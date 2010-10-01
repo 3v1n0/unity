@@ -59,7 +59,10 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private unowned Ctk.IconView  renderer;
+    
+    /* If renderer is null it indicates that we have been disposed,
+     * and that all changes to the results should be ignored */
+    private unowned Ctk.IconView?  renderer;
 
     private MoreResultsButton? more_results_button;
 
@@ -73,8 +76,17 @@ namespace Unity.Places
 
     public signal void activated (string uri, string mimetype);
     
-    private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
+    private Gee.Queue<Tile> cleanup_tiles = new Gee.LinkedList<Tile> ();
     private uint cleanup_operation = 0;
+    
+    private TileFactory tile_factory;
+    
+    private delegate Tile TileFactory (Dee.ModelIter iter,
+                                       string uri,
+                                       string icon_hint,
+                                       string mimetype,
+                                       string display_name,
+                                       string comment);
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -86,7 +98,7 @@ namespace Unity.Places
               group_renderer:group_renderer,
               display_name:display_name,
               icon_hint:icon_hint,
-              results:results);
+              results:results);      
     }
 
     construct
@@ -98,6 +110,22 @@ namespace Unity.Places
         allow_expand = false;
       else if (group_renderer == "UnityFolderGroupRenderer")
         bin_state = ExpandingBinState.EXPANDED;
+      
+      /* Find the right tile factory for our rendering mode
+       * IMPORANT: The file_factory must *not* point to a lambda or
+       * non-static method on 'this'. That leads to self-refs (aka leaks) */
+      if (group_renderer == "UnityFileInfoRenderer")
+        {
+          tile_factory = file_info_tile_factory;
+        }
+      else if (group_renderer == "UnityShowcaseRenderer")
+        {
+          tile_factory = showcase_tile_factory;
+        }
+      else
+        {
+          tile_factory = default_tile_factory;
+        }
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -240,6 +268,28 @@ namespace Unity.Places
       results.row_removed.connect (on_result_removed);
 
     }
+    
+    private override void dispose ()
+    {
+      if (renderer != null)
+        {           
+          /* Drop refs to renderer since we have a cycle:
+           * self->renderer vs self->vbox->renderer */
+          renderer = null;
+          remove_actor (vbox);
+          
+          /* Disconnect signals, so we don't start doing funky stuff
+           * after we've been disposed */
+          results.row_added.disconnect (on_result_added);
+          results.row_removed.disconnect (on_result_removed);
+          
+          /* Drain the cleanup queue */
+          cleanup_tiles.clear ();
+        }
+      
+      /* Chain up */
+      base.dispose ();
+    }
 
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
@@ -264,68 +314,76 @@ namespace Unity.Places
     /*
      * Private Methods
      */
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile file_info_tile_factory (Dee.ModelIter iter,
+                                                string uri,
+                                                string icon_hint,
+                                                string mimetype,
+                                                string display_name,
+                                                string comment)
+    {
+      return new FileInfoTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile showcase_tile_factory (Dee.ModelIter iter,
+                                               string uri,
+                                               string icon_hint,
+                                               string mimetype,
+                                               string display_name,
+                                               string comment)
+    {
+      return new ShowcaseTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile default_tile_factory (Dee.ModelIter iter,
+                                              string uri,
+                                              string icon_hint,
+                                              string mimetype,
+                                              string display_name,
+                                              string comment)
+    {
+      return new DefaultTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+     
     private void on_result_added (Dee.ModelIter iter)
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+    
       if (!interesting (iter))
         return;
 
       if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
         return;
+
+      /* Try to reuse a tile from the cleanup queue. We are guaranteed
+       * that it's the right type because all tiles are created from the same
+       * tile_factory instance */
+      Tile? button = cleanup_tiles.poll ();
       
-      Tile button;
-      
-      if (cleanup_tiles.length () > 0)
+      if (button is Tile)
         {
-          button = cleanup_tiles.nth_data (0);
           button.update_details (results.get_string (iter, 0),
                          results.get_string (iter, 1),
                          results.get_string (iter, 3),
                          results.get_string (iter, 4),
                          results.get_string (iter, 5));
           button.iter = iter;
-          cleanup_tiles.remove (button);
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-        }
-      else if (group_renderer == "UnityFileInfoRenderer")
-        {
-          button = new FileInfoTile (iter,
-                                     results.get_string (iter, 0),
-                                     results.get_string (iter, 1),
-                                     results.get_string (iter, 3),
-                                     results.get_string (iter, 4),
-                                     results.get_string (iter, 5));
-
-          renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-          button.activated.connect ((u, m) => { activated (u, m); });
-        }
-      else if (group_renderer == "UnityShowcaseRenderer")
-        {
-          button = new ShowcaseTile (iter,
-                                     results.get_string (iter, 0),
-                                     results.get_string (iter, 1),
-                                     results.get_string (iter, 3),
-                                     results.get_string (iter, 4),
-                                     results.get_string (iter, 5));
-          renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-
-          button.activated.connect ((u, m) => { activated (u, m); });
         }
       else
         {
-          button = new DefaultTile (iter,
-                                    results.get_string (iter, 0),
-                                    results.get_string (iter, 1),
-                                    results.get_string (iter, 3),
-                                    results.get_string (iter, 4),
-                                    results.get_string (iter, 5));
+          button = tile_factory (iter,
+                                 results.get_string (iter, 0),
+                                 results.get_string (iter, 1),
+                                 results.get_string (iter, 3),
+                                 results.get_string (iter, 4),
+                                 results.get_string (iter, 5));
           renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-
+          button.show ();          
           button.activated.connect ((u, m) => { activated (u, m); });
         }
 
@@ -350,13 +408,15 @@ namespace Unity.Places
 
     private bool cleanup_operation_callback ()
     {
-      foreach (Tile? tile in cleanup_tiles)
+      Tile? tile;
+      
+      /* Drain the cleanup queue */
+      while ((tile = cleanup_tiles.poll ()) != null)
         {
-          renderer.remove_actor (tile);
+          /* If we are disposed renderer will be null */
+          if (renderer == null)
+            renderer.remove_actor (tile);
         }
-
-      cleanup_tiles = null;
-      cleanup_tiles = new GLib.List<Tile?> ();
 
       cleanup_operation = 0;
       return false;
@@ -364,7 +424,11 @@ namespace Unity.Places
 
     private void on_result_removed (Dee.ModelIter iter)
     {
-     if (!interesting (iter))
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+     
+      if (!interesting (iter))
         return;
 
       var children = renderer.get_children ();
@@ -374,7 +438,7 @@ namespace Unity.Places
 
           if (tile.iter == iter)
             {
-              cleanup_tiles.append (tile);
+              cleanup_tiles.offer (tile);
               if (cleanup_operation == 0)
                 cleanup_operation = Timeout.add (200, cleanup_operation_callback);
 
@@ -402,6 +466,10 @@ namespace Unity.Places
 
     private void add_to_n_results (int i)
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+      
       n_results += i;
 
       if (n_results > renderer.get_n_cols ())
@@ -430,6 +498,10 @@ namespace Unity.Places
 
     private void on_n_cols_changed ()
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+    
       var n_cols = renderer.get_n_cols ();
 
       if (bin_state == ExpandingBinState.UNEXPANDED)

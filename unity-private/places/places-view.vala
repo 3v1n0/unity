@@ -33,10 +33,10 @@ namespace Unity.Places
     private Ctk.VBox   content_box;
     private LayeredBin layered_bin;
 
-    public  PlaceHomeEntry       home_entry;
-    public  PlaceSearchBar       search_bar;
-    private Unity.Place.Renderer renderer;
-    private unowned PlaceEntry?  active_entry = null;
+    public  PlaceEntry            home_entry;
+    public  PlaceSearchBar        search_bar;
+    private Unity.Place.Renderer? renderer;
+    private unowned PlaceEntry?   active_entry = null;
 
     private bool is_showing = false;
 
@@ -81,7 +81,10 @@ namespace Unity.Places
       search_bar.entry.text.captured_event.connect (on_stage_event_captured);
       search_bar.entry.text.activatable = true;
       search_bar.entry.text.activate.connect (() => {
-        renderer.activate_default ();                                        
+        if (renderer is Clutter.Actor)
+          {
+            renderer.activate_default ();
+          }
       });
 
       layered_bin = new LayeredBin ();
@@ -107,6 +110,7 @@ namespace Unity.Places
           active_entry.active = false;
         }
       active_entry = null;
+      remove_current_renderer ();
     }
 
     public void on_entry_view_activated (PlaceEntry entry, uint section_id)
@@ -126,30 +130,34 @@ namespace Unity.Places
       entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
     }
 
+    /* Fade out previous results view if we had one, and set
+     * this.renderer = null */
+    private void remove_current_renderer ()
+    {
+      if (renderer is Clutter.Actor)
+        {
+          var anim = renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                       300,
+                                       "opacity", 0);
+          
+          layered_bin.remove_actor (renderer);
+          renderer = null;
+        }
+    }
+
     private void update_views (PlaceEntry entry, uint section_id=0)
     {
       search_bar.set_active_entry_view (entry, 0, section_id);
 
-      /* Create the correct results view */
-      if (renderer is Clutter.Actor)
-        {
-          
-          var anim = renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                       300,
-                                       "opacity", 0);
-          anim.completed.connect ((a)=> {
-              (a.get_object () as Clutter.Actor).destroy ();
-            });
-          layered_bin.remove_actor (renderer);
-        }
+      remove_current_renderer ();
 
+      /* Create the correct results view */
       renderer = lookup_renderer (entry);
+
       layered_bin.add_actor (renderer);
-      renderer.unref (); /* Because lookup_renderer returns it unfloating */
       renderer.opacity = 0;
       renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
                         "opacity", 255);
-
       renderer.set_models (entry.entry_groups_model,
                            entry.entry_results_model,
                            entry.entry_renderer_hints);
