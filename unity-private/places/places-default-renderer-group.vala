@@ -287,6 +287,8 @@ namespace Unity.Places
           cleanup_tiles.clear ();
         }
       
+      /* Chain up */
+      base.dispose ();
     }
 
     private override void allocate (Clutter.ActorBox        box,
