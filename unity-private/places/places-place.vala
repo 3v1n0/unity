@@ -377,9 +377,11 @@ namespace Unity.Places
               return null;
             }
 
-          name = file.get_locale_string (group, "Name", null);
-          icon = file.get_locale_string (group, "Icon", null);
-          desc = file.get_locale_string (group, "Description", null);
+          var domain = file.get_string (KeyFileDesktop.GROUP,
+                                        "X-Ubuntu-Gettext-Domain");
+          name = dgettext (domain, file.get_string (group, "Name"));
+          icon = file.get_string (group, "Icon");
+          desc = dgettext (domain, file.get_string (group, "Description"));
       } catch (Error e) {
         warning (@"Cannot load entry '$group': %s", e.message);
         return null;
