@@ -100,10 +100,8 @@ namespace Unity.Panel
         cache.update_texture_cache ();
       });
 
-	  string? disable_cache = Environment.get_variable ("UNITY_DISABLE_CACHE");
-	  if (disable_cache != null) {
+	  if (Unity.Quirks.cache_disabled ())
 		  remove_effect (cache);
-	  }
 
       END_FUNCTION ();
     }

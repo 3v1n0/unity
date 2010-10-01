@@ -34,11 +34,8 @@ namespace Unity.Launcher
       this.add_effect (this.cache);
       this.cache.update_texture_cache ();
 
-	  string? disable_cache = Environment.get_variable ("UNITY_DISABLE_CACHE");
-	  if (disable_cache != null) {
+	  if (Unity.Quirks.effects_disabled ())
 		  this.remove_effect (cache);
-	  }
-
     }
 
     construct
