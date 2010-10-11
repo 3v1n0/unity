@@ -1,4 +1,4 @@
-unity (0.2.46-0ubuntu5) maverick; urgency=low
+unity (0.2.46-0ubuntu5) maverick-proposed; urgency=low
 
   * Revert to maverick branch
     (lucid une ppa branch wrongly merged in this one):
