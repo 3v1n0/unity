@@ -1,3 +1,16 @@
+unity (0.2.46-0ubuntu5) UNRELEASED; urgency=low
+
+  * Revert to maverick branch
+    (lucid une ppa branch wrongly merged in this one):
+    + debian/control:
+      - Readd netbook-launcher transitional package, this is needed for people
+        not having ubuntu-netbook installed on dist-upgrade to be
+        transitionned to unity.  (LP: #657838)
+      - recommends ubuntu-netbook-default-settings and not
+        ubuntu-netbook-unity-defaut-settings
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Oct 2010 20:16:07 +0200
+
 unity (0.2.46-0ubuntu4) maverick; urgency=low
 
   * Cherry-picked from upstream:
