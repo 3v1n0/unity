@@ -341,7 +341,6 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_button_new@Base 0.2.32
  unity_places_button_normal_state_get_type@Base 0.2.32
  unity_places_button_prelight_state_get_type@Base 0.2.32
- unity_places_button_rounded_rect@Base 0.2.32
  unity_places_button_set_normal_state@Base 0.2.32
  unity_places_button_set_prelight_state@Base 0.2.32
  unity_places_controller_activate_entry@Base 0.2.22
@@ -1158,11 +1157,9 @@ libunity.so.0 libunity0 #MINVER#
  unity_shell_show_window@Base 0.2.22
  unity_shell_stop_expose@Base 0.2.22
  unity_stripe_texture_construct@Base 0.2.28
- unity_stripe_texture_get_radius@Base 0.2.28
  unity_stripe_texture_get_type@Base 0.2.28
  unity_stripe_texture_new@Base 0.2.28
  unity_stripe_texture_rounded_outline@Base 0.2.28
- unity_stripe_texture_set_radius@Base 0.2.28
  unity_theme_file_path_add_icon_theme@Base 0.2.22
  unity_theme_file_path_construct@Base 0.2.22
  unity_theme_file_path_get_icon_filepath@Base 0.2.22
