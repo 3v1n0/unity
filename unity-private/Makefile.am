@@ -72,6 +72,7 @@ libunity_private_la_LIBADD = \
 private_sources = \
   application.vala \
   unity.vala \
+  unity-quirks.vala \
   utils.vala
 
 panel_sources = \
