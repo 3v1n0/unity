@@ -14,9 +14,15 @@ set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 #
 set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/3")
+set (PKGDATADIR "${DATADIR}/unity/${UNITY_MAJOR}")
 set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
+
+#
+# Data
+#
+file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
+install (FILES ${_datafiles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/${UNITY_MAJOR}/)
