@@ -14,7 +14,7 @@ pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0
 
 set(CFLAGS
 	${DEPS_CFLAGS} ${DEPS_CFLAGS_OTHER}
-  "-I/usr/include/gee-1.0" "-DGETTEXT_PACKAGE=\"unity\" -I${CMAKE_SOURCE_DIR}"
+  "-I/usr/include/gee-1.0" "-DGETTEXT_PACKAGE=\"unity\" -I${CMAKE_BINARY_DIR}"
 )
 add_definitions(${CFLAGS})
 
