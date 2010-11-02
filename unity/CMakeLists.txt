@@ -1,4 +1,12 @@
 #
+# unity.pc
+#
+set (PREFIX ${CMAKE_INSTALL_PREFIX})
+set (DOLLAR "$") # You hear that? It's kittens being killed by the gods of cmake
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/unity/unity.pc)
+install (FILES ${CMAKE_BINARY_DIR}/unity/unity.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
+
+#
 # libunity
 #
 find_package(PkgConfig)
