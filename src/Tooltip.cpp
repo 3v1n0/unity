@@ -507,6 +507,7 @@ namespace nux
 
   Tooltip::Tooltip ()
   {
+    _texture2D = 0;
     _anchorX   = 0;
     _anchorY   = 0;
     _labelText = TEXT ("unset");
@@ -526,8 +527,10 @@ namespace nux
   Tooltip::~Tooltip ()
   {
     cairo_font_options_destroy (_fontOpts);
-    delete(_cairo_graphics);
-    delete(_texture2D);
+    if (_texture2D)
+      _texture2D->UnReference ();
+    if (_cairo_graphics)
+      delete(_cairo_graphics);
   }
 
   long
@@ -682,10 +685,14 @@ namespace nux
 
     // BaseTexture is the high level representation of an image that is backed by
     // an actual opengl texture.
+    if (_texture2D)
+      _texture2D->UnReference ();
+    
     _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
     _texture2D->Update(bitmap);
     
     delete _cairo_graphics;
+    _cairo_graphics = 0;
   }
 
   long

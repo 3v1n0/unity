@@ -64,7 +64,7 @@ namespace nux
                                       int height);
                                       
       nux::CairoGraphics*   _cairo_graphics;
-      nux::BaseTexture*        _texture2D;
+      nux::BaseTexture*     _texture2D;
       int                   _anchorX;
       int                   _anchorY;
       nux::NString          _labelText;

@@ -694,7 +694,12 @@ void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
     }
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates().SetBlend(false);
+    GfxContext.GetRenderStates ().SetSeparateBlend (false,
+                                                    GL_SRC_ALPHA,
+                                                    GL_ONE_MINUS_SRC_ALPHA,
+                                                    GL_SRC_ALPHA,
+                                                    GL_ONE_MINUS_SRC_ALPHA);
+          
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
 }
