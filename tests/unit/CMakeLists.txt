@@ -13,8 +13,15 @@ link_libraries (${LIBS})
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${LIB_PATHS})
 
-include_directories (. .. ../../src)
+include_directories (. .. ../../src ${CMAKE_BINARY_DIR})
 
 # We can't have convenience libs so we need to rebuild with what we need
+# Please keep actual test files alphabetically at top and then files
+# from ../../src in alphabetically after that
 add_executable (test-unit
-                test-unit.cpp)
+                TestFavoriteStoreGSettings.cpp
+                TestMain.cpp
+                ../../src/FavoriteStore.cpp
+                ../../src/FavoriteStore.h
+                ../../src/FavoriteStoreGSettings.cpp
+                ../../src/FavoriteStoreGSettings.h)

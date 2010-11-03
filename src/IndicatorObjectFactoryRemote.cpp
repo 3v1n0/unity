@@ -16,6 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include "IndicatorObjectFactoryRemote.h"
 
 #include "IndicatorObjectProxyRemote.h"
@@ -254,7 +256,7 @@ on_proxy_ready_cb (GObject      *source,
       GError *error = NULL;
       
       // Let's attempt to run it from where we expect it to be
-      char *cmd = g_strdup_printf ("%s/lib/unity/unity-panel-service", PREFIX);
+      char *cmd = g_strdup_printf ("%s/lib/unity/unity-panel-service", PREFIXDIR);
       printf ("\nWARNING: Couldn't load panel from installed services, so trying to load panel from known location: %s\n", cmd);
 
       g_spawn_command_line_async (cmd, &error);
