@@ -2,22 +2,22 @@
 # Panel Service
 #
 find_package(PkgConfig)
-pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 indicator dee-1.0 gee-1.0 dbus-glib-1)
+pkg_check_modules(SERVICE_DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 indicator dee-1.0 gee-1.0 dbus-glib-1)
 
 set(CFLAGS
-	${DEPS_CFLAGS} ${DEPS_CFLAGS_OTHER}
+	${SERVICE_DEPS_CFLAGS} ${SERVICE_DEPS_CFLAGS_OTHER}
   "-I/usr/include/gee-1.0" "-DGETTEXT_PACKAGE=\"unity\""
 )
 add_definitions(${CFLAGS})
 
 set(LIBS
-	${DEPS_LIBRARIES}
+	${SERVICE_DEPS_LIBRARIES}
   "-lgee"
 )
 link_libraries(${LIBS})
 
 set(LIB_PATHS
-	${DEPS_LIBRARY_DIRS}
+	${SERVICE_DEPS_LIBRARY_DIRS}
 )
 link_directories(${LIB_PATHS})
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/vala)
