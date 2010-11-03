@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 2.8)
+
 subdirs (unity)
 
 #
@@ -8,7 +10,7 @@ set (UNITY_MAJOR 3)
 set (UNITY_MINOR 0)
 set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
-
+set (UNITY_API_VERSION "3.0")
 
 #
 # config.h

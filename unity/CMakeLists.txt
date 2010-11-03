@@ -1,10 +1,12 @@
+set (PKGNAME "unity-${UNITY_API_VERSION}")
+
 #
 # unity.pc
 #
 set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (DOLLAR "$") # You hear that? It's kittens being killed by the gods of cmake
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/unity/unity.pc)
-install (FILES ${CMAKE_BINARY_DIR}/unity/unity.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/unity/${PKGNAME}.pc)
+install (FILES ${CMAKE_BINARY_DIR}/unity/${PKGNAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
 
 #
 # libunity
@@ -14,7 +16,7 @@ pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0
 
 set(CFLAGS
 	${DEPS_CFLAGS} ${DEPS_CFLAGS_OTHER}
-  "-I/usr/include/gee-1.0" "-DGETTEXT_PACKAGE=\"unity\" -I${CMAKE_BINARY_DIR}"
+  "-I/usr/include/gee-1.0" -DGETTEXT_PACKAGE=\"unity\" -I${CMAKE_BINARY_DIR}
 )
 add_definitions(${CFLAGS})
 
@@ -62,6 +64,6 @@ vala_precompile (VALA_C chrome-handler.vala
                  GENERATE_VAPI unity
 )
 
-add_library (unity SHARED ${VALA_C})
-install (TARGETS unity DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
-install (FILES ${CMAKE_BINARY_DIR}/unity/unity.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/unity/unity/)
+add_library (${PKGNAME} SHARED ${VALA_C})
+install (TARGETS ${PKGNAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
+install (FILES ${CMAKE_BINARY_DIR}/unity/unity.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PKGNAME}/unity/)
