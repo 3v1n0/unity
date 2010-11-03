@@ -1,5 +1,3 @@
-[encoding: UTF-8]
-targets/mutter/spaces-manager.vala
 unity-private/launcher/application-controller.vala
 unity-private/places/places-default-renderer-group.vala
 unity-private/places/places-place-home-renderer.vala
