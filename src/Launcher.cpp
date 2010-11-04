@@ -639,7 +639,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.PushClippingRectangle(base);
 
     nux::ROPConfig ROP;
-    ROP.Blend = true;
+    ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -1254,7 +1254,6 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
 
 void Launcher::UpdateIconXForm ()
 {
-
   nux::Geometry geo = GetGeometry ();
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
