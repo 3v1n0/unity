@@ -56,7 +56,6 @@ TestAllocation ()
 
 static void
 TestGetFavorites ()
-// Not a real test, obviously
 {
   GSettingsBackend       *backend;
   FavoriteStoreGSettings *settings;
