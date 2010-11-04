@@ -27,7 +27,15 @@ FavoriteStoreGSettings::FavoriteStoreGSettings ()
 
   Refresh ();
 }
- 
+
+FavoriteStoreGSettings::FavoriteStoreGSettings (GSettingsBackend *backend)
+{
+  m_settings = g_settings_new_with_backend ("com.canonical.Unity.Launcher", backend);
+  m_favorites = NULL;
+
+  Refresh ();
+}
+  
 
 FavoriteStoreGSettings::~FavoriteStoreGSettings ()
 {
@@ -114,6 +122,8 @@ FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
       favs[i] = NULL;
       i++;
     }
+
+  Refresh ();
 }
  
 void
@@ -149,6 +159,8 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
       favs[i] = NULL;
       i++;
     }
+
+  Refresh ();
 }
 
 void

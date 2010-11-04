@@ -20,7 +20,7 @@ SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager, NUX_FILE_LINE_DEC
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
     if (m_Icon)
-      delete m_Icon;
+      m_Icon->UnReference ();
 }
 
 void
@@ -60,7 +60,7 @@ SimpleLauncherIcon::GetTextureForSize (int size)
       return m_Icon;
       
     if (m_Icon)
-      delete m_Icon;
+      m_Icon->UnReference ();
     
     if (!m_IconName)
       return 0;

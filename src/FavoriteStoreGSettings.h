@@ -30,7 +30,8 @@ class FavoriteStoreGSettings : public FavoriteStore
 {
 public:
 
-  FavoriteStoreGSettings  ();
+  FavoriteStoreGSettings ();
+  FavoriteStoreGSettings (GSettingsBackend *backend);
   ~FavoriteStoreGSettings ();
 
   //Methods
