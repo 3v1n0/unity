@@ -58,13 +58,13 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 }
 
 void
-PanelIndicatorObjectView::Draw (nux::GraphicsContext& GfxContext, bool force_draw)
+PanelIndicatorObjectView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
 
 }
 
 void
-PanelIndicatorObjectView::DrawContent (nux::GraphicsContext &GfxContext, bool force_draw)
+PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
   _layout->ProcessDraw (GfxContext, force_draw);

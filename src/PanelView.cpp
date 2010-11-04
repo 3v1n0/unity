@@ -66,7 +66,7 @@ PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 }
 
 void
-PanelView::Draw (nux::GraphicsContext& GfxContext, bool force_draw)
+PanelView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
 
@@ -78,7 +78,7 @@ PanelView::Draw (nux::GraphicsContext& GfxContext, bool force_draw)
 }
 
 void
-PanelView::DrawContent (nux::GraphicsContext &GfxContext, bool force_draw)
+PanelView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
 

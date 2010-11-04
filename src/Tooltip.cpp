@@ -542,7 +542,7 @@ namespace nux
   }
 
   void
-  Tooltip::Draw (GraphicsContext& gfxContext,
+  Tooltip::Draw (GraphicsEngine& gfxContext,
                  bool             forceDraw)
   {
     Geometry base = GetGeometry();
@@ -575,7 +575,7 @@ namespace nux
   }
 
   void
-  Tooltip::DrawContent (GraphicsContext& GfxContext,
+  Tooltip::DrawContent (GraphicsEngine& GfxContext,
                              bool             force_draw)
   {
     /*Geometry base = GetGeometry();

@@ -271,12 +271,12 @@ long Launcher::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Process
     return ret;
 }
 
-void Launcher::Draw(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
 
-void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view)
+void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -371,7 +371,7 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
     
-    nux::GetThreadGraphicsContext ()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
@@ -379,7 +379,7 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetThreadGraphicsContext ()->GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -391,7 +391,7 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
     VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
@@ -420,13 +420,13 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
   if(!USE_ARB_SHADERS)
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   
@@ -447,7 +447,7 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
   }
 }
 
-void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view)
+void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -549,7 +549,7 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
     
-    nux::GetThreadGraphicsContext ()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
@@ -557,7 +557,7 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetThreadGraphicsContext ()->GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -569,7 +569,7 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
     VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
@@ -593,13 +593,13 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
   if(!USE_ARB_SHADERS)
   {
     CHECKGL ( glUniform4fARB (FragmentColor, white.R(), white.G(), white.B(), white.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, white.R(), white.G(), white.B(), white.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   
@@ -633,7 +633,7 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
   }
 }
 
-void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
     GfxContext.PushClippingRectangle(base);
@@ -704,7 +704,7 @@ void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
     GfxContext.PopClippingRectangle();
 }
 
-void Launcher::PostDraw(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
@@ -848,15 +848,15 @@ void Launcher::ScheduleRevealAnimation ()
   _launcher_state = LAUNCHER_UNFOLDED;
   OrderRevealedIcons();
 
-  if(nux::GetThreadTimer().FindTimerHandle(_folding_timer_handle))
+  if(nux::GetTimer().FindTimerHandle(_folding_timer_handle))
   {
-    nux::GetThreadTimer().RemoveTimerHandler(_folding_timer_handle);
+    nux::GetTimer().RemoveTimerHandler(_folding_timer_handle);
   }
   _folding_timer_handle = 0;
 
-  if(!nux::GetThreadTimer().FindTimerHandle(_reveal_timer_handle))
+  if(!nux::GetTimer().FindTimerHandle(_reveal_timer_handle))
   {
-    _reveal_timer_handle = nux::GetThreadTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _reveal_functor, this);
+    _reveal_timer_handle = nux::GetTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _reveal_functor, this);
   }
 }
 
@@ -865,15 +865,15 @@ void Launcher::ScheduleFoldAnimation ()
   _launcher_state = LAUNCHER_FOLDED;
   OrderFoldedIcons(0);
 
-  if(nux::GetThreadTimer().FindTimerHandle(_reveal_timer_handle))
+  if(nux::GetTimer().FindTimerHandle(_reveal_timer_handle))
   {
-    nux::GetThreadTimer().RemoveTimerHandler(_reveal_timer_handle);
+    nux::GetTimer().RemoveTimerHandler(_reveal_timer_handle);
   }
   _reveal_timer_handle = 0;
 
-  if(!nux::GetThreadTimer().FindTimerHandle(_folding_timer_handle))
+  if(!nux::GetTimer().FindTimerHandle(_folding_timer_handle))
   {
-    _folding_timer_handle = nux::GetThreadTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _folding_functor, this);
+    _folding_timer_handle = nux::GetTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _folding_functor, this);
   }
 }
 

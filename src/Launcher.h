@@ -16,9 +16,9 @@ public:
     ~Launcher();
 
     virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-    virtual void Draw(nux::GraphicsContext& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsContext& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsContext& GfxContext, bool force_draw);
+    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
     LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
@@ -63,8 +63,8 @@ private:
   void FoldingCallback(void* v);
   void RevealCallback(void* v);
 
-  void RenderIcon (nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view);
-  void RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
+  void RenderIconImage(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
   void UpdateIconXForm ();
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
