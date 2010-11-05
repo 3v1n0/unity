@@ -28,7 +28,7 @@ add_custom_target (distcheck
     && tar xf ${ARCHIVE_NAME}.tar.bz2
     && mkdir ${ARCHIVE_NAME}/build
     && cd ${ARCHIVE_NAME}/build
-    && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON ..
+    && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
     && make
     && make install
     && make check

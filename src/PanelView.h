@@ -21,7 +21,7 @@
 
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
-#include <NuxGraphics/OpenGLEngine.h>
+#include <NuxGraphics/GraphicsEngine.h>
 
 #include "PanelHomeButton.h"
 #include "IndicatorObjectFactoryRemote.h"

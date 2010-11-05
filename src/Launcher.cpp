@@ -5,7 +5,7 @@
 #include "Nux/MenuPage.h"
 
 #include "NuxGraphics/NuxGraphics.h"
-#include "NuxGraphics/GLDeviceFactory.h"
+#include "NuxGraphics/GpuDevice.h"
 #include "NuxGraphics/GLTextureResourceManager.h"
 
 #include "Nux/BaseWindow.h"
