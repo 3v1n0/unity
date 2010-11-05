@@ -52,6 +52,20 @@ private:
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
   } LauncherActionState;
+  
+  typedef struct
+  {
+    LauncherIcon *icon;
+    nux::Point3   center;
+    float         folding_rads;
+    float         alpha;
+    float         backlight_intensity;
+    float         glow_intensity;
+    bool          running_arrow;
+    bool          active_arrow;
+  } RenderArg;
+  
+  std::list<RenderArg> RenderArgs (float hover_progress);
 
   void OnIconAdded (void *icon_pointer);
   void OnIconRemoved (void *icon_pointer);

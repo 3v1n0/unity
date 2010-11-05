@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "Nux/Nux.h"
 #include "Nux/VScrollBar.h"
 #include "Nux/HLayout.h"
@@ -206,6 +208,83 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
 Launcher::~Launcher()
 {
 
+}
+
+std::list<Launcher::RenderArg> Launcher::RenderArgs (float hover_progress)
+{
+    std::list<Launcher::RenderArg> result;
+    int icon_spacing = 10;
+    int min_icon_size = 10;
+    int animation_icon_size = (int) (10 + (_icon_size - min_icon_size) * hover_progress);
+    float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
+
+    nux::Geometry geo = GetGeometry ();
+    LauncherModel::iterator it;
+    nux::Point3 center;
+    
+    center.x = geo.width / 2;
+    center.y = icon_spacing;
+    center.z = 0;
+    
+    int max_flat_icons = (geo.height - icon_spacing) / (_icon_size + icon_spacing);
+    int overflow = MAX (0, _model->Size () - max_flat_icons);
+    int folding_threshold = geo.height;
+        
+    if (overflow > 0)
+    {
+        folding_threshold = geo.height - (overflow * min_icon_size);        
+    }
+    
+    for (it = _model->begin (); it != _model->end (); it++)
+    {
+        RenderArg arg;
+        LauncherIcon *icon = *it;
+        
+        arg.icon           = icon;
+        arg.alpha          = 1.0f;
+        arg.glow_intensity = 0.0f;
+        arg.running_arrow  = false;
+        arg.active_arrow   = icon->Active ();
+        arg.folding_rads   = 0.0f;
+        
+        // animate this shit
+        if (icon->Running ())
+          arg.backlight_intensity = 1.0f;
+        else
+          arg.backlight_intensity = 0.0f;
+        
+        if (hover_progress >= 1.0f || overflow > 0)
+        {
+            //wewt no folding work to be done
+            center.y += _icon_size / 2;         // move to center
+            arg.center = nux::Point3 (center);       // copy center
+            center.y += (_icon_size / 2) + 10;  // move to start of next icon
+        }
+        else
+        {
+            //foldy mathy time
+            if (center.y >= folding_threshold)
+            {
+                // we are past the threshold, fully fold
+                center.y += animation_icon_size / 2;
+                arg.center = nux::Point3 (center);
+                center.y += animation_icon_size / 2 + (10 * hover_progress);
+                
+                arg.folding_rads = animation_neg_rads;
+            }
+            else
+            {
+                //we can draw flat HUZZAH
+                center.y += _icon_size / 2;         // move to center
+                arg.center = nux::Point3 (center);       // copy center
+                center.y += (_icon_size / 2) + 10;  // move to start of next icon
+            }
+        }
+        
+        result.push_back (arg);
+    }
+    
+    return result;
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent)
@@ -645,6 +724,19 @@ void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x99000000), true, ROP);
     gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (base.x + base.width - 1, base.y, 1, base.height), nux::Color(0x60FFFFFF), true, ROP);
+    
+    std::list<Launcher::RenderArg> args = RenderArgs (0.0f);
+    
+    std::list<Launcher::RenderArg>::iterator arg_it;
+    
+    for (arg_it = args.begin (); arg_it != args.end (); arg_it++)
+    {
+        RenderArg arg = *arg_it;
+        
+        printf ("Center: %f, %f, %f\n", arg.center.x, arg.center.y, arg.center.z);
+    }
+    
+    printf ("\n\n");
     
     LauncherModel::reverse_iterator rev_it;
     for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
