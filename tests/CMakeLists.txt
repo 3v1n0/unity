@@ -24,7 +24,29 @@ add_executable (test-unit
                 ../src/FavoriteStore.cpp
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
-                ../src/FavoriteStoreGSettings.h)
+                ../src/FavoriteStoreGSettings.h
+                )
+
+add_executable (test-panel
+                TestPanel.cpp
+                ../src/PanelView.cpp
+                ../src/PanelView.h
+                ../src/PanelIndicatorObjectView.cpp
+                ../src/PanelIndicatorObjectView.h
+                ../src/PanelIndicatorObjectEntryView.cpp
+                ../src/PanelIndicatorObjectEntryView.h
+                ../src/IndicatorObjectFactory.h
+                ../src/IndicatorObjectProxy.h
+                ../src/IndicatorObjectEntryProxy.h
+                ../src/IndicatorObjectFactoryRemote.cpp
+                ../src/IndicatorObjectFactoryRemote.h
+                ../src/IndicatorObjectProxyRemote.cpp
+                ../src/IndicatorObjectProxyRemote.h
+                ../src/IndicatorObjectEntryProxyRemote.cpp
+                ../src/IndicatorObjectEntryProxyRemote.h
+                ../src/PanelHomeButton.cpp
+                ../src/PanelHomeButton.h
+                )
 
 #
 # check target
