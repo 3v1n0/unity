@@ -1,6 +1,7 @@
+project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (unity services tests/unit)
+subdirs (unity services tests)
 
 #
 # Base bits
@@ -11,6 +12,28 @@ set (UNITY_MINOR 0)
 set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
+
+#
+# Niceties
+#
+set (ARCHIVE_NAME unity-${UNITY_VERSION})
+add_custom_target (dist
+    COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+add_custom_target(distcheck
+    COMMAND cd ${CMAKE_BINARY_DIR}
+    && rm -rf ${ARCHIVE_NAME}
+    && tar xf ${ARCHIVE_NAME}.tar.bz2
+    && mkdir ${ARCHIVE_NAME}/build
+    && cd ${ARCHIVE_NAME}/build
+    && cmake -DCMAKE_INSTALL_PREFIX=../install ..
+    && make
+    && make install
+    && make check
+    )
+add_dependencies(distcheck dist)
 
 #
 # config.h
@@ -58,7 +81,8 @@ include (CompizPlugin)
 compiz_plugin (unity 
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR}")
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR}"
+               )
 
 #
 # GSettings Schema
