@@ -8,7 +8,7 @@ subdirs (unity services tests)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
-set (UNITY_MINOR 0)
+set (UNITY_MINOR 1)
 set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
@@ -22,13 +22,13 @@ add_custom_target (dist
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-add_custom_target(distcheck
+add_custom_target (distcheck
     COMMAND cd ${CMAKE_BINARY_DIR}
     && rm -rf ${ARCHIVE_NAME}
     && tar xf ${ARCHIVE_NAME}.tar.bz2
     && mkdir ${ARCHIVE_NAME}/build
     && cd ${ARCHIVE_NAME}/build
-    && cmake -DCMAKE_INSTALL_PREFIX=../install ..
+    && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON ..
     && make
     && make install
     && make check
