@@ -32,8 +32,6 @@ CreateDefaultKeyFileBackend ()
   GSettingsBackend *b;
   GError *error = NULL;
 
-  g_setenv ("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings", TRUE);
-
   g_file_set_contents (BASE_STORE_FILE,
                        BASE_STORE_CONTENTS,
                        -1,
