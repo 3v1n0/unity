@@ -26,7 +26,7 @@
 #include <gtk/gtk.h>
 
 #include "PanelView.h"
-
+#include <dbus/dbus-glib.h>
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
@@ -46,8 +46,12 @@ int main(int argc, char **argv)
   g_thread_init (NULL);
   gtk_init (&argc, &argv);
 
+  dbus_g_thread_init ();
+
   nux::NuxInitialize(0);
+
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
+  
   wt->Run(NULL);
   delete wt;
   return 0;

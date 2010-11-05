@@ -2,7 +2,7 @@
 # Unit tests
 #
 find_package (PkgConfig)
-pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
+pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${UNITY_PLUGIN_DEPS} dbus-glib-1)
 
 set (CFLAGS ${TEST_UNIT_DEPS_CFLAGS} ${TEST_UNIT_DEPS_CFLAGS_OTHER})
 add_definitions (${CFLAGS})

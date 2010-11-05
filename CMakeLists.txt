@@ -74,7 +74,7 @@ endif (${GETTEXT_FOUND} STREQUAL "TRUE")
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9 libbamf dbus-glib-1 dee-1.0 gio-2.0")
+set (UNITY_PLUGIN_DEPS "nux-0.9 libbamf dbus-glib-1 dee-1.0 gio-2.0 gio-unix-2.0")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
