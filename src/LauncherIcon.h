@@ -84,14 +84,10 @@ protected:
     nux::BaseWindow* m_Window;
     Launcher* m_IconManager;
 
-    float         _folding_angle;   //!< angle of folded icon in radian.
-    float         _folding_angle_delta;   //!< Difference between start and end.
-    nux::Point2   _point[4];       //!< screen space projection of icon.
-    nux::Point3   _position;
-    nux::Point3   _position_delta;
     nux::Vector4  _xform_screen_coord [4];
     nux::Vector4  _xform_icon_screen_coord [4];
     bool          _mouse_inside;
+    float         _folding_angle;
 
     nux::Tooltip* _tooltip;
 

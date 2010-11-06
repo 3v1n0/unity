@@ -43,7 +43,6 @@ nux::Color LauncherIcon::BackgroundColor ()
 nux::BaseTexture * LauncherIcon::TextureForSize (int size)
 {
   nux::BaseTexture * result = GetTextureForSize (size);
-  
   return result;
 }
 

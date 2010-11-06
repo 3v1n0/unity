@@ -1,6 +1,8 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
+#include <sys/time.h>
+
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include "LauncherIcon.h"
@@ -65,20 +67,23 @@ private:
     bool          active_arrow;
   } RenderArg;
   
-  std::list<RenderArg> RenderArgs (float hover_progress);
+  bool AnimationInProgress ();
+  void SetTimeStruct (struct timeval *timer);
+  float GetHoverProgress ();
+  
+  void SetHover   ();
+  void UnsetHover ();
+  
+  std::list<RenderArg> RenderArgs ();
 
   void OnIconAdded (void *icon_pointer);
   void OnIconRemoved (void *icon_pointer);
   void OnOrderChanged ();
 
-
   void OnIconNeedsRedraw (void *icon);
 
-  void FoldingCallback(void* v);
-  void RevealCallback(void* v);
-
-  void RenderIcon (nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
-  void RenderIconImage(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg arg);
+  void RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg);
   void UpdateIconXForm (std::list<Launcher::RenderArg> args);
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
@@ -92,20 +97,13 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void OrderRevealedIcons();
-  void OrderFoldedIcons(int FocusIconIndex);
-  void ScheduleRevealAnimation ();
-  void ScheduleFoldAnimation ();
-
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
 
-  float _folding_angle;
-  float _angle_rate;
-  float _timer_intervals;
+  bool  _hovered;
   int   _space_between_icons;
   int   _anim_duration;
   float _folded_angle;
@@ -125,11 +123,6 @@ private:
   int _dnd_delta;
   int _dnd_security;
 
-  nux::TimerFunctor* _folding_functor;
-  nux::TimerHandle _folding_timer_handle;
-  nux::TimerFunctor* _reveal_functor;
-  nux::TimerHandle _reveal_timer_handle;
-
   nux::Matrix4  _view_matrix;
   nux::Matrix4  _projection_matrix;
   nux::Point2   _mouse_position;
@@ -139,6 +132,11 @@ private:
   nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   LauncherModel* _model;
+  
+  /* event times */
+  struct timeval _enter_time;
+  struct timeval _exit_time;
+  struct timeval _drag_end_time;
 };
 
 #endif // LAUNCHER_H
