@@ -350,12 +350,12 @@ long Launcher::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Process
     return ret;
 }
 
-void Launcher::Draw(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
 
-void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view)
+void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -526,7 +526,7 @@ void Launcher::RenderIcon(nux::GraphicsContext& GfxContext, LauncherIcon* launch
   }
 }
 
-void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* launcher_view)
+void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -712,38 +712,29 @@ void Launcher::RenderIconImage(nux::GraphicsContext& GfxContext, LauncherIcon* l
   }
 }
 
-void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
     GfxContext.PushClippingRectangle(base);
 
     nux::ROPConfig ROP;
-    ROP.Blend = true;
+    ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x99000000), true, ROP);
     gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (base.x + base.width - 1, base.y, 1, base.height), nux::Color(0x60FFFFFF), true, ROP);
-    
-    std::list<Launcher::RenderArg> args = RenderArgs (0.0f);
-    
-    std::list<Launcher::RenderArg>::iterator arg_it;
-    
-    for (arg_it = args.begin (); arg_it != args.end (); arg_it++)
-    {
-        RenderArg arg = *arg_it;
-        
-        printf ("Center: %f, %f, %f\n", arg.center.x, arg.center.y, arg.center.z);
-    }
-    
-    printf ("\n\n");
-    
+
+    std::list<Launcher::RenderArg> args = RenderArgs (0.50f);
+
+    UpdateIconXForm (args);
+
     LauncherModel::reverse_iterator rev_it;
     for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
     {
       if ((*rev_it)->_folding_angle >= 0.0f)
         continue;
-    
+
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA,
@@ -761,7 +752,7 @@ void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
       GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
       RenderIconImage (GfxContext, *rev_it);
     }
-    
+
     LauncherModel::iterator it;
     for (it = _model->begin(); it != _model->end(); it++)
     {
@@ -796,7 +787,7 @@ void Launcher::DrawContent(nux::GraphicsContext& GfxContext, bool force_draw)
     GfxContext.PopClippingRectangle();
 }
 
-void Launcher::PostDraw(nux::GraphicsContext& GfxContext, bool force_draw)
+void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
@@ -940,15 +931,15 @@ void Launcher::ScheduleRevealAnimation ()
   _launcher_state = LAUNCHER_UNFOLDED;
   OrderRevealedIcons();
 
-  if(nux::GetThreadTimer().FindTimerHandle(_folding_timer_handle))
+  if(nux::GetTimer().FindTimerHandle(_folding_timer_handle))
   {
-    nux::GetThreadTimer().RemoveTimerHandler(_folding_timer_handle);
+    nux::GetTimer().RemoveTimerHandler(_folding_timer_handle);
   }
   _folding_timer_handle = 0;
 
-  if(!nux::GetThreadTimer().FindTimerHandle(_reveal_timer_handle))
+  if(!nux::GetTimer().FindTimerHandle(_reveal_timer_handle))
   {
-    _reveal_timer_handle = nux::GetThreadTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _reveal_functor, this);
+    _reveal_timer_handle = nux::GetTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _reveal_functor, this);
   }
 }
 
@@ -957,15 +948,15 @@ void Launcher::ScheduleFoldAnimation ()
   _launcher_state = LAUNCHER_FOLDED;
   OrderFoldedIcons(0);
 
-  if(nux::GetThreadTimer().FindTimerHandle(_reveal_timer_handle))
+  if(nux::GetTimer().FindTimerHandle(_reveal_timer_handle))
   {
-    nux::GetThreadTimer().RemoveTimerHandler(_reveal_timer_handle);
+    nux::GetTimer().RemoveTimerHandler(_reveal_timer_handle);
   }
   _reveal_timer_handle = 0;
 
-  if(!nux::GetThreadTimer().FindTimerHandle(_folding_timer_handle))
+  if(!nux::GetTimer().FindTimerHandle(_folding_timer_handle))
   {
-    _folding_timer_handle = nux::GetThreadTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _folding_functor, this);
+    _folding_timer_handle = nux::GetTimer().AddPeriodicTimerHandler(_timer_intervals, _anim_duration, _folding_functor, this);
   }
 }
 
@@ -1029,7 +1020,6 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   _mouse_position = nux::Point2 (x, y);
   _dnd_delta = 0;
   
-  UpdateIconXForm ();
   MouseDownLogic ();
   NeedRedraw ();
 }
@@ -1056,7 +1046,6 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
     ScheduleRevealAnimation ();
   }
 
-  UpdateIconXForm ();
   MouseUpLogic ();
   _launcher_action_state = ACTION_NONE;
   NeedRedraw ();
@@ -1121,7 +1110,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     }
   }
   
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1132,7 +1120,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   if  (_launcher_action_state == ACTION_NONE)
     ScheduleRevealAnimation ();
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1143,7 +1130,6 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   if  (_launcher_action_state == ACTION_NONE)
     ScheduleFoldAnimation ();
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1154,7 +1140,6 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 
   // Every time the mouse moves, we check if it is inside an icon...
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1205,7 +1190,6 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
     }
   }
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1222,7 +1206,6 @@ void Launcher::FoldingCallback(void* v)
     (*it)->_position.z += _folding_timer_handle.GetProgressDelta() * (*it)->_position_delta.z;
   }
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1239,7 +1222,6 @@ void Launcher::RevealCallback(void* v)
     (*it)->_position.z += _reveal_timer_handle.GetProgressDelta() * (*it)->_position_delta.z;
   }
 
-  UpdateIconXForm ();
   EventLogic ();
   NeedRedraw ();
 }
@@ -1344,9 +1326,8 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   return 0;
 }
 
-void Launcher::UpdateIconXForm ()
+void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
 {
-
   nux::Geometry geo = GetGeometry ();
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
@@ -1355,19 +1336,23 @@ void Launcher::UpdateIconXForm ()
 
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
-  LauncherModel::iterator it;
-  for(it = _model->begin(); it != _model->end(); it++)
+  //LauncherModel::iterator it;
+  std::list<Launcher::RenderArg>::iterator it;
+  for(it = args.begin(); it != args.end(); it++)
   {
-    LauncherIcon* launcher_icon = *it;
-
+    LauncherIcon* launcher_icon = (*it).icon;
+    
+    // We to store the icon angle in the icons itself. Makes one thing easier afterward.
+    (*it).icon->_folding_angle = (*it).folding_rads;
+    
     float w = _icon_size;
     float h = _icon_size;
-    float x = launcher_icon->_position.x;
-    float y = launcher_icon->_position.y;
-    float z = launcher_icon->_position.z;
+    float x = (*it).center.x - w/2.0f; // x: top left corner
+    float y = (*it).center.y - h/2.0f; // y: top left corner
+    float z = (*it).center.z;
 
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
-      nux::Matrix4::ROTATEX(launcher_icon->_folding_angle) *      // rotate the icon
+      nux::Matrix4::ROTATEX((*it).folding_rads) *              // rotate the icon
       nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
 
     ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
@@ -1420,9 +1405,9 @@ void Launcher::UpdateIconXForm ()
     //// icon image
     w = _icon_image_size;
     h = _icon_image_size;
-    x = launcher_icon->_position.x + _icon_image_size_delta/2;
-    y = launcher_icon->_position.y + _icon_image_size_delta/2;
-    z = launcher_icon->_position.z;
+    x = (*it).center.x - _icon_size/2.0f + _icon_image_size_delta/2.0f;
+    y = (*it).center.y - _icon_size/2.0f + _icon_image_size_delta/2.0f;
+    z = (*it).center.z;
     
     v0 = nux::Vector4(x,   y,    z, 1.0f);
     v1 = nux::Vector4(x,   y+h,  z, 1.0f);

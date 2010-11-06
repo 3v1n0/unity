@@ -42,10 +42,10 @@ namespace nux
                          long    traverseInfo,
                          long    processEventInfo);
 
-      void Draw (GraphicsContext& gfxContext,
+      void Draw (GraphicsEngine& gfxContext,
                  bool             forceDraw);
 
-      void DrawContent (GraphicsContext& gfxContext,
+      void DrawContent (GraphicsEngine& gfxContext,
                         bool             forceDraw);
 
       void SetText (NString text);

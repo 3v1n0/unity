@@ -31,8 +31,8 @@ public:
   ~PanelIndicatorObjectView ();
 
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsContext& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsContext &GfxContext, bool force_draw);
+  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
