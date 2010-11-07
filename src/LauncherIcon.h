@@ -50,6 +50,8 @@ public:
     
     int SortPriority ();
     
+    struct timeval VisibleTime ();
+    
     LauncherIconType Type ();
     
     nux::Color BackgroundColor ();
@@ -104,6 +106,7 @@ private:
     bool             _running;
     int              _sort_priority;
     LauncherIconType _icon_type;
+    struct timeval   _visible_time;
 };
 
 #endif // LAUNCHERICON_H

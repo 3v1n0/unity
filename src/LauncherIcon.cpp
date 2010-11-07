@@ -1,3 +1,5 @@
+#include <sys/time.h>
+
 #include "Nux/Nux.h"
 #include "Nux/VScrollBar.h"
 #include "Nux/HLayout.h"
@@ -18,7 +20,10 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _folding_angle = 0;
   m_IconManager = IconManager;
   m_TooltipText = "blank";
+
   _visible = true;
+  gettimeofday (&_visible_time, NULL);
+
   _active = false;
   _running = false;
   _background_color = nux::Color::White;
@@ -26,6 +31,7 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _tooltip = new nux::Tooltip ();
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
+  
 
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -174,6 +180,11 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
+struct timeval LauncherIcon::VisibleTime ()
+{
+  return _visible_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -183,9 +194,14 @@ LauncherIcon::SetVisible (bool visible)
   _visible = visible;
   
   if (visible)
+  {
+    gettimeofday (&_visible_time, NULL);
     show.emit (this);
+  }
   else
+  {
     hide.emit (this);
+  }
 }
 
 void

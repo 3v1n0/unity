@@ -18,11 +18,11 @@
 #include "LauncherModel.h"
 
 #define TimeDelta(tv1, tv2)						   \
-    ((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ? \
+    (((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ? \
     ((((tv1)->tv_sec - (tv2)->tv_sec) * 1000000) +			   \
      ((tv1)->tv_usec - (tv2)->tv_usec)) / 1000 :			   \
     ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +			   \
-     (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)) / 1000
+     (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)) / 1000)
 
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
@@ -202,6 +202,7 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _dnd_security           = 15;
     _dnd_delta              = 0;
+    _anim_handle            = 0;
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -223,19 +224,75 @@ float Launcher::GetHoverProgress ()
     gettimeofday (&current, NULL);
     
     if (_hovered)
-        return MIN (1.0f, TimeDelta (&current, &_enter_time) / (float) _anim_duration);
+        return MIN (1.0f, (float) (TimeDelta (&current, &_enter_time)) / (float) _anim_duration);
     else
-        return 1.0f - MIN (1.0f, TimeDelta (&current, &_exit_time) / (float) _anim_duration);
+        return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_exit_time)) / (float) _anim_duration);
 }
 
-bool Launcher::AnimationInProgress ()
+float Launcher::DnDExitProgress ()
 {
     struct timeval current;
     gettimeofday (&current, NULL);
     
-    return (TimeDelta (&current, &_enter_time) < _anim_duration)   ||
-           (TimeDelta (&current, &_exit_time) < _anim_duration)    ||
-           (TimeDelta (&current, &_drag_end_time) < _anim_duration);
+    return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) _anim_duration);
+}
+
+gboolean Launcher::AnimationTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->NeedRedraw ();
+    
+    if (self->AnimationInProgress ())
+      return true;
+    
+    // zero out handle so we know we are done
+    self->_anim_handle = 0;
+    return false;
+}
+
+void Launcher::EnsureAnimation ()
+{
+    if (_anim_handle)
+      return;
+    
+    NeedRedraw ();
+    
+    if (AnimationInProgress ())
+        _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
+}
+
+bool Launcher::AnimationInProgress ()
+{
+    // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
+    // this way extra checks may be avoided
+
+    // short circuit to avoid unneeded calculations
+    struct timeval current;
+    gettimeofday (&current, NULL);
+    
+    // hover in animation
+    if (TimeDelta (&current, &_enter_time) < _anim_duration)
+       return true;
+    
+    // hover out animation
+    if (TimeDelta (&current, &_exit_time) < _anim_duration)
+        return true;
+    
+    // drag end animation
+    if (TimeDelta (&current, &_drag_end_time) < _anim_duration)
+        return true;
+    
+    // animations happening on specific icons (just enter for now)
+    LauncherModel::iterator it;
+    for (it = _model->begin  (); it != _model->end (); it++)
+    {
+        struct timeval enter_time = (*it)->VisibleTime ();
+        if (TimeDelta (&current, &enter_time) < _anim_duration)
+            return true;
+    }
+    
+    return false;
 }
 
 void Launcher::SetTimeStruct (struct timeval *timer)
@@ -246,7 +303,7 @@ void Launcher::SetTimeStruct (struct timeval *timer)
 std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 {
     std::list<Launcher::RenderArg> result;
-    float hover_progress = 0.0f;
+    float hover_progress = GetHoverProgress ();
     float folding_constant = 0.15f;
     
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
@@ -254,6 +311,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     int folded_size = (int) (_icon_size * folding_not_constant);
     int folded_spacing = (int) (_space_between_icons * folding_not_constant);
     
+    float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
 
     nux::Geometry geo = GetGeometry ();
@@ -264,9 +322,15 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     center.y = _space_between_icons;
     center.z = 0;
     
+    float dnd_exit_progress = DnDExitProgress ();
+    
     if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
     {
         center.y += _dnd_delta;
+    }
+    else if (dnd_exit_progress > 0.0f)
+    {
+        center.y += _dnd_delta * dnd_exit_progress;
     }
     
     int max_flat_icons = ((geo.height - 300) - _space_between_icons) / (_icon_size + _space_between_icons);
@@ -277,6 +341,9 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     {
         folding_threshold = geo.height - (overflow * _icon_size * folding_constant) - 300;
     }
+    
+    struct timeval current;
+    gettimeofday (&current, NULL);
     
     for (it = _model->begin (); it != _model->end (); it++)
     {
@@ -296,19 +363,32 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         else
           arg.backlight_intensity = 0.0f;
         
+        struct timeval icon_visible_time = icon->VisibleTime ();
+        float size_modifier = 1.0f;
+        int enter_ms = TimeDelta (&current, &icon_visible_time);
+        float enter_progress = MIN (1.0f,  (float) enter_ms / (float) _anim_duration);
+        
+        center.z = 0;
+        
+        if (enter_progress < 1.0f)
+        {
+            center.z = 100.0f * (1.0f - enter_progress);
+            size_modifier *= enter_progress;
+        }
+        
         if (hover_progress >= 1.0f || overflow == 0)
         {
             //wewt no folding work to be done
-            center.y += _icon_size / 2;         // move to center
+            center.y += (_icon_size / 2) * size_modifier;         // move to center
             arg.center = nux::Point3 (center);       // copy center
-            center.y += (_icon_size / 2) + _space_between_icons;  // move to start of next icon
+            center.y += ((_icon_size / 2) + _space_between_icons) * size_modifier;  // move to start of next icon
         }
         else
         {
             //foldy mathy time
             if (center.y < folding_threshold)
             {
-                if (center.y + _icon_size >= folding_threshold)
+                if (center.y + (_icon_size * size_modifier) >= folding_threshold)
                 {
                     // icon is crossing threshold, start folding
                     
@@ -316,38 +396,39 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
                     float transition_progress = (center.y + _icon_size - folding_threshold) / (float) _icon_size;
                     float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
                     
-                    center.y += half_size;
+                    center.y += half_size * size_modifier;
                     arg.center = nux::Point3 (center);
-                    center.y += half_size + folded_spacing;
+                    center.y += (half_size + folded_spacing) * size_modifier;
                     
+                    arg.center.z += folded_z_distance * transition_progress;
                     arg.folding_rads = animation_neg_rads * transition_progress;
-                }
-                else if (center.y + _icon_size + _space_between_icons >= folding_threshold)
-                {
-                    // icon is not crossing threshold, however spacing is, collapse spacing
-                    center.y += _icon_size / 2;
-                    arg.center = nux::Point3 (center);
-                    center.y += _icon_size / 2;
-                    
-                    int passed = (center.y + _space_between_icons) - folding_threshold;
-                    
-                    center.y = folding_threshold + passed * folding_constant;
                 }
                 else
                 {
                     //we can draw flat HUZZAH
-                    center.y += _icon_size / 2;         // move to center
+                    center.y += (_icon_size / 2) * size_modifier;         // move to center
                     arg.center = nux::Point3 (center);       // copy center
-                    center.y += (_icon_size / 2) + _space_between_icons;  // move to start of next icon
+                    center.y += (_icon_size / 2) * size_modifier;
+                    
+                    if (center.y + _space_between_icons * size_modifier >= folding_threshold)
+                    {
+                        int passed = (center.y + (_space_between_icons) * size_modifier) - folding_threshold;
+                        center.y = folding_threshold + passed * folding_constant * size_modifier;
+                    }
+                    else
+                    {
+                        center.y += _space_between_icons * size_modifier;  // move to start of next icon
+        		        }
         		    }
             }
             else
             {
                 // we are past the threshold, fully fold
-                center.y += folded_size / 2;
+                center.y += (folded_size / 2) * size_modifier;
                 arg.center = nux::Point3 (center);
-                center.y += folded_size / 2 + folded_spacing;
+                center.y += (folded_size / 2 + folded_spacing) * size_modifier;
                 
+                arg.center.z += folded_z_distance;
                 arg.folding_rads = animation_neg_rads;
             }
         }
@@ -392,7 +473,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent
 void Launcher::OnIconAdded (void *icon_pointer)
 {
     LauncherIcon *icon = (LauncherIcon *) icon_pointer;
-    NeedRedraw();
+    EnsureAnimation();
     
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
@@ -400,7 +481,7 @@ void Launcher::OnIconAdded (void *icon_pointer)
 
 void Launcher::OnIconRemoved (void *icon_pointer)
 {
-    NeedRedraw();
+    EnsureAnimation();
 }
 
 void Launcher::OnOrderChanged ()
@@ -418,7 +499,7 @@ void Launcher::SetModel (LauncherModel *model)
 
 void Launcher::OnIconNeedsRedraw (void *icon)
 {
-    NeedRedraw();
+    EnsureAnimation();
 }
 
 long Launcher::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
@@ -895,12 +976,12 @@ void Launcher::PositionChildLayout(float offsetX, float offsetY)
 
 void Launcher::SlideDown(float stepy, int mousedy)
 {
-    NeedRedraw();
+    EnsureAnimation();
 }
 
 void Launcher::SlideUp(float stepy, int mousedy)
 {
-    NeedRedraw();
+    EnsureAnimation();
 }
 
 bool Launcher::TooltipNotify(LauncherIcon* Icon)
@@ -925,7 +1006,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   _dnd_delta = 0;
   
   MouseDownLogic ();
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -941,7 +1022,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
   MouseUpLogic ();
   _launcher_action_state = ACTION_NONE;
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -961,7 +1042,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   }
   
   _launcher_action_state = ACTION_DRAG_LAUNCHER;
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -970,7 +1051,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   SetHover ();
 
   EventLogic ();
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -981,7 +1062,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
       UnsetHover ();
   
   EventLogic ();
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -991,7 +1072,7 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   // Every time the mouse moves, we check if it is inside an icon...
 
   EventLogic ();
-  NeedRedraw ();
+  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags)
@@ -1049,6 +1130,11 @@ void Launcher::MouseUpLogic ()
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
     launcher_icon->MouseUp.emit ();
+  }
+  
+  if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
+  {
+    SetTimeStruct (&_drag_end_time);
   }
   
   _icon_mouse_down = 0;

@@ -67,10 +67,15 @@ private:
     bool          active_arrow;
   } RenderArg;
   
-  bool AnimationInProgress ();
-  void SetTimeStruct (struct timeval *timer);
-  float GetHoverProgress ();
+  static gboolean AnimationTimeout (gpointer data);
   
+  bool  AnimationInProgress ();
+  void  SetTimeStruct (struct timeval *timer);
+  void  EnsureAnimation ();
+  
+  float DnDExitProgress ();
+  float GetHoverProgress ();
+
   void SetHover   ();
   void UnsetHover ();
   
@@ -122,6 +127,7 @@ private:
   nux::BaseTexture* _icon_outline_texture;
   int _dnd_delta;
   int _dnd_security;
+  guint _anim_handle;
 
   nux::Matrix4  _view_matrix;
   nux::Matrix4  _projection_matrix;
