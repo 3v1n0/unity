@@ -110,7 +110,6 @@ private:
 
   bool  _hovered;
   int   _space_between_icons;
-  int   _anim_duration;
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;

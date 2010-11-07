@@ -23,6 +23,8 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
 
   _visible = true;
   gettimeofday (&_visible_time, NULL);
+  
+  _running_time.tv_sec = 0;
 
   _active = false;
   _running = false;
@@ -93,8 +95,8 @@ nux::Color LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf)
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = MAX (s, 0.5f);
-  v = .8f;
+    s = 0.4f;
+  v = .85f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
   
@@ -185,6 +187,11 @@ struct timeval LauncherIcon::VisibleTime ()
   return _visible_time;
 }
 
+struct timeval LauncherIcon::RunningTime ()
+{
+  return _running_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -220,6 +227,7 @@ void LauncherIcon::SetRunning (bool running)
     return;
     
   _running = running;
+  gettimeofday (&_running_time, NULL);
   needs_redraw.emit (this);
 }
 

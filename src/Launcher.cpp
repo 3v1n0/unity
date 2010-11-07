@@ -24,6 +24,10 @@
     ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +			   \
      (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)) / 1000)
 
+#define ANIM_DURATION_SHORT 125
+#define ANIM_DURATION 200
+#define ANIM_DURATION_LONG 350
+
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
@@ -187,7 +191,6 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
     _folded_angle         = 1.0f;
     _neg_folded_angle     = -1.0f;
     _space_between_icons  = 5;
-    _anim_duration        = 200;
     _launcher_top_y       = 0;
     _launcher_bottom_y    = 0;
     _folded_z_distance    = 10.0f;
@@ -224,9 +227,9 @@ float Launcher::GetHoverProgress ()
     gettimeofday (&current, NULL);
     
     if (_hovered)
-        return MIN (1.0f, (float) (TimeDelta (&current, &_enter_time)) / (float) _anim_duration);
+        return MIN (1.0f, (float) (TimeDelta (&current, &_enter_time)) / (float) ANIM_DURATION);
     else
-        return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_exit_time)) / (float) _anim_duration);
+        return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_exit_time)) / (float) ANIM_DURATION);
 }
 
 float Launcher::DnDExitProgress ()
@@ -234,7 +237,7 @@ float Launcher::DnDExitProgress ()
     struct timeval current;
     gettimeofday (&current, NULL);
     
-    return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) _anim_duration);
+    return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -272,23 +275,27 @@ bool Launcher::AnimationInProgress ()
     gettimeofday (&current, NULL);
     
     // hover in animation
-    if (TimeDelta (&current, &_enter_time) < _anim_duration)
+    if (TimeDelta (&current, &_enter_time) < ANIM_DURATION)
        return true;
     
     // hover out animation
-    if (TimeDelta (&current, &_exit_time) < _anim_duration)
+    if (TimeDelta (&current, &_exit_time) < ANIM_DURATION)
         return true;
     
     // drag end animation
-    if (TimeDelta (&current, &_drag_end_time) < _anim_duration)
+    if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION)
         return true;
     
-    // animations happening on specific icons (just enter for now)
+    // animations happening on specific icons
     LauncherModel::iterator it;
     for (it = _model->begin  (); it != _model->end (); it++)
     {
         struct timeval enter_time = (*it)->VisibleTime ();
-        if (TimeDelta (&current, &enter_time) < _anim_duration)
+        if (TimeDelta (&current, &enter_time) < ANIM_DURATION_SHORT)
+            return true;
+        
+        struct timeval running_time = (*it)->RunningTime ();
+        if (TimeDelta (&current, &running_time) < ANIM_DURATION_SHORT)
             return true;
     }
     
@@ -379,21 +386,32 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         arg.folding_rads   = 0.0f;
         
         // animate this shit
+        struct timeval running_time = icon->RunningTime ();
+        int running_ms = TimeDelta (&current, &running_time);
+
         if (icon->Running ())
-          arg.backlight_intensity = 1.0f;
+        {
+          arg.backlight_intensity = 0.2f + 0.8f * MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+        }
         else
-          arg.backlight_intensity = 0.0f;
+        {
+          if (running_ms > ANIM_DURATION_SHORT)
+            arg.backlight_intensity = 0.0f;
+          else
+            arg.backlight_intensity = 0.2f + 0.8f * (1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT));
+        }
         
         struct timeval icon_visible_time = icon->VisibleTime ();
         float size_modifier = 1.0f;
         int enter_ms = TimeDelta (&current, &icon_visible_time);
-        float enter_progress = MIN (1.0f,  (float) enter_ms / (float) _anim_duration);
+        float enter_progress = MIN (1.0f,  (float) enter_ms / (float) ANIM_DURATION_SHORT);
         
         // reset z
         center.z = 0;
         
         if (enter_progress < 1.0f)
         {
+            arg.alpha = enter_progress;
             center.z = 100.0f * (1.0f - enter_progress);
             size_modifier *= enter_progress;
         }
@@ -428,7 +446,7 @@ void Launcher::SetHover ()
         return;
     
     _hovered = true;
-    SetTimeStruct (&_enter_time, &_exit_time, _anim_duration);
+    SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
 }
 
 void Launcher::UnsetHover ()
@@ -437,7 +455,7 @@ void Launcher::UnsetHover ()
         return;
     
     _hovered = false;
-    SetTimeStruct (&_exit_time, &_enter_time, _anim_duration);
+    SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent)
@@ -632,11 +650,14 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
   
   nux::Color bkg_color;
   if (arg.backlight_intensity > 0.0f)
+  {
     bkg_color = arg.icon->BackgroundColor ();
+    bkg_color.SetAlpha (bkg_color.A () * arg.backlight_intensity);
+  }
   else    
+  {
     bkg_color = nux::Color(0xFF6D6D6D);
-  
-  nux::Color white = nux::Color::White;
+  }
   
   if(!USE_ARB_SHADERS)
   {
@@ -803,15 +824,17 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
   nux::Color bkg_color = nux::Color::White;
   nux::Color white = nux::Color::White;
   
+  bkg_color.SetAlpha (bkg_color.A () * arg.alpha);
+  
   if(!USE_ARB_SHADERS)
   {
-    CHECKGL ( glUniform4fARB (FragmentColor, white.R(), white.G(), white.B(), white.A() ) );
+    CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
     nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
-    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, white.R(), white.G(), white.B(), white.A() ) );
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
     nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }

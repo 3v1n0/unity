@@ -51,6 +51,7 @@ public:
     int SortPriority ();
     
     struct timeval VisibleTime ();
+    struct timeval RunningTime ();
     
     LauncherIconType Type ();
     
@@ -107,6 +108,7 @@ private:
     int              _sort_priority;
     LauncherIconType _icon_type;
     struct timeval   _visible_time;
+    struct timeval   _running_time;
 };
 
 #endif // LAUNCHERICON_H
