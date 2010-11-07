@@ -295,9 +295,32 @@ bool Launcher::AnimationInProgress ()
     return false;
 }
 
-void Launcher::SetTimeStruct (struct timeval *timer)
+void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int sister_relation)
 {
-    gettimeofday (timer, NULL);
+    struct timeval current;
+    gettimeofday (&current, NULL);
+    
+    if (sister)
+    {
+        int diff = TimeDelta (&current, sister);
+        
+        if (diff < sister_relation)
+        {
+            int remove = sister_relation - diff;
+            current.tv_sec -= remove / 1000;
+            remove = remove % 1000;
+            
+            if (remove > current.tv_usec / 1000)
+            {
+                current.tv_sec--;
+                current.tv_usec += 1000000;
+            }
+            current.tv_usec -= remove * 1000;
+        }
+    }
+    
+    timer->tv_sec = current.tv_sec;
+    timer->tv_usec = current.tv_usec;
 }
 
 std::list<Launcher::RenderArg> Launcher::RenderArgs ()
@@ -333,16 +356,16 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     
     int max_flat_icons = ((geo.height - 300) - _space_between_icons) / (_icon_size + _space_between_icons);
     int overflow = MAX (0, _model->Size () - max_flat_icons);
-    int folding_threshold = geo.height;
+    int folding_threshold = geo.height - (overflow * _icon_size * folding_constant) - 300;;
         
-    if (overflow > 0)
-    {
-        folding_threshold = geo.height - (overflow * _icon_size * folding_constant) - 300;
-    }
-    
     struct timeval current;
     gettimeofday (&current, NULL);
     
+    // The functional position we wish to represent for these icons is not smooth. Rather than introducing
+    // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
+    // function is not smooth it is continuous, which is more important for our visual representation (icons
+    // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
+    // as bugs.
     for (it = _model->begin (); it != _model->end (); it++)
     {
         RenderArg arg;
@@ -366,6 +389,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         int enter_ms = TimeDelta (&current, &icon_visible_time);
         float enter_progress = MIN (1.0f,  (float) enter_ms / (float) _anim_duration);
         
+        // reset z
         center.z = 0;
         
         if (enter_progress < 1.0f)
@@ -374,61 +398,23 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
             size_modifier *= enter_progress;
         }
         
-        if (hover_progress >= 1.0f || overflow == 0)
-        {
-            //wewt no folding work to be done
-            center.y += (_icon_size / 2) * size_modifier;         // move to center
-            arg.center = nux::Point3 (center);       // copy center
-            center.y += ((_icon_size / 2) + _space_between_icons) * size_modifier;  // move to start of next icon
-        }
-        else
-        {
-            //foldy mathy time
-            if (center.y < folding_threshold)
-            {
-                // deal with rendering things prior to folding threshold or things crossing it
-                float half_size;
-                
-                if (center.y + (_icon_size * size_modifier) >= folding_threshold)
-                {
-                    // goes for 0.0f when fully unfolded, to 1.0f folded
-                    float transition_progress = MAX (0.0f, (center.y + _icon_size - folding_threshold)) / (float) _icon_size;
-                    half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
-                  
-                    // icon is crossing threshold, start folding
-                    arg.center.z += folded_z_distance * transition_progress;
-                    arg.folding_rads = animation_neg_rads * transition_progress;
-                }
-                else
-                {
-                    half_size = _icon_size / 2.0f;
-                }
-                
-                center.y += half_size * size_modifier;         // move to center
-                arg.center = nux::Point3 (center);       // copy center
-                center.y += half_size * size_modifier;
-                
-                if (center.y + _space_between_icons * size_modifier >= folding_threshold)
-                {
-                    int passed = (center.y + (_space_between_icons) * size_modifier) - folding_threshold;
-                    center.y = folding_threshold + passed * folding_constant * size_modifier;
-                }
-                else
-                {
-                    center.y += _space_between_icons * size_modifier;  // move to start of next icon
-    		        }
-            }
-            else
-            {
-                // we are past the threshold, fully fold
-                center.y += (folded_size / 2) * size_modifier;
-                arg.center = nux::Point3 (center);
-                center.y += (folded_size / 2 + folded_spacing) * size_modifier;
-                
-                arg.center.z += folded_z_distance;
-                arg.folding_rads = animation_neg_rads;
-            }
-        }
+        // goes for 0.0f when fully unfolded, to 1.0f folded
+        float transition_progress = MIN (1.0f, MAX (0.0f, (center.y + _icon_size - folding_threshold)) / (float) _icon_size);
+        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
+      
+        // icon is crossing threshold, start folding
+        arg.center.z += folded_z_distance * transition_progress;
+        arg.folding_rads = animation_neg_rads * transition_progress;
+        
+        center.y += half_size * size_modifier;   // move to center
+        arg.center = nux::Point3 (center);       // copy center
+        center.y += half_size * size_modifier;   // move to end
+        
+        float spacing_overlap = MAX (0.0f, 
+                                 MIN (1.0f, 
+                                  (float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size));
+        //add spacing
+        center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
         
         result.push_back (arg);
     }
@@ -442,7 +428,7 @@ void Launcher::SetHover ()
         return;
     
     _hovered = true;
-    SetTimeStruct (&_enter_time);
+    SetTimeStruct (&_enter_time, &_exit_time, _anim_duration);
 }
 
 void Launcher::UnsetHover ()
@@ -451,7 +437,7 @@ void Launcher::UnsetHover ()
         return;
     
     _hovered = false;
-    SetTimeStruct (&_exit_time);
+    SetTimeStruct (&_exit_time, &_enter_time, _anim_duration);
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent)
@@ -649,7 +635,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
     bkg_color = arg.icon->BackgroundColor ();
   else    
     bkg_color = nux::Color(0xFF6D6D6D);
-    
+  
   nux::Color white = nux::Color::White;
   
   if(!USE_ARB_SHADERS)

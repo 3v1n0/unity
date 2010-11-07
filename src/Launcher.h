@@ -70,7 +70,7 @@ private:
   static gboolean AnimationTimeout (gpointer data);
   
   bool  AnimationInProgress ();
-  void  SetTimeStruct (struct timeval *timer);
+  void  SetTimeStruct (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
   void  EnsureAnimation ();
   
   float DnDExitProgress ();
