@@ -302,21 +302,19 @@ void Launcher::SetTimeStruct (struct timeval *timer)
 
 std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 {
+    nux::Geometry geo = GetGeometry ();
+    LauncherModel::iterator it;
+    nux::Point3 center;
     std::list<Launcher::RenderArg> result;
     float hover_progress = GetHoverProgress ();
+    float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
+    float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
+
     float folding_constant = 0.15f;
-    
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
     
     int folded_size = (int) (_icon_size * folding_not_constant);
     int folded_spacing = (int) (_space_between_icons * folding_not_constant);
-    
-    float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
-    float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
-
-    nux::Geometry geo = GetGeometry ();
-    LauncherModel::iterator it;
-    nux::Point3 center;
     
     center.x = geo.width / 2;
     center.y = _space_between_icons;
@@ -388,38 +386,37 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
             //foldy mathy time
             if (center.y < folding_threshold)
             {
+                // deal with rendering things prior to folding threshold or things crossing it
+                float half_size;
+                
                 if (center.y + (_icon_size * size_modifier) >= folding_threshold)
                 {
-                    // icon is crossing threshold, start folding
-                    
                     // goes for 0.0f when fully unfolded, to 1.0f folded
-                    float transition_progress = (center.y + _icon_size - folding_threshold) / (float) _icon_size;
-                    float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
-                    
-                    center.y += half_size * size_modifier;
-                    arg.center = nux::Point3 (center);
-                    center.y += (half_size + folded_spacing) * size_modifier;
-                    
+                    float transition_progress = MAX (0.0f, (center.y + _icon_size - folding_threshold)) / (float) _icon_size;
+                    half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
+                  
+                    // icon is crossing threshold, start folding
                     arg.center.z += folded_z_distance * transition_progress;
                     arg.folding_rads = animation_neg_rads * transition_progress;
                 }
                 else
                 {
-                    //we can draw flat HUZZAH
-                    center.y += (_icon_size / 2) * size_modifier;         // move to center
-                    arg.center = nux::Point3 (center);       // copy center
-                    center.y += (_icon_size / 2) * size_modifier;
-                    
-                    if (center.y + _space_between_icons * size_modifier >= folding_threshold)
-                    {
-                        int passed = (center.y + (_space_between_icons) * size_modifier) - folding_threshold;
-                        center.y = folding_threshold + passed * folding_constant * size_modifier;
-                    }
-                    else
-                    {
-                        center.y += _space_between_icons * size_modifier;  // move to start of next icon
-        		        }
-        		    }
+                    half_size = _icon_size / 2.0f;
+                }
+                
+                center.y += half_size * size_modifier;         // move to center
+                arg.center = nux::Point3 (center);       // copy center
+                center.y += half_size * size_modifier;
+                
+                if (center.y + _space_between_icons * size_modifier >= folding_threshold)
+                {
+                    int passed = (center.y + (_space_between_icons) * size_modifier) - folding_threshold;
+                    center.y = folding_threshold + passed * folding_constant * size_modifier;
+                }
+                else
+                {
+                    center.y += _space_between_icons * size_modifier;  // move to start of next icon
+    		        }
             }
             else
             {
