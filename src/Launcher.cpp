@@ -330,6 +330,13 @@ void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int
     timer->tv_usec = current.tv_usec;
 }
 
+float SizeModifierForIcon (LauncherIcon *icon, struct timeval current)
+{
+    struct timeval icon_visible_time = icon->VisibleTime ();
+    int enter_ms = TimeDelta (&current, &icon_visible_time);
+    return MIN (1.0f,  (float) enter_ms / (float) ANIM_DURATION_SHORT);
+}
+
 std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 {
     nux::Geometry geo = GetGeometry ();
@@ -339,6 +346,8 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     float hover_progress = GetHoverProgress ();
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
+    struct timeval current;
+    gettimeofday (&current, NULL);
 
     float folding_constant = 0.15f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
@@ -350,23 +359,19 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     center.y = _space_between_icons;
     center.z = 0;
     
+    float sum = 0.0f + center.y;
+    for (it = _model->begin (); it != _model->end (); it++)
+        sum += (_icon_size + _space_between_icons) * SizeModifierForIcon (*it, current);
+
+    float overflow = sum - geo.height;
+    int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
+    
     float dnd_exit_progress = DnDExitProgress ();
-    
     if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
-    {
         center.y += _dnd_delta;
-    }
     else if (dnd_exit_progress > 0.0f)
-    {
         center.y += _dnd_delta * dnd_exit_progress;
-    }
-    
-    int max_flat_icons = ((geo.height - 300) - _space_between_icons) / (_icon_size + _space_between_icons);
-    int overflow = MAX (0, _model->Size () - max_flat_icons);
-    int folding_threshold = geo.height - (overflow * _icon_size * folding_constant) - 300;;
-        
-    struct timeval current;
-    gettimeofday (&current, NULL);
+
     
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
@@ -401,19 +406,14 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
             arg.backlight_intensity = 0.2f + 0.8f * (1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT));
         }
         
-        struct timeval icon_visible_time = icon->VisibleTime ();
-        float size_modifier = 1.0f;
-        int enter_ms = TimeDelta (&current, &icon_visible_time);
-        float enter_progress = MIN (1.0f,  (float) enter_ms / (float) ANIM_DURATION_SHORT);
-        
         // reset z
         center.z = 0;
         
-        if (enter_progress < 1.0f)
+        float size_modifier = SizeModifierForIcon (icon, current);
+        if (size_modifier < 1.0f)
         {
-            arg.alpha = enter_progress;
-            center.z = 100.0f * (1.0f - enter_progress);
-            size_modifier *= enter_progress;
+            arg.alpha = size_modifier;
+            center.z = 100.0f * (1.0f - size_modifier);
         }
         
         // goes for 0.0f when fully unfolded, to 1.0f folded
