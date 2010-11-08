@@ -25,8 +25,8 @@
      (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)) / 1000)
 
 #define ANIM_DURATION_SHORT 125
-#define ANIM_DURATION 200
-#define ANIM_DURATION_LONG 350
+#define ANIM_DURATION       200
+#define ANIM_DURATION_LONG  350
 
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
@@ -237,7 +237,7 @@ float Launcher::DnDExitProgress ()
     struct timeval current;
     gettimeofday (&current, NULL);
     
-    return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION);
+    return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -283,7 +283,7 @@ bool Launcher::AnimationInProgress ()
         return true;
     
     // drag end animation
-    if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
         return true;
     
     // animations happening on specific icons
@@ -379,12 +379,35 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     float overflow = sum - geo.height;
     int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
     
-    float dnd_exit_progress = DnDExitProgress ();
-    if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
-        center.y += _dnd_delta;
-    else if (dnd_exit_progress > 0.0f)
-        center.y += _dnd_delta * dnd_exit_progress;
-
+    
+    if (hover_progress > 0.0f)
+    {
+        int delta_y = _dnd_delta;
+        
+        if (hover_progress > 0.0f)
+            delta_y *= hover_progress;
+        
+        if (hover_progress >= 1.0f && _launcher_action_state != ACTION_DRAG_LAUNCHER)
+        {
+            float dnd_progress = DnDExitProgress ();
+            
+            float max = 0;
+            float min = MIN (0.0f, geo.height - sum);
+            if (_dnd_delta > max)
+                delta_y = max + (delta_y - max) * dnd_progress * hover_progress;
+            else if (_dnd_delta < min)
+                delta_y = min + (delta_y - min) * dnd_progress * hover_progress;
+            
+            if (dnd_progress == 0.0f)
+                _dnd_delta = (int) delta_y;
+        }
+        
+        center.y += delta_y;
+    } 
+    else 
+    {
+        _dnd_delta = 0;
+    }
     
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
@@ -555,7 +578,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
   
   icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
 
-  if(arg.folding_rads == 0.0f)
+  if(nux::Abs (arg.folding_rads) < 0.15f)
   {
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
   }
@@ -724,7 +747,7 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
  
   icon = arg.icon->TextureForSize (_icon_image_size);
   
-  if(arg.folding_rads == 0.0f)
+  if(nux::Abs (arg.folding_rads) < 0.15f)
   {
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
   }
@@ -1032,7 +1055,6 @@ void Launcher::NotifyMenuTermination(LauncherIcon* Icon)
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
-  _dnd_delta = 0;
   
   MouseDownLogic ();
   EnsureAnimation ();
@@ -1329,6 +1351,7 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
     launcher_icon->_xform_icon_screen_coord[0].y = v0.y;
     launcher_icon->_xform_icon_screen_coord[0].z = v0.z;
     launcher_icon->_xform_icon_screen_coord[0].w = v0.w;
+
     launcher_icon->_xform_icon_screen_coord[1].x = v1.x;
     launcher_icon->_xform_icon_screen_coord[1].y = v1.y;
     launcher_icon->_xform_icon_screen_coord[1].z = v1.z;
