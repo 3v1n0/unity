@@ -7,7 +7,7 @@
 #include "Nux/MenuPage.h"
 
 #include "NuxGraphics/NuxGraphics.h"
-#include "NuxGraphics/GLDeviceFactory.h"
+#include "NuxGraphics/GpuDevice.h"
 #include "NuxGraphics/GLTextureResourceManager.h"
 
 #include "Nux/BaseWindow.h"
@@ -633,7 +633,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
     
-    nux::GetThreadGraphicsContext ()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
@@ -641,7 +641,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetThreadGraphicsContext ()->GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -653,7 +653,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
     VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
@@ -685,13 +685,13 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
   if(!USE_ARB_SHADERS)
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   
@@ -806,7 +806,7 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
     
-    nux::GetThreadGraphicsContext ()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
@@ -814,7 +814,7 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetThreadGraphicsContext ()->GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -826,7 +826,7 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
     VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
@@ -852,13 +852,13 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
   if(!USE_ARB_SHADERS)
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetThreadGraphicsContext()->SetTexture(GL_TEXTURE0, icon);
+    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   

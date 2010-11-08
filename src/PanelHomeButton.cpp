@@ -71,6 +71,7 @@ PanelHomeButton::Refresh ()
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
   
+  // The Texture is created with a reference count of 1.
   nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
@@ -91,8 +92,13 @@ PanelHomeButton::Refresh ()
                                                             );
 
   SetPaintLayer(texture_layer);
+
+  // We don't need the texture anymore. Since it hasn't been reference, it ref count should still be 1.
+  // UnReference it and it will be destroyed.  
+  texture2D->UnReference ();
   
-  delete texture2D;
+  // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
+  delete texture_layer;
   
   NeedRedraw ();
 }

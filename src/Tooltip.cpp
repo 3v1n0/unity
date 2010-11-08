@@ -5,7 +5,7 @@
 #include "Nux/WindowCompositor.h"
 #include "Nux/BaseWindow.h"
 #include "Nux/Button.h"
-#include "NuxGraphics/OpenGLEngine.h"
+#include "NuxGraphics/GraphicsEngine.h"
 #include "NuxGraphics/GfxEventsX11.h"
 #include "NuxGraphics/GfxSetupX11.h"
 #include "Nux/TextureArea.h"
