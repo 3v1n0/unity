@@ -48,11 +48,6 @@ SimpleLauncherIcon::OnMouseLeave ()
 {
 }
 
-void SimpleLauncherIcon::Remove ()
-{
-    remove.emit (this);
-}
-
 nux::BaseTexture *
 SimpleLauncherIcon::GetTextureForSize (int size)
 {

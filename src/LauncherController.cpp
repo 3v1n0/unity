@@ -43,6 +43,7 @@ LauncherController::InsertExpoAction ()
     expoIcon->SetTooltipText ("Workspace Switcher");
     expoIcon->SetIconName ("workspace-switcher");
     expoIcon->SetVisible (true);
+    expoIcon->SetRunning (false);
     
     expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
     
@@ -50,40 +51,9 @@ LauncherController::InsertExpoAction ()
 }
 
 void
-LauncherController::OnIconShow (void *sender)
-{
-    LauncherIcon *icon = (LauncherIcon *) sender;
-    _model->AddIcon (icon);
-}
-
-void
-LauncherController::OnIconHide (void *sender)
-{
-    LauncherIcon *icon = (LauncherIcon *) sender;
-    _model->RemoveIcon (icon);
-}
-
-void
-LauncherController::OnIconRemove (void *sender)
-{
-    LauncherIcon *icon = (LauncherIcon *) sender;
-    _model->RemoveIcon (icon);
-    
-    m_Icons.remove (icon);
-    delete icon;
-}
-
-void
 LauncherController::RegisterIcon (LauncherIcon *icon)
 {
-    icon->show.connect   (sigc::mem_fun (this, &LauncherController::OnIconShow));
-    icon->hide.connect   (sigc::mem_fun (this, &LauncherController::OnIconHide));
-    icon->remove.connect (sigc::mem_fun (this, &LauncherController::OnIconRemove));
-    
-    m_Icons.push_back (icon);
-    
-    if (icon->Visible ())
-        _model->AddIcon (icon);
+    _model->AddIcon (icon);
 }
 
 /* static private */
@@ -122,10 +92,10 @@ LauncherController::CreateFavorite (const char *file_path)
     app = bamf_matcher_get_application_for_desktop_file (m_Matcher, file_path, true);
     
     if (g_object_get_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen")))
-      {
+    {
         bamf_view_set_sticky (BAMF_VIEW (app), true);
         return;
-      }
+    }
     
     g_object_set_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (1));
     

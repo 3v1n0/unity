@@ -28,7 +28,7 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
-class LauncherIcon: public sigc::trackable
+class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
     LauncherIcon(Launcher* IconManager);
@@ -50,7 +50,8 @@ public:
     
     int SortPriority ();
     
-    struct timeval VisibleTime ();
+    struct timeval ShowTime ();
+    struct timeval HideTime ();
     struct timeval RunningTime ();
     
     LauncherIconType Type ();
@@ -74,6 +75,7 @@ protected:
     void SetVisible (bool visible);
     void SetActive (bool active);
     void SetRunning (bool running);
+    void Remove ();
     
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
@@ -107,7 +109,8 @@ private:
     bool             _running;
     int              _sort_priority;
     LauncherIconType _icon_type;
-    struct timeval   _visible_time;
+    struct timeval   _show_time;
+    struct timeval   _hide_time;
     struct timeval   _running_time;
 };
 

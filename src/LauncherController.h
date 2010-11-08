@@ -33,7 +33,6 @@ private:
     Launcher* m_Launcher;
     LauncherModel* _model;
     nux::BaseWindow* m_Window;
-    std::list<LauncherIcon *> m_Icons;
     FavoriteStore* m_FavoriteStore;
 
     void InsertExpoAction ();
@@ -44,12 +43,6 @@ private:
 
     void SetupBamf ();
 
-    void OnIconShow (void *sender);
-    
-    void OnIconHide (void *sender);
-    
-    void OnIconRemove (void *sender);
-    
     void OnExpoClicked ();
     
     /* statics */

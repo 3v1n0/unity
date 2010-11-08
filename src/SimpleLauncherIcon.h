@@ -22,7 +22,6 @@ public:
     nux::BaseTexture * GetTextureForSize (int size);
     
     void SetIconName (const char *name);
-    void Remove ();
 
 protected:
     virtual void OnMouseDown ();

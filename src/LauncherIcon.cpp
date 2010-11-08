@@ -21,19 +21,23 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   m_IconManager = IconManager;
   m_TooltipText = "blank";
 
-  _visible = true;
-  gettimeofday (&_visible_time, NULL);
-  
+  _show_time.tv_sec = 0;
+  _hide_time.tv_sec = 0;
   _running_time.tv_sec = 0;
 
-  _active = false;
+  _show_time.tv_usec = 0;
+  _hide_time.tv_usec = 0;
+  _running_time.tv_usec = 0;
+
+  _active  = false;
   _running = false;
+  _visible = false;
+
   _background_color = nux::Color::White;
   _mouse_inside = false;
   _tooltip = new nux::Tooltip ();
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
-  
 
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -182,9 +186,14 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
-struct timeval LauncherIcon::VisibleTime ()
+struct timeval LauncherIcon::ShowTime ()
 {
-  return _visible_time;
+  return _show_time;
+}
+
+struct timeval LauncherIcon::HideTime ()
+{
+  return _hide_time;
 }
 
 struct timeval LauncherIcon::RunningTime ()
@@ -200,13 +209,16 @@ LauncherIcon::SetVisible (bool visible)
       
   _visible = visible;
   
+  needs_redraw.emit (this);
+
   if (visible)
   {
-    gettimeofday (&_visible_time, NULL);
+    gettimeofday (&_show_time, NULL);
     show.emit (this);
   }
   else
   {
+    gettimeofday (&_hide_time, NULL);
     hide.emit (this);
   }
 }
@@ -229,6 +241,13 @@ void LauncherIcon::SetRunning (bool running)
   _running = running;
   gettimeofday (&_running_time, NULL);
   needs_redraw.emit (this);
+}
+
+
+void LauncherIcon::Remove ()
+{
+  SetVisible (false);
+  remove.emit (this);
 }
 
 void 

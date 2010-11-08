@@ -65,6 +65,7 @@ private:
     float         glow_intensity;
     bool          running_arrow;
     bool          active_arrow;
+    bool          skip;
   } RenderArg;
   
   static gboolean AnimationTimeout (gpointer data);

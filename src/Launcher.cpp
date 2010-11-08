@@ -290,8 +290,12 @@ bool Launcher::AnimationInProgress ()
     LauncherModel::iterator it;
     for (it = _model->begin  (); it != _model->end (); it++)
     {
-        struct timeval enter_time = (*it)->VisibleTime ();
+        struct timeval enter_time = (*it)->ShowTime ();
         if (TimeDelta (&current, &enter_time) < ANIM_DURATION_SHORT)
+            return true;
+        
+        struct timeval hide_time = (*it)->HideTime ();
+        if (TimeDelta (&current, &hide_time) < ANIM_DURATION_SHORT)
             return true;
         
         struct timeval running_time = (*it)->RunningTime ();
@@ -332,9 +336,18 @@ void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int
 
 float SizeModifierForIcon (LauncherIcon *icon, struct timeval current)
 {
-    struct timeval icon_visible_time = icon->VisibleTime ();
-    int enter_ms = TimeDelta (&current, &icon_visible_time);
-    return MIN (1.0f,  (float) enter_ms / (float) ANIM_DURATION_SHORT);
+    if (icon->Visible ())
+    {
+        struct timeval icon_visible_time = icon->ShowTime ();
+        int enter_ms = TimeDelta (&current, &icon_visible_time);
+        return MIN (1.0f,  (float) enter_ms / (float) ANIM_DURATION_SHORT);
+    }
+    else
+    {
+        struct timeval icon_hide_time = icon->HideTime ();
+        int hide_ms = TimeDelta (&current, &icon_hide_time);
+        return 1.0f - MIN (1.0f,  (float) hide_ms / (float) ANIM_DURATION_SHORT);
+    }
 }
 
 std::list<Launcher::RenderArg> Launcher::RenderArgs ()
@@ -389,6 +402,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         arg.running_arrow  = false;
         arg.active_arrow   = icon->Active ();
         arg.folding_rads   = 0.0f;
+        arg.skip           = false;
         
         // animate this shit
         struct timeval running_time = icon->RunningTime ();
@@ -414,6 +428,12 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         {
             arg.alpha = size_modifier;
             center.z = 100.0f * (1.0f - size_modifier);
+        }
+        
+        if (size_modifier <= 0.0f)
+        {
+            arg.skip = true;
+            continue;
         }
         
         // goes for 0.0f when fully unfolded, to 1.0f folded
@@ -474,6 +494,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent
 void Launcher::OnIconAdded (void *icon_pointer)
 {
     LauncherIcon *icon = (LauncherIcon *) icon_pointer;
+    icon->Reference ();
     EnsureAnimation();
     
     // needs to be disconnected
@@ -482,6 +503,8 @@ void Launcher::OnIconAdded (void *icon_pointer)
 
 void Launcher::OnIconRemoved (void *icon_pointer)
 {
+    LauncherIcon *icon = (LauncherIcon *) icon_pointer;
+    icon->UnReference ();
     EnsureAnimation();
 }
 
@@ -899,7 +922,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
-      if ((*rev_it).folding_rads >= 0.0f)
+      if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
         continue;
 
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
@@ -923,7 +946,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg>::iterator it;
     for (it = args.begin(); it != args.end(); it++)
     {
-      if ((*it).folding_rads < 0.0f)
+      if ((*it).folding_rads < 0.0f || (*it).skip)
         continue;
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
@@ -1156,7 +1179,7 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   LauncherModel::reverse_iterator rev_it;
   for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
   {
-    if ((*rev_it)->_folding_angle < 0.0f)
+    if ((*rev_it)->_folding_angle < 0.0f || !(*rev_it)->Visible ())
       continue;
 
     nux::Point2 screen_coord [4];
@@ -1173,7 +1196,7 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   LauncherModel::iterator it;
   for (it = _model->begin(); it != _model->end (); it++)
   {
-    if ((*it)->_folding_angle >= 0.0f)
+    if ((*it)->_folding_angle >= 0.0f || !(*it)->Visible ())
       continue;
 
     nux::Point2 screen_coord [4];
@@ -1204,6 +1227,9 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
   std::list<Launcher::RenderArg>::iterator it;
   for(it = args.begin(); it != args.end(); it++)
   {
+    if ((*it).skip)
+      continue;
+    
     LauncherIcon* launcher_icon = (*it).icon;
     
     // We to store the icon angle in the icons itself. Makes one thing easier afterward.

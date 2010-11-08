@@ -31,10 +31,13 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
     g_signal_connect (app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
     g_signal_connect (app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
+    
+    g_object_ref (m_App);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+    g_object_unref (m_App);
 }
 
 void
