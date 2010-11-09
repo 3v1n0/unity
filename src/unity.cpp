@@ -458,8 +458,11 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
     UnityScreen *self = (UnityScreen*) data;  
     
-    self->launcherWindow->InputWindowEnableStruts(false);
-    self->launcherWindow->InputWindowEnableStruts(true);
+    if (!self->launcher->AutohideEnabled ())
+    {
+        self->launcherWindow->InputWindowEnableStruts(false);
+        self->launcherWindow->InputWindowEnableStruts(true);
+    }
     
     self->panelWindow->InputWindowEnableStruts(false);
     self->panelWindow->InputWindowEnableStruts(true);
@@ -515,6 +518,9 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->InputWindowEnableStruts(true);
   
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+  
+  /*self->launcher->SetAutohide (true, (nux::View*) self->panelView->HomeButton ());
+  self->launcher->SetFloating (true);*/
 }
 
 UnityWindow::UnityWindow (CompWindow *window) :

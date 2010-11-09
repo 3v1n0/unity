@@ -40,6 +40,8 @@ public:
   virtual long PostLayoutManagement (long LayoutResult);
   
   void OnObjectAdded (IndicatorObjectProxy *proxy);
+  
+  PanelHomeButton * HomeButton ();
 
 private:
   void UpdateBackground ();

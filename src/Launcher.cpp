@@ -210,8 +210,11 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
+    _autohide_handle        = 0;
     _floating               = false;
     _hovered                = false;
+    _autohide               = false;
+    _hidden                 = false;
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -220,6 +223,8 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _exit_time.tv_usec = 0;
     _drag_end_time.tv_sec = 0;
     _drag_end_time.tv_usec = 0;
+    _autohide_time.tv_sec = 0;
+    _autohide_time.tv_usec = 0;
 }
 
 Launcher::~Launcher()
@@ -244,6 +249,20 @@ float Launcher::DnDExitProgress ()
     gettimeofday (&current, NULL);
     
     return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG);
+}
+
+float Launcher::AutohideProgress ()
+{
+    if (!_autohide)
+        return 0.0f;
+        
+    struct timeval current;
+    gettimeofday (&current, NULL);
+    
+    if (_hidden)
+        return MIN (1.0f, (float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG);
+    else
+        return 1.0f - MIN (1.0f, (float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -290,6 +309,9 @@ bool Launcher::AnimationInProgress ()
     
     // drag end animation
     if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
+        return true;
+    
+    if (TimeDelta (&current, &_autohide_time) < ANIM_DURATION_LONG)
         return true;
     
     // animations happening on specific icons
@@ -356,7 +378,7 @@ float SizeModifierForIcon (LauncherIcon *icon, struct timeval current)
     }
 }
 
-std::list<Launcher::RenderArg> Launcher::RenderArgs ()
+std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
 {
     nux::Geometry geo = GetGeometry ();
     LauncherModel::iterator it;
@@ -384,8 +406,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 
     float overflow = sum - geo.height;
     int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
-    
-    
+
     if (hover_progress > 0.0f)
     {
         int delta_y = _dnd_delta;
@@ -414,6 +435,21 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     {
         _dnd_delta = 0;
     }
+    
+    float autohide_progress = AutohideProgress ();
+    if (_autohide && autohide_progress > 0.0f)
+    {
+        center.y -= geo.height * autohide_progress;
+    }
+    
+    // Inform the painter where to paint the box
+    box_geo = geo;
+
+    if (_floating)
+        box_geo.height = sum + _space_between_icons;
+    
+    if (_autohide)
+        box_geo.height -= box_geo.height * autohide_progress;
     
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
@@ -490,6 +526,90 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     return result;
 }
 
+void Launcher::SetHidden (bool hidden)
+{
+    if (hidden == _hidden)
+        return;
+        
+    _hidden = hidden;
+    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION);
+    
+    _parent->EnableInputWindow(!hidden);
+    
+    EnsureAnimation ();
+}
+
+gboolean Launcher::OnAutohideTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+ 
+    if (self->_hovered || self->_hidden)
+        return false;
+    
+    self->SetHidden (true);
+
+    self->_autohide_handle = 0;
+    return false;
+}
+
+void Launcher::OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+    if (!_autohide || !_hidden)
+        return;
+    
+    SetHidden (false);
+}
+
+void Launcher::SetupAutohideTimer ()
+{
+    if (_autohide)
+    {
+        if (_autohide_handle > 0)
+            g_source_remove (_autohide_handle);
+        _autohide_handle = g_timeout_add (2000, &Launcher::OnAutohideTimeout, this);
+    }
+}
+
+void Launcher::OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+    SetupAutohideTimer ();
+}
+
+bool Launcher::AutohideEnabled ()
+{
+    return _autohide;
+}
+
+void Launcher::SetAutohide (bool autohide, nux::View *trigger)
+{
+    if (_autohide == autohide)
+        return;
+    
+    if (autohide)
+    {
+        _parent->InputWindowEnableStruts(false);
+        _autohide_trigger = trigger;
+        _autohide_trigger->OnMouseEnter.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseEnter));
+        _autohide_trigger->OnMouseLeave.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseLeave));
+    }
+    else
+    {
+        _parent->InputWindowEnableStruts(true);
+    }
+    
+    _autohide = autohide;
+    EnsureAnimation ();
+}
+
+void Launcher::SetFloating (bool floating)
+{
+    if (_floating == floating)
+        return;
+    
+    _floating = floating;
+    EnsureAnimation ();
+}
+
 void Launcher::SetHover ()
 {
     if (_hovered)
@@ -506,6 +626,7 @@ void Launcher::UnsetHover ()
     
     _hovered = false;
     SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
+    SetupAutohideTimer ();
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)
@@ -916,25 +1037,18 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
     GfxContext.PushClippingRectangle(base);
+    nux::Geometry bkg_box;
 
     nux::ROPConfig ROP;
     ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    std::list<Launcher::RenderArg> args = RenderArgs ();
+    std::list<Launcher::RenderArg> args = RenderArgs (bkg_box);
 
-    if (!_floating)
-    {
-        gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x99000000), true, ROP);
-        gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (base.x + base.width - 1, base.y, 1, base.height), nux::Color(0x60FFFFFF), true, ROP);
-    }
-    else
-    {
-        nux::Geometry geo = base;
-        geo.height = args.back ().center.y + _icon_size;
-        gPainter.PushDrawColorLayer(GfxContext, geo, nux::Color(0x99000000), true, ROP);
-    }
+    gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
+    gPainter.PushDrawColorLayer(GfxContext, bkg_box, nux::Color(0x99000000), true, ROP);
+    gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF), true, ROP);
     
     UpdateIconXForm (args);
     EventLogic ();

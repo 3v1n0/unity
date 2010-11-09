@@ -57,6 +57,12 @@ PanelView::~PanelView ()
   delete _bg_layer;
 }
 
+PanelHomeButton * 
+PanelView::HomeButton ()
+{
+  return _home_button;
+}
+
 long
 PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {

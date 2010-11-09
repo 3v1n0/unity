@@ -35,6 +35,9 @@ public:
     
     void SetFloating (bool floating);
     
+    void SetAutohide (bool autohide, nux::View *show_trigger);
+    bool AutohideEnabled ();
+    
     virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -71,18 +74,26 @@ private:
   } RenderArg;
   
   static gboolean AnimationTimeout (gpointer data);
+  static gboolean OnAutohideTimeout (gpointer data);
   
-  bool  AnimationInProgress ();
-  void  SetTimeStruct (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
-  void  EnsureAnimation ();
+  void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
+  bool AnimationInProgress ();
+  void SetTimeStruct (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
+  
+  void EnsureAnimation ();
+  void SetupAutohideTimer ();
   
   float DnDExitProgress ();
   float GetHoverProgress ();
+  float AutohideProgress ();
 
   void SetHover   ();
   void UnsetHover ();
+  void SetHidden (bool hidden);
   
-  std::list<RenderArg> RenderArgs ();
+  std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
 
   void OnIconAdded (void *icon_pointer);
   void OnIconRemoved (void *icon_pointer);
@@ -110,6 +121,8 @@ private:
 
   bool  _hovered;
   bool  _floating;
+  bool  _autohide;
+  bool  _hidden;
   int   _space_between_icons;
   float _folded_angle;
   float _neg_folded_angle;
@@ -129,6 +142,7 @@ private:
   int _dnd_delta;
   int _dnd_security;
   guint _anim_handle;
+  guint _autohide_handle;
 
   nux::Matrix4  _view_matrix;
   nux::Matrix4  _projection_matrix;
@@ -139,12 +153,14 @@ private:
   nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
+  nux::View* _autohide_trigger;
   LauncherModel* _model;
   
   /* event times */
   struct timeval _enter_time;
   struct timeval _exit_time;
   struct timeval _drag_end_time;
+  struct timeval _autohide_time;
 };
 
 #endif // LAUNCHER_H
