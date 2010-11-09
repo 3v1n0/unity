@@ -57,6 +57,12 @@ PanelView::~PanelView ()
   delete _bg_layer;
 }
 
+PanelHomeButton * 
+PanelView::HomeButton ()
+{
+  return _home_button;
+}
+
 long
 PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
@@ -66,7 +72,7 @@ PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 }
 
 void
-PanelView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+PanelView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
 
@@ -154,7 +160,7 @@ PanelView::UpdateBackground ()
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 
-  texture2D->UnReference ();
+  delete texture2D;
 
   NeedRedraw ();
 }

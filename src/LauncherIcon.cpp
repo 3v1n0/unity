@@ -1,3 +1,5 @@
+#include <sys/time.h>
+
 #include "Nux/Nux.h"
 #include "Nux/VScrollBar.h"
 #include "Nux/HLayout.h"
@@ -18,9 +20,19 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _folding_angle = 0;
   m_IconManager = IconManager;
   m_TooltipText = "blank";
-  _visible = true;
-  _active = false;
+
+  _show_time.tv_sec = 0;
+  _hide_time.tv_sec = 0;
+  _running_time.tv_sec = 0;
+
+  _show_time.tv_usec = 0;
+  _hide_time.tv_usec = 0;
+  _running_time.tv_usec = 0;
+
+  _active  = false;
   _running = false;
+  _visible = false;
+
   _background_color = nux::Color::White;
   _mouse_inside = false;
   _tooltip = new nux::Tooltip ();
@@ -43,7 +55,6 @@ nux::Color LauncherIcon::BackgroundColor ()
 nux::BaseTexture * LauncherIcon::TextureForSize (int size)
 {
   nux::BaseTexture * result = GetTextureForSize (size);
-  
   return result;
 }
 
@@ -88,8 +99,8 @@ nux::Color LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf)
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = MAX (s, 0.5f);
-  v = .8f;
+    s = 0.4f;
+  v = .85f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
   
@@ -175,6 +186,21 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
+struct timeval LauncherIcon::ShowTime ()
+{
+  return _show_time;
+}
+
+struct timeval LauncherIcon::HideTime ()
+{
+  return _hide_time;
+}
+
+struct timeval LauncherIcon::RunningTime ()
+{
+  return _running_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -183,10 +209,18 @@ LauncherIcon::SetVisible (bool visible)
       
   _visible = visible;
   
+  needs_redraw.emit (this);
+
   if (visible)
+  {
+    gettimeofday (&_show_time, NULL);
     show.emit (this);
+  }
   else
+  {
+    gettimeofday (&_hide_time, NULL);
     hide.emit (this);
+  }
 }
 
 void
@@ -205,7 +239,15 @@ void LauncherIcon::SetRunning (bool running)
     return;
     
   _running = running;
+  gettimeofday (&_running_time, NULL);
   needs_redraw.emit (this);
+}
+
+
+void LauncherIcon::Remove ()
+{
+  SetVisible (false);
+  remove.emit (this);
 }
 
 void 

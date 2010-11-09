@@ -21,6 +21,8 @@ public:
     void RemoveIcon (LauncherIcon *icon);
     void Sort (SortFunc func);
     int  Size ();
+
+    void OnIconRemove (void *icon);
     
     iterator begin ();
     iterator end ();
@@ -33,6 +35,8 @@ public:
     
 private:
     Base _inner;
+    
+    static gboolean RemoveCallback (gpointer data);
 };
 
 #endif // LAUNCHERMODEL_H

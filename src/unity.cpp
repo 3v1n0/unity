@@ -458,8 +458,11 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
     UnityScreen *self = (UnityScreen*) data;  
     
-    self->launcherWindow->InputWindowEnableStruts(false);
-    self->launcherWindow->InputWindowEnableStruts(true);
+    if (!self->launcher->AutohideEnabled ())
+    {
+        self->launcherWindow->InputWindowEnableStruts(false);
+        self->launcherWindow->InputWindowEnableStruts(true);
+    }
     
     self->panelWindow->InputWindowEnableStruts(false);
     self->panelWindow->InputWindowEnableStruts(true);
@@ -471,7 +474,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 {
   UnityScreen *self = (UnityScreen*) InitData;
   
-  self->launcher = new Launcher();
+  self->launcherWindow = new nux::BaseWindow(TEXT(""));
+  self->launcher = new Launcher(self->launcherWindow);
 
   nux::HLayout* layout = new nux::HLayout();
 
@@ -480,7 +484,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
@@ -491,7 +494,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->EnableInputWindow(true);
   self->launcherWindow->InputWindowEnableStruts(true);
 
-  self->launcher->SetIconSize (54, 48, self->launcherWindow);
+  self->launcher->SetIconSize (54, 48);
 
   /* Setup panel */
   self->panelView = new PanelView ();
@@ -515,6 +518,9 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->InputWindowEnableStruts(true);
   
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+  
+  /*self->launcher->SetAutohide (true, (nux::View*) self->panelView->HomeButton ());
+  self->launcher->SetFloating (true);*/
 }
 
 UnityWindow::UnityWindow (CompWindow *window) :

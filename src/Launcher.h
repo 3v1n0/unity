@@ -1,6 +1,8 @@
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
+#include <sys/time.h>
+
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include "LauncherIcon.h"
@@ -12,7 +14,7 @@ class LauncherModel;
 class Launcher : public nux::View
 {
 public:
-    Launcher(NUX_FILE_LINE_PROTO);
+    Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
     ~Launcher();
 
     virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -26,10 +28,15 @@ public:
     bool TooltipNotify(LauncherIcon* Icon);
     bool MenuNotify(LauncherIcon* Icon);
     
-    void SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent);
+    void SetIconSize(int tile_size, int icon_size);
     void NotifyMenuTermination(LauncherIcon* Icon);
     
     void SetModel (LauncherModel *model);
+    
+    void SetFloating (bool floating);
+    
+    void SetAutohide (bool autohide, nux::View *show_trigger);
+    bool AutohideEnabled ();
     
     virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -52,36 +59,59 @@ private:
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
   } LauncherActionState;
+  
+  typedef struct
+  {
+    LauncherIcon *icon;
+    nux::Point3   center;
+    float         folding_rads;
+    float         alpha;
+    float         backlight_intensity;
+    float         glow_intensity;
+    bool          running_arrow;
+    bool          active_arrow;
+    bool          skip;
+  } RenderArg;
+  
+  static gboolean AnimationTimeout (gpointer data);
+  static gboolean OnAutohideTimeout (gpointer data);
+  
+  void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
+  bool AnimationInProgress ();
+  void SetTimeStruct (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
+  
+  void EnsureAnimation ();
+  void SetupAutohideTimer ();
+  
+  float DnDExitProgress ();
+  float GetHoverProgress ();
+  float AutohideProgress ();
+
+  void SetHover   ();
+  void UnsetHover ();
+  void SetHidden (bool hidden);
+  
+  std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
 
   void OnIconAdded (void *icon_pointer);
   void OnIconRemoved (void *icon_pointer);
   void OnOrderChanged ();
 
-
   void OnIconNeedsRedraw (void *icon);
 
-  void FoldingCallback(void* v);
-  void RevealCallback(void* v);
-
-  void RenderIcon (nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
-  void RenderIconImage(nux::GraphicsEngine& GfxContext, LauncherIcon* launcher_view);
-  void UpdateIconXForm ();
+  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::BaseTexture *text, nux::Color bkg_color, float alpha);
+  void RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg);
+  void UpdateIconXForm (std::list<Launcher::RenderArg> args);
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
   void MouseDownLogic ();
   void MouseUpLogic ();
 
-  void SlideDown(float stepy, int mousedy);
-  void SlideUp(float stepy, int mousedy);
-
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
-
-  void OrderRevealedIcons();
-  void OrderFoldedIcons(int FocusIconIndex);
-  void ScheduleRevealAnimation ();
-  void ScheduleFoldAnimation ();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -89,11 +119,11 @@ private:
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
 
-  float _folding_angle;
-  float _angle_rate;
-  float _timer_intervals;
+  bool  _hovered;
+  bool  _floating;
+  bool  _autohide;
+  bool  _hidden;
   int   _space_between_icons;
-  int   _anim_duration;
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
@@ -107,14 +137,12 @@ private:
   int _icon_image_size;
   int _icon_image_size_delta;
   nux::BaseTexture* _icon_bkg_texture;
+  nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   int _dnd_delta;
   int _dnd_security;
-
-  nux::TimerFunctor* _folding_functor;
-  nux::TimerHandle _folding_timer_handle;
-  nux::TimerFunctor* _reveal_functor;
-  nux::TimerHandle _reveal_timer_handle;
+  guint _anim_handle;
+  guint _autohide_handle;
 
   nux::Matrix4  _view_matrix;
   nux::Matrix4  _projection_matrix;
@@ -124,7 +152,15 @@ private:
   nux::BaseTexture* m_RunningIndicator;
   nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
+  nux::BaseWindow* _parent;
+  nux::View* _autohide_trigger;
   LauncherModel* _model;
+  
+  /* event times */
+  struct timeval _enter_time;
+  struct timeval _exit_time;
+  struct timeval _drag_end_time;
+  struct timeval _autohide_time;
 };
 
 #endif // LAUNCHER_H
