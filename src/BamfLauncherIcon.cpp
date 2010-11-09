@@ -27,6 +27,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     
     g_free (icon_name);
     
+    g_signal_connect (app, "urgent-changed", (GCallback) &BamfLauncherIcon::OnUrgentChanged, this);
     g_signal_connect (app, "running-changed", (GCallback) &BamfLauncherIcon::OnRunningChanged, this);
     g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
     g_signal_connect (app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
@@ -131,4 +132,11 @@ BamfLauncherIcon::OnActiveChanged (BamfView *view, gboolean active, gpointer dat
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     self->SetActive (active);
+}
+
+void
+BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon *) data;
+    self->SetUrgent (urgent);
 }

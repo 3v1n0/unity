@@ -79,24 +79,25 @@ private:
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
+  bool IconNeedsAnimation  (LauncherIcon *icon, struct timeval current);
   bool AnimationInProgress ();
-  void SetTimeStruct (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
+  void SetTimeStruct       (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
   
-  void EnsureAnimation ();
+  void EnsureAnimation    ();
   void SetupAutohideTimer ();
   
-  float DnDExitProgress ();
+  float DnDExitProgress  ();
   float GetHoverProgress ();
   float AutohideProgress ();
 
   void SetHover   ();
   void UnsetHover ();
-  void SetHidden (bool hidden);
+  void SetHidden  (bool hidden);
   
   std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
 
-  void OnIconAdded (void *icon_pointer);
-  void OnIconRemoved (void *icon_pointer);
+  void OnIconAdded    (void *icon_pointer);
+  void OnIconRemoved  (void *icon_pointer);
   void OnOrderChanged ();
 
   void OnIconNeedsRedraw (void *icon);

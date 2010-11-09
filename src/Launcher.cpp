@@ -290,6 +290,30 @@ void Launcher::EnsureAnimation ()
         _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
 }
 
+bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timeval current)
+{
+    struct timeval enter_time = icon->ShowTime ();
+    if (TimeDelta (&current, &enter_time) < ANIM_DURATION_SHORT)
+        return true;
+    
+    struct timeval hide_time = icon->HideTime ();
+    if (TimeDelta (&current, &hide_time) < ANIM_DURATION_SHORT)
+        return true;
+    
+    struct timeval running_time = icon->RunningTime ();
+    if (TimeDelta (&current, &running_time) < ANIM_DURATION_SHORT)
+        return true;
+    
+    if (icon->Urgent ())
+    {
+        struct timeval urgent_time = icon->UrgentTime ();
+        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * 4))
+            return true;
+    }
+    
+    return false;
+}
+
 bool Launcher::AnimationInProgress ()
 {
     // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
@@ -317,19 +341,8 @@ bool Launcher::AnimationInProgress ()
     // animations happening on specific icons
     LauncherModel::iterator it;
     for (it = _model->begin  (); it != _model->end (); it++)
-    {
-        struct timeval enter_time = (*it)->ShowTime ();
-        if (TimeDelta (&current, &enter_time) < ANIM_DURATION_SHORT)
+        if (IconNeedsAnimation (*it, current))
             return true;
-        
-        struct timeval hide_time = (*it)->HideTime ();
-        if (TimeDelta (&current, &hide_time) < ANIM_DURATION_SHORT)
-            return true;
-        
-        struct timeval running_time = (*it)->RunningTime ();
-        if (TimeDelta (&current, &running_time) < ANIM_DURATION_SHORT)
-            return true;
-    }
     
     return false;
 }
@@ -477,6 +490,15 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         if (icon->Running ())
         {
           arg.backlight_intensity = running_progress * BACKLIGHT_STRENGTH;
+          
+          if (icon->Urgent ())
+          {
+              struct timeval urgent_time = icon->UrgentTime ();
+              int urgent_ms = TimeDelta (&current, &urgent_time);
+              double urgent_progress = (double) MIN (1.0f, (float) urgent_ms / (float) (ANIM_DURATION_LONG * 4));
+              
+              arg.backlight_intensity *= 0.5f + (float) (std::cos (M_PI * 4.0f * urgent_progress)) * 0.5f;
+          }
         }
         else
         {
