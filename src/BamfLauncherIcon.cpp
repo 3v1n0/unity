@@ -27,6 +27,8 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     
     g_free (icon_name);
     
+    g_signal_connect (app, "child-removed", (GCallback) &BamfLauncherIcon::OnChildRemoved, this);
+    g_signal_connect (app, "child-added", (GCallback) &BamfLauncherIcon::OnChildAdded, this);
     g_signal_connect (app, "urgent-changed", (GCallback) &BamfLauncherIcon::OnUrgentChanged, this);
     g_signal_connect (app, "running-changed", (GCallback) &BamfLauncherIcon::OnRunningChanged, this);
     g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
@@ -34,6 +36,8 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     g_signal_connect (app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
     
     g_object_ref (m_App);
+    
+    EnsureWindowState ();
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -139,4 +143,34 @@ BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer dat
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     self->SetUrgent (urgent);
+}
+
+void
+BamfLauncherIcon::EnsureWindowState ()
+{
+    GList *children, *l;
+    int count = 0;
+    
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+    for (l = children; l; l = l->next)
+    {
+        if (BAMF_IS_WINDOW (l->data))
+            count++;
+    }
+    
+    SetRelatedWindows (count);
+}
+
+void
+BamfLauncherIcon::OnChildAdded (BamfView *view, BamfView *child, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon*) data;
+    self->EnsureWindowState ();
+}
+
+void
+BamfLauncherIcon::OnChildRemoved (BamfView *view, BamfView *child, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon*) data;
+    self->EnsureWindowState ();
 }

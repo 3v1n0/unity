@@ -205,9 +205,14 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _icon_image_size        = 48;
     _icon_image_size_delta  = 6;
     _icon_size              = _icon_image_size + _icon_image_size_delta;
+    
     _icon_bkg_texture       = nux::CreateTextureFromFile (PKGDATADIR"/round_corner_54x54.png");
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
+    _icon_2indicator        = nux::CreateTextureFromFile (PKGDATADIR"/2indicate_54x54.png");
+    _icon_3indicator        = nux::CreateTextureFromFile (PKGDATADIR"/3indicate_54x54.png");
+    _icon_4indicator        = nux::CreateTextureFromFile (PKGDATADIR"/4indicate_54x54.png");
+    
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
@@ -482,6 +487,12 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         arg.active_arrow   = icon->Active ();
         arg.folding_rads   = 0.0f;
         arg.skip           = false;
+        
+        arg.window_indicators = MIN (4, icon->RelatedWindows ());
+        
+        // we dont need to show strays
+        if (arg.window_indicators == 1 || !icon->Running ())
+          arg.window_indicators = 0;
         
         // animate this shit
         struct timeval running_time = icon->RunningTime ();
@@ -1056,6 +1067,47 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
   }
 }
 
+void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
+{
+  GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                GL_SRC_ALPHA,
+                                                GL_ONE_MINUS_SRC_ALPHA,
+                                                GL_ONE_MINUS_DST_ALPHA,
+                                                GL_ONE);
+
+  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+  
+  if (arg.backlight_intensity < 1.0f)
+    RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
+  if (arg.backlight_intensity > 0.0f)
+    RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
+
+  GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                GL_SRC_ALPHA,
+                                                GL_ONE_MINUS_SRC_ALPHA,
+                                                GL_ONE_MINUS_DST_ALPHA,
+                                                GL_ONE);
+  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+  
+  RenderIconImage (GfxContext, arg);
+  
+  if (arg.backlight_intensity > 0.0f)
+    RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
+  
+  switch (arg.window_indicators)
+  {
+    case 2:
+      RenderIcon(GfxContext, arg, _icon_2indicator, nux::Color::White, 1.0f);
+      break;
+    case 3:
+      RenderIcon(GfxContext, arg, _icon_3indicator, nux::Color::White, 1.0f);
+      break;
+    case 4:
+      RenderIcon(GfxContext, arg, _icon_4indicator, nux::Color::White, 1.0f);
+      break;
+  }
+}
+
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
@@ -1083,32 +1135,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
         continue;
-        
-      RenderArg arg = *rev_it;
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
       
-      if (arg.backlight_intensity < 1.0f)
-        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, arg);
-      
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
+      DrawRenderArg (GfxContext, *rev_it);
     }
 
     std::list<Launcher::RenderArg>::iterator it;
@@ -1117,30 +1145,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       if ((*it).folding_rads < 0.0f || (*it).skip)
         continue;
       
+      DrawRenderArg (GfxContext, *it);
       RenderArg arg = *it;  
-      
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      if (arg.backlight_intensity < 1.0f)
-        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, arg);
-      
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
     }
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);

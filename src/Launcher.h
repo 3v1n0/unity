@@ -71,6 +71,7 @@ private:
     bool          running_arrow;
     bool          active_arrow;
     bool          skip;
+    int           window_indicators;
   } RenderArg;
   
   static gboolean AnimationTimeout (gpointer data);
@@ -95,6 +96,8 @@ private:
   void SetHidden  (bool hidden);
   
   std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
+
+  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
 
   void OnIconAdded    (void *icon_pointer);
   void OnIconRemoved  (void *icon_pointer);
@@ -140,6 +143,9 @@ private:
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
+  nux::BaseTexture* _icon_2indicator;
+  nux::BaseTexture* _icon_3indicator;
+  nux::BaseTexture* _icon_4indicator;
   int _dnd_delta;
   int _dnd_security;
   guint _anim_handle;
