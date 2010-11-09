@@ -28,6 +28,7 @@ struct _PanelServicePrivate
 enum
 {
   ENTRY_ACTIVATED = 0,
+  RE_SYNC,
 
   LAST_SIGNAL
 };
@@ -80,6 +81,16 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  _service_signals[RE_SYNC] =
+    g_signal_new ("re-sync",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
@@ -125,7 +136,9 @@ actually_notify_object (IndicatorObject *object)
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
   priv->timeouts[position] = 0;
 
-  g_debug ("Notify object");
+  g_signal_emit (self, _service_signals[RE_SYNC],
+                 0, g_object_get_data (G_OBJECT (object), "id"));
+
   return FALSE;
 }
 
