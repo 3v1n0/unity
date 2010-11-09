@@ -15,6 +15,8 @@ link_directories(${LIB_PATHS})
 
 add_executable(unity-panel-service
                panel-main.c
+               panel-service.c
+               panel-service.h 
               )
 install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/unity/)
 
