@@ -28,6 +28,8 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define BACKLIGHT_STRENGTH  0.9f;
+
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
@@ -431,17 +433,18 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         // animate this shit
         struct timeval running_time = icon->RunningTime ();
         int running_ms = TimeDelta (&current, &running_time);
+        float running_progress = MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
 
         if (icon->Running ())
         {
-          arg.backlight_intensity = MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+          arg.backlight_intensity = running_progress * BACKLIGHT_STRENGTH;
         }
         else
         {
           if (running_ms > ANIM_DURATION_SHORT)
             arg.backlight_intensity = 0.0f;
           else
-            arg.backlight_intensity = 1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+            arg.backlight_intensity = BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
         }
         
         // reset z
