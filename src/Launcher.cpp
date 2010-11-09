@@ -363,7 +363,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
     struct timeval current;
     gettimeofday (&current, NULL);
 
-    float folding_constant = 0.15f;
+    float folding_constant = 0.2f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
     
     int folded_size = (int) (_icon_size * folding_not_constant);
@@ -434,14 +434,14 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 
         if (icon->Running ())
         {
-          arg.backlight_intensity = 0.2f + 0.7f * MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+          arg.backlight_intensity = MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
         }
         else
         {
           if (running_ms > ANIM_DURATION_SHORT)
             arg.backlight_intensity = 0.0f;
           else
-            arg.backlight_intensity = 0.2f + 0.7f * (1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT));
+            arg.backlight_intensity = 1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
         }
         
         // reset z
