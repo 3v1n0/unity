@@ -13,6 +13,8 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_SERVICE, PanelServicePrivate))
 
+#define NOTIFY_TIMEOUT 80
+
 struct _PanelServicePrivate
 {
   GSList     *indicators;
@@ -110,27 +112,56 @@ panel_service_get_default ()
 /*
  * Private Methods
  */
+static gboolean
+actually_notify_object (IndicatorObject *object)
+{
+  PanelService *self;
+  PanelServicePrivate *priv;
+  gint position;
+
+  self = panel_service_get_default ();
+  priv = self->priv;
+
+  position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
+  priv->timeouts[position] = 0;
+
+  g_debug ("Notify object");
+  return FALSE;
+}
+
+static void
+notify_object (IndicatorObject *object)
+{
+  PanelService *self;
+  PanelServicePrivate *priv;
+  gint position;
+
+  self = panel_service_get_default ();
+  priv = self->priv;
+
+  position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
+
+  if (priv->timeouts[position])
+      g_source_remove (priv->timeouts[position]);
+
+  priv->timeouts[position] = g_timeout_add (NOTIFY_TIMEOUT,
+                                            (GSourceFunc)actually_notify_object,
+                                            object);
+}
+
 static void
 on_entry_property_changed (GObject        *o,
                            GParamSpec      *pspec,
                            IndicatorObject *object)
 {
-  PanelService *self;
-  PanelServicePrivate *priv;
-
-  self = panel_service_get_default ();
-  priv = self->priv;
+  notify_object (object);
 }
 
 static void
 on_entry_changed (GObject *o,
                   IndicatorObject *object)
 {
-  PanelService *self;
-  PanelServicePrivate *priv;
-
-  self = panel_service_get_default ();
-  priv = self->priv;
+  notify_object (object);
 }
 
 static void
@@ -288,7 +319,8 @@ sort_indicators (PanelService *self)
   GSList *i;
   int     k = 0;
 
-  g_slist_sort (self->priv->indicators, (GCompareFunc)indicator_compare_func);
+  self->priv->indicators = g_slist_sort (self->priv->indicators,
+                                         (GCompareFunc)indicator_compare_func);
 
   for (i = self->priv->indicators; i; i = i->next)
     {
