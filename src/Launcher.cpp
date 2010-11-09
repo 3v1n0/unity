@@ -28,6 +28,7 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define URGENT_BLINKS       3
 #define BACKLIGHT_STRENGTH  0.9f
 
 static bool USE_ARB_SHADERS = true;
@@ -307,7 +308,7 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timeval current)
     if (icon->Urgent ())
     {
         struct timeval urgent_time = icon->UrgentTime ();
-        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * 4))
+        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
             return true;
     }
     
@@ -495,9 +496,9 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
           {
               struct timeval urgent_time = icon->UrgentTime ();
               int urgent_ms = TimeDelta (&current, &urgent_time);
-              double urgent_progress = (double) MIN (1.0f, (float) urgent_ms / (float) (ANIM_DURATION_LONG * 4));
+              double urgent_progress = (double) MIN (1.0f, (float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2));
               
-              arg.backlight_intensity *= 0.5f + (float) (std::cos (M_PI * 4.0f * urgent_progress)) * 0.5f;
+              arg.backlight_intensity *= 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
           }
         }
         else
