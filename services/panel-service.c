@@ -17,7 +17,7 @@ struct _PanelServicePrivate
 /* Globals */
 enum
 {
-  SHOW_ENTRY = 0,
+  ENTRY_ACTIVATED = 0,
 
   LAST_SIGNAL
 };
@@ -35,8 +35,8 @@ panel_service_class_init (PanelServiceClass *klass)
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
   /* Signals */
-  _service_signals[SHOW_ENTRY] =
-    g_signal_new ("show-entry",
+  _service_signals[ENTRY_ACTIVATED] =
+    g_signal_new ("entry-activated",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
