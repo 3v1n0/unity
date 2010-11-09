@@ -1024,16 +1024,6 @@ void Launcher::PositionChildLayout(float offsetX, float offsetY)
 {
 }
 
-void Launcher::SlideDown(float stepy, int mousedy)
-{
-    EnsureAnimation();
-}
-
-void Launcher::SlideUp(float stepy, int mousedy)
-{
-    EnsureAnimation();
-}
-
 bool Launcher::TooltipNotify(LauncherIcon* Icon)
 {
     if(GetActiveMenuIcon())
@@ -1121,7 +1111,6 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   // Every time the mouse moves, we check if it is inside an icon...
 
   EventLogic ();
-  EnsureAnimation ();
 }
 
 void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags)

@@ -96,9 +96,6 @@ private:
   void MouseDownLogic ();
   void MouseUpLogic ();
 
-  void SlideDown(float stepy, int mousedy);
-  void SlideUp(float stepy, int mousedy);
-
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
