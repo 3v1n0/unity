@@ -160,7 +160,7 @@ PanelView::UpdateBackground ()
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 
-  delete texture2D;
+  texture2D->UnReference ();
 
   NeedRedraw ();
 }
