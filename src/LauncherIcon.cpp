@@ -24,14 +24,17 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _show_time.tv_sec = 0;
   _hide_time.tv_sec = 0;
   _running_time.tv_sec = 0;
+  _urgent_time.tv_sec = 0;
 
   _show_time.tv_usec = 0;
   _hide_time.tv_usec = 0;
   _running_time.tv_usec = 0;
+  _urgent_time.tv_usec = 0;
 
   _active  = false;
   _running = false;
   _visible = false;
+  _urgent  = false;
 
   _background_color = nux::Color::White;
   _mouse_inside = false;
@@ -201,6 +204,11 @@ struct timeval LauncherIcon::RunningTime ()
   return _running_time;
 }
 
+struct timeval LauncherIcon::UrgentTime ()
+{
+  return _urgent_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -243,6 +251,18 @@ void LauncherIcon::SetRunning (bool running)
   needs_redraw.emit (this);
 }
 
+void LauncherIcon::SetUrgent (bool urgent)
+{
+  if (urgent == _urgent)
+    return;
+  
+  _urgent = urgent;
+  
+  if (urgent)
+      gettimeofday (&_urgent_time, NULL);
+  
+  needs_redraw.emit (this);
+}
 
 void LauncherIcon::Remove ()
 {
@@ -290,4 +310,10 @@ bool
 LauncherIcon::Running ()
 {
   return _running;
+}
+
+bool
+LauncherIcon::Urgent ()
+{
+  return _urgent;
 }

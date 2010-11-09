@@ -41,6 +41,7 @@ public:
     bool Visible ();
     bool Active  ();
     bool Running ();
+    bool Urgent  ();
 
     void RecvMouseEnter ();
 
@@ -53,6 +54,7 @@ public:
     struct timeval ShowTime ();
     struct timeval HideTime ();
     struct timeval RunningTime ();
+    struct timeval UrgentTime ();
     
     LauncherIconType Type ();
     
@@ -73,8 +75,9 @@ public:
 protected:
 
     void SetVisible (bool visible);
-    void SetActive (bool active);
+    void SetActive  (bool active);
     void SetRunning (bool running);
+    void SetUrgent  (bool urgent);
     void Remove ();
     
     void SetIconType (LauncherIconType type);
@@ -107,11 +110,13 @@ private:
     bool             _visible;
     bool             _active;
     bool             _running;
+    bool             _urgent;
     int              _sort_priority;
     LauncherIconType _icon_type;
     struct timeval   _show_time;
     struct timeval   _hide_time;
     struct timeval   _running_time;
+    struct timeval   _urgent_time;
 };
 
 #endif // LAUNCHERICON_H
