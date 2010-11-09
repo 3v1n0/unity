@@ -14,7 +14,7 @@ class LauncherModel;
 class Launcher : public nux::View
 {
 public:
-    Launcher(NUX_FILE_LINE_PROTO);
+    Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
     ~Launcher();
 
     virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -28,10 +28,12 @@ public:
     bool TooltipNotify(LauncherIcon* Icon);
     bool MenuNotify(LauncherIcon* Icon);
     
-    void SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent);
+    void SetIconSize(int tile_size, int icon_size);
     void NotifyMenuTermination(LauncherIcon* Icon);
     
     void SetModel (LauncherModel *model);
+    
+    void SetFloating (bool floating);
     
     virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -107,6 +109,7 @@ private:
   LauncherIcon* m_ActiveMenuIcon;
 
   bool  _hovered;
+  bool  _floating;
   int   _space_between_icons;
   float _folded_angle;
   float _neg_folded_angle;
@@ -135,6 +138,7 @@ private:
   nux::BaseTexture* m_RunningIndicator;
   nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
+  nux::BaseWindow* _parent;
   LauncherModel* _model;
   
   /* event times */

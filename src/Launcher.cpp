@@ -28,7 +28,7 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
-#define BACKLIGHT_STRENGTH  0.9f;
+#define BACKLIGHT_STRENGTH  0.9f
 
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
@@ -142,7 +142,7 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
                                        float FarClipPlane,
                                        float Fovy);
 
-Launcher::Launcher(NUX_FILE_LINE_DECL)
+Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
 ,   m_RunningIndicator(0)
@@ -150,6 +150,7 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
 ,   m_BackgroundLayer(0)
 ,   _model (0)
 {
+    _parent = parent;
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
     OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
@@ -209,6 +210,8 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
+    _floating               = false;
+    _hovered                = false;
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -505,9 +508,9 @@ void Launcher::UnsetHover ()
     SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
 }
 
-void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent)
+void Launcher::SetIconSize(int tile_size, int icon_size)
 {
-    nux::Geometry geo = parent->GetGeometry ();
+    nux::Geometry geo = _parent->GetGeometry ();
     
     _icon_size = tile_size;
     _icon_image_size = icon_size;
@@ -515,7 +518,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size, nux::BaseWindow *parent
     
     // recreate tile textures
     
-    parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
+    _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
 }
 
 void Launcher::OnIconAdded (void *icon_pointer)
@@ -919,11 +922,22 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     ROP.SrcBlend = GL_SRC_ALPHA;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x99000000), true, ROP);
-    gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (base.x + base.width - 1, base.y, 1, base.height), nux::Color(0x60FFFFFF), true, ROP);
-
     std::list<Launcher::RenderArg> args = RenderArgs ();
+
+    if (!_floating)
+    {
+        gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x99000000), true, ROP);
+        gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (base.x + base.width - 1, base.y, 1, base.height), nux::Color(0x60FFFFFF), true, ROP);
+    }
+    else
+    {
+        nux::Geometry geo = base;
+        geo.height = args.back ().center.y + _icon_size;
+        gPainter.PushDrawColorLayer(GfxContext, geo, nux::Color(0x99000000), true, ROP);
+    }
+    
     UpdateIconXForm (args);
+    EventLogic ();
     
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
