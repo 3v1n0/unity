@@ -95,7 +95,6 @@ namespace nux
 
     bool _cairo_text_has_changed;
     void UpdateTexture ();
-    std::list<nux::StaticCairoText*> _item_list;
   };
 }
 

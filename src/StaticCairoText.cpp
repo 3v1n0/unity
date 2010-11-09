@@ -40,7 +40,7 @@ namespace nux
 #elif defined(NUX_OS_LINUX)
   _fontName   = TEXT ("Ubuntu");
 #endif
-  _fontSize   = 24;
+  _fontSize   = 12;
   _fontStyle  = eNormalStyle;
   _fontWeight = eNormalWeight;
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -202,9 +202,8 @@ StaticCairoText::SetText (NString text)
   if (_text != text)
   {
     _text = text;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
-
+    sigTextChanged.emit (*this);
   }
 }
 
@@ -214,8 +213,8 @@ StaticCairoText::SetFontName (NString fontName)
   if (_fontName != fontName)
   {
     _fontName = fontName;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
+    sigTextChanged.emit (*this);
   }
 }
 
@@ -225,8 +224,8 @@ StaticCairoText::SetFontSize (float fontSize)
   if (_fontSize != fontSize)
   {
     _fontSize = fontSize;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
+    sigTextChanged.emit (*this);
   }
 }
 
@@ -236,8 +235,8 @@ StaticCairoText::SetFontWeight (eFontWeight fontWeight)
   if (_fontWeight != fontWeight)
   {
     _fontWeight = fontWeight;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
+    sigTextChanged.emit (*this);
   }
 }
 
@@ -247,8 +246,8 @@ StaticCairoText::SetFontStyle (eFontStyle fontStyle)
   if (_fontStyle != fontStyle)
   {
     _fontStyle = fontStyle;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
+    sigTextChanged.emit (*this);
   }
 }
 
@@ -258,8 +257,8 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
-    sigTextChanged.emit (*this);
     UpdateTexture ();
+    sigTextChanged.emit (*this);
   }
 }
 

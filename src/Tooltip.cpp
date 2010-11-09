@@ -24,12 +24,12 @@ namespace nux
 
     _anchorX   = 0;
     _anchorY   = 0;
-    _labelText = TEXT ("Tooltip 1234567890");
+    _labelText = TEXT ("Unity");
 
     _anchor_width   = 10;
     _anchor_height  = 18;
     _corner_radius  = 4;
-    _padding        = 10;
+    _padding        = 15;
 
     _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
     _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -42,19 +42,11 @@ namespace nux
 
     _vlayout->AddLayout(_top_space, 0);
 
-    for (int i = 0; i < 5; i++)
-    {
-      nux::StaticCairoText* tooltip_text;
-      if (i == 0)
-        tooltip_text = new nux::StaticCairoText (TEXT ("1234567890"), NUX_TRACKER_LOCATION);
-      else
-        tooltip_text = new nux::StaticCairoText (TEXT ("Tooltip 1234567890"), NUX_TRACKER_LOCATION);
-
-      tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
-      _vlayout->AddView(tooltip_text, 1, eCenter, eFull);
-      _item_list.push_back (tooltip_text);
-      tooltip_text->Reference();
-    }
+    _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
+    _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _tooltip_text->Reference();
+    
+    _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
 
     _vlayout->AddLayout(_bottom_space, 0);
  
@@ -72,22 +64,15 @@ namespace nux
     if (_texture_bg)
       _texture_bg->UnReference ();
 
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
-    {
-      (*it)->UnReference();
-    }
-    _item_list.clear ();
+    _tooltip_text->UnReference();
   }
 
   long Tooltip::ProcessEvent (IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
   {
     long ret = TraverseInfo;
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
-    {
-      ret = (*it)->ProcessEvent(ievent, ret, ProcessEventInfo);
-    }
+
+    _tooltip_text->ProcessEvent(ievent, ret, ProcessEventInfo);
+    
     return ret;
   }
 
@@ -139,12 +124,8 @@ namespace nux
 
     GetGraphicsEngine().GetRenderStates().SetBlend (false);
 
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
-    {
-      (*it)->ProcessDraw(gfxContext, forceDraw);
-    }
-
+    _tooltip_text->ProcessDraw(gfxContext, forceDraw);
+    
     gfxContext.PopClippingRectangle ();
   }
 
@@ -157,21 +138,15 @@ namespace nux
   {
     int MaxItemWidth = 0;
     int TotalItemHeight = 0;
-//     //_tooltip_text->SetGeometry (Geometry (25, 50, GetBaseWidth(), 62));
-//     int new_width = _padding + _anchor_width + _corner_radius + _tooltip_text->GetBaseWidth () + _padding + _corner_radius;
-//     int new_height = nux::Max<int>(_tooltip_text->GetBaseHeight () + 2 * _corner_radius + 2 * _padding, 2*_corner_radius + _anchor_height + 2 * _padding);
-//     
+    int  textWidth  = 0;
+    int  textHeight = 0;
     
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
-    {
-      int  textWidth  = 0;
-      int  textHeight = 0;
-      (*it)->GetTextExtents(textWidth, textHeight);
-      if (textWidth > MaxItemWidth)
-        MaxItemWidth = textWidth;
-      TotalItemHeight += textHeight;
-    }
+    _tooltip_text->GetTextExtents(textWidth, textHeight);
+    
+    if (textWidth > MaxItemWidth)
+      MaxItemWidth = textWidth;
+    TotalItemHeight += textHeight;
+
 
     if(TotalItemHeight < _anchor_height)
     {
@@ -179,16 +154,6 @@ namespace nux
       _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
     }
 
-//     if((_texture_bg == 0) ||
-//       (_texture_mask == 0) ||
-//       (_texture_outline == 0) ||
-//       (_hlayout->GetBaseWidth() != new_width) ||
-//       (_hlayout->GetBaseHeight() != new_height))
-//     {
-//       //_hlayout->SetBaseSize (new_width, new_height);
-//       //UpdateTexture ();
-//     }
-    
     BaseWindow::PreLayoutManagement ();
   }
 
@@ -200,14 +165,8 @@ namespace nux
     int x = _padding + _anchor_width + _corner_radius;
     int y = _padding + _corner_radius;
 
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
-    {
-      (*it)->SetBaseX (x);
-      (*it)->SetBaseY (y);
-
-      y += (*it)->GetBaseHeight ();
-    }
+    _tooltip_text->SetBaseX (x);
+    _tooltip_text->SetBaseY (y);
 
     return result;
   }
@@ -900,7 +859,8 @@ void ctk_surface_blur (cairo_surface_t* surface,
       return;
 
     _labelText = text;
-    UpdateTexture ();
+    _tooltip_text->SetText (_labelText);
+    this->ComputeChildLayout (); 
   }
 
 } // namespace nux
