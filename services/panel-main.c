@@ -13,12 +13,17 @@ static GDBusNodeInfo *introspection_data = NULL;
 
 static const gchar introspection_xml[] =
   "<node>"
-  "  <interface name='org.myorg.MyObject'>"
-  "    <method name='ChangeCount'>"
-  "      <arg type='i' name='change' direction='in'/>"
+  "  <interface name='com.canonical.Unity.Panel.Service'>"
+  "    <method name='Sync'>"
+  "      <arg type='a{sa{sv}}' name='state' direction='out'/>"
   "    </method>"
-  "    <property type='i' name='Count' access='read'/>"
-  "    <property type='s' name='Name' access='readwrite'/>"
+  "    <method name='SyncOne'>"
+  "      <arg type='s' name='id' direction='in'/>"
+  "      <arg type='a{sv}' name='state' direction='out'/>"
+  "    </method>"
+  "    <signal name='ShowEntry'>"
+  "     <arg type='s' name='id' />"
+  "    </signal>"
   "  </interface>"
   "</node>";
 

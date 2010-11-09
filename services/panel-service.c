@@ -15,6 +15,14 @@ struct _PanelServicePrivate
 };
 
 /* Globals */
+enum
+{
+  SHOW_ENTRY = 0,
+
+  LAST_SIGNAL
+};
+
+static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 /* Forwards */
 
@@ -26,6 +34,15 @@ panel_service_class_init (PanelServiceClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
+  /* Signals */
+  _service_signals[SHOW_ENTRY] =
+    g_signal_new ("show-entry",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
