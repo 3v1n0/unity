@@ -33,13 +33,13 @@ namespace nux
   class HLayout;
   class SpaceLayout;
   
-  class Tooltip : public BaseWindow
+  class QuicklistView : public BaseWindow
   {
-    NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
+    NUX_DECLARE_OBJECT_TYPE (QuicklistView, BaseWindow);
   public:
-    Tooltip ();
+    QuicklistView ();
 
-    ~Tooltip ();
+    ~QuicklistView ();
 
     long ProcessEvent (IEvent& iEvent,
       long    traverseInfo,
@@ -95,6 +95,7 @@ namespace nux
 
     bool _cairo_text_has_changed;
     void UpdateTexture ();
+    std::list<nux::StaticCairoText*> _item_list;
   };
 }
 
