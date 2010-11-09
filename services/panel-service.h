@@ -48,7 +48,7 @@ struct _PanelServiceClass
 
 GType          panel_service_get_type      (void) G_GNUC_CONST;
 
-PanelService * panel_service_new ();
+PanelService * panel_service_get_default ();
 
 G_END_DECLS
 

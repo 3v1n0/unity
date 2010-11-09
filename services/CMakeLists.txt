@@ -4,7 +4,16 @@
 find_package(PkgConfig)
 pkg_check_modules(SERVICE_DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 indicator)
 
-set(CFLAGS ${SERVICE_DEPS_CFLAGS} ${SERVICE_DEPS_CFLAGS_OTHER} "-DGETTEXT_PACKAGE=\"unity\"")
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable indicatordir OUTPUT_VARIABLE _indicatordir OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable iconsdir OUTPUT_VARIABLE _iconsdir OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(CFLAGS
+    ${SERVICE_DEPS_CFLAGS}
+    ${SERVICE_DEPS_CFLAGS_OTHER}
+    "-DGETTEXT_PACKAGE=\"unity\""
+    "-DINDICATORDIR=\"${_indicatordir}\""
+    "-DINDICATORICONDIR=\"${_iconsdir}\""
+    )
 add_definitions(${CFLAGS})
 
 set(LIBS ${SERVICE_DEPS_LIBRARIES})

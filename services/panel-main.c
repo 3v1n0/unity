@@ -3,9 +3,6 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
-#include <libindicator/indicator.h>
-#include <libindicator/indicator-object.h>
-
 #include "panel-service.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
@@ -20,23 +17,23 @@ static const gchar introspection_xml[] =
   "    </method>"
   ""
   "    <method name='SyncOne'>"
-  "      <arg type='s' name='id' direction='in'/>"
+  "      <arg type='s' name='indicator_id' direction='in'/>"
   "      <arg type='a{sv}' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='ShowEntry'>"
-  "      <arg type='s' name='id' direction='in'/>"
+  "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='u' name='timestamp' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
   "    </method>"
   ""
   "    <signal name='EntryActivated'>"
-  "     <arg type='s' name='id' />"
+  "     <arg type='s' name='entry_id' />"
   "    </signal>"
   ""
   "    <signal name='ReSync'>"
-  "     <arg type='s' name='id' />"
+  "     <arg type='s' name='indicator_id' />"
   "    </signal>"
   ""
   "  </interface>"
@@ -130,11 +127,13 @@ main (gint argc, gchar **argv)
   guint         owner_id;
 
   gtk_init (&argc, &argv);
+	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
+	                                   INDICATORICONDIR);
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);
 
-  service = panel_service_new ();
+  service = panel_service_get_default ();
 
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                              "com.canonical.Unity.Panel.Service",
