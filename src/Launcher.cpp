@@ -203,6 +203,7 @@ Launcher::Launcher(NUX_FILE_LINE_DECL)
     _icon_size              = _icon_image_size + _icon_image_size_delta;
     _icon_bkg_texture       = nux::CreateTextureFromFile (PKGDATADIR"/round_corner_54x54.png");
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
+    _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
@@ -433,14 +434,14 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
 
         if (icon->Running ())
         {
-          arg.backlight_intensity = 0.2f + 0.8f * MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+          arg.backlight_intensity = 0.2f + 0.7f * MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
         }
         else
         {
           if (running_ms > ANIM_DURATION_SHORT)
             arg.backlight_intensity = 0.0f;
           else
-            arg.backlight_intensity = 0.2f + 0.8f * (1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT));
+            arg.backlight_intensity = 0.2f + 0.7f * (1.0f - MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT));
         }
         
         // reset z
@@ -450,7 +451,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs ()
         if (size_modifier < 1.0f)
         {
             arg.alpha = size_modifier;
-            center.z = 100.0f * (1.0f - size_modifier);
+            center.z = 300.0f * (1.0f - size_modifier);
         }
         
         if (size_modifier <= 0.0f)
@@ -561,7 +562,7 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
-void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
+void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg, nux::BaseTexture *icon, nux::Color bkg_color, float alpha)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -569,23 +570,11 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
   nux::Matrix4 ViewMatrix;
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
-  nux::BaseTexture *icon;
   
-  if (arg.backlight_intensity > 0.0f)
-    icon = _icon_bkg_texture; 
-  else
-    icon = _icon_outline_texture;
-  
-  icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
-
   if(nux::Abs (arg.folding_rads) < 0.15f)
-  {
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
-  }
   else
-  {
     icon->GetDeviceTexture()->SetFiltering(GL_LINEAR, GL_LINEAR);
-  }
 
   nux::Vector4 v0;
   nux::Vector4 v1;
@@ -694,16 +683,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg)
     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
   }
   
-  nux::Color bkg_color;
-  if (arg.backlight_intensity > 0.0f)
-  {
-    bkg_color = arg.icon->BackgroundColor ();
-    bkg_color.SetAlpha (bkg_color.A () * arg.backlight_intensity);
-  }
-  else    
-  {
-    bkg_color = nux::Color(0xFF6D6D6D);
-  }
+  bkg_color.SetAlpha (bkg_color.A () * alpha);
   
   if(!USE_ARB_SHADERS)
   {
@@ -947,6 +927,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
         continue;
+        
+      RenderArg arg = *rev_it;
 
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
@@ -955,7 +937,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE);
 
       GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIcon(GfxContext, *rev_it);
+      
+      if (arg.backlight_intensity < 1.0f)
+        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
+      if (arg.backlight_intensity > 0.0f)
+        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
 
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
@@ -963,7 +949,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE_MINUS_DST_ALPHA,
                                                     GL_ONE);
       GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, *rev_it);
+      RenderIconImage (GfxContext, arg);
+      
+      if (arg.backlight_intensity > 0.0f)
+        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
     }
 
     std::list<Launcher::RenderArg>::iterator it;
@@ -971,6 +960,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*it).folding_rads < 0.0f || (*it).skip)
         continue;
+      
+      RenderArg arg = *it;  
+      
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA,
@@ -978,7 +970,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE);
 
       GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIcon(GfxContext, *it);
+      if (arg.backlight_intensity < 1.0f)
+        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
+      if (arg.backlight_intensity > 0.0f)
+        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
 
       GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
@@ -986,7 +981,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE_MINUS_DST_ALPHA,
                                                     GL_ONE);
       GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, *it);
+      RenderIconImage (GfxContext, arg);
+      
+      if (arg.backlight_intensity > 0.0f)
+        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
     }
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
