@@ -350,7 +350,26 @@ gtk_image_to_data (GtkImage *image)
 
   if (type == GTK_IMAGE_PIXBUF)
     {
+      GdkPixbuf  *pixbuf;
+      gchar      *buffer = NULL;
+      gsize       buffer_size = 0;
+      GError     *error = NULL;
 
+      pixbuf = gtk_image_get_pixbuf (image);
+     
+      if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
+        {
+          ret = g_base64_encode ((const guchar *)buffer, buffer_size);
+          g_free (buffer);
+        }
+      else
+        {
+          g_warning ("Unable to convert pixbuf to png data: '%s'", error ? error->message : "unknown");
+          if (error)
+            g_error_free (error);
+
+          ret = g_strdup ("");
+        }
     }
   else if (type == GTK_IMAGE_STOCK)
     {
@@ -427,9 +446,9 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssbbusbb))"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbb))"));
 
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssbbusbb)"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbb)"));
 
   for (i = self->priv->indicators; i; i = i->next)
     {
