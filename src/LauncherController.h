@@ -43,7 +43,7 @@ private:
 
     void SetupBamf ();
 
-    void OnExpoClicked ();
+    void OnExpoClicked (int button);
     
     /* statics */
     

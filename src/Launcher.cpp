@@ -1200,7 +1200,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 {
   _mouse_position = nux::Point2 (x, y);
   
-  MouseDownLogic ();
+  MouseDownLogic (x, y, button_flags, key_flags);
   EnsureAnimation ();
 }
 
@@ -1215,7 +1215,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
     UnsetHover ();
   }
 
-  MouseUpLogic ();
+  MouseUpLogic (x, y, button_flags, key_flags);
   _launcher_action_state = ACTION_NONE;
   EnsureAnimation ();
 }
@@ -1296,7 +1296,7 @@ void Launcher::EventLogic ()
   }
 }
 
-void Launcher::MouseDownLogic ()
+void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
@@ -1304,26 +1304,26 @@ void Launcher::MouseDownLogic ()
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
-    launcher_icon->MouseDown.emit ();
+    launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
   }
 }
 
-void Launcher::MouseUpLogic ()
+void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->MouseUp.emit ();
+    _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
     
     if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
-      _icon_mouse_down->MouseClick.emit ();
+      _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->MouseUp.emit ();
+    launcher_icon->MouseUp.emit (nux::GetEventButton (button_flags));
   }
   
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)

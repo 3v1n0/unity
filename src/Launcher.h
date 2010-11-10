@@ -107,8 +107,8 @@ private:
   void UpdateIconXForm (std::list<Launcher::RenderArg> args);
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
-  void MouseDownLogic ();
-  void MouseUpLogic ();
+  void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);

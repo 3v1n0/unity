@@ -62,11 +62,11 @@ public:
     
     nux::BaseTexture * TextureForSize (int size);
     
-    sigc::signal<void> MouseDown;
-    sigc::signal<void> MouseUp;
+    sigc::signal<void, int> MouseDown;
+    sigc::signal<void, int> MouseUp;
     sigc::signal<void> MouseEnter;
     sigc::signal<void> MouseLeave;
-    sigc::signal<void> MouseClick;
+    sigc::signal<void, int> MouseClick;
     
     sigc::signal<void, void *> show;
     sigc::signal<void, void *> hide;

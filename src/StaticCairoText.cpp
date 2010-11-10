@@ -27,7 +27,7 @@
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 #include "Nux/Validator.h"
-#include "Nux/StaticCairoText.h"
+#include "StaticCairoText.h"
 
 namespace nux
 {

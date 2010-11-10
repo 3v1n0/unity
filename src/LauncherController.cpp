@@ -29,7 +29,7 @@ LauncherController::~LauncherController()
 }
 
 void
-LauncherController::OnExpoClicked ()
+LauncherController::OnExpoClicked (int button)
 {
     PluginAdapter::Default ()->InitiateExpo ();
 }
