@@ -151,32 +151,8 @@ class UnityScreen :
 	void
 	handleEvent (XEvent *);
 
-	/* Actions, these are called on keypresses, buttonpress, edges etc by compiz */
+	void optionChanged (CompOption *, Options num);
 
-	static bool
-	unityInitiate (CompAction         *action,
-	  		 CompAction::State  state,
-	  		 CompOption::Vector &options);
-
-	/* Initiate / Terminate action pair */
-
-	static bool
-	specialInitiate (CompAction         *action,
-		         CompAction::State  state,
-		         CompOption::Vector &options);
-
-	static bool
-	specialTerminate (CompAction         *action,
-			  CompAction::State  state,
-			  CompOption::Vector &options);
-
-	/* Actions with additional args through boost::bind */
-
-	static bool
-	customInitiate (CompAction	   *action,
-		        CompAction::State  state,
-		        CompOption::Vector options,
-		        int                theMeaningOfLife);
 	
 	bool
 	initPluginForScreen (CompPlugin *p);

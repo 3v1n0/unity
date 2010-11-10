@@ -370,17 +370,6 @@ UnityWindow::windowNotify (CompWindowNotify n)
     window->windowNotify (n);
 }
 
-/* This is an action. It is called on a keybinding as set in the options. It is binded when
- *  the class is constructed
- */
-
-bool
-UnityScreen::unityInitiate (CompAction         *action,
-                CompAction::State  state,
-                CompOption::Vector &options)
-{
-    return false;
-}
 
 void 
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
@@ -411,6 +400,24 @@ UnityScreen::onRedrawRequested ()
   damageNuxRegions ();
 }
 
+void
+UnityScreen::optionChanged (CompOption            *opt,
+			    UnityOptions::Options num)
+{
+    switch (num)
+    {
+	case UnityOptions::LauncherAutohide:
+	    launcher->SetAutohide (optionGetLauncherAutohide (),
+				   (nux::View *) panelView->HomeButton ());
+	    break;
+	case UnityOptions::LauncherFloat:
+	    launcher->SetFloating (optionGetLauncherFloat ());
+	    break;
+	default:
+	    break;
+    }
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompScreen *,
     PluginClassHandler <UnityScreen, CompScreen> (screen), // Initiate PluginClassHandler class template
     screen (screen),
@@ -430,8 +437,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     CompositeScreenInterface::setHandler (cScreen); // Ditto for cScreen
     GLScreenInterface::setHandler (gScreen); // Ditto for gScreen
 
-    optionSetUnityInitiate (unityInitiate); // Initiate handler for 'unity' action
-
     nux::NuxInitialize (0);
     wt = nux::CreateFromForeignWindow (cScreen->output (), 
                                        glXGetCurrentContext (),	
@@ -444,6 +449,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     uScreen = this;
     
     PluginAdapter::Initialize (screen);
+
+    optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+    optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 }
 
 /* This is the destructor. It is called when the class is destroyed. If you allocated any
