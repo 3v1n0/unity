@@ -353,12 +353,13 @@ LauncherIcon::RelatedWindows ()
   return _related_windows;
 }
 
-std::list<DbusmenuClient *> Menus ()
+std::list<DbusmenuClient *> LauncherIcon::Menus ()
 {
   return GetMenus ();
 }
 
-std::list<DbusmenuClient *> GetMenus ()
+std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
 {
-  return 0;
+  std::list<DbusmenuClient *> result;
+  return result;
 }
