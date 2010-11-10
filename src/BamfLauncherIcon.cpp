@@ -129,6 +129,9 @@ BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer d
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     self->SetRunning (running);
+    
+    if (running)
+      self->EnsureWindowState ();
 }
 
 void
