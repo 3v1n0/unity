@@ -22,10 +22,10 @@
 #include <string>
 #include <vector>
 #include <sigc++/signal.h>
-
+#include <sigc++/trackable.h>
 #include "IndicatorObjectProxy.h"
 
-class IndicatorObjectFactory
+class IndicatorObjectFactory : public sigc::trackable
 {
 public:
 

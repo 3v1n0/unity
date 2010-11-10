@@ -21,10 +21,10 @@
 
 #include <string>
 #include <sigc++/signal.h>
-
+#include <sigc++/sigc++.h>
 #include <gdk/gdk.h>
 
-class IndicatorObjectEntryProxy
+class IndicatorObjectEntryProxy : public sigc::trackable
 {
 public:
 

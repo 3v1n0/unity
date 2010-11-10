@@ -61,6 +61,7 @@ IndicatorObjectProxyRemote::BeginSync ()
     IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
     remote->_dirty = true;
   }
+  g_message ("%s", G_STRFUNC);
 }
 
 void
@@ -73,6 +74,7 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
                                       bool         image_sensitive,
                                       bool         image_visible)
 {
+  g_message ("%s", G_STRFUNC);
   g_message ("\t%s %s %d %d %u %s %d %d",
              entry_id,
              label,
@@ -82,26 +84,66 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
              image_type == 3 ? "Pixbuf": image_data,
              image_sensitive,
              image_visible);
+
+  IndicatorObjectEntryProxyRemote *remote = NULL;
+  std::vector<IndicatorObjectEntryProxy*>::iterator it;
+  
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    IndicatorObjectEntryProxyRemote *r = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+    if (r->_dirty == true)
+      {
+        remote = r;
+        break;
+      }
+  }
+  
+  /* Create a new one */
+  if (remote == NULL)
+    {
+      remote = new IndicatorObjectEntryProxyRemote ();
+      remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
+                                                        &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
+      g_message ("ADDED: %p", remote);
+      _entries.push_back (remote);
+    }
+
+  remote->Refresh (entry_id,
+                   label,
+                   label_sensitive,
+                   label_visible,
+                   image_type,
+                   image_data,
+                   image_sensitive,
+                   image_visible);
+  if (remote->_dirty)
+    remote->_dirty = false;
+  else
+    OnEntryAdded.emit (remote);
 }
+
 void
 IndicatorObjectProxyRemote::EndSync ()
 {
-
+  g_message ("%s", G_STRFUNC);
+  std::vector<IndicatorObjectEntryProxy*>::iterator it;
+ 
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+    if (remote->_dirty == true)
+      {
+        remote->Refresh ("",
+                         "",
+                         false,
+                         false,
+                         0,
+                         "",
+                         false,
+                         false);
+      }
+  }
 }
-
-#if 0
-void
-IndicatorObjectProxyRemote::OnRowAdded (DeeModelIter *iter)
-{
-  IndicatorObjectEntryProxyRemote *remote;
-
-  remote = new IndicatorObjectEntryProxyRemote (_model, iter);
-  remote->OnShowMenuRequest.connect (sigc::mem_fun (this, &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
-  _entries.push_back (remote);
-
-  OnEntryAdded.emit (remote);
-}
-#endif
 
 void
 IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *id,

@@ -22,7 +22,11 @@
 
 IndicatorObjectEntryProxyRemote::IndicatorObjectEntryProxyRemote ()
 : _dirty (false),
-  _active (false)
+  _active (false),
+  _id (NULL),
+  _label (NULL),
+  _image_type (0),
+  _image_data (NULL)
 {
   label_visible = false;
   label_sensitive = true;
@@ -33,7 +37,9 @@ IndicatorObjectEntryProxyRemote::IndicatorObjectEntryProxyRemote ()
 
 IndicatorObjectEntryProxyRemote::~IndicatorObjectEntryProxyRemote ()
 {
-
+  g_free (_id);
+  g_free (_label);
+  g_free (_image_data);
 }
 
 const char *
@@ -126,7 +132,8 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
   label_sensitive = __label_sensitive;
   label_visible = __label_visible;
   _image_type = __image_type;
-  _image_data = g_strdup (__image_data);
+  if (_image_type)
+    _image_data = g_strdup (__image_data);
   icon_sensitive = __image_sensitive;
   icon_visible = __image_visible;
 
