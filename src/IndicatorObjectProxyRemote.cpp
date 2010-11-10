@@ -122,7 +122,7 @@ IndicatorObjectProxyRemote::EndSync ()
         /* We don't get rid of the entries as there's no real need to, and it saves us
          * having to do a bunch of object creation everytime the menu changes
          */
-        remote->Refresh ("",
+        remote->Refresh ("|",
                          "",
                          false,
                          false,
