@@ -76,6 +76,7 @@ private:
   
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
+  static gboolean StrutHack (gpointer data);
   
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);

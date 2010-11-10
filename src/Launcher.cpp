@@ -614,6 +614,15 @@ bool Launcher::AutohideEnabled ()
     return _autohide;
 }
 
+gboolean Launcher::StrutHack (gpointer data)
+{
+    Launcher *self = (Launcher *) data;
+    self->_parent->InputWindowEnableStruts(false);
+    self->_parent->InputWindowEnableStruts(true);
+    
+    return false;
+}
+
 void Launcher::SetAutohide (bool autohide, nux::View *trigger)
 {
     if (_autohide == autohide)
@@ -628,6 +637,8 @@ void Launcher::SetAutohide (bool autohide, nux::View *trigger)
     }
     else
     {
+        _parent->EnableInputWindow(true);
+        g_timeout_add (1000, &Launcher::StrutHack, this);
         _parent->InputWindowEnableStruts(true);
     }
     

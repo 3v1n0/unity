@@ -406,15 +406,15 @@ UnityScreen::optionChanged (CompOption            *opt,
 {
     switch (num)
     {
-	case UnityOptions::LauncherAutohide:
-	    launcher->SetAutohide (optionGetLauncherAutohide (),
-				   (nux::View *) panelView->HomeButton ());
-	    break;
-	case UnityOptions::LauncherFloat:
-	    launcher->SetFloating (optionGetLauncherFloat ());
-	    break;
-	default:
-	    break;
+        case UnityOptions::LauncherAutohide:
+	          launcher->SetAutohide (optionGetLauncherAutohide (),
+                                   (nux::View *) panelView->HomeButton ());
+            break;
+        case UnityOptions::LauncherFloat:
+            launcher->SetFloating (optionGetLauncherFloat ());
+	          break;
+        default:
+            break;
     }
 }
 
