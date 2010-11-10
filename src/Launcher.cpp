@@ -1122,7 +1122,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg> args = RenderArgs (bkg_box);
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
-    gPainter.PushDrawColorLayer(GfxContext, bkg_box, nux::Color(0x99000000), true, ROP);
+    gPainter.PushDrawColorLayer(GfxContext, bkg_box, nux::Color(0xB5000000), true, ROP);
     
     ROP.Blend = true;
     gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF), false, ROP);
