@@ -11,13 +11,13 @@
 
 LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window, NUX_FILE_LINE_DECL)
 {
-    m_Launcher = launcher;
-    m_Window = window;
-    m_Screen = screen;
+    _launcher = launcher;
+    _window = window;
+    _screen = screen;
     _model = new LauncherModel ();
     
-    m_Launcher->SetModel (_model);
-    m_FavoriteStore = FavoriteStore::GetDefault ();
+    _launcher->SetModel (_model);
+    _favorite_store = FavoriteStore::GetDefault ();
   
     g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
     InsertExpoAction ();
@@ -25,7 +25,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
 
 LauncherController::~LauncherController()
 {
-  m_FavoriteStore->UnReference ();
+  _favorite_store->UnReference ();
 }
 
 void
@@ -38,22 +38,35 @@ void
 LauncherController::InsertExpoAction ()
 {
     SimpleLauncherIcon *expoIcon;
-    expoIcon = new SimpleLauncherIcon (m_Launcher);
+    expoIcon = new SimpleLauncherIcon (_launcher);
     
     expoIcon->SetTooltipText ("Workspace Switcher");
     expoIcon->SetIconName ("workspace-switcher");
     expoIcon->SetVisible (true);
     expoIcon->SetRunning (false);
+    expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
     
     expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
     
     RegisterIcon (expoIcon);
 }
 
+bool
+LauncherController::CompareIcons (LauncherIcon *first, LauncherIcon *second)
+{
+    if (first->Type () < second->Type ())
+        return true;
+    else if (first->Type () > second->Type ())
+        return false;
+    
+    return first->SortPriority () < second->SortPriority ();
+}
+
 void
 LauncherController::RegisterIcon (LauncherIcon *icon)
 {
     _model->AddIcon (icon);
+    _model->Sort (&LauncherController::CompareIcons);
 }
 
 /* static private */
@@ -79,29 +92,33 @@ LauncherController::OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer
     
     app = BAMF_APPLICATION (view);
     
-    BamfLauncherIcon *icon = new BamfLauncherIcon (self->m_Launcher, app, self->m_Screen);
+    BamfLauncherIcon *icon = new BamfLauncherIcon (self->_launcher, app, self->_screen);
+    icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+
     self->RegisterIcon (icon);
 }
 
-void
+LauncherIcon *
 LauncherController::CreateFavorite (const char *file_path)
 {
     BamfApplication *app;
     BamfLauncherIcon *icon;
 
-    app = bamf_matcher_get_application_for_desktop_file (m_Matcher, file_path, true);
+    app = bamf_matcher_get_application_for_desktop_file (_matcher, file_path, true);
     
     if (g_object_get_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen")))
     {
         bamf_view_set_sticky (BAMF_VIEW (app), true);
-        return;
+        return 0;
     }
     
     g_object_set_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (1));
     
     bamf_view_set_sticky (BAMF_VIEW (app), true);
-    icon = new BamfLauncherIcon (m_Launcher, app, m_Screen);
-    RegisterIcon (icon);
+    icon = new BamfLauncherIcon (_launcher, app, _screen);
+    icon->SetIconType (LAUNCHER_ICON_TYPE_FAVORITE);
+    
+    return icon;
 }
 
 /* private */
@@ -112,16 +129,28 @@ LauncherController::SetupBamf ()
     GSList *favs, *f;
     BamfApplication *app;
     BamfLauncherIcon *icon;
+    int priority = 0;
     
-    m_Matcher = bamf_matcher_get_default ();
+    _matcher = bamf_matcher_get_default ();
     
     favs = FavoriteStore::GetDefault ()->GetFavorites ();
     
     for (f = favs; f; f = f->next)
-      CreateFavorite ((const char *) f->data);
+    {
+        LauncherIcon *fav = CreateFavorite ((const char *) f->data);
+        
+        if (fav)
+        {
+            fav->SetSortPriority (priority);
+            RegisterIcon (fav);
+            priority++;
+        }
+    }
     
-    apps = bamf_matcher_get_applications (m_Matcher);
-    g_signal_connect (m_Matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
+    priority = 0;
+    
+    apps = bamf_matcher_get_applications (_matcher);
+    g_signal_connect (_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
     
     for (l = apps; l; l = l->next)
     {
@@ -131,8 +160,11 @@ LauncherController::SetupBamf ()
           continue;
         g_object_set_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (1));
         
-        icon = new BamfLauncherIcon (m_Launcher, app, m_Screen);
+        icon = new BamfLauncherIcon (_launcher, app, _screen);
+        icon->SetSortPriority (priority);
         RegisterIcon (icon);
+        
+        priority++;
     }
 }
 

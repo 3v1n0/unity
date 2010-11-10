@@ -16,6 +16,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
     SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
     SetIconName (icon_name);
+    SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
     
     if (bamf_view_is_sticky (BAMF_VIEW (m_App)))
       SetVisible (true);

@@ -27,25 +27,27 @@ public:
 
 
 private:
-    BamfMatcher* m_Matcher;
-    CompAction* m_ExpoAction;
-    CompScreen* m_Screen;
-    Launcher* m_Launcher;
-    LauncherModel* _model;
-    nux::BaseWindow* m_Window;
-    FavoriteStore* m_FavoriteStore;
+    BamfMatcher*     _matcher;
+    CompAction*      _expo_action;
+    CompScreen*      _screen;
+    Launcher*        _launcher;
+    LauncherModel*   _model;
+    nux::BaseWindow* _window;
+    FavoriteStore*   _favorite_store;
 
     void InsertExpoAction ();
 
     void RegisterIcon (LauncherIcon *icon);
     
-    void CreateFavorite (const char *file_path);
+    LauncherIcon * CreateFavorite (const char *file_path);
 
     void SetupBamf ();
 
     void OnExpoClicked ();
     
     /* statics */
+    
+    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 
