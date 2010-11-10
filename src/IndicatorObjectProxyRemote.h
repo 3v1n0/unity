@@ -31,15 +31,12 @@ class IndicatorObjectProxyRemote : public IndicatorObjectProxy
 {
 public:
 
-  IndicatorObjectProxyRemote  (const char *name, const char *model_name);
+  IndicatorObjectProxyRemote  (const char *name);
   ~IndicatorObjectProxyRemote ();
   
   virtual std::string& GetName ();
   virtual std::vector<IndicatorObjectEntryProxy *>& GetEntries ();
 
-  void OnRowAdded   (DeeModelIter *iter);
-  void OnRowChanged (DeeModelIter *iter);
-  void OnRowRemoved (DeeModelIter *iter);
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
 
   // Signals
@@ -47,8 +44,6 @@ public:
 
 private:
   std::string _name;
-  std::string _model_name;
-  DeeModel    *_model;
 };
 
 #endif // INDICATOR_OBJECT_PROXY_REMOTE_H

@@ -173,6 +173,38 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 #endif
 }
 
+IndicatorObjectProxyRemote *
+IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
+{
+  IndicatorObjectProxyRemote *remote = NULL;
+  std::vector<IndicatorObjectProxy*>::iterator it;
+  
+  for (it = _indicators.begin(); it != _indicators.end(); it++)
+  {
+    IndicatorObjectProxyRemote *r = static_cast<IndicatorObjectProxyRemote *> (*it);
+
+    if (g_strcmp0 (id, r->GetName ().c_str ()) == 0)
+      {
+        remote = r;
+        break;
+      }
+  }
+
+  if (remote == NULL)
+    {
+      // Create one
+      remote = new IndicatorObjectProxyRemote (id);
+      remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
+                                                        &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
+
+      _indicators.push_back (remote);
+
+      OnObjectAdded.emit (remote);
+    }
+
+  return remote;
+}
+
 void
 IndicatorObjectFactoryRemote::Sync (GVariant *args)
 {
@@ -187,6 +219,9 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
   gboolean      image_sensitive;
   gboolean      image_visible;
 
+  IndicatorObjectProxyRemote *current_proxy = NULL;
+  gchar                      *current_proxy_id = NULL;
+
   g_variant_get (args, "(a(sssbbusbb))", &iter);
   while (g_variant_iter_loop (iter, "(sssbbusbb)",
                               &indicator_id,
@@ -199,7 +234,14 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
                               &image_sensitive,
                               &image_visible))
     {
-      g_message ("%s: %s", indicator_id, entry_id);
+      if (g_strcmp0 (current_proxy_id, indicator_id) != 0)
+        {
+          g_free (current_proxy_id);
+
+          current_proxy_id = g_strdup (indicator_id);
+          current_proxy = IndicatorForID (indicator_id);
+        }
+      g_message ("%s:%p:%s", current_proxy_id, current_proxy, entry_id);
     }
 
   g_variant_iter_free (iter);

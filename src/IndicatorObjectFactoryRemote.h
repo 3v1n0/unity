@@ -24,6 +24,7 @@
 #include <dee.h>
 
 #include "IndicatorObjectFactory.h"
+#include "IndicatorObjectProxyRemote.h"
 
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
@@ -42,6 +43,8 @@ public:
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
   void Sync (GVariant *args);
 
+private:
+  IndicatorObjectProxyRemote* IndicatorForID (const char *id);
 private:
   GDBusProxy *_proxy;
 };
