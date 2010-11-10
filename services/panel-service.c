@@ -342,3 +342,104 @@ sort_indicators (PanelService *self)
     }
 }
 
+static gchar *
+gtk_image_to_data (GtkImage *image)
+{
+  GtkImageType type = gtk_image_get_storage_type (image);
+  gchar *ret = NULL;
+
+  if (type == GTK_IMAGE_PIXBUF)
+    {
+
+    }
+  else if (type == GTK_IMAGE_STOCK)
+    {
+      g_object_get (G_OBJECT (image), "stock", &ret, NULL);
+    }
+  else if (type == GTK_IMAGE_ICON_NAME)
+    {
+      g_object_get (G_OBJECT (image), "icon-name", &ret, NULL);
+    }
+  else if (type == GTK_IMAGE_GICON)
+    {
+      GIcon *icon = NULL;
+      gtk_image_get_gicon (image, &icon, NULL);
+      if (G_IS_ICON (icon))
+        {
+          ret = g_icon_to_string (icon);
+        }
+    }
+  else
+    {
+      ret = g_strdup ("");
+      g_warning ("Unable to support GtkImageType: %d", type);
+    }
+
+  return ret;
+}
+
+static void
+indicator_entry_to_variant (IndicatorObjectEntry *entry,
+                            const gchar          *id,
+                            const gchar          *indicator_id,
+                            GVariantBuilder      *b)
+{
+  gboolean is_label = GTK_IS_LABEL (entry->label);
+  gboolean is_image = GTK_IS_IMAGE (entry->image);
+  gchar *image_data = NULL;
+  
+  g_variant_builder_add (b, "(sssbbusbb)",
+                         indicator_id,
+                         id,
+                         is_label ? gtk_label_get_label (entry->label) : "",
+                         is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
+                         is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
+                         is_image ? (guint32)gtk_image_get_storage_type (entry->image) : (guint32) 0,
+                         is_image ? (image_data = gtk_image_to_data (entry->image)) : "",
+                         is_image ? gtk_widget_get_sensitive (GTK_WIDGET (entry->image)) : FALSE,
+                         is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE);
+
+  g_free (image_data);
+}
+
+static void
+indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+{
+  GList *entries, *e;
+
+  entries = indicator_object_get_entries (object);
+  for (e = entries; e; e = e->next)
+    {
+      IndicatorObjectEntry *entry = e->data;
+      gchar *id = g_strdup_printf ("%p", entry);
+      indicator_entry_to_variant (entry, id, indicator_id, b);
+      g_free (id);
+    }
+  g_list_free (entries);
+}
+
+/*
+ * Public Methods
+ */
+GVariant *
+panel_service_sync_one (PanelService *self, const gchar *indicator_id)
+{
+  GVariantBuilder b;
+  GSList *i;
+
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssbbusbb))"));
+
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssbbusbb)"));
+
+  for (i = self->priv->indicators; i; i = i->next)
+    {
+      if (g_strcmp0 (indicator_id,
+                     g_object_get_data (G_OBJECT (i->data), "id")) == 0)
+        {
+          indicator_object_to_variant (i->data, indicator_id, &b);
+          break;
+        }
+    }
+  g_variant_builder_close (&b);
+  return g_variant_builder_end (&b);
+}

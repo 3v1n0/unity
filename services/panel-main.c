@@ -7,18 +7,32 @@
 
 static GDBusNodeInfo *introspection_data = NULL;
 
+/*
+ * typedef struct {
+ *   gchar *indicator_id
+ *   gchar *entry_id;
+ *   gchar *label;
+ *   bool   label_sensitive;
+ *   bool   label_visible;
+ *   uint32 icon_hint;
+ *   gchar *icon_data;
+ *   bool   icon_sensitive;
+ *   bool   icon_visible;
+ *
+ * } EntryInfo;
+ */
 
 static const gchar introspection_xml[] =
   "<node>"
   "  <interface name='com.canonical.Unity.Panel.Service'>"
   ""
   "    <method name='Sync'>"
-  "      <arg type='a{sa{sv}}' name='state' direction='out'/>"
+  "      <arg type='a(ssbbusbb)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncOne'>"
   "      <arg type='s' name='indicator_id' direction='in'/>"
-  "      <arg type='a{sv}' name='state' direction='out'/>"
+  "      <arg type='a(ssbbusbb)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='ShowEntry'>"
@@ -73,14 +87,13 @@ handle_method_call (GDBusConnection       *connection,
 {
   PanelService *service = PANEL_SERVICE (user_data);
 
-  if (g_strcmp0 (method_name, "ChangeCount") == 0)
+  if (g_strcmp0 (method_name, "SyncOne") == 0)
     {
-      gint change;
-      g_variant_get (parameters, "(i)", &change);
-
-      printf ("change: %d\n", change);
-
-      g_dbus_method_invocation_return_value (invocation, NULL);
+      gchar *id;
+      g_variant_get (parameters, "(s)", &id, NULL);
+      g_dbus_method_invocation_return_value (invocation,
+                                             panel_service_sync_one (service,
+                                                                     id));
     }
 }
 
