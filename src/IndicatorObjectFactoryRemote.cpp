@@ -154,8 +154,6 @@ IndicatorObjectFactoryRemote::OnRowAdded (DeeModelIter *iter)
 void
 IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 {
-  g_debug ("ENTRY ACTIVATED: %s", entry_id);
-#if 0
   std::vector<IndicatorObjectProxy*>::iterator it;
   
   for (it = _indicators.begin(); it != _indicators.end(); it++)
@@ -170,7 +168,6 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
   } 
-#endif
 }
 
 IndicatorObjectProxyRemote *

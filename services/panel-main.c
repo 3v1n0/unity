@@ -142,6 +142,26 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
 }
 
 static void
+on_service_entry_activated (PanelService    *service,
+                            const gchar     *entry_id,
+                            GDBusConnection *connection)
+{
+  GError *error = NULL;
+  g_dbus_connection_emit_signal (connection,
+                                 S_NAME,
+                                 S_PATH,
+                                 S_IFACE,
+                                 "EntryActivated",
+                                 g_variant_new ("(s)", entry_id),
+                                 &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit EntryActivated signal: %s", error->message);
+      g_error_free (error);
+    }
+}
+static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
@@ -158,6 +178,8 @@ on_bus_acquired (GDBusConnection *connection,
                                               NULL);
   g_signal_connect (service, "re-sync",
                     G_CALLBACK (on_service_resync), connection);
+  g_signal_connect (service, "entry-activated",
+                    G_CALLBACK (on_service_entry_activated), connection);
 
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);
