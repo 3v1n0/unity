@@ -149,7 +149,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       self->priv->last_menu_button = 0;
     }
-  g_debug ("FILTER: %d", e->type);
 
   return ret;
 }

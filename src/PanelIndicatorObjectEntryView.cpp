@@ -56,9 +56,8 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 void
 PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, long key_flags)
 {
-  //printf ("OnMouseDown: %d %d %ld %ld\n", x, y, button_flags, key_flags);
-  //printf ("Geometry   : %d %d %d %d\n", GetGeometry ().x, GetGeometry ().y, GetGeometry ().width, GetGeometry ().height);
-
+  g_debug ("%s: %s", G_STRFUNC, _proxy->GetLabel ());
+  g_debug ("\n\n%d %d %d %d\n\n", x, y, GetGeometry().width, GetGeometry ().height);
   _proxy->ShowMenu (GetGeometry ().x, PANEL_HEIGHT, time (NULL), nux::GetEventButton (button_flags));
 }
 
@@ -176,6 +175,8 @@ PanelIndicatorObjectEntryView::Refresh ()
     cairo_paint (cr);
 
     x += icon_width + SPACING;
+
+    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)

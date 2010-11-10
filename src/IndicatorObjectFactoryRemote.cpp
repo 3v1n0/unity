@@ -113,8 +113,13 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
 }
 
 void
-IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button)
+IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
+                                                         int         x,
+                                                         int         y,
+                                                         guint       timestamp,
+                                                         guint32     button)
 {
+  g_debug ("%s: %s", G_STRFUNC, entry_id);
   Display* d = nux::GetThreadGLWindow()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
   XFlush (d);
@@ -122,7 +127,7 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, 
   g_dbus_proxy_call (_proxy,
                      "ShowEntry",
                      g_variant_new ("(suiii)",
-                                    id,
+                                    entry_id,
                                     CurrentTime,
                                     x,
                                     y,
