@@ -42,7 +42,7 @@ private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
     
-    void OnMouseClick ();
+    void OnMouseClick (int button);
     void EnsureWindowState ();
     
     static void OnClosed (BamfView *view, gpointer data);

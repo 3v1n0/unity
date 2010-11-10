@@ -65,7 +65,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 }
 
 void
-BamfLauncherIcon::OnMouseClick ()
+BamfLauncherIcon::OnMouseClick (int button)
 {
     BamfView *view;
     GList *children, *l;
