@@ -21,7 +21,12 @@ struct _PanelServicePrivate
   GHashTable *id2entry_hash;
   GHashTable *entry2indicator_hash;
 
-  guint32 timeouts[100];
+  gint32 timeouts[100];
+
+  GtkMenu *last_menu;
+  guint32  last_menu_id;
+  gint32   last_x;
+  gint32   last_y;
 };
 
 /* Globals */
@@ -453,6 +458,36 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
   g_list_free (entries);
 }
 
+static void
+positon_menu (GtkMenu  *menu,
+              gint     *x,
+              gint     *y,
+              gboolean *push,
+              gpointer  user_data)
+{
+  PanelService *self = PANEL_SERVICE (user_data);
+  PanelServicePrivate *priv = self->priv;
+
+  *x = priv->last_x;
+  *y = priv->last_y;
+  *push = TRUE;
+}
+
+static void
+on_active_menu_hidden (GtkMenu *menu, PanelService *self)
+{
+  PanelServicePrivate *priv = self->priv;
+
+  priv->last_x = 0;
+  priv->last_y = 0;
+
+  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
+  priv->last_menu = NULL;
+  priv->last_menu_id = 0;
+
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
+}
+
 /*
  * Public Methods
  */
@@ -508,4 +543,38 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
 
   g_variant_builder_close (&b);
   return g_variant_builder_end (&b);
+}
+
+void
+panel_service_show_entry (PanelService *self,
+                          const gchar  *entry_id,
+                          guint32       timestamp,
+                          gint32        x,
+                          gint32        y,
+                          gint32        button)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+
+  if (GTK_IS_MENU (priv->last_menu))
+    {
+      priv->last_x = 0;
+      priv->last_y = 0;
+
+      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
+      priv->last_menu = NULL;
+      priv->last_menu_id = 0;
+    }
+
+  if (entry != NULL && GTK_IS_MENU (entry->menu))
+    {
+      priv->last_menu = entry->menu;
+      priv->last_x = x;
+      priv->last_y = y;
+      priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
+                                             G_CALLBACK (on_active_menu_hidden), self);
+      gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, timestamp);
+
+      g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
+    }
 }

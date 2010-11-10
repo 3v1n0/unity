@@ -55,6 +55,14 @@ GVariant     * panel_service_sync          (PanelService *self);
 GVariant     * panel_service_sync_one      (PanelService *self,
                                             const gchar  *indicator_id);
 
+void           panel_service_show_entry    (PanelService *self,
+                                            const gchar  *entry_id,
+                                            guint32       timestamp,
+                                            gint32        x,
+                                            gint32        y,
+                                            gint32        button);
+
+
 G_END_DECLS
 
 #endif /* _PANEL_SERVICE_H_ */

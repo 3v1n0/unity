@@ -101,6 +101,18 @@ handle_method_call (GDBusConnection       *connection,
                                              panel_service_sync_one (service,
                                                                      id));
     }
+  else if (g_strcmp0 (method_name, "ShowEntry") == 0)
+    {
+      gchar *entry_id;
+      guint32 timestamp;
+      gint32  x;
+      gint32  y;
+      gint32  button;
+      g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
+      panel_service_show_entry (service, entry_id, timestamp, x, y, button);
+
+      g_dbus_method_invocation_return_value (invocation, NULL);
+    }
 }
 
 static void
