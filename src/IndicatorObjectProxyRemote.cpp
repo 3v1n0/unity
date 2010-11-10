@@ -61,7 +61,6 @@ IndicatorObjectProxyRemote::BeginSync ()
     IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
     remote->_dirty = true;
   }
-  g_message ("%s", G_STRFUNC);
 }
 
 void
@@ -74,17 +73,6 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
                                       bool         image_sensitive,
                                       bool         image_visible)
 {
-  g_message ("%s", G_STRFUNC);
-  g_message ("\t%s %s %d %d %u %s %d %d",
-             entry_id,
-             label,
-             label_sensitive,
-             label_visible,
-             image_type,
-             image_type == 3 ? "Pixbuf": image_data,
-             image_sensitive,
-             image_visible);
-
   IndicatorObjectEntryProxyRemote *remote = NULL;
   std::vector<IndicatorObjectEntryProxy*>::iterator it;
   
@@ -104,7 +92,6 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
       remote = new IndicatorObjectEntryProxyRemote ();
       remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
                                                         &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
-      g_message ("ADDED: %p", remote);
       _entries.push_back (remote);
     }
 
@@ -125,7 +112,6 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
 void
 IndicatorObjectProxyRemote::EndSync ()
 {
-  g_message ("%s", G_STRFUNC);
   std::vector<IndicatorObjectEntryProxy*>::iterator it;
  
   for (it = _entries.begin(); it != _entries.end(); it++)
@@ -133,6 +119,9 @@ IndicatorObjectProxyRemote::EndSync ()
     IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
     if (remote->_dirty == true)
       {
+        /* We don't get rid of the entries as there's no real need to, and it saves us
+         * having to do a bunch of object creation everytime the menu changes
+         */
         remote->Refresh ("",
                          "",
                          false,
