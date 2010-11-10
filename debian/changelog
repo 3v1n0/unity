@@ -1,9 +1,10 @@
-unity (0.2.46-0ubuntu6~dx1) UNRELEASED; urgency=low
+unity (0.3.0-0ubuntu1~dx1ubuntu1) UNRELEASED; urgency=low
 
+  * merge with new release
   * debian/libunity0.symbols:
     - update to new internal API
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 12 Oct 2010 15:47:59 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 10 Nov 2010 14:08:12 +0100
 
 unity (0.2.46-0ubuntu5) maverick-proposed; urgency=low
 
