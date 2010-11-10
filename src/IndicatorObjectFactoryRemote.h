@@ -38,15 +38,12 @@ public:
   virtual void ForceRefresh ();
 
   void OnRemoteProxyReady (GDBusProxy *proxy);
-  void OnRowAdded         (DeeModelIter   *iter);
-  void OnRowChanged       (DeeModelIter *iter);
-  void OnRowRemoved       (DeeModelIter *iter);
   void OnEntryActivated   (const char *entry_id);
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
+  void Sync (GVariant *args);
 
 private:
   GDBusProxy *_proxy;
-  DeeModel   *_model;
 };
 
 #endif // INDICATOR_OBJECT_FACTORY_REMOTE_H

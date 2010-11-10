@@ -27,39 +27,24 @@
 #define S_NAME  "com.canonical.Unity.Panel.Service"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
-#define D_NAME  "com.canonical.Unity.Panel.Service.Indicators"
+
 
 // Enums
-
-enum
-{
-  COL_NAME = 0,
-  COL_MODEL_NAME,
-  COL_EXPAND
-};
 
 // Forwards
 static void on_proxy_ready_cb (GObject      *source,
                                GAsyncResult *res,
                                gpointer      data);
 
-static void on_row_added   (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
-static void on_row_changed (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
-static void on_row_removed (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
 static void on_proxy_signal_received (GDBusProxy *proxy,
                                       gchar      *sender_name,
                                       gchar      *signal_name,
                                       GVariant   *parameters,
                                       IndicatorObjectFactoryRemote *remote);
+
+static void on_sync_ready_cb (GObject      *source,
+                              GAsyncResult *res,
+                              gpointer      data);
 
 // Public Methods
 IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
@@ -74,18 +59,6 @@ IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
                             NULL,
                             on_proxy_ready_cb,
                             this);
-
-  // Connect to the main DeeSharedModel, which gives us info about the
-  // indicators that the service has
-  _model = dee_shared_model_new_with_name (D_NAME);
-  g_signal_connect (_model, "row-added",
-                    G_CALLBACK (on_row_added), this);
-  g_signal_connect (_model, "row-changed",
-                    G_CALLBACK (on_row_changed), this);
-  g_signal_connect (_model, "row-removed",
-                    G_CALLBACK (on_row_removed), this);
-
-  dee_shared_model_connect (DEE_SHARED_MODEL (_model));
 }
 
 IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
@@ -93,10 +66,6 @@ IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
   if (G_IS_OBJECT (_proxy))
     g_object_unref (_proxy);
   _proxy = NULL;
-
-  if (DEE_IS_SHARED_MODEL (_model))
-    g_object_unref (_model);
-  _model = NULL;
 
   std::vector<IndicatorObjectProxy*>::iterator it;
   
@@ -129,6 +98,15 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
   // FIXME: Add autorestarting bits here
  g_signal_connect (_proxy, "g-signal",
                    G_CALLBACK (on_proxy_signal_received), this);
+
+  g_dbus_proxy_call (_proxy,
+                     "Sync",
+                     NULL,
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     on_sync_ready_cb,
+                     this);
 }
 
 void
@@ -139,11 +117,12 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, 
 
   g_dbus_proxy_call (_proxy,
                      "ShowEntry",
-                     g_variant_new ("(suii)",
+                     g_variant_new ("(suiii)",
                                     id,
                                     timestamp,
                                     x,
-                                    y),
+                                    y,
+                                    0),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
@@ -151,6 +130,7 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, 
                      NULL);
 }
 
+#if 0
 void
 IndicatorObjectFactoryRemote::OnRowAdded (DeeModelIter *iter)
 {
@@ -168,23 +148,14 @@ IndicatorObjectFactoryRemote::OnRowAdded (DeeModelIter *iter)
 
   OnObjectAdded.emit (remote);
 }
-
-void
-IndicatorObjectFactoryRemote::OnRowChanged (DeeModelIter *iter)
-{
-  printf ("HELLO %s\n", G_STRFUNC);
-}
-
-void
-IndicatorObjectFactoryRemote::OnRowRemoved (DeeModelIter *iter)
-{
-  printf ("HELLO%s\n", G_STRFUNC);
-}
+#endif
 
 // We need to unset the last active entry and set the new one as active
 void
 IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 {
+  g_debug ("ENTRY ACTIVATED: %s", entry_id);
+#if 0
   std::vector<IndicatorObjectProxy*>::iterator it;
   
   for (it = _indicators.begin(); it != _indicators.end(); it++)
@@ -199,6 +170,39 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
   } 
+#endif
+}
+
+void
+IndicatorObjectFactoryRemote::Sync (GVariant *args)
+{
+  GVariantIter *iter;
+  gchar        *indicator_id;
+  gchar        *entry_id;
+  gchar        *label;
+  gboolean      label_sensitive;
+  gboolean      label_visible;
+  guint32       image_type;
+  gchar        *image_data;
+  gboolean      image_sensitive;
+  gboolean      image_visible;
+
+  g_variant_get (args, "(a(sssbbusbb))", &iter);
+  while (g_variant_iter_loop (iter, "(sssbbusbb)",
+                              &indicator_id,
+                              &entry_id,
+                              &label,
+                              &label_sensitive,
+                              &label_visible,
+                              &image_type,
+                              &image_data,
+                              &image_sensitive,
+                              &image_visible))
+    {
+      g_message ("%s: %s", indicator_id, entry_id);
+    }
+
+  g_variant_iter_free (iter);
 }
 
 //
@@ -277,24 +281,6 @@ on_proxy_ready_cb (GObject      *source,
 }
 
 static void
-on_row_added (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowAdded (iter);
-}
-
-static void
-on_row_changed (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowChanged (iter);
-}
-
-static void
-on_row_removed (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowRemoved (iter);
-}
-
-static void
 on_proxy_signal_received (GDBusProxy *proxy,
                           gchar      *sender_name,
                           gchar      *signal_name,
@@ -305,4 +291,27 @@ on_proxy_signal_received (GDBusProxy *proxy,
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
   }
+}
+
+static void
+on_sync_ready_cb (GObject      *source,
+                  GAsyncResult *res,
+                  gpointer      data)
+{
+  IndicatorObjectFactoryRemote *remote = static_cast<IndicatorObjectFactoryRemote *> (data);
+  GVariant     *args;
+  GError       *error = NULL;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy*)source, res, &error);
+
+  if (args == NULL)
+    {
+      g_warning ("Unable to perform Sync() on panel service: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  remote->Sync (args);
+
+  g_variant_unref (args);
 }
