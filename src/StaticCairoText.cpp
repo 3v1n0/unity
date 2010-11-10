@@ -27,7 +27,7 @@
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 #include "Nux/Validator.h"
-#include "Nux/StaticCairoText.h"
+#include "StaticCairoText.h"
 
 namespace nux
 {
@@ -94,7 +94,7 @@ StaticCairoText::~StaticCairoText ()
   delete (_cairoGraphics);
   delete (_texture2D);
 }
-  
+
 void StaticCairoText::PreLayoutManagement ()
 {
   int textWidth  = 0;
@@ -109,7 +109,7 @@ void StaticCairoText::PreLayoutManagement ()
   SetBaseSize (textWidth, textHeight);
 
   if((_texture2D == 0) )
-  {    
+  {
     UpdateTexture ();
   }
 

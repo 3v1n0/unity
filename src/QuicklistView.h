@@ -6,7 +6,7 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
-#include "Nux/StaticCairoText.h"
+#include "StaticCairoText.h"
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
@@ -18,7 +18,7 @@
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
-#define HIGH_LIGHT_MIN_WIDTH 200.0f 
+#define HIGH_LIGHT_MIN_WIDTH 200.0f
 #define RADIUS               5.0f
 #define BLUR_INTENSITY       8
 #define LINE_WIDTH           1.0f
@@ -32,7 +32,7 @@ namespace nux
   class VLayout;
   class HLayout;
   class SpaceLayout;
-  
+
   class QuicklistView : public BaseWindow
   {
     NUX_DECLARE_OBJECT_TYPE (QuicklistView, BaseWindow);

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <compiz>
     <plugin name="unity" useBcop="true">
-	<_short>Unity plugin</_short>
-	<_long>Developers are awesome</_long>
+	<_short>Ubuntu Unity Plugin</_short>
+	<_long>Plugin to draw the Unity Shell</_long>
 	<deps>
 	    <relation type="after">
 		<plugin>decor</plugin>
@@ -12,10 +12,7 @@
 	    </requirement>
 	</deps>
 	<options>
-	    <option type="key" name="unity">
-		<_short>Unity Action</_short>
-		<_long>Unity action. See what comes out of a terminal? Familiar with the code yet?</_long>
-	    </option>
+
 	</options>
     </plugin>
 </compiz>
