@@ -51,6 +51,8 @@ public:
     
     int SortPriority ();
     
+    int RelatedWindows ();
+    
     struct timeval ShowTime ();
     struct timeval HideTime ();
     struct timeval RunningTime ();
@@ -62,11 +64,11 @@ public:
     
     nux::BaseTexture * TextureForSize (int size);
     
-    sigc::signal<void> MouseDown;
-    sigc::signal<void> MouseUp;
+    sigc::signal<void, int> MouseDown;
+    sigc::signal<void, int> MouseUp;
     sigc::signal<void> MouseEnter;
     sigc::signal<void> MouseLeave;
-    sigc::signal<void> MouseClick;
+    sigc::signal<void, int> MouseClick;
     
     sigc::signal<void, void *> show;
     sigc::signal<void, void *> hide;
@@ -78,6 +80,7 @@ protected:
     void SetActive  (bool active);
     void SetRunning (bool running);
     void SetUrgent  (bool urgent);
+    void SetRelatedWindows (int windows);
     void Remove ();
     
     void SetIconType (LauncherIconType type);
@@ -112,6 +115,7 @@ private:
     bool             _running;
     bool             _urgent;
     int              _sort_priority;
+    int              _related_windows;
     LauncherIconType _icon_type;
     struct timeval   _show_time;
     struct timeval   _hide_time;

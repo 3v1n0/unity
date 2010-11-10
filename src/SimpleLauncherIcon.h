@@ -24,9 +24,9 @@ public:
     void SetIconName (const char *name);
 
 protected:
-    virtual void OnMouseDown ();
-    virtual void OnMouseUp ();
-    virtual void OnMouseClick ();
+    virtual void OnMouseDown (int button);
+    virtual void OnMouseUp (int button);
+    virtual void OnMouseClick (int button);
     virtual void OnMouseEnter ();
     virtual void OnMouseLeave ();
 private:

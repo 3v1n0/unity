@@ -1,7 +1,6 @@
 #ifndef TOOLTIP_H
 #define TOOLTIP_H
 
-
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
 #include "NuxGraphics/GraphicsEngine.h"
@@ -19,7 +18,7 @@
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
-#define HIGH_LIGHT_MIN_WIDTH 200.0f 
+#define HIGH_LIGHT_MIN_WIDTH 200.0f
 #define RADIUS               5.0f
 #define BLUR_INTENSITY       8
 #define LINE_WIDTH           1.0f
@@ -33,14 +32,14 @@ namespace nux
   class VLayout;
   class HLayout;
   class SpaceLayout;
-  
-  class Tooltip : public BaseWindow
-  {
-    NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
-  public:
-    Tooltip ();
 
-    ~Tooltip ();
+  class QuicklistView : public BaseWindow
+  {
+    NUX_DECLARE_OBJECT_TYPE (QuicklistView, BaseWindow);
+  public:
+    QuicklistView ();
+
+    ~QuicklistView ();
 
     long ProcessEvent (IEvent& iEvent,
       long    traverseInfo,
@@ -96,6 +95,7 @@ namespace nux
 
     bool _cairo_text_has_changed;
     void UpdateTexture ();
+    std::list<nux::StaticCairoText*> _item_list;
   };
 }
 

@@ -35,6 +35,8 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _running = false;
   _visible = false;
   _urgent  = false;
+  
+  _related_windows = 0;
 
   _background_color = nux::Color::White;
   _mouse_inside = false;
@@ -264,6 +266,15 @@ void LauncherIcon::SetUrgent (bool urgent)
   needs_redraw.emit (this);
 }
 
+void LauncherIcon::SetRelatedWindows (int windows)
+{
+  if (_related_windows == windows)
+    return;
+    
+  _related_windows = windows;
+  needs_redraw.emit (this);
+}
+
 void LauncherIcon::Remove ()
 {
   SetVisible (false);
@@ -316,4 +327,10 @@ bool
 LauncherIcon::Urgent ()
 {
   return _urgent;
+}
+
+int
+LauncherIcon::RelatedWindows ()
+{
+  return _related_windows;
 }

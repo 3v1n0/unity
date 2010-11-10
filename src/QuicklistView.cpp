@@ -9,13 +9,13 @@
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
 
-#include "Tooltip.h"
+#include "QuicklistView.h"
 
 namespace nux
 {
-  NUX_IMPLEMENT_OBJECT_TYPE (Tooltip);
+  NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
   
-  Tooltip::Tooltip ()
+  QuicklistView::QuicklistView ()
   {
     _texture_bg = 0;
     _texture_mask = 0;
@@ -24,12 +24,12 @@ namespace nux
 
     _anchorX   = 0;
     _anchorY   = 0;
-    _labelText = TEXT ("Unity");
+    _labelText = TEXT ("QuicklistView 1234567890");
 
     _anchor_width   = 10;
     _anchor_height  = 18;
     _corner_radius  = 4;
-    _padding        = 15;
+    _padding        = 10;
 
     _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
     _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -42,11 +42,19 @@ namespace nux
 
     _vlayout->AddLayout(_top_space, 0);
 
-    _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
-    _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
-    _tooltip_text->Reference();
-    
-    _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
+    for (int i = 0; i < 5; i++)
+    {
+      nux::StaticCairoText* tooltip_text;
+      if (i == 0)
+        tooltip_text = new nux::StaticCairoText (TEXT ("1234567890"), NUX_TRACKER_LOCATION);
+      else
+        tooltip_text = new nux::StaticCairoText (TEXT ("QuicklistView 1234567890"), NUX_TRACKER_LOCATION);
+
+      tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+      _vlayout->AddView(tooltip_text, 1, eCenter, eFull);
+      _item_list.push_back (tooltip_text);
+      tooltip_text->Reference();
+    }
 
     _vlayout->AddLayout(_bottom_space, 0);
  
@@ -59,24 +67,31 @@ namespace nux
   
   }
 
-  Tooltip::~Tooltip ()
+  QuicklistView::~QuicklistView ()
   {
     if (_texture_bg)
       _texture_bg->UnReference ();
 
-    _tooltip_text->UnReference();
+    std::list<nux::StaticCairoText*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    {
+      (*it)->UnReference();
+    }
+    _item_list.clear ();
   }
 
-  long Tooltip::ProcessEvent (IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
+  long QuicklistView::ProcessEvent (IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
   {
     long ret = TraverseInfo;
-
-    _tooltip_text->ProcessEvent(ievent, ret, ProcessEventInfo);
-    
+    std::list<nux::StaticCairoText*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    {
+      ret = (*it)->ProcessEvent(ievent, ret, ProcessEventInfo);
+    }
     return ret;
   }
 
-  void Tooltip::Draw (GraphicsEngine& gfxContext, bool forceDraw)
+  void QuicklistView::Draw (GraphicsEngine& gfxContext, bool forceDraw)
   {
     Geometry base = GetGeometry();
 
@@ -124,29 +139,35 @@ namespace nux
 
     GetGraphicsEngine().GetRenderStates().SetBlend (false);
 
-    _tooltip_text->ProcessDraw(gfxContext, forceDraw);
-    
+    std::list<nux::StaticCairoText*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    {
+      (*it)->ProcessDraw(gfxContext, forceDraw);
+    }
+
     gfxContext.PopClippingRectangle ();
   }
 
-  void Tooltip::DrawContent (GraphicsEngine& GfxContext, bool force_draw)
+  void QuicklistView::DrawContent (GraphicsEngine& GfxContext, bool force_draw)
   {
 
   }
 
-  void Tooltip::PreLayoutManagement ()
+  void QuicklistView::PreLayoutManagement ()
   {
     int MaxItemWidth = 0;
     int TotalItemHeight = 0;
-    int  textWidth  = 0;
-    int  textHeight = 0;
     
-    _tooltip_text->GetTextExtents(textWidth, textHeight);
-    
-    if (textWidth > MaxItemWidth)
-      MaxItemWidth = textWidth;
-    TotalItemHeight += textHeight;
-
+    std::list<nux::StaticCairoText*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    {
+      int  textWidth  = 0;
+      int  textHeight = 0;
+      (*it)->GetTextExtents(textWidth, textHeight);
+      if (textWidth > MaxItemWidth)
+        MaxItemWidth = textWidth;
+      TotalItemHeight += textHeight;
+    }
 
     if(TotalItemHeight < _anchor_height)
     {
@@ -157,7 +178,7 @@ namespace nux
     BaseWindow::PreLayoutManagement ();
   }
 
-  long Tooltip::PostLayoutManagement (long LayoutResult)
+  long QuicklistView::PostLayoutManagement (long LayoutResult)
   {
     long result = BaseWindow::PostLayoutManagement (LayoutResult);
     UpdateTexture ();
@@ -165,13 +186,19 @@ namespace nux
     int x = _padding + _anchor_width + _corner_radius;
     int y = _padding + _corner_radius;
 
-    _tooltip_text->SetBaseX (x);
-    _tooltip_text->SetBaseY (y);
+    std::list<nux::StaticCairoText*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    {
+      (*it)->SetBaseX (x);
+      (*it)->SetBaseY (y);
+
+      y += (*it)->GetBaseHeight ();
+    }
 
     return result;
   }
 
-  void Tooltip::RecvCairoTextChanged (StaticCairoText& cairo_text)
+  void QuicklistView::RecvCairoTextChanged (StaticCairoText& cairo_text)
   {
     _cairo_text_has_changed = true;
   }
@@ -180,7 +207,7 @@ namespace nux
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-  static inline void _blurinner (guchar* pixel,
+  static inline void ql_blurinner (guchar* pixel,
     gint   *zR,
     gint   *zG,
     gint   *zB,
@@ -210,7 +237,7 @@ namespace nux
     *(pixel + 3) = *zA >> zprec;
   }
 
-  static inline void _blurrow (guchar* pixels,
+  static inline void ql_blurrow (guchar* pixels,
     gint    width,
     gint    height,
     gint    channels,
@@ -234,15 +261,15 @@ namespace nux
     zA = *(scanline + 3) << zprec;
 
     for (index = 0; index < width; index ++)
-      _blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
+      ql_blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
       zprec);
 
     for (index = width - 2; index >= 0; index--)
-      _blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
+      ql_blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
       zprec);
   }
 
-  static inline void _blurcol (guchar* pixels,
+  static inline void ql_blurcol (guchar* pixels,
     gint    width,
     gint    height,
     gint    channels,
@@ -268,11 +295,11 @@ namespace nux
     zA = *((guchar*) ptr + 3) << zprec;
 
     for (index = width; index < (height - 1) * width; index += width)
-      _blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
+      ql_blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
       aprec, zprec);
 
     for (index = (height - 2) * width; index >= 0; index -= width)
-      _blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
+      ql_blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
       aprec, zprec);
   }
 
@@ -290,7 +317,7 @@ namespace nux
   //
   // zprec = precision of state parameters zR,zG,zB and zA in fp format 8.zprec
   //
-  void _expblur (guchar* pixels,
+  void ql_expblur (guchar* pixels,
     gint    width,
     gint    height,
     gint    channels,
@@ -311,10 +338,10 @@ namespace nux
     alpha = (gint) ((1 << aprec) * (1.0f - expf (-2.3f / (radius + 1.f))));
 
     for (; row < height; row++)
-      _blurrow (pixels, width, height, channels, row, alpha, aprec, zprec);
+      ql_blurrow (pixels, width, height, channels, row, alpha, aprec, zprec);
 
     for(; col < width; col++)
-      _blurcol (pixels, width, height, channels, col, alpha, aprec, zprec);
+      ql_blurcol (pixels, width, height, channels, col, alpha, aprec, zprec);
 
     return;
   }
@@ -327,7 +354,7 @@ namespace nux
  * Applies an exponential blur on the passed surface executed on the CPU. Not as
  * nice as a real gaussian blur, but much faster.
  **/
-void ctk_surface_blur (cairo_surface_t* surface,
+void ql_surface_blur (cairo_surface_t* surface,
                   guint            radius)
 {
   guchar*        pixels;
@@ -346,15 +373,15 @@ void ctk_surface_blur (cairo_surface_t* surface,
   switch (format)
   {
     case CAIRO_FORMAT_ARGB32:
-      _expblur (pixels, width, height, 4, radius, 16, 7);
+      ql_expblur (pixels, width, height, 4, radius, 16, 7);
     break;
 
     case CAIRO_FORMAT_RGB24:
-      _expblur (pixels, width, height, 3, radius, 16, 7);
+      ql_expblur (pixels, width, height, 3, radius, 16, 7);
     break;
 
     case CAIRO_FORMAT_A8:
-      _expblur (pixels, width, height, 1, radius, 16, 7);
+      ql_expblur (pixels, width, height, 1, radius, 16, 7);
     break;
 
     default :
@@ -367,7 +394,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
 }
 
     
-  void tint_dot_hl (cairo_t* cr,
+  void ql_tint_dot_hl (cairo_t* cr,
     gint    width,
     gint    height,
     gfloat  hl_x,
@@ -451,7 +478,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_pattern_destroy (hl_pattern);
   }
 
-  void _setup (cairo_surface_t** surf,
+  void ql_setup (cairo_surface_t** surf,
     cairo_t**         cr,
     gboolean          outline,
     gint              width,
@@ -483,7 +510,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_paint (*cr);
   }
 
-  void _compute_full_mask_path (cairo_t* cr,
+  void ql_compute_full_mask_path (cairo_t* cr,
     gfloat   anchor_width,
     gfloat   anchor_height,
     gint     width,
@@ -599,13 +626,13 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_close_path (cr);
   }
 
-  void compute_mask (cairo_t* cr)
+  void ql_compute_mask (cairo_t* cr)
   {
     cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
     cairo_fill_preserve (cr);
   }
 
-  void compute_outline (cairo_t* cr,
+  void ql_compute_outline (cairo_t* cr,
     gfloat   line_width,
     gfloat*  rgba_line)
   {
@@ -619,7 +646,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_stroke (cr);
   }
 
-  void _draw (cairo_t* cr,
+  void ql_draw (cairo_t* cr,
     gboolean outline,
     gfloat   line_width,
     gfloat*  rgba,
@@ -650,7 +677,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
       cairo_fill_preserve (cr);
   }
 
-  void _finalize (cairo_t** cr,
+  void ql_finalize (cairo_t** cr,
     gboolean  outline,
     gfloat    line_width,
     gfloat*   rgba,
@@ -682,7 +709,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
   }
 
   void
-    compute_full_outline_shadow (
+    ql_compute_full_outline_shadow (
     cairo_t* cr,
     cairo_surface_t* surf,
     gint    width,
@@ -697,8 +724,8 @@ void ctk_surface_blur (cairo_surface_t* surface,
     gint    padding_size,
     gfloat* rgba_line)
   {
-    _setup (&surf, &cr, TRUE, width, height, FALSE);
-    _compute_full_mask_path (cr,
+    ql_setup (&surf, &cr, TRUE, width, height, FALSE);
+    ql_compute_full_mask_path (cr,
       anchor_width,
       anchor_height,
       width,
@@ -707,13 +734,13 @@ void ctk_surface_blur (cairo_surface_t* surface,
       corner_radius,
       padding_size);
 
-    _draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
-    ctk_surface_blur (surf, blur_coeff);
-    compute_mask (cr);
-    compute_outline (cr, line_width, rgba_line);
+    ql_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+    ql_surface_blur (surf, blur_coeff);
+    ql_compute_mask (cr);
+    ql_compute_outline (cr, line_width, rgba_line);
   }
 
-  void compute_full_mask (
+  void ql_compute_full_mask (
     cairo_t* cr,
     cairo_surface_t* surf,
     gint     width,
@@ -729,8 +756,8 @@ void ctk_surface_blur (cairo_surface_t* surface,
     gint     padding_size,
     gfloat*  rgba)
   {
-    _setup (&surf, &cr, outline, width, height, negative);
-    _compute_full_mask_path (cr,
+    ql_setup (&surf, &cr, outline, width, height, negative);
+    ql_compute_full_mask_path (cr,
       anchor_width,
       anchor_height,
       width,
@@ -738,10 +765,10 @@ void ctk_surface_blur (cairo_surface_t* surface,
       upper_size,
       radius,
       padding_size);
-    _finalize (&cr, outline, line_width, rgba, negative, outline);
+    ql_finalize (&cr, outline, line_width, rgba, negative, outline);
   }
 
-  void Tooltip::UpdateTexture ()
+  void QuicklistView::UpdateTexture ()
   {
     if (_cairo_text_has_changed == false)
       return;
@@ -765,7 +792,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     float   anchor_width      = 10;
     float   anchor_height     = 18;
 
-    tint_dot_hl (cr_bg,
+    ql_tint_dot_hl (cr_bg,
       GetBaseWidth (),
       GetBaseHeight (),
       GetBaseWidth () / 2.0f,
@@ -775,7 +802,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
       hl_color,
       dot_color);
 
-    compute_full_outline_shadow
+    ql_compute_full_outline_shadow
       (
       cr_outline,
       cairo_outline->GetSurface(),
@@ -791,7 +818,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
       _padding,
       outline_color);
 
-    compute_full_mask (
+    ql_compute_full_mask (
       cr_mask,
       cairo_mask->GetSurface(),
       GetBaseWidth (),
@@ -839,28 +866,27 @@ void ctk_surface_blur (cairo_surface_t* surface,
     _cairo_text_has_changed = false;
   }
 
-  void Tooltip::PositionChildLayout (float offsetX,
+  void QuicklistView::PositionChildLayout (float offsetX,
                                 float offsetY)
   {
   }
 
-  void Tooltip::LayoutWindowElements ()
+  void QuicklistView::LayoutWindowElements ()
   {
   }
 
-  void Tooltip::NotifyConfigurationChange (int width,
+  void QuicklistView::NotifyConfigurationChange (int width,
                                       int height)
   {
   }
 
-  void Tooltip::SetText (NString text)
+  void QuicklistView::SetText (NString text)
   {
     if (_labelText == text)
       return;
 
     _labelText = text;
-    _tooltip_text->SetText (_labelText);
-    this->ComputeChildLayout (); 
+    UpdateTexture ();
   }
 
 } // namespace nux

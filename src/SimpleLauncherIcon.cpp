@@ -24,17 +24,17 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
 }
 
 void
-SimpleLauncherIcon::OnMouseDown ()
+SimpleLauncherIcon::OnMouseDown (int button)
 {
 }
 
 void
-SimpleLauncherIcon::OnMouseUp ()
+SimpleLauncherIcon::OnMouseUp (int button)
 {
 }
 
 void
-SimpleLauncherIcon::OnMouseClick ()
+SimpleLauncherIcon::OnMouseClick (int button)
 {
 }
 

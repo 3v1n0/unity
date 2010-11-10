@@ -6,7 +6,7 @@
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -127,10 +127,7 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib &attrib, // Some basic att
     ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
     
     if (paint_required)
-    {
         paintDisplay (region);
-        paint_required = false;
-    }
     
     return ret;
 }
@@ -191,6 +188,9 @@ void
 UnityScreen::handleEvent (XEvent *event)
 {
     screen->handleEvent (event);
+    
+    if (screen->otherGrabExist ("deco", "move", NULL))
+      wt->ProcessForeignEvent (event, NULL);
 }
 
 bool
@@ -370,17 +370,6 @@ UnityWindow::windowNotify (CompWindowNotify n)
     window->windowNotify (n);
 }
 
-/* This is an action. It is called on a keybinding as set in the options. It is binded when
- *  the class is constructed
- */
-
-bool
-UnityScreen::unityInitiate (CompAction         *action,
-                CompAction::State  state,
-                CompOption::Vector &options)
-{
-    return false;
-}
 
 void 
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
@@ -411,6 +400,24 @@ UnityScreen::onRedrawRequested ()
   damageNuxRegions ();
 }
 
+void
+UnityScreen::optionChanged (CompOption            *opt,
+			    UnityOptions::Options num)
+{
+    switch (num)
+    {
+        case UnityOptions::LauncherAutohide:
+	          launcher->SetAutohide (optionGetLauncherAutohide (),
+                                   (nux::View *) panelView->HomeButton ());
+            break;
+        case UnityOptions::LauncherFloat:
+            launcher->SetFloating (optionGetLauncherFloat ());
+	          break;
+        default:
+            break;
+    }
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompScreen *,
     PluginClassHandler <UnityScreen, CompScreen> (screen), // Initiate PluginClassHandler class template
     screen (screen),
@@ -430,8 +437,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     CompositeScreenInterface::setHandler (cScreen); // Ditto for cScreen
     GLScreenInterface::setHandler (gScreen); // Ditto for gScreen
 
-    optionSetUnityInitiate (unityInitiate); // Initiate handler for 'unity' action
-
     nux::NuxInitialize (0);
     wt = nux::CreateFromForeignWindow (cScreen->output (), 
                                        glXGetCurrentContext (),	
@@ -444,6 +449,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     uScreen = this;
     
     PluginAdapter::Initialize (screen);
+
+    optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+    optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 }
 
 /* This is the destructor. It is called when the class is destroyed. If you allocated any

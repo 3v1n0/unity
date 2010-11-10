@@ -28,6 +28,7 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define URGENT_BLINKS       3
 #define BACKLIGHT_STRENGTH  0.9f
 
 static bool USE_ARB_SHADERS = true;
@@ -204,9 +205,14 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _icon_image_size        = 48;
     _icon_image_size_delta  = 6;
     _icon_size              = _icon_image_size + _icon_image_size_delta;
+    
     _icon_bkg_texture       = nux::CreateTextureFromFile (PKGDATADIR"/round_corner_54x54.png");
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
+    _icon_2indicator        = nux::CreateTextureFromFile (PKGDATADIR"/2indicate_54x54.png");
+    _icon_3indicator        = nux::CreateTextureFromFile (PKGDATADIR"/3indicate_54x54.png");
+    _icon_4indicator        = nux::CreateTextureFromFile (PKGDATADIR"/4indicate_54x54.png");
+    
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
@@ -307,7 +313,7 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timeval current)
     if (icon->Urgent ())
     {
         struct timeval urgent_time = icon->UrgentTime ();
-        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * 4))
+        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
             return true;
     }
     
@@ -482,6 +488,12 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         arg.folding_rads   = 0.0f;
         arg.skip           = false;
         
+        arg.window_indicators = MIN (4, icon->RelatedWindows ());
+        
+        // we dont need to show strays
+        if (arg.window_indicators == 1 || !icon->Running ())
+          arg.window_indicators = 0;
+        
         // animate this shit
         struct timeval running_time = icon->RunningTime ();
         int running_ms = TimeDelta (&current, &running_time);
@@ -495,9 +507,9 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
           {
               struct timeval urgent_time = icon->UrgentTime ();
               int urgent_ms = TimeDelta (&current, &urgent_time);
-              double urgent_progress = (double) MIN (1.0f, (float) urgent_ms / (float) (ANIM_DURATION_LONG * 4));
+              double urgent_progress = (double) MIN (1.0f, (float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2));
               
-              arg.backlight_intensity *= 0.5f + (float) (std::cos (M_PI * 4.0f * urgent_progress)) * 0.5f;
+              arg.backlight_intensity *= 0.2f + 0.8f * (0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f);
           }
         }
         else
@@ -602,6 +614,15 @@ bool Launcher::AutohideEnabled ()
     return _autohide;
 }
 
+gboolean Launcher::StrutHack (gpointer data)
+{
+    Launcher *self = (Launcher *) data;
+    self->_parent->InputWindowEnableStruts(false);
+    self->_parent->InputWindowEnableStruts(true);
+    
+    return false;
+}
+
 void Launcher::SetAutohide (bool autohide, nux::View *trigger)
 {
     if (_autohide == autohide)
@@ -616,6 +637,8 @@ void Launcher::SetAutohide (bool autohide, nux::View *trigger)
     }
     else
     {
+        _parent->EnableInputWindow(true);
+        g_timeout_add (1000, &Launcher::StrutHack, this);
         _parent->InputWindowEnableStruts(true);
     }
     
@@ -1055,6 +1078,47 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
   }
 }
 
+void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
+{
+  GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                GL_SRC_ALPHA,
+                                                GL_ONE_MINUS_SRC_ALPHA,
+                                                GL_ONE_MINUS_DST_ALPHA,
+                                                GL_ONE);
+
+  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+  
+  if (arg.backlight_intensity < 1.0f)
+    RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
+  if (arg.backlight_intensity > 0.0f)
+    RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
+
+  GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                GL_SRC_ALPHA,
+                                                GL_ONE_MINUS_SRC_ALPHA,
+                                                GL_ONE_MINUS_DST_ALPHA,
+                                                GL_ONE);
+  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+  
+  RenderIconImage (GfxContext, arg);
+  
+  if (arg.backlight_intensity > 0.0f)
+    RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
+  
+  switch (arg.window_indicators)
+  {
+    case 2:
+      RenderIcon(GfxContext, arg, _icon_2indicator, nux::Color::White, 1.0f);
+      break;
+    case 3:
+      RenderIcon(GfxContext, arg, _icon_3indicator, nux::Color::White, 1.0f);
+      break;
+    case 4:
+      RenderIcon(GfxContext, arg, _icon_4indicator, nux::Color::White, 1.0f);
+      break;
+  }
+}
+
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
@@ -1069,8 +1133,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg> args = RenderArgs (bkg_box);
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
-    gPainter.PushDrawColorLayer(GfxContext, bkg_box, nux::Color(0x99000000), true, ROP);
-    gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF), true, ROP);
+    gPainter.PushDrawColorLayer(GfxContext, bkg_box, nux::Color(0xB5000000), true, ROP);
+    
+    ROP.Blend = true;
+    gPainter.PushDrawColorLayer(GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF), false, ROP);
     
     UpdateIconXForm (args);
     EventLogic ();
@@ -1080,32 +1146,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
         continue;
-        
-      RenderArg arg = *rev_it;
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
       
-      if (arg.backlight_intensity < 1.0f)
-        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, arg);
-      
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
+      DrawRenderArg (GfxContext, *rev_it);
     }
 
     std::list<Launcher::RenderArg>::iterator it;
@@ -1114,30 +1156,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       if ((*it).folding_rads < 0.0f || (*it).skip)
         continue;
       
+      DrawRenderArg (GfxContext, *it);
       RenderArg arg = *it;  
-      
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      if (arg.backlight_intensity < 1.0f)
-        RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
-
-      GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
-      GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-      RenderIconImage (GfxContext, arg);
-      
-      if (arg.backlight_intensity > 0.0f)
-        RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
     }
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
@@ -1197,7 +1217,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 {
   _mouse_position = nux::Point2 (x, y);
   
-  MouseDownLogic ();
+  MouseDownLogic (x, y, button_flags, key_flags);
   EnsureAnimation ();
 }
 
@@ -1212,7 +1232,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
     UnsetHover ();
   }
 
-  MouseUpLogic ();
+  MouseUpLogic (x, y, button_flags, key_flags);
   _launcher_action_state = ACTION_NONE;
   EnsureAnimation ();
 }
@@ -1293,7 +1313,7 @@ void Launcher::EventLogic ()
   }
 }
 
-void Launcher::MouseDownLogic ()
+void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
@@ -1301,26 +1321,26 @@ void Launcher::MouseDownLogic ()
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
-    launcher_icon->MouseDown.emit ();
+    launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
   }
 }
 
-void Launcher::MouseUpLogic ()
+void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->MouseUp.emit ();
+    _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
     
     if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
-      _icon_mouse_down->MouseClick.emit ();
+      _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->MouseUp.emit ();
+    launcher_icon->MouseUp.emit (nux::GetEventButton (button_flags));
   }
   
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
