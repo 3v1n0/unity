@@ -33,6 +33,12 @@ enum
   LAST_SIGNAL
 };
 
+enum
+{
+  SYNC_WAITING = -1,
+  SYNC_NEUTRAL = 0,
+};
+
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 static gchar * indicator_order[] = {
@@ -134,7 +140,7 @@ actually_notify_object (IndicatorObject *object)
   priv = self->priv;
 
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
-  priv->timeouts[position] = 0;
+  priv->timeouts[position] = SYNC_WAITING;
 
   g_signal_emit (self, _service_signals[RE_SYNC],
                  0, g_object_get_data (G_OBJECT (object), "id"));
@@ -154,8 +160,18 @@ notify_object (IndicatorObject *object)
 
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
 
-  if (priv->timeouts[position])
+  if (priv->timeouts[position] == SYNC_WAITING)
+    {
+      /* No need to ping again as we're waiting for the client to sync anyway */
+      return;
+    }
+  else if (priv->timeouts[position] != SYNC_NEUTRAL)
+    {
+      /* We were going to signal that a sync was needed, but since there's been another change let's
+       * hold off a little longer so we're not flooding the client
+       */
       g_source_remove (priv->timeouts[position]);
+    }
 
   priv->timeouts[position] = g_timeout_add (NOTIFY_TIMEOUT,
                                             (GSourceFunc)actually_notify_object,
@@ -452,6 +468,12 @@ panel_service_sync (PanelService *self)
   for (i = self->priv->indicators; i; i = i->next)
     {
       const gchar *indicator_id = g_object_get_data (G_OBJECT (i->data), "id");
+      gint position;
+
+      /* Set the sync back to neutral */
+      position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
+      self->priv->timeouts[position] = SYNC_NEUTRAL;
+      
       indicator_object_to_variant (i->data, indicator_id, &b);
     }
 
@@ -473,6 +495,12 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
       if (g_strcmp0 (indicator_id,
                      g_object_get_data (G_OBJECT (i->data), "id")) == 0)
         {
+          gint position;
+
+          /* Set the sync back to neutral */
+          position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
+          self->priv->timeouts[position] = SYNC_NEUTRAL;
+
           indicator_object_to_variant (i->data, indicator_id, &b);
           break;
         }

@@ -40,6 +40,7 @@ static const gchar introspection_xml[] =
   "      <arg type='u' name='timestamp' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
+  "      <arg type='i' name='button' direction='in'/>"
   "    </method>"
   ""
   "    <signal name='EntryActivated'>"
