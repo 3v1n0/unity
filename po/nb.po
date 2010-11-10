@@ -6,24 +6,80 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-10 15:07-0500\n"
+"Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
+"POT-Creation-Date: 2010-11-02 23:58+0000\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Norwegian Bokmal\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: ../src/quicklauncher/application-model.vala:64
+msgid "Eject"
+msgstr ""
+
+msgid "Email & Chat"
+msgstr ""
+
+msgid "Empty Trash"
+msgstr ""
+
+msgid "Files & Folders"
+msgstr ""
+
+#. i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason
+#, c-format
+msgid "Files in trash: %d"
+msgstr ""
+
+msgid "Games"
+msgstr ""
+
+msgid "Get New Apps"
+msgstr ""
+
+#, fuzzy
+msgid "Keep in Launcher"
+msgstr "Behold i oppstartsprogram"
+
+msgid "Music"
+msgstr ""
+
+msgid "Office"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Photos & Videos"
+msgstr ""
+
 msgid "Quit"
 msgstr "Avslutt"
 
-#: ../src/quicklauncher/application-model.vala:81
-msgid "Remove from Launcher"
+#, fuzzy
+msgid "Remove from launcher"
 msgstr "Fjern fra oppstartsprogram"
 
-#: ../src/quicklauncher/application-model.vala:85
-msgid "Keep In Launcher"
-msgstr "Behold i oppstartsprogram"
+msgid "Search"
+msgstr ""
+
+#. i18n: This is meant to be used like Search $PLACES_NAME, so eg.
+#. * 'Search Applications'
+#.
+#, c-format
+msgid "Search %s"
+msgstr ""
+
+#, c-format
+msgid "See %u more results"
+msgstr ""
+
+msgid "Trash"
+msgstr ""
+
+#. Load up the world
+msgid "Web"
+msgstr ""

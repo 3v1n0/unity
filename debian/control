@@ -2,7 +2,7 @@ Source: unity
 Section: gnome
 Priority: optional
 Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
-Build-Depends: cdbs,
+Build-Depends: cmake,
                debhelper (>= 7),
                pkg-config,
                valac (>= 0.7.8),
@@ -15,7 +15,6 @@ Build-Depends: cdbs,
                libbamf-dev (>= 0.2.32),
                libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
                libdbusmenu-glib-dev (>= 0.3.6),
-               libgconf2-dev,
                libgnome-desktop-dev,
                libgtk2.0-dev (>= 2.18.0),
                libpango1.0-dev,
@@ -23,7 +22,6 @@ Build-Depends: cdbs,
                libdee-dev (>= 0.3.0),
                libindicator-dev (>= 0.3.14),
                libunity-misc-dev (>= 0.1.0),
-               libmutter-dev (>= 2.31.5),
                libutouch-grail-dev,
                libxcb-icccm1-dev,
 Standards-Version: 3.9.1
@@ -33,7 +31,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         mutter (>= 2.31.5),
+         compiz-core, compiz-core-abiversion-${coreabiversion}
          unity-asset-pool (>= 0.8.18)
 Provides: indicator-renderer,
           netbook-launcher

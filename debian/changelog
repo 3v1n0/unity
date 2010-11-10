@@ -1,6 +1,11 @@
 unity (0.3.0-0ubuntu1~dx1ubuntu1) UNRELEASED; urgency=low
 
   * merge with new release
+  * udpate debian/copyright
+  * change debian/rules to build unity as a compiz plugin
+    - needed cmake
+  * debian/control:
+    - change to new dependencies
   * debian/libunity0.symbols:
     - update to new internal API
 

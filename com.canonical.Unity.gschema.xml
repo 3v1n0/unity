@@ -1,0 +1,9 @@
+<schemalist>
+	<schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
+    <key type="as" name="favorites">
+      <default>[ 'firefox.desktop', 'evolution.desktop', 'empathy.desktop', 'totem.desktop' ]</default>
+      <summary>List of desktop file ids for favorites on the launcher.</summary>
+      <description>These applications are shown in the Launcher by default.</description>
+    </key>
+    </schema>
+</schemalist>

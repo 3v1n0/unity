@@ -1,0 +1,137 @@
+#!/bin/bash
+
+#
+# A script to build compiz++ by Scott Moreau oreaus@gmail.com
+# Modifications by Jason Smith jason.smith@canonical.com
+#
+
+# Make sure we're being ran in bash
+if [[ -z "$BASH_VERSION" ]]; then
+   echo "Please run this script in a bash environment."
+   exit 1
+fi
+
+# Don't run it as root
+if [[ "$EUID" = 0 ]]; then
+   echo "Run as user, without sudo and not as root."
+   exit 1
+fi
+
+SRC_DIR=$HOME/staging/build/compiz/script-src
+PLUGIN_DIR=$SRC_DIR/plugins
+PREFIX=$HOME/staging/
+PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
+LD_LIBRARY_PATH=$PREFIX/lib
+# These are the dependencies for ubuntu. This script should work on other distros provided the dependencies are met
+DEPENDENCIES="git-core cmake libcairo2-dev librsvg2-dev libglib2.0-dev libpng12-dev libdbus-1-dev libboost-dev libboost-serialization-dev libxml2-dev libgl1-mesa-dev libglu1-mesa-dev libwnck-dev libgconf2-dev libx11-xcb-dev libxslt1-dev libnotify-dev libprotobuf-dev libmetacity-dev libgnome-window-settings-dev libgnome-desktop-dev gnome-control-center-dev intltool cython python2.6-dev"
+COMPONENTS=(core libcompizconfig compizconfig-python ccsm compizconfig-backend-gconf plugins-main plugins-extra plugins-unsupported)
+
+echo "Installing dependencies..."
+sudo apt-get install $DEPENDENCIES
+
+mkdir -p $SRC_DIR
+
+for COMPONENT in "${COMPONENTS[@]}"; do
+
+	cd $SRC_DIR
+
+	if [[ ! -d $SRC_DIR/$COMPONENT ]]; then
+	    if [[ "$COMPONENT" = "libcompizconfig" || "$COMPONENT" = "compizconfig-python" || "$COMPONENT" = "ccsm" || "$COMPONENT" = "compizconfig-backend-gconf" ]]; then
+		echo "COMPONENT = $COMPONENT"
+		git clone git://anongit.compiz.org/compiz/compizconfig/$COMPONENT
+	    elif [ "$COMPONENT" = "core" ]; then
+	        git clone git://anongit.compiz.org/users/dbo/compiz-with-glib-mainloop core
+	    else
+		git clone git://anongit.compiz.org/compiz/$COMPONENT
+	    fi
+	else
+	    cd $SRC_DIR/$COMPONENT
+	    git checkout master
+	    git reset --hard master
+	    git clean -fd
+	    git pull
+	fi
+	if [[ "$COMPONENT" = "plugins-main" || "$COMPONENT" = "plugins-extra" || "$COMPONENT" = "plugins-unsupported" ]]; then
+	    cd $SRC_DIR/$COMPONENT
+	    git submodule init
+	    git submodule update
+	fi
+	if [[ "$COMPONENT" = "compizconfig-python" ]]; then
+	    cd $SRC_DIR/$COMPONENT
+	    echo "Installing $COMPONENT..."
+	    PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig python ./setup.py install --prefix=$PREFIX
+	elif [[ "$COMPONENT" = "ccsm" ]]; then
+	    cd $SRC_DIR/$COMPONENT
+	    echo "Installing $COMPONENT..."
+	    ./setup.py install --prefix=$PREFIX
+	else
+	    mkdir -p $SRC_DIR/$COMPONENT/build
+	    cd $SRC_DIR/$COMPONENT/build
+	    echo "Building $COMPONENT..."
+	    cmake .. -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Debug -DCOMPIZ_PLUGIN_INSTALL_TYPE=compiz
+	    make clean
+	    make -j5
+	    echo "Installing $COMPONENT..."
+	    make install
+	fi
+	if [[ "$COMPONENT" = "core" ]]; then
+	    sudo make findcompiz_install
+	fi
+	if [[ "$COMPONENT" = "libcompizconfig" ]]; then
+	    sudo make findcompizconfig_install
+	fi
+done
+
+cd $SRC_DIR
+
+if [[ ! -f $PREFIX/bin/ccsm++ ]]; then
+cat << EOF > ccsm++
+#!/bin/bash
+
+PREFIX=$PREFIX
+
+# Hack to fix ccsm from complaining and causing incorrect plugin config option ordering
+rm -rf $HOME/.cache/compizconfig-1 2&1>/dev/null
+
+LD_LIBRARY_PATH=\$PREFIX/lib/ PYTHONPATH=\$PREFIX/lib/python2.6/site-packages \$PREFIX/bin/ccsm
+EOF
+
+chmod +x ccsm++
+echo "Installing ccsm++ starter script to $PREFIX/bin/"
+cp ccsm++ $PREFIX/bin/
+fi
+
+if [[ ! -f $PREFIX/bin/compiz++ ]]; then
+cat <<EOF > compiz++
+#!/bin/bash
+
+PREFIX=$PREFIX
+
+# Kill all decorators in case an incompatible (0.8) decorator is running
+if ps ax | grep gtk-window-decorator | grep -v grep 2>&1>/dev/null; then
+	echo "Killing gtk-window-decorator"
+	killall gtk-window-decorator 2>&1>/dev/null
+fi
+if ps ax | grep kde4-window-decorator | grep -v grep 2>&1>/dev/null; then
+	echo "Killing kde4-window-decorator"
+	killall kde4-window-decorator 2>&1>/dev/null
+fi
+if ps ax | grep emerald | grep -v grep 2>&1>/dev/null; then
+	echo "Killing emerald"
+	killall emerald 2>&1>/dev/null
+fi
+
+# Kill ccsm
+pkill ccsm
+
+LD_LIBRARY_PATH=\$PREFIX/lib/ \$PREFIX/bin/compiz --replace ccp &
+\$PREFIX/bin/gtk-window-decorator &
+\$PREFIX/bin/ccsm++ &
+EOF
+
+chmod +x compiz++
+echo "Installing compiz++ starter script to $PREFIX/bin/"
+cp compiz++ $PREFIX/bin/
+fi
+
+echo "Done. Run $PREFIX/bin/compiz++ to start compiz or $PREFIX/bin/ccsm++ to start ccsm."

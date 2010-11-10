@@ -1,0 +1,83 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Canonical\ Ltd
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
+"POT-Creation-Date: 2010-11-09 12:48-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Keep in Launcher"
+msgstr ""
+
+msgid "Remove from launcher"
+msgstr ""
+
+msgid "Quit"
+msgstr ""
+
+#, c-format
+msgid "See %u more results"
+msgstr ""
+
+#. Load up the world
+msgid "Web"
+msgstr ""
+
+msgid "Music"
+msgstr ""
+
+msgid "Photos & Videos"
+msgstr ""
+
+msgid "Games"
+msgstr ""
+
+msgid "Email & Chat"
+msgstr ""
+
+msgid "Office"
+msgstr ""
+
+msgid "Files & Folders"
+msgstr ""
+
+msgid "Get New Apps"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+#. i18n: This is meant to be used like Search $PLACES_NAME, so eg.
+#. * 'Search Applications'
+#.
+#, c-format
+msgid "Search %s"
+msgstr ""
+
+msgid "Trash"
+msgstr ""
+
+#. i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason
+#, c-format
+msgid "Files in trash: %d"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Empty Trash"
+msgstr ""
+
+msgid "Eject"
+msgstr ""
