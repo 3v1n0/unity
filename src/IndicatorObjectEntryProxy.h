@@ -32,7 +32,7 @@ public:
   virtual GdkPixbuf  * GetPixbuf () = 0;
   virtual void         SetActive (bool active) = 0;
   virtual bool         GetActive () = 0;
-  virtual void         ShowMenu (int x, int y, guint32 timestamp) = 0;
+  virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button) = 0;
 
   // Signals
   sigc::signal<void> Updated;

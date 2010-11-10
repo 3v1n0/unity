@@ -44,9 +44,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
   _proxy->Updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
-  //InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
-  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
-
+  InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  
   Refresh ();
 }
 
@@ -60,7 +59,7 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   //printf ("OnMouseDown: %d %d %ld %ld\n", x, y, button_flags, key_flags);
   //printf ("Geometry   : %d %d %d %d\n", GetGeometry ().x, GetGeometry ().y, GetGeometry ().width, GetGeometry ().height);
 
-  _proxy->ShowMenu (GetGeometry ().x, PANEL_HEIGHT, time (NULL));
+  _proxy->ShowMenu (GetGeometry ().x, PANEL_HEIGHT, time (NULL), nux::GetEventButton (button_flags));
 }
 
 static char *

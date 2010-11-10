@@ -138,7 +138,8 @@ void
 IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *id,
                                                        int         x,
                                                        int         y,
-                                                       guint32     timestamp)
+                                                       guint32     timestamp,
+                                                       guint32     button)
 {
-  OnShowMenuRequest.emit (id, x, y, timestamp);
+  OnShowMenuRequest.emit (id, x, y, timestamp, button);
 }

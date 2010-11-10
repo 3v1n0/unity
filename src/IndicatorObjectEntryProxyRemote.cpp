@@ -147,7 +147,7 @@ IndicatorObjectEntryProxyRemote::GetId ()
 }
 
 void
-IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp)
+IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp, guint32 button)
 {
-  OnShowMenuRequest.emit (_id, x, y, timestamp);  
+  OnShowMenuRequest.emit (_id, x, y, timestamp, button);
 }

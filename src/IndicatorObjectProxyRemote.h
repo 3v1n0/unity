@@ -48,10 +48,10 @@ public:
                   bool         image_visible);
   void EndSync   ();
 
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
+  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
 
 private:
   std::string _name;

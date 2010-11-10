@@ -40,7 +40,7 @@ public:
 
   void OnRemoteProxyReady (GDBusProxy *proxy);
   void OnEntryActivated   (const char *entry_id);
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
+  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
   void Sync (GVariant *args);
 
 private:

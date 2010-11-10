@@ -7,6 +7,7 @@
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-object.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -27,6 +28,7 @@ struct _PanelServicePrivate
   guint32  last_menu_id;
   gint32   last_x;
   gint32   last_y;
+  guint32  last_menu_button;
 };
 
 /* Globals */
@@ -105,12 +107,36 @@ panel_service_class_init (PanelServiceClass *klass)
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
+static GdkFilterReturn
+event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
+{
+  XEvent *e = (XEvent *)ev;
+  GdkFilterReturn ret = GDK_FILTER_CONTINUE;
+
+  if (e->type == 5 && self->priv->last_menu_button != 0)
+    {
+      //ret = GDK_FILTER_REMOVE;
+      gint x=0, y=0, width=0, height=0, depth=0;
+
+      gdk_window_get_geometry (gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu)),
+                               &x, &y, &width, &height, &depth);
+      gdk_window_get_origin (gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu)),
+                             &x, &y);
+      g_debug ("%d %d %d %d", x, y, width, height);
+    }
+
+  g_debug ("FILTER: %d", e->type);
+
+  return ret;
+}
 
 static void
 panel_service_init (PanelService *self)
 {
   PanelServicePrivate *priv;
   priv = self->priv = GET_PRIVATE (self);
+
+  gdk_window_add_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   priv->id2entry_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
                                                g_free, NULL);
@@ -149,8 +175,6 @@ actually_notify_object (IndicatorObject *object)
 
   g_signal_emit (self, _service_signals[RE_SYNC],
                  0, g_object_get_data (G_OBJECT (object), "id"));
-
-  g_message ("NOTIFY");
 
   return FALSE;
 }
@@ -483,6 +507,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   priv->last_x = 0;
   priv->last_y = 0;
+  priv->last_menu_button = 0;
 
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
   priv->last_menu = NULL;
@@ -558,7 +583,7 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-
+  
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;
@@ -567,6 +592,7 @@ panel_service_show_entry (PanelService *self,
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
       priv->last_menu = NULL;
       priv->last_menu_id = 0;
+      priv->last_menu_button = 0;
     }
 
   if (entry != NULL && GTK_IS_MENU (entry->menu))
@@ -574,6 +600,7 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu = entry->menu;
       priv->last_x = x;
       priv->last_y = y;
+      priv->last_menu_button = button;
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, timestamp);

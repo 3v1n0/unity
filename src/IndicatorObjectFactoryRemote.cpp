@@ -24,6 +24,9 @@
 #include "IndicatorObjectEntryProxyRemote.h"
 #include "IndicatorObjectEntryProxy.h"
 
+#include "NuxGraphics/GLWindowManager.h"
+#include <X11/Xlib.h>
+
 #define S_NAME  "com.canonical.Unity.Panel.Service"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
@@ -110,19 +113,20 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
 }
 
 void
-IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp)
+IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button)
 {
-  // FIXME: Why doesn't this work if timestamp is valid?
-  timestamp = 0;
+  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  XUngrabPointer(d, CurrentTime);
+  XFlush (d);
 
   g_dbus_proxy_call (_proxy,
                      "ShowEntry",
                      g_variant_new ("(suiii)",
                                     id,
-                                    timestamp,
+                                    CurrentTime,
                                     x,
                                     y,
-                                    0),
+                                    button),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,

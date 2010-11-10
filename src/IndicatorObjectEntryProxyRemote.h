@@ -45,7 +45,7 @@ public:
   virtual void         SetActive (bool active);
   virtual bool         GetActive ();
 
-  virtual void         ShowMenu (int x, int y, guint32 timestamp);
+  virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button);
 
   void Refresh (const char *__id,
                 const char *__label,
@@ -57,7 +57,7 @@ public:
                 bool        __image_visible);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
 
 public:
   bool     _dirty;
