@@ -236,14 +236,28 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
     {
       if (g_strcmp0 (current_proxy_id, indicator_id) != 0)
         {
+          if (current_proxy)
+            current_proxy->EndSync ();
           g_free (current_proxy_id);
 
           current_proxy_id = g_strdup (indicator_id);
           current_proxy = IndicatorForID (indicator_id);
+          current_proxy->BeginSync ();
         }
-      g_message ("%s:%p:%s", current_proxy_id, current_proxy, entry_id);
-    }
 
+      current_proxy->AddEntry (entry_id,
+                               label,
+                               label_sensitive,
+                               label_visible,
+                               image_type,
+                               image_data,
+                               image_sensitive,
+                               image_visible);
+    }
+  if (current_proxy)
+    current_proxy->EndSync ();
+  
+  g_free (current_proxy_id);
   g_variant_iter_free (iter);
 }
 

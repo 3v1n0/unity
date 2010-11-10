@@ -50,6 +50,39 @@ IndicatorObjectProxyRemote::GetEntries ()
   return _entries;
 }
 
+
+void
+IndicatorObjectProxyRemote::BeginSync ()
+{
+
+}
+
+void
+IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
+                                      const gchar *label,
+                                      bool         label_sensitive,
+                                      bool         label_visible,
+                                      guint32      image_type,
+                                      const gchar *image_data,
+                                      bool         image_sensitive,
+                                      bool         image_visible)
+{
+  g_message ("\t%s %s %d %d %u %s %d %d",
+             entry_id,
+             label,
+             label_sensitive,
+             label_visible,
+             image_type,
+             image_type == 3 ? "Pixbuf": image_data,
+             image_sensitive,
+             image_visible);
+}
+void
+IndicatorObjectProxyRemote::EndSync ()
+{
+
+}
+
 #if 0
 void
 IndicatorObjectProxyRemote::OnRowAdded (DeeModelIter *iter)

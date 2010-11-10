@@ -37,6 +37,17 @@ public:
   virtual std::string& GetName ();
   virtual std::vector<IndicatorObjectEntryProxy *>& GetEntries ();
 
+  void BeginSync ();
+  void AddEntry  (const gchar *entry_id,
+                  const gchar *label,
+                  bool         label_sensitive,
+                  bool         label_visible,
+                  guint32      image_type,
+                  const gchar *image_data,
+                  bool         image_sensitive,
+                  bool         image_visible);
+  void EndSync   ();
+
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
 
   // Signals
