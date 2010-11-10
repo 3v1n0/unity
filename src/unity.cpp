@@ -127,10 +127,7 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib &attrib, // Some basic att
     ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
     
     if (paint_required)
-    {
         paintDisplay (region);
-        paint_required = false;
-    }
     
     return ret;
 }
