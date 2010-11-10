@@ -87,7 +87,12 @@ handle_method_call (GDBusConnection       *connection,
 {
   PanelService *service = PANEL_SERVICE (user_data);
 
-  if (g_strcmp0 (method_name, "SyncOne") == 0)
+  if (g_strcmp0 (method_name, "Sync") == 0)
+    {
+      g_dbus_method_invocation_return_value (invocation,
+                                             panel_service_sync (service));
+    }
+  else if (g_strcmp0 (method_name, "SyncOne") == 0)
     {
       gchar *id;
       g_variant_get (parameters, "(s)", &id, NULL);

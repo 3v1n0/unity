@@ -441,13 +441,31 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
  * Public Methods
  */
 GVariant *
+panel_service_sync (PanelService *self)
+{
+  GVariantBuilder b;
+  GSList *i;
+
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbb))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbb)"));
+
+  for (i = self->priv->indicators; i; i = i->next)
+    {
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (i->data), "id");
+      indicator_object_to_variant (i->data, indicator_id, &b);
+    }
+
+  g_variant_builder_close (&b);
+  return g_variant_builder_end (&b);
+}
+
+GVariant *
 panel_service_sync_one (PanelService *self, const gchar *indicator_id)
 {
   GVariantBuilder b;
   GSList *i;
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbb))"));
-
   g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbb)"));
 
   for (i = self->priv->indicators; i; i = i->next)
@@ -459,6 +477,7 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
           break;
         }
     }
+
   g_variant_builder_close (&b);
   return g_variant_builder_end (&b);
 }
