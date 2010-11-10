@@ -150,6 +150,8 @@ actually_notify_object (IndicatorObject *object)
   g_signal_emit (self, _service_signals[RE_SYNC],
                  0, g_object_get_data (G_OBJECT (object), "id"));
 
+  g_message ("NOTIFY");
+
   return FALSE;
 }
 
@@ -359,6 +361,7 @@ sort_indicators (PanelService *self)
   for (i = self->priv->indicators; i; i = i->next)
     {
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
+      self->priv->timeouts[k] = SYNC_NEUTRAL;
       k++;
     }
 }

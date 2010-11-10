@@ -347,6 +347,20 @@ on_proxy_signal_received (GDBusProxy *proxy,
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
   }
+  else if (g_strcmp0 (signal_name, "ReSync") == 0)
+  {
+    const gchar *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
+    bool sync_one = !g_strcmp0 (id, "") == 0;
+
+    g_dbus_proxy_call (proxy,
+                       sync_one ? "SyncOne" : "Sync", 
+                       sync_one ? g_variant_new ("(s)", id) : NULL,
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1,
+                       NULL,
+                       on_sync_ready_cb,
+                       remote);
+  }
 }
 
 static void

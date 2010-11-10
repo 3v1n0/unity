@@ -54,6 +54,10 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
+#define S_NAME  "com.canonical.Unity.Panel.Service"
+#define S_PATH  "/com/canonical/Unity/Panel/Service"
+#define S_IFACE "com.canonical.Unity.Panel.Service"
+
 /* Forwards */
 static void
 handle_method_call (GDBusConnection       *connection,
@@ -119,6 +123,25 @@ handle_method_call (GDBusConnection       *connection,
 }
 
 static void
+on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnection *connection)
+{
+  GError *error = NULL;
+  g_dbus_connection_emit_signal (connection,
+                                 S_NAME,
+                                 S_PATH,
+                                 S_IFACE,
+                                 "ReSync",
+                                 g_variant_new ("(s)", indicator_id),
+                                 &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit ReSync signal: %s", error->message);
+      g_error_free (error);
+    }
+}
+
+static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
@@ -127,12 +150,15 @@ on_bus_acquired (GDBusConnection *connection,
   guint         reg_id;
 
   reg_id = g_dbus_connection_register_object (connection,
-                                              "/com/canonical/Unity/Panel/Service",
+                                              S_PATH,
                                               introspection_data->interfaces[0],
                                               &interface_vtable,
                                               service,
                                               NULL,
                                               NULL);
+  g_signal_connect (service, "re-sync",
+                    G_CALLBACK (on_service_resync), connection);
+
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);
 }
@@ -168,9 +194,9 @@ main (gint argc, gchar **argv)
   g_assert (introspection_data != NULL);
 
   service = panel_service_get_default ();
-
+  
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                             "com.canonical.Unity.Panel.Service",
+                             S_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
                              on_bus_acquired,
                              on_name_acquired,
