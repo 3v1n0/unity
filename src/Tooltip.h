@@ -7,7 +7,6 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
-
 #include "StaticCairoText.h"
 
 #include <pango/pango.h>
