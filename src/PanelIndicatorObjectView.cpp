@@ -58,7 +58,7 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 }
 
 void
-PanelIndicatorObjectView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }

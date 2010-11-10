@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
 
@@ -16,6 +34,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
     SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
     SetIconName (icon_name);
+    SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
     
     if (bamf_view_is_sticky (BAMF_VIEW (m_App)))
       SetVisible (true);
@@ -27,18 +46,26 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     
     g_free (icon_name);
     
+    g_signal_connect (app, "child-removed", (GCallback) &BamfLauncherIcon::OnChildRemoved, this);
+    g_signal_connect (app, "child-added", (GCallback) &BamfLauncherIcon::OnChildAdded, this);
+    g_signal_connect (app, "urgent-changed", (GCallback) &BamfLauncherIcon::OnUrgentChanged, this);
     g_signal_connect (app, "running-changed", (GCallback) &BamfLauncherIcon::OnRunningChanged, this);
     g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
     g_signal_connect (app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
     g_signal_connect (app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
+    
+    g_object_ref (m_App);
+    
+    EnsureWindowState ();
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+    g_object_unref (m_App);
 }
 
 void
-BamfLauncherIcon::OnMouseClick ()
+BamfLauncherIcon::OnMouseClick (int button)
 {
     BamfView *view;
     GList *children, *l;
@@ -121,6 +148,9 @@ BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer d
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     self->SetRunning (running);
+    
+    if (running)
+      self->EnsureWindowState ();
 }
 
 void
@@ -128,4 +158,62 @@ BamfLauncherIcon::OnActiveChanged (BamfView *view, gboolean active, gpointer dat
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     self->SetActive (active);
+}
+
+void
+BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon *) data;
+    self->SetUrgent (urgent);
+}
+
+void
+BamfLauncherIcon::EnsureWindowState ()
+{
+    GList *children, *l;
+    int count = 0;
+    
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+    for (l = children; l; l = l->next)
+    {
+        if (BAMF_IS_WINDOW (l->data))
+            count++;
+    }
+    
+    SetRelatedWindows (count);
+}
+
+void
+BamfLauncherIcon::OnChildAdded (BamfView *view, BamfView *child, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon*) data;
+    self->EnsureWindowState ();
+}
+
+void
+BamfLauncherIcon::OnChildRemoved (BamfView *view, BamfView *child, gpointer data)
+{
+    BamfLauncherIcon *self = (BamfLauncherIcon*) data;
+    self->EnsureWindowState ();
+}
+
+std::list<DbusmenuClient *>
+BamfLauncherIcon::GetMenus ()
+{
+    GList *children, *l;
+    std::list<DbusmenuClient *> result;
+    
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+    for (l = children; l; l = l->next)
+    {
+        if (BAMF_IS_INDICATOR (l->data))
+        {
+            BamfIndicator *indicator = BAMF_INDICATOR (l->data);
+            DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), bamf_indicator_get_remote_path (indicator));
+            
+            result.push_back (client);
+        }
+    }
+    
+    return result;
 }

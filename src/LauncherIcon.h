@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ * 
+ */
+
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
@@ -11,6 +30,7 @@
 #include <sigc++/functors/mem_fun.h>
 
 #include <gtk/gtk.h>
+#include <libdbusmenu-glib/client.h>
 
 #include "Tooltip.h"
 
@@ -28,7 +48,7 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
-class LauncherIcon: public sigc::trackable
+class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
     LauncherIcon(Launcher* IconManager);
@@ -41,14 +61,21 @@ public:
     bool Visible ();
     bool Active  ();
     bool Running ();
+    bool Urgent  ();
 
     void RecvMouseEnter ();
-
     void RecvMouseLeave ();
     
     void HideTooltip ();
     
     int SortPriority ();
+    
+    int RelatedWindows ();
+    
+    struct timeval ShowTime ();
+    struct timeval HideTime ();
+    struct timeval RunningTime ();
+    struct timeval UrgentTime ();
     
     LauncherIconType Type ();
     
@@ -56,11 +83,13 @@ public:
     
     nux::BaseTexture * TextureForSize (int size);
     
-    sigc::signal<void> MouseDown;
-    sigc::signal<void> MouseUp;
+    std::list<DbusmenuClient *> Menus ();
+    
+    sigc::signal<void, int> MouseDown;
+    sigc::signal<void, int> MouseUp;
     sigc::signal<void> MouseEnter;
     sigc::signal<void> MouseLeave;
-    sigc::signal<void> MouseClick;
+    sigc::signal<void, int> MouseClick;
     
     sigc::signal<void, void *> show;
     sigc::signal<void, void *> hide;
@@ -69,12 +98,16 @@ public:
 protected:
 
     void SetVisible (bool visible);
-    void SetActive (bool active);
+    void SetActive  (bool active);
     void SetRunning (bool running);
+    void SetUrgent  (bool urgent);
+    void SetRelatedWindows (int windows);
+    void Remove ();
     
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
+    virtual std::list<DbusmenuClient *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
@@ -84,14 +117,10 @@ protected:
     nux::BaseWindow* m_Window;
     Launcher* m_IconManager;
 
-    float         _folding_angle;   //!< angle of folded icon in radian.
-    float         _folding_angle_delta;   //!< Difference between start and end.
-    nux::Point2   _point[4];       //!< screen space projection of icon.
-    nux::Point3   _position;
-    nux::Point3   _position_delta;
     nux::Vector4  _xform_screen_coord [4];
     nux::Vector4  _xform_icon_screen_coord [4];
     bool          _mouse_inside;
+    float         _folding_angle;
 
     nux::Tooltip* _tooltip;
 
@@ -106,8 +135,14 @@ private:
     bool             _visible;
     bool             _active;
     bool             _running;
+    bool             _urgent;
     int              _sort_priority;
+    int              _related_windows;
     LauncherIconType _icon_type;
+    struct timeval   _show_time;
+    struct timeval   _hide_time;
+    struct timeval   _running_time;
+    struct timeval   _urgent_time;
 };
 
 #endif // LAUNCHERICON_H

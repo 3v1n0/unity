@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
 #ifndef LAUNCHERCONTROLLER_H
 #define LAUNCHERCONTROLLER_H
 
@@ -27,32 +45,27 @@ public:
 
 
 private:
-    BamfMatcher* m_Matcher;
-    CompAction* m_ExpoAction;
-    CompScreen* m_Screen;
-    Launcher* m_Launcher;
-    LauncherModel* _model;
-    nux::BaseWindow* m_Window;
-    std::list<LauncherIcon *> m_Icons;
-    FavoriteStore* m_FavoriteStore;
+    BamfMatcher*     _matcher;
+    CompAction*      _expo_action;
+    CompScreen*      _screen;
+    Launcher*        _launcher;
+    LauncherModel*   _model;
+    nux::BaseWindow* _window;
+    FavoriteStore*   _favorite_store;
 
     void InsertExpoAction ();
 
     void RegisterIcon (LauncherIcon *icon);
     
-    void CreateFavorite (const char *file_path);
+    LauncherIcon * CreateFavorite (const char *file_path);
 
     void SetupBamf ();
 
-    void OnIconShow (void *sender);
-    
-    void OnIconHide (void *sender);
-    
-    void OnIconRemove (void *sender);
-    
-    void OnExpoClicked ();
+    void OnExpoClicked (int button);
     
     /* statics */
+    
+    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 

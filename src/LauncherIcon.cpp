@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
+#include <sys/time.h>
+
 #include "Nux/Nux.h"
 #include "Nux/VScrollBar.h"
 #include "Nux/HLayout.h"
@@ -18,9 +38,24 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _folding_angle = 0;
   m_IconManager = IconManager;
   m_TooltipText = "blank";
-  _visible = true;
-  _active = false;
+
+  _show_time.tv_sec = 0;
+  _hide_time.tv_sec = 0;
+  _running_time.tv_sec = 0;
+  _urgent_time.tv_sec = 0;
+
+  _show_time.tv_usec = 0;
+  _hide_time.tv_usec = 0;
+  _running_time.tv_usec = 0;
+  _urgent_time.tv_usec = 0;
+
+  _active  = false;
   _running = false;
+  _visible = false;
+  _urgent  = false;
+  
+  _related_windows = 0;
+
   _background_color = nux::Color::White;
   _mouse_inside = false;
   _tooltip = new nux::Tooltip ();
@@ -43,7 +78,6 @@ nux::Color LauncherIcon::BackgroundColor ()
 nux::BaseTexture * LauncherIcon::TextureForSize (int size)
 {
   nux::BaseTexture * result = GetTextureForSize (size);
-  
   return result;
 }
 
@@ -88,8 +122,8 @@ nux::Color LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf)
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = MAX (s, 0.5f);
-  v = .8f;
+    s = 0.4f;
+  v = .85f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
   
@@ -175,6 +209,26 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
+struct timeval LauncherIcon::ShowTime ()
+{
+  return _show_time;
+}
+
+struct timeval LauncherIcon::HideTime ()
+{
+  return _hide_time;
+}
+
+struct timeval LauncherIcon::RunningTime ()
+{
+  return _running_time;
+}
+
+struct timeval LauncherIcon::UrgentTime ()
+{
+  return _urgent_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -183,10 +237,18 @@ LauncherIcon::SetVisible (bool visible)
       
   _visible = visible;
   
+  needs_redraw.emit (this);
+
   if (visible)
+  {
+    gettimeofday (&_show_time, NULL);
     show.emit (this);
+  }
   else
+  {
+    gettimeofday (&_hide_time, NULL);
     hide.emit (this);
+  }
 }
 
 void
@@ -205,7 +267,36 @@ void LauncherIcon::SetRunning (bool running)
     return;
     
   _running = running;
+  gettimeofday (&_running_time, NULL);
   needs_redraw.emit (this);
+}
+
+void LauncherIcon::SetUrgent (bool urgent)
+{
+  if (urgent == _urgent)
+    return;
+  
+  _urgent = urgent;
+  
+  if (urgent)
+      gettimeofday (&_urgent_time, NULL);
+  
+  needs_redraw.emit (this);
+}
+
+void LauncherIcon::SetRelatedWindows (int windows)
+{
+  if (_related_windows == windows)
+    return;
+    
+  _related_windows = windows;
+  needs_redraw.emit (this);
+}
+
+void LauncherIcon::Remove ()
+{
+  SetVisible (false);
+  remove.emit (this);
 }
 
 void 
@@ -248,4 +339,27 @@ bool
 LauncherIcon::Running ()
 {
   return _running;
+}
+
+bool
+LauncherIcon::Urgent ()
+{
+  return _urgent;
+}
+
+int
+LauncherIcon::RelatedWindows ()
+{
+  return _related_windows;
+}
+
+std::list<DbusmenuClient *> LauncherIcon::Menus ()
+{
+  return GetMenus ();
+}
+
+std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
+{
+  std::list<DbusmenuClient *> result;
+  return result;
 }
