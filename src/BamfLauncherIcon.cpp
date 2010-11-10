@@ -196,3 +196,24 @@ BamfLauncherIcon::OnChildRemoved (BamfView *view, BamfView *child, gpointer data
     BamfLauncherIcon *self = (BamfLauncherIcon*) data;
     self->EnsureWindowState ();
 }
+
+std::list<DbusmenuClient *>
+BamfLauncherIcon::GetMenus ()
+{
+    GList *children, *l;
+    std::list<DbusmenuClient *> result;
+    
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+    for (l = children; l; l = l->next)
+    {
+        if (BAMF_IS_INDICATOR (l->data))
+        {
+            BamfIndicator *indicator = BAMF_INDICATOR (l->data);
+            DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_address (indicator), bamf_indicator_get_path (indicator));
+            
+            result.push_back (client);
+        }
+    }
+    
+    return result;
+}

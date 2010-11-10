@@ -30,6 +30,7 @@
 #include <sigc++/functors/mem_fun.h>
 
 #include <gtk/gtk.h>
+#include <libdbusmenu-glib/client.h>
 
 #include "Tooltip.h"
 
@@ -63,7 +64,6 @@ public:
     bool Urgent  ();
 
     void RecvMouseEnter ();
-
     void RecvMouseLeave ();
     
     void HideTooltip ();
@@ -82,6 +82,8 @@ public:
     nux::Color BackgroundColor ();
     
     nux::BaseTexture * TextureForSize (int size);
+    
+    std::list<DbusmenuClient *> Menus ();
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -105,6 +107,7 @@ protected:
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
+    virtual std::list<DbusmenuClient *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
