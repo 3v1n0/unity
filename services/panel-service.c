@@ -113,18 +113,42 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   XEvent *e = (XEvent *)ev;
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
-  if (e->type == 5 && self->priv->last_menu_button != 0)
+  if (e->type == 5 && self->priv->last_menu_button != 0) //FocusChange
     {
-      //ret = GDK_FILTER_REMOVE;
-      gint x=0, y=0, width=0, height=0, depth=0;
+      gint       x=0, y=0, width=0, height=0, depth=0, x_root=0, y_root=0;
+      GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
+      Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
+      Window     root = 0, child = 0;
+      int        win_x=0, win_y = 0;
+      guint32    mask_return = 0;
 
-      gdk_window_get_geometry (gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu)),
-                               &x, &y, &width, &height, &depth);
-      gdk_window_get_origin (gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu)),
-                             &x, &y);
-      g_debug ("%d %d %d %d", x, y, width, height);
+      XQueryPointer (gdk_x11_display_get_xdisplay (gdk_display_get_default ()),
+                     xwindow,
+                     &root,
+                     &child,
+                     &x_root,
+                     &y_root,
+                     &win_x,
+                     &win_y,
+                     &mask_return);
+
+      gdk_window_get_geometry (window, &x, &y, &width, &height, &depth);
+      gdk_window_get_origin (window, &x, &y);
+
+      if (x_root > x
+          && x_root < x + width
+          && y_root > y
+          && y_root < y + height)
+        {
+          ret = GDK_FILTER_CONTINUE;
+        }
+      else
+        {
+          ret = GDK_FILTER_REMOVE;
+        }
+
+      self->priv->last_menu_button = 0;
     }
-
   g_debug ("FILTER: %d", e->type);
 
   return ret;
