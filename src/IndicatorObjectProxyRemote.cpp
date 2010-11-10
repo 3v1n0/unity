@@ -54,7 +54,13 @@ IndicatorObjectProxyRemote::GetEntries ()
 void
 IndicatorObjectProxyRemote::BeginSync ()
 {
-
+  std::vector<IndicatorObjectEntryProxy*>::iterator it;
+  
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+    remote->_dirty = true;
+  }
 }
 
 void
