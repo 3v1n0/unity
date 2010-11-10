@@ -193,10 +193,7 @@ UnityScreen::handleEvent (XEvent *event)
     screen->handleEvent (event);
     
     if (screen->otherGrabExist ("deco", "move", NULL))
-    {
-      printf ("Process Foreign!\n");
       wt->ProcessForeignEvent (event, NULL);
-    }
 }
 
 bool
