@@ -29,6 +29,9 @@ struct _PanelServicePrivate
   gint32   last_x;
   gint32   last_y;
   guint32  last_menu_button;
+
+  gint     last_menu_x;
+  gint     last_menu_y;
 };
 
 /* Globals */
@@ -36,6 +39,7 @@ enum
 {
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
+  ACTIVE_MENU_POINTER_MOTION,
 
   LAST_SIGNAL
 };
@@ -104,6 +108,15 @@ panel_service_class_init (PanelServiceClass *klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
+ _service_signals[ACTIVE_MENU_POINTER_MOTION] =
+    g_signal_new ("active-menu-pointer-motion",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
 
@@ -150,6 +163,40 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       self->priv->last_menu_button = 0;
     }
 
+  // FIXME: THIS IS HORRIBLE AND WILL BE CHANGED BEFORE RELEASE
+  // ITS A WORKAROUND SO I CAN TEST THE PANEL SCRUBBING
+  // DONT HATE ME
+  // --------------------------------------------------------------------------
+  else if (e->type == 6)
+    {
+      int       x_root=0, y_root=0;
+      GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
+      Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
+      Window     root = 0, child = 0;
+      int        win_x=0, win_y = 0;
+      guint32    mask_return = 0;
+
+      XQueryPointer (gdk_x11_display_get_xdisplay (gdk_display_get_default ()),
+                     xwindow,
+                     &root,
+                     &child,
+                     &x_root,
+                     &y_root,
+                     &win_x,
+                     &win_y,
+                     &mask_return);
+
+      self->priv->last_menu_x = x_root;
+      self->priv->last_menu_y = y_root;
+
+      if (y_root <= self->priv->last_y)
+        {
+          g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
+        }
+    }
+  // /DONT HATE ME
+  // /FIXME
+  // --------------------------------------------------------------------------
   return ret;
 }
 
@@ -630,4 +677,13 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
+}
+
+void
+panel_service_get_last_xy   (PanelService  *self,
+                             gint          *x,
+                             gint          *y)
+{
+  *x = self->priv->last_menu_x;
+  *y = self->priv->last_menu_y;
 }

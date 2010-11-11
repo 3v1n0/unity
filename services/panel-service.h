@@ -62,6 +62,9 @@ void           panel_service_show_entry    (PanelService *self,
                                             gint32        y,
                                             gint32        button);
 
+void           panel_service_get_last_xy   (PanelService  *self,
+                                            gint          *x,
+                                            gint          *y);
 
 G_END_DECLS
 

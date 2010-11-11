@@ -137,8 +137,6 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
   icon_sensitive = __image_sensitive;
   icon_visible = __image_visible;
 
-  g_debug ("%s %d %d", _label, label_sensitive, label_visible);
-
   Updated.emit ();
 }
 

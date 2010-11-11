@@ -370,6 +370,14 @@ on_proxy_signal_received (GDBusProxy *proxy,
                        on_sync_ready_cb,
                        remote);
   }
+  else if (g_strcmp0 (signal_name, "ActiveMenuPointerMotion") == 0)
+    {
+      int x=0, y=0;
+
+      g_variant_get (parameters, "(ii)", &x, &y);
+
+      g_debug ("%d %d", x, y);
+    }
 }
 
 static void
