@@ -157,7 +157,7 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
     Button1,
     True
   };
-  XEvent *e = (XEvent*)&ev
+  XEvent *e = (XEvent*)&ev;
   nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
   // --------------------------------------------------------------------------
 }
