@@ -38,11 +38,15 @@ public:
     BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_PROTO);
     ~BamfLauncherIcon();
     
+    
+protected:
+    void OnMouseClick (int button);
+    std::list<DbusmenuClient *> GetMenus ();
+
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
     
-    void OnMouseClick (int button);
     void EnsureWindowState ();
     
     static void OnClosed (BamfView *view, gpointer data);

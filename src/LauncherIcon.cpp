@@ -191,9 +191,9 @@ LauncherIcon::RecvMouseEnter ()
   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
 
-  _tooltip->SetBaseX (icon_x + icon_w);
+  _tooltip->SetBaseX (icon_x + icon_w - 10);
   _tooltip->SetBaseY (icon_y +
-                      24 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
+                      23 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
                       (icon_h / 2) -
                       (_tooltip->GetBaseHeight () / 2));
   _tooltip->ShowWindow (true);
@@ -351,4 +351,15 @@ int
 LauncherIcon::RelatedWindows ()
 {
   return _related_windows;
+}
+
+std::list<DbusmenuClient *> LauncherIcon::Menus ()
+{
+  return GetMenus ();
+}
+
+std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
+{
+  std::list<DbusmenuClient *> result;
+  return result;
 }
