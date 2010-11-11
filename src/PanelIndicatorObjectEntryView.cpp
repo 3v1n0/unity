@@ -56,6 +56,9 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 void
 PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, long key_flags)
 {
+  if (_proxy->GetActive ())
+    return;
+
   if ((_proxy->label_visible && _proxy->label_sensitive)
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {

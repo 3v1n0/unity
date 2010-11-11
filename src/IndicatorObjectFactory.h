@@ -40,6 +40,7 @@ public:
   // Signals
   sigc::signal<void, IndicatorObjectProxy *> OnObjectAdded;
   sigc::signal<void, IndicatorObjectProxy *> OnObjectRemoved;
+  sigc::signal<void, int, int>               OnMenuPointerMoved;
 
 protected:
   std::vector<IndicatorObjectProxy *>_indicators;

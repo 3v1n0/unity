@@ -126,11 +126,21 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   XEvent *e = (XEvent *)ev;
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
+  if (!GTK_IS_WIDGET (self->priv->last_menu))
+    return ret;
+
   if (e->type == 5 && self->priv->last_menu_button != 0) //FocusChange
     {
       gint       x=0, y=0, width=0, height=0, depth=0, x_root=0, y_root=0;
       GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
+      if (window == NULL)
+        return GDK_FILTER_CONTINUE;
+      
       Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
+
+      if (xwindow == 0)
+        return GDK_FILTER_CONTINUE;
+
       Window     root = 0, child = 0;
       int        win_x=0, win_y = 0;
       guint32    mask_return = 0;
@@ -656,6 +666,8 @@ panel_service_show_entry (PanelService *self,
   
   if (GTK_IS_MENU (priv->last_menu))
     {
+      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
       priv->last_x = 0;
       priv->last_y = 0;
 

@@ -376,7 +376,7 @@ on_proxy_signal_received (GDBusProxy *proxy,
 
       g_variant_get (parameters, "(ii)", &x, &y);
 
-      g_debug ("%d %d", x, y);
+      remote->OnMenuPointerMoved.emit (x, y);
     }
 }
 

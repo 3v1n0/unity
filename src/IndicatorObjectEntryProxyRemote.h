@@ -35,7 +35,7 @@ public:
   IndicatorObjectEntryProxyRemote  ();
   ~IndicatorObjectEntryProxyRemote ();
 
-  const char * GetId ();
+  virtual const char * GetId ();
 
   virtual const char * GetLabel ();
 

@@ -28,6 +28,7 @@ class IndicatorObjectEntryProxy : public sigc::trackable
 {
 public:
 
+  virtual const char * GetId () = 0;
   virtual const char * GetLabel () = 0;
   virtual GdkPixbuf  * GetPixbuf () = 0;
   virtual void         SetActive (bool active) = 0;
