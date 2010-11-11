@@ -37,6 +37,8 @@
 
 #include <core/atoms.h>
 
+#define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
+
 /* You must also call this. This creates a proper vTable for a plugin name in the 
  * first argument (it's a macro, so you don't need a string). This changes from
  * time to time as the vTable changes, so it is a good way of ensure plugins keep
@@ -447,7 +449,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     
     wt->Run (NULL);
     uScreen = this;
-    
+
+	initStateIntrospection ();
     PluginAdapter::Initialize (screen);
 
     optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
@@ -459,6 +462,39 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
  */
 
 UnityScreen::~UnityScreen ()
+{
+	g_bus_unown_name (_owner_id);
+}
+
+void
+UnityScreen::initStateIntrospection ()
+{
+	std::cout << "tryna own da bus jawn" << std::endl;
+    _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
+                               UNITY_STATE_DEBUG_BUS_NAME,
+                               G_BUS_NAME_OWNER_FLAGS_NONE,
+                               &UnityScreen::onBusAcquired,
+                               &UnityScreen::onNameAcquired,
+                               &UnityScreen::onNameLost,
+                               this,
+                               NULL);
+                               
+}
+
+void
+UnityScreen::onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+{
+	std::cout << "bus acquired" << std::endl;
+}
+
+void
+UnityScreen::onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+{
+	std::cout << "name aquired" << std::endl;
+}
+
+void
+UnityScreen::onNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 

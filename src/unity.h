@@ -176,6 +176,19 @@ class UnityScreen :
 
 	static void 
 	initUnity(nux::NThread* thread, void* InitData);
+
+	void
+	initStateIntrospection ();
+
+	static void
+	onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+
+	static void
+	onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+
+	static void
+    onNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
+
 	
 	static gboolean 
 	strutHackTimeout (gpointer data);
@@ -187,6 +200,7 @@ class UnityScreen :
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
+	guint                   _owner_id;
 };
 
 class UnityWindow :
