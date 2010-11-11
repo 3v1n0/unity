@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<compiz>
+    <plugin name="unity" useBcop="true">
+	<_short>Ubuntu Unity Plugin</_short>
+	<_long>Plugin to draw the Unity Shell</_long>
+	<deps>
+	    <relation type="after">
+		<plugin>decor</plugin>
+	    </relation>
+	    <requirement>
+		<plugin>opengl</plugin>
+	    </requirement>
+	</deps>
+	<options>
+	    <option name="launcher_autohide" type="bool">
+	    <_short>Autohide Launcher</_short>
+	    <_long>Make the launcher hide automatically after some time inactive</_long>
+	    <default>false</default>
+	    </option>
+	    <option name="launcher_float" type="bool">
+	    <_short>Float Launcher</_short>
+	    <_long>Make the launcher appear above other windows</_long>
+	    <default>false</default>
+	    </option>
+	</options>
+    </plugin>
+</compiz>

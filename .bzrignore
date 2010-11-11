@@ -357,3 +357,4 @@ unity-private/places/places-default-renderer-tiles.c
 unity-private/places/places-button.c
 unity-private/panel/panel-divider.c
 unity-private/places/places-place-search-extra-action.c
+build
