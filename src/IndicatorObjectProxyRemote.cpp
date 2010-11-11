@@ -141,6 +141,5 @@ IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *entry_id,
                                                        guint32     timestamp,
                                                        guint32     button)
 {
-  g_debug ("%s: %s", G_STRFUNC, entry_id);
   OnShowMenuRequest.emit (entry_id, x, y, timestamp, button);
 }

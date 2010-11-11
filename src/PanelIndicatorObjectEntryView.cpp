@@ -56,9 +56,10 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 void
 PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, long key_flags)
 {
-  g_debug ("%s: %s", G_STRFUNC, _proxy->GetLabel ());
-  g_debug ("\n\n%d %d %d %d\n\n", x, y, GetGeometry().width, GetGeometry ().height);
-  _proxy->ShowMenu (GetGeometry ().x, PANEL_HEIGHT, time (NULL), nux::GetEventButton (button_flags));
+  _proxy->ShowMenu (GetGeometry ().x,
+                    PANEL_HEIGHT,
+                    time (NULL),
+                    nux::GetEventButton (button_flags));
 }
 
 static char *

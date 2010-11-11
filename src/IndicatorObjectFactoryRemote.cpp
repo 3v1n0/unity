@@ -24,6 +24,8 @@
 #include "IndicatorObjectEntryProxyRemote.h"
 #include "IndicatorObjectEntryProxy.h"
 
+#include "Nux/Nux.h"
+#include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
 #include <X11/Xlib.h>
 
@@ -119,7 +121,6 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
                                                          guint       timestamp,
                                                          guint32     button)
 {
-  g_debug ("%s: %s", G_STRFUNC, entry_id);
   Display* d = nux::GetThreadGLWindow()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
   XFlush (d);
@@ -137,27 +138,29 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
                      NULL,
                      NULL,
                      NULL);
+
+  // --------------------------------------------------------------------------
+  // FIXME: This is a workaround until the non-paired events issue is fixed in
+  // nux
+  XButtonEvent ev = {
+    ButtonRelease,
+    0,
+    False,
+    d,
+    0,
+    0,
+    0,
+    CurrentTime,
+    x, y,
+    x, y,
+    0,
+    Button1,
+    True
+  };
+  XEvent *e = (XEvent*)&ev
+  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
+  // --------------------------------------------------------------------------
 }
-
-#if 0
-void
-IndicatorObjectFactoryRemote::OnRowAdded (DeeModelIter *iter)
-{
-  IndicatorObjectProxyRemote *remote;
-  const gchar *name;
-  const gchar *model_name;
-
-  name = dee_model_get_string (_model, iter, COL_NAME);
-  model_name = dee_model_get_string (_model, iter, COL_MODEL_NAME);
-
-  remote = new IndicatorObjectProxyRemote (name, model_name);
-  remote->OnShowMenuRequest.connect (sigc::mem_fun (this, &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
-
-  _indicators.push_back (remote);
-
-  OnObjectAdded.emit (remote);
-}
-#endif
 
 // We need to unset the last active entry and set the new one as active
 void

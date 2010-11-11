@@ -149,6 +149,5 @@ IndicatorObjectEntryProxyRemote::GetId ()
 void
 IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp, guint32 button)
 {
-  g_debug ("%s: %s", G_STRFUNC, _id);
   OnShowMenuRequest.emit (_id, x, y, timestamp, button);
 }
