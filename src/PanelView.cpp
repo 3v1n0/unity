@@ -187,7 +187,11 @@ void
 PanelView::OnMenuPointerMoved (int x, int y)
 {
   nux::Geometry geo = GetGeometry ();
+  nux::Geometry hgeo = _home_button->GetGeometry ();
 
+  if (x <= (hgeo.x + hgeo.width))
+    return; 
+  
   if (x > geo.x && x < (geo.x + geo.width)
       && y > geo.y && y < (geo.y + geo.height))
     {

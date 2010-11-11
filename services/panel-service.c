@@ -663,15 +663,17 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+
+  g_debug ("%s: entry_id: %s, entry: %p, is_menu:%d", G_STRFUNC, entry_id, entry, entry ?GTK_IS_MENU (entry->menu):0);
   
   if (GTK_IS_MENU (priv->last_menu))
     {
-      gtk_menu_popdown (GTK_MENU (priv->last_menu));
-
       priv->last_x = 0;
       priv->last_y = 0;
 
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
+      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
       priv->last_menu = NULL;
       priv->last_menu_id = 0;
       priv->last_menu_button = 0;
@@ -685,7 +687,11 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_button = button;
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
-      gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, timestamp);
+      gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
+
+      g_debug ("%s",
+               gtk_widget_get_visible (GTK_WIDGET (priv->last_menu)) ? "true"
+                                                                     : "false");
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
