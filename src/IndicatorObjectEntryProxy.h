@@ -21,18 +21,19 @@
 
 #include <string>
 #include <sigc++/signal.h>
-
+#include <sigc++/sigc++.h>
 #include <gdk/gdk.h>
 
-class IndicatorObjectEntryProxy
+class IndicatorObjectEntryProxy : public sigc::trackable
 {
 public:
 
+  virtual const char * GetId () = 0;
   virtual const char * GetLabel () = 0;
   virtual GdkPixbuf  * GetPixbuf () = 0;
   virtual void         SetActive (bool active) = 0;
   virtual bool         GetActive () = 0;
-  virtual void         ShowMenu (int x, int y, guint32 timestamp) = 0;
+  virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button) = 0;
 
   // Signals
   sigc::signal<void> Updated;

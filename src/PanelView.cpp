@@ -19,7 +19,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
+#include <Nux/Layout.h>
 #include <Nux/WindowCompositor.h>
 
 #include <NuxImage/CairoGraphics.h>
@@ -49,6 +49,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
+  _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
 }
 
 PanelView::~PanelView ()
@@ -180,4 +181,44 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
 
   this->ComputeChildLayout (); 
   NeedRedraw ();
+}
+
+void
+PanelView::OnMenuPointerMoved (int x, int y)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  if (x > geo.x && x < (geo.x + geo.width)
+      && y > geo.y && y < (geo.y + geo.height))
+    {
+      std::list<Area *>::iterator it;
+
+      std::list<Area *> my_children = _layout->GetChildren ();
+      for (it = my_children.begin(); it != my_children.end(); it++)
+      {
+        PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+        geo = view->GetGeometry ();
+        if (x > geo.x && x < (geo.x + geo.width)
+            && y > geo.y && y < (geo.y + geo.height))
+          {
+            std::list<Area *>::iterator it2;
+
+            std::list<Area *> its_children = view->_layout->GetChildren ();
+            for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+            {
+              PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+              geo = entry->GetGeometry ();
+              if (x > geo.x && x < (geo.x + geo.width)
+                  && y > geo.y && y < (geo.y + geo.height))
+                {
+                  entry->OnMouseDown (x, y, 0, 0);
+                  break;
+                }
+            }
+            break;
+          }
+      }
+    }
 }

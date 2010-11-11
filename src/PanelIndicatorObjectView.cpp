@@ -81,8 +81,7 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
   _entries.push_back (view);
 
   this->ComputeChildLayout ();
-  NeedRedraw ();
-  
+  NeedRedraw ();  
 }
 
 void

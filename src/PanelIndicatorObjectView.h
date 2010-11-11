@@ -38,8 +38,8 @@ public:
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
-private:
   nux::HLayout *_layout;
+private:
   IndicatorObjectProxy *_proxy;
   std::vector<PanelIndicatorObjectEntryView *> _entries;
 };
