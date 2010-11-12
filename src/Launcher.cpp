@@ -1176,7 +1176,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         continue;
       
       DrawRenderArg (GfxContext, *it);
-      RenderArg arg = *it;  
     }
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
