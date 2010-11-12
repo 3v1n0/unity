@@ -8,10 +8,10 @@ unity (3.1.2-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - remove mutter deps
     - add gsettings-desktop-schemas-dev and libnux-0.9-dev
-  * debian/libunity0.symbols:
+  * debian/libunity3.symbols:
     - update to new internal API
   * debian/*install:
-    - install the new files in the right places
+    - dispatch new layout and files in the right places
   * debian/control, debian/libunity*.*:
     - rename libunity0 to libunity3
 
