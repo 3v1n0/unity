@@ -1,7 +1,7 @@
 project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (unity services tests)
+subdirs (libunity services tests)
 
 #
 # Base bits
@@ -9,7 +9,7 @@ subdirs (unity services tests)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 1)
-set (UNITY_MICRO 1)
+set (UNITY_MICRO 3)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -51,7 +51,7 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 # Data
 #
-file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
+file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
 install (FILES ${_datafiles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/${UNITY_MAJOR}/)
 
 #
@@ -78,7 +78,7 @@ set (UNITY_PLUGIN_DEPS "nux-0.9 libbamf dbus-glib-1 dee-1.0 gio-2.0 gio-unix-2.0
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
-compiz_plugin (unity 
+compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR}"
