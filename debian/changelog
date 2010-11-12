@@ -16,7 +16,7 @@ unity (3.1.3-0ubuntu1) natty; urgency=low
   * debian/control, debian/libunity*.*:
     - rename libunity0 to libunity3
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Nov 2010 14:23:36 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Nov 2010 18:35:04 +0100
 
 unity (0.2.46-0ubuntu5) maverick-proposed; urgency=low
 
