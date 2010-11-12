@@ -32,6 +32,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
     _window = window;
     _screen = screen;
     _model = new LauncherModel ();
+    _sort_priority = 0;
     
     _launcher->SetModel (_model);
     _favorite_store = FavoriteStore::GetDefault ();
@@ -111,6 +112,7 @@ LauncherController::OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer
     
     BamfLauncherIcon *icon = new BamfLauncherIcon (self->_launcher, app, self->_screen);
     icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+    icon->SetSortPriority (self->_sort_priority++);
 
     self->RegisterIcon (icon);
 }
@@ -164,8 +166,6 @@ LauncherController::SetupBamf ()
         }
     }
     
-    priority = 0;
-    
     apps = bamf_matcher_get_applications (_matcher);
     g_signal_connect (_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
     
@@ -178,10 +178,8 @@ LauncherController::SetupBamf ()
         g_object_set_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (1));
         
         icon = new BamfLauncherIcon (_launcher, app, _screen);
-        icon->SetSortPriority (priority);
+        icon->SetSortPriority (_sort_priority++);
         RegisterIcon (icon);
-        
-        priority++;
     }
 }
 
