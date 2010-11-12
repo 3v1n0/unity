@@ -48,7 +48,8 @@ private:
 	static void
     onNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
 
-	
+	static GVariant*
+	buildFakeReturn ();
 
 	/* members */
 	guint               _owner_id;

@@ -128,22 +128,83 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
                                                  gpointer data)
 {
     if (g_strcmp0 (methodName, "GetState") == 0) {
-		gchar *output;
-		GVariant *result;
-		const gchar *input;
-		GVariantBuilder *builder;
-		
+		const gchar *input;		
         g_variant_get (parameters, "(&s)", &input);
-        output = g_strdup_printf ("You have passed the string `%s'. Jolly good!", input);
-		builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-		g_variant_builder_add (builder, "{sv}", input, g_variant_new_string (output));
-		result = g_variant_new ("(a{sv})", builder);
-
+		std::cout << "you input " << input << std::endl;
 		std::cout << "returning gvariant" << std::endl;
-        g_dbus_method_invocation_return_value (invocation, result);
-        g_free (output);
+        g_dbus_method_invocation_return_value (invocation, buildFakeReturn());
     } else {
         g_dbus_method_invocation_return_dbus_error (invocation, "org.canonical.Unity",
                                                     "EAT IT, BITCH");
     }
+}
+
+/* a very contrived example purely for giving QA something purposes */
+GVariant* 
+StateIntrospectionDBusInterface::buildFakeReturn ()
+{
+	GVariantBuilder *builder;
+	GVariant *result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string ("_File"));
+	g_variant_builder_add (builder, "{sv}", "image", g_variant_new_string (""));
+	g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (TRUE));
+	g_variant_builder_add (builder, "{sv}", "sensitive", g_variant_new_boolean (TRUE));
+	g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (FALSE));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (34));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (24));
+	zero_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string ("_Edit"));
+	g_variant_builder_add (builder, "{sv}", "image", g_variant_new_string (""));
+	g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (TRUE));
+	g_variant_builder_add (builder, "{sv}", "sensitive", g_variant_new_boolean (TRUE));
+	g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (FALSE));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (34));
+	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (24));
+	one_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+	
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "0", zero_result);
+	g_variant_builder_add (builder, "{sv}", "1", one_result);
+	entries_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+	
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "model-name", 
+	                       g_variant_new_string ("com.canonical.Unity.Panel.Service.Indicators.appmenu.324234243"));
+	g_variant_builder_add (builder, "{sv}", "entries", entries_result);
+	appmenu_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "appmenu", appmenu_result);
+	indicators_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "backend", 
+	                       g_variant_new_string ("/com/canonical/Unity/Panel/Service/324234243"));
+	g_variant_builder_add (builder, "{sv}", "launch-type", 
+	                       g_variant_new_string ("dbus"));
+	g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (1024));
+	g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (32));
+	g_variant_builder_add (builder, "{sv}", "theme", g_variant_new_string ("gtk"));
+	g_variant_builder_add (builder, "{sv}", "indicators", indicators_result);
+	panel_result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", "panel", panel_result);
+	result = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+		
+	gchar *s = g_variant_print (result, TRUE);
+	std::cout << "returning: " << s << std::endl;
+	g_free (s);
+	return result;
 }
