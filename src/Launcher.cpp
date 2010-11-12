@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
+ */
+
 #include <math.h>
 
 #include "Nux/Nux.h"
@@ -1217,7 +1236,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 {
   _mouse_position = nux::Point2 (x, y);
   
-  MouseDownLogic ();
+  MouseDownLogic (x, y, button_flags, key_flags);
   EnsureAnimation ();
 }
 
@@ -1232,7 +1251,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
     UnsetHover ();
   }
 
-  MouseUpLogic ();
+  MouseUpLogic (x, y, button_flags, key_flags);
   _launcher_action_state = ACTION_NONE;
   EnsureAnimation ();
 }
@@ -1313,7 +1332,7 @@ void Launcher::EventLogic ()
   }
 }
 
-void Launcher::MouseDownLogic ()
+void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
@@ -1321,26 +1340,26 @@ void Launcher::MouseDownLogic ()
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
-    launcher_icon->MouseDown.emit ();
+    launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
   }
 }
 
-void Launcher::MouseUpLogic ()
+void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->MouseUp.emit ();
+    _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
     
     if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
-      _icon_mouse_down->MouseClick.emit ();
+      _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->MouseUp.emit ();
+    launcher_icon->MouseUp.emit (nux::GetEventButton (button_flags));
   }
   
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)

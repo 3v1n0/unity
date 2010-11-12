@@ -44,9 +44,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
   _proxy->Updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
-  //InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
-  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
-
+  InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  
   Refresh ();
 }
 
@@ -57,10 +56,17 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 void
 PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, long key_flags)
 {
-  //printf ("OnMouseDown: %d %d %ld %ld\n", x, y, button_flags, key_flags);
-  //printf ("Geometry   : %d %d %d %d\n", GetGeometry ().x, GetGeometry ().y, GetGeometry ().width, GetGeometry ().height);
+  if (_proxy->GetActive ())
+    return;
 
-  _proxy->ShowMenu (GetGeometry ().x, PANEL_HEIGHT, time (NULL));
+  if ((_proxy->label_visible && _proxy->label_sensitive)
+      || (_proxy->icon_visible && _proxy->icon_sensitive))
+  {
+    _proxy->ShowMenu (GetGeometry ().x,
+                      PANEL_HEIGHT,
+                      time (NULL),
+                      nux::GetEventButton (button_flags));
+  }
 }
 
 static char *
@@ -174,9 +180,11 @@ PanelIndicatorObjectEntryView::Refresh ()
   if (_proxy->GetPixbuf () && _proxy->icon_visible)
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (height - gdk_pixbuf_get_height (pixbuf))/2);
-    cairo_paint (cr);
+    cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
+
+    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)
@@ -190,7 +198,8 @@ PanelIndicatorObjectEntryView::Refresh ()
     cairo_stroke (cr);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f, 1.0f);
+    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f,
+                           _proxy->label_sensitive ? 1.0f : 0.0f);
     cairo_move_to (cr, x, (height - text_height)/2);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);

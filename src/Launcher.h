@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
+ */
+
 #ifndef LAUNCHER_H
 #define LAUNCHER_H
 
@@ -111,8 +130,8 @@ private:
   void UpdateIconXForm (std::list<Launcher::RenderArg> args);
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
-  void MouseDownLogic ();
-  void MouseUpLogic ();
+  void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);

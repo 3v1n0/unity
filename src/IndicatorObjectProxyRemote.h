@@ -31,24 +31,30 @@ class IndicatorObjectProxyRemote : public IndicatorObjectProxy
 {
 public:
 
-  IndicatorObjectProxyRemote  (const char *name, const char *model_name);
+  IndicatorObjectProxyRemote  (const char *name);
   ~IndicatorObjectProxyRemote ();
   
   virtual std::string& GetName ();
   virtual std::vector<IndicatorObjectEntryProxy *>& GetEntries ();
 
-  void OnRowAdded   (DeeModelIter *iter);
-  void OnRowChanged (DeeModelIter *iter);
-  void OnRowRemoved (DeeModelIter *iter);
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
+  void BeginSync ();
+  void AddEntry  (const gchar *entry_id,
+                  const gchar *label,
+                  bool         label_sensitive,
+                  bool         label_visible,
+                  guint32      image_type,
+                  const gchar *image_data,
+                  bool         image_sensitive,
+                  bool         image_visible);
+  void EndSync   ();
+
+  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
 
 private:
   std::string _name;
-  std::string _model_name;
-  DeeModel    *_model;
 };
 
 #endif // INDICATOR_OBJECT_PROXY_REMOTE_H

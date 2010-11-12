@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
+ * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ */
+
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
 #include "Nux/HLayout.h"
@@ -377,14 +396,14 @@ void ctk_surface_blur (cairo_surface_t* surface,
     gfloat* rgba_hl,
     gfloat* rgba_dot)
   {
-    cairo_surface_t* dots_surf    = NULL;
+    /*cairo_surface_t* dots_surf    = NULL;
     cairo_t*         dots_cr      = NULL;
     cairo_pattern_t* dots_pattern = NULL;
-    cairo_pattern_t* hl_pattern   = NULL;
+    cairo_pattern_t* hl_pattern   = NULL;*/
 
     // create context for dot-pattern
-    dots_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
-    dots_cr = cairo_create (dots_surf);
+    /*dots_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
+    dots_cr = cairo_create (dots_surf);*/
 
     // clear normal context
     cairo_scale (cr, 1.0f, 1.0f);
@@ -404,10 +423,11 @@ void ctk_surface_blur (cairo_surface_t* surface,
       rgba_tint[1],
       rgba_tint[2],
       rgba_tint[3]);
-    cairo_fill_preserve (cr);
+    //cairo_fill_preserve (cr);
+    cairo_fill (cr);
 
     // create pattern in dot-context
-    cairo_set_operator (dots_cr, CAIRO_OPERATOR_CLEAR);
+    /*cairo_set_operator (dots_cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint (dots_cr);
     cairo_scale (dots_cr, 1.0f, 1.0f);
     cairo_set_operator (dots_cr, CAIRO_OPERATOR_OVER);
@@ -420,19 +440,19 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_fill (dots_cr);
     cairo_rectangle (dots_cr, 2.0f, 2.0f, 1.0f, 1.0f);
     cairo_fill (dots_cr);
-    dots_pattern = cairo_pattern_create_for_surface (dots_surf);
+    dots_pattern = cairo_pattern_create_for_surface (dots_surf);*/
 
     // fill path of normal context with dot-pattern
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    /*cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_set_source (cr, dots_pattern);
     cairo_pattern_set_extend (dots_pattern, CAIRO_EXTEND_REPEAT);
     cairo_fill_preserve (cr);
     cairo_pattern_destroy (dots_pattern);
     cairo_surface_destroy (dots_surf);
-    cairo_destroy (dots_cr);
+    cairo_destroy (dots_cr);*/
 
     // draw highlight
-    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    /*cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     hl_pattern = cairo_pattern_create_radial (hl_x,
       hl_y,
       0.0f,
@@ -448,7 +468,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_pattern_add_color_stop_rgba (hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
     cairo_set_source (cr, hl_pattern);
     cairo_fill (cr);
-    cairo_pattern_destroy (hl_pattern);
+    cairo_pattern_destroy (hl_pattern);*/
   }
 
   void _setup (cairo_surface_t** surf,
@@ -710,7 +730,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     _draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
     ctk_surface_blur (surf, blur_coeff);
     compute_mask (cr);
-    compute_outline (cr, line_width, rgba_line);
+    //compute_outline (cr, line_width, rgba_line);
   }
 
   void compute_full_mask (
@@ -756,7 +776,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
     cairo_t *cr_mask    = cairo_mask->GetContext ();
     cairo_t *cr_outline = cairo_outline->GetContext ();
 
-    float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.80f};
+    float   tint_color[4]    = {0.074f, 0.074f, 0.074f, 0.80f};
     float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.15f};
     float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
     float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};

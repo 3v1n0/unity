@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
 #include <sys/time.h>
 
 #include "Nux/Nux.h"
@@ -173,9 +191,9 @@ LauncherIcon::RecvMouseEnter ()
   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
 
-  _tooltip->SetBaseX (icon_x + icon_w);
+  _tooltip->SetBaseX (icon_x + icon_w - 10);
   _tooltip->SetBaseY (icon_y +
-                      24 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
+                      23 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
                       (icon_h / 2) -
                       (_tooltip->GetBaseHeight () / 2));
   _tooltip->ShowWindow (true);
@@ -333,4 +351,15 @@ int
 LauncherIcon::RelatedWindows ()
 {
   return _related_windows;
+}
+
+std::list<DbusmenuClient *> LauncherIcon::Menus ()
+{
+  return GetMenus ();
+}
+
+std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
+{
+  std::list<DbusmenuClient *> result;
+  return result;
 }

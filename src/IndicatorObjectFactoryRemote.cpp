@@ -24,42 +24,32 @@
 #include "IndicatorObjectEntryProxyRemote.h"
 #include "IndicatorObjectEntryProxy.h"
 
+#include "Nux/Nux.h"
+#include "Nux/WindowThread.h"
+#include "NuxGraphics/GLWindowManager.h"
+#include <X11/Xlib.h>
+
 #define S_NAME  "com.canonical.Unity.Panel.Service"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
-#define D_NAME  "com.canonical.Unity.Panel.Service.Indicators"
+
 
 // Enums
-
-enum
-{
-  COL_NAME = 0,
-  COL_MODEL_NAME,
-  COL_EXPAND
-};
 
 // Forwards
 static void on_proxy_ready_cb (GObject      *source,
                                GAsyncResult *res,
                                gpointer      data);
 
-static void on_row_added   (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
-static void on_row_changed (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
-static void on_row_removed (DeeModel                     *model,
-                            DeeModelIter                 *iter,
-                            IndicatorObjectFactoryRemote *remote);
-
 static void on_proxy_signal_received (GDBusProxy *proxy,
                                       gchar      *sender_name,
                                       gchar      *signal_name,
                                       GVariant   *parameters,
                                       IndicatorObjectFactoryRemote *remote);
+
+static void on_sync_ready_cb (GObject      *source,
+                              GAsyncResult *res,
+                              gpointer      data);
 
 // Public Methods
 IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
@@ -74,18 +64,6 @@ IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
                             NULL,
                             on_proxy_ready_cb,
                             this);
-
-  // Connect to the main DeeSharedModel, which gives us info about the
-  // indicators that the service has
-  _model = dee_shared_model_new_with_name (D_NAME);
-  g_signal_connect (_model, "row-added",
-                    G_CALLBACK (on_row_added), this);
-  g_signal_connect (_model, "row-changed",
-                    G_CALLBACK (on_row_changed), this);
-  g_signal_connect (_model, "row-removed",
-                    G_CALLBACK (on_row_removed), this);
-
-  dee_shared_model_connect (DEE_SHARED_MODEL (_model));
 }
 
 IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
@@ -93,10 +71,6 @@ IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
   if (G_IS_OBJECT (_proxy))
     g_object_unref (_proxy);
   _proxy = NULL;
-
-  if (DEE_IS_SHARED_MODEL (_model))
-    g_object_unref (_model);
-  _model = NULL;
 
   std::vector<IndicatorObjectProxy*>::iterator it;
   
@@ -129,56 +103,63 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
   // FIXME: Add autorestarting bits here
  g_signal_connect (_proxy, "g-signal",
                    G_CALLBACK (on_proxy_signal_received), this);
+
+  g_dbus_proxy_call (_proxy,
+                     "Sync",
+                     NULL,
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     on_sync_ready_cb,
+                     this);
 }
 
 void
-IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp)
+IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
+                                                         int         x,
+                                                         int         y,
+                                                         guint       timestamp,
+                                                         guint32     button)
 {
-  // FIXME: Why doesn't this work if timestamp is valid?
-  timestamp = 0;
+  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  XUngrabPointer(d, CurrentTime);
+  XFlush (d);
 
   g_dbus_proxy_call (_proxy,
                      "ShowEntry",
-                     g_variant_new ("(suii)",
-                                    id,
-                                    timestamp,
+                     g_variant_new ("(suiii)",
+                                    entry_id,
+                                    0,
                                     x,
-                                    y),
+                                    y,
+                                    button),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      NULL,
                      NULL);
-}
 
-void
-IndicatorObjectFactoryRemote::OnRowAdded (DeeModelIter *iter)
-{
-  IndicatorObjectProxyRemote *remote;
-  const gchar *name;
-  const gchar *model_name;
-
-  name = dee_model_get_string (_model, iter, COL_NAME);
-  model_name = dee_model_get_string (_model, iter, COL_MODEL_NAME);
-
-  remote = new IndicatorObjectProxyRemote (name, model_name);
-  remote->OnShowMenuRequest.connect (sigc::mem_fun (this, &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
-
-  _indicators.push_back (remote);
-
-  OnObjectAdded.emit (remote);
-}
-
-void
-IndicatorObjectFactoryRemote::OnRowChanged (DeeModelIter *iter)
-{
-  printf ("HELLO %s\n", G_STRFUNC);
-}
-
-void
-IndicatorObjectFactoryRemote::OnRowRemoved (DeeModelIter *iter)
-{
-  printf ("HELLO%s\n", G_STRFUNC);
+  // --------------------------------------------------------------------------
+  // FIXME: This is a workaround until the non-paired events issue is fixed in
+  // nux
+  XButtonEvent ev = {
+    ButtonRelease,
+    0,
+    False,
+    d,
+    0,
+    0,
+    0,
+    CurrentTime,
+    x, y,
+    x, y,
+    0,
+    Button1,
+    True
+  };
+  XEvent *e = (XEvent*)&ev;
+  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
+  // --------------------------------------------------------------------------
 }
 
 // We need to unset the last active entry and set the new one as active
@@ -199,6 +180,94 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
   } 
+}
+
+IndicatorObjectProxyRemote *
+IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
+{
+  IndicatorObjectProxyRemote *remote = NULL;
+  std::vector<IndicatorObjectProxy*>::iterator it;
+  
+  for (it = _indicators.begin(); it != _indicators.end(); it++)
+  {
+    IndicatorObjectProxyRemote *r = static_cast<IndicatorObjectProxyRemote *> (*it);
+
+    if (g_strcmp0 (id, r->GetName ().c_str ()) == 0)
+      {
+        remote = r;
+        break;
+      }
+  }
+
+  if (remote == NULL)
+    {
+      // Create one
+      remote = new IndicatorObjectProxyRemote (id);
+      remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
+                                                        &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
+
+      _indicators.push_back (remote);
+
+      OnObjectAdded.emit (remote);
+    }
+
+  return remote;
+}
+
+void
+IndicatorObjectFactoryRemote::Sync (GVariant *args)
+{
+  GVariantIter *iter;
+  gchar        *indicator_id;
+  gchar        *entry_id;
+  gchar        *label;
+  gboolean      label_sensitive;
+  gboolean      label_visible;
+  guint32       image_type;
+  gchar        *image_data;
+  gboolean      image_sensitive;
+  gboolean      image_visible;
+
+  IndicatorObjectProxyRemote *current_proxy = NULL;
+  gchar                      *current_proxy_id = NULL;
+
+  g_variant_get (args, "(a(sssbbusbb))", &iter);
+  while (g_variant_iter_loop (iter, "(sssbbusbb)",
+                              &indicator_id,
+                              &entry_id,
+                              &label,
+                              &label_sensitive,
+                              &label_visible,
+                              &image_type,
+                              &image_data,
+                              &image_sensitive,
+                              &image_visible))
+    {
+      if (g_strcmp0 (current_proxy_id, indicator_id) != 0)
+        {
+          if (current_proxy)
+            current_proxy->EndSync ();
+          g_free (current_proxy_id);
+
+          current_proxy_id = g_strdup (indicator_id);
+          current_proxy = IndicatorForID (indicator_id);
+          current_proxy->BeginSync ();
+        }
+
+      current_proxy->AddEntry (entry_id,
+                               label,
+                               label_sensitive,
+                               label_visible,
+                               image_type,
+                               image_data,
+                               image_sensitive,
+                               image_visible);
+    }
+  if (current_proxy)
+    current_proxy->EndSync ();
+  
+  g_free (current_proxy_id);
+  g_variant_iter_free (iter);
 }
 
 //
@@ -277,24 +346,6 @@ on_proxy_ready_cb (GObject      *source,
 }
 
 static void
-on_row_added (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowAdded (iter);
-}
-
-static void
-on_row_changed (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowChanged (iter);
-}
-
-static void
-on_row_removed (DeeModel *model, DeeModelIter *iter, IndicatorObjectFactoryRemote *remote)
-{
-  remote->OnRowRemoved (iter);
-}
-
-static void
 on_proxy_signal_received (GDBusProxy *proxy,
                           gchar      *sender_name,
                           gchar      *signal_name,
@@ -305,4 +356,49 @@ on_proxy_signal_received (GDBusProxy *proxy,
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
   }
+  else if (g_strcmp0 (signal_name, "ReSync") == 0)
+  {
+    const gchar *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
+    bool sync_one = !g_strcmp0 (id, "") == 0;
+
+    g_dbus_proxy_call (proxy,
+                       sync_one ? "SyncOne" : "Sync", 
+                       sync_one ? g_variant_new ("(s)", id) : NULL,
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1,
+                       NULL,
+                       on_sync_ready_cb,
+                       remote);
+  }
+  else if (g_strcmp0 (signal_name, "ActiveMenuPointerMotion") == 0)
+    {
+      int x=0, y=0;
+
+      g_variant_get (parameters, "(ii)", &x, &y);
+
+      remote->OnMenuPointerMoved.emit (x, y);
+    }
+}
+
+static void
+on_sync_ready_cb (GObject      *source,
+                  GAsyncResult *res,
+                  gpointer      data)
+{
+  IndicatorObjectFactoryRemote *remote = static_cast<IndicatorObjectFactoryRemote *> (data);
+  GVariant     *args;
+  GError       *error = NULL;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy*)source, res, &error);
+
+  if (args == NULL)
+    {
+      g_warning ("Unable to perform Sync() on panel service: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  remote->Sync (args);
+
+  g_variant_unref (args);
 }

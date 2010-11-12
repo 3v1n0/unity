@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jason Smith <jason.smith@canonical.com>
+ */
+
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
 
@@ -47,7 +65,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 }
 
 void
-BamfLauncherIcon::OnMouseClick ()
+BamfLauncherIcon::OnMouseClick (int button)
 {
     BamfView *view;
     GList *children, *l;
@@ -177,4 +195,25 @@ BamfLauncherIcon::OnChildRemoved (BamfView *view, BamfView *child, gpointer data
 {
     BamfLauncherIcon *self = (BamfLauncherIcon*) data;
     self->EnsureWindowState ();
+}
+
+std::list<DbusmenuClient *>
+BamfLauncherIcon::GetMenus ()
+{
+    GList *children, *l;
+    std::list<DbusmenuClient *> result;
+    
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+    for (l = children; l; l = l->next)
+    {
+        if (BAMF_IS_INDICATOR (l->data))
+        {
+            BamfIndicator *indicator = BAMF_INDICATOR (l->data);
+            DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), bamf_indicator_get_remote_path (indicator));
+            
+            result.push_back (client);
+        }
+    }
+    
+    return result;
 }
