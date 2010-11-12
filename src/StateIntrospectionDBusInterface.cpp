@@ -17,7 +17,6 @@
 #include <iostream>
 #include "StateIntrospectionDBusInterface.h"
 
-
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
 
 static const GDBusInterfaceVTable si_vtable =
@@ -41,7 +40,7 @@ static const GDBusArgInfo si_getstate_out_args =
 {
 	-1,
 	"state",
-	"s",
+	"a{sv}",
 	NULL
 };
 static const GDBusArgInfo * const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -69,7 +68,6 @@ static const GDBusInterfaceInfo si_iface_info =
 
 StateIntrospectionDBusInterface::StateIntrospectionDBusInterface ()
 {
-    std::cout << "OK MAKING THIS OBJECT YA KNOW?" << std::endl;
 }
 
 StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
@@ -80,7 +78,6 @@ StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
 void
 StateIntrospectionDBusInterface::initStateIntrospection ()
 {
-	std::cout << "tryna own da bus jawn" << std::endl;
     _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                                UNITY_STATE_DEBUG_BUS_NAME,
                                G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -96,7 +93,6 @@ void
 StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 	GError *error = NULL;
-	std::cout << "bus acquired " << name << std::endl;
 	g_dbus_connection_register_object (connection,
 	                                   "/org/canonical/Unity/Debug/StateIntrospection",
 	                                   (GDBusInterfaceInfo*) &si_iface_info,
@@ -114,7 +110,6 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 void
 StateIntrospectionDBusInterface::onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
-	std::cout << "name aquired " << name << std::endl;
 }
 
 void
@@ -132,4 +127,23 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
                                                  GDBusMethodInvocation *invocation, 
                                                  gpointer data)
 {
+    if (g_strcmp0 (methodName, "GetState") == 0) {
+		gchar *output;
+		GVariant *result;
+		const gchar *input;
+		GVariantBuilder *builder;
+		
+        g_variant_get (parameters, "(&s)", &input);
+        output = g_strdup_printf ("You have passed the string `%s'. Jolly good!", input);
+		builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+		g_variant_builder_add (builder, "{sv}", input, g_variant_new_string (output));
+		result = g_variant_new ("(a{sv})", builder);
+
+		std::cout << "returning gvariant" << std::endl;
+        g_dbus_method_invocation_return_value (invocation, result);
+        g_free (output);
+    } else {
+        g_dbus_method_invocation_return_dbus_error (invocation, "org.canonical.Unity",
+                                                    "EAT IT, BITCH");
+    }
 }

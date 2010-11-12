@@ -51,7 +51,7 @@ private:
 	
 
 	/* members */
-	guint _owner_id;
+	guint               _owner_id;
 };
 
 #endif
