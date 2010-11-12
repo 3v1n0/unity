@@ -12,7 +12,7 @@ install (FILES ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc DESTINATION ${CMAKE_IN
 # libunity
 #
 find_package(PkgConfig)
-pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 clutter-1.0 clutk-0.3 gconf-2.0)
+pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 gconf-2.0)
 
 # Bump this one when a binary-incompatible change is introduced
 set (libunity_SOVERSION ${UNITY_MAJOR})
@@ -47,31 +47,15 @@ include(ValaVersion)
 
 find_package (Vala)
 
-vala_precompile (VALA_C chrome-handler.vala
-                        drag-controller.vala
-                        drag-view.vala
-                        entry.vala
-                        icon-postprocessor.vala
-                        prism-handler.vala
-                        quicklist-rendering.vala
-                        shell.vala
-                        theme.vala
-                        unity-appinfo-manager.vala
-                        unity-cairo-canvas.vala
-                        unity-expanding-bin.vala
-                        unity-favorites.vala
+vala_precompile (VALA_C unity-appinfo-manager.vala
                         unity-io.vala
-                        unity-layered-bin.vala
-                        unity-pixbuf-cache.vala
                         unity-place-activation.vala
                         unity-place-browser.vala
                         unity-place-renderer.vala
                         unity-place.vala
-                        unity-stripe-texture.vala
-                        webapp-fetcher.vala
-                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib-1 clutter-json-1.0 gconf-2.0 gio-unix-2.0
+                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib gio-unix-2.0
                  OPTIONS --thread
-                 CUSTOM_VAPIS ../vapi/dee-1.0.vapi ../vapi/clutter-1.0.vapi ../vapi/config.vapi ../vapi/clutk-0.3.vapi ../vapi/cogl-1.0.vapi
+                 CUSTOM_VAPIS ../vapi/dee-1.0.vapi ../vapi/config.vapi
                  GENERATE_VAPI unity
 )
 

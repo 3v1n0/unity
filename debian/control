@@ -9,9 +9,6 @@ Build-Depends: cmake,
                intltool (>= 0.35.0),
                libgee-dev (>= 0.5.0),
                libunique-dev,
-               libclutter-1.0-dev,
-               libclutter-gtk-0.10-dev (>= 0.10.2-1ubuntu1),
-               libclutk-dev (>= 0.3.45),
                libbamf-dev (>= 0.2.32),
                gsettings-desktop-schemas-dev,
                libgconf2-dev,
@@ -27,6 +24,11 @@ Build-Depends: cmake,
                libutouch-grail-dev,
                libxcb-icccm1-dev,
                libnux-0.9-dev,
+               compiz-dev,
+               libcompizconfig0-dev,
+               xsltproc,
+               libboost1.42-dev,
+               libboost-serialization1.42-dev,
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 
@@ -85,11 +87,8 @@ Depends: ${misc:Depends},
          libglib2.0-dev,
          libdbus-glib-1-dev,
          libgtk2.0-dev,
-         libclutter-1.0-dev,
-         libclutter-gtk-0.10-dev,
          libdee-dev,
          libgee-dev,
-         libclutk-dev,
 Description: binding to get places into the launcher - development files
  libunity-places is a shared library to be able to interact with the launcher
  and add places in Unity environment.
