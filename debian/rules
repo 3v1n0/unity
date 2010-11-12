@@ -2,7 +2,7 @@
 # -*- makefile -*-
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DH_VERBOSE=1
 
 CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 
@@ -17,6 +17,9 @@ override_dh_install:
 
 override_dh_gencontrol:
 	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION)
+
+override_dh_auto_test:
+	echo "not working right now"
 
 %:
 	dh $@

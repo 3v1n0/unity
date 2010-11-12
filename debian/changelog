@@ -1,13 +1,17 @@
-unity (0.3.0-0ubuntu1~dx1ubuntu1) UNRELEASED; urgency=low
+unity (0.3.0-0ubuntu1) UNRELEASED; urgency=low
 
   * merge with new release
   * udpate debian/copyright
   * change debian/rules to build unity as a compiz plugin
     - needed cmake
+    - skip tests for now
   * debian/control:
-    - change to new dependencies
+    - remove clutter/mutter/gconf deps
+    - add gsettings-desktop-schemas-dev
   * debian/libunity0.symbols:
     - update to new internal API
+  * debian/*install:
+    - install the new files in the right places
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 10 Nov 2010 14:08:12 +0100
 

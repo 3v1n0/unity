@@ -1,6 +1,3 @@
-debian/tmp/etc/gconf
-debian/tmp/usr/bin
-debian/tmp/usr/lib/mutter
-debian/tmp/usr/lib/unity
-debian/tmp/usr/share/locale
-debian/tmp/usr/share/unity
+usr/lib/unity
+usr/share/locale
+usr/share/unity
