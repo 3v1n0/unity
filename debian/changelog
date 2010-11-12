@@ -1,4 +1,4 @@
-unity (0.3.0-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.46-0ubuntu6) UNRELEASED; urgency=low
 
   * merge with new release
   * udpate debian/copyright
