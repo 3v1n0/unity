@@ -50,6 +50,8 @@ struct _PanelServicePrivate
 
   gint     last_menu_x;
   gint     last_menu_y;
+
+  gboolean suppress_signals;
 };
 
 /* Globals */
@@ -228,6 +230,13 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   return ret;
 }
 
+static gboolean
+initial_resync (PanelService *self)
+{
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
+  return FALSE;
+}
+
 static void
 panel_service_init (PanelService *self)
 {
@@ -240,8 +249,12 @@ panel_service_init (PanelService *self)
                                                g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
+  priv->suppress_signals = TRUE;
   load_indicators (self);
   sort_indicators (self);
+  priv->suppress_signals = FALSE;
+
+  g_idle_add ((GSourceFunc)initial_resync, self);
 }
 
 PanelService *
@@ -271,8 +284,9 @@ actually_notify_object (IndicatorObject *object)
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
   priv->timeouts[position] = SYNC_WAITING;
 
-  g_signal_emit (self, _service_signals[RE_SYNC],
-                 0, g_object_get_data (G_OBJECT (object), "id"));
+  if (!priv->suppress_signals);
+    g_signal_emit (self, _service_signals[RE_SYNC],
+                   0, g_object_get_data (G_OBJECT (object), "id"));
 
   return FALSE;
 }
