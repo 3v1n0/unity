@@ -20,6 +20,7 @@
 #define _STATE_INTROSPECTION_DBUS_INTERFACE_H 1
 
 #include <glib.h>
+#include <gio/gio.h>
 
 class StateIntrospectionDBusInterface
 {
@@ -30,7 +31,14 @@ public:
 	void
 	initStateIntrospection ();
 	
+	static void 
+	dBusMethodCall (GDBusConnection *connection, const gchar *sender,
+	                const gchar *objectPath, const gchar *ifaceName,
+	                const gchar *methodName, GVariant *parameters,
+	                GDBusMethodInvocation *invocation, gpointer data);
+	
 private:
+	/* methods */
 	static void
 	onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
 
@@ -40,6 +48,9 @@ private:
 	static void
     onNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
 
+	
+
+	/* members */
 	static guint _owner_id;
 };
 

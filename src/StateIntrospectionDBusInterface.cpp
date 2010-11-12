@@ -15,11 +15,57 @@
  */
 
 #include <iostream>
-#include <gio/gio.h>
 #include "StateIntrospectionDBusInterface.h"
 
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
+
+static const GDBusInterfaceVTable si_vtable =
+{
+	&StateIntrospectionDBusInterface::dBusMethodCall,
+	NULL,
+	NULL
+};
+
+static const GDBusArgInfo si_getstate_in_args =
+{
+	-1,
+	"piece",
+	"s",
+	NULL
+};
+static const GDBusArgInfo * const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
+
+// TODO: this is really a a{sv} or something like that.
+static const GDBusArgInfo si_getstate_out_args =
+{
+	-1,
+	"state",
+	"s",
+	NULL
+};
+static const GDBusArgInfo * const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
+
+static const GDBusMethodInfo si_method_info_getstate =
+{
+	-1,
+	"GetState",
+	(GDBusArgInfo **) &si_getstate_in_arg_pointers,
+	(GDBusArgInfo **) &si_getstate_out_arg_pointers,
+	NULL
+};
+
+static const GDBusMethodInfo * const si_method_info_pointers[] = { &si_method_info_getstate, NULL };
+
+static const GDBusInterfaceInfo si_iface_info =
+{
+	-1,
+	"org.canonical.Unity.Debug.StateIntrospection",
+	(GDBusMethodInfo **) &si_method_info_pointers,
+	NULL,
+	NULL,
+	NULL,
+};
 
 StateIntrospectionDBusInterface::StateIntrospectionDBusInterface ()
 {
@@ -48,7 +94,15 @@ StateIntrospectionDBusInterface::initStateIntrospection ()
 void
 StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
+	GError *error;
 	std::cout << "bus acquired" << std::endl;
+	g_dbus_connection_register_object (connection,
+	                                   "/org/canonical/Unity/Debug/StateIntrospection",
+	                                   (GDBusInterfaceInfo*) &si_iface_info,
+	                                   &si_vtable,
+	                                   NULL,
+	                                   NULL,
+	                                   &error);
 }
 
 void
@@ -59,5 +113,17 @@ StateIntrospectionDBusInterface::onNameAcquired (GDBusConnection *connection, co
 
 void
 StateIntrospectionDBusInterface::onNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
+{
+}
+
+void
+StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection, 
+                                                 const gchar *sender,
+                                                 const gchar *objectPath,
+                                                 const gchar *ifaceName,
+                                                 const gchar *methodName,
+                                                 GVariant *parameters,
+                                                 GDBusMethodInvocation *invocation, 
+                                                 gpointer data)
 {
 }
