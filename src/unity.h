@@ -44,6 +44,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
+#include "StateIntrospectionDBusInterface.h"
 
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
@@ -177,30 +178,17 @@ class UnityScreen :
 	static void 
 	initUnity(nux::NThread* thread, void* InitData);
 
-	void
-	initStateIntrospection ();
-
-	static void
-	onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
-
-	static void
-	onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
-
-	static void
-    onNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
-
-	
 	static gboolean 
 	strutHackTimeout (gpointer data);
 	
-	Launcher               *launcher;
-	LauncherController     *controller;
-	PanelView              *panelView;
-	nux::WindowThread      *wt;
-	nux::BaseWindow        *launcherWindow;
-	nux::BaseWindow        *panelWindow;
-	nux::Geometry           lastTooltipArea;
-	guint                   _owner_id;
+	Launcher               			*launcher;
+	LauncherController    	 		*controller;
+	PanelView              			*panelView;
+	nux::WindowThread      			*wt;
+	nux::BaseWindow        			*launcherWindow;
+	nux::BaseWindow        			*panelWindow;
+	nux::Geometry                   lastTooltipArea;
+	StateIntrospectionDBusInterface *debugger;
 };
 
 class UnityWindow :
