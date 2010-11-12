@@ -178,10 +178,10 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                icon_name,
                error ? error->message : "unknown");
 
-    if (g_strcmp0 (icon_name, "gtk-stop") == 0)
+    if (g_strcmp0 (icon_name, "folder") == 0)
       return NULL;
     else
-      return TextureFromGtkTheme ("gtk-stop", size);
+      return TextureFromGtkTheme ("folder", size);
   }
   
   return result;
