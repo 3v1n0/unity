@@ -136,6 +136,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   GtkIconTheme *theme;
   GtkIconInfo *info;
   nux::BaseTexture *result;
+  GError *error = NULL;
   
   theme = gtk_icon_theme_get_default ();
       
@@ -162,12 +163,26 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        (GtkIconLookupFlags) 0);
   }
   
-  pbuf = gtk_icon_info_load_icon (info, NULL);
-  result = nux::CreateTextureFromPixbuf (pbuf);
+  pbuf = gtk_icon_info_load_icon (info, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    _background_color = ColorForIcon (pbuf);
   
-  _background_color = ColorForIcon (pbuf);
-  
-  g_object_unref (pbuf);
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' from icon theme: %s",
+               icon_name,
+               error ? error->message : "unknown");
+
+    if (g_strcmp0 (icon_name, "gtk-stop") == 0)
+      return NULL;
+    else
+      return TextureFromGtkTheme ("gtk-stop", size);
+  }
   
   return result;
 }
