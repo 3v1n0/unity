@@ -32,7 +32,6 @@ public:
   PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy);
   ~PanelIndicatorObjectEntryView ();
 
-private:
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
 

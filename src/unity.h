@@ -39,7 +39,7 @@
 #include <opengl/opengl.h>
 
 /* This is the options class header created for us automatically on build with BCOP */
-#include "unity_options.h"
+#include "unityshell_options.h"
 
 #include "Launcher.h"
 #include "LauncherController.h"
@@ -72,7 +72,7 @@ class UnityScreen :
     /* And finally, because we are using BCOP to generate our options, it creates a class
      * with a bunch of getters and setters that are added to out class when we inherit it. Yay.
      */
-    public UnityOptions
+    public UnityshellOptions
 {
 
     public:

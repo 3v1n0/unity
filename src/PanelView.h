@@ -40,6 +40,7 @@ public:
   virtual long PostLayoutManagement (long LayoutResult);
   
   void OnObjectAdded (IndicatorObjectProxy *proxy);
+  void OnMenuPointerMoved (int x, int y);
   
   PanelHomeButton * HomeButton ();
 

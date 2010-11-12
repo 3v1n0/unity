@@ -21,7 +21,6 @@
 
 #include <string>
 #include <gio/gio.h>
-#include <dee.h>
 
 #include "IndicatorObjectEntryProxy.h"
 
@@ -33,10 +32,10 @@ class IndicatorObjectEntryProxyRemote : public IndicatorObjectEntryProxy
 {
 public:
 
-  IndicatorObjectEntryProxyRemote  (DeeModel *model, DeeModelIter *iter);
+  IndicatorObjectEntryProxyRemote  ();
   ~IndicatorObjectEntryProxyRemote ();
 
-  const char * GetId ();
+  virtual const char * GetId ();
 
   virtual const char * GetLabel ();
 
@@ -46,17 +45,28 @@ public:
   virtual void         SetActive (bool active);
   virtual bool         GetActive ();
 
-  virtual void         ShowMenu (int x, int y, guint32 timestamp);
+  virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button);
 
-  void Refresh ();
+  void Refresh (const char *__id,
+                const char *__label,
+                bool        __label_sensitive,
+                bool        __label_visible,
+                guint32     __image_type,
+                const char *__image_data,
+                bool        __image_sensitive,
+                bool        __image_visible);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
 
 public:
-  DeeModel     *_model;
-  DeeModelIter *_iter;
-  bool          _active;
+  bool     _dirty;
+  bool     _active;
+
+  char    *_id;
+  char    *_label;
+  guint32  _image_type;
+  char    *_image_data;
 };
 
 #endif // INDICATOR_OBJECT_ENTRY_PROXY_REMOTE_H

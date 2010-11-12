@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <compiz>
-    <plugin name="unity" useBcop="true">
+    <plugin name="unityshell" useBcop="true">
 	<_short>Ubuntu Unity Plugin</_short>
 	<_long>Plugin to draw the Unity Shell</_long>
 	<deps>

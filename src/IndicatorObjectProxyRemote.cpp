@@ -20,32 +20,9 @@
 
 #include "IndicatorObjectEntryProxyRemote.h"
 
-static void on_row_added   (DeeModel                   *model,
-                            DeeModelIter               *iter,
-                            IndicatorObjectProxyRemote *remote);
-
-static void on_row_changed (DeeModel                   *model,
-                            DeeModelIter               *iter,
-                            IndicatorObjectProxyRemote *remote);
-
-static void on_row_removed (DeeModel                   *model,
-                            DeeModelIter               *iter,
-                            IndicatorObjectProxyRemote *remote);
-
-IndicatorObjectProxyRemote::IndicatorObjectProxyRemote (const char *name,
-                                                        const char *model_name)
-: _name (name),
-  _model_name (model_name)
+IndicatorObjectProxyRemote::IndicatorObjectProxyRemote (const char *name)
+: _name (name)
 {
-  _model = dee_shared_model_new_with_name (model_name);
-  g_signal_connect (_model, "row-added",
-                    G_CALLBACK (on_row_added), this);
-  g_signal_connect (_model, "row-changed",
-                    G_CALLBACK (on_row_changed), this);
-  g_signal_connect (_model, "row-removed",
-                    G_CALLBACK (on_row_removed), this);
-
-  dee_shared_model_connect (DEE_SHARED_MODEL (_model));
 }
 
 IndicatorObjectProxyRemote::~IndicatorObjectProxyRemote ()
@@ -73,76 +50,96 @@ IndicatorObjectProxyRemote::GetEntries ()
   return _entries;
 }
 
-void
-IndicatorObjectProxyRemote::OnRowAdded (DeeModelIter *iter)
-{
-  IndicatorObjectEntryProxyRemote *remote;
-
-  remote = new IndicatorObjectEntryProxyRemote (_model, iter);
-  remote->OnShowMenuRequest.connect (sigc::mem_fun (this, &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
-  _entries.push_back (remote);
-
-  OnEntryAdded.emit (remote);
-}
 
 void
-IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *id,
-                                                       int         x,
-                                                       int         y,
-                                                       guint32     timestamp)
-{
-  OnShowMenuRequest.emit (id, x, y, timestamp);
-}
-
-void
-IndicatorObjectProxyRemote::OnRowChanged (DeeModelIter *iter)
+IndicatorObjectProxyRemote::BeginSync ()
 {
   std::vector<IndicatorObjectEntryProxy*>::iterator it;
   
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
     IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
-    if (remote->_iter == iter)
-      remote->Refresh ();
+    remote->_dirty = true;
   }
 }
 
 void
-IndicatorObjectProxyRemote::OnRowRemoved (DeeModelIter *iter)
+IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
+                                      const gchar *label,
+                                      bool         label_sensitive,
+                                      bool         label_visible,
+                                      guint32      image_type,
+                                      const gchar *image_data,
+                                      bool         image_sensitive,
+                                      bool         image_visible)
 {
+  IndicatorObjectEntryProxyRemote *remote = NULL;
   std::vector<IndicatorObjectEntryProxy*>::iterator it;
   
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
-    IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
-    if (remote->_iter == iter)
+    IndicatorObjectEntryProxyRemote *r = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+    if (r->_dirty == true)
       {
-        _entries.erase (it);
-        OnEntryRemoved.emit (remote);
-        delete remote;
-
+        remote = r;
         break;
+      }
+  }
+  
+  /* Create a new one */
+  if (remote == NULL)
+    {
+      remote = new IndicatorObjectEntryProxyRemote ();
+      remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
+                                                        &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
+      _entries.push_back (remote);
+    }
+
+  remote->Refresh (entry_id,
+                   label,
+                   label_sensitive,
+                   label_visible,
+                   image_type,
+                   image_data,
+                   image_sensitive,
+                   image_visible);
+  if (remote->_dirty)
+    remote->_dirty = false;
+  else
+    OnEntryAdded.emit (remote);
+}
+
+void
+IndicatorObjectProxyRemote::EndSync ()
+{
+  std::vector<IndicatorObjectEntryProxy*>::iterator it;
+ 
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    IndicatorObjectEntryProxyRemote *remote = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+    if (remote->_dirty == true)
+      {
+        /* We don't get rid of the entries as there's no real need to, and it saves us
+         * having to do a bunch of object creation everytime the menu changes
+         */
+        remote->Refresh ("|",
+                         "",
+                         false,
+                         false,
+                         0,
+                         "",
+                         false,
+                         false);
       }
   }
 }
 
-//
-// C callbacks, they just link to class methods and aren't interesting
-//
-static void
-on_row_added (DeeModel *model, DeeModelIter *iter, IndicatorObjectProxyRemote *remote)
+void
+IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *entry_id,
+                                                       int         x,
+                                                       int         y,
+                                                       guint32     timestamp,
+                                                       guint32     button)
 {
-  remote->OnRowAdded (iter);
-}
-
-static void
-on_row_changed (DeeModel *model, DeeModelIter *iter, IndicatorObjectProxyRemote *remote)
-{
-  remote->OnRowChanged (iter);
-}
-
-static void
-on_row_removed (DeeModel *model, DeeModelIter *iter, IndicatorObjectProxyRemote *remote)
-{
-  remote->OnRowRemoved (iter);
+  OnShowMenuRequest.emit (entry_id, x, y, timestamp, button);
 }

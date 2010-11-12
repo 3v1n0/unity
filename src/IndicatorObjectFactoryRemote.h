@@ -24,6 +24,7 @@
 #include <dee.h>
 
 #include "IndicatorObjectFactory.h"
+#include "IndicatorObjectProxyRemote.h"
 
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
@@ -38,15 +39,14 @@ public:
   virtual void ForceRefresh ();
 
   void OnRemoteProxyReady (GDBusProxy *proxy);
-  void OnRowAdded         (DeeModelIter   *iter);
-  void OnRowChanged       (DeeModelIter *iter);
-  void OnRowRemoved       (DeeModelIter *iter);
   void OnEntryActivated   (const char *entry_id);
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp);
+  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
+  void Sync (GVariant *args);
 
 private:
+  IndicatorObjectProxyRemote* IndicatorForID (const char *id);
+private:
   GDBusProxy *_proxy;
-  DeeModel   *_model;
 };
 
 #endif // INDICATOR_OBJECT_FACTORY_REMOTE_H

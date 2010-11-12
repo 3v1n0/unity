@@ -16,6 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include "Nux/Nux.h"
 
 #include "NuxGraphics/GLThread.h"
@@ -33,8 +35,7 @@ PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
   _util_cg (CAIRO_FORMAT_ARGB32, BUTTON_WIDTH, PANEL_HEIGHT)
 {
-  // FIXME: This obviously needs a lookup
-  _pixbuf = gdk_pixbuf_new_from_file ("/usr/share/unity/bfb.png", NULL);
+  _pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/bfb.png", NULL);
   SetMinMaxSize (BUTTON_WIDTH, PANEL_HEIGHT);
   Refresh ();
 }

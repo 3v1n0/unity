@@ -20,58 +20,46 @@
 
 #include <gtk/gtk.h>
 
-enum
-{
-  COL_ID,
-  COL_LABEL,
-  COL_ICON_HINT,
-  COL_ICON_DATA,
-  COL_LABEL_VISIBLE,
-  COL_ICON_VISIBLE,
-  COL_LABEL_SENSITIVE,
-  COL_ICON_SENSITIVE
-};
-
-IndicatorObjectEntryProxyRemote::IndicatorObjectEntryProxyRemote (DeeModel     *model,
-                                                                  DeeModelIter *iter)
-: _model (model),
-  _iter (iter),
-  _active (false)
+IndicatorObjectEntryProxyRemote::IndicatorObjectEntryProxyRemote ()
+: _dirty (false),
+  _active (false),
+  _id (NULL),
+  _label (NULL),
+  _image_type (0),
+  _image_data (NULL)
 {
   label_visible = false;
   label_sensitive = true;
   icon_visible = false;
   icon_sensitive = true;
-  _active = false;
-
-  Refresh ();
 }
 
 
 IndicatorObjectEntryProxyRemote::~IndicatorObjectEntryProxyRemote ()
 {
-
+  g_free (_id);
+  g_free (_label);
+  g_free (_image_data);
 }
 
 const char *
 IndicatorObjectEntryProxyRemote::GetLabel ()
 {
-  return dee_model_get_string (_model, _iter, COL_LABEL);
+  return _label;
 }
 
 GdkPixbuf *
 IndicatorObjectEntryProxyRemote::GetPixbuf ()
 {
   GdkPixbuf *ret = NULL;
-  guint32 icon_hint = dee_model_get_uint (_model, _iter, COL_ICON_HINT);
-
-  if (icon_hint == GTK_IMAGE_PIXBUF)
+  
+  if (_image_type == GTK_IMAGE_PIXBUF)
     {
       guchar       *decoded;
       GInputStream *stream;
       gsize         len = 0;
      
-      decoded = g_base64_decode (dee_model_get_string (_model, _iter, COL_ICON_DATA), &len);
+      decoded = g_base64_decode (_image_data, &len);
       stream = g_memory_input_stream_new_from_data (decoded, len, NULL);
 
       ret = gdk_pixbuf_new_from_stream (stream, NULL, NULL);
@@ -79,21 +67,21 @@ IndicatorObjectEntryProxyRemote::GetPixbuf ()
       g_free (decoded);
       g_input_stream_close (stream, NULL, NULL);
     }
-  else if (icon_hint == GTK_IMAGE_STOCK
-           || icon_hint == GTK_IMAGE_ICON_NAME)
+  else if (_image_type == GTK_IMAGE_STOCK
+           || _image_type == GTK_IMAGE_ICON_NAME)
     {
       ret = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                      dee_model_get_string (_model, _iter, COL_ICON_DATA),
+                                      _image_data,
                                       22,
                                       (GtkIconLookupFlags)0,
                                       NULL);
     }
-  else if (icon_hint == GTK_IMAGE_GICON)
+  else if (_image_type == GTK_IMAGE_GICON)
     {
       GtkIconInfo *info;
       GIcon       *icon;
 
-      icon = g_icon_new_for_string (dee_model_get_string (_model, _iter, COL_ICON_DATA), NULL);
+      icon = g_icon_new_for_string (_image_data, NULL);
       info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
                                              icon,
                                              22,
@@ -126,12 +114,28 @@ IndicatorObjectEntryProxyRemote::GetActive ()
 }
 
 void
-IndicatorObjectEntryProxyRemote::Refresh ()
+IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
+                                          const char *__label,
+                                          bool        __label_sensitive,
+                                          bool        __label_visible,
+                                          guint32     __image_type,
+                                          const char *__image_data,
+                                          bool        __image_sensitive,
+                                          bool        __image_visible)
 {
-  label_visible = dee_model_get_bool (_model, _iter, COL_LABEL_VISIBLE);
-  //label_sensitive = dee_model_get_bool (_model, _iter, COL_LABEL_SENSITIVE); FIXME: Re-enable these when the service supports them
-  icon_visible = dee_model_get_bool (_model, _iter, COL_ICON_VISIBLE);
-  //icon_sensitive = dee_model_get_bool (_model, _iter, COL_ICON_SENSITIVE);
+  g_free (_id);
+  g_free (_label);
+  g_free (_image_data);
+
+  _id = g_strdup (__id);
+  _label = g_strdup (__label);
+  label_sensitive = __label_sensitive;
+  label_visible = __label_visible;
+  _image_type = __image_type;
+  if (_image_type)
+    _image_data = g_strdup (__image_data);
+  icon_sensitive = __image_sensitive;
+  icon_visible = __image_visible;
 
   Updated.emit ();
 }
@@ -139,11 +143,11 @@ IndicatorObjectEntryProxyRemote::Refresh ()
 const char *
 IndicatorObjectEntryProxyRemote::GetId ()
 {
-  return dee_model_get_string (_model, _iter, COL_ID);
+  return _id;
 }
 
 void
-IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp)
+IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp, guint32 button)
 {
-  OnShowMenuRequest.emit (dee_model_get_string (_model, _iter, COL_ID), x, y, timestamp);  
+  OnShowMenuRequest.emit (_id, x, y, timestamp, button);
 }
