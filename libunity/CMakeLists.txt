@@ -12,7 +12,7 @@ install (FILES ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc DESTINATION ${CMAKE_IN
 # libunity
 #
 find_package(PkgConfig)
-pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 clutter-1.0 clutk-0.3 gconf-2.0)
+pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 gconf-2.0)
 
 # Bump this one when a binary-incompatible change is introduced
 set (libunity_SOVERSION ${UNITY_MAJOR})
