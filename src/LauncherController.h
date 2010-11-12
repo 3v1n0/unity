@@ -52,6 +52,7 @@ private:
     LauncherModel*   _model;
     nux::BaseWindow* _window;
     FavoriteStore*   _favorite_store;
+    int              _sort_priority;
 
     void InsertExpoAction ();
 
