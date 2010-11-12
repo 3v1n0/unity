@@ -52,7 +52,7 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 # Data
 #
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-install (FILES ${_datafiles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/${UNITY_MAJOR}/)
+install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
 #
 # i18n
