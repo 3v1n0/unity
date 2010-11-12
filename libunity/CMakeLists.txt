@@ -83,4 +83,4 @@ set_target_properties (${PKGNAME} PROPERTIES
 
 
 install (TARGETS ${PKGNAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
-install (FILES ${CMAKE_BINARY_DIR}/unity/unity.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PKGNAME}/unity/)
+install (FILES ${CMAKE_BINARY_DIR}/libunity/unity.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PKGNAME}/unity/)
