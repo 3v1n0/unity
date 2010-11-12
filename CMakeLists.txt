@@ -9,7 +9,7 @@ subdirs (libunity services tests)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 1)
-set (UNITY_MICRO 2)
+set (UNITY_MICRO 3)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
