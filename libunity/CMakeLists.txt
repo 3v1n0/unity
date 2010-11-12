@@ -53,7 +53,7 @@ vala_precompile (VALA_C unity-appinfo-manager.vala
                         unity-place-browser.vala
                         unity-place-renderer.vala
                         unity-place.vala
-                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib gio-unix-2.0
+                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib-1 gio-unix-2.0
                  OPTIONS --thread
                  CUSTOM_VAPIS ../vapi/dee-1.0.vapi ../vapi/config.vapi
                  GENERATE_VAPI unity
