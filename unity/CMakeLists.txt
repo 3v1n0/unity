@@ -14,6 +14,17 @@ install (FILES ${CMAKE_BINARY_DIR}/unity/${PKGNAME}.pc DESTINATION ${CMAKE_INSTA
 find_package(PkgConfig)
 pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 clutter-1.0 clutk-0.3 gconf-2.0)
 
+# Bump this one when a binary-incompatible change is introduced
+set (libunity_SOVERSION ${UNITY_MAJOR})
+
+# Bump this one when the API is extended in a binary-compatible way
+set (libunity_API_VERSION 0)
+
+# Bump this one when changes do not extend the API
+set (libunity_PATCH_VERSION 0)
+
+set (libunity_VERSION ${libunity_SOVERSION}.${libunity_API_VERSION}.${libunity_PATCH_VERSION})
+
 set(CFLAGS
 	${DEPS_CFLAGS} ${DEPS_CFLAGS_OTHER}
   "-I/usr/include/gee-1.0" -DGETTEXT_PACKAGE=\"unity\" -I${CMAKE_BINARY_DIR}
@@ -65,5 +76,11 @@ vala_precompile (VALA_C chrome-handler.vala
 )
 
 add_library (${PKGNAME} SHARED ${VALA_C})
+set_target_properties (${PKGNAME} PROPERTIES
+                       VERSION ${libunity_VERSION}
+                       SOVERSION ${libunity_SOVERSION}
+                       )
+
+
 install (TARGETS ${PKGNAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/)
 install (FILES ${CMAKE_BINARY_DIR}/unity/unity.h DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PKGNAME}/unity/)
