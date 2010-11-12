@@ -6,9 +6,6 @@ libunity.so.3 libunity3 #MINVER#
  _unity_place_entry_service_impl_dbus_unregister@Base 3.1.3
  _unity_place_service_dbus_unregister@Base 3.1.3
  _unity_place_service_impl_dbus_unregister@Base 3.1.3
- _unity_quicklist_rendering_align@Base 3.1.3
- _unity_quicklist_rendering_round_rect@Base 3.1.3
- unity__pixbuf_cache@Base 3.1.3
  unity_app_info_manager_clear@Base 3.1.3
  unity_app_info_manager_get_categories@Base 3.1.3
  unity_app_info_manager_get_instance@Base 3.1.3
@@ -16,67 +13,6 @@ libunity.so.3 libunity3 #MINVER#
  unity_app_info_manager_lookup@Base 3.1.3
  unity_app_info_manager_lookup_async@Base 3.1.3
  unity_app_info_manager_lookup_finish@Base 3.1.3
- unity_cairo_canvas_construct@Base 3.1.3
- unity_cairo_canvas_get_type@Base 3.1.3
- unity_cairo_canvas_new@Base 3.1.3
- unity_cairo_canvas_update@Base 3.1.3
- unity_dnd_targets_get_type@Base 3.1.3
- unity_drag_controller_construct@Base 3.1.3
- unity_drag_controller_get_default@Base 3.1.3
- unity_drag_controller_get_drag_model@Base 3.1.3
- unity_drag_controller_get_is_dragging@Base 3.1.3
- unity_drag_controller_get_type@Base 3.1.3
- unity_drag_controller_new@Base 3.1.3
- unity_drag_controller_singleton@Base 3.1.3
- unity_drag_controller_start_drag@Base 3.1.3
- unity_drag_model_get_drag_data@Base 3.1.3
- unity_drag_model_get_icon@Base 3.1.3
- unity_drag_model_get_type@Base 3.1.3
- unity_drag_view_construct@Base 3.1.3
- unity_drag_view_get_stage@Base 3.1.3
- unity_drag_view_get_type@Base 3.1.3
- unity_drag_view_hook_actor_to_cursor@Base 3.1.3
- unity_drag_view_new@Base 3.1.3
- unity_drag_view_unhook_actor@Base 3.1.3
- unity_entry_construct@Base 3.1.3
- unity_entry_get_static_text@Base 3.1.3
- unity_entry_get_type@Base 3.1.3
- unity_entry_new@Base 3.1.3
- unity_entry_set_static_text@Base 3.1.3
- unity_expanding_bin_construct@Base 3.1.3
- unity_expanding_bin_get_bin_state@Base 3.1.3
- unity_expanding_bin_get_size_factor@Base 3.1.3
- unity_expanding_bin_get_type@Base 3.1.3
- unity_expanding_bin_get_unexpanded_height@Base 3.1.3
- unity_expanding_bin_new@Base 3.1.3
- unity_expanding_bin_set_bin_state@Base 3.1.3
- unity_expanding_bin_set_size_factor@Base 3.1.3
- unity_expanding_bin_set_unexpanded_height@Base 3.1.3
- unity_expanding_bin_state_get_type@Base 3.1.3
- unity_favorites_add_favorite@Base 3.1.3
- unity_favorites_construct@Base 3.1.3
- unity_favorites_find_uid_for_desktop_file@Base 3.1.3
- unity_favorites_get_bool@Base 3.1.3
- unity_favorites_get_default@Base 3.1.3
- unity_favorites_get_favorites@Base 3.1.3
- unity_favorites_get_float@Base 3.1.3
- unity_favorites_get_int@Base 3.1.3
- unity_favorites_get_string@Base 3.1.3
- unity_favorites_get_type@Base 3.1.3
- unity_favorites_is_favorite@Base 3.1.3
- unity_favorites_remove_favorite@Base 3.1.3
- unity_favorites_set_bool@Base 3.1.3
- unity_favorites_set_float@Base 3.1.3
- unity_favorites_set_int@Base 3.1.3
- unity_favorites_set_string@Base 3.1.3
- unity_favorites_singleton@Base 3.1.3
- unity_gconf_favorites_construct@Base 3.1.3
- unity_gconf_favorites_get_type@Base 3.1.3
- unity_gconf_favorites_new@Base 3.1.3
- unity_get_average_color@Base 3.1.3
- unity_global_shell@Base 3.1.3
- unity_hsv_to_rgb@Base 3.1.3
- unity_icon_name_exists_in_theme@Base 3.1.3
  unity_io_get_system_data_dirs@Base 3.1.3
  unity_io_open_from_data_dirs@Base 3.1.3
  unity_io_open_from_data_dirs_finish@Base 3.1.3
@@ -86,31 +22,6 @@ libunity.so.3 libunity3 #MINVER#
  unity_io_read_stream_finish@Base 3.1.3
  unity_io_system_data_dirs@Base 3.1.3
  unity_io_system_data_dirs_length1@Base 3.1.3
- unity_layered_bin_construct@Base 3.1.3
- unity_layered_bin_get_children@Base 3.1.3
- unity_layered_bin_get_type@Base 3.1.3
- unity_layered_bin_new@Base 3.1.3
- unity_param_spec_pixbuf_cache_task@Base 3.1.3
- unity_pixbuf_cache_clear@Base 3.1.3
- unity_pixbuf_cache_construct@Base 3.1.3
- unity_pixbuf_cache_get@Base 3.1.3
- unity_pixbuf_cache_get_default@Base 3.1.3
- unity_pixbuf_cache_get_size@Base 3.1.3
- unity_pixbuf_cache_get_type@Base 3.1.3
- unity_pixbuf_cache_new@Base 3.1.3
- unity_pixbuf_cache_set@Base 3.1.3
- unity_pixbuf_cache_set_image_from_gicon@Base 3.1.3
- unity_pixbuf_cache_set_image_from_gicon_finish@Base 3.1.3
- unity_pixbuf_cache_set_image_from_gicon_string@Base 3.1.3
- unity_pixbuf_cache_set_image_from_icon_name@Base 3.1.3
- unity_pixbuf_cache_task_construct@Base 3.1.3
- unity_pixbuf_cache_task_get_type@Base 3.1.3
- unity_pixbuf_cache_task_new@Base 3.1.3
- unity_pixbuf_cache_task_ref@Base 3.1.3
- unity_pixbuf_cache_task_unref@Base 3.1.3
- unity_pixbuf_check_threshold@Base 3.1.3
- unity_pixbuf_is_tile@Base 3.1.3
- unity_pixbuf_request_type_get_type@Base 3.1.3
  unity_place__browsingstate_copy@Base 3.1.3
  unity_place__browsingstate_destroy@Base 3.1.3
  unity_place__browsingstate_dup@Base 3.1.3
@@ -241,8 +152,6 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_entry_service_set_search@Base 3.1.3
  unity_place_param_spec_stack@Base 3.1.3
  unity_place_param_spec_state@Base 3.1.3
- unity_place_renderer_activate_default@Base 3.1.3
- unity_place_renderer_get_type@Base 3.1.3
  unity_place_renderer_info_clear_hint@Base 3.1.3
  unity_place_renderer_info_clear_hints@Base 3.1.3
  unity_place_renderer_info_construct@Base 3.1.3
@@ -258,7 +167,6 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_renderer_info_set_groups_model@Base 3.1.3
  unity_place_renderer_info_set_hint@Base 3.1.3
  unity_place_renderer_info_set_results_model@Base 3.1.3
- unity_place_renderer_set_models@Base 3.1.3
  unity_place_search_clear_hint@Base 3.1.3
  unity_place_search_clear_hints@Base 3.1.3
  unity_place_search_construct@Base 3.1.3
@@ -316,130 +224,3 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_value_set_state@Base 3.1.3
  unity_place_value_take_stack@Base 3.1.3
  unity_place_value_take_state@Base 3.1.3
- unity_quicklist_rendering_checkmark_item_construct@Base 3.1.3
- unity_quicklist_rendering_checkmark_item_get_type@Base 3.1.3
- unity_quicklist_rendering_checkmark_item_new@Base 3.1.3
- unity_quicklist_rendering_checkmark_item_normal_mask@Base 3.1.3
- unity_quicklist_rendering_checkmark_item_selected_mask@Base 3.1.3
- unity_quicklist_rendering_get_text_extents@Base 3.1.3
- unity_quicklist_rendering_item_construct@Base 3.1.3
- unity_quicklist_rendering_item_get_type@Base 3.1.3
- unity_quicklist_rendering_item_new@Base 3.1.3
- unity_quicklist_rendering_item_normal_mask@Base 3.1.3
- unity_quicklist_rendering_item_selected_mask@Base 3.1.3
- unity_quicklist_rendering_menu_anchor_mask@Base 3.1.3
- unity_quicklist_rendering_menu_background@Base 3.1.3
- unity_quicklist_rendering_menu_bottom_mask@Base 3.1.3
- unity_quicklist_rendering_menu_construct@Base 3.1.3
- unity_quicklist_rendering_menu_dyn_mask@Base 3.1.3
- unity_quicklist_rendering_menu_fill_mask@Base 3.1.3
- unity_quicklist_rendering_menu_full_mask@Base 3.1.3
- unity_quicklist_rendering_menu_get_type@Base 3.1.3
- unity_quicklist_rendering_menu_new@Base 3.1.3
- unity_quicklist_rendering_menu_outline_shadow_anchor@Base 3.1.3
- unity_quicklist_rendering_menu_outline_shadow_bottom@Base 3.1.3
- unity_quicklist_rendering_menu_outline_shadow_dyn@Base 3.1.3
- unity_quicklist_rendering_menu_outline_shadow_top@Base 3.1.3
- unity_quicklist_rendering_menu_tint_dot_hl@Base 3.1.3
- unity_quicklist_rendering_menu_top_mask@Base 3.1.3
- unity_quicklist_rendering_radio_item_construct@Base 3.1.3
- unity_quicklist_rendering_radio_item_get_type@Base 3.1.3
- unity_quicklist_rendering_radio_item_new@Base 3.1.3
- unity_quicklist_rendering_radio_item_normal_mask@Base 3.1.3
- unity_quicklist_rendering_radio_item_selected_mask@Base 3.1.3
- unity_quicklist_rendering_seperator_construct@Base 3.1.3
- unity_quicklist_rendering_seperator_fill_mask@Base 3.1.3
- unity_quicklist_rendering_seperator_get_type@Base 3.1.3
- unity_quicklist_rendering_seperator_image_background@Base 3.1.3
- unity_quicklist_rendering_seperator_new@Base 3.1.3
- unity_rgb_to_hsv@Base 3.1.3
- unity_shell_about_to_show_places@Base 3.1.3
- unity_shell_add_fullscreen_request@Base 3.1.3
- unity_shell_close_xids@Base 3.1.3
- unity_shell_do_window_action@Base 3.1.3
- unity_shell_ensure_input_region@Base 3.1.3
- unity_shell_expose_xids@Base 3.1.3
- unity_shell_get_current_time@Base 3.1.3
- unity_shell_get_indicators_width@Base 3.1.3
- unity_shell_get_is_starting@Base 3.1.3
- unity_shell_get_launcher_width_foobar@Base 3.1.3
- unity_shell_get_menus_swallow_events@Base 3.1.3
- unity_shell_get_mode@Base 3.1.3
- unity_shell_get_panel_height_foobar@Base 3.1.3
- unity_shell_get_stage@Base 3.1.3
- unity_shell_get_super_key_active@Base 3.1.3
- unity_shell_get_type@Base 3.1.3
- unity_shell_get_window_details@Base 3.1.3
- unity_shell_grab_keyboard@Base 3.1.3
- unity_shell_hide_unity@Base 3.1.3
- unity_shell_mode_get_type@Base 3.1.3
- unity_shell_remove_fullscreen_request@Base 3.1.3
- unity_shell_set_is_starting@Base 3.1.3
- unity_shell_set_super_key_active@Base 3.1.3
- unity_shell_show_unity@Base 3.1.3
- unity_shell_show_window@Base 3.1.3
- unity_shell_stop_expose@Base 3.1.3
- unity_stripe_texture_construct@Base 3.1.3
- unity_stripe_texture_get_type@Base 3.1.3
- unity_stripe_texture_new@Base 3.1.3
- unity_stripe_texture_rounded_outline@Base 3.1.3
- unity_theme_file_path_add_icon_theme@Base 3.1.3
- unity_theme_file_path_construct@Base 3.1.3
- unity_theme_file_path_get_icon_filepath@Base 3.1.3
- unity_theme_file_path_get_icon_filepath_finish@Base 3.1.3
- unity_theme_file_path_get_type@Base 3.1.3
- unity_theme_file_path_new@Base 3.1.3
- unity_theme_image_construct@Base 3.1.3
- unity_theme_image_get_icon_name@Base 3.1.3
- unity_theme_image_get_type@Base 3.1.3
- unity_theme_image_new@Base 3.1.3
- unity_theme_image_set_icon_name@Base 3.1.3
- unity_unity_icon_bg_layer@Base 3.1.3
- unity_unity_icon_construct@Base 3.1.3
- unity_unity_icon_fg_layer@Base 3.1.3
- unity_unity_icon_get_bg_color@Base 3.1.3
- unity_unity_icon_get_icon@Base 3.1.3
- unity_unity_icon_get_rotation@Base 3.1.3
- unity_unity_icon_get_type@Base 3.1.3
- unity_unity_icon_mk_layer@Base 3.1.3
- unity_unity_icon_new@Base 3.1.3
- unity_unity_icon_paint_real@Base 3.1.3
- unity_unity_icon_set_rotation@Base 3.1.3
- unity_value_get_pixbuf_cache_task@Base 3.1.3
- unity_value_set_pixbuf_cache_task@Base 3.1.3
- unity_value_take_pixbuf_cache_task@Base 3.1.3
- unity_webapp_chromium_web_app_add_to_favorites@Base 3.1.3
- unity_webapp_chromium_web_app_construct@Base 3.1.3
- unity_webapp_chromium_web_app_desktop_file_path@Base 3.1.3
- unity_webapp_chromium_web_app_get_icon@Base 3.1.3
- unity_webapp_chromium_web_app_get_type@Base 3.1.3
- unity_webapp_chromium_web_app_get_url@Base 3.1.3
- unity_webapp_chromium_web_app_new@Base 3.1.3
- unity_webapp_fetch_file_construct@Base 3.1.3
- unity_webapp_fetch_file_fetch_data@Base 3.1.3
- unity_webapp_fetch_file_fetch_data_finish@Base 3.1.3
- unity_webapp_fetch_file_get_type@Base 3.1.3
- unity_webapp_fetch_file_get_uri@Base 3.1.3
- unity_webapp_fetch_file_new@Base 3.1.3
- unity_webapp_get_hostname@Base 3.1.3
- unity_webapp_hostname_match@Base 3.1.3
- unity_webapp_primary_match_prefix@Base 3.1.3
- unity_webapp_primary_match_suffix@Base 3.1.3
- unity_webapp_prism_add_to_favorites@Base 3.1.3
- unity_webapp_prism_construct@Base 3.1.3
- unity_webapp_prism_desktop_file_path@Base 3.1.3
- unity_webapp_prism_get_icon@Base 3.1.3
- unity_webapp_prism_get_type@Base 3.1.3
- unity_webapp_prism_get_url@Base 3.1.3
- unity_webapp_prism_new@Base 3.1.3
- unity_webapp_secondary_match_prefix@Base 3.1.3
- unity_webapp_secondary_match_suffix@Base 3.1.3
- unity_webapp_urlify@Base 3.1.3
- unity_webapp_webicon_fetcher_construct@Base 3.1.3
- unity_webapp_webicon_fetcher_fetch_webapp_data@Base 3.1.3
- unity_webapp_webicon_fetcher_get_desktop_location@Base 3.1.3
- unity_webapp_webicon_fetcher_get_destination@Base 3.1.3
- unity_webapp_webicon_fetcher_get_type@Base 3.1.3
- unity_webapp_webicon_fetcher_get_uri@Base 3.1.3
- unity_webapp_webicon_fetcher_new@Base 3.1.3
- unity_window_action_get_type@Base 3.1.3
