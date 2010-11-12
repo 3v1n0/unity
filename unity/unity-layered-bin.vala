@@ -28,9 +28,9 @@ namespace Unity
    */
   public class LayeredBin : Ctk.Actor, Clutter.Container
   {
-    private GLib.List<Clutter.Actor?> _children = null;
+    private Gee.List<Clutter.Actor> _children = new Gee.LinkedList<Clutter.Actor>();
 
-    public unowned GLib.List<Clutter.Actor?> children {
+    public unowned Gee.List<Clutter.Actor> children {
       get { return _children; }
     }
 
@@ -39,12 +39,17 @@ namespace Unity
       Object ();
     }
 
-    ~LayeredBin ()
+    private override void dispose ()
     {
       foreach (Clutter.Actor child in _children)
-        child.unparent ();
+        {
+          child.unparent ();
+        }
 
-      _children = null;
+      _children.clear ();
+      
+      /* Chain up */
+      base.dispose ();
     }
 
     construct
@@ -124,7 +129,7 @@ namespace Unity
     private void add (Clutter.Actor actor)
     {
       actor.set_parent (this);
-      _children.append (actor);
+      _children.add (actor);
 
       queue_relayout ();
 
@@ -157,30 +162,30 @@ namespace Unity
     private new void raise (Clutter.Actor actor, Clutter.Actor sibling)
     {
       if (sibling is Clutter.Actor &&
-          _children.index (sibling) != -1)
+          _children.index_of (sibling) != -1)
         {
           _children.remove (actor);
-          _children.insert (actor, _children.index (sibling) + 1);
+          _children.insert (_children.index_of (sibling) + 1, actor);
         }
       else
         {
           _children.remove (actor);
-          _children.append (actor);
+          _children.add (actor);
         }
     }
 
     private new void lower (Clutter.Actor actor, Clutter.Actor sibling)
     {
       if (sibling is Clutter.Actor &&
-          _children.index (sibling) != -1)
+          _children.index_of (sibling) != -1)
         {
           _children.remove (actor);
-          _children.insert (actor, _children.index (sibling) - 1);
+          _children.insert (_children.index_of (sibling) - 1, actor);
         }
       else
         {
           _children.remove (actor);
-          _children.prepend (actor);
+          _children.insert (0, actor);
         }
     }
 

@@ -95,11 +95,14 @@ namespace Unity.Places
         if (glow is Ctk.EffectGlow)
           glow.set_invalidate_effect_cache (true);
       });
-
+      
+      /* Must not point to a lambda or non-static method on 'this'.
+       * Causes self-refs, hence leaks, otherwise */
       outline_func = rounded_rect;
     }
-
-    public void rounded_rect (Cairo.Context cr, int width, int height)
+    
+    /* This method *must* be static. Otherwise we'll create a circular ref to self */
+    private static void rounded_rect (Cairo.Context cr, int width, int height)
     {
       var padding = 1;
       var x = padding;
@@ -125,7 +128,8 @@ namespace Unity.Places
       cr.curve_to (x, height,
                    x, height,
                    x, height - radius);
-      cr.close_path ();    }
+      cr.close_path ();
+    }
 
     private void paint_bg (Cairo.Context cr, int width, int height)
       requires (this is Button)

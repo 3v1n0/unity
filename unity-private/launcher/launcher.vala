@@ -32,8 +32,10 @@ namespace Unity.Launcher
 
       this.cache = new Ctk.EffectCache ();
       this.add_effect (this.cache);
-
       this.cache.update_texture_cache ();
+
+	  if (Unity.Quirks.effects_disabled ())
+		  this.remove_effect (cache);
     }
 
     construct
