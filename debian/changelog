@@ -12,6 +12,8 @@ unity (3.1.2-0ubuntu1) UNRELEASED; urgency=low
     - update to new internal API
   * debian/*install:
     - install the new files in the right places
+  * debian/control, debian/libunity*.*:
+    - rename libunity0 to libunity3
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Nov 2010 10:54:32 +0100
 

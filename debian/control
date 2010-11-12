@@ -65,7 +65,7 @@ Description: Unity Interface for Ubuntu Netbook Edition - debugging symbols
  .
  This package contains debugging symbols.
 
-Package: libunity0
+Package: libunity3
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
