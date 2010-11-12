@@ -1,12 +1,12 @@
-set (PKGNAME "unity-${UNITY_API_VERSION}")
+set (PKGNAME unity)
 
 #
 # unity.pc
 #
 set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (DOLLAR "$") # You hear that? It's kittens being killed by the gods of cmake
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/unity/${PKGNAME}.pc)
-install (FILES ${CMAKE_BINARY_DIR}/unity/${PKGNAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc)
+install (FILES ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
 
 #
 # libunity

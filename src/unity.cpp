@@ -402,15 +402,15 @@ UnityScreen::onRedrawRequested ()
 
 void
 UnityScreen::optionChanged (CompOption            *opt,
-			    UnityOptions::Options num)
+			    UnityshellOptions::Options num)
 {
     switch (num)
     {
-        case UnityOptions::LauncherAutohide:
+        case UnityshellOptions::LauncherAutohide:
 	          launcher->SetAutohide (optionGetLauncherAutohide (),
                                    (nux::View *) panelView->HomeButton ());
             break;
-        case UnityOptions::LauncherFloat:
+        case UnityshellOptions::LauncherFloat:
             launcher->SetFloating (optionGetLauncherFloat ());
 	          break;
         default:
