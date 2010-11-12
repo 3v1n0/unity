@@ -8,6 +8,7 @@ unity (3.1.3-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - remove mutter deps
     - add gsettings-desktop-schemas-dev and libnux-0.9-dev
+    - don't ship the -dbg package for now
   * debian/libunity3.symbols:
     - update to new internal API
   * debian/*install:

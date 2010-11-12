@@ -3,7 +3,7 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
-               debhelper (>= 7),
+               debhelper (>= 7.0.50~),
                pkg-config,
                valac (>= 0.7.8),
                intltool (>= 0.35.0),
@@ -53,18 +53,18 @@ Recommends: unity-place-applications,
 Description: Unity Interface for Ubuntu Netbook Edition
  Unity is a graphical interface designed for Ubuntu Netbook Edition
 
-Package: unity-dbg
-Section: debug
-Architecture: any
-Priority: extra
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         unity (= ${binary:Version})
-Replaces: libunity0-dbg (<< 0.2.6-0ubuntu1)
-Description: Unity Interface for Ubuntu Netbook Edition - debugging symbols
- Unity is a graphical interface designed for Ubuntu Netbook Edition
- .
- This package contains debugging symbols.
+#Package: unity-dbg
+#Section: debug
+#Architecture: any
+#Priority: extra
+#Depends: ${shlibs:Depends},
+#         ${misc:Depends},
+#         unity (= ${binary:Version})
+#Replaces: libunity0-dbg (<< 0.2.6-0ubuntu1)
+#Description: Unity Interface for Ubuntu Netbook Edition - debugging symbols
+# Unity is a graphical interface designed for Ubuntu Netbook Edition
+# .
+# This package contains debugging symbols.
 
 Package: libunity3
 Section: libs
@@ -81,7 +81,7 @@ Package: libunity-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity0 (= ${binary:Version}),
+         libunity3 (= ${binary:Version}),
          libglib2.0-dev,
          libdbus-glib-1-dev,
          libgtk2.0-dev,
