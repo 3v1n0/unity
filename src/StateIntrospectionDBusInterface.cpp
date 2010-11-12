@@ -69,6 +69,7 @@ static const GDBusInterfaceInfo si_iface_info =
 
 StateIntrospectionDBusInterface::StateIntrospectionDBusInterface ()
 {
+    std::cout << "OK MAKING THIS OBJECT YA KNOW?" << std::endl;
 }
 
 StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
@@ -94,8 +95,8 @@ StateIntrospectionDBusInterface::initStateIntrospection ()
 void
 StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
-	GError *error;
-	std::cout << "bus acquired" << std::endl;
+	GError *error = NULL;
+	std::cout << "bus acquired " << name << std::endl;
 	g_dbus_connection_register_object (connection,
 	                                   "/org/canonical/Unity/Debug/StateIntrospection",
 	                                   (GDBusInterfaceInfo*) &si_iface_info,
@@ -103,12 +104,17 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 	                                   NULL,
 	                                   NULL,
 	                                   &error);
+    if (error != NULL) {
+        std::cout << "Something went wrong " << error->message << std::endl;
+    } else {
+        std::cout << "NO ERROR" << std::endl;
+    }
 }
 
 void
 StateIntrospectionDBusInterface::onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
-	std::cout << "name aquired" << std::endl;
+	std::cout << "name aquired " << name << std::endl;
 }
 
 void

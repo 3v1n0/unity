@@ -449,8 +449,10 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     uScreen = this;
 
 	
+	std::cout << "Setting up state introspection dbus shit" << std::endl;
 	debugger = new StateIntrospectionDBusInterface ();
 	debugger->initStateIntrospection ();
+	std::cout << "Done Setting up state introspection dbus shit" << std::endl;
 	
     PluginAdapter::Initialize (screen);
 

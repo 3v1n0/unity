@@ -31,7 +31,7 @@ public:
 	void
 	initStateIntrospection ();
 	
-	static void 
+	static void
 	dBusMethodCall (GDBusConnection *connection, const gchar *sender,
 	                const gchar *objectPath, const gchar *ifaceName,
 	                const gchar *methodName, GVariant *parameters,
@@ -51,7 +51,7 @@ private:
 	
 
 	/* members */
-	static guint _owner_id;
+	guint _owner_id;
 };
 
 #endif
