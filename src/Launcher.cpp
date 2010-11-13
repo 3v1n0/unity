@@ -339,6 +339,19 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timeval current)
             return true;
     }
     
+    if (icon->Presented ())
+    {
+        struct timeval present_time = icon->PresentTime ();
+        if (TimeDelta0 (&current, &present_time) < ANIM_DURATION)
+            return true;
+    }
+    else
+    {
+        struct timeval unpresent_time = icon->UnpresentTime ();
+        if (TimeDelta0 (&current, &unpresent_time) < ANIM_DURATION)
+            return true;
+    }
+    
     return false;
 }
 
@@ -403,7 +416,7 @@ void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int
     timer->tv_usec = current.tv_usec;
 }
 
-float SizeModifierForIcon (LauncherIcon *icon, struct timeval current)
+float IconVisibleProgress (LauncherIcon *icon, struct timeval current)
 {
     if (icon->Visible ())
     {
@@ -440,8 +453,24 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timeval 
                 
                 break;
             }
-            position += (_icon_size + _space_between_icons) * SizeModifierForIcon (*it, current);
+            position += (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
         }
+    }
+}
+
+float Launcher::IconPresentProgress (LauncherIcon *icon, struct timeval current)
+{
+    if (icon->Presented ())
+    {
+        struct timeval icon_present_time = icon->PresentTime ();
+        int ms = TimeDelta0 (&current, &icon_present_time);
+        return CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+    }
+    else
+    {
+        struct timeval icon_unpresent_time = icon->UnpresentTime ();
+        int ms = TimeDelta0 (&current, &icon_unpresent_time);
+        return 1.0f - CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
     }
 }
 
@@ -468,11 +497,18 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
     center.z = 0;
     
     float sum = 0.0f + center.y;
+    int folding_threshold = geo.height - _icon_size / 3;
     for (it = _model->begin (); it != _model->end (); it++)
-        sum += (_icon_size + _space_between_icons) * SizeModifierForIcon (*it, current);
+    {
+        float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
+        float present_progress = IconPresentProgress (*it, current);
+        
+        sum += height;
+        folding_threshold -= CLAMP (sum - geo.height, 0.0f, height) * (folding_constant + (1.0f - folding_constant) * present_progress);
+    }
 
-    float overflow = sum - geo.height;
-    int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
+    //float overflow = sum - geo.height;
+    //int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
     
     
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
@@ -580,7 +616,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         // reset z
         center.z = 0;
         
-        float size_modifier = SizeModifierForIcon (icon, current);
+        float size_modifier = IconVisibleProgress (icon, current);
         if (size_modifier < 1.0f)
         {
             arg.alpha = size_modifier;
@@ -594,12 +630,16 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         }
         
         // goes for 0.0f when fully unfolded, to 1.0f folded
-        float transition_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - transition_progress);
+        float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
+        float present_progress = IconPresentProgress (icon, current);
+        
+        folding_progress *= 1.0f - present_progress;
+        
+        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
       
         // icon is crossing threshold, start folding
-        arg.center.z += folded_z_distance * transition_progress;
-        arg.folding_rads = animation_neg_rads * transition_progress;
+        arg.center.z += folded_z_distance * folding_progress;
+        arg.folding_rads = animation_neg_rads * folding_progress;
         
         center.y += half_size * size_modifier;   // move to center
         arg.center = nux::Point3 (center);       // copy center

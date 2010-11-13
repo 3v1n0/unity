@@ -110,6 +110,7 @@ private:
   float DnDExitProgress  ();
   float GetHoverProgress ();
   float AutohideProgress ();
+  float IconPresentProgress (LauncherIcon *icon, struct timeval current);
 
   void SetHover   ();
   void UnsetHover ();

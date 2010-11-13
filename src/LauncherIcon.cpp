@@ -43,16 +43,21 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _hide_time.tv_sec = 0;
   _running_time.tv_sec = 0;
   _urgent_time.tv_sec = 0;
+  _present_time.tv_sec = 0;
+  _unpresent_time.tv_sec = 0;
 
   _show_time.tv_usec = 0;
   _hide_time.tv_usec = 0;
   _running_time.tv_usec = 0;
   _urgent_time.tv_usec = 0;
+  _present_time.tv_usec = 0;
+  _unpresent_time.tv_usec = 0;
 
-  _active  = false;
-  _running = false;
-  _visible = false;
-  _urgent  = false;
+  _active    = false;
+  _running   = false;
+  _visible   = false;
+  _urgent    = false;
+  _presented = false;
   
   _related_windows = 0;
 
@@ -244,6 +249,16 @@ struct timeval LauncherIcon::UrgentTime ()
   return _urgent_time;
 }
 
+struct timeval LauncherIcon::PresentTime ()
+{
+  return _present_time;
+}
+
+struct timeval LauncherIcon::UnpresentTime ()
+{
+  return _unpresent_time;
+}
+
 void
 LauncherIcon::SetVisible (bool visible)
 {
@@ -256,6 +271,7 @@ LauncherIcon::SetVisible (bool visible)
 
   if (visible)
   {
+    Present (1500);
     gettimeofday (&_show_time, NULL);
     show.emit (this);
   }
@@ -276,7 +292,8 @@ LauncherIcon::SetActive (bool active)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRunning (bool running)
+void 
+LauncherIcon::SetRunning (bool running)
 {
   if (running == _running)
     return;
@@ -286,7 +303,8 @@ void LauncherIcon::SetRunning (bool running)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetUrgent (bool urgent)
+void 
+LauncherIcon::SetUrgent (bool urgent)
 {
   if (urgent == _urgent)
     return;
@@ -299,7 +317,48 @@ void LauncherIcon::SetUrgent (bool urgent)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRelatedWindows (int windows)
+gboolean
+LauncherIcon::OnPresentTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon*) data;
+  if (!self->_presented)
+    return false;
+  
+  self->_present_time_handle = 0;
+  self->Unpresent ();
+  
+  return false;
+}
+
+void 
+LauncherIcon::Present (int length)
+{
+  if (_presented)
+    return;
+  
+  _presented = true;
+  
+  _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
+  gettimeofday (&_present_time, NULL);
+  needs_redraw.emit (this);
+}
+
+void
+LauncherIcon::Unpresent ()
+{
+  if (!_presented)
+    return;
+  
+  if (_present_time_handle > 0)
+    g_source_remove (_present_time_handle);
+  
+  _presented = false;
+  gettimeofday (&_unpresent_time, NULL);
+  needs_redraw.emit (this);
+}
+
+void 
+LauncherIcon::SetRelatedWindows (int windows)
 {
   if (_related_windows == windows)
     return;
@@ -308,7 +367,8 @@ void LauncherIcon::SetRelatedWindows (int windows)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::Remove ()
+void 
+LauncherIcon::Remove ()
 {
   SetVisible (false);
   remove.emit (this);
@@ -362,6 +422,12 @@ LauncherIcon::Urgent ()
   return _urgent;
 }
 
+bool
+LauncherIcon::Presented ()
+{
+  return _presented;
+}
+
 int
 LauncherIcon::RelatedWindows ()
 {
@@ -376,5 +442,6 @@ std::list<DbusmenuClient *> LauncherIcon::Menus ()
 std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
 {
   std::list<DbusmenuClient *> result;
+
   return result;
 }
