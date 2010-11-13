@@ -457,7 +457,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
     struct timeval current;
     gettimeofday (&current, NULL);
 
-    float folding_constant = 0.2f;
+    float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
     
     int folded_size = (int) (_icon_size * folding_not_constant);
