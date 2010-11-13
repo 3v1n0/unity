@@ -115,6 +115,7 @@ private:
   void UnsetHover ();
   void SetHidden  (bool hidden);
   
+  void                 SetDndDelta (float x, float y, nux::Geometry geo, struct timeval current);
   std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
@@ -147,27 +148,33 @@ private:
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
-  int   _space_between_icons;
+
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
+
+  int _space_between_icons;
   int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
+  int _dnd_delta;
+  int _dnd_security;
+  int _enter_y;
+
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_2indicator;
   nux::BaseTexture* _icon_3indicator;
   nux::BaseTexture* _icon_4indicator;
-  int _dnd_delta;
-  int _dnd_security;
+
   guint _anim_handle;
   guint _autohide_handle;
 

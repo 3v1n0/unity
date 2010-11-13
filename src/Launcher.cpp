@@ -213,12 +213,12 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
       _AsmShaderProg->Link();
     }
 
-    _folded_angle         = 1.0f;
-    _neg_folded_angle     = -1.0f;
-    _space_between_icons  = 5;
-    _launcher_top_y       = 0;
-    _launcher_bottom_y    = 0;
-    _folded_z_distance    = 10.0f;
+    _folded_angle           = 1.0f;
+    _neg_folded_angle       = -1.0f;
+    _space_between_icons    = 5;
+    _launcher_top_y         = 0;
+    _launcher_bottom_y      = 0;
+    _folded_z_distance      = 10.0f;
     _launcher_state         = LAUNCHER_FOLDED;
     _launcher_action_state  = ACTION_NONE;
     _icon_under_mouse       = NULL;
@@ -234,6 +234,7 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _icon_3indicator        = nux::CreateTextureFromFile (PKGDATADIR"/3indicate_54x54.png");
     _icon_4indicator        = nux::CreateTextureFromFile (PKGDATADIR"/4indicate_54x54.png");
     
+    _enter_y                = 0;
     _dnd_security           = 15;
     _dnd_delta              = 0;
     _anim_handle            = 0;
@@ -418,6 +419,32 @@ float SizeModifierForIcon (LauncherIcon *icon, struct timeval current)
     }
 }
 
+void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timeval current)
+{
+    LauncherIcon *anchor = 0;
+    LauncherModel::iterator it;
+    anchor = MouseIconIntersection (x, _enter_y);
+    
+    if (anchor)
+    {
+        float position = y;
+        for (it = _model->begin (); it != _model->end (); it++)
+        {
+            if (*it == anchor)
+            {
+                position += _icon_size / 2;
+                _dnd_delta = _enter_y - position;
+                
+                if (position + _icon_size / 2 + _dnd_delta > geo.height)
+                    _dnd_delta -= (position + _icon_size / 2 + _dnd_delta) - geo.height;
+                
+                break;
+            }
+            position += (_icon_size + _space_between_icons) * SizeModifierForIcon (*it, current);
+        }
+    }
+}
+
 std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
 {
     nux::Geometry geo = GetGeometry ();
@@ -446,6 +473,13 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
 
     float overflow = sum - geo.height;
     int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
+    
+    
+    // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
+    if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
+        SetDndDelta (center.x, center.y, geo, current);
+
+    _enter_y = 0;
 
     if (hover_progress > 0.0f && _dnd_delta != 0)
     {
@@ -458,7 +492,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         {
             float dnd_progress = DnDExitProgress ();
         
-            float max = 0;
+            float max = 0.0f;
             float min = MIN (0.0f, geo.height - sum);
 
             if (_dnd_delta > max)
@@ -1280,6 +1314,8 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
+  _enter_y = y;
+  
   SetHover ();
 
   EventLogic ();
