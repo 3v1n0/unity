@@ -447,28 +447,30 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
     float overflow = sum - geo.height;
     int folding_threshold = geo.height - (overflow * folding_constant) - _icon_size / 3;
 
-    if (hover_progress > 0.0f)
+    if (hover_progress > 0.0f && _dnd_delta != 0)
     {
         int delta_y = _dnd_delta;
         
-        if (hover_progress > 0.0f)
-            delta_y *= hover_progress;
+        // logically dnd exit only restores to the clamped ranges
+        // hover_progress restores to 0
         
-        if (hover_progress >= 1.0f && _launcher_action_state != ACTION_DRAG_LAUNCHER)
+        if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
             float dnd_progress = DnDExitProgress ();
-            
+        
             float max = 0;
             float min = MIN (0.0f, geo.height - sum);
+
             if (_dnd_delta > max)
-                delta_y = max + (delta_y - max) * dnd_progress * hover_progress;
+                delta_y = max + (delta_y - max) * dnd_progress;
             else if (_dnd_delta < min)
-                delta_y = min + (delta_y - min) * dnd_progress * hover_progress;
-            
+                delta_y = min + (delta_y - min) * dnd_progress;
+        
             if (dnd_progress == 0.0f)
                 _dnd_delta = (int) delta_y;
-        }
-        
+        }    
+
+        delta_y *= hover_progress;
         center.y += delta_y;
     } 
     else 
