@@ -312,7 +312,10 @@ LauncherIcon::SetUrgent (bool urgent)
   _urgent = urgent;
   
   if (urgent)
+  {
+      Present (1500);
       gettimeofday (&_urgent_time, NULL);
+  }
   
   needs_redraw.emit (this);
 }
