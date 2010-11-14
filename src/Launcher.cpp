@@ -590,7 +590,7 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
         // animate this shit
         struct timeval running_time = icon->RunningTime ();
         int running_ms = TimeDelta0 (&current, &running_time);
-        float running_progress = MIN (1.0f, (float) running_ms / (float) ANIM_DURATION_SHORT);
+        float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
         if (icon->Running ())
         {
