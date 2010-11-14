@@ -36,21 +36,18 @@
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
 
-#define TimeDelta(tv1, tv2)						   \
-    (((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ? \
-    ((((tv1)->tv_sec - (tv2)->tv_sec) * 1000000) +			   \
-     ((tv1)->tv_usec - (tv2)->tv_usec)) / 1000 :			   \
-    ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +			   \
-     (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)) / 1000)
-
-#define TimeDelta0(tv1, tv2) (MAX (0, TimeDelta (tv1, tv2)))
-
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
 #define URGENT_BLINKS       3
 #define BACKLIGHT_STRENGTH  0.9f
+
+int
+TimeDelta (struct timespec *x, struct timespec *y)
+{
+  return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
+}
 
 static bool USE_ARB_SHADERS = true;
 /*                                                                                                       
@@ -246,13 +243,13 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
-    _enter_time.tv_usec = 0;
+    _enter_time.tv_nsec = 0;
     _exit_time.tv_sec = 0;
-    _exit_time.tv_usec = 0;
+    _exit_time.tv_nsec = 0;
     _drag_end_time.tv_sec = 0;
-    _drag_end_time.tv_usec = 0;
+    _drag_end_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
-    _autohide_time.tv_usec = 0;
+    _autohide_time.tv_nsec = 0;
 }
 
 Launcher::~Launcher()
@@ -262,21 +259,21 @@ Launcher::~Launcher()
 
 float Launcher::GetHoverProgress ()
 {
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     
     if (_hovered)
-        return CLAMP ((float) (TimeDelta0 (&current, &_enter_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
+        return CLAMP ((float) (TimeDelta (&current, &_enter_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
     else
-        return 1.0f - CLAMP ((float) (TimeDelta0 (&current, &_exit_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
+        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_exit_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::DnDExitProgress ()
 {
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     
-    return 1.0f - CLAMP ((float) (TimeDelta0 (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+    return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
 float Launcher::AutohideProgress ()
@@ -284,13 +281,13 @@ float Launcher::AutohideProgress ()
     if (!_autohide)
         return 0.0f;
         
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     
     if (_hidden)
-        return CLAMP ((float) (TimeDelta0 (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+        return CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
     else
-        return 1.0f - CLAMP ((float) (TimeDelta0 (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -318,37 +315,37 @@ void Launcher::EnsureAnimation ()
         _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
 }
 
-bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timeval current)
+bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec current)
 {
-    struct timeval enter_time = icon->ShowTime ();
-    if (TimeDelta0 (&current, &enter_time) < ANIM_DURATION_SHORT)
+    struct timespec enter_time = icon->ShowTime ();
+    if (TimeDelta (&current, &enter_time) < ANIM_DURATION_SHORT)
         return true;
     
-    struct timeval hide_time = icon->HideTime ();
-    if (TimeDelta0 (&current, &hide_time) < ANIM_DURATION_SHORT)
+    struct timespec hide_time = icon->HideTime ();
+    if (TimeDelta (&current, &hide_time) < ANIM_DURATION_SHORT)
         return true;
     
-    struct timeval running_time = icon->RunningTime ();
-    if (TimeDelta0 (&current, &running_time) < ANIM_DURATION_SHORT)
+    struct timespec running_time = icon->RunningTime ();
+    if (TimeDelta (&current, &running_time) < ANIM_DURATION_SHORT)
         return true;
     
     if (icon->Urgent ())
     {
-        struct timeval urgent_time = icon->UrgentTime ();
-        if (TimeDelta0 (&current, &urgent_time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
+        struct timespec urgent_time = icon->UrgentTime ();
+        if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
             return true;
     }
     
     if (icon->Presented ())
     {
-        struct timeval present_time = icon->PresentTime ();
-        if (TimeDelta0 (&current, &present_time) < ANIM_DURATION)
+        struct timespec present_time = icon->PresentTime ();
+        if (TimeDelta (&current, &present_time) < ANIM_DURATION)
             return true;
     }
     else
     {
-        struct timeval unpresent_time = icon->UnpresentTime ();
-        if (TimeDelta0 (&current, &unpresent_time) < ANIM_DURATION)
+        struct timespec unpresent_time = icon->UnpresentTime ();
+        if (TimeDelta (&current, &unpresent_time) < ANIM_DURATION)
             return true;
     }
     
@@ -361,22 +358,22 @@ bool Launcher::AnimationInProgress ()
     // this way extra checks may be avoided
 
     // short circuit to avoid unneeded calculations
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     
     // hover in animation
-    if (TimeDelta0 (&current, &_enter_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_enter_time) < ANIM_DURATION)
        return true;
     
     // hover out animation
-    if (TimeDelta0 (&current, &_exit_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_exit_time) < ANIM_DURATION)
         return true;
     
     // drag end animation
-    if (TimeDelta0 (&current, &_drag_end_time) < ANIM_DURATION_LONG)
+    if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
         return true;
     
-    if (TimeDelta0 (&current, &_autohide_time) < ANIM_DURATION_LONG)
+    if (TimeDelta (&current, &_autohide_time) < ANIM_DURATION_LONG)
         return true;
     
     // animations happening on specific icons
@@ -388,10 +385,10 @@ bool Launcher::AnimationInProgress ()
     return false;
 }
 
-void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int sister_relation)
+void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, int sister_relation)
 {
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     
     if (sister)
     {
@@ -403,36 +400,36 @@ void Launcher::SetTimeStruct (struct timeval *timer, struct timeval *sister, int
             current.tv_sec -= remove / 1000;
             remove = remove % 1000;
             
-            if (remove > current.tv_usec / 1000)
+            if (remove > current.tv_nsec / 1000)
             {
                 current.tv_sec--;
-                current.tv_usec += 1000000;
+                current.tv_nsec += 1000000;
             }
-            current.tv_usec -= remove * 1000;
+            current.tv_nsec -= remove * 1000;
         }
     }
     
     timer->tv_sec = current.tv_sec;
-    timer->tv_usec = current.tv_usec;
+    timer->tv_nsec = current.tv_nsec;
 }
 
-float IconVisibleProgress (LauncherIcon *icon, struct timeval current)
+float IconVisibleProgress (LauncherIcon *icon, struct timespec current)
 {
     if (icon->Visible ())
     {
-        struct timeval icon_visible_time = icon->ShowTime ();
-        int enter_ms = TimeDelta0 (&current, &icon_visible_time);
+        struct timespec icon_visible_time = icon->ShowTime ();
+        int enter_ms = TimeDelta (&current, &icon_visible_time);
         return CLAMP ((float) enter_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     }
     else
     {
-        struct timeval icon_hide_time = icon->HideTime ();
-        int hide_ms = TimeDelta0 (&current, &icon_hide_time);
+        struct timespec icon_hide_time = icon->HideTime ();
+        int hide_ms = TimeDelta (&current, &icon_hide_time);
         return 1.0f - CLAMP ((float) hide_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     }
 }
 
-void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timeval current)
+void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current)
 {
     LauncherIcon *anchor = 0;
     LauncherModel::iterator it;
@@ -458,18 +455,18 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timeval 
     }
 }
 
-float Launcher::IconPresentProgress (LauncherIcon *icon, struct timeval current)
+float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec current)
 {
     if (icon->Presented ())
     {
-        struct timeval icon_present_time = icon->PresentTime ();
-        int ms = TimeDelta0 (&current, &icon_present_time);
+        struct timespec icon_present_time = icon->PresentTime ();
+        int ms = TimeDelta (&current, &icon_present_time);
         return CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
     }
     else
     {
-        struct timeval icon_unpresent_time = icon->UnpresentTime ();
-        int ms = TimeDelta0 (&current, &icon_unpresent_time);
+        struct timespec icon_unpresent_time = icon->UnpresentTime ();
+        int ms = TimeDelta (&current, &icon_unpresent_time);
         return 1.0f - CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
     }
 }
@@ -483,8 +480,8 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
     float hover_progress = GetHoverProgress ();
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
-    struct timeval current;
-    gettimeofday (&current, NULL);
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
 
     float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
@@ -588,8 +585,8 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
           arg.window_indicators = 0;
         
         // animate this shit
-        struct timeval running_time = icon->RunningTime ();
-        int running_ms = TimeDelta0 (&current, &running_time);
+        struct timespec running_time = icon->RunningTime ();
+        int running_ms = TimeDelta (&current, &running_time);
         float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
         if (icon->Running ())
@@ -598,8 +595,8 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
           
           if (icon->Urgent ())
           {
-              struct timeval urgent_time = icon->UrgentTime ();
-              int urgent_ms = TimeDelta0 (&current, &urgent_time);
+              struct timespec urgent_time = icon->UrgentTime ();
+              int urgent_ms = TimeDelta (&current, &urgent_time);
               double urgent_progress = (double) CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
               
               arg.backlight_intensity *= 0.2f + 0.8f * (0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f);

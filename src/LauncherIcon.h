@@ -73,12 +73,12 @@ public:
     
     int RelatedWindows ();
     
-    struct timeval ShowTime ();
-    struct timeval HideTime ();
-    struct timeval RunningTime ();
-    struct timeval UrgentTime ();
-    struct timeval PresentTime ();
-    struct timeval UnpresentTime ();
+    struct timespec ShowTime ();
+    struct timespec HideTime ();
+    struct timespec RunningTime ();
+    struct timespec UrgentTime ();
+    struct timespec PresentTime ();
+    struct timespec UnpresentTime ();
     
     LauncherIconType Type ();
     
@@ -151,12 +151,12 @@ private:
     
     LauncherIconType _icon_type;
     
-    struct timeval   _show_time;
-    struct timeval   _hide_time;
-    struct timeval   _running_time;
-    struct timeval   _urgent_time;
-    struct timeval   _present_time;
-    struct timeval   _unpresent_time;
+    struct timespec   _show_time;
+    struct timespec   _hide_time;
+    struct timespec   _running_time;
+    struct timespec   _urgent_time;
+    struct timespec   _present_time;
+    struct timespec   _unpresent_time;
 };
 
 #endif // LAUNCHERICON_H

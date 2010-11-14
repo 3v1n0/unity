@@ -31,7 +31,7 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
-#define DEFAULT_ICON "empathy"
+#define DEFAULT_ICON "application-default-icon"
 
 LauncherIcon::LauncherIcon(Launcher* IconManager)
 {
@@ -46,12 +46,12 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _present_time.tv_sec = 0;
   _unpresent_time.tv_sec = 0;
 
-  _show_time.tv_usec = 0;
-  _hide_time.tv_usec = 0;
-  _running_time.tv_usec = 0;
-  _urgent_time.tv_usec = 0;
-  _present_time.tv_usec = 0;
-  _unpresent_time.tv_usec = 0;
+  _show_time.tv_nsec = 0;
+  _hide_time.tv_nsec = 0;
+  _running_time.tv_nsec = 0;
+  _urgent_time.tv_nsec = 0;
+  _present_time.tv_nsec = 0;
+  _unpresent_time.tv_nsec = 0;
 
   _active    = false;
   _running   = false;
@@ -229,32 +229,32 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
-struct timeval LauncherIcon::ShowTime ()
+struct timespec LauncherIcon::ShowTime ()
 {
   return _show_time;
 }
 
-struct timeval LauncherIcon::HideTime ()
+struct timespec LauncherIcon::HideTime ()
 {
   return _hide_time;
 }
 
-struct timeval LauncherIcon::RunningTime ()
+struct timespec LauncherIcon::RunningTime ()
 {
   return _running_time;
 }
 
-struct timeval LauncherIcon::UrgentTime ()
+struct timespec LauncherIcon::UrgentTime ()
 {
   return _urgent_time;
 }
 
-struct timeval LauncherIcon::PresentTime ()
+struct timespec LauncherIcon::PresentTime ()
 {
   return _present_time;
 }
 
-struct timeval LauncherIcon::UnpresentTime ()
+struct timespec LauncherIcon::UnpresentTime ()
 {
   return _unpresent_time;
 }
@@ -272,12 +272,12 @@ LauncherIcon::SetVisible (bool visible)
   if (visible)
   {
     Present (1500);
-    gettimeofday (&_show_time, NULL);
+    clock_gettime (CLOCK_MONOTONIC, &_show_time);
     show.emit (this);
   }
   else
   {
-    gettimeofday (&_hide_time, NULL);
+    clock_gettime (CLOCK_MONOTONIC, &_hide_time);
     hide.emit (this);
   }
 }
@@ -299,7 +299,7 @@ LauncherIcon::SetRunning (bool running)
     return;
     
   _running = running;
-  gettimeofday (&_running_time, NULL);
+  clock_gettime (CLOCK_MONOTONIC, &_running_time);
   needs_redraw.emit (this);
 }
 
@@ -314,7 +314,7 @@ LauncherIcon::SetUrgent (bool urgent)
   if (urgent)
   {
       Present (1500);
-      gettimeofday (&_urgent_time, NULL);
+      clock_gettime (CLOCK_MONOTONIC, &_urgent_time);
   }
   
   needs_redraw.emit (this);
@@ -342,7 +342,7 @@ LauncherIcon::Present (int length)
   _presented = true;
   
   _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
-  gettimeofday (&_present_time, NULL);
+  clock_gettime (CLOCK_MONOTONIC, &_present_time);
   needs_redraw.emit (this);
 }
 
@@ -356,7 +356,7 @@ LauncherIcon::Unpresent ()
     g_source_remove (_present_time_handle);
   
   _presented = false;
-  gettimeofday (&_unpresent_time, NULL);
+  clock_gettime (CLOCK_MONOTONIC, &_unpresent_time);
   needs_redraw.emit (this);
 }
 

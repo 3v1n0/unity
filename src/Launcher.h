@@ -100,9 +100,9 @@ private:
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
-  bool IconNeedsAnimation  (LauncherIcon *icon, struct timeval current);
+  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec current);
   bool AnimationInProgress ();
-  void SetTimeStruct       (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
+  void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
   
   void EnsureAnimation    ();
   void SetupAutohideTimer ();
@@ -110,13 +110,13 @@ private:
   float DnDExitProgress  ();
   float GetHoverProgress ();
   float AutohideProgress ();
-  float IconPresentProgress (LauncherIcon *icon, struct timeval current);
+  float IconPresentProgress (LauncherIcon *icon, struct timespec current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
   
-  void                 SetDndDelta (float x, float y, nux::Geometry geo, struct timeval current);
+  void                 SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
   std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
@@ -192,10 +192,10 @@ private:
   LauncherModel* _model;
   
   /* event times */
-  struct timeval _enter_time;
-  struct timeval _exit_time;
-  struct timeval _drag_end_time;
-  struct timeval _autohide_time;
+  struct timespec _enter_time;
+  struct timespec _exit_time;
+  struct timespec _drag_end_time;
+  struct timespec _autohide_time;
 };
 
 #endif // LAUNCHER_H
