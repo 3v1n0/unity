@@ -257,6 +257,8 @@ Launcher::~Launcher()
 
 }
 
+/* Render Layout Logic */
+
 float Launcher::GetHoverProgress ()
 {
     struct timespec current;
@@ -400,12 +402,12 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
             current.tv_sec -= remove / 1000;
             remove = remove % 1000;
             
-            if (remove > current.tv_nsec / 1000)
+            if (remove > current.tv_nsec / 1000000)
             {
                 current.tv_sec--;
-                current.tv_nsec += 1000000;
+                current.tv_nsec += 1000000000;
             }
-            current.tv_nsec -= remove * 1000;
+            current.tv_nsec -= remove * 1000000;
         }
     }
     
@@ -651,6 +653,8 @@ std::list<Launcher::RenderArg> Launcher::RenderArgs (nux::Geometry &box_geo)
     
     return result;
 }
+
+/* End Render Layout Logic */
 
 void Launcher::SetHidden (bool hidden)
 {

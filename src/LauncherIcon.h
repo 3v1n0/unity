@@ -48,7 +48,7 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
-class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
     LauncherIcon(Launcher* IconManager);
