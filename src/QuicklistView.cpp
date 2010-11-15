@@ -48,7 +48,7 @@ namespace nux
     _anchor_width   = 10;
     _anchor_height  = 18;
     _corner_radius  = 4;
-    _padding        = 10;
+    _padding        = 0;
 
     _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
     _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -61,7 +61,7 @@ namespace nux
 
     _vlayout->AddLayout(_top_space, 0);
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 2; i++)
     {
       nux::StaticCairoText* tooltip_text;
       if (i == 0)
@@ -83,7 +83,10 @@ namespace nux
 
     SetWindowSizeMatchLayout (true);
     SetLayout (_hlayout);
-  
+    
+    OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDownOutsideOfQuicklist));
+    OnMouseDown.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDown));
+      
   }
 
   QuicklistView::~QuicklistView ()
@@ -101,13 +104,47 @@ namespace nux
 
   long QuicklistView::ProcessEvent (IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
   {
+//     return BaseWindow::ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+//     
+//     /*long ret = TraverseInfo;
+//     std::list<nux::StaticCairoText*>::iterator it;
+//     for (it = _item_list.begin(); it != _item_list.end(); it++)
+//     {
+//       ret = (*it)->ProcessEvent(ievent, ret, ProcessEventInfo);
+//     }
+//     return ret;*/
+    
     long ret = TraverseInfo;
-    std::list<nux::StaticCairoText*>::iterator it;
-    for (it = _item_list.begin(); it != _item_list.end(); it++)
+    long ProcEvInfo = 0;
+
+    IEvent window_event = ievent;
+    Geometry base = GetGeometry();
+    window_event.e_x_root = base.x;
+    window_event.e_y_root = base.y;
+
+    // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
+    Geometry viewGeometry = GetGeometry();
+
+    if (ievent.e_event == NUX_MOUSE_PRESSED)
     {
-      ret = (*it)->ProcessEvent(ievent, ret, ProcessEventInfo);
+      printf ("QuicklistView::ProcessEvent (x, y): %d %d\n", ievent.e_x, ievent.e_y);
+      printf ("QuicklistView::ProcessEvent Root (x, y): %d %d\n", ievent.e_x_root, ievent.e_y_root);
+      
+      if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+      {
+        ProcEvInfo = eDoNotProcess;
+      }
     }
-    return ret;
+
+//     if (m_layout)
+//       ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
+
+    // PostProcessEvent2 must always have its last parameter set to 0
+    // because the m_BackgroundArea is the real physical limit of the window.
+    // So the previous test about IsPointInside do not prevail over m_BackgroundArea
+    // testing the event by itself.
+    ret = PostProcessEvent2 (ievent, ret, 0);
+    return ret;    
   }
 
   void QuicklistView::Draw (GraphicsEngine& gfxContext, bool forceDraw)
@@ -221,7 +258,44 @@ namespace nux
   {
     _cairo_text_has_changed = true;
   }
+  
+  void QuicklistView::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    printf ("QuicklistView::RecvMouseDown %d %d %d %d\n", GetBaseX (), GetBaseY (), GetBaseWidth (), GetBaseHeight ());
+    if (IsVisible ())
+    {
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+  }
+  
+  void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    printf ("QuicklistView::RecvMouseDownOutsideOfQuicklist %d %d %d %d\n", GetBaseX (), GetBaseY (), GetBaseWidth (), GetBaseHeight ());
+    //if (IsVisible ())
+    {
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+  }
 
+  void QuicklistView::AddMenuItem (NString str)
+  {
+    
+    
+  }
+  
+  void QuicklistView::RenderQuicklistView ()
+  {
+    
+  }
+    
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////

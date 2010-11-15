@@ -33,8 +33,10 @@
 #include <libdbusmenu-glib/client.h>
 
 #include "Tooltip.h"
+#include "QuicklistView.h"
 
 class Launcher;
+
 
 typedef enum
 {
@@ -51,7 +53,7 @@ typedef enum
 class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
-    LauncherIcon(Launcher* IconManager);
+    LauncherIcon(Launcher* launcher);
     ~LauncherIcon();
 
     void         SetTooltipText (const TCHAR* text);
@@ -65,6 +67,8 @@ public:
 
     void RecvMouseEnter ();
     void RecvMouseLeave ();
+    void RecvMouseDown (int button);
+    void RecvMouseUp (int button);
     
     void HideTooltip ();
     
@@ -115,14 +119,15 @@ protected:
     nux::NString m_TooltipText;
     //! the window this icon belong too.
     nux::BaseWindow* m_Window;
-    Launcher* m_IconManager;
+    Launcher* _launcher;
 
     nux::Vector4  _xform_screen_coord [4];
     nux::Vector4  _xform_icon_screen_coord [4];
     bool          _mouse_inside;
     float         _folding_angle;
 
-    nux::Tooltip* _tooltip;
+    nux::Tooltip *_tooltip;
+    nux::QuicklistView *_quicklist;
 
 
     friend class Launcher;

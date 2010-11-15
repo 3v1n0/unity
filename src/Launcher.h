@@ -143,6 +143,8 @@ private:
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
 
+  //nux::QuicklistView* _active_quicklist_view;
+  
   bool  _hovered;
   bool  _floating;
   bool  _autohide;
