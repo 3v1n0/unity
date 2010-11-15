@@ -48,7 +48,7 @@ namespace nux
     _anchor_width   = 10;
     _anchor_height  = 18;
     _corner_radius  = 4;
-    _padding        = 0;
+    _padding        = 13;
 
     _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
     _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -127,9 +127,6 @@ namespace nux
 
     if (ievent.e_event == NUX_MOUSE_PRESSED)
     {
-      printf ("QuicklistView::ProcessEvent (x, y): %d %d\n", ievent.e_x, ievent.e_y);
-      printf ("QuicklistView::ProcessEvent Root (x, y): %d %d\n", ievent.e_x_root, ievent.e_y_root);
-      
       if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
       {
         ProcEvInfo = eDoNotProcess;
@@ -261,7 +258,6 @@ namespace nux
   
   void QuicklistView::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
-    printf ("QuicklistView::RecvMouseDown %d %d %d %d\n", GetBaseX (), GetBaseY (), GetBaseWidth (), GetBaseHeight ());
     if (IsVisible ())
     {
       CaptureMouseDownAnyWhereElse (false);
@@ -274,8 +270,7 @@ namespace nux
   
   void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
-    printf ("QuicklistView::RecvMouseDownOutsideOfQuicklist %d %d %d %d\n", GetBaseX (), GetBaseY (), GetBaseWidth (), GetBaseHeight ());
-    //if (IsVisible ())
+    if (IsVisible ())
     {
       CaptureMouseDownAnyWhereElse (false);
       ForceStopFocus (1, 1);

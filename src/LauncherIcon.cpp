@@ -190,24 +190,24 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-//   int icon_x = _xform_screen_coord[0].x;
-//   int icon_y = _xform_screen_coord[0].y;
-//   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
-//   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
-// 
-//   _tooltip->SetBaseX (icon_x + icon_w);
-//   _tooltip->SetBaseY (icon_y +
-//                       24 + // TODO: HARCODED, replace _launcher->GetBaseY ()
-//                       (icon_h / 2) -
-//                       (_tooltip->GetBaseHeight () / 2));
-//   
-//   if (!_quicklist->IsVisible ())
-//     _tooltip->ShowWindow (true);
+  int icon_x = _xform_screen_coord[0].x;
+  int icon_y = _xform_screen_coord[0].y;
+  int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+  int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+  _tooltip->SetBaseX (icon_x + icon_w);
+  _tooltip->SetBaseY (icon_y +
+                      24 + // TODO: HARCODED, replace _launcher->GetBaseY ()
+                      (icon_h / 2) -
+                      (_tooltip->GetBaseHeight () / 2));
+  
+  if (!_quicklist->IsVisible ())
+    _tooltip->ShowWindow (true);
 }
 
 void LauncherIcon::RecvMouseLeave ()
 {
-//   _tooltip->ShowWindow (false);
+  _tooltip->ShowWindow (false);
 }
 
 void LauncherIcon::RecvMouseDown (int button)
@@ -217,9 +217,9 @@ void LauncherIcon::RecvMouseDown (int button)
     _tooltip->ShowWindow (false);
     
     
-    int icon_x = _xform_screen_coord[0].x;
+    //int icon_x = _xform_screen_coord[0].x;
     int icon_y = _xform_screen_coord[0].y;
-    int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+    //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
     int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
 
     int x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
