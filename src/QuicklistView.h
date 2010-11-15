@@ -17,8 +17,8 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
  */
 
-#ifndef TOOLTIP_H
-#define TOOLTIP_H
+#ifndef QUICKLISTVIEW_H
+#define QUICKLISTVIEW_H
 
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
@@ -71,9 +71,14 @@ namespace nux
       bool             forceDraw);
 
     void SetText (NString text);
+    
+    void AddMenuItem (NString str);
+    void RenderQuicklistView ();
 
   private:
     void RecvCairoTextChanged (StaticCairoText& cairo_text);
+    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
     void PreLayoutManagement ();
 
@@ -118,5 +123,5 @@ namespace nux
   };
 }
 
-#endif // TOOLTIP_H
+#endif // QUICKLISTVIEW_H
 

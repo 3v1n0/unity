@@ -33,10 +33,10 @@
 
 #define DEFAULT_ICON "application-default-icon"
 
-LauncherIcon::LauncherIcon(Launcher* IconManager)
+LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _folding_angle = 0;
-  m_IconManager = IconManager;
+  _launcher = launcher;
   m_TooltipText = "blank";
 
   _show_time.tv_sec = 0;
@@ -67,8 +67,12 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
 
+  _quicklist = new nux::QuicklistView ();
+  
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
 }
 
 LauncherIcon::~LauncherIcon()
@@ -213,15 +217,65 @@ LauncherIcon::RecvMouseEnter ()
 
   _tooltip->SetBaseX (icon_x + icon_w - 10);
   _tooltip->SetBaseY (icon_y +
-                      23 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
+                      24 + // TODO: HARCODED, replace _launcher->GetBaseY ()
                       (icon_h / 2) -
                       (_tooltip->GetBaseHeight () / 2));
-  _tooltip->ShowWindow (true);
+  
+  if (!_quicklist->IsVisible ())
+    _tooltip->ShowWindow (true);
 }
 
 void LauncherIcon::RecvMouseLeave ()
 {
   _tooltip->ShowWindow (false);
+}
+
+void LauncherIcon::RecvMouseDown (int button)
+{
+  if (button == 3)
+  {
+    _tooltip->ShowWindow (false);
+    
+    
+    //int icon_x = _xform_screen_coord[0].x;
+    int icon_y = _xform_screen_coord[0].y;
+    //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+    int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+    int x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+    int y = icon_y +
+            24 + // TODO: HARCODED, replace _launcher->GetBaseY ()
+            (icon_h / 2) -
+            (_tooltip->GetBaseHeight () / 2);
+
+    _quicklist->SetBaseX (x);
+    _quicklist->SetBaseY (y);
+
+    nuxDebugMsg (TEXT("[LauncherIcon::RecvMouseDown] QuicklistView position: %d %d"), x, y);
+    
+//     if (_quicklist->IsVisible ())
+//     {
+//       nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+//       _quicklist->NeedRedraw ();
+//       return;
+//     }
+  
+  
+    _quicklist->ShowWindow (true);
+    _quicklist->EnableInputWindow (true);
+    _quicklist->GrabPointer ();
+    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+    _quicklist->NeedRedraw ();
+    //_quicklist->CaptureMouseDownAnyWhereElse (true);
+  }
+}
+
+void LauncherIcon::RecvMouseUp (int button)
+{
+  if (button == 3)
+  {
+    _quicklist->CaptureMouseDownAnyWhereElse (true);
+  }
 }
 
 void LauncherIcon::HideTooltip ()

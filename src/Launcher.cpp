@@ -1310,6 +1310,8 @@ void Launcher::NotifyMenuTermination(LauncherIcon* Icon)
 
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  printf("Launcher::RecvMouseDown: %d %d\n", x, y);
+  
   _mouse_position = nux::Point2 (x, y);
   
   MouseDownLogic (x, y, button_flags, key_flags);
