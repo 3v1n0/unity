@@ -116,8 +116,10 @@ private:
   void UnsetHover ();
   void SetHidden  (bool hidden);
   
-  void                 SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
-  std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
+  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
+  void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
+                   std::list<Launcher::RenderArg> &shelf_args, 
+                   nux::Geometry &box_geo, nux::Geometry &shelf_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
 

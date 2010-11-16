@@ -47,12 +47,20 @@ public:
     reverse_iterator rbegin ();
     reverse_iterator rend ();
     
+    iterator shelf_begin ();
+    iterator shelf_end ();
+    reverse_iterator shelf_rbegin ();
+    reverse_iterator shelf_rend ();
+    
     sigc::signal<void, void *> icon_added;
     sigc::signal<void, void *> icon_removed;
     sigc::signal<void> order_changed;
     
 private:
-    Base _inner;
+    Base _inner_launcher;
+    Base _inner_shelf;
+    
+    bool IconShouldShelf (LauncherIcon *icon);
     
     static gboolean RemoveCallback (gpointer data);
 };
