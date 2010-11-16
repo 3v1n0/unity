@@ -1335,7 +1335,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE);
     
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
     
     UpdateIconXForm (args);
     UpdateIconXForm (shelf_args);
@@ -1361,7 +1360,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     
     /* draw shelf */
-    gPainter.Paint2DQuadColor (GfxContext, shelf_box, nux::Color(0xDD555555));
+    CHECKGL (glLineWidth (1) );
+    gPainter.Paint2DQuadColor (GfxContext, shelf_box, nux::Color(0x99000000));
+    gPainter.Draw2DLine (GfxContext, shelf_box.x, shelf_box.y - 1, shelf_box.x + shelf_box.width, shelf_box.y - 1, nux::Color (0x66FFFFFF));
     
     for (it = shelf_args.begin(); it != shelf_args.end(); it++)
     {
@@ -1378,6 +1379,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA);
           
+    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
+
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
 }
