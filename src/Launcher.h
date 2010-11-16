@@ -191,6 +191,7 @@ private:
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
+  nux::Geometry _last_shelf_area;
   LauncherModel* _model;
   
   /* event times */

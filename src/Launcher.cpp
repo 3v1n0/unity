@@ -845,6 +845,11 @@ void Launcher::SetHover ()
     if (_hovered)
         return;
     
+    _enter_y = (int) _mouse_position.y;
+    
+    if (_last_shelf_area.y - _enter_y < 5 && _last_shelf_area.y - _enter_y >= 0)
+        _enter_y = _last_shelf_area.y - 5;
+    
     _hovered = true;
     SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
 }
@@ -1319,6 +1324,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     RenderArgs (args, shelf_args, bkg_box, shelf_box);
+    _last_shelf_area = shelf_box;
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
     
@@ -1459,9 +1465,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
-  _enter_y = y;
   
-  SetHover ();
+  if (!_last_shelf_area.IsInside (nux::Point (x, y)))
+      SetHover ();
 
   EventLogic ();
   EnsureAnimation ();
@@ -1482,6 +1488,11 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 {
   _mouse_position = nux::Point2 (x, y);
 
+  if (!_last_shelf_area.IsInside (nux::Point (x, y)))
+  {
+      SetHover ();
+      EnsureAnimation ();
+  }
   // Every time the mouse moves, we check if it is inside an icon...
 
   EventLogic ();
