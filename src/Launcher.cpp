@@ -1328,6 +1328,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
     
+    GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                    GL_SRC_ALPHA,
+                                                    GL_ONE_MINUS_SRC_ALPHA,
+                                                    GL_ONE_MINUS_DST_ALPHA,
+                                                    GL_ONE);
+    
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xB5000000));
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
     
