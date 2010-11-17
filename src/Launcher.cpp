@@ -1362,7 +1362,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* draw shelf */
     nux::Color shelf_color = nux::Color (0xCC000000);
     nux::Color shelf_zero = nux::Color (0x00000000);
-    int shelf_shadow_height = 25;
+    int shelf_shadow_height = 35;
     
     nux::Geometry shelf_shadow = nux::Geometry (shelf_box.x, shelf_box.y - shelf_shadow_height, shelf_box.width, shelf_shadow_height);
     gPainter.Paint2DQuadColor (GfxContext, shelf_shadow, shelf_zero, shelf_color, shelf_color, shelf_zero);
