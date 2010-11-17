@@ -34,24 +34,43 @@ LauncherModel::~LauncherModel()
 {
 }
 
+bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
+{
+  return icon->Type () == LAUNCHER_ICON_TYPE_END ||
+         icon->Type () == LAUNCHER_ICON_TYPE_TRASH || 
+         icon->Type () == LAUNCHER_ICON_TYPE_DEVICE ||
+         icon->Type () == LAUNCHER_ICON_TYPE_PLACE;
+}
+
 void 
 LauncherModel::AddIcon (LauncherIcon *icon)
 {
   icon->SinkReference ();
   
-  _inner.push_front (icon);
+  if (IconShouldShelf (icon))
+    _inner_shelf.push_front (icon);
+  else
+    _inner_launcher.push_front (icon);
+    
   icon_added.emit (icon);
-  
   icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
 }
 
 void
 LauncherModel::RemoveIcon (LauncherIcon *icon)
 {
-  size_t size = _inner.size ();
-  _inner.remove (icon);
+  size_t size;
   
-  if (size != _inner.size ())
+  size = _inner_shelf.size ();
+  _inner_shelf.remove (icon);
+
+  if (size != _inner_shelf.size ())
+    icon_removed.emit (icon);
+  
+  size = _inner_launcher.size ();
+  _inner_launcher.remove (icon);
+
+  if (size != _inner_launcher.size ())
     icon_removed.emit (icon);
   
   icon->UnReference ();
@@ -81,35 +100,60 @@ LauncherModel::OnIconRemove (void *icon_pointer)
 void 
 LauncherModel::Sort (SortFunc func)
 {
-  _inner.sort (func);
+  _inner_launcher.sort (func);
+  _inner_shelf.sort (func);
 }
 
 int
 LauncherModel::Size ()
 {
-  return _inner.size ();
+  return _inner_shelf.size () + _inner_launcher.size ();
 }
     
 LauncherModel::iterator 
 LauncherModel::begin ()
 {
-  return _inner.begin ();
+  return _inner_launcher.begin ();
 }
 
 LauncherModel::iterator 
 LauncherModel::end ()
 {
-  return _inner.end ();
+  return _inner_launcher.end ();
 }
 
 LauncherModel::reverse_iterator 
 LauncherModel::rbegin ()
 {
-  return _inner.rbegin ();
+  return _inner_launcher.rbegin ();
 }
 
 LauncherModel::reverse_iterator 
 LauncherModel::rend ()
 {
-  return _inner.rend ();
+  return _inner_launcher.rend ();
+}
+
+LauncherModel::iterator 
+LauncherModel::shelf_begin ()
+{
+  return _inner_shelf.begin ();
+}
+
+LauncherModel::iterator 
+LauncherModel::shelf_end ()
+{
+  return _inner_shelf.end ();
+}
+
+LauncherModel::reverse_iterator 
+LauncherModel::shelf_rbegin ()
+{
+  return _inner_shelf.rbegin ();
+}
+
+LauncherModel::reverse_iterator 
+LauncherModel::shelf_rend ()
+{
+  return _inner_shelf.rend ();
 }
