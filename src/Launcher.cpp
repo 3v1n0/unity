@@ -1360,8 +1360,15 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     
     /* draw shelf */
-    CHECKGL (glLineWidth (1) );
-    gPainter.Paint2DQuadColor (GfxContext, shelf_box, nux::Color(0x99000000));
+    nux::Color shelf_color = nux::Color (0xCC000000);
+    nux::Color shelf_zero = nux::Color (0x00000000);
+    int shelf_shadow_height = 25;
+    
+    nux::Geometry shelf_shadow = nux::Geometry (shelf_box.x, shelf_box.y - shelf_shadow_height, shelf_box.width, shelf_shadow_height);
+    gPainter.Paint2DQuadColor (GfxContext, shelf_shadow, shelf_zero, shelf_color, shelf_color, shelf_zero);
+    gPainter.Paint2DQuadColor (GfxContext, shelf_box, shelf_color);
+
+    CHECKGL (glLineWidth (1));
     gPainter.Draw2DLine (GfxContext, shelf_box.x, shelf_box.y - 1, shelf_box.x + shelf_box.width, shelf_box.y - 1, nux::Color (0x66FFFFFF));
     
     for (it = shelf_args.begin(); it != shelf_args.end(); it++)
