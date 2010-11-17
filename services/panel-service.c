@@ -50,11 +50,11 @@ struct _PanelServicePrivate
 
   gint     last_menu_x;
   gint     last_menu_y;
-
-  gboolean suppress_signals;
 };
 
 /* Globals */
+static gboolean suppress_signals = FALSE;
+
 enum
 {
   ENTRY_ACTIVATED = 0,
@@ -249,10 +249,10 @@ panel_service_init (PanelService *self)
                                                g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-  priv->suppress_signals = TRUE;
+  suppress_signals = TRUE;
   load_indicators (self);
   sort_indicators (self);
-  priv->suppress_signals = FALSE;
+  suppress_signals = FALSE;
 
   g_idle_add ((GSourceFunc)initial_resync, self);
 }
@@ -284,7 +284,7 @@ actually_notify_object (IndicatorObject *object)
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
   priv->timeouts[position] = SYNC_WAITING;
 
-  if (!priv->suppress_signals);
+  if (!suppress_signals);
     g_signal_emit (self, _service_signals[RE_SYNC],
                    0, g_object_get_data (G_OBJECT (object), "id"));
 
@@ -294,9 +294,12 @@ actually_notify_object (IndicatorObject *object)
 static void
 notify_object (IndicatorObject *object)
 {
-  PanelService *self;
+  PanelService        *self;
   PanelServicePrivate *priv;
-  gint position;
+  gint                 position;
+
+  if (suppress_signals)
+    return;
 
   self = panel_service_get_default ();
   priv = self->priv;
@@ -387,6 +390,8 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_changed), object);
 
     }
+
+  notify_object (object);
 }
 
 static void
@@ -394,7 +399,15 @@ on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
                   PanelService         *self)
 {
+  notify_object (object);
+}
 
+static void
+on_entry_moved (IndicatorObject      *object,
+                IndicatorObjectEntry *entry,
+                PanelService         *self)
+{
+  notify_object (object);
 }
 
 static void
@@ -437,9 +450,8 @@ load_indicators (PanelService *self)
                         G_CALLBACK (on_entry_added), self);
       g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
                         G_CALLBACK (on_entry_removed), self);
-      /* FIXME
       g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
-                        G_CALLBACK (on_entry_moved), service);*/
+                        G_CALLBACK (on_entry_moved), self);
 
       entries = indicator_object_get_entries (object);
       for (entry = entries; entry != NULL; entry = entry->next)

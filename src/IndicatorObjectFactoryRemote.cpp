@@ -111,8 +111,8 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
   _proxy = proxy;
 
   // Connect to interesting signals
-  // FIXME: Add autorestarting bits here
- g_signal_connect (_proxy, "g-signal",
+  // FIXME: Add auto-restarting bits here
+  g_signal_connect (_proxy, "g-signal",
                    G_CALLBACK (on_proxy_signal_received), this);
 
   g_dbus_proxy_call (_proxy,

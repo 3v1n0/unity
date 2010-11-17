@@ -127,6 +127,10 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
   g_free (_label);
   g_free (_image_data);
 
+  _id = NULL;
+  _label = NULL;
+  _image_data = NULL;
+
   _id = g_strdup (__id);
   _label = g_strdup (__label);
   label_sensitive = __label_sensitive;
