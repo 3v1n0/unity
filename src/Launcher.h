@@ -100,9 +100,9 @@ private:
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
-  bool IconNeedsAnimation  (LauncherIcon *icon, struct timeval current);
+  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec current);
   bool AnimationInProgress ();
-  void SetTimeStruct       (struct timeval *timer, struct timeval *sister = 0, int sister_relation = 0);
+  void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
   
   void EnsureAnimation    ();
   void SetupAutohideTimer ();
@@ -110,12 +110,16 @@ private:
   float DnDExitProgress  ();
   float GetHoverProgress ();
   float AutohideProgress ();
+  float IconPresentProgress (LauncherIcon *icon, struct timespec current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
   
-  std::list<RenderArg> RenderArgs (nux::Geometry &box_geo);
+  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
+  void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
+                   std::list<Launcher::RenderArg> &shelf_args, 
+                   nux::Geometry &box_geo, nux::Geometry &shelf_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
 
@@ -147,27 +151,33 @@ private:
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
-  int   _space_between_icons;
+
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
+
+  int _space_between_icons;
   int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
+  int _dnd_delta;
+  int _dnd_security;
+  int _enter_y;
+
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_2indicator;
   nux::BaseTexture* _icon_3indicator;
   nux::BaseTexture* _icon_4indicator;
-  int _dnd_delta;
-  int _dnd_security;
+
   guint _anim_handle;
   guint _autohide_handle;
 
@@ -181,13 +191,14 @@ private:
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
+  nux::Geometry _last_shelf_area;
   LauncherModel* _model;
   
   /* event times */
-  struct timeval _enter_time;
-  struct timeval _exit_time;
-  struct timeval _drag_end_time;
-  struct timeval _autohide_time;
+  struct timespec _enter_time;
+  struct timespec _exit_time;
+  struct timespec _drag_end_time;
+  struct timespec _autohide_time;
 };
 
 #endif // LAUNCHER_H

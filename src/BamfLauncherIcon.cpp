@@ -209,7 +209,7 @@ BamfLauncherIcon::GetMenus ()
         if (BAMF_IS_INDICATOR (l->data))
         {
             BamfIndicator *indicator = BAMF_INDICATOR (l->data);
-            DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), bamf_indicator_get_remote_path (indicator));
+            DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), bamf_indicator_get_dbus_menu_path (indicator));
             
             result.push_back (client);
         }
