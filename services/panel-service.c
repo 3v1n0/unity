@@ -85,8 +85,11 @@ static gchar * indicator_order[] = {
 };
 
 /* Forwards */
-static void load_indicators (PanelService *self);
-static void sort_indicators (PanelService *self);
+static void load_indicator  (PanelService    *self,
+                             IndicatorObject *object,
+                             const gchar     *_name);
+static void load_indicators (PanelService    *self);
+static void sort_indicators (PanelService    *self);
 
 /*
  * GObject stuff
@@ -262,12 +265,35 @@ panel_service_get_default ()
 {
   static PanelService *service = NULL;
   
-  if (service == NULL)
+  if (service == NULL || !PANEL_IS_SERVICE (service))
     service = g_object_new (PANEL_TYPE_SERVICE, NULL);
 
   return service;
 }
 
+PanelService *
+panel_service_get_default_with_indicators (GList *indicators)
+{
+  PanelService *service = panel_service_get_default ();
+  GList        *i;
+
+  for (i = indicators; i; i = i->next)
+    {
+      IndicatorObject *object = i->data;
+      if (INDICATOR_IS_OBJECT (object))
+          load_indicator (service, object, NULL);
+    }
+
+  return service;
+}
+guint
+panel_service_get_n_indicators (PanelService *self)
+{
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), 0);
+
+  return g_slist_length (self->priv->indicators);
+}
+     
 /*
  * Private Methods
  */
@@ -411,9 +437,41 @@ on_entry_moved (IndicatorObject      *object,
 }
 
 static void
-load_indicators (PanelService *self)
+load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
+  gchar *name;
+  GList *entries, *entry;
+
+  if (_name != NULL)
+    name = g_strdup (_name);
+  else
+    name = g_strdup_printf ("%p", object);
+
+  priv->indicators = g_slist_append (priv->indicators, object);
+
+  g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
+  
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
+                    G_CALLBACK (on_entry_added), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
+                    G_CALLBACK (on_entry_removed), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
+                    G_CALLBACK (on_entry_moved), self);
+
+  entries = indicator_object_get_entries (object);
+  for (entry = entries; entry != NULL; entry = entry->next)
+    {
+      on_entry_added (object, entry->data, self);
+    }
+  g_list_free (entries);
+
+  g_free (name);
+}
+
+static void
+load_indicators (PanelService *self)
+{
   GDir        *dir;
   const gchar *name;
 
@@ -429,7 +487,6 @@ load_indicators (PanelService *self)
     {
       IndicatorObject *object;
       gchar           *path;
-      GList           *entries, *entry;
 
       if (!g_str_has_suffix (name, ".so"))
         continue;
@@ -444,24 +501,8 @@ load_indicators (PanelService *self)
           g_free (path);
           continue;
         }
+      load_indicator (self, object, name);
 
-      priv->indicators = g_slist_append (priv->indicators, object);
-
-      g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
-      
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
-                        G_CALLBACK (on_entry_added), self);
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
-                        G_CALLBACK (on_entry_removed), self);
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
-                        G_CALLBACK (on_entry_moved), self);
-
-      entries = indicator_object_get_entries (object);
-      for (entry = entries; entry != NULL; entry = entry->next)
-        {
-          on_entry_added (object, entry->data, self);
-        }
-      g_list_free (entries);
       g_free (path);
     }
 
