@@ -33,6 +33,9 @@
 
 #define DEFAULT_ICON "application-default-icon"
 
+nux::Tooltip *LauncherIcon::_current_tooltip = 0;
+QuicklistView *LauncherIcon::_current_quicklist = 0;
+
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _folding_angle = 0;
@@ -67,7 +70,9 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
 
-  _quicklist = new nux::QuicklistView ();
+  _quicklist = new QuicklistView ();
+  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
+  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -210,6 +215,12 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
+  if (_launcher->GetActiveQuicklist ())
+  {
+    // A quicklist is active
+    return;
+  }
+  
   int icon_x = _xform_screen_coord[0].x;
   int icon_y = _xform_screen_coord[0].y;
   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
@@ -222,7 +233,9 @@ LauncherIcon::RecvMouseEnter ()
                       (_tooltip->GetBaseHeight () / 2));
   
   if (!_quicklist->IsVisible ())
+  {
     _tooltip->ShowWindow (true);
+  }
 }
 
 void LauncherIcon::RecvMouseLeave ()
@@ -260,7 +273,32 @@ void LauncherIcon::RecvMouseDown (int button)
 //       return;
 //     }
   
-  
+    std::list<DbusmenuClient *> menus_list = Menus ();
+    std::list<DbusmenuClient *>::iterator it;
+    for (it = menus_list.begin (); it != menus_list.end (); it++)
+    {
+      DbusmenuMenuitem *item = dbusmenu_client_get_root (*it);
+    
+      if (DBUSMENU_IS_MENUITEM (item) && dbusmenu_menuitem_get_root (item))
+      {
+        GList *children_list = dbusmenu_menuitem_get_children (item);
+        
+        unsigned int i = 0;
+        for (i = 0; i < g_list_length (children_list); i++)
+        {
+          DbusmenuMenuitem *item = (DbusmenuMenuitem *) g_list_nth_data (children_list, i);
+          std::string label = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+          printf ("label: %s\n", label.c_str ());
+        }
+      }
+    }
+    
+    for (it = menus_list.begin (); it != menus_list.end (); it++)
+    {
+      g_object_unref (*it);
+    }
+    menus_list.clear ();
+    
     _quicklist->ShowWindow (true);
     _quicklist->EnableInputWindow (true);
     _quicklist->GrabPointer ();
@@ -276,6 +314,16 @@ void LauncherIcon::RecvMouseUp (int button)
   {
     _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
+}
+
+void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->SetActiveQuicklist (_quicklist);
+}
+
+void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->CancelActiveQuicklist (_quicklist);
 }
 
 void LauncherIcon::HideTooltip ()

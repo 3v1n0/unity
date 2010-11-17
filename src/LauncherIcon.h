@@ -36,7 +36,7 @@
 #include "QuicklistView.h"
 
 class Launcher;
-
+class QuicklistView;
 
 typedef enum
 {
@@ -70,6 +70,9 @@ public:
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
+    
+    void RecvShowQuicklist (nux::BaseWindow *quicklist);
+    void RecvHideQuicklist (nux::BaseWindow *quicklist);
     
     void HideTooltip ();
     
@@ -133,7 +136,10 @@ protected:
     float         _folding_angle;
 
     nux::Tooltip *_tooltip;
-    nux::QuicklistView *_quicklist;
+    QuicklistView *_quicklist;
+
+    static nux::Tooltip *_current_tooltip;
+    static QuicklistView *_current_quicklist;
 
 
     friend class Launcher;
