@@ -107,8 +107,53 @@ test_object_new ()
 
 //----------------------- /TESTING INDICATOR STUFF ----------------------------
 
+//------------------------ USEFUL FUNCTIONS -----------------------------------
+
+guint
+get_n_indicators_in_result (GVariant *result)
+{
+  guint  ret = 0;
+  gchar *current_object_id = NULL;
+  GVariantIter *iter;
+  gchar        *indicator_id;
+  gchar        *entry_id;
+  gchar        *label;
+  gboolean      label_sensitive;
+  gboolean      label_visible;
+  guint32       image_type;
+  gchar        *image_data;
+  gboolean      image_sensitive;
+  gboolean      image_visible;
+
+  g_variant_get (result, "(a(sssbbusbb))", &iter);
+  while (g_variant_iter_loop (iter, "(sssbbusbb)",
+                              &indicator_id,
+                              &entry_id,
+                              &label,
+                              &label_sensitive,
+                              &label_visible,
+                              &image_type,
+                              &image_data,
+                              &image_sensitive,
+                              &image_visible))
+    {
+      if (g_strcmp0 (current_object_id, indicator_id) != 0)
+        {
+          ret++;
+          g_free (current_object_id);
+          current_object_id = g_strdup (indicator_id);
+        }
+    }
+  g_free (current_object_id);
+
+  return ret;
+}
+
+//------------------------ /USEFUL FUNCTIONS ----------------------------------
+
 static void TestAllocation  (void);
-static void TestEmptyObject (void);
+static void TestIndicatorLoading (void);
+static void TestEmptyObjectMessage (void);
 
 void
 TestPanelServiceCreateSuite ()
@@ -116,7 +161,8 @@ TestPanelServiceCreateSuite ()
 #define _DOMAIN "/Unit/PanelService"
 
   g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
-  g_test_add_func (_DOMAIN"/EmptyObject", TestEmptyObject);
+  g_test_add_func (_DOMAIN"/IndicatorLoading", TestIndicatorLoading);
+  g_test_add_func (_DOMAIN"/EmptyObjectMessage", TestEmptyObjectMessage);
 }
 
 static void
@@ -132,7 +178,7 @@ TestAllocation ()
 }
 
 static void
-TestEmptyObject ()
+TestIndicatorLoading ()
 {
   PanelService    *service;
   IndicatorObject *object;
@@ -147,6 +193,34 @@ TestEmptyObject ()
 
   g_assert_cmpint (panel_service_get_n_indicators (service), ==, 1);
 
+  g_list_free (objects);
+  g_object_unref (object);
+  g_object_unref (service);
+}
+
+static void
+TestEmptyObjectMessage ()
+{
+  PanelService    *service;
+  IndicatorObject *object;
+  GList           *objects = NULL;
+  GVariant        *result;
+
+  object = test_object_new ();
+  g_assert (INDICATOR_IS_OBJECT (object));
+  objects = g_list_append (objects, object);
+
+  service = panel_service_get_default_with_indicators (objects);
+  g_assert (PANEL_IS_SERVICE (service));
+
+  g_assert_cmpint (panel_service_get_n_indicators (service), ==, 1);
+
+  result = panel_service_sync (service);
+  g_assert (result != NULL);
+
+  g_assert_cmpint (get_n_indicators_in_result (result), ==, 1);
+
+  g_variant_unref (result);
   g_list_free (objects);
   g_object_unref (object);
 }
