@@ -582,17 +582,41 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
 }
 
 static void
+indicator_entry_null_to_variant (const gchar     *indicator_id,
+                                 GVariantBuilder *b)
+{
+  g_variant_builder_add (b, "(sssbbusbb)",
+                         indicator_id,
+                         "",
+                         "",
+                         FALSE,
+                         FALSE,
+                         (guint32) 0,
+                         "",
+                         FALSE,
+                         FALSE);
+}
+
+static void
 indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
 
   entries = indicator_object_get_entries (object);
-  for (e = entries; e; e = e->next)
+  if (entries)
     {
-      IndicatorObjectEntry *entry = e->data;
-      gchar *id = g_strdup_printf ("%p", entry);
-      indicator_entry_to_variant (entry, id, indicator_id, b);
-      g_free (id);
+      for (e = entries; e; e = e->next)
+        {
+          IndicatorObjectEntry *entry = e->data;
+          gchar *id = g_strdup_printf ("%p", entry);
+          indicator_entry_to_variant (entry, id, indicator_id, b);
+          g_free (id);
+        }
+    }
+  else
+    {
+      /* Add a null entry to indicate that there is an indicator here, it's just empty */
+      indicator_entry_null_to_variant (indicator_id, b);
     }
   g_list_free (entries);
 }
@@ -695,9 +719,7 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-
-  g_debug ("%s: entry_id: %s, entry: %p, is_menu:%d", G_STRFUNC, entry_id, entry, entry ?GTK_IS_MENU (entry->menu):0);
-  
+ 
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;
@@ -720,10 +742,6 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
-
-      g_debug ("%s",
-               gtk_widget_get_visible (GTK_WIDGET (priv->last_menu)) ? "true"
-                                                                     : "false");
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }

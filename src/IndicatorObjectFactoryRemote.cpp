@@ -51,19 +51,30 @@ static void on_sync_ready_cb (GObject      *source,
                               GAsyncResult *res,
                               gpointer      data);
 
+static bool run_local_panel_service ();
+static bool reconnect_to_service (gpointer data);
+
 // Public Methods
 IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
 {
-  // We want to grab the Panel Service object. This is async, which is fine
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            S_NAME,
-                            S_PATH,
-                            S_IFACE,
-                            NULL,
-                            on_proxy_ready_cb,
-                            this);
+  if (g_getenv ("PANEL_USE_LOCAL_SERVICE"))
+  {
+    run_local_panel_service ();
+    g_timeout_add_seconds (1, (GSourceFunc)reconnect_to_service, this);
+  }
+  else
+  {
+    // We want to grab the Panel Service object. This is async, which is fine
+    g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                              G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                              NULL,
+                              S_NAME,
+                              S_PATH,
+                              S_IFACE,
+                              NULL,
+                              on_proxy_ready_cb,
+                              this);
+  }
 }
 
 IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
@@ -254,14 +265,16 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
           current_proxy->BeginSync ();
         }
 
-      current_proxy->AddEntry (entry_id,
-                               label,
-                               label_sensitive,
-                               label_visible,
-                               image_type,
-                               image_data,
-                               image_sensitive,
-                               image_visible);
+      /* NULL entries (id == "") are just padding */
+      if (g_strcmp0 (entry_id, "") != 0)
+        current_proxy->AddEntry (entry_id,
+                                 label,
+                                 label_sensitive,
+                                 label_visible,
+                                 image_type,
+                                 image_data,
+                                 image_sensitive,
+                                 image_visible);
     }
   if (current_proxy)
     current_proxy->EndSync ();
@@ -322,27 +335,36 @@ on_proxy_ready_cb (GObject      *source,
     else
     {
       force_tried = true;
-      GError *error = NULL;
-      
-      // Let's attempt to run it from where we expect it to be
-      char *cmd = g_strdup_printf ("%s/lib/unity/unity-panel-service", PREFIXDIR);
-      printf ("\nWARNING: Couldn't load panel from installed services, so trying to load panel from known location: %s\n", cmd);
+      run_local_panel_service ();
 
-      g_spawn_command_line_async (cmd, &error);
-      if (error)
-      {
-        printf ("\nWARNING: Unable to launch remote service manually: %s\n", error->message);
-        g_error_free (error);
-        return;
-      }
-
-      // This is obviously hackish, but this part of the code is mostly hackish...
       g_timeout_add_seconds (2, (GSourceFunc)reconnect_to_service, remote);
-      g_free (cmd);
     }
   }
 
   g_object_unref (proxy);
+}
+
+static bool
+run_local_panel_service ()
+{
+  GError *error = NULL;
+
+  // This is obviously hackish, but this part of the code is mostly hackish...
+  // Let's attempt to run it from where we expect it to be
+  char *cmd = g_strdup_printf ("%s/lib/unity/unity-panel-service", PREFIXDIR);
+  printf ("\nWARNING: Couldn't load panel from installed services, so trying to"
+          "load panel from known location: %s\n", cmd);
+
+  g_spawn_command_line_async (cmd, &error);
+  g_free (cmd);
+  
+  if (error)
+  {
+    printf ("\nWARNING: Unable to launch remote service manually: %s\n", error->message);
+    g_error_free (error);
+    return false;
+  }
+  return true;
 }
 
 static void
