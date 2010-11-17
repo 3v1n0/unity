@@ -431,6 +431,9 @@ load_indicators (PanelService *self)
       gchar           *path;
       GList           *entries, *entry;
 
+      if (!g_str_has_suffix (name, ".so"))
+        continue;
+
       path = g_build_filename (INDICATORDIR, name, NULL);
       g_debug ("Loading: %s", path);
 

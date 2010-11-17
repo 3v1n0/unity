@@ -18,26 +18,28 @@
  *
  */
 
+
 #include "config.h"
-#include <glib.h>
-#include <glib-object.h>
 
-void TestFavoriteStoreGSettingsCreateSuite (void);
-void TestPanelServiceCreateSuite (void);
+#include "panel-service.h"
 
-int
-main (int argc, char **argv)
+static void TestAllocation   (void);
+
+void
+TestPanelServiceCreateSuite ()
 {
-  g_setenv ("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
+#define _DOMAIN "/Unit/PanelService"
 
-  g_type_init ();
-  g_thread_init (NULL);
-  
-  g_test_init (&argc, &argv, NULL);
+  g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
+}
 
-  //Keep alphabetical please
-  TestFavoriteStoreGSettingsCreateSuite ();
-  TestPanelServiceCreateSuite ();
+static void
+TestAllocation ()
+{
+  PanelService *service;
 
-  return g_test_run ();
+  service = panel_service_get_default ();
+  g_assert (PANEL_IS_SERVICE (service));
+
+  g_object_unref (service);
 }
