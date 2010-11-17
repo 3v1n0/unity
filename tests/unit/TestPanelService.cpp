@@ -49,6 +49,8 @@ typedef struct _TestObjectClass   TestObjectClass;
 struct _TestObject
 {
   IndicatorObject parent;
+
+  GList *entries;
 };
 
 struct _TestObjectClass
@@ -58,21 +60,47 @@ struct _TestObjectClass
 
 GType             test_object_get_type (void) G_GNUC_CONST;
 
-IndicatorObject * test_object_new        ();
+IndicatorObject      * test_object_new       ();
+
+IndicatorObjectEntry * test_object_add_entry (TestObject  *self,
+                                              const gchar *label,
+                                              const gchar *icon_name);
+
+//--- .c
 
 G_DEFINE_TYPE (TestObject, test_object, INDICATOR_OBJECT_TYPE);
+
+void
+test_object_dispose (GObject *object)
+{
+  TestObject *self = TEST_OBJECT (object);
+
+  GList *e;
+  for (e = self->entries; e; e = e->next)
+    {
+      g_slice_free (IndicatorObjectEntry, e->data);
+    }
+  g_list_free (self->entries);
+  self->entries = NULL;
+
+  G_OBJECT_CLASS (test_object_parent_class)->dispose (object);
+}
 
 GList *
 test_object_get_entries (IndicatorObject *io)
 {
-  return NULL;
+  g_return_val_if_fail (TEST_IS_OBJECT (io), NULL);
+
+  return g_list_copy (TEST_OBJECT (io)->entries);
 }
 
 guint
 test_object_get_location (IndicatorObject      *io,
                           IndicatorObjectEntry *entry)
 {
-  return 0;
+  g_return_val_if_fail (TEST_IS_OBJECT (io), 0);
+
+  return g_list_index (TEST_OBJECT (io)->entries, entry);
 }
 
 void
@@ -86,7 +114,10 @@ test_object_entry_activate (IndicatorObject      *io,
 void
 test_object_class_init (TestObjectClass *klass)
 {
+  GObjectClass         *obj_class = G_OBJECT_CLASS (klass);
   IndicatorObjectClass *ind_class = INDICATOR_OBJECT_CLASS (klass);
+
+  obj_class->dispose = test_object_dispose;
 
   ind_class->get_entries    = test_object_get_entries;
   ind_class->get_location   = test_object_get_location;
@@ -103,6 +134,27 @@ IndicatorObject *
 test_object_new ()
 {
   return (IndicatorObject *)g_object_new (TEST_TYPE_OBJECT, NULL);
+}
+
+IndicatorObjectEntry *
+test_object_add_entry (TestObject  *self,
+                       const gchar *label,
+                       const gchar *icon_name)
+{
+  IndicatorObjectEntry *entry;
+  g_return_val_if_fail (TEST_IS_OBJECT (self), NULL);
+
+  entry = g_slice_new0 (IndicatorObjectEntry);
+  entry->label = (GtkLabel *)gtk_label_new (label);
+  entry->image = icon_name ? (GtkImage *)gtk_image_new_from_icon_name (icon_name,
+                                                                       GTK_ICON_SIZE_MENU) : NULL;
+  entry->menu = NULL;
+
+  self->entries = g_list_append (self->entries, entry);
+
+  g_signal_emit (self, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED_ID, 0, entry, TRUE);
+
+  return entry;
 }
 
 //----------------------- /TESTING INDICATOR STUFF ----------------------------
@@ -149,11 +201,48 @@ get_n_indicators_in_result (GVariant *result)
   return ret;
 }
 
+guint
+get_n_entries_in_result (GVariant *result)
+{
+  guint  ret = 0;
+  GVariantIter *iter;
+  gchar        *indicator_id;
+  gchar        *entry_id;
+  gchar        *label;
+  gboolean      label_sensitive;
+  gboolean      label_visible;
+  guint32       image_type;
+  gchar        *image_data;
+  gboolean      image_sensitive;
+  gboolean      image_visible;
+
+  g_variant_get (result, "(a(sssbbusbb))", &iter);
+  while (g_variant_iter_loop (iter, "(sssbbusbb)",
+                              &indicator_id,
+                              &entry_id,
+                              &label,
+                              &label_sensitive,
+                              &label_visible,
+                              &image_type,
+                              &image_data,
+                              &image_sensitive,
+                              &image_visible))
+    {
+      if (g_strcmp0 (entry_id, "") != 0)
+        ret++;
+    }
+
+  return ret;
+}
+
+
+
 //------------------------ /USEFUL FUNCTIONS ----------------------------------
 
-static void TestAllocation  (void);
-static void TestIndicatorLoading (void);
-static void TestEmptyObjectMessage (void);
+static void TestAllocation           (void);
+static void TestIndicatorLoading     (void);
+static void TestEmptyIndicatorObject (void);
+static void TestEntryAddition        (void);
 
 void
 TestPanelServiceCreateSuite ()
@@ -162,7 +251,8 @@ TestPanelServiceCreateSuite ()
 
   g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
   g_test_add_func (_DOMAIN"/IndicatorLoading", TestIndicatorLoading);
-  g_test_add_func (_DOMAIN"/EmptyObjectMessage", TestEmptyObjectMessage);
+  g_test_add_func (_DOMAIN"/EmptyIndicatorObject", TestEmptyIndicatorObject);
+  g_test_add_func (_DOMAIN"/EntryAddition", TestEntryAddition);
 }
 
 static void
@@ -199,7 +289,7 @@ TestIndicatorLoading ()
 }
 
 static void
-TestEmptyObjectMessage ()
+TestEmptyIndicatorObject ()
 {
   PanelService    *service;
   IndicatorObject *object;
@@ -223,4 +313,41 @@ TestEmptyObjectMessage ()
   g_variant_unref (result);
   g_list_free (objects);
   g_object_unref (object);
+  g_object_unref (service);
+}
+
+static void
+TestEntryAddition ()
+{
+  PanelService *service;
+  TestObject   *object;
+  GList        *objects = NULL;
+  GVariant     *result;
+  int           i;
+
+  object = (TestObject *)test_object_new ();
+  test_object_add_entry (object, "Hello", "gtk-apply");
+  g_assert (INDICATOR_IS_OBJECT (object));
+  objects = g_list_append (objects, object);
+
+  service = panel_service_get_default_with_indicators (objects);
+  g_assert (PANEL_IS_SERVICE (service));
+
+  result = panel_service_sync (service);
+  g_assert (result != NULL);
+  g_assert_cmpint (get_n_entries_in_result (result), ==, 1);
+
+  for (i = 2; i < 10; i++)
+    {
+      g_variant_unref (result);
+
+      test_object_add_entry (object, "Bye", "gtk-forward");
+      result = panel_service_sync (service);
+      g_assert_cmpint (get_n_entries_in_result (result), ==, i);
+    }
+
+  g_variant_unref (result);
+  g_list_free (objects);
+  g_object_unref (object);
+  g_object_unref (service);
 }

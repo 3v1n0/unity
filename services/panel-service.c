@@ -374,6 +374,7 @@ on_entry_added (IndicatorObject      *object,
   gchar *id;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (entry != NULL);
   priv = self->priv;
 
   id = g_strdup_printf ("%p", entry);
