@@ -41,6 +41,7 @@
 /* This is the options class header created for us automatically on build with BCOP */
 #include "unityshell_options.h"
 
+#include "Introspectable.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
@@ -54,7 +55,8 @@
  * instance per screen.
  */
 
-class UnityScreen :
+class UnityScreen : 
+	public Introspectable,
     public sigc::trackable,
     /* You should inherit the ScreenInterface class if you want to dynamically hook
      * screen-level core functions. */
@@ -157,6 +159,14 @@ class UnityScreen :
 	
 	bool
 	initPluginForScreen (CompPlugin *p);
+
+	protected:
+
+	const gchar* 
+	getName ();
+
+	void
+	addProperties (GVariantBuilder *builder);
 	
     private:
     

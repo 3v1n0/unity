@@ -21,11 +21,12 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include "Introspectable.h"
 
 class StateIntrospectionDBusInterface
 {
 public:
-	StateIntrospectionDBusInterface ();
+	StateIntrospectionDBusInterface  (Introspectable *introspectable);
 	~StateIntrospectionDBusInterface ();
 	
 	void
@@ -49,10 +50,14 @@ private:
     onNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
 
 	static GVariant*
+	getState (const char *piece);
+	
+	static GVariant*
 	buildFakeReturn ();
 
 	/* members */
-	guint               _owner_id;
+	guint						_owner_id;
+	static Introspectable      *_introspectable;
 };
 
 #endif

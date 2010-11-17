@@ -232,6 +232,18 @@ UnityScreen::initPluginForScreen (CompPlugin *p)
     return true;
 }
 
+void
+UnityScreen::addProperties (GVariantBuilder *builder)
+{
+	g_variant_builder_add (builder, "{sv}", "something", g_variant_new_string ("lol"));
+}
+
+const gchar*
+UnityScreen::getName ()
+{
+	return "Unity";
+}
+
 /* This gets called whenever the window needs to be repainted. WindowPaintAttrib gives you some
  * attributes like brightness/saturation etc to play around with. GLMatrix is the window's
  * transformation matrix. the unsigned int is the mask, have a look at opengl.h on what you can do
@@ -448,7 +460,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     wt->Run (NULL);
     uScreen = this;
 
-	debugger = new StateIntrospectionDBusInterface ();
+	debugger = new StateIntrospectionDBusInterface (this);
 	debugger->initStateIntrospection ();
 	
     PluginAdapter::Initialize (screen);

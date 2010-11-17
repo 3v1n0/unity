@@ -66,8 +66,9 @@ static const GDBusInterfaceInfo si_iface_info =
 	NULL,
 };
 
-StateIntrospectionDBusInterface::StateIntrospectionDBusInterface ()
-{
+StateIntrospectionDBusInterface::StateIntrospectionDBusInterface (Introspectable *introspectable)
+{	
+	_introspectable = introspectable;
 }
 
 StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
@@ -128,15 +129,25 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
                                                  gpointer data)
 {
     if (g_strcmp0 (methodName, "GetState") == 0) {
-		const gchar *input;		
+		GVariant *ret;
+		const gchar *input;
         g_variant_get (parameters, "(&s)", &input);
+		
+		ret = getState (input);
 		std::cout << "you input " << input << std::endl;
 		std::cout << "returning gvariant" << std::endl;
-        g_dbus_method_invocation_return_value (invocation, buildFakeReturn());
+        g_dbus_method_invocation_return_value (invocation, ret);
+		g_variant_unref (ret);
     } else {
         g_dbus_method_invocation_return_dbus_error (invocation, "org.canonical.Unity",
                                                     "EAT IT, BITCH");
     }
+}
+
+GVariant*
+StateIntrospectionDBusInterface::getState (const gchar *piece)
+{
+	return _introspectable->introspect ();
 }
 
 /* a very contrived example purely for giving QA something purposes */
