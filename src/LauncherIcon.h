@@ -33,8 +33,10 @@
 #include <libdbusmenu-glib/client.h>
 
 #include "Tooltip.h"
+#include "QuicklistView.h"
 
 class Launcher;
+class QuicklistView;
 
 typedef enum
 {
@@ -51,7 +53,7 @@ typedef enum
 class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
-    LauncherIcon(Launcher* IconManager);
+    LauncherIcon(Launcher* launcher);
     ~LauncherIcon();
 
     void         SetTooltipText (const TCHAR* text);
@@ -66,6 +68,11 @@ public:
 
     void RecvMouseEnter ();
     void RecvMouseLeave ();
+    void RecvMouseDown (int button);
+    void RecvMouseUp (int button);
+    
+    void RecvShowQuicklist (nux::BaseWindow *quicklist);
+    void RecvHideQuicklist (nux::BaseWindow *quicklist);
     
     void HideTooltip ();
     
@@ -121,20 +128,30 @@ protected:
     nux::NString m_TooltipText;
     //! the window this icon belong too.
     nux::BaseWindow* m_Window;
-    Launcher* m_IconManager;
+    Launcher* _launcher;
 
     nux::Vector4  _xform_screen_coord [4];
     nux::Vector4  _xform_icon_screen_coord [4];
     bool          _mouse_inside;
     float         _folding_angle;
 
-    nux::Tooltip* _tooltip;
+    nux::Tooltip *_tooltip;
+    QuicklistView *_quicklist;
+
+    static nux::Tooltip *_current_tooltip;
+    static QuicklistView *_current_quicklist;
 
 
     friend class Launcher;
     friend class LauncherController;
 
 private:
+  
+    static gboolean label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
+    static gboolean separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
+    
+    static void child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
+    static void root_changed (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
     static gboolean OnPresentTimeout (gpointer data);
 
     nux::Color ColorForIcon (GdkPixbuf *pixbuf);
@@ -148,6 +165,7 @@ private:
     int              _sort_priority;
     int              _related_windows;
     guint            _present_time_handle;
+    bool             _quicklist_is_initialized;
     
     LauncherIconType _icon_type;
     

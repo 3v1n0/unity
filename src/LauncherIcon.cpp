@@ -33,10 +33,13 @@
 
 #define DEFAULT_ICON "application-default-icon"
 
-LauncherIcon::LauncherIcon(Launcher* IconManager)
+nux::Tooltip *LauncherIcon::_current_tooltip = 0;
+QuicklistView *LauncherIcon::_current_quicklist = 0;
+
+LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _folding_angle = 0;
-  m_IconManager = IconManager;
+  _launcher = launcher;
   m_TooltipText = "blank";
 
   _show_time.tv_sec = 0;
@@ -67,8 +70,16 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
 
+  _quicklist = new QuicklistView ();
+  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
+  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
+  _quicklist_is_initialized = false;
+  
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  
 }
 
 LauncherIcon::~LauncherIcon()
@@ -206,22 +217,158 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  int icon_x = _xform_screen_coord[0].x;
+  if (_quicklist_is_initialized == false)
+  {
+    std::list<DbusmenuClient *> menus_list = Menus ();
+    std::list<DbusmenuClient *>::iterator it;
+    for (it = menus_list.begin (); it != menus_list.end (); it++)
+    {
+      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::root_changed), _quicklist);
+      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_DEFAULT, (&LauncherIcon::label_handler));
+      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_SEPARATOR, (&LauncherIcon::separator_handler));
+    }
+    
+    _quicklist_is_initialized = true;
+  }
+  
+  if (_launcher->GetActiveQuicklist ())
+  {
+    // A quicklist is active
+    return;
+  }
+  
+//   int icon_x = _xform_screen_coord[0].x;
+//   int icon_y = _xform_screen_coord[0].y;
+//   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+//   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+    //int icon_x = _xform_screen_coord[0].x;
   int icon_y = _xform_screen_coord[0].y;
-  int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+  //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
 
-  _tooltip->SetBaseX (icon_x + icon_w - 10);
-  _tooltip->SetBaseY (icon_y +
-                      23 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
-                      (icon_h / 2) -
-                      (_tooltip->GetBaseHeight () / 2));
-  _tooltip->ShowWindow (true);
+  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+  int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
+          icon_y +
+          (icon_h / 2);
+          
+  _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
+  
+  if (!_quicklist->IsVisible ())
+  {
+    _tooltip->ShowWindow (true);
+  }
 }
 
 void LauncherIcon::RecvMouseLeave ()
 {
   _tooltip->ShowWindow (false);
+}
+
+
+gboolean LauncherIcon::label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
+{
+  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  //printf ("label: %s\n", s);
+  
+  return true;
+}
+
+gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
+{
+  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  //printf ("separator: %s\n", s);
+
+  return true;
+}
+
+void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
+{
+  const gchar* label = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
+  
+  if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+  {
+    quicklist->AddMenuItem ("-----------------");
+  }
+  else
+  {
+    quicklist->AddMenuItem (label);
+  }
+    
+}
+
+void LauncherIcon::root_changed (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
+{
+  GList * child = NULL;
+  for (child = dbusmenu_menuitem_get_children(newroot); child != NULL; child = g_list_next(child))
+  {
+    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(child_realized), quicklist);    
+  }
+}
+
+void LauncherIcon::RecvMouseDown (int button)
+{
+  if (button == 3)
+  {
+    if (_launcher->GetActiveQuicklist () == _quicklist)
+    {
+      // this quicklist is already active
+      return;
+    }
+    
+    if (_launcher->GetActiveQuicklist ())
+    {
+      // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
+      // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
+      // So the new quicklist that is about to be set as active will keep the grab of the pointer.
+      // Also disable theinput window.
+      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
+      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
+      // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
+      // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
+      // and it set the active window to Null.
+      _launcher->GetActiveQuicklist ()->ShowWindow (false);
+    }
+    
+    _tooltip->ShowWindow (false);
+    
+    
+    //int icon_x = _xform_screen_coord[0].x;
+    int icon_y = _xform_screen_coord[0].y;
+    //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+    int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+    int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
+            icon_y +
+            (icon_h / 2);
+
+    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+    _quicklist->EnableInputWindow (true);
+    _quicklist->GrabPointer ();
+    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+    _quicklist->NeedRedraw ();
+  }
+}
+
+void LauncherIcon::RecvMouseUp (int button)
+{
+  if (button == 3)
+  {
+    if (_quicklist->IsVisible ())
+      _quicklist->CaptureMouseDownAnyWhereElse (true);
+  }
+}
+
+void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->SetActiveQuicklist (_quicklist);
+}
+
+void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->CancelActiveQuicklist (_quicklist);
 }
 
 void LauncherIcon::HideTooltip ()

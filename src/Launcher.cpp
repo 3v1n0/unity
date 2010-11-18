@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
+#include "QuicklistView.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -170,6 +171,8 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
 ,   _model (0)
 {
     _parent = parent;
+    _active_quicklist = 0;
+    
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
     OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
@@ -1891,3 +1894,21 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     }
 //     glEnd();
 }
+
+void Launcher::SetActiveQuicklist (QuicklistView *quicklist)
+{
+  // Assert: _active_quicklist should be 0
+  _active_quicklist = quicklist;
+}
+
+QuicklistView *Launcher::GetActiveQuicklist ()
+{
+  return _active_quicklist;
+}
+
+void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
+{
+  if (_active_quicklist == quicklist)
+    _active_quicklist = 0;
+}
+
