@@ -105,8 +105,6 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 	                                   &error);
     if (error != NULL) {
         std::cout << "Something went wrong " << error->message << std::endl;
-    } else {
-        std::cout << "NO ERROR" << std::endl;
     }
 }
 
@@ -136,8 +134,6 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
         g_variant_get (parameters, "(&s)", &input);
 		
 		ret = getState (input);
-		std::cout << "you input " << input << std::endl;
-		std::cout << "returning gvariant" << std::endl;
         g_dbus_method_invocation_return_value (invocation, ret);
 		g_variant_unref (ret);
     } else {

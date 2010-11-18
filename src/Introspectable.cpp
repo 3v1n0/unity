@@ -22,7 +22,8 @@
 GVariant*
 Introspectable::introspect ()
 {
-	GVariant        *result;
+	GVariant		*result;
+	GVariant        *childResults;
 	GVariantBuilder *builder;
 
 	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
@@ -31,7 +32,13 @@ Introspectable::introspect ()
 	}	
 	addProperties (builder);
 	
+	childResults = g_variant_new ("(a{sv})", builder);
+	g_variant_builder_unref (builder);
+
+	builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
+	g_variant_builder_add (builder, "{sv}", getName (), childResults);
 	result = g_variant_new ("(a{sv})", builder);
 	g_variant_builder_unref (builder);
+	
 	return result;
 }
