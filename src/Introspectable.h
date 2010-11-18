@@ -27,13 +27,15 @@ class Introspectable
 {
 public:
 	virtual GVariant* introspect ();
+	void addChild (Introspectable *child);
+	void removeChild (Introspectable *child);
 
 protected:
 	virtual const gchar* getName () = 0;
 	virtual void addProperties (GVariantBuilder *builder) = 0;
 
-protected:
-	std::list<Introspectable*> children;
+private:
+	std::list<Introspectable*> _children;
 };
 
 #endif

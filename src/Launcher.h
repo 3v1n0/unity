@@ -24,13 +24,14 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+#include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
 class LauncherModel;
 
-class Launcher : public nux::View
+class Launcher : public Introspectable, public nux::View
 {
 public:
     Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
@@ -64,6 +65,13 @@ public:
     virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+
+protected:
+	const gchar* 
+	getName ();
+
+	void
+	addProperties (GVariantBuilder *builder);
 
 private:
   typedef enum

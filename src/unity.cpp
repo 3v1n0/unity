@@ -499,6 +499,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->launcher = new Launcher(self->launcherWindow);
+  self->addChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();
 

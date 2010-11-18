@@ -46,7 +46,6 @@
 #include "LauncherController.h"
 #include "PanelView.h"
 #include "StateIntrospectionDBusInterface.h"
-
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 

@@ -1518,6 +1518,18 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 {
 }
 
+const gchar* 
+Launcher::getName ()
+{
+	return "Launcher";
+}
+
+void
+Launcher::addProperties (GVariantBuilder *builder)
+{
+	g_variant_builder_add (builder, "{sv}", "launcher something", g_variant_new_int32 (666));
+}
+
 void Launcher::EventLogic ()
 { 
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
