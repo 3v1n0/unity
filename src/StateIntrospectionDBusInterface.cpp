@@ -104,7 +104,7 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 	                                   NULL,
 	                                   &error);
     if (error != NULL) {
-        std::cout << "Something went wrong " << error->message << std::endl;
+        g_warning ("Could not register StateIntrospection object onto d-bus");
     }
 }
 
@@ -213,7 +213,6 @@ StateIntrospectionDBusInterface::buildFakeReturn ()
 	g_variant_builder_unref (builder);
 		
 	gchar *s = g_variant_print (result, TRUE);
-	std::cout << "returning: " << s << std::endl;
 	g_free (s);
 	return result;
 }
