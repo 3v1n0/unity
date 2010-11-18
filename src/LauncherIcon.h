@@ -33,8 +33,10 @@
 #include <libdbusmenu-glib/client.h>
 
 #include "Tooltip.h"
+#include "QuicklistView.h"
 
 class Launcher;
+class QuicklistView;
 
 typedef enum
 {
@@ -48,10 +50,10 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
-class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
-    LauncherIcon(Launcher* IconManager);
+    LauncherIcon(Launcher* launcher);
     ~LauncherIcon();
 
     void         SetTooltipText (const TCHAR* text);
@@ -62,9 +64,15 @@ public:
     bool Active  ();
     bool Running ();
     bool Urgent  ();
+    bool Presented ();
 
     void RecvMouseEnter ();
     void RecvMouseLeave ();
+    void RecvMouseDown (int button);
+    void RecvMouseUp (int button);
+    
+    void RecvShowQuicklist (nux::BaseWindow *quicklist);
+    void RecvHideQuicklist (nux::BaseWindow *quicklist);
     
     void HideTooltip ();
     
@@ -72,10 +80,12 @@ public:
     
     int RelatedWindows ();
     
-    struct timeval ShowTime ();
-    struct timeval HideTime ();
-    struct timeval RunningTime ();
-    struct timeval UrgentTime ();
+    struct timespec ShowTime ();
+    struct timespec HideTime ();
+    struct timespec RunningTime ();
+    struct timespec UrgentTime ();
+    struct timespec PresentTime ();
+    struct timespec UnpresentTime ();
     
     LauncherIconType Type ();
     
@@ -104,6 +114,9 @@ protected:
     void SetRelatedWindows (int windows);
     void Remove ();
     
+    void Present (int length);
+    void Unpresent ();
+    
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
@@ -115,20 +128,32 @@ protected:
     nux::NString m_TooltipText;
     //! the window this icon belong too.
     nux::BaseWindow* m_Window;
-    Launcher* m_IconManager;
+    Launcher* _launcher;
 
     nux::Vector4  _xform_screen_coord [4];
     nux::Vector4  _xform_icon_screen_coord [4];
     bool          _mouse_inside;
     float         _folding_angle;
 
-    nux::Tooltip* _tooltip;
+    nux::Tooltip *_tooltip;
+    QuicklistView *_quicklist;
+
+    static nux::Tooltip *_current_tooltip;
+    static QuicklistView *_current_quicklist;
 
 
     friend class Launcher;
     friend class LauncherController;
 
 private:
+  
+    static gboolean label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
+    static gboolean separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
+    
+    static void child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
+    static void root_changed (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
+    static gboolean OnPresentTimeout (gpointer data);
+
     nux::Color ColorForIcon (GdkPixbuf *pixbuf);
 
     nux::Color       _background_color;
@@ -136,13 +161,20 @@ private:
     bool             _active;
     bool             _running;
     bool             _urgent;
+    bool             _presented;
     int              _sort_priority;
     int              _related_windows;
+    guint            _present_time_handle;
+    bool             _quicklist_is_initialized;
+    
     LauncherIconType _icon_type;
-    struct timeval   _show_time;
-    struct timeval   _hide_time;
-    struct timeval   _running_time;
-    struct timeval   _urgent_time;
+    
+    struct timespec   _show_time;
+    struct timespec   _hide_time;
+    struct timespec   _running_time;
+    struct timespec   _urgent_time;
+    struct timespec   _present_time;
+    struct timespec   _unpresent_time;
 };
 
 #endif // LAUNCHERICON_H

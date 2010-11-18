@@ -170,7 +170,7 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                             base.height,
                             _texture2D->GetDeviceTexture(),
                             texxform,
-                            Color(1.0f, 1.0f, 1.0f, 1.0f));
+                            _textColor);
 
   gfxContext.GetRenderStates().SetBlend (false);
 
@@ -252,8 +252,7 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
-    UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextColorChanged.emit (*this);
   }
 }
 

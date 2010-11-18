@@ -53,6 +53,8 @@ struct _PanelServicePrivate
 };
 
 /* Globals */
+static gboolean suppress_signals = FALSE;
+
 enum
 {
   ENTRY_ACTIVATED = 0,
@@ -83,8 +85,11 @@ static gchar * indicator_order[] = {
 };
 
 /* Forwards */
-static void load_indicators (PanelService *self);
-static void sort_indicators (PanelService *self);
+static void load_indicator  (PanelService    *self,
+                             IndicatorObject *object,
+                             const gchar     *_name);
+static void load_indicators (PanelService    *self);
+static void sort_indicators (PanelService    *self);
 
 /*
  * GObject stuff
@@ -228,6 +233,13 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   return ret;
 }
 
+static gboolean
+initial_resync (PanelService *self)
+{
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
+  return FALSE;
+}
+
 static void
 panel_service_init (PanelService *self)
 {
@@ -240,8 +252,12 @@ panel_service_init (PanelService *self)
                                                g_free, NULL);
   priv->entry2indicator_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
 
+  suppress_signals = TRUE;
   load_indicators (self);
   sort_indicators (self);
+  suppress_signals = FALSE;
+
+  g_idle_add ((GSourceFunc)initial_resync, self);
 }
 
 PanelService *
@@ -249,12 +265,35 @@ panel_service_get_default ()
 {
   static PanelService *service = NULL;
   
-  if (service == NULL)
+  if (service == NULL || !PANEL_IS_SERVICE (service))
     service = g_object_new (PANEL_TYPE_SERVICE, NULL);
 
   return service;
 }
 
+PanelService *
+panel_service_get_default_with_indicators (GList *indicators)
+{
+  PanelService *service = panel_service_get_default ();
+  GList        *i;
+
+  for (i = indicators; i; i = i->next)
+    {
+      IndicatorObject *object = i->data;
+      if (INDICATOR_IS_OBJECT (object))
+          load_indicator (service, object, NULL);
+    }
+
+  return service;
+}
+guint
+panel_service_get_n_indicators (PanelService *self)
+{
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), 0);
+
+  return g_slist_length (self->priv->indicators);
+}
+     
 /*
  * Private Methods
  */
@@ -271,8 +310,9 @@ actually_notify_object (IndicatorObject *object)
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
   priv->timeouts[position] = SYNC_WAITING;
 
-  g_signal_emit (self, _service_signals[RE_SYNC],
-                 0, g_object_get_data (G_OBJECT (object), "id"));
+  if (!suppress_signals);
+    g_signal_emit (self, _service_signals[RE_SYNC],
+                   0, g_object_get_data (G_OBJECT (object), "id"));
 
   return FALSE;
 }
@@ -280,9 +320,12 @@ actually_notify_object (IndicatorObject *object)
 static void
 notify_object (IndicatorObject *object)
 {
-  PanelService *self;
+  PanelService        *self;
   PanelServicePrivate *priv;
-  gint position;
+  gint                 position;
+
+  if (suppress_signals)
+    return;
 
   self = panel_service_get_default ();
   priv = self->priv;
@@ -331,6 +374,7 @@ on_entry_added (IndicatorObject      *object,
   gchar *id;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (entry != NULL);
   priv = self->priv;
 
   id = g_strdup_printf ("%p", entry);
@@ -373,6 +417,8 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_changed), object);
 
     }
+
+  notify_object (object);
 }
 
 static void
@@ -380,13 +426,53 @@ on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
                   PanelService         *self)
 {
+  notify_object (object);
+}
 
+static void
+on_entry_moved (IndicatorObject      *object,
+                IndicatorObjectEntry *entry,
+                PanelService         *self)
+{
+  notify_object (object);
+}
+
+static void
+load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
+{
+  PanelServicePrivate *priv = self->priv;
+  gchar *name;
+  GList *entries, *entry;
+
+  if (_name != NULL)
+    name = g_strdup (_name);
+  else
+    name = g_strdup_printf ("%p", object);
+
+  priv->indicators = g_slist_append (priv->indicators, object);
+
+  g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
+  
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
+                    G_CALLBACK (on_entry_added), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
+                    G_CALLBACK (on_entry_removed), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
+                    G_CALLBACK (on_entry_moved), self);
+
+  entries = indicator_object_get_entries (object);
+  for (entry = entries; entry != NULL; entry = entry->next)
+    {
+      on_entry_added (object, entry->data, self);
+    }
+  g_list_free (entries);
+
+  g_free (name);
 }
 
 static void
 load_indicators (PanelService *self)
 {
-  PanelServicePrivate *priv = self->priv;
   GDir        *dir;
   const gchar *name;
 
@@ -402,7 +488,9 @@ load_indicators (PanelService *self)
     {
       IndicatorObject *object;
       gchar           *path;
-      GList           *entries, *entry;
+
+      if (!g_str_has_suffix (name, ".so"))
+        continue;
 
       path = g_build_filename (INDICATORDIR, name, NULL);
       g_debug ("Loading: %s", path);
@@ -414,25 +502,8 @@ load_indicators (PanelService *self)
           g_free (path);
           continue;
         }
+      load_indicator (self, object, name);
 
-      priv->indicators = g_slist_append (priv->indicators, object);
-
-      g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
-      
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
-                        G_CALLBACK (on_entry_added), self);
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
-                        G_CALLBACK (on_entry_removed), self);
-      /* FIXME
-      g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
-                        G_CALLBACK (on_entry_moved), service);*/
-
-      entries = indicator_object_get_entries (object);
-      for (entry = entries; entry != NULL; entry = entry->next)
-        {
-          on_entry_added (object, entry->data, self);
-        }
-      g_list_free (entries);
       g_free (path);
     }
 
@@ -568,17 +639,41 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
 }
 
 static void
+indicator_entry_null_to_variant (const gchar     *indicator_id,
+                                 GVariantBuilder *b)
+{
+  g_variant_builder_add (b, "(sssbbusbb)",
+                         indicator_id,
+                         "",
+                         "",
+                         FALSE,
+                         FALSE,
+                         (guint32) 0,
+                         "",
+                         FALSE,
+                         FALSE);
+}
+
+static void
 indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
 
   entries = indicator_object_get_entries (object);
-  for (e = entries; e; e = e->next)
+  if (entries)
     {
-      IndicatorObjectEntry *entry = e->data;
-      gchar *id = g_strdup_printf ("%p", entry);
-      indicator_entry_to_variant (entry, id, indicator_id, b);
-      g_free (id);
+      for (e = entries; e; e = e->next)
+        {
+          IndicatorObjectEntry *entry = e->data;
+          gchar *id = g_strdup_printf ("%p", entry);
+          indicator_entry_to_variant (entry, id, indicator_id, b);
+          g_free (id);
+        }
+    }
+  else
+    {
+      /* Add a null entry to indicate that there is an indicator here, it's just empty */
+      indicator_entry_null_to_variant (indicator_id, b);
     }
   g_list_free (entries);
 }
@@ -681,9 +776,7 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-
-  g_debug ("%s: entry_id: %s, entry: %p, is_menu:%d", G_STRFUNC, entry_id, entry, entry ?GTK_IS_MENU (entry->menu):0);
-  
+ 
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;
@@ -706,10 +799,6 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
-
-      g_debug ("%s",
-               gtk_widget_get_visible (GTK_WIDGET (priv->last_menu)) ? "true"
-                                                                     : "false");
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }

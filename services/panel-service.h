@@ -68,6 +68,10 @@ GType          panel_service_get_type      (void) G_GNUC_CONST;
 
 PanelService * panel_service_get_default   ();
 
+PanelService * panel_service_get_default_with_indicators (GList *indicators);
+
+guint          panel_service_get_n_indicators (PanelService *self);
+
 GVariant     * panel_service_sync          (PanelService *self);
 
 GVariant     * panel_service_sync_one      (PanelService *self,

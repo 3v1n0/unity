@@ -42,7 +42,7 @@
  * time to time as the vTable changes, so it is a good way of ensure plugins keep
  * current */
 
-COMPIZ_PLUGIN_20090315 (unity, UnityPluginVTable);
+COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
 /* This is the function that is called before the screen is 're-painted'. It is used for animation
  * and such because it gives you a time difference between when the last time the screen was repainted
@@ -188,9 +188,11 @@ void
 UnityScreen::handleEvent (XEvent *event)
 {
     screen->handleEvent (event);
-    
+
     if (screen->otherGrabExist ("deco", "move", NULL))
+    {
       wt->ProcessForeignEvent (event, NULL);
+    }
 }
 
 bool

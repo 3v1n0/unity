@@ -31,28 +31,36 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
-#define DEFAULT_ICON "empathy"
+#define DEFAULT_ICON "application-default-icon"
 
-LauncherIcon::LauncherIcon(Launcher* IconManager)
+nux::Tooltip *LauncherIcon::_current_tooltip = 0;
+QuicklistView *LauncherIcon::_current_quicklist = 0;
+
+LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _folding_angle = 0;
-  m_IconManager = IconManager;
+  _launcher = launcher;
   m_TooltipText = "blank";
 
   _show_time.tv_sec = 0;
   _hide_time.tv_sec = 0;
   _running_time.tv_sec = 0;
   _urgent_time.tv_sec = 0;
+  _present_time.tv_sec = 0;
+  _unpresent_time.tv_sec = 0;
 
-  _show_time.tv_usec = 0;
-  _hide_time.tv_usec = 0;
-  _running_time.tv_usec = 0;
-  _urgent_time.tv_usec = 0;
+  _show_time.tv_nsec = 0;
+  _hide_time.tv_nsec = 0;
+  _running_time.tv_nsec = 0;
+  _urgent_time.tv_nsec = 0;
+  _present_time.tv_nsec = 0;
+  _unpresent_time.tv_nsec = 0;
 
-  _active  = false;
-  _running = false;
-  _visible = false;
-  _urgent  = false;
+  _active    = false;
+  _running   = false;
+  _visible   = false;
+  _urgent    = false;
+  _presented = false;
   
   _related_windows = 0;
 
@@ -62,8 +70,16 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
 
+  _quicklist = new QuicklistView ();
+  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
+  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
+  _quicklist_is_initialized = false;
+  
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  
 }
 
 LauncherIcon::~LauncherIcon()
@@ -136,6 +152,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   GtkIconTheme *theme;
   GtkIconInfo *info;
   nux::BaseTexture *result;
+  GError *error = NULL;
   
   theme = gtk_icon_theme_get_default ();
       
@@ -162,12 +179,26 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        (GtkIconLookupFlags) 0);
   }
   
-  pbuf = gtk_icon_info_load_icon (info, NULL);
-  result = nux::CreateTextureFromPixbuf (pbuf);
+  pbuf = gtk_icon_info_load_icon (info, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    _background_color = ColorForIcon (pbuf);
   
-  _background_color = ColorForIcon (pbuf);
-  
-  g_object_unref (pbuf);
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' from icon theme: %s",
+               icon_name,
+               error ? error->message : "unknown");
+
+    if (g_strcmp0 (icon_name, "folder") == 0)
+      return NULL;
+    else
+      return TextureFromGtkTheme ("folder", size);
+  }
   
   return result;
 }
@@ -186,17 +217,47 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  int icon_x = _xform_screen_coord[0].x;
+  if (_quicklist_is_initialized == false)
+  {
+    std::list<DbusmenuClient *> menus_list = Menus ();
+    std::list<DbusmenuClient *>::iterator it;
+    for (it = menus_list.begin (); it != menus_list.end (); it++)
+    {
+      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::root_changed), _quicklist);
+      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_DEFAULT, (&LauncherIcon::label_handler));
+      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_SEPARATOR, (&LauncherIcon::separator_handler));
+    }
+    
+    _quicklist_is_initialized = true;
+  }
+  
+  if (_launcher->GetActiveQuicklist ())
+  {
+    // A quicklist is active
+    return;
+  }
+  
+//   int icon_x = _xform_screen_coord[0].x;
+//   int icon_y = _xform_screen_coord[0].y;
+//   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+//   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+    //int icon_x = _xform_screen_coord[0].x;
   int icon_y = _xform_screen_coord[0].y;
-  int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+  //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
 
-  _tooltip->SetBaseX (icon_x + icon_w - 10);
-  _tooltip->SetBaseY (icon_y +
-                      23 + // TODO: HARCODED, replace m_IconManager->GetBaseY ()
-                      (icon_h / 2) -
-                      (_tooltip->GetBaseHeight () / 2));
-  _tooltip->ShowWindow (true);
+  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+  int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
+          icon_y +
+          (icon_h / 2);
+          
+  _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
+  
+  if (!_quicklist->IsVisible ())
+  {
+    _tooltip->ShowWindow (true);
+  }
 }
 
 void LauncherIcon::RecvMouseLeave ()
@@ -204,29 +265,145 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
+
+gboolean LauncherIcon::label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
+{
+  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  //printf ("label: %s\n", s);
+  
+  return true;
+}
+
+gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
+{
+  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  //printf ("separator: %s\n", s);
+
+  return true;
+}
+
+void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
+{
+  const gchar* label = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
+  const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
+  
+  if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+  {
+    quicklist->AddMenuItem ("-----------------");
+  }
+  else
+  {
+    quicklist->AddMenuItem (label);
+  }
+    
+}
+
+void LauncherIcon::root_changed (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
+{
+  GList * child = NULL;
+  for (child = dbusmenu_menuitem_get_children(newroot); child != NULL; child = g_list_next(child))
+  {
+    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(child_realized), quicklist);    
+  }
+}
+
+void LauncherIcon::RecvMouseDown (int button)
+{
+  if (button == 3)
+  {
+    if (_launcher->GetActiveQuicklist () == _quicklist)
+    {
+      // this quicklist is already active
+      return;
+    }
+    
+    if (_launcher->GetActiveQuicklist ())
+    {
+      // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
+      // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
+      // So the new quicklist that is about to be set as active will keep the grab of the pointer.
+      // Also disable theinput window.
+      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
+      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
+      // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
+      // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
+      // and it set the active window to Null.
+      _launcher->GetActiveQuicklist ()->ShowWindow (false);
+    }
+    
+    _tooltip->ShowWindow (false);
+    
+    
+    //int icon_x = _xform_screen_coord[0].x;
+    int icon_y = _xform_screen_coord[0].y;
+    //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
+    int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
+
+    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+    int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
+            icon_y +
+            (icon_h / 2);
+
+    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+    _quicklist->EnableInputWindow (true);
+    _quicklist->GrabPointer ();
+    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+    _quicklist->NeedRedraw ();
+  }
+}
+
+void LauncherIcon::RecvMouseUp (int button)
+{
+  if (button == 3)
+  {
+    if (_quicklist->IsVisible ())
+      _quicklist->CaptureMouseDownAnyWhereElse (true);
+  }
+}
+
+void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->SetActiveQuicklist (_quicklist);
+}
+
+void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
+{
+  _launcher->CancelActiveQuicklist (_quicklist);
+}
+
 void LauncherIcon::HideTooltip ()
 {
   _tooltip->ShowWindow (false);
 }
 
-struct timeval LauncherIcon::ShowTime ()
+struct timespec LauncherIcon::ShowTime ()
 {
   return _show_time;
 }
 
-struct timeval LauncherIcon::HideTime ()
+struct timespec LauncherIcon::HideTime ()
 {
   return _hide_time;
 }
 
-struct timeval LauncherIcon::RunningTime ()
+struct timespec LauncherIcon::RunningTime ()
 {
   return _running_time;
 }
 
-struct timeval LauncherIcon::UrgentTime ()
+struct timespec LauncherIcon::UrgentTime ()
 {
   return _urgent_time;
+}
+
+struct timespec LauncherIcon::PresentTime ()
+{
+  return _present_time;
+}
+
+struct timespec LauncherIcon::UnpresentTime ()
+{
+  return _unpresent_time;
 }
 
 void
@@ -241,12 +418,13 @@ LauncherIcon::SetVisible (bool visible)
 
   if (visible)
   {
-    gettimeofday (&_show_time, NULL);
+    Present (1500);
+    clock_gettime (CLOCK_MONOTONIC, &_show_time);
     show.emit (this);
   }
   else
   {
-    gettimeofday (&_hide_time, NULL);
+    clock_gettime (CLOCK_MONOTONIC, &_hide_time);
     hide.emit (this);
   }
 }
@@ -261,17 +439,19 @@ LauncherIcon::SetActive (bool active)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRunning (bool running)
+void 
+LauncherIcon::SetRunning (bool running)
 {
   if (running == _running)
     return;
     
   _running = running;
-  gettimeofday (&_running_time, NULL);
+  clock_gettime (CLOCK_MONOTONIC, &_running_time);
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetUrgent (bool urgent)
+void 
+LauncherIcon::SetUrgent (bool urgent)
 {
   if (urgent == _urgent)
     return;
@@ -279,12 +459,56 @@ void LauncherIcon::SetUrgent (bool urgent)
   _urgent = urgent;
   
   if (urgent)
-      gettimeofday (&_urgent_time, NULL);
+  {
+      Present (1500);
+      clock_gettime (CLOCK_MONOTONIC, &_urgent_time);
+  }
   
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRelatedWindows (int windows)
+gboolean
+LauncherIcon::OnPresentTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon*) data;
+  if (!self->_presented)
+    return false;
+  
+  self->_present_time_handle = 0;
+  self->Unpresent ();
+  
+  return false;
+}
+
+void 
+LauncherIcon::Present (int length)
+{
+  if (_presented)
+    return;
+  
+  _presented = true;
+  
+  _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
+  clock_gettime (CLOCK_MONOTONIC, &_present_time);
+  needs_redraw.emit (this);
+}
+
+void
+LauncherIcon::Unpresent ()
+{
+  if (!_presented)
+    return;
+  
+  if (_present_time_handle > 0)
+    g_source_remove (_present_time_handle);
+  
+  _presented = false;
+  clock_gettime (CLOCK_MONOTONIC, &_unpresent_time);
+  needs_redraw.emit (this);
+}
+
+void 
+LauncherIcon::SetRelatedWindows (int windows)
 {
   if (_related_windows == windows)
     return;
@@ -293,7 +517,8 @@ void LauncherIcon::SetRelatedWindows (int windows)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::Remove ()
+void 
+LauncherIcon::Remove ()
 {
   SetVisible (false);
   remove.emit (this);
@@ -347,6 +572,12 @@ LauncherIcon::Urgent ()
   return _urgent;
 }
 
+bool
+LauncherIcon::Presented ()
+{
+  return _presented;
+}
+
 int
 LauncherIcon::RelatedWindows ()
 {
@@ -361,5 +592,6 @@ std::list<DbusmenuClient *> LauncherIcon::Menus ()
 std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
 {
   std::list<DbusmenuClient *> result;
+
   return result;
 }

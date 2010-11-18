@@ -9,7 +9,7 @@ subdirs (libunity services tests)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 1)
-set (UNITY_MICRO 3)
+set (UNITY_MICRO 4)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -52,7 +52,7 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 # Data
 #
 file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-install (FILES ${_datafiles} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/${UNITY_MAJOR}/)
+install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
 #
 # i18n
@@ -74,7 +74,7 @@ endif (${GETTEXT_FOUND} STREQUAL "TRUE")
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9 libbamf dbus-glib-1 dee-1.0 gio-2.0 gio-unix-2.0 dbusmenu-glib")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
