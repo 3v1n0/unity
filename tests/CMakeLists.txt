@@ -20,11 +20,22 @@ include_directories (. .. ../src ${CMAKE_BINARY_DIR})
 # from ../../src in alphabetically after that
 add_executable (test-unit
                 unit/TestFavoriteStoreGSettings.cpp
+                unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 ../src/FavoriteStore.cpp
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
+                ../src/QuicklistMenuItem.cpp
+                ../src/QuicklistMenuItem.h
+                ../src/QuicklistMenuItemCheckmark.cpp
+                ../src/QuicklistMenuItemCheckmark.h
+                ../src/QuicklistMenuItemLabel.cpp
+                ../src/QuicklistMenuItemLabel.h
+                ../src/QuicklistMenuItemRadio.cpp
+                ../src/QuicklistMenuItemRadio.h
+                ../src/QuicklistMenuItemSeparator.cpp
+                ../src/QuicklistMenuItemSeparator.h
                 )
 
 add_executable (test-panel

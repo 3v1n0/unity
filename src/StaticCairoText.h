@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
- * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
 #ifndef STATICCAIROTEXT_H

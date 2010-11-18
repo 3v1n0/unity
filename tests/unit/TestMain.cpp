@@ -23,6 +23,7 @@
 #include <glib-object.h>
 
 void TestFavoriteStoreGSettingsCreateSuite (void);
+void TestQuicklistMenuitemsCreateSuite (void);
 
 int
 main (int argc, char **argv)
@@ -36,6 +37,7 @@ main (int argc, char **argv)
 
   //Keep alphabetical please
   TestFavoriteStoreGSettingsCreateSuite ();
+  TestQuicklistMenuitemsCreateSuite ();
 
   return g_test_run ();
 }
