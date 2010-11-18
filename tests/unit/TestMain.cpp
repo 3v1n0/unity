@@ -24,6 +24,7 @@
 
 void TestFavoriteStoreGSettingsCreateSuite (void);
 void TestPanelServiceCreateSuite (void);
+void TestQuicklistMenuitemsCreateSuite (void);
 
 int
 main (int argc, char **argv)
@@ -38,6 +39,7 @@ main (int argc, char **argv)
   //Keep alphabetical please
   TestFavoriteStoreGSettingsCreateSuite ();
   TestPanelServiceCreateSuite ();
+  TestQuicklistMenuitemsCreateSuite ();
 
   return g_test_run ();
 }

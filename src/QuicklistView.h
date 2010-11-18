@@ -50,6 +50,7 @@
 class VLayout;
 class HLayout;
 class SpaceLayout;
+class QuicklistMenuItem;
 
 class QuicklistView : public nux::BaseWindow
 {
@@ -77,6 +78,11 @@ public:
 
   void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
   virtual void ShowWindow (bool b, bool StartModal = false);
+  
+  int GetNumItems ();
+  QuicklistMenuItem* GetNthItems (int index);
+  QuicklistMenuItem* GetNthType  (int index);
+  std::list<QuicklistMenuItem*> GetChildren ();
   
 private:
   void RecvCairoTextChanged (nux::StaticCairoText& cairo_text);
@@ -109,7 +115,6 @@ private:
 
   cairo_font_options_t* _fontOpts;
 
-  nux::StaticCairoText* _tooltip_text;
   nux::BaseTexture*     _texture_bg;
   nux::BaseTexture*     _texture_mask;
   nux::BaseTexture*     _texture_outline;

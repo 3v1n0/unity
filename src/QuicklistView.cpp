@@ -29,6 +29,7 @@
 #include "NuxImage/CairoGraphics.h"
 
 #include "QuicklistView.h"
+#include "QuicklistMenuItem.h"
 
 
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
@@ -442,6 +443,28 @@ void QuicklistView::RenderQuicklistView ()
 {
   
 }
+
+int QuicklistView::GetNumItems ()
+{
+  return _item_list.size () + _default_item_list.size ();
+}
+
+QuicklistMenuItem* QuicklistView::GetNthItems (int index)
+{
+  return 0;
+}
+
+QuicklistMenuItem* QuicklistView::GetNthType  (int index)
+{
+  return 0;
+}
+
+std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
+{
+  std::list<QuicklistMenuItem*> l;
+  return l;
+}
+
   
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
