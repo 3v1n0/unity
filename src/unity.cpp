@@ -235,7 +235,6 @@ UnityScreen::initPluginForScreen (CompPlugin *p)
 void
 UnityScreen::addProperties (GVariantBuilder *builder)
 {
-	g_variant_builder_add (builder, "{sv}", "something", g_variant_new_string ("lol"));
 }
 
 const gchar*
