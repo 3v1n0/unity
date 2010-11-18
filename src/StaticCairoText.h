@@ -99,6 +99,7 @@ namespace nux
       void GetTextExtents (int &width, int &height);
 
       sigc::signal<void, StaticCairoText&> sigTextChanged;
+      sigc::signal<void, StaticCairoText&> sigTextColorChanged;
 
     protected:
 	  
