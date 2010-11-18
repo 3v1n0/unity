@@ -29,6 +29,9 @@
 #include <pango/pangocairo.h>
 
 
+void
+GetDPI (int &dpi_x, int &dpi_y);
+
 typedef enum
 {
   FONTSTYLE_NORMAL  = PANGO_STYLE_NORMAL,
@@ -42,6 +45,7 @@ typedef enum
   FONTWEIGHT_NORMAL = PANGO_WEIGHT_NORMAL,
   FONTWEIGHT_BOLD   = PANGO_WEIGHT_BOLD,
 } FontWeight;
+
 
 class QuicklistMenuItem : public nux::View
 {
@@ -95,7 +99,6 @@ class QuicklistMenuItem : public nux::View
     nux::Color        _color;
     bool              _debug;
 
-    void DrawText ();
 
     void GetExtents ();
 

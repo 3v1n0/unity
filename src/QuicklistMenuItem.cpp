@@ -19,6 +19,44 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItem.h"
 
+#if defined(NUX_OS_LINUX)
+#include <X11/Xlib.h>
+#endif
+
+void
+GetDPI (int &dpi_x, int &dpi_y)
+{
+#if defined(NUX_OS_LINUX)
+  Display* display     = NULL;
+  int      screen      = 0;
+  double   dpyWidth    = 0.0;
+  double   dpyHeight   = 0.0;
+  double   dpyWidthMM  = 0.0;
+  double   dpyHeightMM = 0.0;
+  double   dpiX        = 0.0;
+  double   dpiY        = 0.0;
+
+  display = XOpenDisplay (NULL);
+  screen = DefaultScreen (display);
+
+  dpyWidth    = (double) DisplayWidth (display, screen);
+  dpyHeight   = (double) DisplayHeight (display, screen);
+  dpyWidthMM  = (double) DisplayWidthMM (display, screen);
+  dpyHeightMM = (double) DisplayHeightMM (display, screen);
+
+  dpiX = dpyWidth * 25.4 / dpyWidthMM;
+  dpiY = dpyHeight * 25.4 / dpyHeightMM;
+
+  dpi_x = (int) (dpiX + 0.5);
+  dpi_y = (int) (dpiY + 0.5);
+
+  XCloseDisplay (display);
+#elif defined(NUX_OS_WINDOWS)
+  dpi_x = 72;
+  dpi_y = 72;
+#endif
+}
+
 static void
 OnPropertyChanged (gchar*             property,
                    GValue*            value,
@@ -133,11 +171,6 @@ QuicklistMenuItem::SetColor (nux::Color color)
     //UpdateTextures ();
     //sigColorChanged.emit (*this);
   }
-}
-
-void
-QuicklistMenuItem::DrawText ()
-{
 }
 
 void

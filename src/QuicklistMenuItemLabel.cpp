@@ -42,7 +42,7 @@ QuicklistMenuItem (item,
 
   SetMinimumSize (1, 1);
   // make sure _dpiX and _dpiY are initialized correctly
-  GetDPI ();
+  GetDPI (_dpiX, _dpiY);
 }
 
 QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
@@ -206,6 +206,48 @@ void QuicklistMenuItemLabel::GetTextExtents (const TCHAR* font,
   g_object_unref (layout);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
+}
+
+void QuicklistMenuItemLabel::DrawText (cairo_t*   cr,
+                                int        width,
+                                int        height,
+                                nux::Color color)
+{
+  int                   textWidth  = 0;
+  int                   textHeight = 0;
+  PangoLayout*          layout     = NULL;
+  PangoFontDescription* desc       = NULL;
+  PangoContext*         pangoCtx   = NULL;
+
+  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
+
+  cairo_set_font_options (cr, _fontOpts);
+  layout = pango_cairo_create_layout (cr);
+  //desc = pango_font_description_from_string ((char*) FONT_FACE);
+  desc = pango_font_description_from_string (str.GetTCharPtr ());
+  pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
+  pango_layout_set_font_description (layout, desc);
+  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
+  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
+  pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  cairo_paint (cr);
+  cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+
+  pango_layout_context_changed (layout);
+
+  cairo_move_to (cr, 0.0f, 0.0f);
+  pango_cairo_show_layout (cr, layout);
+
+  // clean up
+  pango_font_description_free (desc);
+  g_object_unref (layout);
 }
 
 void

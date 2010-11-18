@@ -21,8 +21,9 @@
 
 #include "Nux/Nux.h"
 #include "Nux/View.h"
-#include "QuicklistMenuItem.h"
 #include "NuxImage/CairoGraphics.h"
+
+#include "QuicklistMenuItem.h"
 
 #if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
@@ -91,8 +92,6 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
 
     int _pre_layout_width;
     int _pre_layout_height;
-
-    void GetDPI ();
 
     void GetTextExtents (const TCHAR* font, int &width, int &height);
     void DrawText (cairo_t*   cr, int width, int height, nux::Color color);
