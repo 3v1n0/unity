@@ -188,9 +188,11 @@ void
 UnityScreen::handleEvent (XEvent *event)
 {
     screen->handleEvent (event);
-    
+
     if (screen->otherGrabExist ("deco", "move", NULL))
+    {
       wt->ProcessForeignEvent (event, NULL);
+    }
 }
 
 bool

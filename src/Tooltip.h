@@ -73,6 +73,7 @@ namespace nux
 
     void SetText (NString text);
 
+    void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
   private:
     void RecvCairoTextChanged (StaticCairoText& cairo_text);
 
@@ -94,6 +95,7 @@ namespace nux
     nux::NString          _labelText;
     int                   _dpiX;
     int                   _dpiY;
+    int                   _top_size; // size of the segment from point 13 to 14. See figure in _compute_full_mask_path.
 
     cairo_font_options_t* _fontOpts;
 
