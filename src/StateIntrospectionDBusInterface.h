@@ -57,7 +57,6 @@ private:
 
 	/* members */
 	guint						_owner_id;
-	static Introspectable      *_introspectable;
 };
 
 #endif

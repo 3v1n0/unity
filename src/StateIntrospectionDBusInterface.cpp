@@ -66,6 +66,8 @@ static const GDBusInterfaceInfo si_iface_info =
 	NULL,
 };
 
+static Introspectable      *_introspectable;
+
 StateIntrospectionDBusInterface::StateIntrospectionDBusInterface (Introspectable *introspectable)
 {	
 	_introspectable = introspectable;
