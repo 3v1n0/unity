@@ -2,7 +2,8 @@
 # Unit tests
 #
 find_package (PkgConfig)
-pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${UNITY_PLUGIN_DEPS} indicator)
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator")
+pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
