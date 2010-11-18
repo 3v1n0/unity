@@ -1,3 +1,12 @@
+unity (3.1.3-0ubuntu3) UNRELEASED; urgency=low
+
+  * Backport some upstream fixes:
+    - The top half of icons in the launcher is white (LP: #675082)
+  * debian/watch:
+    - look for upstream bz2 file now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 18 Nov 2010 17:50:20 +0100
+
 unity (3.1.3-0ubuntu2) natty; urgency=low
 
   * don't build the place bindings right now as it doesn't build in a chroot

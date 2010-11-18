@@ -31,7 +31,7 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
-#define DEFAULT_ICON "empathy"
+#define DEFAULT_ICON "application-default-icon"
 
 LauncherIcon::LauncherIcon(Launcher* IconManager)
 {
@@ -43,16 +43,21 @@ LauncherIcon::LauncherIcon(Launcher* IconManager)
   _hide_time.tv_sec = 0;
   _running_time.tv_sec = 0;
   _urgent_time.tv_sec = 0;
+  _present_time.tv_sec = 0;
+  _unpresent_time.tv_sec = 0;
 
-  _show_time.tv_usec = 0;
-  _hide_time.tv_usec = 0;
-  _running_time.tv_usec = 0;
-  _urgent_time.tv_usec = 0;
+  _show_time.tv_nsec = 0;
+  _hide_time.tv_nsec = 0;
+  _running_time.tv_nsec = 0;
+  _urgent_time.tv_nsec = 0;
+  _present_time.tv_nsec = 0;
+  _unpresent_time.tv_nsec = 0;
 
-  _active  = false;
-  _running = false;
-  _visible = false;
-  _urgent  = false;
+  _active    = false;
+  _running   = false;
+  _visible   = false;
+  _urgent    = false;
+  _presented = false;
   
   _related_windows = 0;
 
@@ -136,6 +141,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   GtkIconTheme *theme;
   GtkIconInfo *info;
   nux::BaseTexture *result;
+  GError *error = NULL;
   
   theme = gtk_icon_theme_get_default ();
       
@@ -162,12 +168,26 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        (GtkIconLookupFlags) 0);
   }
   
-  pbuf = gtk_icon_info_load_icon (info, NULL);
-  result = nux::CreateTextureFromPixbuf (pbuf);
+  pbuf = gtk_icon_info_load_icon (info, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    _background_color = ColorForIcon (pbuf);
   
-  _background_color = ColorForIcon (pbuf);
-  
-  g_object_unref (pbuf);
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' from icon theme: %s",
+               icon_name,
+               error ? error->message : "unknown");
+
+    if (g_strcmp0 (icon_name, "folder") == 0)
+      return NULL;
+    else
+      return TextureFromGtkTheme ("folder", size);
+  }
   
   return result;
 }
@@ -209,24 +229,34 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
-struct timeval LauncherIcon::ShowTime ()
+struct timespec LauncherIcon::ShowTime ()
 {
   return _show_time;
 }
 
-struct timeval LauncherIcon::HideTime ()
+struct timespec LauncherIcon::HideTime ()
 {
   return _hide_time;
 }
 
-struct timeval LauncherIcon::RunningTime ()
+struct timespec LauncherIcon::RunningTime ()
 {
   return _running_time;
 }
 
-struct timeval LauncherIcon::UrgentTime ()
+struct timespec LauncherIcon::UrgentTime ()
 {
   return _urgent_time;
+}
+
+struct timespec LauncherIcon::PresentTime ()
+{
+  return _present_time;
+}
+
+struct timespec LauncherIcon::UnpresentTime ()
+{
+  return _unpresent_time;
 }
 
 void
@@ -241,12 +271,13 @@ LauncherIcon::SetVisible (bool visible)
 
   if (visible)
   {
-    gettimeofday (&_show_time, NULL);
+    Present (1500);
+    clock_gettime (CLOCK_MONOTONIC, &_show_time);
     show.emit (this);
   }
   else
   {
-    gettimeofday (&_hide_time, NULL);
+    clock_gettime (CLOCK_MONOTONIC, &_hide_time);
     hide.emit (this);
   }
 }
@@ -261,17 +292,19 @@ LauncherIcon::SetActive (bool active)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRunning (bool running)
+void 
+LauncherIcon::SetRunning (bool running)
 {
   if (running == _running)
     return;
     
   _running = running;
-  gettimeofday (&_running_time, NULL);
+  clock_gettime (CLOCK_MONOTONIC, &_running_time);
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetUrgent (bool urgent)
+void 
+LauncherIcon::SetUrgent (bool urgent)
 {
   if (urgent == _urgent)
     return;
@@ -279,12 +312,56 @@ void LauncherIcon::SetUrgent (bool urgent)
   _urgent = urgent;
   
   if (urgent)
-      gettimeofday (&_urgent_time, NULL);
+  {
+      Present (1500);
+      clock_gettime (CLOCK_MONOTONIC, &_urgent_time);
+  }
   
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::SetRelatedWindows (int windows)
+gboolean
+LauncherIcon::OnPresentTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon*) data;
+  if (!self->_presented)
+    return false;
+  
+  self->_present_time_handle = 0;
+  self->Unpresent ();
+  
+  return false;
+}
+
+void 
+LauncherIcon::Present (int length)
+{
+  if (_presented)
+    return;
+  
+  _presented = true;
+  
+  _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
+  clock_gettime (CLOCK_MONOTONIC, &_present_time);
+  needs_redraw.emit (this);
+}
+
+void
+LauncherIcon::Unpresent ()
+{
+  if (!_presented)
+    return;
+  
+  if (_present_time_handle > 0)
+    g_source_remove (_present_time_handle);
+  
+  _presented = false;
+  clock_gettime (CLOCK_MONOTONIC, &_unpresent_time);
+  needs_redraw.emit (this);
+}
+
+void 
+LauncherIcon::SetRelatedWindows (int windows)
 {
   if (_related_windows == windows)
     return;
@@ -293,7 +370,8 @@ void LauncherIcon::SetRelatedWindows (int windows)
   needs_redraw.emit (this);
 }
 
-void LauncherIcon::Remove ()
+void 
+LauncherIcon::Remove ()
 {
   SetVisible (false);
   remove.emit (this);
@@ -347,6 +425,12 @@ LauncherIcon::Urgent ()
   return _urgent;
 }
 
+bool
+LauncherIcon::Presented ()
+{
+  return _presented;
+}
+
 int
 LauncherIcon::RelatedWindows ()
 {
@@ -361,5 +445,6 @@ std::list<DbusmenuClient *> LauncherIcon::Menus ()
 std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
 {
   std::list<DbusmenuClient *> result;
+
   return result;
 }

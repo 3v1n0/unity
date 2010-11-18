@@ -48,7 +48,7 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
-class LauncherIcon: public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
     LauncherIcon(Launcher* IconManager);
@@ -62,6 +62,7 @@ public:
     bool Active  ();
     bool Running ();
     bool Urgent  ();
+    bool Presented ();
 
     void RecvMouseEnter ();
     void RecvMouseLeave ();
@@ -72,10 +73,12 @@ public:
     
     int RelatedWindows ();
     
-    struct timeval ShowTime ();
-    struct timeval HideTime ();
-    struct timeval RunningTime ();
-    struct timeval UrgentTime ();
+    struct timespec ShowTime ();
+    struct timespec HideTime ();
+    struct timespec RunningTime ();
+    struct timespec UrgentTime ();
+    struct timespec PresentTime ();
+    struct timespec UnpresentTime ();
     
     LauncherIconType Type ();
     
@@ -104,6 +107,9 @@ protected:
     void SetRelatedWindows (int windows);
     void Remove ();
     
+    void Present (int length);
+    void Unpresent ();
+    
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
@@ -129,6 +135,8 @@ protected:
     friend class LauncherController;
 
 private:
+    static gboolean OnPresentTimeout (gpointer data);
+
     nux::Color ColorForIcon (GdkPixbuf *pixbuf);
 
     nux::Color       _background_color;
@@ -136,13 +144,19 @@ private:
     bool             _active;
     bool             _running;
     bool             _urgent;
+    bool             _presented;
     int              _sort_priority;
     int              _related_windows;
+    guint            _present_time_handle;
+    
     LauncherIconType _icon_type;
-    struct timeval   _show_time;
-    struct timeval   _hide_time;
-    struct timeval   _running_time;
-    struct timeval   _urgent_time;
+    
+    struct timespec   _show_time;
+    struct timespec   _hide_time;
+    struct timespec   _running_time;
+    struct timespec   _urgent_time;
+    struct timespec   _present_time;
+    struct timespec   _unpresent_time;
 };
 
 #endif // LAUNCHERICON_H
