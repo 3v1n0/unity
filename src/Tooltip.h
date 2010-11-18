@@ -75,7 +75,7 @@ namespace nux
 
     void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
   private:
-    void RecvCairoTextChanged (StaticCairoText& cairo_text);
+    void RecvCairoTextChanged (StaticCairoText* cairo_text);
 
     void PreLayoutManagement ();
 

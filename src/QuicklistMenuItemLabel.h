@@ -22,6 +22,7 @@
 #include "Nux/Nux.h"
 #include "Nux/View.h"
 #include "QuicklistMenuItem.h"
+#include "NuxImage/CairoGraphics.h"
 
 #if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
@@ -56,13 +57,52 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
+        // public API
+    void SetText (nux::NString text);
+
+    void SetFontName (nux::NString fontName);
+
+    void SetFontSize (float fontSize);
+
+    void SetFontWeight (FontWeight fontWeight);
+
+    void SetFontStyle (FontStyle fontStyle);
+
+    void SetTextColor (nux::Color textColor);
+
+    void GetTextExtents (int &width, int &height);
+
+    sigc::signal<void, QuicklistMenuItemLabel*> sigTextChanged;
+    sigc::signal<void, QuicklistMenuItemLabel*> sigTextColorChanged;
+    
   private:
+    nux::NString          _text;
+    nux::NString          _fontName;
+    float            _fontSize;
+    FontStyle       _fontStyle;
+    FontWeight      _fontWeight;
+    nux::Color            _textColor;
+
+    nux::CairoGraphics*   _cairoGraphics;
+    nux::BaseTexture*     _texture2D;
+    int                   _dpiX;
+    int                   _dpiY;
+    cairo_font_options_t* _fontOpts;
+
+    int _pre_layout_width;
+    int _pre_layout_height;
+
+    void GetDPI ();
+
+    void GetTextExtents (const TCHAR* font, int &width, int &height);
+    void DrawText (cairo_t*   cr, int width, int height, nux::Color color);
+        
+    ////
     nux::BaseTexture* _normalTexture;
     nux::BaseTexture* _prelightTexture;
 
     void DrawText ();
-    void GetExtents ();
-    void UpdateTextures ();
+    virtual void UpdateTexture ();
     void DrawRoundedRectangle ();
 };
 

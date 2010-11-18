@@ -62,6 +62,7 @@ QuicklistMenuItem::~QuicklistMenuItem ()
 void
 QuicklistMenuItem::PreLayoutManagement ()
 {
+  View::PreLayoutManagement ();
 }
 
 long
@@ -144,14 +145,14 @@ QuicklistMenuItem::GetExtents ()
 {
 }
 
-void
-QuicklistMenuItem::UpdateTextures ()
-{
-  if (_debug)
-    sigChanged.emit (*this);
-
-  std::cout << "UpdateTextures() called" << std::endl;
-}
+// void
+// QuicklistMenuItem::UpdateTextures ()
+// {
+//   if (_debug)
+//     sigChanged.emit (*this);
+// 
+//   std::cout << "UpdateTextures() called" << std::endl;
+// }
 
 void
 QuicklistMenuItem::ItemActivated ()
@@ -167,12 +168,17 @@ QuicklistMenuItem::DrawRoundedRectangle ()
 {
 }
 
+void QuicklistMenuItem::UpdateTexture ()
+{
+  
+}
+
 static void
 OnPropertyChanged (gchar*             property,
                    GValue*            value,
                    QuicklistMenuItem* self)
 {
-  self->UpdateTextures ();
+  self->UpdateTexture ();
 }
 
 static void

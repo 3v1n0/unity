@@ -308,12 +308,12 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   return result;
 }
 
-void QuicklistView::RecvCairoTextChanged (nux::StaticCairoText& cairo_text)
+void QuicklistView::RecvCairoTextChanged (nux::StaticCairoText* cairo_text)
 {
   _cairo_text_has_changed = true;
 }
 
-void QuicklistView::RecvCairoTextColorChanged (nux::StaticCairoText& cairo_text)
+void QuicklistView::RecvCairoTextColorChanged (nux::StaticCairoText* cairo_text)
 {
   NeedRedraw ();
 }

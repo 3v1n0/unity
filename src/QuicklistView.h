@@ -85,8 +85,8 @@ public:
   std::list<QuicklistMenuItem*> GetChildren ();
   
 private:
-  void RecvCairoTextChanged (nux::StaticCairoText& cairo_text);
-  void RecvCairoTextColorChanged (nux::StaticCairoText& cairo_text);
+  void RecvCairoTextChanged (nux::StaticCairoText* cairo_text);
+  void RecvCairoTextColorChanged (nux::StaticCairoText* cairo_text);
   
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);

@@ -211,7 +211,7 @@ namespace nux
     return result;
   }
 
-  void Tooltip::RecvCairoTextChanged (StaticCairoText& cairo_text)
+  void Tooltip::RecvCairoTextChanged (StaticCairoText* cairo_text)
   {
     _cairo_text_has_changed = true;
   }

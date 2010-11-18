@@ -25,9 +25,23 @@
 #include "Nux/Nux.h"
 #include "Nux/View.h"
 
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
+#include <pango/pango.h>
+#include <pango/pangocairo.h>
+
+
+typedef enum
+{
+  FONTSTYLE_NORMAL  = PANGO_STYLE_NORMAL,
+  FONTSTYLE_OBLIQUE = PANGO_STYLE_OBLIQUE,
+  FONTSTYLE_ITALIC  = PANGO_STYLE_ITALIC,
+}  FontStyle;
+
+typedef enum
+{
+  FONTWEIGHT_LIGHT  = PANGO_WEIGHT_LIGHT,
+  FONTWEIGHT_NORMAL = PANGO_WEIGHT_NORMAL,
+  FONTWEIGHT_BOLD   = PANGO_WEIGHT_BOLD,
+} FontWeight;
 
 class QuicklistMenuItem : public nux::View
 {
@@ -69,11 +83,11 @@ class QuicklistMenuItem : public nux::View
 
     sigc::signal<void, QuicklistMenuItem&> sigChanged;
 
-    void UpdateTextures ();
-
+    virtual void UpdateTexture ();
     void ItemActivated ();
 
   private:
+    
     nux::BaseTexture* _normalTexture[2];
     nux::BaseTexture* _activeTexture[2];
     nux::BaseTexture* _insensitiveTexture;
