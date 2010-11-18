@@ -26,7 +26,6 @@
 #include "QuicklistMenuItemRadio.h"
 #include "QuicklistMenuItemSeparator.h"
 
-static void TestMenuItem          (void);
 static void TestMenuItemCheckmark (void);
 static void TestMenuItemLabel     (void);
 static void TestMenuItemRadio     (void);
@@ -37,7 +36,6 @@ TestQuicklistMenuitemsCreateSuite ()
 {
 #define _DOMAIN "/Unit/QuicklistMenuitems"
 
-  g_test_add_func (_DOMAIN"/MenuItem",          TestMenuItem);
   g_test_add_func (_DOMAIN"/MenuItemCheckmark", TestMenuItemCheckmark);
   g_test_add_func (_DOMAIN"/MenuItemLabel",     TestMenuItemLabel);
   g_test_add_func (_DOMAIN"/MenuItemRadio",     TestMenuItemRadio);
@@ -45,13 +43,37 @@ TestQuicklistMenuitemsCreateSuite ()
 }
 
 static void
-TestMenuItem ()
-{
-}
-
-static void
 TestMenuItemCheckmark ()
 {
+  DbusmenuMenuitem* item = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "Unchecked");
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                  DBUSMENU_MENUITEM_TOGGLE_CHECK);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+
+  QuicklistMenuItemCheckmark* qlCheckmarkItem = NULL;
+
+  qlCheckmarkItem = new QuicklistMenuItemCheckmark (item, true);
+
+  g_assert_cmpstr (qlCheckmarkItem->GetLabel (), ==, "Unchecked");
+  g_assert_cmpint (qlCheckmarkItem->GetEnabled (), ==, false);
+  g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, true);
+
+  g_object_unref (item);
 }
 
 static void

@@ -40,6 +40,49 @@ QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
 }
 
 void
+QuicklistMenuItemCheckmark::PreLayoutManagement ()
+{
+}
+
+long
+QuicklistMenuItemCheckmark::PostLayoutManagement (long layoutResult)
+{
+  long result = View::PostLayoutManagement (layoutResult);
+
+  return result;
+}
+
+long
+QuicklistMenuItemCheckmark::ProcessEvent (nux::IEvent& event,
+                                          long         traverseInfo,
+                                          long         processEventInfo)
+{
+  long result = traverseInfo;
+
+  result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
+  return result;
+
+}
+
+void
+QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
+                                  bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemCheckmark::DrawContent (nux::GraphicsEngine& gfxContext,
+                                         bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemCheckmark::PostDraw (nux::GraphicsEngine& gfxContext,
+                                      bool                 forceDraw)
+{
+}
+
+void
 QuicklistMenuItemCheckmark::DrawText ()
 {
 }

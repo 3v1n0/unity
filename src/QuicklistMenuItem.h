@@ -40,6 +40,23 @@ class QuicklistMenuItem : public nux::View
 
     ~QuicklistMenuItem ();
 
+    void PreLayoutManagement ();
+
+    long PostLayoutManagement (long layoutResult);
+
+    long ProcessEvent (nux::IEvent& event,
+                       long         traverseInfo,
+                       long         processEventInfo);
+
+    void Draw (nux::GraphicsEngine& gfxContext,
+               bool                 forceDraw);
+
+    void DrawContent (nux::GraphicsEngine& gfxContext,
+                      bool                 forceDraw);
+
+    void PostDraw (nux::GraphicsEngine& gfxContext,
+                   bool                 forceDraw);
+
     // public API
     virtual const gchar* GetLabel ();
 
@@ -63,12 +80,6 @@ class QuicklistMenuItem : public nux::View
     bool              _debug;
     nux::Color        _color;
 
-    void OnPropertyChanged (gchar*   property,
-                            GValue*  value,
-                            gpointer data);
-
-    void OnItemActivated (guint    timestamp,
-                          gpointer data);
     void DrawText ();
 
     void GetExtents ();

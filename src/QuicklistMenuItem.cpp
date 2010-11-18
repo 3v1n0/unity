@@ -59,6 +59,49 @@ QuicklistMenuItem::~QuicklistMenuItem ()
 {
 }
 
+void
+QuicklistMenuItem::PreLayoutManagement ()
+{
+}
+
+long
+QuicklistMenuItem::PostLayoutManagement (long layoutResult)
+{
+  long result = View::PostLayoutManagement (layoutResult);
+
+  return result;
+}
+
+long
+QuicklistMenuItem::ProcessEvent (nux::IEvent& event,
+                                 long         traverseInfo,
+                                 long         processEventInfo)
+{
+  long result = traverseInfo;
+
+  result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
+  return result;
+
+}
+
+void
+QuicklistMenuItem::Draw (nux::GraphicsEngine& gfxContext,
+                         bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItem::DrawContent (nux::GraphicsEngine& gfxContext,
+                                bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItem::PostDraw (nux::GraphicsEngine& gfxContext,
+                             bool                 forceDraw)
+{
+}
+
 const gchar*
 QuicklistMenuItem::GetLabel ()
 {

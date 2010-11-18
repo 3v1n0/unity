@@ -40,6 +40,49 @@ QuicklistMenuItemRadio::~QuicklistMenuItemRadio ()
 }
 
 void
+QuicklistMenuItemRadio::PreLayoutManagement ()
+{
+}
+
+long
+QuicklistMenuItemRadio::PostLayoutManagement (long layoutResult)
+{
+  long result = View::PostLayoutManagement (layoutResult);
+
+  return result;
+}
+
+long
+QuicklistMenuItemRadio::ProcessEvent (nux::IEvent& event,
+                                      long         traverseInfo,
+                                      long         processEventInfo)
+{
+  long result = traverseInfo;
+
+  result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
+  return result;
+
+}
+
+void
+QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
+                              bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemRadio::DrawContent (nux::GraphicsEngine& gfxContext,
+                                     bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemRadio::PostDraw (nux::GraphicsEngine& gfxContext,
+                                  bool                 forceDraw)
+{
+}
+
+void
 QuicklistMenuItemRadio::DrawText ()
 {
 }

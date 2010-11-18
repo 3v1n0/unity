@@ -40,6 +40,49 @@ QuicklistMenuItemSeparator::~QuicklistMenuItemSeparator ()
 }
 
 void
+QuicklistMenuItemSeparator::PreLayoutManagement ()
+{
+}
+
+long
+QuicklistMenuItemSeparator::PostLayoutManagement (long layoutResult)
+{
+  long result = View::PostLayoutManagement (layoutResult);
+
+  return result;
+}
+
+long
+QuicklistMenuItemSeparator::ProcessEvent (nux::IEvent& event,
+                                          long         traverseInfo,
+                                          long         processEventInfo)
+{
+  long result = traverseInfo;
+
+  result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
+  return result;
+
+}
+
+void
+QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
+                                  bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemSeparator::DrawContent (nux::GraphicsEngine& gfxContext,
+                                         bool                 forceDraw)
+{
+}
+
+void
+QuicklistMenuItemSeparator::PostDraw (nux::GraphicsEngine& gfxContext,
+                                      bool                 forceDraw)
+{
+}
+
+void
 QuicklistMenuItemSeparator::UpdateTextures ()
 {
 }
