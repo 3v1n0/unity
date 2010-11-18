@@ -47,12 +47,14 @@
 #define V_MARGIN             4
 #define FONT_FACE            "Ubuntu 13"
 
+class QuicklistMenuItem;
+  
 namespace nux
 {
   class VLayout;
   class HLayout;
   class SpaceLayout;
-  
+
   class Tooltip : public BaseWindow
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);

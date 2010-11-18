@@ -54,6 +54,7 @@ class VLayout;
 class HLayout;
 class SpaceLayout;
 class QuicklistMenuItem;
+class QuicklistMenuItemLabel;
 
 class QuicklistView : public nux::BaseWindow
 {
@@ -76,7 +77,11 @@ public:
   void SetText (nux::NString text);
   
   void RemoveAllMenuItem ();
+  
   void AddMenuItem (nux::NString str);
+  
+  void AddMenuItem (QuicklistMenuItem* item);
+  
   void RenderQuicklistView ();
 
   void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
@@ -88,8 +93,8 @@ public:
   std::list<QuicklistMenuItem*> GetChildren ();
   
 private:
-  void RecvCairoTextChanged (nux::StaticCairoText* cairo_text);
-  void RecvCairoTextColorChanged (nux::StaticCairoText* cairo_text);
+  void RecvCairoTextChanged (QuicklistMenuItem* cairo_text);
+  void RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text);
   
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -137,8 +142,8 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture ();
-  std::list<nux::StaticCairoText*> _item_list;
-  std::list<nux::StaticCairoText*> _default_item_list;
+  std::list<QuicklistMenuItem*> _item_list;
+  std::list<QuicklistMenuItem*> _default_item_list;
 };
 
 #endif // QUICKLISTVIEW_H

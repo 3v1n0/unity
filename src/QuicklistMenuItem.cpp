@@ -169,23 +169,9 @@ QuicklistMenuItem::SetColor (nux::Color color)
   {
     _color = color;
     //UpdateTextures ();
-    //sigColorChanged.emit (*this);
+    sigColorChanged.emit (this);
   }
 }
-
-void
-QuicklistMenuItem::GetExtents ()
-{
-}
-
-// void
-// QuicklistMenuItem::UpdateTextures ()
-// {
-//   if (_debug)
-//     sigChanged.emit (*this);
-// 
-//   std::cout << "UpdateTextures() called" << std::endl;
-// }
 
 void
 QuicklistMenuItem::ItemActivated ()
@@ -199,6 +185,12 @@ QuicklistMenuItem::ItemActivated ()
 void
 QuicklistMenuItem::DrawRoundedRectangle ()
 {
+}
+
+void
+QuicklistMenuItem::GetTextExtents (int &width, int &height)
+{
+  
 }
 
 void QuicklistMenuItem::UpdateTexture ()

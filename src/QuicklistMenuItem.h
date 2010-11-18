@@ -87,10 +87,16 @@ class QuicklistMenuItem : public nux::View
 
     sigc::signal<void, QuicklistMenuItem&> sigChanged;
 
+    //! Return the size of the text + size of associated radio button or check box
+    virtual void GetTextExtents (int &width, int &height);
+    
     virtual void UpdateTexture ();
     void ItemActivated ();
 
-  private:
+    sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
+    sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
+    
+  protected:
     
     nux::BaseTexture* _normalTexture[2];
     nux::BaseTexture* _activeTexture[2];
@@ -99,8 +105,6 @@ class QuicklistMenuItem : public nux::View
     nux::Color        _color;
     bool              _debug;
 
-
-    void GetExtents ();
 
     void DrawRoundedRectangle ();
 };

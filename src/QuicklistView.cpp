@@ -68,17 +68,17 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-  for (int i = 0; i < 2; i++)
-  {
-    nux::StaticCairoText* item_text;
-    item_text = new nux::StaticCairoText (TEXT ("Default Item"), NUX_TRACKER_LOCATION);
-
-    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-    item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-    _default_item_list.push_back (item_text);
-    item_text->Reference();
-  }
+//   for (int i = 0; i < 2; i++)
+//   {
+//     nux::StaticCairoText* item_text;
+//     item_text = new nux::StaticCairoText (TEXT ("Default Item"), NUX_TRACKER_LOCATION);
+// 
+//     item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+//     item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+//     _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
+//     _default_item_list.push_back (item_text);
+//     item_text->Reference();
+//   }
 
   _vlayout->AddLayout (_bottom_space, 0);
 
@@ -103,7 +103,7 @@ QuicklistView::~QuicklistView ()
   if (_texture_bg)
     _texture_bg->UnReference ();
 
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->UnReference();
@@ -136,10 +136,10 @@ void QuicklistView::ShowWindow (bool b, bool start_modal)
   BaseWindow::ShowWindow (b, start_modal);
   
   // Reset all colors to white
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    (*it)->SetTextColor (nux::Color::White);
+    (*it)->SetColor (nux::Color::White);
   }
 }
 
@@ -225,7 +225,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   nux::GetGraphicsEngine().GetRenderStates().SetBlend (false);
 
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->ProcessDraw(gfxContext, forceDraw);
@@ -250,7 +250,7 @@ void QuicklistView::PreLayoutManagement ()
   int MaxItemWidth = 0;
   int TotalItemHeight = 0;
   
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     int  textWidth  = 0;
@@ -288,7 +288,7 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   int x = _padding + _anchor_width + _corner_radius;
   int y = _padding + _corner_radius;
 
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->SetBaseX (x);
@@ -308,12 +308,12 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   return result;
 }
 
-void QuicklistView::RecvCairoTextChanged (nux::StaticCairoText* cairo_text)
+void QuicklistView::RecvCairoTextChanged (QuicklistMenuItem* cairo_text)
 {
   _cairo_text_has_changed = true;
 }
 
-void QuicklistView::RecvCairoTextColorChanged (nux::StaticCairoText* cairo_text)
+void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
 {
   NeedRedraw ();
 }
@@ -349,16 +349,16 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 
 void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     if ((*it)->GetGeometry ().IsPointInside (x, y))
     {
-      (*it)->SetTextColor (nux::Color::DarkGray);
+      (*it)->SetColor (nux::Color::DarkGray);
     }
     else
     {
-      (*it)->SetTextColor (nux::Color::White);
+      (*it)->SetColor (nux::Color::White);
     }
   }
   
@@ -366,27 +366,27 @@ void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long b
   {
     if ((*it)->GetGeometry ().IsPointInside (x, y))
     {
-      (*it)->SetTextColor (nux::Color::DarkGray);
+      (*it)->SetColor (nux::Color::DarkGray);
     }
     else
     {
-      (*it)->SetTextColor (nux::Color::White);
+      (*it)->SetColor (nux::Color::White);
     }
   }  
 }
 
 void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     if ((*it)->GetGeometry ().IsPointInside (x, y))
     {
-      (*it)->SetTextColor (nux::Color::DarkGray);
+      (*it)->SetColor (nux::Color::DarkGray);
     }
     else
     {
-      (*it)->SetTextColor (nux::Color::White);
+      (*it)->SetColor (nux::Color::White);
     }
   }
   
@@ -394,11 +394,11 @@ void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long b
   {
     if ((*it)->GetGeometry ().IsPointInside (x, y))
     {
-      (*it)->SetTextColor (nux::Color::DarkGray);
+      (*it)->SetColor (nux::Color::DarkGray);
     }
     else
     {
-      (*it)->SetTextColor (nux::Color::White);
+      (*it)->SetColor (nux::Color::White);
     }
   }  
 }
@@ -425,14 +425,27 @@ void QuicklistView::RemoveAllMenuItem ()
 
 void QuicklistView::AddMenuItem (nux::NString str)
 {
-  nux::StaticCairoText* item_text;
-  item_text = new nux::StaticCairoText (str.GetTCharPtr (), NUX_TRACKER_LOCATION);
+//   nux::StaticCairoText* item_text;
+//   item_text = new nux::StaticCairoText (str.GetTCharPtr (), NUX_TRACKER_LOCATION);
+// 
+//   item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+//   item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+//   _item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
+//   _item_list.push_back (item_text);
+//   item_text->Reference();
+//   
+//   _cairo_text_has_changed = true;
+//   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
+//   NeedRedraw ();
+}
 
-  item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  _item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-  _item_list.push_back (item_text);
-  item_text->Reference();
+void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
+{
+  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+  _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+  _item_list.push_back (item);
+  item->Reference();
   
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);

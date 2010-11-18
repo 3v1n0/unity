@@ -31,6 +31,10 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
+#include "QuicklistMenuItem.h"
+#include "QuicklistMenuItemLabel.h"
+#include "QuicklistMenuItemSeparator.h"
+
 #define DEFAULT_ICON "application-default-icon"
 
 nux::Tooltip *LauncherIcon::_current_tooltip = 0;
@@ -284,16 +288,18 @@ gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMe
 
 void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
 {
-  const gchar* label = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
   const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
   
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
     quicklist->AddMenuItem ("-----------------");
+    //QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
+    //quicklist->AddMenuItem (item);
   }
   else
   {
-    quicklist->AddMenuItem (label);
+    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
   }
     
 }

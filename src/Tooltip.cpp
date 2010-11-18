@@ -28,6 +28,8 @@
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
 
+#include "QuicklistMenuItem.h"
+
 #include "Tooltip.h"
 
 namespace nux

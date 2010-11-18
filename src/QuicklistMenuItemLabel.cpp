@@ -28,8 +28,8 @@ QuicklistMenuItem (item,
   _fontSize   = 12;
   _fontStyle  = FONTSTYLE_NORMAL;
   _fontWeight = FONTWEIGHT_NORMAL;
-  _textColor  = nux::Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _text       = TEXT ("");
+  
+  _text       = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
   _fontOpts   = cairo_font_options_create ();
   _texture2D  = 0;
 
@@ -138,7 +138,7 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
                             base.height,
                             _texture2D->GetDeviceTexture(),
                             texxform,
-                            _textColor);
+                            _color);
 
   gfxContext.GetRenderStates().SetBlend (false);
 
@@ -264,7 +264,7 @@ QuicklistMenuItemLabel::UpdateTexture ()
                                       GetBaseHeight ());
   cairo_t *cr = _cairoGraphics->GetContext ();
 
-  DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
+  DrawText (cr, GetBaseWidth (), GetBaseHeight (), nux::Color::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -337,15 +337,5 @@ QuicklistMenuItemLabel::SetFontStyle (FontStyle fontStyle)
     _fontStyle = fontStyle;
     UpdateTexture ();
     sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemLabel::SetTextColor (nux::Color textColor)
-{
-  if (_textColor != textColor)
-  {
-    _textColor = textColor;
-    sigTextColorChanged.emit (this);
   }
 }

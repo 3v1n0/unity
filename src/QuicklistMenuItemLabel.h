@@ -69,20 +69,16 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
 
     void SetFontStyle (FontStyle fontStyle);
 
-    void SetTextColor (nux::Color textColor);
+    virtual void GetTextExtents (int &width, int &height);
 
-    void GetTextExtents (int &width, int &height);
-
-    sigc::signal<void, QuicklistMenuItemLabel*> sigTextChanged;
-    sigc::signal<void, QuicklistMenuItemLabel*> sigTextColorChanged;
     
   private:
-    nux::NString          _text;
-    nux::NString          _fontName;
-    float            _fontSize;
+    nux::NString    _text;
+    nux::NString    _fontName;
+    float           _fontSize;
     FontStyle       _fontStyle;
     FontWeight      _fontWeight;
-    nux::Color            _textColor;
+    nux::Color      _textColor;
 
     nux::CairoGraphics*   _cairoGraphics;
     nux::BaseTexture*     _texture2D;
