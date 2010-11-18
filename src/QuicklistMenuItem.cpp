@@ -147,12 +147,18 @@ QuicklistMenuItem::GetExtents ()
 void
 QuicklistMenuItem::UpdateTextures ()
 {
+  if (_debug)
+    sigChanged.emit (*this);
+
   std::cout << "UpdateTextures() called" << std::endl;
 }
 
 void
 QuicklistMenuItem::ItemActivated ()
 {
+  if (_debug)
+    sigChanged.emit (*this);
+
   std::cout << "ItemActivated() called" << std::endl;
 }
 

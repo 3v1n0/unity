@@ -73,20 +73,101 @@ TestMenuItemCheckmark ()
   g_assert_cmpint (qlCheckmarkItem->GetEnabled (), ==, false);
   g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, true);
 
+  //qlCheckmarkItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
+  //                                                    &CallerClass::RecvChanged));
+
+  delete qlCheckmarkItem;
   g_object_unref (item);
 }
 
 static void
 TestMenuItemLabel ()
 {
+  DbusmenuMenuitem* item = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "A Label");
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  QuicklistMenuItemLabel* qlLabelItem = NULL;
+
+  qlLabelItem = new QuicklistMenuItemLabel (item, true);
+
+  g_assert_cmpstr (qlLabelItem->GetLabel (), ==, "A Label");
+  g_assert_cmpint (qlLabelItem->GetEnabled (), ==, true);
+
+  //qlLabelItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
+  //                                                &CallerClass::RecvChanged));
+    
+  delete qlLabelItem;
+  g_object_unref (item);
 }
 
 static void
 TestMenuItemRadio ()
 {
+  DbusmenuMenuitem* item = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "Radio Active");
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                  DBUSMENU_MENUITEM_TOGGLE_RADIO);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+
+  QuicklistMenuItemRadio* qlRadioItem = NULL;
+
+  qlRadioItem = new QuicklistMenuItemRadio (item, true);
+
+  g_assert_cmpstr (qlRadioItem->GetLabel (), ==, "Radio Active");
+  g_assert_cmpint (qlRadioItem->GetEnabled (), ==, true);
+  g_assert_cmpint (qlRadioItem->GetActive (), ==, true);
+
+  //qlRadioItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
+  //                                                &CallerClass::RecvChanged));
+    
+  delete qlRadioItem;
+  g_object_unref (item);
 }
 
 static void
 TestMenuItemSeparator ()
 {
+  DbusmenuMenuitem* item = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  "type",
+                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  QuicklistMenuItemSeparator* qlSeparatorItem = NULL;
+
+  qlSeparatorItem = new QuicklistMenuItemSeparator (item, true);
+
+  g_assert_cmpint (qlSeparatorItem->GetEnabled (), ==, true);
+
+  delete qlSeparatorItem;
+  g_object_unref (item);
 }

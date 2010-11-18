@@ -20,6 +20,7 @@
 #define QUICKLISTMENUITEM_H
 
 #include <libdbusmenu-glib/menuitem.h>
+#include <libdbusmenu-glib/client.h>
 
 #include "Nux/Nux.h"
 #include "Nux/View.h"
@@ -66,7 +67,7 @@ class QuicklistMenuItem : public nux::View
 
     virtual void         SetColor (nux::Color color);
 
-    //sigc::signal<void, QuicklistMenuItem&> sigColorChanged;
+    sigc::signal<void, QuicklistMenuItem&> sigChanged;
 
     void UpdateTextures ();
 
@@ -77,8 +78,8 @@ class QuicklistMenuItem : public nux::View
     nux::BaseTexture* _activeTexture[2];
     nux::BaseTexture* _insensitiveTexture;
     DbusmenuMenuitem* _menuItem;
-    bool              _debug;
     nux::Color        _color;
+    bool              _debug;
 
     void DrawText ();
 
