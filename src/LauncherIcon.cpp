@@ -311,6 +311,26 @@ void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
   {
+    if (_launcher->GetActiveQuicklist () == _quicklist)
+    {
+      // this quicklist is already active
+      return;
+    }
+    
+    if (_launcher->GetActiveQuicklist ())
+    {
+      // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
+      // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
+      // So the new quicklist that is about to be set as active will keep the grab of the pointer.
+      // Also disable theinput window.
+      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
+      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
+      // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
+      // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
+      // and it set the active window to Null.
+      _launcher->GetActiveQuicklist ()->ShowWindow (false);
+    }
+    
     _tooltip->ShowWindow (false);
     
     

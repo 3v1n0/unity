@@ -67,6 +67,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
+    if (button != 1)
+      return;
+    
     BamfView *view;
     GList *children, *l;
     bool active, running;
