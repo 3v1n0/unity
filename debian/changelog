@@ -6,6 +6,8 @@ unity (3.1.4-0ubuntu1) UNRELEASED; urgency=low
     - Quicklist Menu - Initial Support (LP: #676154)
   * debian/watch:
     - look for upstream bz2 file now
+  * debian/control:
+    - bump libnux-0.9-dev build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 18 Nov 2010 17:51:48 +0100
 
