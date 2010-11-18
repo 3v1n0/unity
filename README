@@ -1,0 +1,17 @@
+                                    Unity                                      
+--------------------------------------------------------------------------------
+
+• Installation
+
+• Tests
+
+  - You can run `make check` in the build directory to run all GTester tests
+  - In the build directory, ./tests/test-panel will start the panel in
+    standalone mode, which is great for testing
+
+• Environmental Variables
+
+  PANEL_USE_LOCAL_SERVICE=${anything}
+    Makes the panel run the unity-panel-service directly instead of through
+    D-Bus activation. This is used for testing how the panel reacts when it
+    starts before the service does.
