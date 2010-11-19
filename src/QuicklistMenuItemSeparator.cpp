@@ -24,6 +24,7 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
+  SetMinimumHeight (3);
   _normalTexture = NULL;
 }
 
@@ -34,6 +35,7 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
+  SetMinimumHeight (3);
   _normalTexture = NULL;
 }
 
