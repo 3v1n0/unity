@@ -289,7 +289,7 @@ gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMe
 void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
 {
   const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
-  
+
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
     QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
@@ -300,7 +300,37 @@ void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *qui
     QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-    
+
+  // enable this once all proper QuicklistMenuitems are fully implemented
+
+  // add separator
+  /*if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+  {
+    QuicklistMenuItemSeparator* item;
+    item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  // add checkmark-item
+  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+  {
+    QuicklistMenuItemLabel* item;
+    item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  // add radio-button-item
+  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+  {
+    QuicklistMenuItemLabel* item;
+    item = new QuicklistMenuItemRadio (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  // add plain label-item
+  else
+  {
+    QuicklistMenuItemLabel* item;
+    item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }*/
 }
 
 void LauncherIcon::root_changed (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
