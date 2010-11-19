@@ -69,17 +69,17 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-//   for (int i = 0; i < 2; i++)
-//   {
-//     QuicklistMenuItemLabel* item_text;
-//     item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
-// 
-//     item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-//     item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-//     _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-//     _default_item_list.push_back (item_text);
-//     item_text->Reference();
-//   }
+  for (int i = 0; i < 2; i++)
+  {
+    QuicklistMenuItemLabel* item_text;
+    item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
+
+    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+    item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
+    _default_item_list.push_back (item_text);
+    item_text->Reference();
+  }
 
   _vlayout->AddLayout (_bottom_space, 0);
 
