@@ -30,7 +30,8 @@
 
 #include "QuicklistView.h"
 #include "QuicklistMenuItem.h"
-
+#include "QuicklistMenuItemLabel.h"
+#include "QuicklistMenuItemSeparator.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
@@ -68,17 +69,17 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-//   for (int i = 0; i < 2; i++)
-//   {
-//     nux::StaticCairoText* item_text;
-//     item_text = new nux::StaticCairoText (TEXT ("Default Item"), NUX_TRACKER_LOCATION);
-// 
-//     item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-//     item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-//     _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-//     _default_item_list.push_back (item_text);
-//     item_text->Reference();
-//   }
+  for (int i = 0; i < 2; i++)
+  {
+    QuicklistMenuItemLabel* item_text;
+    item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
+
+    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+    item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
+    _default_item_list.push_back (item_text);
+    item_text->Reference();
+  }
 
   _vlayout->AddLayout (_bottom_space, 0);
 
@@ -464,12 +465,39 @@ int QuicklistView::GetNumItems ()
 
 QuicklistMenuItem* QuicklistView::GetNthItems (int index)
 {
+  if (index < (int)_item_list.size ())
+  {
+    int i = 0;
+    std::list<QuicklistMenuItem*>::iterator it;
+    for (i = 0, it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    {
+      if (i == index)
+        return *it;
+    }
+  }
+
+  if (index < (int)_item_list.size () + (int)_default_item_list.size ())
+  {
+    int i = 0;
+    if (_item_list.size () > 0)
+      i = _item_list.size () -1;
+    std::list<QuicklistMenuItem*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    {
+      if (i == index)
+        return *it;
+    }
+  }
+
   return 0;
 }
 
-QuicklistMenuItem* QuicklistView::GetNthType  (int index)
+QuicklistMenuItemType QuicklistView::GetNthType  (int index)
 {
-  return 0;
+  QuicklistMenuItem* item = GetNthItems (index);
+  if (item)
+    return item->GetItemType ();
+  return MENUITEM_TYPE_UNKNOWN;
 }
 
 std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
@@ -477,11 +505,6 @@ std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
   std::list<QuicklistMenuItem*> l;
   return l;
 }
-
-  
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline void ql_blurinner (guchar* pixel,
   gint   *zR,
@@ -1188,3 +1211,28 @@ void QuicklistView::SetText (nux::NString text)
   _labelText = text;
   UpdateTexture ();
 }
+
+void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
+{
+  void RemoveAllMenuItem ();
+  if (root == 0)
+    return;
+  
+  GList * child = NULL;
+  for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
+  {
+    const gchar* type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)    
+    {
+      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)    
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+  }
+}
+

@@ -46,6 +46,14 @@ typedef enum
   FONTWEIGHT_BOLD   = PANGO_WEIGHT_BOLD,
 } FontWeight;
 
+typedef enum
+{
+  MENUITEM_TYPE_UNKNOWN    = 0,
+  MENUITEM_TYPE_LABEL,
+  MENUITEM_TYPE_SEPARATOR,
+  MENUITEM_TYPE_CHECK,
+  MENUITEM_TYPE_RADIO,
+} QuicklistMenuItemType;
 
 class QuicklistMenuItem : public nux::View
 {
@@ -85,14 +93,15 @@ class QuicklistMenuItem : public nux::View
 
     virtual void         SetColor (nux::Color color);
 
-    sigc::signal<void, QuicklistMenuItem&> sigChanged;
-
+    QuicklistMenuItemType GetItemType ();
+    
     //! Return the size of the text + size of associated radio button or check box
     virtual void GetTextExtents (int &width, int &height);
     
     virtual void UpdateTexture ();
     void ItemActivated ();
 
+    sigc::signal<void, QuicklistMenuItem&> sigChanged;
     sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
     sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
     
@@ -104,7 +113,7 @@ class QuicklistMenuItem : public nux::View
     DbusmenuMenuitem* _menuItem;
     nux::Color        _color;
     bool              _debug;
-
+    QuicklistMenuItemType _item_type;
 
     void DrawRoundedRectangle ();
 };

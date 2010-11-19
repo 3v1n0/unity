@@ -24,12 +24,32 @@ QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
+  Initialize (item);
+}
+
+QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
+                                                bool              debug,
+                                                NUX_FILE_LINE_DECL) :
+QuicklistMenuItem (item,
+                   debug,
+                   NUX_FILE_LINE_PARAM)
+{
+  Initialize (item);
+}
+
+void QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
+{
   _fontName   = TEXT ("Ubuntu");
   _fontSize   = 12;
   _fontStyle  = FONTSTYLE_NORMAL;
   _fontWeight = FONTWEIGHT_NORMAL;
+  _item_type  = MENUITEM_TYPE_LABEL;
   
-  _text       = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+  if (item)
+    _text = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+  else
+    _text = "QuicklistItem";
+  
   _fontOpts   = cairo_font_options_create ();
   _texture2D  = 0;
 
@@ -43,15 +63,6 @@ QuicklistMenuItem (item,
   SetMinimumSize (1, 1);
   // make sure _dpiX and _dpiY are initialized correctly
   GetDPI (_dpiX, _dpiY);
-}
-
-QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
-                                                bool              debug,
-                                                NUX_FILE_LINE_DECL) :
-QuicklistMenuItem (item,
-                   debug,
-                   NUX_FILE_LINE_PARAM)
-{
 }
 
 QuicklistMenuItemLabel::~QuicklistMenuItemLabel ()
