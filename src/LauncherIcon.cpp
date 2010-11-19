@@ -292,9 +292,8 @@ void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *qui
   
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
-    quicklist->AddMenuItem ("-----------------");
-    //QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
-    //quicklist->AddMenuItem (item);
+    QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
   }
   else
   {

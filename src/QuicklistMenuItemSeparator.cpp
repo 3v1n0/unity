@@ -24,6 +24,7 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
+  _normalTexture = NULL;
 }
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
@@ -33,6 +34,7 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
+  _normalTexture = NULL;
 }
 
 QuicklistMenuItemSeparator::~QuicklistMenuItemSeparator ()
@@ -42,12 +44,43 @@ QuicklistMenuItemSeparator::~QuicklistMenuItemSeparator ()
 void
 QuicklistMenuItemSeparator::PreLayoutManagement ()
 {
+  _pre_layout_width = GetBaseWidth ();
+  _pre_layout_height = GetBaseHeight ();
+
+  // using some hard-coded values the width of 150 will be stretched to fit
+  // the 3 for the height is enough for a simple line that the separator is
+  // one line gap at the top, the separator itself, one line gap at the bottom
+  SetBaseSize (150, 3);
+
+  if((_normalTexture == 0) )
+  {
+    UpdateTexture ();
+  }
+
+  QuicklistMenuItem::PreLayoutManagement ();
 }
 
 long
 QuicklistMenuItemSeparator::PostLayoutManagement (long layoutResult)
 {
-  long result = View::PostLayoutManagement (layoutResult);
+  int w = GetBaseWidth();
+  int h = GetBaseHeight();
+
+  long result = 0;
+  
+  if (_pre_layout_width < w)
+    result |= nux::eLargerWidth;
+  else if (_pre_layout_width > w)
+    result |= nux::eSmallerWidth;
+  else
+    result |= nux::eCompliantWidth;
+
+  if (_pre_layout_height < h)
+    result |= nux::eLargerHeight;
+  else if (_pre_layout_height > h)
+    result |= nux::eSmallerHeight;
+  else
+    result |= nux::eCompliantHeight;
 
   return result;
 }
@@ -68,6 +101,29 @@ void
 QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                                   bool                 forceDraw)
 {
+  nux::Geometry base = GetGeometry ();
+
+  gfxContext.PushClippingRectangle (base);
+
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+
+  gfxContext.GetRenderStates().SetBlend (true,
+                                         GL_ONE,
+                                         GL_ONE_MINUS_SRC_ALPHA);
+
+  gfxContext.QRP_GLSL_1Tex (base.x,
+                            base.y,
+                            base.width,
+                            base.height,
+                            _normalTexture->GetDeviceTexture(),
+                            texxform,
+                            _color);
+
+  gfxContext.GetRenderStates().SetBlend (false);
+
+  gfxContext.PopClippingRectangle ();
 }
 
 void
@@ -83,7 +139,34 @@ QuicklistMenuItemSeparator::PostDraw (nux::GraphicsEngine& gfxContext,
 }
 
 void
-QuicklistMenuItemSeparator::UpdateTextures ()
+QuicklistMenuItemSeparator::UpdateTexture ()
 {
-}
+  int width  = 150;
+  int height = 3;
 
+  SetBaseSize (width, height);
+
+  _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
+                                           GetBaseWidth (),
+                                           GetBaseHeight ());
+  cairo_t *cr = _cairoGraphics->GetContext ();
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  cairo_paint (cr);
+  cairo_set_source_rgba (cr, _color.R (), _color.G (), _color.B (), _color.A ());
+  cairo_set_line_width (cr, 1.0f);
+  cairo_move_to (cr, 0.5f, 1.5f);
+  cairo_line_to (cr, width - 0.5f, 1.5f);
+  cairo_stroke (cr);
+
+  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
+
+  if (_normalTexture)
+    _normalTexture->UnReference ();
+
+  _normalTexture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture->Update (bitmap);
+
+  delete _cairoGraphics;
+}

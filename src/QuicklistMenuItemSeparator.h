@@ -21,6 +21,7 @@
 
 #include "Nux/Nux.h"
 #include "Nux/View.h"
+#include "NuxImage/CairoGraphics.h"
 #include "QuicklistMenuItem.h"
 
 #if defined(NUX_OS_LINUX)
@@ -57,8 +58,12 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
                    bool                 forceDraw);
 
   private:
-    nux::BaseTexture* _normalTexture;
-    void UpdateTextures ();
+    int                 _pre_layout_width;
+    int                 _pre_layout_height;
+    nux::BaseTexture*   _normalTexture;
+    nux::CairoGraphics* _cairoGraphics;
+
+    void UpdateTexture ();
 };
 
 #endif // QUICKLISTMENUITEMSEPARATOR_H
