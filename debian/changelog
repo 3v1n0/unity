@@ -1,9 +1,9 @@
-unity (3.1.4-0ubuntu3) UNRELEASED; urgency=low
+unity (3.1.4-0ubuntu3) natty; urgency=low
 
   * Argh, of course, as we removed the vala file build, we export less symbols
     (update debian/libunity3.symbols)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 13:46:12 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 13:46:43 +0100
 
 unity (3.1.4-0ubuntu2) natty; urgency=low
 
