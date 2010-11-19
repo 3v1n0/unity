@@ -1,9 +1,10 @@
-unity (3.1.4-0ubuntu2) UNRELEASED; urgency=low
+unity (3.1.4-0ubuntu2) natty; urgency=low
 
   * Don't build some vala files:
-    - places aren't present today and that make the buildd FTBFS
+    - places aren't present today and that make a FTBFS on buildd (some vapi
+      files should have changed)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 13:06:42 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 13:07:06 +0100
 
 unity (3.1.4-0ubuntu1) natty; urgency=low
 
