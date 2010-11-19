@@ -46,6 +46,8 @@ add_executable (test-unit
                 ../src/QuicklistMenuItemRadio.h
                 ../src/QuicklistMenuItemSeparator.cpp
                 ../src/QuicklistMenuItemSeparator.h
+                ../src/QuicklistView.cpp
+                ../src/QuicklistView.h
                 )
 
 add_executable (test-panel

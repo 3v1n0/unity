@@ -26,10 +26,20 @@
 #include "QuicklistMenuItemRadio.h"
 #include "QuicklistMenuItemSeparator.h"
 
+#include "Nux/Nux.h"
+#include "Nux/VLayout.h"
+#include "Nux/HLayout.h"
+#include "Nux/WindowThread.h"
+#include "Nux/WindowCompositor.h"
+#include "Nux/BaseWindow.h"
+
+#include "QuicklistView.h"
+
 static void TestMenuItemCheckmark (void);
 static void TestMenuItemLabel     (void);
 static void TestMenuItemRadio     (void);
 static void TestMenuItemSeparator (void);
+static void TestQuicklistMenuItem (void);
 
 void
 TestQuicklistMenuitemsCreateSuite ()
@@ -40,6 +50,7 @@ TestQuicklistMenuitemsCreateSuite ()
   g_test_add_func (_DOMAIN"/MenuItemLabel",     TestMenuItemLabel);
   g_test_add_func (_DOMAIN"/MenuItemRadio",     TestMenuItemRadio);
   g_test_add_func (_DOMAIN"/MenuItemSeparator", TestMenuItemSeparator);
+  g_test_add_func (_DOMAIN"/QuicklistMenuItem", TestQuicklistMenuItem);
 }
 
 static void
@@ -170,4 +181,23 @@ TestMenuItemSeparator ()
 
   delete qlSeparatorItem;
   g_object_unref (item);
+}
+
+static void
+TestQuicklistMenuItem ()
+{
+  DbusmenuMenuitem* root = dbusmenu_menuitem_new ();
+  
+  dbusmenu_menuitem_set_root (root, true);
+
+  DbusmenuMenuitem* child = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_child_append (root, child);
+  
+  QuicklistView* quicklist = new QuicklistView ();
+  
+  quicklist->TestMenuItems (root);
+  
+  delete quicklist;
 }

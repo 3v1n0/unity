@@ -25,17 +25,11 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
-#include "StaticCairoText.h"
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
 #include "QuicklistMenuItem.h"
-#include "QuicklistMenuItemLabel.h"
-
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
 
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
@@ -89,8 +83,10 @@ public:
   
   int GetNumItems ();
   QuicklistMenuItem* GetNthItems (int index);
-  QuicklistMenuItem* GetNthType  (int index);
+  QuicklistMenuItemType GetNthType  (int index);
   std::list<QuicklistMenuItem*> GetChildren ();
+  
+  void TestMenuItems (DbusmenuMenuitem* root);
   
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* cairo_text);

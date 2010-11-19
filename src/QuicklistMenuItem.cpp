@@ -70,9 +70,10 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
                                       NUX_FILE_LINE_DECL) :
 View (NUX_FILE_LINE_PARAM)
 {
-  _color    = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem = item;
-  _debug    = false;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
+  _menuItem   = item;
+  _debug      = false;
+  _item_type  = MENUITEM_TYPE_UNKNOWN;
   g_signal_connect (_menuItem,
                     "property-changed",
                     G_CALLBACK (OnPropertyChanged),
@@ -88,13 +89,19 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
                                       NUX_FILE_LINE_DECL) :
 View (NUX_FILE_LINE_PARAM)
 {
-  _color    = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
-  _menuItem = item;
-  _debug    = debug;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
+  _menuItem   = item;
+  _debug      = debug;
+  _item_type  = MENUITEM_TYPE_UNKNOWN;
 }
 
 QuicklistMenuItem::~QuicklistMenuItem ()
 {
+}
+
+QuicklistMenuItemType QuicklistMenuItem::GetItemType ()
+{
+  return _item_type;
 }
 
 void
