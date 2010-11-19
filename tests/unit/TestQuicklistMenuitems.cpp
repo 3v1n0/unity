@@ -34,6 +34,7 @@
 #include "Nux/BaseWindow.h"
 
 #include "QuicklistView.h"
+#include "TestThreadHelper.h"
 
 static void TestMenuItemCheckmark (void);
 static void TestMenuItemLabel     (void);
@@ -56,7 +57,10 @@ TestQuicklistMenuitemsCreateSuite ()
 static void
 TestMenuItemCheckmark ()
 {
+  nux::WindowThread* thread = NULL;
   DbusmenuMenuitem* item = NULL;
+
+  thread = createThread ();
 
   item = dbusmenu_menuitem_new ();
 
@@ -70,7 +74,7 @@ TestMenuItemCheckmark ()
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
+                                       false);
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
@@ -82,10 +86,13 @@ TestMenuItemCheckmark ()
 
   g_assert_cmpstr (qlCheckmarkItem->GetLabel (), ==, "Unchecked");
   g_assert_cmpint (qlCheckmarkItem->GetEnabled (), ==, false);
-  g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, true);
+  g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, false);
 
   //qlCheckmarkItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                    &CallerClass::RecvChanged));
+
+  runThread (thread);
+  stopThread (thread);
 
   delete qlCheckmarkItem;
   g_object_unref (item);
