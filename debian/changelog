@@ -1,3 +1,10 @@
+unity (3.1.4-0ubuntu2) UNRELEASED; urgency=low
+
+  * Don't build some vala files:
+    - places aren't present today and that make the buildd FTBFS
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 13:06:42 +0100
+
 unity (3.1.4-0ubuntu1) natty; urgency=low
 
   * New upstream release.
