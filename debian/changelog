@@ -1,3 +1,11 @@
+unity (3.1.4-0ubuntu5) UNRELEASED; urgency=low
+
+  * debian/control:
+    - don't recommend ubuntu-netbook-default-settings anymore
+    - change the description
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Nov 2010 16:32:44 +0100
+
 unity (3.1.4-0ubuntu4) natty; urgency=low
 
   * debian/rules:

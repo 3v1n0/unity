@@ -51,9 +51,8 @@ Recommends: unity-place-applications,
             indicator-messages,
             indicator-me,
             indicator-session,
-            ubuntu-netbook-default-settings,
-Description: Unity Interface for Ubuntu Netbook Edition
- Unity is a graphical interface designed for Ubuntu Netbook Edition
+Description: Interface for Ubuntu Desktop Edition
+ Unity is a graphical interface designed for Ubuntu Desktop Edition
 
 #Package: unity-dbg
 #Section: debug
