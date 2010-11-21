@@ -74,14 +74,17 @@ View (NUX_FILE_LINE_PARAM)
   _menuItem   = item;
   _debug      = false;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
-  g_signal_connect (_menuItem,
+  if (_menuItem)
+  {
+    g_signal_connect (_menuItem,
                     "property-changed",
                     G_CALLBACK (OnPropertyChanged),
                     this);
-  g_signal_connect (_menuItem,
+    g_signal_connect (_menuItem,
                     "item-activated",
                     G_CALLBACK (OnItemActivated),
                     this);
+  }
 }
 
 QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,

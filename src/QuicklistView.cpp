@@ -103,12 +103,25 @@ QuicklistView::~QuicklistView ()
 {
   if (_texture_bg)
     _texture_bg->UnReference ();
-
+  
+  if (_texture_outline)
+    _texture_outline->UnReference ();
+  
+    if (_texture_mask)
+    _texture_mask->UnReference ();
+  
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->UnReference();
   }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
+  _default_item_list.clear ();
   _item_list.clear ();
 }
 
@@ -419,7 +432,10 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 void QuicklistView::RemoveAllMenuItem ()
 {
   _item_list.clear ();
+  _default_item_list.clear ();
+  
   _item_layout->Clear ();
+  _default_item_layout->Clear ();
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
 }
@@ -1214,7 +1230,8 @@ void QuicklistView::SetText (nux::NString text)
 
 void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
 {
-  void RemoveAllMenuItem ();
+  RemoveAllMenuItem ();
+  
   if (root == 0)
     return;
   
@@ -1222,13 +1239,14 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
   for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
   {
     const gchar* type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
+
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)    
     {
       QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);
     }
-    
-    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)    
+
+    if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)    
     {
       QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);

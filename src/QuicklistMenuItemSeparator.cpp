@@ -26,6 +26,7 @@ QuicklistMenuItem (item,
 {
   SetMinimumHeight (3);
   _normalTexture = NULL;
+  _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
 QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
@@ -37,6 +38,7 @@ QuicklistMenuItem (item,
 {
   SetMinimumHeight (3);
   _normalTexture = NULL;
+  _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
 QuicklistMenuItemSeparator::~QuicklistMenuItemSeparator ()

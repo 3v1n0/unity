@@ -34,12 +34,15 @@
 #include "Nux/BaseWindow.h"
 
 #include "QuicklistView.h"
+#include "TestThreadHelper.h"
 
 static void TestMenuItemCheckmark (void);
 static void TestMenuItemLabel     (void);
 static void TestMenuItemRadio     (void);
 static void TestMenuItemSeparator (void);
 static void TestQuicklistMenuItem (void);
+
+nux::WindowThread* thread = NULL;
 
 void
 TestQuicklistMenuitemsCreateSuite ()
@@ -56,7 +59,10 @@ TestQuicklistMenuitemsCreateSuite ()
 static void
 TestMenuItemCheckmark ()
 {
+  thread = createThread ();
+  
   DbusmenuMenuitem* item = NULL;
+
 
   item = dbusmenu_menuitem_new ();
 
@@ -70,7 +76,7 @@ TestMenuItemCheckmark ()
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
+                                       false);
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
@@ -82,12 +88,13 @@ TestMenuItemCheckmark ()
 
   g_assert_cmpstr (qlCheckmarkItem->GetLabel (), ==, "Unchecked");
   g_assert_cmpint (qlCheckmarkItem->GetEnabled (), ==, false);
-  g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, true);
+  g_assert_cmpint (qlCheckmarkItem->GetActive (), ==, false);
 
   //qlCheckmarkItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                    &CallerClass::RecvChanged));
 
-  delete qlCheckmarkItem;
+
+  qlCheckmarkItem->Dispose ();
   g_object_unref (item);
 }
 
@@ -116,7 +123,7 @@ TestMenuItemLabel ()
   //qlLabelItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                &CallerClass::RecvChanged));
     
-  delete qlLabelItem;
+  qlLabelItem->Dispose ();
   g_object_unref (item);
 }
 
@@ -154,7 +161,7 @@ TestMenuItemRadio ()
   //qlRadioItem->sigChanged.connect (sigc::mem_fun (pointerToCallerClass,
   //                                                &CallerClass::RecvChanged));
     
-  delete qlRadioItem;
+  qlRadioItem->Dispose ();
   g_object_unref (item);
 }
 
@@ -179,7 +186,7 @@ TestMenuItemSeparator ()
 
   g_assert_cmpint (qlSeparatorItem->GetEnabled (), ==, true);
 
-  delete qlSeparatorItem;
+  qlSeparatorItem->Dispose ();
   g_object_unref (item);
 }
 
@@ -191,13 +198,38 @@ TestQuicklistMenuItem ()
   dbusmenu_menuitem_set_root (root, true);
 
   DbusmenuMenuitem* child = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_MENUITEM_PROP_LABEL);
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_LABEL, "label 0");
   dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_child_append (root, child);
+  
+  child = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+  dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_child_append (root, child);
+  
+  child = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_MENUITEM_PROP_LABEL);
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_LABEL, "label 1");
+  dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_child_append (root, child);
+  
   
   QuicklistView* quicklist = new QuicklistView ();
   
   quicklist->TestMenuItems (root);
   
-  delete quicklist;
+  g_assert_cmpint (quicklist->GetNumItems (), ==, 3);
+  g_assert_cmpint (quicklist->GetNthType (0), ==, MENUITEM_TYPE_LABEL);
+  g_assert_cmpint (quicklist->GetNthType (1), ==, MENUITEM_TYPE_SEPARATOR);
+  g_assert_cmpint (quicklist->GetNthType (2), ==, MENUITEM_TYPE_LABEL);
+  
+  g_assert_cmpstr (quicklist->GetNthItems (0)->GetLabel (), ==, "label 0");
+  g_assert_cmpstr (quicklist->GetNthItems (2)->GetLabel (), ==, "label 1");
+  
+  
+  quicklist->Dispose ();
+  
+  stopThread (thread);
+  
 }

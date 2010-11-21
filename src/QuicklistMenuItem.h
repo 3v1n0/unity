@@ -65,7 +65,7 @@ class QuicklistMenuItem : public nux::View
                        bool              debug,
                        NUX_FILE_LINE_PROTO);
 
-    ~QuicklistMenuItem ();
+    virtual ~QuicklistMenuItem ();
 
     void PreLayoutManagement ();
 

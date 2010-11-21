@@ -21,10 +21,40 @@
 #include "config.h"
 #include <glib.h>
 #include <glib-object.h>
+#include "Nux/Nux.h"
+#include "Nux/WindowThread.h"
 
 void TestFavoriteStoreGSettingsCreateSuite (void);
 void TestPanelServiceCreateSuite (void);
 void TestQuicklistMenuitemsCreateSuite (void);
+
+nux::WindowThread*
+createThread ()
+{
+  nux::WindowThread* thread = NULL;
+
+  nux::NuxInitialize (0);
+  thread = nux::CreateGUIThread (TEXT ("Unit-Test Dummy Window"),
+                                 320,
+                                 240,
+                                 0,
+                                 NULL,
+                                 0);
+  return thread;
+}
+
+void
+runThread (nux::WindowThread* thread)
+{
+  thread->Run (NULL);
+}
+
+void
+stopThread (nux::WindowThread* thread)
+{
+  thread->TerminateThread ();
+  delete thread;
+}
 
 int
 main (int argc, char **argv)
