@@ -138,8 +138,14 @@ private:
 
   void OnIconNeedsRedraw (void *icon);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::BaseTexture *text, nux::Color bkg_color, float alpha);
-  void RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, 
+                   RenderArg arg, 
+                   nux::BaseTexture *icon, 
+                   nux::Color bkg_color, 
+                   float alpha, 
+                   nux::Vector4 xform_coords[], 
+                   bool render_indicators);
+                   
   void UpdateIconXForm (std::list<Launcher::RenderArg> args);
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();

@@ -135,11 +135,13 @@ nux::NString PerspectiveCorrectTexFrg = TEXT (
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
+                            TEMP temp1;                                 \n\
+                            TEMP recip;                                 \n\
                             MOV pcoord, fragment.texcoord[0].w;         \n\
                             RCP temp, fragment.texcoord[0].w;           \n\
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], 2D;           \n\
-                            MUL result.color, color0, tex0;     \n\
+                            MUL result.color, color0, tex0;             \n\
                             END");
 
 nux::NString PerspectiveCorrectTexRectFrg = TEXT (
@@ -927,7 +929,13 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
-void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg, nux::BaseTexture *icon, nux::Color bkg_color, float alpha)
+void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, 
+                          RenderArg arg, 
+                          nux::BaseTexture *icon, 
+                          nux::Color bkg_color, 
+                          float alpha, 
+                          nux::Vector4 xform_coords[], 
+                          bool render_indicators)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -946,22 +954,22 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg, nux::B
   nux::Vector4 v2;
   nux::Vector4 v3;
 
-  v0.x = arg.icon->_xform_screen_coord[0].x ;
-  v0.y = arg.icon->_xform_screen_coord[0].y ;
-  v0.z = arg.icon->_xform_screen_coord[0].z ;
-  v0.w = arg.icon->_xform_screen_coord[0].w ;
-  v1.x = arg.icon->_xform_screen_coord[1].x ;
-  v1.y = arg.icon->_xform_screen_coord[1].y ;
-  v1.z = arg.icon->_xform_screen_coord[1].z ;
-  v1.w = arg.icon->_xform_screen_coord[1].w ;
-  v2.x = arg.icon->_xform_screen_coord[2].x ;
-  v2.y = arg.icon->_xform_screen_coord[2].y ;
-  v2.z = arg.icon->_xform_screen_coord[2].z ;
-  v2.w = arg.icon->_xform_screen_coord[2].w ;
-  v3.x = arg.icon->_xform_screen_coord[3].x ;
-  v3.y = arg.icon->_xform_screen_coord[3].y ;
-  v3.z = arg.icon->_xform_screen_coord[3].z ;
-  v3.w = arg.icon->_xform_screen_coord[3].w ;
+  v0.x = xform_coords[0].x ;
+  v0.y = xform_coords[0].y ;
+  v0.z = xform_coords[0].z ;
+  v0.w = xform_coords[0].w ;
+  v1.x = xform_coords[1].x ;
+  v1.y = xform_coords[1].y ;
+  v1.z = xform_coords[1].z ;
+  v1.w = xform_coords[1].w ;
+  v2.x = xform_coords[2].x ;
+  v2.y = xform_coords[2].y ;
+  v2.z = xform_coords[2].z ;
+  v2.w = xform_coords[2].w ;
+  v3.x = xform_coords[3].x ;
+  v3.y = xform_coords[3].y ;
+  v3.z = xform_coords[3].z ;
+  v3.w = xform_coords[3].w ;
 
   nux::Color color;
   color = nux::Color::White;
@@ -1078,177 +1086,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg arg, nux::B
   {
     _AsmShaderProg->End();
   }
-}
-
-void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
-{
-  nux::Geometry geo = GetGeometry();
-
-  nux::Matrix4 ObjectMatrix;
-  nux::Matrix4 ViewMatrix;
-  nux::Matrix4 ProjectionMatrix;
-  nux::Matrix4 ViewProjectionMatrix;
-  nux::BaseTexture *icon;
- 
-  icon = arg.icon->TextureForSize (_icon_image_size);
-  
-  if(nux::Abs (arg.folding_rads) < 0.15f)
-  {
-    icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
-  }
-  else
-  {
-    icon->GetDeviceTexture()->SetFiltering(GL_LINEAR, GL_LINEAR);
-  }
-
-  nux::Vector4 v0;
-  nux::Vector4 v1;
-  nux::Vector4 v2;
-  nux::Vector4 v3;
-
-  v0.x = arg.icon->_xform_icon_screen_coord[0].x;
-  v0.y = arg.icon->_xform_icon_screen_coord[0].y;
-  v0.z = arg.icon->_xform_icon_screen_coord[0].z;
-  v0.w = arg.icon->_xform_icon_screen_coord[0].w;
-  v1.x = arg.icon->_xform_icon_screen_coord[1].x;
-  v1.y = arg.icon->_xform_icon_screen_coord[1].y;
-  v1.z = arg.icon->_xform_icon_screen_coord[1].z;
-  v1.w = arg.icon->_xform_icon_screen_coord[1].w;
-  v2.x = arg.icon->_xform_icon_screen_coord[2].x;
-  v2.y = arg.icon->_xform_icon_screen_coord[2].y;
-  v2.z = arg.icon->_xform_icon_screen_coord[2].z;
-  v2.w = arg.icon->_xform_icon_screen_coord[2].w;
-  v3.x = arg.icon->_xform_icon_screen_coord[3].x;
-  v3.y = arg.icon->_xform_icon_screen_coord[3].y;
-  v3.z = arg.icon->_xform_icon_screen_coord[3].z;
-  v3.w = arg.icon->_xform_icon_screen_coord[3].w;
-  int inside = arg.icon->_mouse_inside; //PointInside2DPolygon(arg.icon->_xform_screen_coord, 4, _mouse_position, 1);
-
-  nux::Color color;
-  if(inside)
-    color = nux::Color::Red;
-  else
-    color = nux::Color::White;
-
-  float s0, t0, s1, t1, s2, t2, s3, t3;
-  
-  if (icon->Type ().IsDerivedFromType(nux::TextureRectangle::StaticObjectType))
-  {
-    s0 = 0.0f;                                  t0 = 0.0f;
-    s1 = 0.0f;                                  t1 = icon->GetHeight();
-    s2 = icon->GetWidth();     t2 = icon->GetHeight();
-    s3 = icon->GetWidth();     t3 = 0.0f;
-  }
-  else
-  {
-    s0 = 0.0f;    t0 = 0.0f;
-    s1 = 0.0f;    t1 = 1.0f;
-    s2 = 1.0f;    t2 = 1.0f;
-    s3 = 1.0f;    t3 = 0.0f;
-  }
-
-  float VtxBuffer[] =
-  {// Perspective correct
-    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,     color.R(), color.G(), color.B(), color.A(),
-    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,     color.R(), color.G(), color.B(), color.A(),
-    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,     color.R(), color.G(), color.B(), color.A(),
-    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,     color.R(), color.G(), color.B(), color.A(),
-  };
-
-  CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
-  CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
-
-  int TextureObjectLocation;
-  int VertexLocation;
-  int TextureCoord0Location;
-  int VertexColorLocation;
-  int FragmentColor;
-
-  if(!USE_ARB_SHADERS)
-  {
-    _shader_program_uv_persp_correction->Begin();
-
-    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
-    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
-    
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-
-    if(TextureObjectLocation != -1)
-      CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
-
-    int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
-    if(VPMatrixLocation != -1)
-    {
-      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
-      _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
-    }
-  }
-  else
-  {
-    _AsmShaderProg->Begin();
-
-    VertexLocation        = nux::VTXATTRIB_POSITION;
-    TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
-    VertexColorLocation   = nux::VTXATTRIB_COLOR;
-
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-  }
-
-  CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
-  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer) );
-
-  if(TextureCoord0Location != -1)
-  {
-    CHECKGL( glEnableVertexAttribArrayARB(TextureCoord0Location) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4) );
-  }
-
-  if(VertexColorLocation != -1)
-  {
-    CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
-  }
-
-  nux::Color bkg_color = nux::Color::White;
-  nux::Color white = nux::Color::White;
-  
-  bkg_color.SetAlpha (bkg_color.A () * arg.alpha);
-  
-  if(!USE_ARB_SHADERS)
-  {
-    CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-    CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
-  }
-  else
-  {
-    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-    CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
-  }
-  
-  if(VertexLocation != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(VertexLocation) );
-  if(TextureCoord0Location != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(TextureCoord0Location) );
-  if(VertexColorLocation != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
-
-  if(!USE_ARB_SHADERS)
-  {
-    _shader_program_uv_persp_correction->End();
-  }
-  else
-  {
-    _AsmShaderProg->End();
-  }
   
   int markerCenter = (v1.y + v0.y) / 2;
   
-  if (arg.running_arrow)
+  if (arg.running_arrow && render_indicators)
   {
     if (!m_RunningIndicator)
     {
@@ -1259,7 +1100,7 @@ void Launcher::RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg)
     gPainter.Draw2DTexture (GfxContext, m_RunningIndicator, 0, markerCenter - (m_ActiveIndicator->GetHeight () / 2));
   }
   
-  if (arg.active_arrow)
+  if (arg.active_arrow && render_indicators)
   {
     if (!m_ActiveIndicator)
     {
@@ -1282,9 +1123,21 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
   
   if (arg.backlight_intensity < 1.0f)
-    RenderIcon(GfxContext, arg, _icon_outline_texture, nux::Color(0xFF6D6D6D), 1.0f - arg.backlight_intensity);
+    RenderIcon(GfxContext, 
+               arg, 
+               _icon_outline_texture, 
+               nux::Color(0xFF6D6D6D), 
+               1.0f - arg.backlight_intensity, 
+               arg.icon->_xform_screen_coord, 
+               false);
   if (arg.backlight_intensity > 0.0f)
-    RenderIcon(GfxContext, arg, _icon_bkg_texture, arg.icon->BackgroundColor (), arg.backlight_intensity);
+    RenderIcon(GfxContext, 
+               arg, 
+               _icon_bkg_texture, 
+               arg.icon->BackgroundColor (), 
+               arg.backlight_intensity, 
+               arg.icon->_xform_screen_coord, 
+               false);
 
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
@@ -1293,21 +1146,45 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
                                                 GL_ONE);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
   
-  RenderIconImage (GfxContext, arg);
+  RenderIcon (GfxContext, 
+              arg, 
+              arg.icon->TextureForSize (_icon_image_size), 
+              nux::Color::White,
+              arg.alpha,
+              arg.icon->_xform_icon_screen_coord,
+              true);
   
   if (arg.backlight_intensity > 0.0f)
-    RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity);
+    RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity, arg.icon->_xform_screen_coord, false);
   
   switch (arg.window_indicators)
   {
     case 2:
-      RenderIcon(GfxContext, arg, _icon_2indicator, nux::Color::White, 1.0f);
+      RenderIcon(GfxContext, 
+                 arg, 
+                 _icon_2indicator, 
+                 nux::Color::White, 
+                 1.0f, 
+                 arg.icon->_xform_screen_coord, 
+                 false);
       break;
     case 3:
-      RenderIcon(GfxContext, arg, _icon_3indicator, nux::Color::White, 1.0f);
+      RenderIcon(GfxContext, 
+                  arg, 
+                  _icon_3indicator, 
+                  nux::Color::White, 
+                  1.0f, 
+                  arg.icon->_xform_screen_coord, 
+                  false);
       break;
     case 4:
-      RenderIcon(GfxContext, arg, _icon_4indicator, nux::Color::White, 1.0f);
+      RenderIcon(GfxContext, 
+                 arg, 
+                 _icon_4indicator, 
+                 nux::Color::White, 
+                 1.0f, 
+                 arg.icon->_xform_screen_coord, 
+                 false);
       break;
   }
 }
