@@ -971,10 +971,8 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   v3.z = xform_coords[3].z ;
   v3.w = xform_coords[3].w ;
 
-  nux::Color color;
-  color = nux::Color::White;
-
   float s0, t0, s1, t1, s2, t2, s3, t3;
+  nux::Color color = nux::Color::White;
   
   if (icon->Type ().IsDerivedFromType(nux::TextureRectangle::StaticObjectType))
   {
@@ -1155,7 +1153,13 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
               true);
   
   if (arg.backlight_intensity > 0.0f)
-    RenderIcon(GfxContext, arg, _icon_shine_texture, nux::Color::White, arg.backlight_intensity, arg.icon->_xform_screen_coord, false);
+    RenderIcon(GfxContext, 
+               arg, 
+               _icon_shine_texture, 
+               nux::Color::White, 
+               arg.backlight_intensity, 
+               arg.icon->_xform_screen_coord, 
+               false);
   
   switch (arg.window_indicators)
   {
