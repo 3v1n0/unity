@@ -4,7 +4,6 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
 CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
@@ -21,13 +20,9 @@ override_dh_install:
 
 override_dh_gencontrol:
 	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION)
-	# override netbook-launcher for i386 to get an epoch
-ifeq ($(DEB_HOST_ARCH),i386)
-		rm debian/netbook-launcher/DEBIAN/control
-		dpkg-gencontrol -pnetbook-launcher -ldebian/changelog -Tdebian/netbook-launcher.substvars -Pdebian/netbook-launcher -Vcoreabiversion=20101111 -v2:$(DEB_VERSION) 
-		chmod 644 debian/netbook-launcher/DEBIAN/control
-		chown 0:0 debian/netbook-launcher/DEBIAN/control
-endif
+	# override netbook-launcher on i386 to get an epoch
+	rm -f debian/netbook-launcher/DEBIAN/control
+	dh_gencontrol -pnetbook-launcher -- -Vcoreabiversion=$(CORE_ABIVERSION) -v2:$(DEB_VERSION)
 
 override_dh_auto_test:
 	echo "not working right now"
