@@ -523,6 +523,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   self->panelView = new PanelView ();
+  self->addChild (self->panelView);
 
   layout = new nux::HLayout();
 

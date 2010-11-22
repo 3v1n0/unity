@@ -74,12 +74,10 @@ public:
     //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
     void CancelActiveQuicklist (QuicklistView *quicklist);
 
-protected:
-	const gchar* 
-	getName ();
-
-	void
-	addProperties (GVariantBuilder *builder);
+protected:	
+	// Introspectable methods
+	const gchar* getName ();
+	void addProperties (GVariantBuilder *builder);
 
 private:
   typedef enum

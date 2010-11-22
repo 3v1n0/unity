@@ -25,8 +25,9 @@
 
 #include "PanelHomeButton.h"
 #include "IndicatorObjectFactoryRemote.h"
+#include "Introspectable.h"
 
-class PanelView : public nux::View
+class PanelView : public Introspectable, public nux::View
 {
 public:
   PanelView (NUX_FILE_LINE_PROTO);
@@ -43,6 +44,11 @@ public:
   void OnMenuPointerMoved (int x, int y);
   
   PanelHomeButton * HomeButton ();
+
+protected:
+  // Introspectable methods
+  const gchar* getName ();
+  void addProperties (GVariantBuilder *builder);
 
 private:
   void UpdateBackground ();
