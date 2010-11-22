@@ -192,8 +192,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
   if (x <= (hgeo.x + hgeo.width))
     return; 
   
-  if (x > geo.x && x < (geo.x + geo.width)
-      && y > geo.y && y < (geo.y + geo.height))
+  if (x >= geo.x && x <= (geo.x + geo.width)
+      && y >= geo.y && y <= (geo.y + geo.height))
     {
       std::list<Area *>::iterator it;
 
@@ -203,8 +203,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
         PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
         geo = view->GetGeometry ();
-        if (x > geo.x && x < (geo.x + geo.width)
-            && y > geo.y && y < (geo.y + geo.height))
+        if (x >= geo.x && x <= (geo.x + geo.width)
+            && y >= geo.y && y <= (geo.y + geo.height))
           {
             std::list<Area *>::iterator it2;
 
@@ -214,8 +214,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
               PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
               geo = entry->GetGeometry ();
-              if (x > geo.x && x < (geo.x + geo.width)
-                  && y > geo.y && y < (geo.y + geo.height))
+              if (x >= geo.x && x <= (geo.x + geo.width)
+                  && y >= geo.y && y <= (geo.y + geo.height))
                 {
                   entry->OnMouseDown (x, y, 0, 0);
                   break;

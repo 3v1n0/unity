@@ -30,6 +30,7 @@
 #include "Nux/TimerProc.h"
 
 class LauncherModel;
+class QuicklistView;
 
 class Launcher : public Introspectable, public nux::View
 {
@@ -65,6 +66,13 @@ public:
     virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+
+    //! Called by LauncherIcon to signal that a Quicklist is becoming active.
+    void SetActiveQuicklist (QuicklistView *quicklist);
+    //! Get the active qicklist
+    QuicklistView *GetActiveQuicklist ();
+    //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
+    void CancelActiveQuicklist (QuicklistView *quicklist);
 
 protected:
 	const gchar* 
@@ -148,6 +156,7 @@ private:
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
+ 
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -155,6 +164,9 @@ private:
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
 
+  
+  QuicklistView* _active_quicklist;
+  
   bool  _hovered;
   bool  _floating;
   bool  _autohide;

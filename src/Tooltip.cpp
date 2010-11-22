@@ -49,6 +49,7 @@ namespace nux
     _anchor_height  = 18;
     _corner_radius  = 4;
     _padding        = 15;
+    _top_size       = 4;
 
     _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
     _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -93,6 +94,26 @@ namespace nux
     _tooltip_text->ProcessEvent(ievent, ret, ProcessEventInfo);
     
     return ret;
+  }
+  
+  void Tooltip::ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y)
+  {
+    int window_width;
+    int window_height;
+
+    window_width = nux::GetWindow ().GetWindowWidth ();
+    window_height = nux::GetWindow ().GetWindowHeight ();
+
+    _anchorX = anchor_tip_x;
+    _anchorY = anchor_tip_y;
+
+    int x = _anchorX - _padding;
+    int y = anchor_tip_y - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+    SetBaseX (x);
+    SetBaseY (y);
+
+    ShowWindow (true);
   }
 
   void Tooltip::Draw (GraphicsEngine& gfxContext, bool forceDraw)
@@ -766,6 +787,17 @@ void ctk_surface_blur (cairo_surface_t* surface,
     if (_cairo_text_has_changed == false)
       return;
 
+    int height = GetBaseHeight ();
+    int size_above_anchor = -1; // equal to sise below
+    
+    _top_size = 0;
+    size_above_anchor = -1;
+    int x = _anchorX - _padding;
+    int y = _anchorY - height/2;
+
+    SetBaseX (x);
+    SetBaseY (y);
+
     float blur_coef         = 6.0f;
 
     CairoGraphics* cairo_bg       = new CairoGraphics (CAIRO_FORMAT_ARGB32, GetBaseWidth (), GetBaseHeight ());
@@ -782,8 +814,6 @@ void ctk_surface_blur (cairo_surface_t* surface,
     float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
     float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.75f};
     float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-    float   anchor_width      = 10;
-    float   anchor_height     = 18;
 
     tint_dot_hl (cr_bg,
       GetBaseWidth (),
@@ -801,8 +831,8 @@ void ctk_surface_blur (cairo_surface_t* surface,
       cairo_outline->GetSurface(),
       GetBaseWidth (),
       GetBaseHeight (),
-      anchor_width,
-      anchor_height,
+      _anchor_width,
+      _anchor_height,
       -1,
       _corner_radius,
       blur_coef,
@@ -816,15 +846,15 @@ void ctk_surface_blur (cairo_surface_t* surface,
       cairo_mask->GetSurface(),
       GetBaseWidth (),
       GetBaseHeight(),
-      _corner_radius,  // radius,
+      _corner_radius, // radius,
       16,             // shadow_radius,
-      anchor_width,   // anchor_width,
-      anchor_height,  // anchor_height,
+      _anchor_width,  // anchor_width,
+      _anchor_height, // anchor_height,
       -1,             // upper_size,
       true,           // negative,
       false,          // outline,
       1.0,            // line_width,
-      _padding,        // padding_size,
+      _padding,       // padding_size,
       mask_color);
 
     cairo_destroy (cr_bg);

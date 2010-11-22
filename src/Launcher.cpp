@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
+#include "QuicklistView.h"
 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -170,6 +171,8 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
 ,   _model (0)
 {
     _parent = parent;
+    _active_quicklist = 0;
+    
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
     OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
@@ -668,7 +671,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         launcher_args.push_back (arg);
     }
     
-    center.y = geo.height - shelf_sum + _space_between_icons;
+    center.y = (box_geo.y + box_geo.height) - shelf_sum + _space_between_icons;
     
     // Place shelf icons
     for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
@@ -1326,8 +1329,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     RenderArgs (args, shelf_args, bkg_box, shelf_box);
     _last_shelf_area = shelf_box;
 
+    // clear region    
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
     
+    GfxContext.PushClippingRectangle(bkg_box);
     GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA,
@@ -1389,6 +1394,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
 
     gPainter.PopBackground();
+    GfxContext.PopClippingRectangle();
     GfxContext.PopClippingRectangle();
 }
 
@@ -1902,3 +1908,21 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     }
 //     glEnd();
 }
+
+void Launcher::SetActiveQuicklist (QuicklistView *quicklist)
+{
+  // Assert: _active_quicklist should be 0
+  _active_quicklist = quicklist;
+}
+
+QuicklistView *Launcher::GetActiveQuicklist ()
+{
+  return _active_quicklist;
+}
+
+void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
+{
+  if (_active_quicklist == quicklist)
+    _active_quicklist = 0;
+}
+
