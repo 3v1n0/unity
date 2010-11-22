@@ -45,15 +45,11 @@ namespace Unity {
     private Map<string,AppInfo?> appinfo_by_id; /* id or path -> AppInfo */
     private Map<string,FileMonitor> monitors; /* parent uri -> monitor */
     private Map<string, Gee.List<string>> categories_by_id; /* desktop id or path -> xdg cats */
-    private uchar[] buffer;
-    private size_t buffer_size;
     
     private AppInfoManager ()
     {
       appinfo_by_id = new HashMap<string,AppInfo?> (GLib.str_hash, GLib.str_equal);
       categories_by_id = new HashMap<string,Gee.List<string>> (GLib.str_hash, GLib.str_equal);
-      buffer_size = 1024;
-      buffer = new uchar[buffer_size];
       
       monitors = new HashMap<string,AppInfo?> (GLib.str_hash, GLib.str_equal);
       foreach (string path in IO.get_system_data_dirs())
@@ -228,7 +224,7 @@ namespace Unity {
       
       /* Load it async */            
       size_t data_size;
-      void* data;
+      uint8[] data;
       FileInputStream input;
       
       /* Open from path or by desktop id */
@@ -268,8 +264,8 @@ namespace Unity {
       try
         {
           /* Note that we must manually free 'data' */
-          yield IO.read_stream_async (input, buffer, buffer_size,
-                                      Priority.DEFAULT, null,
+          yield IO.read_stream_async (input,
+                                      Priority.LOW, null,
                                       out data, out data_size);
         }
       catch (Error e)
@@ -292,9 +288,6 @@ namespace Unity {
       /* Create the appinfo and cache it */
       var appinfo = new DesktopAppInfo.from_keyfile (keyfile);
       appinfo_by_id.set (id, appinfo);
-      
-      /* Manually free the raw file data */
-      g_free (data);
       
       return appinfo;
     }

@@ -37,39 +37,24 @@ namespace Unity.IO {
   /**
    * Asynchronously read a stream into memory. This method will close
    * the input stream when done.
-   *
-   * Important: The passed back data must be manually freed using g_free()
    */
   public async void read_stream_async (InputStream input,
-                                       void* buffer,
-                                       size_t buffer_lenght,
-                                       int io_priority,
-                                       Cancellable? cancellable,
-                                       out void* data,
-                                       out size_t size) throws Error
+                                       int io_priority = GLib.Priority.LOW,
+                                       Cancellable? cancellable = null,
+                                       out uint8[] data,
+                                       out size_t size) throws IOError
   {
-    size_t numread, numwritten;
-    
     /* Since the free func of the MemoryOutputStream is null, we own the
      * ref to the internal buffer when the stream is finalized */
-    var output = new MemoryOutputStream (null, 0, realloc, null);
-
-    while (true)
-      {
-        numread = yield input.read_async (buffer, buffer_lenght,
-                                          io_priority, cancellable);
-        if (numread <= 0)
-          break;
-        
-        /* We can do sync writes since it's known to be in memory */
-        output.write_all (buffer, numread, out numwritten, null);
-      }
+    var output = new MemoryOutputStream (null, realloc, null);
+    yield output.splice_async (input, OutputStreamSpliceFlags.NONE,
+                               io_priority, cancellable);
     
-    data = output.get_data();
+    data = output.steal_data();
     size = output.get_data_size ();
     
     /* Start closing the input stream, but don't wait for it to happen */
-    input.close_async.begin(Priority.DEFAULT, null);
+    input.close_async.begin(Priority.LOW, null);
     output.close (null);    
   }
   
