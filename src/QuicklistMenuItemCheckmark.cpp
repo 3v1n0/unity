@@ -98,7 +98,6 @@ QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
 
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference ();
-
 }
 
 void
@@ -112,8 +111,6 @@ QuicklistMenuItemCheckmark::PreLayoutManagement ()
                                            _fontSize);
   GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
 
-  //_pre_layout_width = GetBaseWidth ();
-  //_pre_layout_height = GetBaseHeight ();
   _pre_layout_width = textWidth + (int) ITEM_INDENT_ABS;
   _pre_layout_height = textHeight;
 
@@ -275,7 +272,7 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
   //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
   //cairo_paint (cr);
-  cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+  //cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
 
   pango_layout_context_changed (layout);
 

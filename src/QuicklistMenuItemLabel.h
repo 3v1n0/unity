@@ -81,7 +81,6 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     nux::Color      _textColor;
 
     nux::CairoGraphics*   _cairoGraphics;
-    nux::BaseTexture*     _texture2D;
     int                   _dpiX;
     int                   _dpiY;
     cairo_font_options_t* _fontOpts;
@@ -97,9 +96,14 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     nux::BaseTexture* _prelightTexture;
 
     void Initialize (DbusmenuMenuitem* item);
-    void DrawText ();
     virtual void UpdateTexture ();
-    void DrawRoundedRectangle ();
+    void DrawRoundedRectangle (cairo_t* cr,
+                               double   aspect,
+                               double   x,
+                               double   y,
+                               double   cornerRadius,
+                               double   width,
+                               double   height);
 };
 
 #endif // QUICKLISTMENUITEMLABEL_H
