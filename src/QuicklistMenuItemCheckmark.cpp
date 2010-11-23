@@ -107,13 +107,15 @@ QuicklistMenuItemCheckmark::PreLayoutManagement ()
   int textWidth  = 0;
   int textHeight = 0;
 
-  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
+                                           _fontName.GetTCharPtr (),
+                                           _fontSize);
   GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
 
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
 
-  SetBaseSize (textWidth, textHeight);
+  SetBaseSize (textWidth + ITEM_INDENT_ABS, textHeight);
 
   if (_normalTexture[0] == 0)
   {
@@ -254,7 +256,7 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
 
   pango_layout_context_changed (layout);
 
-  cairo_move_to (cr, 0.0f, 0.0f);
+  cairo_move_to (cr, ITEM_INDENT_ABS, (float) (height - textHeight) / 2.0f);
   pango_cairo_show_layout (cr, layout);
 
   // clean up
@@ -264,7 +266,9 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
 
 void QuicklistMenuItemCheckmark::GetTextExtents (int &width, int &height)
 {
-  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
+                                           _fontName.GetTCharPtr (),
+                                           _fontSize);
   GetTextExtents (str.GetTCharPtr (), width, height);
 }
 
@@ -312,10 +316,11 @@ QuicklistMenuItemCheckmark::GetTextExtents (const TCHAR* font,
 void
 QuicklistMenuItemCheckmark::UpdateTexture ()
 {
-  int width  = GetBaseWidth ();
-  int height = GetBaseHeight ();
+  nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
+  int        width       = GetBaseWidth () + ITEM_INDENT_ABS;
+  int        height      = GetBaseHeight ();
 
-  GetTextExtents(width, height);
+  GetTextExtents (width, height);
   
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
@@ -330,6 +335,8 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   cairo_set_line_width (cr, 1.0f);
 
   DrawText (cr, width, height, nux::Color::White);
+
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal-unchecked.png");
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -372,6 +379,8 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   DrawText (cr, width, height, nux::Color::White);
 
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal-checked.png");
+
   bitmap = _cairoGraphics->GetBitmap ();
 
   if (_normalTexture[1])
@@ -400,7 +409,9 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, transparent);
+
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active-unchecked.png");
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -450,7 +461,9 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_restore (cr);
 
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, transparent);
+
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active-checked.png");
 
   bitmap = _cairoGraphics->GetBitmap ();
 
