@@ -85,6 +85,19 @@ View (NUX_FILE_LINE_PARAM)
                     G_CALLBACK (OnItemActivated),
                     this);
   }
+  
+  OnMouseDown.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDown));
+  OnMouseUp.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseUp));
+  OnMouseClick.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseClick));
+  OnMouseMove.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseMove));
+  OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDrag));
+  OnMouseEnter.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseEnter));
+  OnMouseLeave.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseLeave));
+  
+  // Get the original states of the item
+  _enabled = true; //GetEnabled ();
+  _active = true; //GetActive ();
+  _prelight = false;
 }
 
 QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
@@ -96,6 +109,19 @@ View (NUX_FILE_LINE_PARAM)
   _menuItem   = item;
   _debug      = debug;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
+  
+  OnMouseDown.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDown));
+  OnMouseUp.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseUp));
+  OnMouseClick.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseClick));
+  OnMouseMove.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseMove));
+  OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDrag));
+  OnMouseEnter.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseEnter));
+  OnMouseLeave.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseLeave));
+  
+  // Get the original states of the item
+  _enabled = GetEnabled ();
+  _active = GetActive ();
+  _prelight = false;
 }
 
 QuicklistMenuItem::~QuicklistMenuItem ()
@@ -227,4 +253,48 @@ OnItemActivated (guint              timestamp,
                  QuicklistMenuItem* self)
 {
   self->ItemActivated ();
+}
+
+void QuicklistMenuItem::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+
+}
+
+void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  printf ("Mouse Up\n");
+  sigMouseReleased.emit (this);
+}
+
+void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (!_enabled)
+  {
+    sigMouseClick.emit (this);
+    return;
+  }
+  _active = !_active;
+  sigMouseClick.emit (this);
+}
+
+void QuicklistMenuItem::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+{
+  
+}
+
+void QuicklistMenuItem::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+{
+  
+}
+
+void QuicklistMenuItem::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _prelight = true;
+  sigMouseEnter.emit (this);
+}
+
+void QuicklistMenuItem::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _prelight = false;
+  sigMouseLeave.emit (this);
 }

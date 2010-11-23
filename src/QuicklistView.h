@@ -72,8 +72,6 @@ public:
   
   void RemoveAllMenuItem ();
   
-  void AddMenuItem (nux::NString str);
-  
   void AddMenuItem (QuicklistMenuItem* item);
   
   void RenderQuicklistView ();
@@ -89,8 +87,12 @@ public:
   void TestMenuItems (DbusmenuMenuitem* root);
   
 private:
-  void RecvCairoTextChanged (QuicklistMenuItem* cairo_text);
-  void RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text);
+  void RecvCairoTextChanged (QuicklistMenuItem* item);
+  void RecvCairoTextColorChanged (QuicklistMenuItem* item);
+  void RecvItemMouseClick (QuicklistMenuItem* item);
+  void RecvItemMouseRelease (QuicklistMenuItem* item);
+  void RecvItemMouseEnter (QuicklistMenuItem* item);
+  void RecvItemMouseLeave (QuicklistMenuItem* item);
   
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -120,6 +122,8 @@ private:
   int                   _dpiY;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
+  bool                  _mouse_down;
+  
   cairo_font_options_t* _fontOpts;
 
   nux::BaseTexture*     _texture_bg;

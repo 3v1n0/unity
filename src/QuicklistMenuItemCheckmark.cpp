@@ -181,19 +181,40 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
-  if (GetActive ())
+//   if (GetActive ())
+//   {
+//     if (GetEnabled ())
+//       texture = _prelightTexture[1]->GetDeviceTexture ();
+//     else
+//       texture = _prelightTexture[0]->GetDeviceTexture ();
+//   }
+//   else
+//   {
+//     if (GetEnabled ())
+//       texture = _normalTexture[1]->GetDeviceTexture ();
+//     else
+//       texture = _normalTexture[0]->GetDeviceTexture ();
+//   }
+  
+  if (_enabled)
   {
-    if (GetEnabled ())
-      texture = _prelightTexture[1]->GetDeviceTexture ();
-    else
+    if (_active && _prelight)
+    {
       texture = _prelightTexture[0]->GetDeviceTexture ();
-  }
-  else
-  {
-    if (GetEnabled ())
-      texture = _normalTexture[1]->GetDeviceTexture ();
-    else
+    }
+    else if (_active)
+    {
       texture = _normalTexture[0]->GetDeviceTexture ();
+    }
+
+    if ((!_active) && _prelight)
+    {
+      texture = _prelightTexture[1]->GetDeviceTexture ();
+    }
+    else if (!_active)
+    {
+      texture = _normalTexture[1]->GetDeviceTexture ();
+    }
   }
   
   gfxContext.QRP_GLSL_1Tex (base.x,

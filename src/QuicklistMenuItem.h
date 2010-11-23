@@ -105,7 +105,21 @@ class QuicklistMenuItem : public nux::View
     sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
     sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
     
+    
   protected:
+
+    void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+    void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+    
+    sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
+    sigc::signal<void, QuicklistMenuItem*> sigMouseLeave;
+    sigc::signal<void, QuicklistMenuItem*> sigMouseReleased;
+    sigc::signal<void, QuicklistMenuItem*> sigMouseClick;
     
     nux::BaseTexture* _normalTexture[2];
     nux::BaseTexture* _activeTexture[2];
@@ -114,8 +128,14 @@ class QuicklistMenuItem : public nux::View
     nux::Color        _color;
     bool              _debug;
     QuicklistMenuItemType _item_type;
+    
+    bool _enabled;
+    bool _active;
+    bool _prelight;
 
     void DrawRoundedRectangle ();
+    
+    friend class QuicklistView;
 };
 
 #endif // QUICKLISTMENUITEM_H

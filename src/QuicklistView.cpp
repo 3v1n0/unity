@@ -89,6 +89,7 @@ QuicklistView::QuicklistView ()
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   
+  _mouse_down = false;
 }
 
 QuicklistView::~QuicklistView ()
@@ -121,14 +122,19 @@ void QuicklistView::FillInDefaultItems ()
 {
   for (int i = 0; i < 2; i++)
   {
-    QuicklistMenuItemCheckmark* item_text;
-    item_text = new QuicklistMenuItemCheckmark (0, NUX_TRACKER_LOCATION);
+    QuicklistMenuItemCheckmark* item;
+    item = new QuicklistMenuItemCheckmark (0, NUX_TRACKER_LOCATION);
 
-    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-    item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-    _default_item_list.push_back (item_text);
-    item_text->Reference();
+    item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+    item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+    item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
+    item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
+    item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
+    item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+    
+    _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+    _default_item_list.push_back (item);
+    item->Reference();
   }
 }
 
@@ -187,14 +193,49 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
 
   // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
   // This is meantto be easier since the quicklist has a atypical way of working.
-  // if (m_layout)
-  // ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
+  if (m_layout)
+    ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
 
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+    {
+      _mouse_down = true;
+    }
+    else
+    {
+      _mouse_down = false;
+      if (IsVisible ())
+      {
+        CaptureMouseDownAnyWhereElse (false);
+        ForceStopFocus (1, 1);
+        UnGrabPointer ();
+        EnableInputWindow (false);
+        ShowWindow (false);
+      }
+      return nux::eMouseEventSolved;
+    }
+  }
+  else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
+  {
+    
+    _mouse_down = false;
+    if (IsVisible ())
+    {
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+    return nux::eMouseEventSolved;
+  }
+  
   // PostProcessEvent2 must always have its last parameter set to 0
   // because the m_BackgroundArea is the real physical limit of the window.
   // So the previous test about IsPointInside do not prevail over m_BackgroundArea
   // testing the event by itself.
-  ret = PostProcessEvent2 (ievent, ret, 0);
+  //ret = PostProcessEvent2 (ievent, ret, 0);
   return ret;    
 }
 
@@ -364,6 +405,42 @@ void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
   NeedRedraw ();
 }
 
+void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
+{
+  _mouse_down = false;
+  if (IsVisible ())
+  {
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
+  }
+}
+
+void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item)
+{
+  _mouse_down = false;
+  if (IsVisible ())
+  {
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
+  }  
+}
+
+void QuicklistView::RecvItemMouseEnter (QuicklistMenuItem* item)
+{
+  NeedRedraw ();
+}
+
+void QuicklistView::RecvItemMouseLeave (QuicklistMenuItem* item)
+{
+  NeedRedraw ();
+}
+
 void QuicklistView::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
 //     if (IsVisible ())
@@ -395,70 +472,70 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 
 void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
-  
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    nux::Geometry geo = (*it)->GetGeometry ();
-    geo.SetWidth (_max_layout_width);
-    if (geo.IsPointInside (x, y))
-    {
-      (*it)->SetColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetColor (nux::Color::White);
-    }
-  }
-  
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    nux::Geometry geo = (*it)->GetGeometry ();
-    geo.SetWidth (_max_layout_width);    
-    if (geo.IsPointInside (x, y))
-    {
-      (*it)->SetColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetColor (nux::Color::White);
-    }
-  }
+//   int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
+//   
+//   std::list<QuicklistMenuItem*>::iterator it;
+//   for (it = _item_list.begin(); it != _item_list.end(); it++)
+//   {
+//     nux::Geometry geo = (*it)->GetGeometry ();
+//     geo.SetWidth (_max_layout_width);
+//     if (geo.IsPointInside (x, y))
+//     {
+//       (*it)->SetColor (nux::Color::DarkGray);
+//     }
+//     else
+//     {
+//       (*it)->SetColor (nux::Color::White);
+//     }
+//   }
+//   
+//   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+//   {
+//     nux::Geometry geo = (*it)->GetGeometry ();
+//     geo.SetWidth (_max_layout_width);    
+//     if (geo.IsPointInside (x, y))
+//     {
+//       (*it)->SetColor (nux::Color::DarkGray);
+//     }
+//     else
+//     {
+//       (*it)->SetColor (nux::Color::White);
+//     }
+//   }
 }
 
 void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
-  
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    nux::Geometry geo = (*it)->GetGeometry ();
-    geo.SetWidth (_max_layout_width);
-    if (geo.IsPointInside (x, y))
-    {
-      (*it)->SetColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetColor (nux::Color::White);
-    }
-  }
-  
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    nux::Geometry geo = (*it)->GetGeometry ();
-    geo.SetWidth (_max_layout_width);    
-    if (geo.IsPointInside (x, y))
-    {
-      (*it)->SetColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetColor (nux::Color::White);
-    }
-  }
+//   int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
+//   
+//   std::list<QuicklistMenuItem*>::iterator it;
+//   for (it = _item_list.begin(); it != _item_list.end(); it++)
+//   {
+//     nux::Geometry geo = (*it)->GetGeometry ();
+//     geo.SetWidth (_max_layout_width);
+//     if (geo.IsPointInside (x, y))
+//     {
+//       (*it)->SetColor (nux::Color::DarkGray);
+//     }
+//     else
+//     {
+//       (*it)->SetColor (nux::Color::White);
+//     }
+//   }
+//   
+//   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+//   {
+//     nux::Geometry geo = (*it)->GetGeometry ();
+//     geo.SetWidth (_max_layout_width);    
+//     if (geo.IsPointInside (x, y))
+//     {
+//       (*it)->SetColor (nux::Color::DarkGray);
+//     }
+//     else
+//     {
+//       (*it)->SetColor (nux::Color::White);
+//     }
+//   }
 }
   
 void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -484,26 +561,15 @@ void QuicklistView::RemoveAllMenuItem ()
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
 }
 
-void QuicklistView::AddMenuItem (nux::NString str)
-{
-//   nux::StaticCairoText* item_text;
-//   item_text = new nux::StaticCairoText (str.GetTCharPtr (), NUX_TRACKER_LOCATION);
-// 
-//   item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-//   item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-//   _item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-//   _item_list.push_back (item_text);
-//   item_text->Reference();
-//   
-//   _cairo_text_has_changed = true;
-//   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
-//   NeedRedraw ();
-}
-
 void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
 {
   item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
   item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
+  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
+  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
+  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
   item->Reference();
