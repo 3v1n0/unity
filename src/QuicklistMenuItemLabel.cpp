@@ -19,6 +19,9 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemLabel.h"
 
+#define ITEM_INDENT_ABS        20.0f
+#define ITEM_CORNER_RADIUS_ABS 4.0f
+
 QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
                                                 NUX_FILE_LINE_DECL) :
 QuicklistMenuItem (item,
@@ -51,7 +54,8 @@ void QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
     _text = "QuicklistItem";
   
   _fontOpts   = cairo_font_options_create ();
-  _texture2D  = 0;
+  _normalTexture   = 0;
+  _prelightTexture = 0;
 
   // FIXME: hard-coding these for the moment, as we don't have
   // gsettings-support in place right now
@@ -84,7 +88,7 @@ QuicklistMenuItemLabel::PreLayoutManagement ()
 
   SetBaseSize (textWidth, textHeight);
 
-  if((_texture2D == 0) )
+  if((_normalTexture == 0) )
   {
     UpdateTexture ();
   }
@@ -132,6 +136,8 @@ void
 QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
                          bool                 forceDraw)
 {
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+
   nux::Geometry base = GetGeometry ();
 
   gfxContext.PushClippingRectangle (base);
@@ -144,11 +150,13 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
+  texture = _prelightTexture->GetDeviceTexture ();
+
   gfxContext.QRP_GLSL_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,
-                            _texture2D->GetDeviceTexture(),
+                            texture,
                             texxform,
                             _color);
 
@@ -247,10 +255,10 @@ void QuicklistMenuItemLabel::DrawText (cairo_t*   cr,
   pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
   pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
-  cairo_paint (cr);
-  cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  //cairo_paint (cr);
+  //cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
 
   pango_layout_context_changed (layout);
 
@@ -265,36 +273,139 @@ void QuicklistMenuItemLabel::DrawText (cairo_t*   cr,
 void
 QuicklistMenuItemLabel::UpdateTexture ()
 {
+  nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
   int width = 0;
   int height = 0;
-  GetTextExtents(width, height);
+  GetTextExtents (width, height);
 
-  SetBaseSize(width, height);
-    
+  SetBaseSize (width, height);
+
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
                                       GetBaseWidth (),
                                       GetBaseHeight ());
   cairo_t *cr = _cairoGraphics->GetContext ();
 
-  DrawText (cr, GetBaseWidth (), GetBaseHeight (), nux::Color::White);
+  // draw normal, unchecked version
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_scale (cr, 1.0f, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width (cr, 1.0f);
+
+  DrawText (cr, width, height, nux::Color::White);
+
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal.png");
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
-  // NTexture2D is the high level representation of an image that is backed by
-  // an actual opengl texture.
+  if (_normalTexture)
+    _normalTexture->UnReference ();
 
-  if (_texture2D)
-    _texture2D->UnReference ();
+  _normalTexture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture->Update (bitmap);
 
-  _texture2D = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _texture2D->Update (bitmap);
+
+  /*DrawText (cr, GetBaseWidth (), GetBaseHeight (), nux::Color::White);
+
+  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
+
+  if (_normalTexture)
+    _normalTexture->UnReference ();
+
+  _normalTexture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture->Update (bitmap);*/
+
+  // draw active/prelight, unchecked version
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_scale (cr, 1.0f, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width (cr, 1.0f);
+
+  DrawRoundedRectangle (cr,
+                        1.0f,
+                        0.5f,
+                        0.5f,
+                        ITEM_CORNER_RADIUS_ABS,
+                        width - 1.0f,
+                        height - 1.0f);
+  cairo_fill (cr);
+
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+
+  DrawText (cr, width, height, transparent);
+
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active.png");
+
+  bitmap = _cairoGraphics->GetBitmap ();
+
+  if (_prelightTexture)
+    _prelightTexture->UnReference ();
+
+  _prelightTexture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _prelightTexture->Update (bitmap);
 
   delete _cairoGraphics;
 }
 
 void
-QuicklistMenuItemLabel::DrawRoundedRectangle ()
+QuicklistMenuItemLabel::DrawRoundedRectangle (cairo_t* cr,
+                                              double   aspect,
+                                              double   x,
+                                              double   y,
+                                              double   cornerRadius,
+                                              double   width,
+                                              double   height)
 {
+  double radius = cornerRadius / aspect;
+
+  // top-left, right of the corner
+  cairo_move_to (cr, x + radius, y);
+
+  // top-right, left of the corner
+  cairo_line_to (cr, x + width - radius, y);
+
+  // top-right, below the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + radius,
+             radius,
+             -90.0f * G_PI / 180.0f,
+             0.0f * G_PI / 180.0f);
+
+  // bottom-right, above the corner
+  cairo_line_to (cr, x + width, y + height - radius);
+
+  // bottom-right, left of the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + height - radius,
+             radius,
+             0.0f * G_PI / 180.0f,
+             90.0f * G_PI / 180.0f);
+
+  // bottom-left, right of the corner
+  cairo_line_to (cr, x + radius, y + height);
+
+  // bottom-left, above the corner
+  cairo_arc (cr,
+             x + radius,
+             y + height - radius,
+             radius,
+             90.0f * G_PI / 180.0f,
+             180.0f * G_PI / 180.0f);
+
+  // top-left, right of the corner
+  cairo_arc (cr,
+             x + radius,
+             y + radius,
+             radius,
+             180.0f * G_PI / 180.0f,
+             270.0f * G_PI / 180.0f);
 }
 
 void
