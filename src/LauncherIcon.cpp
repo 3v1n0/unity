@@ -237,20 +237,8 @@ LauncherIcon::RecvMouseEnter ()
     return;
   }
   
-//   int icon_x = _xform_screen_coord[0].x;
-//   int icon_y = _xform_screen_coord[0].y;
-//   int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
-//   int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
-
-    //int icon_x = _xform_screen_coord[0].x;
-  int icon_y = _xform_screen_coord[0].y;
-  //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
-  int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
-
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
-          icon_y +
-          (icon_h / 2);
+  int tip_y = 24 + _center.y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -334,15 +322,8 @@ void LauncherIcon::RecvMouseDown (int button)
     _tooltip->ShowWindow (false);
     
     
-    //int icon_x = _xform_screen_coord[0].x;
-    int icon_y = _xform_screen_coord[0].y;
-    //int icon_w = _xform_screen_coord[2].x - _xform_screen_coord[0].x;
-    int icon_h = _xform_screen_coord[2].y - _xform_screen_coord[0].y;
-
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = 24 + // The BaseWindow where the launcher resides is 24 pixels away from the top of the screen: find a better way to get that number.
-            icon_y +
-            (icon_h / 2);
+    int tip_y = 24 + _center.y;
 
     _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
     _quicklist->EnableInputWindow (true);
@@ -404,6 +385,20 @@ struct timespec LauncherIcon::PresentTime ()
 struct timespec LauncherIcon::UnpresentTime ()
 {
   return _unpresent_time;
+}
+
+void 
+LauncherIcon::SetCenter (nux::Point3 center)
+{
+  _center = center;
+  
+  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+  int tip_y = 24 + _center.y;
+    
+  if (_quicklist->IsVisible ())
+    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+  else if (_tooltip->IsVisible ())
+    _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
 }
 
 void

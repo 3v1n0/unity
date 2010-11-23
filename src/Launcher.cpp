@@ -245,6 +245,7 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _hovered                = false;
     _autohide               = false;
     _hidden                 = false;
+    _mouse_inside_launcher  = false;
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -664,6 +665,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         center.y += half_size * size_modifier;   // move to center
         arg.center = nux::Point3 (center);       // copy center
+        icon->SetCenter (arg.center);
         center.y += half_size * size_modifier;   // move to end
         
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
@@ -741,6 +743,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
       
         center.y += half_size * size_modifier;   // move to center
         arg.center = nux::Point3 (center);       // copy center
+        icon->SetCenter (arg.center);
         center.y += half_size * size_modifier;   // move to end
         center.y += _space_between_icons * size_modifier;
         
@@ -888,6 +891,11 @@ void Launcher::OnIconAdded (void *icon_pointer)
     icon->Reference ();
     EnsureAnimation();
     
+    // How to free these properly?
+    icon->_xform_coords["HitArea"] = new nux::Vector4[4];
+    icon->_xform_coords["Image"]   = new nux::Vector4[4];
+    icon->_xform_coords["Tile"]    = new nux::Vector4[4];
+    
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 }
@@ -896,6 +904,7 @@ void Launcher::OnIconRemoved (void *icon_pointer)
 {
     LauncherIcon *icon = (LauncherIcon *) icon_pointer;
     icon->UnReference ();
+    
     EnsureAnimation();
 }
 
@@ -1121,22 +1130,27 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
   
   if (arg.backlight_intensity < 1.0f)
+  {
     RenderIcon(GfxContext, 
                arg, 
                _icon_outline_texture, 
                nux::Color(0xFF6D6D6D), 
                1.0f - arg.backlight_intensity, 
-               arg.icon->_xform_screen_coord, 
+               arg.icon->_xform_coords["Tile"], 
                false);
+  }
+  
   if (arg.backlight_intensity > 0.0f)
+  {
     RenderIcon(GfxContext, 
                arg, 
                _icon_bkg_texture, 
                arg.icon->BackgroundColor (), 
                arg.backlight_intensity, 
-               arg.icon->_xform_screen_coord, 
+               arg.icon->_xform_coords["Tile"], 
                false);
-
+  }
+  
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
                                                 GL_ONE_MINUS_SRC_ALPHA,
@@ -1149,17 +1163,19 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
               arg.icon->TextureForSize (_icon_image_size), 
               nux::Color::White,
               arg.alpha,
-              arg.icon->_xform_icon_screen_coord,
+              arg.icon->_xform_coords["Image"],
               true);
   
   if (arg.backlight_intensity > 0.0f)
+  {
     RenderIcon(GfxContext, 
                arg, 
                _icon_shine_texture, 
                nux::Color::White, 
                arg.backlight_intensity, 
-               arg.icon->_xform_screen_coord, 
+               arg.icon->_xform_coords["Tile"], 
                false);
+  }
   
   switch (arg.window_indicators)
   {
@@ -1169,7 +1185,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
                  _icon_2indicator, 
                  nux::Color::White, 
                  1.0f, 
-                 arg.icon->_xform_screen_coord, 
+                 arg.icon->_xform_coords["Tile"], 
                  false);
       break;
     case 3:
@@ -1178,7 +1194,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
                   _icon_3indicator, 
                   nux::Color::White, 
                   1.0f, 
-                  arg.icon->_xform_screen_coord, 
+                  arg.icon->_xform_coords["Tile"], 
                   false);
       break;
     case 4:
@@ -1187,7 +1203,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg)
                  _icon_4indicator, 
                  nux::Color::White, 
                  1.0f, 
-                 arg.icon->_xform_screen_coord, 
+                 arg.icon->_xform_coords["Tile"], 
                  false);
       break;
   }
@@ -1368,6 +1384,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
+  _mouse_inside_launcher = true;
   
   if (!_last_shelf_area.IsInside (nux::Point (x, y)))
       SetHover ();
@@ -1379,6 +1396,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
+  _mouse_inside_launcher = false;
   
   if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
       UnsetHover ();
@@ -1411,7 +1429,9 @@ void Launcher::EventLogic ()
     return;
   
   LauncherIcon* launcher_icon = 0;
-  launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+  
+  if (_mouse_inside_launcher)
+    launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
@@ -1482,8 +1502,8 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; i++)
     {
-      screen_coord [i].x = (*it)->_xform_screen_coord [i].x;
-      screen_coord [i].y = (*it)->_xform_screen_coord [i].y;
+      screen_coord [i].x = (*it)->_xform_coords["HitArea"] [i].x;
+      screen_coord [i].y = (*it)->_xform_coords["HitArea"] [i].y;
     }
     inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -1499,8 +1519,8 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; i++)
     {
-      screen_coord [i].x = (*rev_it)->_xform_screen_coord [i].x;
-      screen_coord [i].y = (*rev_it)->_xform_screen_coord [i].y;
+      screen_coord [i].x = (*rev_it)->_xform_coords["HitArea"] [i].x;
+      screen_coord [i].y = (*rev_it)->_xform_coords["HitArea"] [i].y;
     }
     inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -1515,8 +1535,8 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; i++)
     {
-      screen_coord [i].x = (*it)->_xform_screen_coord [i].x;
-      screen_coord [i].y = (*it)->_xform_screen_coord [i].y;
+      screen_coord [i].x = (*it)->_xform_coords["HitArea"] [i].x;
+      screen_coord [i].y = (*it)->_xform_coords["HitArea"] [i].y;
     }
     inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -1524,6 +1544,55 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   }
 
   return 0;
+}
+
+void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
+                             float x, float y, float w, float h, float z, std::string name)
+{
+  nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
+  nux::Vector4 v1 = nux::Vector4(x,   y+h,  z, 1.0f);
+  nux::Vector4 v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
+  nux::Vector4 v3 = nux::Vector4(x+w, y,    z, 1.0f);
+  
+  v0 = ViewProjectionMatrix * v0;
+  v1 = ViewProjectionMatrix * v1;
+  v2 = ViewProjectionMatrix * v2;
+  v3 = ViewProjectionMatrix * v3;
+
+  v0.divide_xyz_by_w();
+  v1.divide_xyz_by_w();
+  v2.divide_xyz_by_w();
+  v3.divide_xyz_by_w();
+
+  // normalize to the viewport coordinates and translate to the correct location
+  v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
+  v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;;
+  v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
+  v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
+  v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
+
+
+  nux::Vector4* vectors = icon->_xform_coords[name];
+  
+  vectors[0].x = v0.x;
+  vectors[0].y = v0.y;
+  vectors[0].z = v0.z;
+  vectors[0].w = v0.w;
+  vectors[1].x = v1.x;
+  vectors[1].y = v1.y;
+  vectors[1].z = v1.z;
+  vectors[1].w = v1.w;
+  vectors[2].x = v2.x;
+  vectors[2].y = v2.y;
+  vectors[2].z = v2.z;
+  vectors[2].w = v2.w;
+  vectors[3].x = v3.x;
+  vectors[3].y = v3.y;
+  vectors[3].z = v3.z;
+  vectors[3].w = v3.w;
 }
 
 void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
@@ -1561,49 +1630,7 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
     ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
 
     // Icon 
-    nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
-    nux::Vector4 v1 = nux::Vector4(x,   y+h,  z, 1.0f);
-    nux::Vector4 v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
-    nux::Vector4 v3 = nux::Vector4(x+w, y,    z, 1.0f);
-    
-    v0 = ViewProjectionMatrix * v0;
-    v1 = ViewProjectionMatrix * v1;
-    v2 = ViewProjectionMatrix * v2;
-    v3 = ViewProjectionMatrix * v3;
-
-    v0.divide_xyz_by_w();
-    v1.divide_xyz_by_w();
-    v2.divide_xyz_by_w();
-    v3.divide_xyz_by_w();
-
-    // normalize to the viewport coordinates and translate to the correct location
-    v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;;
-    v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-
-
-    launcher_icon->_xform_screen_coord[0].x = v0.x;
-    launcher_icon->_xform_screen_coord[0].y = v0.y;
-    launcher_icon->_xform_screen_coord[0].z = v0.z;
-    launcher_icon->_xform_screen_coord[0].w = v0.w;
-    launcher_icon->_xform_screen_coord[1].x = v1.x;
-    launcher_icon->_xform_screen_coord[1].y = v1.y;
-    launcher_icon->_xform_screen_coord[1].z = v1.z;
-    launcher_icon->_xform_screen_coord[1].w = v1.w;
-    launcher_icon->_xform_screen_coord[2].x = v2.x;
-    launcher_icon->_xform_screen_coord[2].y = v2.y;
-    launcher_icon->_xform_screen_coord[2].z = v2.z;
-    launcher_icon->_xform_screen_coord[2].w = v2.w;
-    launcher_icon->_xform_screen_coord[3].x = v3.x;
-    launcher_icon->_xform_screen_coord[3].y = v3.y;
-    launcher_icon->_xform_screen_coord[3].z = v3.z;
-    launcher_icon->_xform_screen_coord[3].w = v3.w;
-    
+    SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Tile");
     
     //// icon image
     w = _icon_image_size;
@@ -1612,49 +1639,15 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
     y = (*it).center.y - _icon_size/2.0f + _icon_image_size_delta/2.0f;
     z = (*it).center.z;
     
-    v0 = nux::Vector4(x,   y,    z, 1.0f);
-    v1 = nux::Vector4(x,   y+h,  z, 1.0f);
-    v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
-    v3 = nux::Vector4(x+w, y,    z, 1.0f);
+    SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
     
-    v0 = ViewProjectionMatrix * v0;
-    v1 = ViewProjectionMatrix * v1;
-    v2 = ViewProjectionMatrix * v2;
-    v3 = ViewProjectionMatrix * v3;
-
-    v0.divide_xyz_by_w();
-    v1.divide_xyz_by_w();
-    v2.divide_xyz_by_w();
-    v3.divide_xyz_by_w();
-
-    // normalize to the viewport coordinates and translate to the correct location
-    v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;;
-    v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-    v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
-    v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-
-
-    launcher_icon->_xform_icon_screen_coord[0].x = v0.x;
-    launcher_icon->_xform_icon_screen_coord[0].y = v0.y;
-    launcher_icon->_xform_icon_screen_coord[0].z = v0.z;
-    launcher_icon->_xform_icon_screen_coord[0].w = v0.w;
-
-    launcher_icon->_xform_icon_screen_coord[1].x = v1.x;
-    launcher_icon->_xform_icon_screen_coord[1].y = v1.y;
-    launcher_icon->_xform_icon_screen_coord[1].z = v1.z;
-    launcher_icon->_xform_icon_screen_coord[1].w = v1.w;
-    launcher_icon->_xform_icon_screen_coord[2].x = v2.x;
-    launcher_icon->_xform_icon_screen_coord[2].y = v2.y;
-    launcher_icon->_xform_icon_screen_coord[2].z = v2.z;
-    launcher_icon->_xform_icon_screen_coord[2].w = v2.w;
-    launcher_icon->_xform_icon_screen_coord[3].x = v3.x;
-    launcher_icon->_xform_icon_screen_coord[3].y = v3.y;
-    launcher_icon->_xform_icon_screen_coord[3].z = v3.z;
-    launcher_icon->_xform_icon_screen_coord[3].w = v3.w;    
+    w = geo.width + 2;
+    h = _icon_size + _space_between_icons;
+    x = (*it).center.x - w/2.0f;
+    y = (*it).center.y - h/2.0f;
+    z = (*it).center.z;
+    
+    SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
   }
 }
 

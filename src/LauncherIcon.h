@@ -75,6 +75,7 @@ public:
     void RecvHideQuicklist (nux::BaseWindow *quicklist);
     
     void HideTooltip ();
+    void SetCenter (nux::Point3 center);
     
     int SortPriority ();
     
@@ -130,8 +131,7 @@ protected:
     nux::BaseWindow* m_Window;
     Launcher* _launcher;
 
-    nux::Vector4  _xform_screen_coord [4];
-    nux::Vector4  _xform_icon_screen_coord [4];
+    std::map<std::string, nux::Vector4*> _xform_coords;
     bool          _mouse_inside;
     float         _folding_angle;
 
@@ -166,6 +166,8 @@ private:
     int              _related_windows;
     guint            _present_time_handle;
     bool             _quicklist_is_initialized;
+    
+    nux::Point3      _center;
     
     LauncherIconType _icon_type;
     
