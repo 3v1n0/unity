@@ -249,6 +249,12 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
   g_object_unref (layout);
 }
 
+void QuicklistMenuItemCheckmark::GetTextExtents (int &width, int &height)
+{
+  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  GetTextExtents (str.GetTCharPtr (), width, height);
+}
+
 void
 QuicklistMenuItemCheckmark::GetTextExtents (const TCHAR* font,
                                             int&         width,
@@ -296,6 +302,8 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   int width  = GetBaseWidth ();
   int height = GetBaseHeight ();
 
+  GetTextExtents(width, height);
+  
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
 

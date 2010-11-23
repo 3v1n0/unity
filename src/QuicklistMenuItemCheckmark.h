@@ -68,6 +68,8 @@ class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 
     void SetFontStyle (FontStyle fontStyle);
 
+    void GetTextExtents (int &width, int &height);
+    
   private:
     nux::NString          _text;
     nux::NString          _fontName;

@@ -154,6 +154,8 @@ QuicklistMenuItem::PostDraw (nux::GraphicsEngine& gfxContext,
 const gchar*
 QuicklistMenuItem::GetLabel ()
 {
+  if (_menuItem == 0)
+    return 0;
   return dbusmenu_menuitem_property_get (_menuItem,
                                          DBUSMENU_MENUITEM_PROP_LABEL);
 }
@@ -161,6 +163,8 @@ QuicklistMenuItem::GetLabel ()
 bool
 QuicklistMenuItem::GetEnabled ()
 {
+  if (_menuItem == 0)
+    return false;
   return dbusmenu_menuitem_property_get_bool (_menuItem,
                                               DBUSMENU_MENUITEM_PROP_ENABLED);
 }
@@ -168,6 +172,8 @@ QuicklistMenuItem::GetEnabled ()
 bool
 QuicklistMenuItem::GetActive ()
 {
+  if (_menuItem == 0)
+    return false;
   return dbusmenu_menuitem_property_get_bool (_menuItem,
                                               DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
 }
