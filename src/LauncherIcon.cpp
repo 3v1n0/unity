@@ -292,11 +292,29 @@ void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *qui
 
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
+    std::cout << "Adding separator-quicklist-item" << std::endl;
+
     QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+  {
+    std::cout << "Adding checkmark-quicklist-item" << std::endl;
+
+    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+  {
+    std::cout << "Adding radio-quicklist-item" << std::endl;
+
+    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
   else
   {
+    std::cout << "Adding label-quicklist-item" << std::endl;
+
     QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }

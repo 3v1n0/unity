@@ -32,6 +32,7 @@
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemSeparator.h"
+#include "QuicklistMenuItemCheckmark.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
@@ -120,8 +121,8 @@ void QuicklistView::FillInDefaultItems ()
 {
   for (int i = 0; i < 2; i++)
   {
-    QuicklistMenuItemLabel* item_text;
-    item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
+    QuicklistMenuItemCheckmark* item_text;
+    item_text = new QuicklistMenuItemCheckmark (0, NUX_TRACKER_LOCATION);
 
     item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
     item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
@@ -130,7 +131,6 @@ void QuicklistView::FillInDefaultItems ()
     item_text->Reference();
   }
 }
-
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 {
@@ -256,7 +256,6 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   {
     (*it)->ProcessDraw(gfxContext, forceDraw);
   }
-  
 
   gfxContext.PopClippingRectangle ();
 }
