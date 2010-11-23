@@ -84,6 +84,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  if (_present_time_handle)
+    g_source_remove (_present_time_handle);
+  
+  _present_time_handle = 0;
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
