@@ -52,6 +52,7 @@ QuicklistView::QuicklistView ()
   _padding        = 13;
   _top_size       = 4;
 
+  SetGeometry (nux::Geometry (0, 0, 1, 1));
   _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
   _item_layout     = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -69,22 +70,12 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-  for (int i = 0; i < 2; i++)
-  {
-    QuicklistMenuItemLabel* item_text;
-    item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
-
-    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-    item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-    _default_item_list.push_back (item_text);
-    item_text->Reference();
-  }
+  FillInDefaultItems ();
 
   _vlayout->AddLayout (_bottom_space, 0);
 
   _hlayout->AddLayout (_left_space, 0);
-  _hlayout->AddLayout (_vlayout, 1, nux::eCenter, nux::eFull);
+  _hlayout->AddLayout (_vlayout, 0, nux::eCenter, nux::eFull);
   _hlayout->AddLayout (_right_space, 0);
 
   SetWindowSizeMatchLayout (true);
@@ -124,6 +115,22 @@ QuicklistView::~QuicklistView ()
   _default_item_list.clear ();
   _item_list.clear ();
 }
+
+void QuicklistView::FillInDefaultItems ()
+{
+  for (int i = 0; i < 2; i++)
+  {
+    QuicklistMenuItemLabel* item_text;
+    item_text = new QuicklistMenuItemLabel (0, NUX_TRACKER_LOCATION);
+
+    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+    item_text->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
+    _default_item_list.push_back (item_text);
+    item_text->Reference();
+  }
+}
+
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 {
@@ -284,12 +291,17 @@ void QuicklistView::PreLayoutManagement ()
       MaxItemWidth = textWidth;
     TotalItemHeight += textHeight;
   }
-  
+
   if(TotalItemHeight < _anchor_height)
   {
     _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
     _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
   }
+  else
+  {
+    _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+   }
 
   BaseWindow::PreLayoutManagement ();
 }
@@ -297,6 +309,7 @@ void QuicklistView::PreLayoutManagement ()
 long QuicklistView::PostLayoutManagement (long LayoutResult)
 {
   long result = BaseWindow::PostLayoutManagement (LayoutResult);
+  
   UpdateTexture ();
 
   int x = _padding + _anchor_width + _corner_radius;
@@ -317,6 +330,26 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
     (*it)->SetBaseY (y);
 
     y += (*it)->GetBaseHeight ();
+  }
+
+  // We must correct the width of line separators. The rendering of the separator can be smaller than the width of the
+  // quicklist. The reason for that is, the quicklist width is determined by the largest entry it contains. That size is 
+  // only after MaxItemWidth is computed in QuicklistView::PreLayoutManagement.
+  // The setting of the separtor width is done here after the Layout cycle for this widget is over. The width of the separator 
+  // has bee set correctly during the layout cycle, but the cairo rendering still need to be adjusted.
+  int separator_width = nux::Max<int>(_default_item_layout->GetBaseWidth (), _item_layout->GetBaseWidth ());
+  
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    if ((*it)->GetItemType () == MENUITEM_TYPE_SEPARATOR)
+    {
+      QuicklistMenuItemSeparator* sparator_item = (QuicklistMenuItemSeparator*) (*it);
+      if (sparator_item->GetLineWidth () != separator_width)
+      {
+        // Causes the drawing of the separator line.
+        (*it)->UpdateTexture ();
+      }
+    }
   }
   
   return result;
@@ -363,10 +396,14 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 
 void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
+  
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
+    nux::Geometry geo = (*it)->GetGeometry ();
+    geo.SetWidth (_max_layout_width);
+    if (geo.IsPointInside (x, y))
     {
       (*it)->SetColor (nux::Color::DarkGray);
     }
@@ -378,7 +415,9 @@ void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long b
   
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
+    nux::Geometry geo = (*it)->GetGeometry ();
+    geo.SetWidth (_max_layout_width);    
+    if (geo.IsPointInside (x, y))
     {
       (*it)->SetColor (nux::Color::DarkGray);
     }
@@ -386,15 +425,19 @@ void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long b
     {
       (*it)->SetColor (nux::Color::White);
     }
-  }  
+  }
 }
 
 void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
+  
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
+    nux::Geometry geo = (*it)->GetGeometry ();
+    geo.SetWidth (_max_layout_width);
+    if (geo.IsPointInside (x, y))
     {
       (*it)->SetColor (nux::Color::DarkGray);
     }
@@ -406,7 +449,9 @@ void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long b
   
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
+    nux::Geometry geo = (*it)->GetGeometry ();
+    geo.SetWidth (_max_layout_width);    
+    if (geo.IsPointInside (x, y))
     {
       (*it)->SetColor (nux::Color::DarkGray);
     }
@@ -414,7 +459,7 @@ void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long b
     {
       (*it)->SetColor (nux::Color::White);
     }
-  }  
+  }
 }
   
 void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -1240,7 +1285,7 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
   {
     const gchar* type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
 
-    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)    
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
       QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);

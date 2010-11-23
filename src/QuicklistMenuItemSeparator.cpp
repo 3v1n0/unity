@@ -25,6 +25,7 @@ QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
   SetMinimumHeight (3);
+  SetBaseSize (150, 3);
   _normalTexture = NULL;
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
@@ -37,6 +38,7 @@ QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
   SetMinimumHeight (3);
+  SetBaseSize (150, 3);
   _normalTexture = NULL;
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
@@ -54,7 +56,7 @@ QuicklistMenuItemSeparator::PreLayoutManagement ()
   // using some hard-coded values the width of 150 will be stretched to fit
   // the 3 for the height is enough for a simple line that the separator is
   // one line gap at the top, the separator itself, one line gap at the bottom
-  SetBaseSize (150, 3);
+  //SetBaseSize (150, 3);
 
   if((_normalTexture == 0) )
   {
@@ -145,11 +147,8 @@ QuicklistMenuItemSeparator::PostDraw (nux::GraphicsEngine& gfxContext,
 void
 QuicklistMenuItemSeparator::UpdateTexture ()
 {
-  int width  = 150;
-  int height = 3;
-
-  SetBaseSize (width, height);
-
+  int width  = GetBaseWidth ();
+  
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
                                            GetBaseWidth (),
                                            GetBaseHeight ());
@@ -173,4 +172,12 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   _normalTexture->Update (bitmap);
 
   delete _cairoGraphics;
+}
+
+int QuicklistMenuItemSeparator::GetLineWidth ()
+{
+  if (_normalTexture)
+    return _normalTexture->GetWidth ();
+  
+  return 0;
 }

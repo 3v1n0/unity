@@ -269,7 +269,7 @@ QuicklistMenuItemLabel::UpdateTexture ()
   GetTextExtents(width, height);
 
   SetBaseSize(width, height);
-
+    
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
                                       GetBaseWidth (),
                                       GetBaseHeight ());
