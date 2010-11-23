@@ -68,6 +68,8 @@ class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 
     void SetFontStyle (FontStyle fontStyle);
 
+    void GetTextExtents (int &width, int &height);
+    
   private:
     nux::NString          _text;
     nux::NString          _fontName;
@@ -93,7 +95,7 @@ class QuicklistMenuItemCheckmark : public QuicklistMenuItem
     void GetTextExtents (const TCHAR* font,
                          int&         width,
                          int&         height);
-    void UpdateTextures ();
+    void UpdateTexture ();
     void DrawRoundedRectangle (cairo_t* cr,
                                double   aspect,
                                double   x,

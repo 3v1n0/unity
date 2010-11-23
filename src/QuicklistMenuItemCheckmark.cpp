@@ -58,12 +58,12 @@ QuicklistMenuItemCheckmark::Initialize (DbusmenuMenuitem* item)
   _fontSize   = 12;
   _fontStyle  = FONTSTYLE_NORMAL;
   _fontWeight = FONTWEIGHT_NORMAL;
-  _item_type  = MENUITEM_TYPE_LABEL;
+  _item_type  = MENUITEM_TYPE_CHECK;
   
   if (item)
     _text = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
   else
-    _text = "QuicklistItem";
+    _text = "Check Mark";
   
   _fontOpts   = cairo_font_options_create ();
   _normalTexture[0]   = NULL;
@@ -104,6 +104,23 @@ QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
 void
 QuicklistMenuItemCheckmark::PreLayoutManagement ()
 {
+  int textWidth  = 0;
+  int textHeight = 0;
+
+  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
+
+  _pre_layout_width = GetBaseWidth ();
+  _pre_layout_height = GetBaseHeight ();
+
+  SetBaseSize (textWidth, textHeight);
+
+  if (_normalTexture[0] == 0)
+  {
+    UpdateTexture ();
+  }
+
+  QuicklistMenuItem::PreLayoutManagement ();
 }
 
 long
@@ -161,16 +178,20 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
   if (GetActive ())
+  {
     if (GetEnabled ())
       texture = _prelightTexture[1]->GetDeviceTexture ();
     else
       texture = _prelightTexture[0]->GetDeviceTexture ();
+  }
   else
+  {
     if (GetEnabled ())
       texture = _normalTexture[1]->GetDeviceTexture ();
     else
       texture = _normalTexture[0]->GetDeviceTexture ();
-
+  }
+  
   gfxContext.QRP_GLSL_1Tex (base.x,
                             base.y,
                             base.width,
@@ -241,6 +262,12 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
   g_object_unref (layout);
 }
 
+void QuicklistMenuItemCheckmark::GetTextExtents (int &width, int &height)
+{
+  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  GetTextExtents (str.GetTCharPtr (), width, height);
+}
+
 void
 QuicklistMenuItemCheckmark::GetTextExtents (const TCHAR* font,
                                             int&         width,
@@ -283,11 +310,13 @@ QuicklistMenuItemCheckmark::GetTextExtents (const TCHAR* font,
 }
 
 void
-QuicklistMenuItemCheckmark::UpdateTextures ()
+QuicklistMenuItemCheckmark::UpdateTexture ()
 {
   int width  = GetBaseWidth ();
   int height = GetBaseHeight ();
 
+  GetTextExtents(width, height);
+  
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
 
@@ -300,7 +329,7 @@ QuicklistMenuItemCheckmark::UpdateTextures ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, nux::Color::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -340,7 +369,8 @@ QuicklistMenuItemCheckmark::UpdateTextures ()
   cairo_fill (cr);
 
   cairo_restore (cr);
-  DrawText (cr, width, height, _textColor);
+
+  DrawText (cr, width, height, nux::Color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -370,7 +400,7 @@ QuicklistMenuItemCheckmark::UpdateTextures ()
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, nux::Color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -420,7 +450,7 @@ QuicklistMenuItemCheckmark::UpdateTextures ()
 
   cairo_restore (cr);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, nux::Color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -496,7 +526,7 @@ QuicklistMenuItemCheckmark::SetText (nux::NString text)
   if (_text != text)
   {
     _text = text;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -507,7 +537,7 @@ QuicklistMenuItemCheckmark::SetFontName (nux::NString fontName)
   if (_fontName != fontName)
   {
     _fontName = fontName;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -518,7 +548,7 @@ QuicklistMenuItemCheckmark::SetFontSize (float fontSize)
   if (_fontSize != fontSize)
   {
     _fontSize = fontSize;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -529,7 +559,7 @@ QuicklistMenuItemCheckmark::SetFontWeight (FontWeight fontWeight)
   if (_fontWeight != fontWeight)
   {
     _fontWeight = fontWeight;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -540,7 +570,7 @@ QuicklistMenuItemCheckmark::SetFontStyle (FontStyle fontStyle)
   if (_fontStyle != fontStyle)
   {
     _fontStyle = fontStyle;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }

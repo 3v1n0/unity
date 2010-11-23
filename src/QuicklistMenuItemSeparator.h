@@ -63,7 +63,12 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
     nux::BaseTexture*   _normalTexture;
     nux::CairoGraphics* _cairoGraphics;
 
-    void UpdateTexture ();
+    virtual void UpdateTexture ();
+    
+    //! Returns the width of the separator line as defined by the size of the _normalTexture.
+    int GetLineWidth ();
+    
+    friend class QuicklistView;
 };
 
 #endif // QUICKLISTMENUITEMSEPARATOR_H

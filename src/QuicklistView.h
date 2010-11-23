@@ -109,6 +109,9 @@ private:
 
   void NotifyConfigurationChange (int width, int height);
 
+  //! A convenience function to fill in the default quicklist with some random items.
+  void FillInDefaultItems ();
+  
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
