@@ -96,7 +96,6 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     nux::BaseTexture* _prelightTexture;
 
     void Initialize (DbusmenuMenuitem* item);
-    void DrawText ();
     virtual void UpdateTexture ();
     void DrawRoundedRectangle (cairo_t* cr,
                                double   aspect,

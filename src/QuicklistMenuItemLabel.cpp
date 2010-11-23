@@ -150,7 +150,10 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
-  texture = _prelightTexture->GetDeviceTexture ();
+  if (GetActive ())
+    texture = _prelightTexture->GetDeviceTexture ();
+  else
+    texture = _normalTexture->GetDeviceTexture ();
 
   gfxContext.QRP_GLSL_1Tex (base.x,
                             base.y,
@@ -178,19 +181,19 @@ QuicklistMenuItemLabel::PostDraw (nux::GraphicsEngine& gfxContext,
 }
 
 void
-QuicklistMenuItemLabel::DrawText ()
+QuicklistMenuItemLabel::GetTextExtents (int &width,
+                                        int &height)
 {
-}
-
-void QuicklistMenuItemLabel::GetTextExtents (int &width, int &height)
-{
-  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
+  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
+                                           _fontName.GetTCharPtr (),
+                                           _fontSize);
   GetTextExtents (str.GetTCharPtr (), width, height);
 }
 
-void QuicklistMenuItemLabel::GetTextExtents (const TCHAR* font,
-                                      int&  width,
-                                      int&  height)
+void
+QuicklistMenuItemLabel::GetTextExtents (const TCHAR* font,
+                                        int&         width,
+                                        int&         height)
 {
   cairo_surface_t*      surface  = NULL;
   cairo_t*              cr       = NULL;
