@@ -112,8 +112,10 @@ QuicklistMenuItemCheckmark::PreLayoutManagement ()
                                            _fontSize);
   GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
 
-  _pre_layout_width = GetBaseWidth ();
-  _pre_layout_height = GetBaseHeight ();
+  //_pre_layout_width = GetBaseWidth ();
+  //_pre_layout_height = GetBaseHeight ();
+  _pre_layout_width = textWidth + (int) ITEM_INDENT_ABS;
+  _pre_layout_height = textHeight;
 
   SetBaseSize (textWidth + ITEM_INDENT_ABS, textHeight);
 
@@ -317,10 +319,8 @@ void
 QuicklistMenuItemCheckmark::UpdateTexture ()
 {
   nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
-  int        width       = GetBaseWidth () + ITEM_INDENT_ABS;
+  int        width       = GetBaseWidth ();
   int        height      = GetBaseHeight ();
-
-  GetTextExtents (width, height);
   
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
