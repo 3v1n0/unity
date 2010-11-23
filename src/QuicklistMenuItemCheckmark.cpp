@@ -85,6 +85,20 @@ QuicklistMenuItemCheckmark::Initialize (DbusmenuMenuitem* item)
 
 QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
 {
+  cairo_font_options_destroy (_fontOpts);
+
+  if (_normalTexture[0])
+    _normalTexture[0]->UnReference ();
+
+  if (_normalTexture[1])
+    _normalTexture[1]->UnReference ();
+
+  if (_prelightTexture[0])
+    _prelightTexture[0]->UnReference ();
+
+  if (_prelightTexture[1])
+    _prelightTexture[1]->UnReference ();
+
 }
 
 void
@@ -126,7 +140,6 @@ QuicklistMenuItemCheckmark::ProcessEvent (nux::IEvent& event,
 
   result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
   return result;
-
 }
 
 void

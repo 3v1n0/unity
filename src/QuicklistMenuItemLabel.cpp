@@ -67,6 +67,7 @@ void QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
 
 QuicklistMenuItemLabel::~QuicklistMenuItemLabel ()
 {
+  cairo_font_options_destroy (_fontOpts);
 }
 
 void
