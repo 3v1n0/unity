@@ -486,7 +486,7 @@ LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
   needs_redraw.emit (this);
   
   // Present on urgent as a general policy
-  if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
+  if ((quirk == LAUNCHER_ICON_QUIRK_URGENT || quirk == LAUNCHER_ICON_QUIRK_VISIBLE) && value)
     Present (1500);
 }
 
