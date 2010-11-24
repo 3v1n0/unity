@@ -184,8 +184,10 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
   int     n_total_favs;
   GSList *f;
   int     i = 0;
+  bool    found = false;
 
   g_return_if_fail (desktop_path);
+  g_return_if_fail (desktop_path[0] == '/');
 
   n_total_favs = g_slist_length (m_favorites) - 1;
   
@@ -194,15 +196,25 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
 
   for (f = m_favorites; f; f = f->next)
     {
-      if (g_strcmp0 ((char *)f->data, desktop_path))
+      if (g_strcmp0 ((char *)f->data, desktop_path) != 0)
         {
-          favs[i] = g_path_get_basename ((char *)f->data);
+          favs[i] = get_basename_or_path ((char *)f->data);
           i++;
+        }
+      else
+        {
+          found = true;
         }
     }
 
+  if (!found)
+    {
+      g_warning ("Unable to remove favorite '%s': Does not exist in favorites",
+                 desktop_path);
+    }
+
   if (!g_settings_set_strv (m_settings, "favorites", favs))
-    g_warning ("Unable to add a new favorite");
+    g_warning ("Unable to remove favorite '%s'", desktop_path);
 
   i = 0;
   while (favs[i] != NULL)
