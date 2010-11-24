@@ -120,6 +120,8 @@ private:
   float GetHoverProgress ();
   float AutohideProgress ();
   float IconPresentProgress (LauncherIcon *icon, struct timespec current);
+  float IconUrgentPulseValue (LauncherIcon *icon, struct timespec current);
+  float IconStartingPulseValue (LauncherIcon *icon, struct timespec current);
 
   void SetHover   ();
   void UnsetHover ();

@@ -29,6 +29,7 @@
 #include "LauncherIcon.h"
 #include "LauncherController.h"
 #include "PluginAdapter.h"
+#include "StartupNotifyService.h"
 #include "unity.h"
 
 #include <dbus/dbus.h>
@@ -438,6 +439,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     ScreenInterface::setHandler (screen); // Sets the screen function hook handler
     CompositeScreenInterface::setHandler (cScreen); // Ditto for cScreen
     GLScreenInterface::setHandler (gScreen); // Ditto for gScreen
+    
+    StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
 
     nux::NuxInitialize (0);
     wt = nux::CreateFromForeignWindow (cScreen->output (), 

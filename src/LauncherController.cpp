@@ -60,8 +60,8 @@ LauncherController::InsertExpoAction ()
     
     expoIcon->SetTooltipText ("Workspace Switcher");
     expoIcon->SetIconName ("workspace-switcher");
-    expoIcon->SetVisible (true);
-    expoIcon->SetRunning (false);
+    expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
+    expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
     expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
     
     expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));

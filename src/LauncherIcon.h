@@ -50,6 +50,18 @@ typedef enum
   LAUNCHER_ICON_TYPE_END,
 } LauncherIconType;
 
+typedef enum
+{
+  LAUNCHER_ICON_QUIRK_VISIBLE,
+  LAUNCHER_ICON_QUIRK_ACTIVE,
+  LAUNCHER_ICON_QUIRK_RUNNING,
+  LAUNCHER_ICON_QUIRK_URGENT,
+  LAUNCHER_ICON_QUIRK_PRESENTED,
+  LAUNCHER_ICON_QUIRK_STARTING,
+  
+  LAUNCHER_ICON_QUIRK_LAST,
+} LauncherIconQuirk;
+
 class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
@@ -60,12 +72,6 @@ public:
     
     nux::NString GetTooltipText ();
     
-    bool Visible ();
-    bool Active  ();
-    bool Running ();
-    bool Urgent  ();
-    bool Presented ();
-
     void RecvMouseEnter ();
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
@@ -81,12 +87,8 @@ public:
     
     int RelatedWindows ();
     
-    struct timespec ShowTime ();
-    struct timespec HideTime ();
-    struct timespec RunningTime ();
-    struct timespec UrgentTime ();
-    struct timespec PresentTime ();
-    struct timespec UnpresentTime ();
+    bool GetQuirk (LauncherIconQuirk quirk);
+    struct timespec GetQuirkTime (LauncherIconQuirk quirk);
     
     LauncherIconType Type ();
     
@@ -107,11 +109,11 @@ public:
     sigc::signal<void, void *> remove;
     sigc::signal<void, void *> needs_redraw;
 protected:
+    void SetQuirk (LauncherIconQuirk quirk, bool value);
 
-    void SetVisible (bool visible);
-    void SetActive  (bool active);
-    void SetRunning (bool running);
-    void SetUrgent  (bool urgent);
+    void UpdateQuirkTime (LauncherIconQuirk quirk);
+    void ResetQuirkTime (LauncherIconQuirk quirk);
+
     void SetRelatedWindows (int windows);
     void Remove ();
     
@@ -157,26 +159,17 @@ private:
     nux::Color ColorForIcon (GdkPixbuf *pixbuf);
 
     nux::Color       _background_color;
-    bool             _visible;
-    bool             _active;
-    bool             _running;
-    bool             _urgent;
-    bool             _presented;
     int              _sort_priority;
     int              _related_windows;
     guint            _present_time_handle;
     bool             _quicklist_is_initialized;
     
     nux::Point3      _center;
-    
     LauncherIconType _icon_type;
     
-    struct timespec   _show_time;
-    struct timespec   _hide_time;
-    struct timespec   _running_time;
-    struct timespec   _urgent_time;
-    struct timespec   _present_time;
-    struct timespec   _unpresent_time;
+    bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
+    struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
+    
 };
 
 #endif // LAUNCHERICON_H
