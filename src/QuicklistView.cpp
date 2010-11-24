@@ -192,7 +192,7 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   }
 
   // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
-  // This is meantto be easier since the quicklist has a atypical way of working.
+  // This is meant to be easier since the quicklist has a atypical way of working.
   if (m_layout)
     ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
 
@@ -343,6 +343,9 @@ void QuicklistView::PreLayoutManagement ()
     _bottom_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
    }
 
+  _item_layout->SetMinimumWidth(MaxItemWidth);
+  _default_item_layout->SetMinimumWidth(MaxItemWidth);
+
   BaseWindow::PreLayoutManagement ();
 }
 
@@ -375,23 +378,30 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   // We must correct the width of line separators. The rendering of the separator can be smaller than the width of the
   // quicklist. The reason for that is, the quicklist width is determined by the largest entry it contains. That size is 
   // only after MaxItemWidth is computed in QuicklistView::PreLayoutManagement.
-  // The setting of the separtor width is done here after the Layout cycle for this widget is over. The width of the separator 
+  // The setting of the separator width is done here after the Layout cycle for this widget is over. The width of the separator 
   // has bee set correctly during the layout cycle, but the cairo rendering still need to be adjusted.
   int separator_width = nux::Max<int>(_default_item_layout->GetBaseWidth (), _item_layout->GetBaseWidth ());
   
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    if ((*it)->GetItemType () == MENUITEM_TYPE_SEPARATOR)
+    QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
+    if (item->CairoSurfaceWidth () != separator_width)
     {
-      QuicklistMenuItemSeparator* sparator_item = (QuicklistMenuItemSeparator*) (*it);
-      if (sparator_item->GetLineWidth () != separator_width)
-      {
-        // Causes the drawing of the separator line.
-        (*it)->UpdateTexture ();
-      }
+      // Compute textures of the item.
+      item->UpdateTexture ();
     }
   }
   
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
+    if (item->CairoSurfaceWidth () != separator_width)
+    {
+      // Compute textures of the item.
+      item->UpdateTexture ();
+    }
+  }
+
   return result;
 }
 
@@ -472,70 +482,12 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 
 void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-//   int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
-//   
-//   std::list<QuicklistMenuItem*>::iterator it;
-//   for (it = _item_list.begin(); it != _item_list.end(); it++)
-//   {
-//     nux::Geometry geo = (*it)->GetGeometry ();
-//     geo.SetWidth (_max_layout_width);
-//     if (geo.IsPointInside (x, y))
-//     {
-//       (*it)->SetColor (nux::Color::DarkGray);
-//     }
-//     else
-//     {
-//       (*it)->SetColor (nux::Color::White);
-//     }
-//   }
-//   
-//   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-//   {
-//     nux::Geometry geo = (*it)->GetGeometry ();
-//     geo.SetWidth (_max_layout_width);    
-//     if (geo.IsPointInside (x, y))
-//     {
-//       (*it)->SetColor (nux::Color::DarkGray);
-//     }
-//     else
-//     {
-//       (*it)->SetColor (nux::Color::White);
-//     }
-//   }
+
 }
 
 void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-//   int _max_layout_width = nux::Max<int> (_item_layout->GetBaseWidth (), _default_item_layout->GetBaseWidth ());
-//   
-//   std::list<QuicklistMenuItem*>::iterator it;
-//   for (it = _item_list.begin(); it != _item_list.end(); it++)
-//   {
-//     nux::Geometry geo = (*it)->GetGeometry ();
-//     geo.SetWidth (_max_layout_width);
-//     if (geo.IsPointInside (x, y))
-//     {
-//       (*it)->SetColor (nux::Color::DarkGray);
-//     }
-//     else
-//     {
-//       (*it)->SetColor (nux::Color::White);
-//     }
-//   }
-//   
-//   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-//   {
-//     nux::Geometry geo = (*it)->GetGeometry ();
-//     geo.SetWidth (_max_layout_width);    
-//     if (geo.IsPointInside (x, y))
-//     {
-//       (*it)->SetColor (nux::Color::DarkGray);
-//     }
-//     else
-//     {
-//       (*it)->SetColor (nux::Color::White);
-//     }
-//   }
+
 }
   
 void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -563,13 +515,16 @@ void QuicklistView::RemoveAllMenuItem ()
 
 void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
 {
+  if (item == 0)
+    return;
+
   item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
   item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
   item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
   item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
   item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
-  
+   
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
   item->Reference();

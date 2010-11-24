@@ -34,6 +34,7 @@
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemSeparator.h"
+#include "QuicklistMenuItemCheckmark.h"
 
 #define DEFAULT_ICON "application-default-icon"
 
@@ -301,16 +302,16 @@ void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *qui
   {
     std::cout << "Adding checkmark-quicklist-item" << std::endl;
 
-    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+    QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-  {
-    std::cout << "Adding radio-quicklist-item" << std::endl;
-
-    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
+//   else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+//   {
+//     std::cout << "Adding radio-quicklist-item" << std::endl;
+// 
+//     QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+//     quicklist->AddMenuItem (item);
+//   }
   else
   {
     std::cout << "Adding label-quicklist-item" << std::endl;

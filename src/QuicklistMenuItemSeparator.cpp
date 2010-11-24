@@ -174,7 +174,7 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   delete _cairoGraphics;
 }
 
-int QuicklistMenuItemSeparator::GetLineWidth ()
+int QuicklistMenuItemSeparator::CairoSurfaceWidth ()
 {
   if (_normalTexture)
     return _normalTexture->GetWidth ();

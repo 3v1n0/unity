@@ -240,6 +240,14 @@ QuicklistMenuItemRadio::DrawText (cairo_t*   cr,
   g_object_unref (layout);
 }
 
+void QuicklistMenuItemRadio::GetTextExtents (int &width, int &height)
+{
+  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
+    _fontName.GetTCharPtr (),
+    _fontSize);
+  GetTextExtents (str.GetTCharPtr (), width, height);
+}
+
 void
 QuicklistMenuItemRadio::GetTextExtents (const TCHAR* font,
                                         int&         width,
@@ -282,7 +290,7 @@ QuicklistMenuItemRadio::GetTextExtents (const TCHAR* font,
 }
 
 void
-QuicklistMenuItemRadio::UpdateTextures ()
+QuicklistMenuItemRadio::UpdateTexture ()
 {
   int width  = GetBaseWidth ();
   int height = GetBaseHeight ();
@@ -466,7 +474,7 @@ QuicklistMenuItemRadio::SetText (nux::NString text)
   if (_text != text)
   {
     _text = text;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -477,7 +485,7 @@ QuicklistMenuItemRadio::SetFontName (nux::NString fontName)
   if (_fontName != fontName)
   {
     _fontName = fontName;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -488,7 +496,7 @@ QuicklistMenuItemRadio::SetFontSize (float fontSize)
   if (_fontSize != fontSize)
   {
     _fontSize = fontSize;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -499,7 +507,7 @@ QuicklistMenuItemRadio::SetFontWeight (FontWeight fontWeight)
   if (_fontWeight != fontWeight)
   {
     _fontWeight = fontWeight;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
@@ -510,8 +518,15 @@ QuicklistMenuItemRadio::SetFontStyle (FontStyle fontStyle)
   if (_fontStyle != fontStyle)
   {
     _fontStyle = fontStyle;
-    UpdateTextures ();
+    UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
 
+int QuicklistMenuItemRadio::CairoSurfaceWidth ()
+{
+  if (_normalTexture[0])
+    return _normalTexture[0]->GetWidth ();
+
+  return 0;
+}

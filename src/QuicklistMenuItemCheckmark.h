@@ -92,10 +92,11 @@ class QuicklistMenuItemCheckmark : public QuicklistMenuItem
                    int        width,
                    int        height,
                    nux::Color color);
-    void GetTextExtents (const TCHAR* font,
+    virtual void GetTextExtents (const TCHAR* font,
                          int&         width,
                          int&         height);
-    void UpdateTexture ();
+    virtual void UpdateTexture ();
+    virtual int CairoSurfaceWidth ();
     void DrawRoundedRectangle (cairo_t* cr,
                                double   aspect,
                                double   x,

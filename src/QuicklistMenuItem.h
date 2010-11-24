@@ -96,9 +96,9 @@ class QuicklistMenuItem : public nux::View
     QuicklistMenuItemType GetItemType ();
     
     //! Return the size of the text + size of associated radio button or check box
-    virtual void GetTextExtents (int &width, int &height);
+    virtual void GetTextExtents (int &width, int &height) = 0;
     
-    virtual void UpdateTexture ();
+    virtual void UpdateTexture () = 0;
     void ItemActivated ();
 
     sigc::signal<void, QuicklistMenuItem&> sigChanged;
@@ -107,6 +107,8 @@ class QuicklistMenuItem : public nux::View
     
     
   protected:
+
+    virtual int CairoSurfaceWidth () = 0;
 
     void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);

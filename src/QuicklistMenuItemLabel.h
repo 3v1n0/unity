@@ -33,11 +33,11 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
 {
   public:
     QuicklistMenuItemLabel (DbusmenuMenuitem* item,
-                            NUX_FILE_LINE_PROTO);
+                                NUX_FILE_LINE_PROTO);
 
     QuicklistMenuItemLabel (DbusmenuMenuitem* item,
-                            bool              debug,
-                            NUX_FILE_LINE_PROTO);
+                                bool              debug,
+                                NUX_FILE_LINE_PROTO);
 
     ~QuicklistMenuItemLabel ();
 
@@ -58,7 +58,6 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-        // public API
     void SetText (nux::NString text);
 
     void SetFontName (nux::NString fontName);
@@ -70,33 +69,34 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     void SetFontStyle (FontStyle fontStyle);
 
     virtual void GetTextExtents (int &width, int &height);
-
     
   private:
-    nux::NString    _text;
-    nux::NString    _fontName;
-    float           _fontSize;
-    FontStyle       _fontStyle;
-    FontWeight      _fontWeight;
-    nux::Color      _textColor;
-
-    nux::CairoGraphics*   _cairoGraphics;
+    nux::NString          _text;
+    nux::NString          _fontName;
+    float                 _fontSize;
+    FontStyle             _fontStyle;
+    FontWeight            _fontWeight;
+    nux::Color            _textColor;
     int                   _dpiX;
     int                   _dpiY;
     cairo_font_options_t* _fontOpts;
+    int                   _pre_layout_width;
+    int                   _pre_layout_height;
+    nux::CairoGraphics*   _cairoGraphics;
 
-    int _pre_layout_width;
-    int _pre_layout_height;
-
-    void GetTextExtents (const TCHAR* font, int &width, int &height);
-    void DrawText (cairo_t*   cr, int width, int height, nux::Color color);
-        
-    ////
-    nux::BaseTexture* _normalTexture;
-    nux::BaseTexture* _prelightTexture;
+    nux::BaseTexture* _normalTexture[2];
+    nux::BaseTexture* _prelightTexture[2];
 
     void Initialize (DbusmenuMenuitem* item);
+    void DrawText (cairo_t*   cr,
+                   int        width,
+                   int        height,
+                   nux::Color color);
+    virtual void GetTextExtents (const TCHAR* font,
+                         int&         width,
+                         int&         height);
     virtual void UpdateTexture ();
+    virtual int CairoSurfaceWidth ();
     void DrawRoundedRectangle (cairo_t* cr,
                                double   aspect,
                                double   x,

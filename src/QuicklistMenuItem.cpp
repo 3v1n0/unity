@@ -229,16 +229,16 @@ QuicklistMenuItem::DrawRoundedRectangle ()
 {
 }
 
-void
-QuicklistMenuItem::GetTextExtents (int &width, int &height)
-{
-  
-}
-
-void QuicklistMenuItem::UpdateTexture ()
-{
-  
-}
+// void
+// QuicklistMenuItem::GetTextExtents (int &width, int &height)
+// {
+//   
+// }
+// 
+// void QuicklistMenuItem::UpdateTexture ()
+// {
+//   
+// }
 
 static void
 OnPropertyChanged (gchar*             property,

@@ -56,6 +56,7 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
 
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
+    virtual void GetTextExtents (int &width, int &height) {};
 
   private:
     int                 _pre_layout_width;
@@ -66,7 +67,7 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
     virtual void UpdateTexture ();
     
     //! Returns the width of the separator line as defined by the size of the _normalTexture.
-    int GetLineWidth ();
+    virtual int CairoSurfaceWidth ();
     
     friend class QuicklistView;
 };
