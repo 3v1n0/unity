@@ -23,7 +23,6 @@
 #include "Launcher.h"
 #include "PluginAdapter.h"
 
-#include <X11/Xlib.h>
 #include <gio/gdesktopappinfo.h>
 
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_DECL)
