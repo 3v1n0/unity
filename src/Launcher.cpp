@@ -495,6 +495,37 @@ float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec curr
     return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
+float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec current)
+{
+    float result = 0.0f;
+    struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
+    int running_ms = TimeDelta (&current, &running_time);
+    float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+
+    // After we finish a fade in from running, we can reset the quirk
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING) && running_progress == 1.0f)
+        icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+     
+    result = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
+
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    {
+        // running progress fades in whatever the pulsing did not fill in already
+        result += running_progress * (BACKLIGHT_STRENGTH - result);
+        
+        // urgent serves to bring the total down only
+        if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+            result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
+    }
+    else
+    {
+        // modestly evil
+        result += BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
+    }
+    
+    return result;
+}
+
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
                            std::list<Launcher::RenderArg> &shelf_args, 
                            nux::Geometry &box_geo, nux::Geometry &shelf_geo)
@@ -625,31 +656,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
             arg.window_indicators = 0;
         
-        // animate this shit
-        struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
-        int running_ms = TimeDelta (&current, &running_time);
-        float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
-
-        // After we finish a fade in from running, we can reset the quirk
-        if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING) && running_progress == 1.0f)
-            icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-         
-        arg.backlight_intensity = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
-
-        if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-        {
-            // running progress fades in whatever the pulsing did not fill in already
-            arg.backlight_intensity += running_progress * (BACKLIGHT_STRENGTH - arg.backlight_intensity);
-            
-            // urgent serves to bring the total down only
-            if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
-                arg.backlight_intensity *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
-        }
-        else
-        {
-            arg.backlight_intensity += BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
-        }
-        
+        arg.backlight_intensity = IconBackgroundIntensity (icon, current);
         
         // reset z
         center.z = 0;
@@ -713,25 +720,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
           arg.window_indicators = 0;
         
-        // animate this shit
-        struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
-        int running_ms = TimeDelta (&current, &running_time);
-        float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
-
-        if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-        {
-          arg.backlight_intensity = running_progress * BACKLIGHT_STRENGTH;
-          
-          if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
-              arg.backlight_intensity *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
-        }
-        else
-        {
-          if (running_ms > ANIM_DURATION_SHORT)
-            arg.backlight_intensity = 0.0f;
-          else
-            arg.backlight_intensity = BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
-        }
+        arg.backlight_intensity = IconBackgroundIntensity (icon, current);
         
         // reset z
         center.z = 0;
