@@ -262,7 +262,7 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
     {
 	const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
 
-	for (CompWindow *w = window; w; w = w->prev)
+	for (CompWindow *w = window; w && uScreen->doShellRepaint; w = w->prev)
 	{
 	    if (std::find (xwns.begin (), xwns.end (), w->id ()) != xwns.end ())
 	    {
