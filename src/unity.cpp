@@ -235,12 +235,12 @@ UnityScreen::initPluginForScreen (CompPlugin *p)
 }
 
 void
-UnityScreen::addProperties (GVariantBuilder *builder)
+UnityScreen::AddProperties (GVariantBuilder *builder)
 {
 }
 
 const gchar*
-UnityScreen::getName ()
+UnityScreen::GetName ()
 {
 	return "Unity";
 }
@@ -461,7 +461,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     wt->Run (NULL);
     uScreen = this;
 
-	debugger = new StateIntrospectionDBusInterface (this);
+	debugger = new IntrospectionDBusInterface (this);
 	
     PluginAdapter::Initialize (screen);
 
@@ -499,7 +499,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->launcher = new Launcher(self->launcherWindow);
-  self->addChild (self->launcher);
+  self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();
 
@@ -522,7 +522,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   self->panelView = new PanelView ();
-  self->addChild (self->panelView);
+  self->AddChild (self->panelView);
 
   layout = new nux::HLayout();
 

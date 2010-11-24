@@ -23,19 +23,19 @@
 #include <gio/gio.h>
 #include "Introspectable.h"
 
-class StateIntrospectionDBusInterface
+class IntrospectionDBusInterface
 {
 public:
-  StateIntrospectionDBusInterface  (Introspectable *introspectable);
-  ~StateIntrospectionDBusInterface ();
-
-private:
-  /* methods */
+  IntrospectionDBusInterface  (Introspectable *introspectable);
+  ~IntrospectionDBusInterface ();
 
   static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
                               const gchar *objectPath, const gchar *ifaceName,
                               const gchar *methodName, GVariant *parameters,
                               GDBusMethodInvocation *invocation, gpointer data);
+
+private:
+  /* methods */
 
   static void OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
 

@@ -64,14 +64,12 @@ PanelView::HomeButton ()
   return _home_button;
 }
 
-const gchar*
-PanelView::getName ()
+const gchar* PanelView::GetName ()
 {
 	return "PanelView";
 }
 
-void
-PanelView::addProperties (GVariantBuilder *builder)
+void PanelView::AddProperties (GVariantBuilder *builder)
 {
 }
 

@@ -45,7 +45,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
-#include "StateIntrospectionDBusInterface.h"
+#include "IntrospectionDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
@@ -161,11 +161,9 @@ class UnityScreen :
 
 	protected:
 
-	const gchar* 
-	getName ();
+	const gchar* GetName ();
 
-	void
-	addProperties (GVariantBuilder *builder);
+	void AddProperties (GVariantBuilder *builder);
 	
     private:
     
@@ -197,7 +195,7 @@ class UnityScreen :
 	nux::BaseWindow        			*launcherWindow;
 	nux::BaseWindow        			*panelWindow;
 	nux::Geometry                   lastTooltipArea;
-	StateIntrospectionDBusInterface *debugger;
+	IntrospectionDBusInterface 		*debugger;
 };
 
 class UnityWindow :

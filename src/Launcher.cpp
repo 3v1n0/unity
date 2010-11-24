@@ -1524,14 +1524,12 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 {
 }
 
-const gchar* 
-Launcher::getName ()
+const gchar* Launcher::GetName ()
 {
 	return "Launcher";
 }
 
-void
-Launcher::addProperties (GVariantBuilder *builder)
+void Launcher::AddProperties (GVariantBuilder *builder)
 {
 }
 

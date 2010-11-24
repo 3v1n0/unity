@@ -25,7 +25,7 @@
 class Introspectable
 {
 public:
-  GVariant *introspect ();
+  GVariant *Introspect ();
   void AddChild (Introspectable *child);
   void RemoveChild (Introspectable *child);
 

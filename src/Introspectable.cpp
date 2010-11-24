@@ -28,7 +28,7 @@ Introspectable::Introspect ()
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}") );
   for (std::list<Introspectable *>::iterator it = _children.begin (); it != _children.end (); it++)
   {
-    g_variant_builder_add (builder, "{sv}", (*it)->getName (), (*it)->introspect () );
+    g_variant_builder_add (builder, "{sv}", (*it)->GetName (), (*it)->Introspect () );
   }
   AddProperties (builder);
 
@@ -38,7 +38,7 @@ Introspectable::Introspect ()
   if (_children.size () > 0)
   {
     builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}") );
-    g_variant_builder_add (builder, "{sv}", getName (), childResults);
+    g_variant_builder_add (builder, "{sv}", GetName (), childResults);
     result = g_variant_new ("(a{sv})", builder);
     g_variant_builder_unref (builder);
 

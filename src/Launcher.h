@@ -76,8 +76,8 @@ public:
 
 protected:	
 	// Introspectable methods
-	const gchar* getName ();
-	void addProperties (GVariantBuilder *builder);
+	const gchar* GetName ();
+	void AddProperties (GVariantBuilder *builder);
 
 private:
   typedef enum

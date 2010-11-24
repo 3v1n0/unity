@@ -16,14 +16,13 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#include <iostream>
-#include "StateIntrospectionDBusInterface.h"
+#include "IntrospectionDBusInterface.h"
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
 
 static const GDBusInterfaceVTable si_vtable =
 {
-  &StateIntrospectionDBusInterface::DBusMethodCall,
+  &IntrospectionDBusInterface::DBusMethodCall,
   NULL,
   NULL
 };
@@ -70,26 +69,26 @@ static const GDBusInterfaceInfo si_iface_info =
 
 static Introspectable      *_introspectable;
 
-StateIntrospectionDBusInterface::StateIntrospectionDBusInterface (Introspectable *introspectable)
+IntrospectionDBusInterface::IntrospectionDBusInterface (Introspectable *introspectable)
 {
   _introspectable = introspectable;
   _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                               UNITY_STATE_DEBUG_BUS_NAME,
                               G_BUS_NAME_OWNER_FLAGS_NONE,
-                              &StateIntrospectionDBusInterface::OnBusAcquired,
-                              &StateIntrospectionDBusInterface::OnNameAcquired,
-                              &StateIntrospectionDBusInterface::OnNameLost,
+                              &IntrospectionDBusInterface::OnBusAcquired,
+                              &IntrospectionDBusInterface::OnNameAcquired,
+                              &IntrospectionDBusInterface::OnNameLost,
                               this,
                               NULL);
 }
 
-StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
+IntrospectionDBusInterface::~IntrospectionDBusInterface ()
 {
   g_bus_unown_name (_owner_id);
 }
 
 void
-StateIntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
   GError *error = NULL;
   g_dbus_connection_register_object (connection,
@@ -107,17 +106,17 @@ StateIntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, con
 }
 
 void
-StateIntrospectionDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+IntrospectionDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-StateIntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
+IntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-StateIntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection,
+IntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection,
                                                  const gchar *sender,
                                                  const gchar *objectPath,
                                                  const gchar *ifaceName,
@@ -144,14 +143,14 @@ StateIntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection,
 }
 
 GVariant*
-StateIntrospectionDBusInterface::GetState (const gchar *piece)
+IntrospectionDBusInterface::GetState (const gchar *piece)
 {
-  return _introspectable->introspect ();
+  return _introspectable->Introspect ();
 }
 
 /* a very contrived example purely for giving QA something purposes */
 GVariant*
-StateIntrospectionDBusInterface::BuildFakeReturn ()
+IntrospectionDBusInterface::BuildFakeReturn ()
 {
   GVariantBuilder *builder;
   GVariant *result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
