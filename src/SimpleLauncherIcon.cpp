@@ -22,7 +22,7 @@
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"
 
-SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager, NUX_FILE_LINE_DECL)
+SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
 :   LauncherIcon(IconManager)
 {
     m_Icon = 0;

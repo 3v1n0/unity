@@ -953,7 +953,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
   
-  if(nux::Abs (arg.folding_rads) < 0.15f)
+  if(nux::Abs (arg.folding_rads) < 0.01f)
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
     icon->GetDeviceTexture()->SetFiltering(GL_LINEAR, GL_LINEAR);
@@ -1327,6 +1327,7 @@ bool Launcher::TooltipNotify(LauncherIcon* Icon)
 
 bool Launcher::MenuNotify(LauncherIcon* Icon)
 {
+
     return true;
 }
 

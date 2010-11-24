@@ -40,7 +40,7 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-    LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window, NUX_FILE_LINE_PROTO);
+    LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
 
@@ -55,6 +55,8 @@ private:
     int              _sort_priority;
 
     void InsertExpoAction ();
+    
+    void InsertTrash ();
 
     void RegisterIcon (LauncherIcon *icon);
     

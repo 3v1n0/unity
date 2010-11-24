@@ -16,36 +16,21 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef SIMPLELAUNCHERICON_H
-#define SIMPLELAUNCHERICON_H
+#ifndef TRASHLAUNCHERICON_H
+#define TRASHLAUNCHERICON_H
 
-#include "LauncherIcon.h"
+#include "SimpleLauncherIcon.h"
 
-class Launcher;
-
-class SimpleLauncherIcon : public LauncherIcon
+class TrashLauncherIcon : public SimpleLauncherIcon
 {
+
 public:
-    SimpleLauncherIcon(Launcher* IconManager);
-    ~SimpleLauncherIcon();
-    
-    /* override */
-    nux::BaseTexture * GetTextureForSize (int size);
-    
-    void SetIconName (const char *name);
+  TrashLauncherIcon  (Launcher *launcher);
+  ~TrashLauncherIcon ();
 
 protected:
-    virtual void OnMouseDown (int button);
-    virtual void OnMouseUp (int button);
-    virtual void OnMouseClick (int button);
-    virtual void OnMouseEnter ();
-    virtual void OnMouseLeave ();
-private:
-    
-    char *m_IconName;
-    nux::BaseTexture *m_Icon;
+  void OnMouseClick (int button);
 
 };
 
-#endif // BAMFLAUNCHERICON_H
-
+#endif // TRASHLAUNCHERICON_H
