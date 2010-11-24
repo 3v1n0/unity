@@ -92,12 +92,12 @@ IntrospectionDBusInterface::~IntrospectionDBusInterface ()
   g_bus_unown_name (_owner_id);
 }
 
-void
+void 
 IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
   GError *error = NULL;
   g_dbus_connection_register_object (connection,
-                                     "/com/canonical/Unity/Debug/StateIntrospection",
+                                     "/com/canonical/Unity/Debug/Introspection",
                                      (GDBusInterfaceInfo *) &si_iface_info,
                                      &si_vtable,
                                      NULL,
@@ -105,7 +105,7 @@ IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gc
                                      &error);
   if (error != NULL)
   {
-    g_warning ("Could not register StateIntrospection object onto d-bus");
+    g_warning ("Could not register Introspection object onto d-bus");
 	g_error_free (error);
   }
 }
@@ -143,7 +143,7 @@ DBusMethodCall (GDBusConnection *connection,
   else
   {
     g_dbus_method_invocation_return_dbus_error (invocation, "com.canonical.Unity",
-                                                "EAT IT, BITCH");
+                                                "Failed to find method");
   }
 }
 
