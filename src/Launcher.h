@@ -24,6 +24,7 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+#include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
@@ -31,49 +32,53 @@
 class LauncherModel;
 class QuicklistView;
 
-class Launcher : public nux::View
+class Launcher : public Introspectable, public nux::View
 {
 public:
-  Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
-  ~Launcher();
+    Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
+    ~Launcher();
 
-  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+    virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
-  LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+    LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
+    LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
 
-  bool TooltipNotify(LauncherIcon* Icon);
-  bool MenuNotify(LauncherIcon* Icon);
-  
-  void SetIconSize(int tile_size, int icon_size);
-  void NotifyMenuTermination(LauncherIcon* Icon);
-  
-  void SetModel (LauncherModel *model);
-  
-  void SetFloating (bool floating);
-  
-  void SetAutohide (bool autohide, nux::View *show_trigger);
-  bool AutohideEnabled ();
-  
-  virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+    bool TooltipNotify(LauncherIcon* Icon);
+    bool MenuNotify(LauncherIcon* Icon);
+    
+    void SetIconSize(int tile_size, int icon_size);
+    void NotifyMenuTermination(LauncherIcon* Icon);
+    
+    void SetModel (LauncherModel *model);
+    
+    void SetFloating (bool floating);
+    
+    void SetAutohide (bool autohide, nux::View *show_trigger);
+    bool AutohideEnabled ();
+    
+    virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+    virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  
-  //! Called by LauncherIcon to signal that a Quicklist is becoming active.
-  void SetActiveQuicklist (QuicklistView *quicklist);
-  //! Get the active qicklist
-  QuicklistView *GetActiveQuicklist ();
-  //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
-  void CancelActiveQuicklist (QuicklistView *quicklist);
-  
+    //! Called by LauncherIcon to signal that a Quicklist is becoming active.
+    void SetActiveQuicklist (QuicklistView *quicklist);
+    //! Get the active qicklist
+    QuicklistView *GetActiveQuicklist ();
+    //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
+    void CancelActiveQuicklist (QuicklistView *quicklist);
+
+protected:	
+	// Introspectable methods
+	const gchar* GetName ();
+	void AddProperties (GVariantBuilder *builder);
+
 private:
   typedef enum
   {

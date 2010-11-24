@@ -237,6 +237,17 @@ UnityScreen::initPluginForScreen (CompPlugin *p)
     return true;
 }
 
+void
+UnityScreen::AddProperties (GVariantBuilder *builder)
+{
+}
+
+const gchar*
+UnityScreen::GetName ()
+{
+	return "Unity";
+}
+
 /* This gets called whenever the window needs to be repainted. WindowPaintAttrib gives you some
  * attributes like brightness/saturation etc to play around with. GLMatrix is the window's
  * transformation matrix. the unsigned int is the mask, have a look at opengl.h on what you can do
@@ -453,7 +464,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     
     wt->Run (NULL);
     uScreen = this;
-    
+
+	debugger = new IntrospectionDBusInterface (this);
+	
     PluginAdapter::Initialize (screen);
 
     optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
@@ -490,6 +503,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->launcher = new Launcher(self->launcherWindow);
+  self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();
 
@@ -512,6 +526,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   self->panelView = new PanelView ();
+  self->AddChild (self->panelView);
 
   layout = new nux::HLayout();
 
