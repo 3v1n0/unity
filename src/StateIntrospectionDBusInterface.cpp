@@ -61,7 +61,7 @@ static const GDBusMethodInfo * const si_method_info_pointers[] = { &si_method_in
 static const GDBusInterfaceInfo si_iface_info =
 {
 	-1,
-	"org.canonical.Unity.Debug.StateIntrospection",
+	"com.canonical.Unity.Debug.StateIntrospection",
 	(GDBusMethodInfo **) &si_method_info_pointers,
 	NULL,
 	NULL,
@@ -99,7 +99,7 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 {
 	GError *error = NULL;
 	g_dbus_connection_register_object (connection,
-	                                   "/org/canonical/Unity/Debug/StateIntrospection",
+	                                   "/com/canonical/Unity/Debug/StateIntrospection",
 	                                   (GDBusInterfaceInfo*) &si_iface_info,
 	                                   &si_vtable,
 	                                   NULL,
@@ -139,7 +139,7 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
         g_dbus_method_invocation_return_value (invocation, ret);
 		g_variant_unref (ret);
     } else {
-        g_dbus_method_invocation_return_dbus_error (invocation, "org.canonical.Unity",
+        g_dbus_method_invocation_return_dbus_error (invocation, "com.canonical.Unity",
                                                     "EAT IT, BITCH");
     }
 }
