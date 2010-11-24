@@ -462,7 +462,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     uScreen = this;
 
 	debugger = new StateIntrospectionDBusInterface (this);
-	debugger->initStateIntrospection ();
 	
     PluginAdapter::Initialize (screen);
 

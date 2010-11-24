@@ -23,7 +23,7 @@
 
 static const GDBusInterfaceVTable si_vtable =
 {
-	&StateIntrospectionDBusInterface::dBusMethodCall,
+	&StateIntrospectionDBusInterface::DBusMethodCall,
 	NULL,
 	NULL
 };
@@ -73,6 +73,14 @@ static Introspectable      *_introspectable;
 StateIntrospectionDBusInterface::StateIntrospectionDBusInterface (Introspectable *introspectable)
 {	
 	_introspectable = introspectable;
+	_owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
+                               UNITY_STATE_DEBUG_BUS_NAME,
+                               G_BUS_NAME_OWNER_FLAGS_NONE,
+                               &StateIntrospectionDBusInterface::OnBusAcquired,
+                               &StateIntrospectionDBusInterface::OnNameAcquired,
+                               &StateIntrospectionDBusInterface::OnNameLost,
+                               this,
+                               NULL);
 }
 
 StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
@@ -81,21 +89,7 @@ StateIntrospectionDBusInterface::~StateIntrospectionDBusInterface ()
 }
 
 void
-StateIntrospectionDBusInterface::initStateIntrospection ()
-{
-    _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                               UNITY_STATE_DEBUG_BUS_NAME,
-                               G_BUS_NAME_OWNER_FLAGS_NONE,
-                               &StateIntrospectionDBusInterface::onBusAcquired,
-                               &StateIntrospectionDBusInterface::onNameAcquired,
-                               &StateIntrospectionDBusInterface::onNameLost,
-                               this,
-                               NULL);
-                               
-}
-
-void
-StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+StateIntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 	GError *error = NULL;
 	g_dbus_connection_register_object (connection,
@@ -111,17 +105,17 @@ StateIntrospectionDBusInterface::onBusAcquired (GDBusConnection *connection, con
 }
 
 void
-StateIntrospectionDBusInterface::onNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+StateIntrospectionDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-StateIntrospectionDBusInterface::onNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
+StateIntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection, 
+StateIntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection, 
                                                  const gchar *sender,
                                                  const gchar *objectPath,
                                                  const gchar *ifaceName,
@@ -130,12 +124,13 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
                                                  GDBusMethodInvocation *invocation, 
                                                  gpointer data)
 {
-    if (g_strcmp0 (methodName, "GetState") == 0) {
+    if (g_strcmp0 (methodName, "GetState") == 0) 
+	{
 		GVariant *ret;
 		const gchar *input;
         g_variant_get (parameters, "(&s)", &input);
 		
-		ret = getState (input);
+		ret = GetState (input);
         g_dbus_method_invocation_return_value (invocation, ret);
 		g_variant_unref (ret);
     } else {
@@ -145,14 +140,14 @@ StateIntrospectionDBusInterface::dBusMethodCall (GDBusConnection *connection,
 }
 
 GVariant*
-StateIntrospectionDBusInterface::getState (const gchar *piece)
+StateIntrospectionDBusInterface::GetState (const gchar *piece)
 {
 	return _introspectable->introspect ();
 }
 
 /* a very contrived example purely for giving QA something purposes */
 GVariant* 
-StateIntrospectionDBusInterface::buildFakeReturn ()
+StateIntrospectionDBusInterface::BuildFakeReturn ()
 {
 	GVariantBuilder *builder;
 	GVariant *result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
