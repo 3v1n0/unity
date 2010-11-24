@@ -230,6 +230,53 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
 
 void
 FavoriteStoreGSettings::MoveFavorite (const char *desktop_path,
-                                      guint32     position)
+                                      gint        position)
 {
+  int     n_total_favs;
+  GSList *f;
+  gint    i = 0;
+
+  g_return_if_fail (desktop_path);
+  g_return_if_fail (position < (gint)g_slist_length (m_favorites));
+  
+  n_total_favs = g_slist_length (m_favorites);
+  
+  char *favs[n_total_favs + 1];
+  favs[n_total_favs] = NULL;
+
+  for (f = m_favorites; f; f = f->next)
+    {
+      if (i == position)
+        {
+          favs[i] = get_basename_or_path (desktop_path);
+          i++;
+        }
+
+      if (g_strcmp0 (desktop_path, (char *)f->data) != 0)
+        {
+          favs[i] = get_basename_or_path ((char *)f->data);
+          i++;
+        }
+    }
+
+  /* Add it to the end of the list */
+  if (position == -1)
+    {
+      favs[i] = get_basename_or_path (desktop_path);
+      i++;
+    }
+  favs[i] = NULL;
+
+  if (!g_settings_set_strv (m_settings, "favorites", favs))
+    g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
+
+  i = 0;
+  while (favs[i] != NULL)
+    {
+      g_free (favs[i]);
+      favs[i] = NULL;
+      i++;
+    }
+
+  Refresh ();
 }
