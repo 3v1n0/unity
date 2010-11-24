@@ -230,8 +230,6 @@ LauncherIcon::RecvMouseEnter ()
     for (it = menus_list.begin (); it != menus_list.end (); it++)
     {
       g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::RootChanged), _quicklist);
-      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_DEFAULT, (&LauncherIcon::label_handler));
-      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_SEPARATOR, (&LauncherIcon::separator_handler));
     }
     
     _quicklist_is_initialized = true;
@@ -269,23 +267,6 @@ LauncherIcon::RecvMouseEnter ()
 void LauncherIcon::RecvMouseLeave ()
 {
   _tooltip->ShowWindow (false);
-}
-
-
-gboolean LauncherIcon::label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
-{
-  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
-  //printf ("label: %s\n", s);
-  
-  return true;
-}
-
-gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
-{
-  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
-  //printf ("separator: %s\n", s);
-
-  return true;
 }
 
 void LauncherIcon::ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)

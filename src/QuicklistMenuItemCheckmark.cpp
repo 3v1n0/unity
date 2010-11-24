@@ -169,22 +169,22 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
 //       texture = _normalTexture[0]->GetDeviceTexture ();
 //   }
   
-  if (_enabled)
+  if (GetEnabled ())
   {
-    if (_active && _prelight)
+    if (GetActive () && _prelight)
     {
       texture = _prelightTexture[0]->GetDeviceTexture ();
     }
-    else if (_active)
+    else if (GetActive ())
     {
       texture = _normalTexture[0]->GetDeviceTexture ();
     }
 
-    if ((!_active) && _prelight)
+    if ((!GetActive ()) && _prelight)
     {
       texture = _prelightTexture[1]->GetDeviceTexture ();
     }
-    else if (!_active)
+    else if (!GetActive ())
     {
       texture = _normalTexture[1]->GetDeviceTexture ();
     }
@@ -193,11 +193,11 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
   }
   else
   {
-    if (_active)
+    if (GetActive ())
     {
       texture = _prelightTexture[0]->GetDeviceTexture ();
     }
-    else if (_active)
+    else
     {
       texture = _normalTexture[0]->GetDeviceTexture ();
     }
@@ -233,7 +233,7 @@ void QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
                                       int        height,
                                       nux::Color color)
 {
-  int                   textWidth = 0;
+  int                   textWidth  = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;

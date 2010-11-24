@@ -142,23 +142,8 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates().SetBlend (true,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
-
-//   if (GetActive ())
-//   {
-//     if (GetEnabled ())
-//       texture = _prelightTexture[1]->GetDeviceTexture ();
-//     else
-//       texture = _prelightTexture[0]->GetDeviceTexture ();
-//   }
-//   else
-//   {
-//     if (GetEnabled ())
-//       texture = _normalTexture[1]->GetDeviceTexture ();
-//     else
-//       texture = _normalTexture[0]->GetDeviceTexture ();
-//   }
   
-  if (_enabled)
+  if (GetEnabled ())
   {
     if (_prelight)
     {

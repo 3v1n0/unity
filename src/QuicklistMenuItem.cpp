@@ -71,6 +71,11 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
                                       NUX_FILE_LINE_DECL) :
 View (NUX_FILE_LINE_PARAM)
 {
+  if (item == 0)
+  {
+    g_warning ("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
+  }
+  
   _text       = 0;
   _fontName   = g_strdup ("Ubuntu");
   _fontSize   = 12;

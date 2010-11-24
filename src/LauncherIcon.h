@@ -146,10 +146,6 @@ protected:
     friend class LauncherController;
 
 private:
-  
-    static gboolean label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
-    static gboolean separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client);
-    
     static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
     static void RootChanged (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
     static gboolean OnPresentTimeout (gpointer data);
