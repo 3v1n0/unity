@@ -21,12 +21,13 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 #include "PluginAdapter.h"
+#include "TrashLauncherIcon.h"
 
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window, NUX_FILE_LINE_DECL)
+LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window)
 {
     _launcher = launcher;
     _window = window;
@@ -39,6 +40,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   
     g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
     InsertExpoAction ();
+    InsertTrash ();
 }
 
 LauncherController::~LauncherController()
@@ -50,6 +52,14 @@ void
 LauncherController::OnExpoClicked (int button)
 {
     PluginAdapter::Default ()->InitiateExpo ();
+}
+
+void
+LauncherController::InsertTrash ()
+{
+  TrashLauncherIcon *icon;
+  icon = new TrashLauncherIcon (_launcher);
+  RegisterIcon (icon);
 }
 
 void

@@ -16,36 +16,32 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef SIMPLELAUNCHERICON_H
-#define SIMPLELAUNCHERICON_H
+#include "TrashLauncherIcon.h"
 
-#include "LauncherIcon.h"
-
-class Launcher;
-
-class SimpleLauncherIcon : public LauncherIcon
+TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
+:   SimpleLauncherIcon(IconManager)
 {
-public:
-    SimpleLauncherIcon(Launcher* IconManager);
-    ~SimpleLauncherIcon();
+  SetTooltipText ("Trash");
+  SetIconName ("user-trash");
+  SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
+  SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
+  SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
+}
+
+TrashLauncherIcon::~TrashLauncherIcon()
+{
+}
+
+void
+TrashLauncherIcon::OnMouseClick (int button)
+{
+  if (button == 1)
+  {
+    GError *error = NULL;
     
-    /* override */
-    nux::BaseTexture * GetTextureForSize (int size);
+    g_spawn_command_line_async ("xdg-open trash://", &error);
     
-    void SetIconName (const char *name);
-
-protected:
-    virtual void OnMouseDown (int button);
-    virtual void OnMouseUp (int button);
-    virtual void OnMouseClick (int button);
-    virtual void OnMouseEnter ();
-    virtual void OnMouseLeave ();
-private:
-    
-    char *m_IconName;
-    nux::BaseTexture *m_Icon;
-
-};
-
-#endif // BAMFLAUNCHERICON_H
-
+    if (error)
+      g_error_free (error);
+  }
+}
