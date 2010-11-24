@@ -29,10 +29,10 @@ public:
   IntrospectionDBusInterface  (Introspectable *introspectable);
   ~IntrospectionDBusInterface ();
 
-  static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
+  /*static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
                               const gchar *objectPath, const gchar *ifaceName,
                               const gchar *methodName, GVariant *parameters,
-                              GDBusMethodInvocation *invocation, gpointer data);
+                              GDBusMethodInvocation *invocation, gpointer data);	*/
 
 private:
   /* methods */
@@ -43,7 +43,7 @@ private:
 
   static void OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
 
-  static GVariant *GetState (const char *piece);
+  //static GVariant *GetState (const char *piece);
 
   static GVariant *BuildFakeReturn ();
 

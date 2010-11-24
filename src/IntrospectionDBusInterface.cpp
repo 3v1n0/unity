@@ -20,9 +20,14 @@
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
 
+void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
+					 const gchar*, const gchar*, GVariant*,
+					 GDBusMethodInvocation*, gpointer);
+GVariant* GetState (const gchar*);
+
 static const GDBusInterfaceVTable si_vtable =
 {
-  &IntrospectionDBusInterface::DBusMethodCall,
+  &DBusMethodCall,
   NULL,
   NULL
 };
@@ -116,7 +121,7 @@ IntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar
 }
 
 void
-IntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection,
+DBusMethodCall (GDBusConnection *connection,
                                                  const gchar *sender,
                                                  const gchar *objectPath,
                                                  const gchar *ifaceName,
@@ -143,7 +148,7 @@ IntrospectionDBusInterface::DBusMethodCall (GDBusConnection *connection,
 }
 
 GVariant*
-IntrospectionDBusInterface::GetState (const gchar *piece)
+GetState (const gchar *piece)
 {
   return _introspectable->Introspect ();
 }
