@@ -40,29 +40,23 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
 
     ~QuicklistMenuItemSeparator ();
 
+    virtual void GetTextExtents (int &width, int &height) {};
+
+  protected:
+    
     void PreLayoutManagement ();
 
     long PostLayoutManagement (long layoutResult);
 
-    long ProcessEvent (nux::IEvent& event,
-                       long         traverseInfo,
-                       long         processEventInfo);
+    long ProcessEvent (nux::IEvent& event, long traverseInfo, long processEventInfo);
 
-    void Draw (nux::GraphicsEngine& gfxContext,
-               bool                 forceDraw);
+    void Draw (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext,
-                      bool                 forceDraw);
+    void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    void PostDraw (nux::GraphicsEngine& gfxContext,
-                   bool                 forceDraw);
-    virtual void GetTextExtents (int &width, int &height) {};
-
-  private:
-    int                 _pre_layout_width;
-    int                 _pre_layout_height;
+    void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
+    
     nux::BaseTexture*   _normalTexture;
-    nux::CairoGraphics* _cairoGraphics;
 
     virtual void UpdateTexture ();
     

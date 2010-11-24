@@ -229,7 +229,7 @@ LauncherIcon::RecvMouseEnter ()
     std::list<DbusmenuClient *>::iterator it;
     for (it = menus_list.begin (); it != menus_list.end (); it++)
     {
-      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::root_changed), _quicklist);
+      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::RootChanged), _quicklist);
       dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_DEFAULT, (&LauncherIcon::label_handler));
       dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_SEPARATOR, (&LauncherIcon::separator_handler));
     }
@@ -288,69 +288,45 @@ gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMe
   return true;
 }
 
-void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
+void LauncherIcon::ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
 {
-  const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
+  g_return_if_fail (newitem);
 
+  const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
+  const gchar* toggle_type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+  
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
     QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
   {
     QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
   {
     QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-  else
+  else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
   {
     QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
     quicklist->AddMenuItem (item);
   }
-
-  // enable this once all proper QuicklistMenuitems are fully implemented
-
-  // add separator
-  /*if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
-  {
-    QuicklistMenuItemSeparator* item;
-    item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  // add checkmark-item
-  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
-  {
-    QuicklistMenuItemLabel* item;
-    item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  // add radio-button-item
-  else if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-  {
-    QuicklistMenuItemLabel* item;
-    item = new QuicklistMenuItemRadio (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  // add plain label-item
-  else
-  {
-    QuicklistMenuItemLabel* item;
-    item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }*/
+//   else
+//   {
+//     g_warning ("Unknown menu item type in file %s at line %s", G_STRFUNC, G_STRLOC);
+//   }
 }
 
-void LauncherIcon::root_changed (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
+void LauncherIcon::RootChanged (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
 {
   GList * child = NULL;
   for (child = dbusmenu_menuitem_get_children(newroot); child != NULL; child = g_list_next(child))
   {
-    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(child_realized), quicklist);    
+    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(ChildRealized), quicklist);    
   }
 }
 

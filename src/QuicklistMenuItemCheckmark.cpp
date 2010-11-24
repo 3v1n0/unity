@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
 #include "Nux/Nux.h"
@@ -293,55 +294,6 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
   g_object_unref (layout);
 }
 
-void QuicklistMenuItemCheckmark::GetTextExtents (int &width, int &height)
-{
-  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
-                                           _fontName.GetTCharPtr (),
-                                           _fontSize);
-  GetTextExtents (str.GetTCharPtr (), width, height);
-}
-
-void
-QuicklistMenuItemCheckmark::GetTextExtents (const TCHAR* font,
-                                            int&         width,
-                                            int&         height)
-{
-  cairo_surface_t*      surface  = NULL;
-  cairo_t*              cr       = NULL;
-  PangoLayout*          layout   = NULL;
-  PangoFontDescription* desc     = NULL;
-  PangoContext*         pangoCtx = NULL;
-  PangoRectangle        logRect  = {0, 0, 0, 0};
-
-  // sanity check
-  if (!font)
-    return;
-
-  surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
-  cr = cairo_create (surface);
-  layout = pango_cairo_create_layout (cr);
-  desc = pango_font_description_from_string (font);
-  pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-  pango_layout_set_font_description (layout, desc);
-  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, _dpiX);
-  pango_layout_context_changed (layout);
-  pango_layout_get_extents (layout, NULL, &logRect);
-
-  width  = logRect.width / PANGO_SCALE;
-  height = logRect.height / PANGO_SCALE;
-
-  // clean up
-  pango_font_description_free (desc);
-  g_object_unref (layout);
-  cairo_destroy (cr);
-  cairo_surface_destroy (surface);
-}
-
 void
 QuicklistMenuItemCheckmark::UpdateTexture ()
 {
@@ -558,61 +510,6 @@ QuicklistMenuItemCheckmark::DrawRoundedRectangle (cairo_t* cr,
                radius,
                180.0f * G_PI / 180.0f,
                270.0f * G_PI / 180.0f);
-}
-
-void
-QuicklistMenuItemCheckmark::SetText (nux::NString text)
-{
-  if (_text != text)
-  {
-    _text = text;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemCheckmark::SetFontName (nux::NString fontName)
-{
-  if (_fontName != fontName)
-  {
-    _fontName = fontName;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemCheckmark::SetFontSize (float fontSize)
-{
-  if (_fontSize != fontSize)
-  {
-    _fontSize = fontSize;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemCheckmark::SetFontWeight (FontWeight fontWeight)
-{
-  if (_fontWeight != fontWeight)
-  {
-    _fontWeight = fontWeight;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemCheckmark::SetFontStyle (FontStyle fontStyle)
-{
-  if (_fontStyle != fontStyle)
-  {
-    _fontStyle = fontStyle;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
 }
 
 int QuicklistMenuItemCheckmark::CairoSurfaceWidth ()

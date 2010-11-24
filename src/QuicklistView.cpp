@@ -33,6 +33,7 @@
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemSeparator.h"
 #include "QuicklistMenuItemCheckmark.h"
+#include "QuicklistMenuItemRadio.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
@@ -1304,23 +1305,26 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
   for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
   {
     const gchar* type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
-
+    const gchar* toggle_type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
       QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);
     }
-
-    if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)    
-    {
-      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
-      AddMenuItem (item);
-    }
-
-    type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-    if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)    
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)    
     {
       QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)    
+    {
+      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    else //if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)    
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);
     }
   }

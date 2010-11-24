@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
 #ifndef QUICKLISTMENUITEMLABEL_H
@@ -40,50 +41,22 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
                                 NUX_FILE_LINE_PROTO);
 
     ~QuicklistMenuItemLabel ();
-
+    
+  protected:
+    
     void PreLayoutManagement ();
 
     long PostLayoutManagement (long layoutResult);
 
-    long ProcessEvent (nux::IEvent& event,
-                       long         traverseInfo,
-                       long         processEventInfo);
+    long ProcessEvent (nux::IEvent& event, long traverseInfo, long processEventInfo);
 
-    void Draw (nux::GraphicsEngine& gfxContext,
-               bool                 forceDraw);
+    void Draw (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext,
-                      bool                 forceDraw);
+    void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    void PostDraw (nux::GraphicsEngine& gfxContext,
-                   bool                 forceDraw);
-
-    void SetText (nux::NString text);
-
-    void SetFontName (nux::NString fontName);
-
-    void SetFontSize (float fontSize);
-
-    void SetFontWeight (FontWeight fontWeight);
-
-    void SetFontStyle (FontStyle fontStyle);
-
-    virtual void GetTextExtents (int &width, int &height);
+    void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
     
-  private:
-    nux::NString          _text;
-    nux::NString          _fontName;
-    float                 _fontSize;
-    FontStyle             _fontStyle;
-    FontWeight            _fontWeight;
-    nux::Color            _textColor;
-    int                   _dpiX;
-    int                   _dpiY;
-    cairo_font_options_t* _fontOpts;
-    int                   _pre_layout_width;
-    int                   _pre_layout_height;
-    nux::CairoGraphics*   _cairoGraphics;
-
+    
     nux::BaseTexture* _normalTexture[2];
     nux::BaseTexture* _prelightTexture[2];
 
@@ -92,9 +65,9 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
                    int        width,
                    int        height,
                    nux::Color color);
-    virtual void GetTextExtents (const TCHAR* font,
-                         int&         width,
-                         int&         height);
+//     virtual void GetTextExtents (const TCHAR* font,
+//                          int&         width,
+//                          int&         height);
     virtual void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
     void DrawRoundedRectangle (cairo_t* cr,

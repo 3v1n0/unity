@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
+ * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
 #ifndef QUICKLISTMENUITEM_H
@@ -24,6 +25,7 @@
 
 #include "Nux/Nux.h"
 #include "Nux/View.h"
+#include "NuxImage/CairoGraphics.h"
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
@@ -84,30 +86,51 @@ class QuicklistMenuItem : public nux::View
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-    // public API
-    virtual const gchar* GetLabel ();
-
-    virtual bool         GetEnabled ();
-
-    virtual bool         GetActive ();
-
-    virtual void         SetColor (nux::Color color);
-
     QuicklistMenuItemType GetItemType ();
     
-    //! Return the size of the text + size of associated radio button or check box
-    virtual void GetTextExtents (int &width, int &height) = 0;
-    
-    virtual void UpdateTexture () = 0;
     void ItemActivated ();
 
     sigc::signal<void, QuicklistMenuItem&> sigChanged;
     sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
     sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
     
+    void SetText (nux::NString text);
+
+    void SetFontName (nux::NString fontName);
+
+    void SetFontSize (float fontSize);
+
+    void SetFontWeight (FontWeight fontWeight);
+
+    void SetFontStyle (FontStyle fontStyle);
+    
+    virtual const gchar* GetLabel ();
+
+    virtual bool GetEnabled ();
+
+    virtual bool GetActive ();
+
+    virtual void SetColor (nux::Color color);
     
   protected:
-
+    
+    nux::NString          _text;
+    nux::NString          _fontName;
+    float                 _fontSize;
+    FontStyle             _fontStyle;
+    FontWeight            _fontWeight;
+    nux::Color            _textColor;
+    int                   _dpiX;
+    int                   _dpiY;
+    cairo_font_options_t* _fontOpts;
+    int                   _pre_layout_width;
+    int                   _pre_layout_height;
+    nux::CairoGraphics*   _cairoGraphics;
+    
+    //! Return the size of the text + size of associated radio button or check box
+    virtual void GetTextExtents (int &width, int &height);
+    void GetTextExtents (const TCHAR* font, int& width, int& height);
+    virtual void UpdateTexture () = 0;
     virtual int CairoSurfaceWidth () = 0;
 
     void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
