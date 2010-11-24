@@ -26,29 +26,29 @@
 class StateIntrospectionDBusInterface
 {
 public:
-	StateIntrospectionDBusInterface  (Introspectable *introspectable);
-	~StateIntrospectionDBusInterface ();
+  StateIntrospectionDBusInterface  (Introspectable *introspectable);
+  ~StateIntrospectionDBusInterface ();
 
 private:
-	/* methods */
+  /* methods */
 
-	static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
-	                			const gchar *objectPath, const gchar *ifaceName,
-	                			const gchar *methodName, GVariant *parameters,
-	                			GDBusMethodInvocation *invocation, gpointer data);
-	
-	static void OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
+                              const gchar *objectPath, const gchar *ifaceName,
+                              const gchar *methodName, GVariant *parameters,
+                              GDBusMethodInvocation *invocation, gpointer data);
 
-	static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
 
-	static void OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
 
-	static GVariant* GetState (const char *piece);
-	
-	static GVariant* BuildFakeReturn ();
+  static void OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
 
-	/* members */
-	guint						_owner_id;
+  static GVariant *GetState (const char *piece);
+
+  static GVariant *BuildFakeReturn ();
+
+  /* members */
+  guint						_owner_id;
 };
 
 #endif

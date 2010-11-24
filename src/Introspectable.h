@@ -16,7 +16,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#ifndef _INTROSPECTABLE_H 
+#ifndef _INTROSPECTABLE_H
 #define _INTROSPECTABLE_H 1
 
 #include <glib.h>
@@ -25,16 +25,16 @@
 class Introspectable
 {
 public:
-	GVariant* introspect ();
-	void AddChild (Introspectable *child);
-	void RemoveChild (Introspectable *child);
+  GVariant *introspect ();
+  void AddChild (Introspectable *child);
+  void RemoveChild (Introspectable *child);
 
 protected:
-	virtual const gchar* GetName () = 0;
-	virtual void AddProperties (GVariantBuilder *builder) = 0;
+  virtual const gchar *GetName () = 0;
+  virtual void AddProperties (GVariantBuilder *builder) = 0;
 
 private:
-	std::list<Introspectable*> _children;
+  std::list<Introspectable *> _children;
 };
 
 #endif
