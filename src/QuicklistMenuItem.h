@@ -94,23 +94,11 @@ class QuicklistMenuItem : public nux::View
     sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
     sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
     
-    void SetText (const gchar* text);
-
-    void SetFontName (const gchar* fontName);
-
-    void SetFontSize (float fontSize);
-
-    void SetFontWeight (FontWeight fontWeight);
-
-    void SetFontStyle (FontStyle fontStyle);
-    
     virtual const gchar* GetLabel ();
 
     virtual bool GetEnabled ();
 
     virtual bool GetActive ();
-
-    virtual void SetColor (nux::Color color);
     
   protected:
     

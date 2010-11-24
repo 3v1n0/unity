@@ -162,13 +162,6 @@ void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 void QuicklistView::ShowWindow (bool b, bool start_modal)
 {
   BaseWindow::ShowWindow (b, start_modal);
-  
-  // Reset all colors to white
-  std::list<QuicklistMenuItem*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    (*it)->SetColor (nux::Color::White);
-  }
 }
 
 long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
