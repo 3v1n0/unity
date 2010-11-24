@@ -25,9 +25,7 @@
 
 #include "QuicklistMenuItem.h"
 
-#if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
-#endif
 
 class QuicklistMenuItemRadio : public QuicklistMenuItem
 {

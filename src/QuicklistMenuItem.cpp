@@ -20,14 +20,11 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItem.h"
 
-#if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
-#endif
 
 void
 GetDPI (int &dpi_x, int &dpi_y)
 {
-#if defined(NUX_OS_LINUX)
   Display* display     = NULL;
   int      screen      = 0;
   double   dpyWidth    = 0.0;
@@ -52,10 +49,6 @@ GetDPI (int &dpi_x, int &dpi_y)
   dpi_y = (int) (dpiY + 0.5);
 
   XCloseDisplay (display);
-#elif defined(NUX_OS_WINDOWS)
-  dpi_x = 72;
-  dpi_y = 72;
-#endif
 }
 
 static void
