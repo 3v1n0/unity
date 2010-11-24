@@ -47,7 +47,7 @@ public:
   virtual GSList * GetFavorites () = 0;
   
   // These will emit the relevant signals, so bare that in mind
-  virtual void AddFavorite    (const char *desktop_path, guint32 position) = 0;
+  virtual void AddFavorite    (const char *desktop_path, gint position) = 0;
   virtual void RemoveFavorite (const char *desktop_path) = 0;
   virtual void MoveFavorite   (const char *desktop_path, guint32 position) = 0;
 

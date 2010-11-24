@@ -36,7 +36,7 @@ public:
 
   //Methods
   virtual GSList * GetFavorites ();
-  virtual void     AddFavorite    (const char *desktop_path, guint32 position);
+  virtual void     AddFavorite    (const char *desktop_path, gint    position);
   virtual void     RemoveFavorite (const char *desktop_path);
   virtual void     MoveFavorite   (const char *desktop_path, guint32 position);
 

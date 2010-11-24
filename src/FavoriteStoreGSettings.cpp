@@ -20,9 +20,11 @@
 
 #include "FavoriteStoreGSettings.h"
 
+#define SETTINGS_NAME "com.canonical.Unity.Launcher"
+
 FavoriteStoreGSettings::FavoriteStoreGSettings ()
 {
-  m_settings = g_settings_new ("com.canonical.Unity.Launcher");
+  m_settings = g_settings_new (SETTINGS_NAME);
   m_favorites = NULL;
 
   Refresh ();
@@ -30,7 +32,7 @@ FavoriteStoreGSettings::FavoriteStoreGSettings ()
 
 FavoriteStoreGSettings::FavoriteStoreGSettings (GSettingsBackend *backend)
 {
-  m_settings = g_settings_new_with_backend ("com.canonical.Unity.Launcher", backend);
+  m_settings = g_settings_new_with_backend (SETTINGS_NAME, backend);
   m_favorites = NULL;
 
   Refresh ();
@@ -52,27 +54,46 @@ FavoriteStoreGSettings::Refresh ()
 
   g_slist_foreach (m_favorites, (GFunc)g_free, NULL);
   g_slist_free (m_favorites);
+  m_favorites = NULL;
 
   favs = g_settings_get_strv (m_settings, "favorites");
 
   while (favs[i] != NULL)
     {
-      GDesktopAppInfo *info;
-
-      info = g_desktop_app_info_new (favs[i]);
-      
-      if (info == NULL || g_desktop_app_info_get_filename (info) == NULL)
+      /*
+       * We will be storing either full /path/to/desktop/files or foo.desktop id's
+       */
+      if (favs[i][0] == '/')
         {
-          g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
+          if (g_file_test (favs[i], G_FILE_TEST_EXISTS))
+            {
+              m_favorites = g_slist_append (m_favorites, g_strdup (favs[i]));
+            }
+          else
+            {
+              g_warning ("Unable to load desktop file: %s", favs[i]);
+            }
+        }
+      else
+        {
+          GDesktopAppInfo *info;
 
-          i++;
-          continue;
+          info = g_desktop_app_info_new (favs[i]);
+          
+          if (info == NULL || g_desktop_app_info_get_filename (info) == NULL)
+            {
+              g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
+
+              i++;
+              continue;
+            }
+
+          m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
+
+          g_object_unref (info);
         }
 
-      m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
       i++;
-
-      g_object_unref (info);
     }
 
   g_strfreev (favs);
@@ -84,13 +105,38 @@ FavoriteStoreGSettings::GetFavorites ()
   return m_favorites;
 }
 
+static gchar *
+get_basename_or_path (const gchar *desktop_path)
+{
+  const gchar * const * dirs;
+  const gchar * dir;
+  gint          i = 0;
+
+  dirs = g_get_system_data_dirs ();
+
+  /* We check to see if the desktop file belongs to one of the system data
+   * directories. If so, then we store it's desktop id, otherwise we store
+   * it's full path. We're clever like that.
+   */
+  while ((dir = dirs[i]))
+    {
+      if (g_str_has_prefix (desktop_path, dir))
+        {
+          return g_path_get_basename (desktop_path);
+        }
+      i++;
+    }
+
+  return g_strdup (desktop_path);
+}
+
 void
 FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
-                                     guint32     position)
+                                     gint        position)
 {
   int     n_total_favs;
   GSList *f;
-  guint32 i = 0;
+  gint    i = 0;
 
   g_return_if_fail (desktop_path);
 
@@ -103,17 +149,23 @@ FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
     {
       if (i == position)
         {
-          favs[i] = g_path_get_basename (desktop_path);
+          favs[i] = get_basename_or_path (desktop_path);
           i++;
         }
       
-      favs[i] = g_path_get_basename ((char *)f->data);
+      favs[i] = get_basename_or_path ((char *)f->data);
 
       i++;
     }
 
+  /* Add it to the end of the list */
+  if (position == -1)
+    {
+      favs[i] = get_basename_or_path (desktop_path);
+    }
+
   if (!g_settings_set_strv (m_settings, "favorites", favs))
-    g_warning ("Unable to add a new favorite");
+    g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
 
   i = 0;
   while (favs[i] != NULL)
