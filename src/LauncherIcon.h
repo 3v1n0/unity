@@ -68,7 +68,7 @@ public:
     LauncherIcon(Launcher* launcher);
     ~LauncherIcon();
 
-    void         SetTooltipText (const TCHAR* text);
+    void SetTooltipText (const TCHAR* text);
     
     nux::NString GetTooltipText ();
     
@@ -81,7 +81,9 @@ public:
     void RecvHideQuicklist (nux::BaseWindow *quicklist);
     
     void HideTooltip ();
-    void SetCenter (nux::Point3 center);
+    
+    void        SetCenter (nux::Point3 center);
+    nux::Point3 GetCenter ();
     
     int SortPriority ();
     
@@ -100,8 +102,8 @@ public:
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
-    sigc::signal<void> MouseEnter;
-    sigc::signal<void> MouseLeave;
+    sigc::signal<void>      MouseEnter;
+    sigc::signal<void>      MouseLeave;
     sigc::signal<void, int> MouseClick;
     
     sigc::signal<void, void *> show;
@@ -125,6 +127,8 @@ protected:
 
     virtual std::list<DbusmenuClient *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
+    
+    virtual void OnCenterStabilized (nux::Point3 center) {};
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
 
@@ -155,6 +159,7 @@ private:
     static void child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
     static void root_changed (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
     static gboolean OnPresentTimeout (gpointer data);
+    static gboolean OnCenterTimeout (gpointer data);
 
     nux::Color ColorForIcon (GdkPixbuf *pixbuf);
 
@@ -162,9 +167,11 @@ private:
     int              _sort_priority;
     int              _related_windows;
     guint            _present_time_handle;
+    guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
     
     nux::Point3      _center;
+    nux::Point3      _last_stable;
     LauncherIconType _icon_type;
     
     bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];

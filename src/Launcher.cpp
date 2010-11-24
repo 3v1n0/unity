@@ -536,6 +536,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     float hover_progress = GetHoverProgress ();
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
+    int vertical_offset = _parent->GetGeometry ().y;
     struct timespec current;
     clock_gettime (CLOCK_MONOTONIC, &current);
 
@@ -688,7 +689,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         center.y += half_size * size_modifier;   // move to center
         arg.center = nux::Point3 (center);       // copy center
-        icon->SetCenter (arg.center);
+        icon->SetCenter (nux::Point3 (center.x, center.y + vertical_offset, center.z));
         center.y += half_size * size_modifier;   // move to end
         
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
@@ -742,7 +743,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
       
         center.y += half_size * size_modifier;   // move to center
         arg.center = nux::Point3 (center);       // copy center
-        icon->SetCenter (arg.center);
+        icon->SetCenter (nux::Point3 (center.x, center.y + vertical_offset, center.z));
         center.y += half_size * size_modifier;   // move to end
         center.y += _space_between_icons * size_modifier;
         

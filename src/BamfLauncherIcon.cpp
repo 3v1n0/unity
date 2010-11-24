@@ -25,6 +25,9 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include <core/core.h>
+#include <core/atoms.h>
+
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_DECL)
 :   SimpleLauncherIcon(IconManager)
 {
@@ -222,4 +225,33 @@ BamfLauncherIcon::GetMenus ()
     }
     
     return result;
+}
+
+void 
+BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
+{
+    GList *children, *l;
+    BamfView *view;
+    long data[4];
+
+    data[0] = center.x - 24;
+    data[1] = center.y - 24;
+    data[2] = 48;
+    data[3] = 48;
+
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+
+    for (l = children; l; l = l->next)
+    {
+        view = (BamfView *) l->data;
+    
+        if (BAMF_IS_WINDOW (view))
+        {
+            guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+            
+            XChangeProperty (m_Screen->dpy (), xid, Atoms::wmIconGeometry,
+                             XA_CARDINAL, 32, PropModeReplace,
+                             (unsigned char *) data, 4);
+        }
+    }
 }

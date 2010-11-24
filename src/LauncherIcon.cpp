@@ -73,8 +73,11 @@ LauncherIcon::~LauncherIcon()
 {
   if (_present_time_handle)
     g_source_remove (_present_time_handle);
-  
   _present_time_handle = 0;
+  
+  if (_center_stabilize_handle)
+    g_source_remove (_center_stabilize_handle);
+  _center_stabilize_handle = 0;
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -229,7 +232,7 @@ LauncherIcon::RecvMouseEnter ()
   }
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = 24 + _center.y;
+  int tip_y = _center.y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -314,7 +317,7 @@ void LauncherIcon::RecvMouseDown (int button)
     
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = 24 + _center.y;
+    int tip_y = _center.y;
 
     _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
     _quicklist->EnableInputWindow (true);
@@ -348,18 +351,44 @@ void LauncherIcon::HideTooltip ()
   _tooltip->ShowWindow (false);
 }
 
+gboolean
+LauncherIcon::OnCenterTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon*)data;
+  
+  if (self->_last_stable != self->_center)
+  {
+    self->OnCenterStabilized (self->_center);
+    self->_last_stable = self->_center;
+  }
+
+  self->_center_stabilize_handle = 0;
+  return false;
+}
+
 void 
 LauncherIcon::SetCenter (nux::Point3 center)
 {
   _center = center;
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = 24 + _center.y;
+  int tip_y = _center.y;
     
   if (_quicklist->IsVisible ())
     _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
   else if (_tooltip->IsVisible ())
     _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
+    
+  if (_center_stabilize_handle)
+    g_source_remove (_center_stabilize_handle);
+  
+  _center_stabilize_handle = g_timeout_add (500, &LauncherIcon::OnCenterTimeout, this);
+}
+
+nux::Point3
+LauncherIcon::GetCenter ()
+{
+  return _center;
 }
 
 gboolean
