@@ -65,7 +65,7 @@ static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_inf
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  "com.canonical.Unity.Debug.StateIntrospection",
+  "com.canonical.Unity.Debug.Introspection",
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
