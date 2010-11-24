@@ -59,8 +59,6 @@ TestQuicklistMenuitemsCreateSuite ()
 static void
 TestMenuItemCheckmark ()
 {
-  thread = createThread ();
-  
   DbusmenuMenuitem* item = NULL;
 
 
@@ -214,22 +212,27 @@ TestQuicklistMenuItem ()
   dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_child_append (root, child);
   
-  
+  child = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+  dbusmenu_menuitem_property_set (child, DBUSMENU_MENUITEM_PROP_LABEL, "check mark 0");
+  dbusmenu_menuitem_property_set_bool (child, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_int (child, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+  dbusmenu_menuitem_child_append (root, child);
+
   QuicklistView* quicklist = new QuicklistView ();
   
   quicklist->TestMenuItems (root);
   
-  g_assert_cmpint (quicklist->GetNumItems (), ==, 3);
+  g_assert_cmpint (quicklist->GetNumItems (), ==, 4);
   g_assert_cmpint (quicklist->GetNthType (0), ==, MENUITEM_TYPE_LABEL);
   g_assert_cmpint (quicklist->GetNthType (1), ==, MENUITEM_TYPE_SEPARATOR);
   g_assert_cmpint (quicklist->GetNthType (2), ==, MENUITEM_TYPE_LABEL);
+  g_assert_cmpint (quicklist->GetNthType (3), ==, MENUITEM_TYPE_CHECK);
   
   g_assert_cmpstr (quicklist->GetNthItems (0)->GetLabel (), ==, "label 0");
   g_assert_cmpstr (quicklist->GetNthItems (2)->GetLabel (), ==, "label 1");
+  g_assert_cmpstr (quicklist->GetNthItems (3)->GetLabel (), ==, "check mark 0");
   
   
-  quicklist->Dispose ();
-  
-  stopThread (thread);
-  
+  quicklist->Dispose ();  
 }

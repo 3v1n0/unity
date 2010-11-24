@@ -71,5 +71,12 @@ main (int argc, char **argv)
   TestPanelServiceCreateSuite ();
   TestQuicklistMenuitemsCreateSuite ();
 
-  return g_test_run ();
+  nux::WindowThread* thread = createThread ();
+
+  int ret = g_test_run ();
+
+  stopThread (thread);
+
+  return ret;
+
 }

@@ -1316,6 +1316,13 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
       QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
       AddMenuItem (item);
     }
+
+    type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    if (g_strcmp0 (type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)    
+    {
+      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
   }
 }
 

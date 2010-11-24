@@ -262,7 +262,6 @@ void QuicklistMenuItem::RecvMouseDown (int x, int y, unsigned long button_flags,
 
 void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  printf ("Mouse Up\n");
   sigMouseReleased.emit (this);
 }
 

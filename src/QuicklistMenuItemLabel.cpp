@@ -189,23 +189,20 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
   
   if (_enabled)
   {
-    if (_active && _prelight)
+    if (_prelight)
     {
       texture = _prelightTexture[0]->GetDeviceTexture ();
     }
-    else if (_active)
+    else
     {
       texture = _normalTexture[0]->GetDeviceTexture ();
     }
-
-    if ((!_active) && _prelight)
-    {
-      texture = _prelightTexture[1]->GetDeviceTexture ();
-    }
-    else if (!_active)
-    {
-      texture = _normalTexture[1]->GetDeviceTexture ();
-    }
+    _color = nux::Color::White;
+  }
+  else
+  {
+    texture = _normalTexture[0]->GetDeviceTexture ();
+    _color = nux::Color::DarkGray;
   }
   
   gfxContext.QRP_GLSL_1Tex (base.x,
@@ -358,48 +355,48 @@ QuicklistMenuItemLabel::UpdateTexture ()
   _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
 
-  // draw normal, checked version
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
-
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale (cr, 1.0f, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width (cr, 1.0f);
-
-  cairo_save (cr);
-  cairo_translate (cr,
-                   _aalign ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
-                   _aalign (((double) height - 16.0f)/ 2.0f));
-
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-
-  cairo_translate (cr, 3.0f, 1.0f);
-  cairo_move_to (cr, 0.0f, 6.0f);
-  cairo_line_to (cr, 0.0f, 8.0f);
-  cairo_line_to (cr, 4.0f, 12.0f);
-  cairo_line_to (cr, 6.0f, 12.0f);
-  cairo_line_to (cr, 15.0f, 1.0f);
-  cairo_line_to (cr, 15.0f, 0.0f);
-  cairo_line_to (cr, 14.0f, 0.0f);
-  cairo_line_to (cr, 5.0f, 9.0f);
-  cairo_line_to (cr, 1.0f, 5.0f);
-  cairo_close_path (cr);
-  cairo_fill (cr);
-
-  cairo_restore (cr);
-
-  DrawText (cr, width, height, nux::Color::White);
-
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal-checked.png");
-
-  bitmap = _cairoGraphics->GetBitmap ();
-
-  if (_normalTexture[1])
-    _normalTexture[1]->UnReference ();
-
-  _normalTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _normalTexture[1]->Update (bitmap);
+//   // draw normal, checked version
+//   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+//   cairo_paint (cr);
+// 
+//   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+//   cairo_scale (cr, 1.0f, 1.0f);
+//   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+//   cairo_set_line_width (cr, 1.0f);
+// 
+//   cairo_save (cr);
+//   cairo_translate (cr,
+//                    _aalign ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
+//                    _aalign (((double) height - 16.0f)/ 2.0f));
+// 
+//   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+// 
+//   cairo_translate (cr, 3.0f, 1.0f);
+//   cairo_move_to (cr, 0.0f, 6.0f);
+//   cairo_line_to (cr, 0.0f, 8.0f);
+//   cairo_line_to (cr, 4.0f, 12.0f);
+//   cairo_line_to (cr, 6.0f, 12.0f);
+//   cairo_line_to (cr, 15.0f, 1.0f);
+//   cairo_line_to (cr, 15.0f, 0.0f);
+//   cairo_line_to (cr, 14.0f, 0.0f);
+//   cairo_line_to (cr, 5.0f, 9.0f);
+//   cairo_line_to (cr, 1.0f, 5.0f);
+//   cairo_close_path (cr);
+//   cairo_fill (cr);
+// 
+//   cairo_restore (cr);
+// 
+//   DrawText (cr, width, height, nux::Color::White);
+// 
+//   //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal-checked.png");
+// 
+//   bitmap = _cairoGraphics->GetBitmap ();
+// 
+//   if (_normalTexture[1])
+//     _normalTexture[1]->UnReference ();
+// 
+//   _normalTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+//   _normalTexture[1]->Update (bitmap);
 
   // draw active/prelight, unchecked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -433,57 +430,57 @@ QuicklistMenuItemLabel::UpdateTexture ()
   _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
 
-  // draw active/prelight, unchecked version
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
-
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale (cr, 1.0f, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width (cr, 1.0f);
-
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        0.5f,
-                        0.5f,
-                        ITEM_CORNER_RADIUS_ABS,
-                        width - 1.0f,
-                        height - 1.0f);
-  cairo_fill (cr);
-
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
-
-  cairo_save (cr);
-  cairo_translate (cr,
-                   _aalign ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
-                   _aalign (((double) height - 16.0f) / 2.0f));
-
-  cairo_translate (cr, 3.0f, 1.0f);
-  cairo_move_to (cr, 0.0f, 6.0f);
-  cairo_line_to (cr, 0.0f, 8.0f);
-  cairo_line_to (cr, 4.0f, 12.0f);
-  cairo_line_to (cr, 6.0f, 12.0f);
-  cairo_line_to (cr, 15.0f, 1.0f);
-  cairo_line_to (cr, 15.0f, 0.0f);
-  cairo_line_to (cr, 14.0f, 0.0f);
-  cairo_line_to (cr, 5.0f, 9.0f);
-  cairo_line_to (cr, 1.0f, 5.0f);
-  cairo_close_path (cr);
-  cairo_fill (cr);
-
-  cairo_restore (cr);
-
-  DrawText (cr, width, height, transparent);
-
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active-checked.png");
-
-  bitmap = _cairoGraphics->GetBitmap ();
-
-  if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference ();
-
-  _prelightTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _prelightTexture[1]->Update (bitmap);
+//   // draw active/prelight, unchecked version
+//   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+//   cairo_paint (cr);
+// 
+//   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+//   cairo_scale (cr, 1.0f, 1.0f);
+//   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+//   cairo_set_line_width (cr, 1.0f);
+// 
+//   DrawRoundedRectangle (cr,
+//                         1.0f,
+//                         0.5f,
+//                         0.5f,
+//                         ITEM_CORNER_RADIUS_ABS,
+//                         width - 1.0f,
+//                         height - 1.0f);
+//   cairo_fill (cr);
+// 
+//   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+// 
+//   cairo_save (cr);
+//   cairo_translate (cr,
+//                    _aalign ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
+//                    _aalign (((double) height - 16.0f) / 2.0f));
+// 
+//   cairo_translate (cr, 3.0f, 1.0f);
+//   cairo_move_to (cr, 0.0f, 6.0f);
+//   cairo_line_to (cr, 0.0f, 8.0f);
+//   cairo_line_to (cr, 4.0f, 12.0f);
+//   cairo_line_to (cr, 6.0f, 12.0f);
+//   cairo_line_to (cr, 15.0f, 1.0f);
+//   cairo_line_to (cr, 15.0f, 0.0f);
+//   cairo_line_to (cr, 14.0f, 0.0f);
+//   cairo_line_to (cr, 5.0f, 9.0f);
+//   cairo_line_to (cr, 1.0f, 5.0f);
+//   cairo_close_path (cr);
+//   cairo_fill (cr);
+// 
+//   cairo_restore (cr);
+// 
+//   DrawText (cr, width, height, transparent);
+// 
+//   //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active-checked.png");
+// 
+//   bitmap = _cairoGraphics->GetBitmap ();
+// 
+//   if (_prelightTexture[1])
+//     _prelightTexture[1]->UnReference ();
+// 
+//   _prelightTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+//   _prelightTexture[1]->Update (bitmap);
 
   // finally clean up
   delete _cairoGraphics;
