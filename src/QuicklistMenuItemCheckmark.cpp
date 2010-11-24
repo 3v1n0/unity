@@ -55,29 +55,12 @@ QuicklistMenuItem (item,
 void
 QuicklistMenuItemCheckmark::Initialize (DbusmenuMenuitem* item)
 {
-  _fontName   = TEXT ("Ubuntu");
-  _fontSize   = 12;
-  _fontStyle  = FONTSTYLE_NORMAL;
-  _fontWeight = FONTWEIGHT_NORMAL;
   _item_type  = MENUITEM_TYPE_CHECK;
   
   if (item)
-    _text = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+    _text = g_strdup (dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL));
   else
-    _text = "Check Mark";
-  
-  _fontOpts   = cairo_font_options_create ();
-  _normalTexture[0]   = NULL;
-  _normalTexture[1]   = NULL;
-  _prelightTexture[0] = NULL;
-  _prelightTexture[1] = NULL;
-
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
+    _text = g_strdup ("Check Mark");
 
   // make sure _dpiX and _dpiY are initialized correctly
   GetDPI (_dpiX, _dpiY);
@@ -90,8 +73,6 @@ QuicklistMenuItemCheckmark::Initialize (DbusmenuMenuitem* item)
 
 QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
 {
-  cairo_font_options_destroy (_fontOpts);
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
@@ -237,44 +218,39 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
   gfxContext.PopClippingRectangle ();
 }
 
-void
-QuicklistMenuItemCheckmark::DrawContent (nux::GraphicsEngine& gfxContext,
+void QuicklistMenuItemCheckmark::DrawContent (nux::GraphicsEngine& gfxContext,
                                          bool                 forceDraw)
 {
 }
 
-void
-QuicklistMenuItemCheckmark::PostDraw (nux::GraphicsEngine& gfxContext,
+void QuicklistMenuItemCheckmark::PostDraw (nux::GraphicsEngine& gfxContext,
                                       bool                 forceDraw)
 {
 }
 
-void
-QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
+void QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
                                       int        width,
                                       int        height,
                                       nux::Color color)
 {
-  int                   textWidth  = 0;
+  int                   textWidth = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
 
-  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"),
-                                          _fontName.GetTCharPtr (),
-                                          _fontSize);
-  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
+  gchar* font_str = g_strdup_printf ("%s %.2f", _fontName, _fontSize);
+  GetTextExtents (font_str, textWidth, textHeight);
 
   cairo_set_font_options (cr, _fontOpts);
   layout = pango_cairo_create_layout (cr);
   //desc = pango_font_description_from_string ((char*) FONT_FACE);
-  desc = pango_font_description_from_string (str.GetTCharPtr ());
+  desc = pango_font_description_from_string (font_str);
   pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup (layout, _text, -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
   pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
@@ -291,6 +267,7 @@ QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
 
   // clean up
   pango_font_description_free (desc);
+  g_free (font_str);
   g_object_unref (layout);
 }
 

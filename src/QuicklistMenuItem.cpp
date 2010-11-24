@@ -71,10 +71,29 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
                                       NUX_FILE_LINE_DECL) :
 View (NUX_FILE_LINE_PARAM)
 {
+  _text       = 0;
+  _fontName   = g_strdup ("Ubuntu");
+  _fontSize   = 12;
+  _fontStyle  = FONTSTYLE_NORMAL;
+  _fontWeight = FONTWEIGHT_NORMAL;  
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem   = item;
   _debug      = false;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
+  
+  _fontOpts           = cairo_font_options_create ();
+  _normalTexture[0]   = NULL;
+  _normalTexture[1]   = NULL;
+  _prelightTexture[0] = NULL;
+  _prelightTexture[1] = NULL;
+  
+  // FIXME: hard-coding these for the moment, as we don't have
+  // gsettings-support in place right now
+  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
+  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
+  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
+  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
+  
   if (_menuItem)
   {
     g_signal_connect (_menuItem,
@@ -106,10 +125,40 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
                                       NUX_FILE_LINE_DECL) :
 View (NUX_FILE_LINE_PARAM)
 {
+  _text       = 0;
+  _fontName   = g_strdup ("Ubuntu");
+  _fontSize   = 12;
+  _fontStyle  = FONTSTYLE_NORMAL;
+  _fontWeight = FONTWEIGHT_NORMAL;  
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem   = item;
   _debug      = debug;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
+  
+  _fontOpts           = cairo_font_options_create ();
+  _normalTexture[0]   = NULL;
+  _normalTexture[1]   = NULL;
+  _prelightTexture[0] = NULL;
+  _prelightTexture[1] = NULL;
+  
+  // FIXME: hard-coding these for the moment, as we don't have
+  // gsettings-support in place right now
+  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
+  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
+  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
+  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
+  
+  if (_menuItem)
+  {
+    g_signal_connect (_menuItem,
+                    "property-changed",
+                    G_CALLBACK (OnPropertyChanged),
+                    this);
+    g_signal_connect (_menuItem,
+                    "item-activated",
+                    G_CALLBACK (OnItemActivated),
+                    this);
+  }
   
   OnMouseDown.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDown));
   OnMouseUp.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseUp));
@@ -127,6 +176,14 @@ View (NUX_FILE_LINE_PARAM)
 
 QuicklistMenuItem::~QuicklistMenuItem ()
 {
+  if (_text)
+    g_free (_text);
+  
+  if (_fontName)
+    g_free (_fontName);
+  
+  cairo_font_options_destroy (_fontOpts);
+
 }
 
 QuicklistMenuItemType QuicklistMenuItem::GetItemType ()
@@ -206,22 +263,22 @@ QuicklistMenuItem::GetActive ()
 }
 
 void
-QuicklistMenuItem::SetText (nux::NString text)
+QuicklistMenuItem::SetText (const gchar* text)
 {
-  if (_text != text)
+  if (g_strcmp0 (_text, text) != 0)
   {
-    _text = text;
+    _text = g_strdup (text);
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
 }
 
 void
-QuicklistMenuItem::SetFontName (nux::NString fontName)
+QuicklistMenuItem::SetFontName (const gchar* fontName)
 {
-  if (_fontName != fontName)
+  if (g_strcmp0 (_fontName, fontName) != 0)
   {
-    _fontName = fontName;
+    _fontName = g_strdup (fontName);
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
@@ -285,13 +342,12 @@ void QuicklistMenuItem::DrawRoundedRectangle ()
 
 void QuicklistMenuItem::GetTextExtents (int &width, int &height)
 {
-  nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
-                                           _fontName.GetTCharPtr (),
-                                           _fontSize);
-  GetTextExtents (str.GetTCharPtr (), width, height);
+  gchar* str = g_strdup_printf ("%s %.2f", _fontName, _fontSize);
+  GetTextExtents (str, width, height);
+  g_free (str);
 }
 
-void QuicklistMenuItem::GetTextExtents (const TCHAR* font,
+void QuicklistMenuItem::GetTextExtents (const gchar* font,
                                             int&         width,
                                             int&         height)
 {
@@ -314,7 +370,7 @@ void QuicklistMenuItem::GetTextExtents (const TCHAR* font,
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_markup (layout, _text, -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
   pango_cairo_context_set_resolution (pangoCtx, _dpiX);
