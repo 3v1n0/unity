@@ -22,22 +22,33 @@
 
 #define SETTINGS_NAME "com.canonical.Unity.Launcher"
 
+static void on_settings_updated (GSettings *settings, const gchar *key, FavoriteStoreGSettings *self);
+
 FavoriteStoreGSettings::FavoriteStoreGSettings ()
 {
   m_settings = g_settings_new (SETTINGS_NAME);
-  m_favorites = NULL;
 
-  Refresh ();
+  Init ();
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings (GSettingsBackend *backend)
 {
   m_settings = g_settings_new_with_backend (SETTINGS_NAME, backend);
+
+  Init ();
+}
+
+void
+FavoriteStoreGSettings::Init ()
+{
   m_favorites = NULL;
+  m_ignore_signals = false;
+
+  g_signal_connect (m_settings, "changed",
+                    G_CALLBACK (on_settings_updated), this);
 
   Refresh ();
 }
-  
 
 FavoriteStoreGSettings::~FavoriteStoreGSettings ()
 {
@@ -165,8 +176,10 @@ FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
       favs[i] = get_basename_or_path (desktop_path);
     }
 
+  m_ignore_signals = true;
   if (!g_settings_set_strv (m_settings, "favorites", favs))
     g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
+  m_ignore_signals = false;
 
   i = 0;
   while (favs[i] != NULL)
@@ -214,8 +227,10 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
                  desktop_path);
     }
 
+  m_ignore_signals = true;
   if (!g_settings_set_strv (m_settings, "favorites", favs))
     g_warning ("Unable to remove favorite '%s'", desktop_path);
+  m_ignore_signals = false;
 
   i = 0;
   while (favs[i] != NULL)
@@ -267,8 +282,10 @@ FavoriteStoreGSettings::MoveFavorite (const char *desktop_path,
     }
   favs[i] = NULL;
 
+  m_ignore_signals = true;
   if (!g_settings_set_strv (m_settings, "favorites", favs))
     g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
+  m_ignore_signals = false;
 
   i = 0;
   while (favs[i] != NULL)
@@ -279,4 +296,25 @@ FavoriteStoreGSettings::MoveFavorite (const char *desktop_path,
     }
 
   Refresh ();
+}
+
+void
+FavoriteStoreGSettings::Changed (const gchar *key)
+{
+  if (m_ignore_signals)
+    return;
+
+  g_print ("Changed: %s\n", key);
+}
+
+/*
+ * These are just callbacks chaining to real class functions
+ */
+static void
+on_settings_updated (GSettings *settings, const gchar *key, FavoriteStoreGSettings *self)
+{
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (self != NULL);
+
+  self->Changed (key);
 }

@@ -54,6 +54,8 @@ static void TestRemoveFavoriteBad (void);
 static void TestMoveFavorite (void);
 static void TestMoveFavoriteBad (void);
 
+static void TestSignalAdded (void);
+
 void
 TestFavoriteStoreGSettingsCreateSuite ()
 {
@@ -73,6 +75,8 @@ TestFavoriteStoreGSettingsCreateSuite ()
 
   g_test_add_func (_DOMAIN"/MoveFavorite", TestMoveFavorite);
   g_test_add_func (_DOMAIN"/MoveFavoriteBad", TestMoveFavoriteBad);
+
+  g_test_add_func (_DOMAIN"/SignalAdded", TestSignalAdded);
 }
 
 static GSettingsBackend *
@@ -351,6 +355,22 @@ TestMoveFavoriteBad ()
       settings->MoveFavorite (CUSTOM_DESKTOP, 100);
     }
   g_test_trap_assert_stderr ("*g_slist_length*");
+
+  settings->UnReference ();
+}
+
+static void
+TestSignalAdded ()
+{
+  GSettingsBackend       *backend;
+  FavoriteStoreGSettings *settings;
+ 
+  backend = CreateDefaultKeyFileBackend ();
+  g_assert (G_IS_SETTINGS_BACKEND (backend));
+
+  settings = new FavoriteStoreGSettings (backend);
+  g_assert (settings != NULL);
+  g_object_unref (backend);
 
   settings->UnReference ();
 }
