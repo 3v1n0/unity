@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
- * Authored by: Mirco Müller <mirco.mueller@canonical.com
+ * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
 #ifndef STATICCAIROTEXT_H
@@ -98,21 +98,19 @@ namespace nux
 
       void GetTextExtents (int &width, int &height);
 
-      sigc::signal<void, StaticCairoText&> sigTextChanged;
-      sigc::signal<void, StaticCairoText&> sigTextColorChanged;
+      sigc::signal<void, StaticCairoText*> sigTextChanged;
+      sigc::signal<void, StaticCairoText*> sigTextColorChanged;
 
-    protected:
-	  
     private:
       NString          _text;
       NString          _fontName;
-      float                 _fontSize;
+      float            _fontSize;
       eFontStyle       _fontStyle;
       eFontWeight      _fontWeight;
       Color            _textColor;
 
-      CairoGraphics*   _cairoGraphics;
-      BaseTexture*     _texture2D;
+      CairoGraphics*        _cairoGraphics;
+      BaseTexture*          _texture2D;
       int                   _dpiX;
       int                   _dpiY;
       cairo_font_options_t* _fontOpts;

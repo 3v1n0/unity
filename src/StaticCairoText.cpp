@@ -198,7 +198,7 @@ StaticCairoText::SetText (NString text)
   {
     _text = text;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -209,7 +209,7 @@ StaticCairoText::SetFontName (NString fontName)
   {
     _fontName = fontName;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -220,7 +220,7 @@ StaticCairoText::SetFontSize (float fontSize)
   {
     _fontSize = fontSize;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -231,7 +231,7 @@ StaticCairoText::SetFontWeight (eFontWeight fontWeight)
   {
     _fontWeight = fontWeight;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -242,7 +242,7 @@ StaticCairoText::SetFontStyle (eFontStyle fontStyle)
   {
     _fontStyle = fontStyle;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -252,7 +252,7 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
-    sigTextColorChanged.emit (*this);
+    sigTextColorChanged.emit (this);
   }
 }
 
