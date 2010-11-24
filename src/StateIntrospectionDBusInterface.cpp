@@ -102,6 +102,7 @@ StateIntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, con
   if (error != NULL)
   {
     g_warning ("Could not register StateIntrospection object onto d-bus");
+	g_error_free (error);
   }
 }
 
