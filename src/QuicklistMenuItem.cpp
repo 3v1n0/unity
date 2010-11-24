@@ -118,10 +118,7 @@ View (NUX_FILE_LINE_PARAM)
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDrag));
   OnMouseEnter.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseLeave));
-  
-  // Get the original states of the item
-  _enabled = true; //GetEnabled ();
-  _active = true; //GetActive ();
+
   _prelight = false;
 }
 
@@ -172,10 +169,7 @@ View (NUX_FILE_LINE_PARAM)
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseDrag));
   OnMouseEnter.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &QuicklistMenuItem::RecvMouseLeave));
-  
-  // Get the original states of the item
-  _enabled = GetEnabled ();
-  _active = GetActive ();
+
   _prelight = false;
 }
 
@@ -355,12 +349,11 @@ void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, u
 
 void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!_enabled)
+  if (!GetEnabled ())
   {
     sigMouseClick.emit (this);
     return;
   }
-  _active = !_active;
   sigMouseClick.emit (this);
 }
 

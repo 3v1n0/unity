@@ -138,13 +138,13 @@ class QuicklistMenuItem : public nux::View
     sigc::signal<void, QuicklistMenuItem*> sigMouseClick;
     
     DbusmenuMenuitem* _menuItem;
-    nux::Color        _color;
-    bool              _debug;
     QuicklistMenuItemType _item_type;
     
-    bool _enabled;
-    bool _active;
-    bool _prelight;
+    nux::Color        _color;   //!< Item rendering color factor.
+    bool              _debug;
+    
+    
+    bool _prelight;   //!< True when the mouse is over the item.
 
     void DrawRoundedRectangle ();
     
