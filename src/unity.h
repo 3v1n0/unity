@@ -159,7 +159,9 @@ class UnityScreen :
 	bool
 	initPluginForScreen (CompPlugin *p);
 
-	protected:
+	bool			doShellRepaint;
+
+    protected:
 
 	const gchar* GetName ();
 
