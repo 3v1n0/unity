@@ -252,7 +252,6 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
 	    if (std::find (xwns.begin (), xwns.end (), w->id ()) != xwns.end ())
 	    {
 		uScreen->paintDisplay (region);
-		break;
 	    }
 	}
     }
