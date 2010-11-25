@@ -16,11 +16,15 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
+#include "config.h"
+
 #include <gio/gdesktopappinfo.h>
 
 #include "FavoriteStoreGSettings.h"
 
 #define SETTINGS_NAME "com.canonical.Unity.Launcher"
+
+#define LATEST_SETTINGS_MIGRATION "3.2.0"
 
 static void on_settings_updated (GSettings *settings, const gchar *key, FavoriteStoreGSettings *self);
 
@@ -41,8 +45,31 @@ FavoriteStoreGSettings::FavoriteStoreGSettings (GSettingsBackend *backend)
 void
 FavoriteStoreGSettings::Init ()
 {
+  gchar *latest_migration_update;
+
   m_favorites = NULL;
   m_ignore_signals = false;
+
+  /* migrate the favorites if needed and ignore errors */
+  latest_migration_update = g_settings_get_string (m_settings, "favorite-migration");
+  if (g_strcmp0 (latest_migration_update, LATEST_SETTINGS_MIGRATION) < 0)
+    {
+      GError *error = NULL;
+      char *cmd = g_strdup_printf ("%s/lib/unity/migrate_favorites.py", PREFIXDIR);
+      char *output;
+      
+      g_spawn_command_line_sync (cmd, &output, NULL, NULL, &error);
+      if (error)
+        {
+          printf ("WARNING: Unable to run the migrate favorites tools successfully: %s.\nThe output was:%s\n", error->message,output);
+          g_error_free (error);
+        }
+      g_free (output);
+      g_free (cmd);
+  printf ("migrthere");
+    }
+  printf ("there");
+  g_free (latest_migration_update);
 
   g_signal_connect (m_settings, "changed",
                     G_CALLBACK (on_settings_updated), this);
