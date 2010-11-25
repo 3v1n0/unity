@@ -25,6 +25,8 @@ unity (3.2.0-0ubuntu1) UNRELEASED; urgency=low
       geser
   * debian/unity.install:
     - no more gconf file to install
+  * debian/libunity3.symbols:
+    - updated to latest and greatest
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 25 Nov 2010 18:37:24 +0100
 
