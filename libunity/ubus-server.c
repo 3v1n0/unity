@@ -147,7 +147,22 @@ ubus_server_init (UBusServer *server)
 static void
 ubus_server_finalize (GObject *object)
 {
-	/* TODO: Add deinitalization code here */
+  UBusServer *server = UBUS_SERVER (object);
+	UBusServerPrivate *priv = server->priv;
+	g_hash_table_remove_all (priv->message_interest_table);
+	g_hash_table_remove_all (priv->dispatch_table);
+	g_free (priv->message_interest_table);
+	g_free (priv->dispatch_table);
+
+  UBusMessageInfo *info = g_queue_pop_tail (priv->message_queue);
+  for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
+  {
+    if (info->data != NULL)
+      g_variant_unref (info->data);
+    g_free (info);
+  }
+
+  g_queue_free (priv->message_queue);
 
 	G_OBJECT_CLASS (ubus_server_parent_class)->finalize (object);
 }
@@ -220,6 +235,7 @@ ubus_server_pump_message_queue (UBusServer *server)
   // situations to sort the queue first so that duplicate messages can re-use
   // the same dispatch_list lookups.. but thats a specific case.
 
+
   info = g_queue_pop_tail (priv->message_queue);
   for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
     {
@@ -232,6 +248,7 @@ ubus_server_pump_message_queue (UBusServer *server)
 
       GSequenceIter *iter = g_sequence_get_begin_iter (dispatch_list);
       GSequenceIter *end = g_sequence_get_end_iter (dispatch_list);
+
       while (iter != end)
         {
           GSequenceIter *next = g_sequence_iter_next (iter);
@@ -242,6 +259,10 @@ ubus_server_pump_message_queue (UBusServer *server)
 
           iter = next;
         }
+
+      if (info->data != NULL)
+        g_variant_unref (info->data);
+      g_free (info);
     }
 
   return FALSE;
@@ -266,8 +287,8 @@ ubus_server_send_message (UBusServer *server, const gchar *message,
 {
   g_return_if_fail (UBUS_IS_SERVER (server));
   g_return_if_fail (message != NULL);
-
 	UBusServerPrivate *priv = server->priv;
+
 	UBusMessageInfo *message_info = ubus_message_info_new (message, data);
 	g_queue_push_head (priv->message_queue, message_info);
 

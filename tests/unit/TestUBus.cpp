@@ -106,13 +106,14 @@ TestPropagation ()
   ubus_server_send_message (ubus, MESSAGE1, NULL);
   ubus_server_send_message (ubus, MESSAGE2, NULL);
 
+  ubus_server_force_message_pump (ubus);
+
   g_assert (counter == 0);
 }
 
 gboolean
 main_loop_bailout (gpointer data)
 {
-  g_debug ("got here?");
   GMainLoop *mainloop = (GMainLoop*)data;
   g_main_quit (mainloop);
   return FALSE;
@@ -135,16 +136,13 @@ TestMainLoop ()
   gint counter = 0;
 
   mainloop = g_main_loop_new (NULL, TRUE);
-
-  g_timeout_add_seconds (3, main_loop_bailout, mainloop);
+  g_timeout_add_seconds (1, main_loop_bailout, mainloop);
 
   ubus_server_register_interest (ubus, MESSAGE1,
                                  test_handler_mainloop,
                                  &counter);
 
   ubus_server_send_message (ubus, MESSAGE1, NULL);
-
-
   g_main_loop_run (mainloop);
 
   g_assert (counter == 1);
