@@ -158,7 +158,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
       if (window == NULL)
         return GDK_FILTER_CONTINUE;
-      
+
       Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
 
       if (xwindow == 0)
@@ -236,7 +236,10 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 static gboolean
 initial_resync (PanelService *self)
 {
-  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
+  if (PANEL_IS_SERVICE (self))
+    g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
+
+
   return FALSE;
 }
 
@@ -264,7 +267,7 @@ PanelService *
 panel_service_get_default ()
 {
   static PanelService *service = NULL;
-  
+
   if (service == NULL || !PANEL_IS_SERVICE (service))
     service = g_object_new (PANEL_TYPE_SERVICE, NULL);
 
@@ -293,13 +296,14 @@ panel_service_get_n_indicators (PanelService *self)
 
   return g_slist_length (self->priv->indicators);
 }
-     
+
 /*
  * Private Methods
  */
 static gboolean
 actually_notify_object (IndicatorObject *object)
 {
+  if (!INDICATOR_IS_OBJECT (object)) return;
   PanelService *self;
   PanelServicePrivate *priv;
   gint position;
@@ -310,7 +314,7 @@ actually_notify_object (IndicatorObject *object)
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "position"));
   priv->timeouts[position] = SYNC_WAITING;
 
-  if (!suppress_signals);
+  if (!suppress_signals)
     g_signal_emit (self, _service_signals[RE_SYNC],
                    0, g_object_get_data (G_OBJECT (object), "id"));
 
@@ -392,7 +396,7 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->label, "hide",
                         G_CALLBACK (on_entry_changed), object);
-                        
+
     }
   if (GTK_IS_IMAGE (entry->image))
     {
@@ -452,7 +456,7 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
   priv->indicators = g_slist_append (priv->indicators, object);
 
   g_object_set_data_full (G_OBJECT (object), "id", g_strdup (name), g_free);
-  
+
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED,
                     G_CALLBACK (on_entry_added), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED,
@@ -535,7 +539,7 @@ indicator_compare_func (IndicatorObject *o1, IndicatorObject *o2)
 
   s1 = g_object_get_data (G_OBJECT (o1), "id");
   s2 = g_object_get_data (G_OBJECT (o2), "id");
-  
+
   i1 = name2order (s1);
   i2 = name2order (s2);
 
@@ -573,7 +577,7 @@ gtk_image_to_data (GtkImage *image)
       GError     *error = NULL;
 
       pixbuf = gtk_image_get_pixbuf (image);
-     
+
       if (gdk_pixbuf_save_to_buffer (pixbuf, &buffer, &buffer_size, "png", &error, NULL))
         {
           ret = g_base64_encode ((const guchar *)buffer, buffer_size);
@@ -623,7 +627,7 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
   gboolean is_label = GTK_IS_LABEL (entry->label);
   gboolean is_image = GTK_IS_IMAGE (entry->image);
   gchar *image_data = NULL;
-  
+
   g_variant_builder_add (b, "(sssbbusbb)",
                          indicator_id,
                          id,
@@ -729,7 +733,7 @@ panel_service_sync (PanelService *self)
       /* Set the sync back to neutral */
       position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
       self->priv->timeouts[position] = SYNC_NEUTRAL;
-      
+
       indicator_object_to_variant (i->data, indicator_id, &b);
     }
 
@@ -776,7 +780,7 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
- 
+
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;

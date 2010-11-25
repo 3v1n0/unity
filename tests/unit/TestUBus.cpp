@@ -134,6 +134,7 @@ TestMainLoop ()
   UBusServer *ubus = ubus_server_get_default ();
   gint counter = 0;
 
+  mainloop = g_main_loop_new (NULL, TRUE);
 
   g_timeout_add_seconds (3, main_loop_bailout, mainloop);
 
@@ -143,10 +144,10 @@ TestMainLoop ()
 
   ubus_server_send_message (ubus, MESSAGE1, NULL);
 
-  mainloop = g_main_loop_new (NULL, TRUE);
+
   g_main_loop_run (mainloop);
 
-//  g_assert (counter == 1);
+  g_assert (counter == 1);
 
 }
 
