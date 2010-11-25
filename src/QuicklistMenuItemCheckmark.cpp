@@ -214,58 +214,6 @@ void QuicklistMenuItemCheckmark::PostDraw (nux::GraphicsEngine& gfxContext,
 }
 
 void
-QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
-                                      int        width,
-                                      int        height,
-                                      nux::Color color)
-{
-  int                   textWidth  = 0;
-  int                   textHeight = 0;
-  PangoLayout*          layout     = NULL;
-  PangoFontDescription* desc       = NULL;
-  PangoContext*         pangoCtx   = NULL;
-  int                   dpi        = 0;
-  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
-
-  gchar* font_str = g_strdup_printf ("%s %.2f", _fontName, _fontSize);
-  GetTextExtents (font_str, textWidth, textHeight);
-
-  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
-  layout = pango_cairo_create_layout (cr);
-  desc = pango_font_description_from_string (font_str);
-  pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
-  pango_layout_set_font_description (layout, desc);
-  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text, -1);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx,
-                                        gdk_screen_get_font_options (screen));
-  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution (pangoCtx,
-                                        (float) dpi / (float) PANGO_SCALE);
-  }
-
-  pango_layout_context_changed (layout);
-
-  cairo_move_to (cr, ITEM_INDENT_ABS, (float) (height - textHeight) / 2.0f);
-  pango_cairo_show_layout (cr, layout);
-
-  // clean up
-  pango_font_description_free (desc);
-  g_free (font_str);
-  g_object_unref (layout);
-}
-
-void
 QuicklistMenuItemCheckmark::UpdateTexture ()
 {
   nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);

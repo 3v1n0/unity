@@ -55,10 +55,7 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
     void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
     void Initialize (DbusmenuMenuitem* item);
-    void DrawText (cairo_t*   cr,
-                   int        width,
-                   int        height,
-                   nux::Color color);
+
     virtual void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
 };

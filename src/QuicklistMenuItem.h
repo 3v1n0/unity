@@ -30,24 +30,6 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-
-void
-GetDPI (int &dpi_x, int &dpi_y);
-
-typedef enum
-{
-  FONTSTYLE_NORMAL  = PANGO_STYLE_NORMAL,
-  FONTSTYLE_OBLIQUE = PANGO_STYLE_OBLIQUE,
-  FONTSTYLE_ITALIC  = PANGO_STYLE_ITALIC,
-}  FontStyle;
-
-typedef enum
-{
-  FONTWEIGHT_LIGHT  = PANGO_WEIGHT_LIGHT,
-  FONTWEIGHT_NORMAL = PANGO_WEIGHT_NORMAL,
-  FONTWEIGHT_BOLD   = PANGO_WEIGHT_BOLD,
-} FontWeight;
-
 typedef enum
 {
   MENUITEM_TYPE_UNKNOWN    = 0,
@@ -103,10 +85,6 @@ class QuicklistMenuItem : public nux::View
   protected:
     
     gchar*                _text;
-    gchar*                _fontName;
-    float                 _fontSize;
-    FontStyle             _fontStyle;
-    FontWeight            _fontWeight;
     nux::Color            _textColor;
     int                   _pre_layout_width;
     int                   _pre_layout_height;
@@ -150,6 +128,11 @@ class QuicklistMenuItem : public nux::View
                                double   cornerRadius,
                                double   width,
                                double   height);
+
+    void DrawText (cairo_t*   cr,
+                   int        width,
+                   int        height,
+                   nux::Color color);
 
     friend class QuicklistView;
 };

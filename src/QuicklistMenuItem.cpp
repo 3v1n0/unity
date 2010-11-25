@@ -25,6 +25,9 @@
 
 #include <X11/Xlib.h>
 
+#define ITEM_INDENT_ABS        20
+#define ITEM_CORNER_RADIUS_ABS 4
+
 static void
 OnPropertyChanged (gchar*             property,
                    GValue*            value,
@@ -44,10 +47,6 @@ View (NUX_FILE_LINE_PARAM)
   }
   
   _text       = 0;
-  _fontName   = g_strdup ("Ubuntu");
-  _fontSize   = 12;
-  _fontStyle  = FONTSTYLE_NORMAL;
-  _fontWeight = FONTWEIGHT_NORMAL;  
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem   = item;
   _debug      = false;
@@ -87,10 +86,6 @@ QuicklistMenuItem::QuicklistMenuItem (DbusmenuMenuitem* item,
 View (NUX_FILE_LINE_PARAM)
 {
   _text       = 0;
-  _fontName   = g_strdup ("Ubuntu");
-  _fontSize   = 12;
-  _fontStyle  = FONTSTYLE_NORMAL;
-  _fontWeight = FONTWEIGHT_NORMAL;  
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem   = item;
   _debug      = debug;
@@ -128,9 +123,6 @@ QuicklistMenuItem::~QuicklistMenuItem ()
 {
   if (_text)
     g_free (_text);
-  
-  if (_fontName)
-    g_free (_fontName);
 }
 
 QuicklistMenuItemType QuicklistMenuItem::GetItemType ()
@@ -219,14 +211,17 @@ void QuicklistMenuItem::ItemActivated ()
 
 void QuicklistMenuItem::GetTextExtents (int &width, int &height)
 {
-  gchar* str = g_strdup_printf ("%s %.2f", _fontName, _fontSize);
-  GetTextExtents (str, width, height);
-  g_free (str);
+  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+  gchar*       fontName = NULL;
+
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  GetTextExtents (fontName, width, height);
+  g_free (fontName);
 }
 
 void QuicklistMenuItem::GetTextExtents (const gchar* font,
-                                            int&         width,
-                                            int&         height)
+                                        int&         width,
+                                        int&         height)
 {
   cairo_surface_t*      surface  = NULL;
   cairo_t*              cr       = NULL;
@@ -392,4 +387,56 @@ QuicklistMenuItem::DrawRoundedRectangle (cairo_t* cr,
                radius,
                180.0f * G_PI / 180.0f,
                270.0f * G_PI / 180.0f);
+}
+
+void
+QuicklistMenuItem::DrawText (cairo_t*   cr,
+                             int        width,
+                             int        height,
+                             nux::Color color)
+{
+  int                   textWidth  = 0;
+  int                   textHeight = 0;
+  PangoLayout*          layout     = NULL;
+  PangoFontDescription* desc       = NULL;
+  PangoContext*         pangoCtx   = NULL;
+  int                   dpi        = 0;
+  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
+  gchar*                fontName   = NULL;
+
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  GetTextExtents (fontName, textWidth, textHeight);
+
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
+  layout = pango_cairo_create_layout (cr);
+  desc = pango_font_description_from_string (fontName);
+  pango_layout_set_font_description (layout, desc);
+  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  pango_layout_set_markup (layout, _text, -1);
+  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
+
+  pango_layout_context_changed (layout);
+
+  cairo_move_to (cr, ITEM_INDENT_ABS, (float) (height - textHeight) / 2.0f);
+  pango_cairo_show_layout (cr, layout);
+
+  // clean up
+  pango_font_description_free (desc);
+  g_free (fontName);
+  g_object_unref (layout);
 }

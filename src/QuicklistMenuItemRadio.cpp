@@ -57,10 +57,6 @@ QuicklistMenuItem (item,
 void
 QuicklistMenuItemRadio::Initialize (DbusmenuMenuitem* item)
 {
-  _fontName   = TEXT ("Ubuntu");
-  _fontSize   = 12;
-  _fontStyle  = FONTSTYLE_NORMAL;
-  _fontWeight = FONTWEIGHT_NORMAL;
   _item_type  = MENUITEM_TYPE_LABEL;
   
   if (item)
@@ -72,7 +68,6 @@ QuicklistMenuItemRadio::Initialize (DbusmenuMenuitem* item)
   _normalTexture[1]   = NULL;
   _prelightTexture[0] = NULL;
   _prelightTexture[1] = NULL;
-
 
   SetMinimumSize (1, 1);
   // make sure _dpiX and _dpiY are initialized correctly
@@ -186,59 +181,6 @@ void
 QuicklistMenuItemRadio::PostDraw (nux::GraphicsEngine& gfxContext,
                                   bool                 forceDraw)
 {
-}
-
-void
-QuicklistMenuItemRadio::DrawText (cairo_t*   cr,
-                                  int        width,
-                                  int        height,
-                                  nux::Color color)
-{
-  int                   textWidth  = 0;
-  int                   textHeight = 0;
-  PangoLayout*          layout     = NULL;
-  PangoFontDescription* desc       = NULL;
-  PangoContext*         pangoCtx   = NULL;
-  int                   dpi      = 0;
-  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
-
-  nux::NString str = nux::NString::Printf(TEXT("%s %.2f"),
-                                          _fontName.GetTCharPtr (),
-                                          _fontSize);
-  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
-
-  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
-  layout = pango_cairo_create_layout (cr);
-  desc = pango_font_description_from_string (str.GetTCharPtr ());
-  pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
-  pango_layout_set_font_description (layout, desc);
-  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx,
-                                        gdk_screen_get_font_options (screen));
-  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
-  if (dpi == -1)
-  {
-    // use some default DPI-value
-    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
-  }
-  else
-  {
-    pango_cairo_context_set_resolution (pangoCtx,
-                                        (float) dpi / (float) PANGO_SCALE);
-  }
-
-  pango_layout_context_changed (layout);
-
-  cairo_move_to (cr, 0.0f, 0.0f);
-  pango_cairo_show_layout (cr, layout);
-
-  // clean up
-  pango_font_description_free (desc);
-  g_object_unref (layout);
 }
 
 void
@@ -362,61 +304,6 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   // finally clean up
   delete _cairoGraphics;
-}
-
-void
-QuicklistMenuItemRadio::SetText (nux::NString text)
-{
-  if (_text != text)
-  {
-    _text = text;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemRadio::SetFontName (nux::NString fontName)
-{
-  if (_fontName != fontName)
-  {
-    _fontName = fontName;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemRadio::SetFontSize (float fontSize)
-{
-  if (_fontSize != fontSize)
-  {
-    _fontSize = fontSize;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemRadio::SetFontWeight (FontWeight fontWeight)
-{
-  if (_fontWeight != fontWeight)
-  {
-    _fontWeight = fontWeight;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
-}
-
-void
-QuicklistMenuItemRadio::SetFontStyle (FontStyle fontStyle)
-{
-  if (_fontStyle != fontStyle)
-  {
-    _fontStyle = fontStyle;
-    UpdateTexture ();
-    sigTextChanged.emit (this);
-  }
 }
 
 int QuicklistMenuItemRadio::CairoSurfaceWidth ()

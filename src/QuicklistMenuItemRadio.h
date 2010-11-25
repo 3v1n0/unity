@@ -56,22 +56,8 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-    void SetText (nux::NString text);
-
-    void SetFontName (nux::NString fontName);
-
-    void SetFontSize (float fontSize);
-
-    void SetFontWeight (FontWeight fontWeight);
-
-    void SetFontStyle (FontStyle fontStyle);
-
   private:
     nux::NString          _text;
-    nux::NString          _fontName;
-    float                 _fontSize;
-    FontStyle             _fontStyle;
-    FontWeight            _fontWeight;
     nux::Color            _textColor;
     int                   _pre_layout_width;
     int                   _pre_layout_height;
@@ -81,10 +67,6 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
     nux::BaseTexture* _prelightTexture[2];
 
     void Initialize (DbusmenuMenuitem* item);
-    void DrawText (cairo_t*   cr,
-                   int        width,
-                   int        height,
-                   nux::Color color);
     
     void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
