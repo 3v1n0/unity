@@ -13,6 +13,8 @@ unity (3.2.0-0ubuntu1) UNRELEASED; urgency=low
     - The ws switcher is always visible if launcher in floating and autohide
       mode (LP: #677554)
     - add application startup notification (LP: #638319)
+    - Unity appears on top of gnome-screensaver (LP: #677705)
+    - launcher tooltips hover over gnome-screensaver (LP: #652937)
   * debian/control:
     - don't recommend ubuntu-netbook-default-settings anymore
     - change the description
@@ -21,6 +23,8 @@ unity (3.2.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - try a slighter best solution for netbook-launcher virtual package, thanks
       geser
+  * debian/unity.install:
+    - no more gconf file to install
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 25 Nov 2010 18:37:24 +0100
 
