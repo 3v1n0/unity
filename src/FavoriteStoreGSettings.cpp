@@ -56,7 +56,7 @@ FavoriteStoreGSettings::Init ()
     {
       GError *error = NULL;
       char *cmd = g_strdup_printf ("%s/lib/unity/migrate_favorites.py", PREFIXDIR);
-      char *output;
+      char *output = NULL;
       
       g_spawn_command_line_sync (cmd, &output, NULL, NULL, &error);
       if (error)
