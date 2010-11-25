@@ -31,6 +31,12 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
+#include "QuicklistMenuItem.h"
+#include "QuicklistMenuItemLabel.h"
+#include "QuicklistMenuItemSeparator.h"
+#include "QuicklistMenuItemCheckmark.h"
+#include "QuicklistMenuItemRadio.h"
+
 #define DEFAULT_ICON "application-default-icon"
 
 nux::Tooltip *LauncherIcon::_current_tooltip = 0;
@@ -227,9 +233,7 @@ LauncherIcon::RecvMouseEnter ()
     std::list<DbusmenuClient *>::iterator it;
     for (it = menus_list.begin (); it != menus_list.end (); it++)
     {
-      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::root_changed), _quicklist);
-      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_DEFAULT, (&LauncherIcon::label_handler));
-      dbusmenu_client_add_type_handler (*it, DBUSMENU_CLIENT_TYPES_SEPARATOR, (&LauncherIcon::separator_handler));
+      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::RootChanged), _quicklist);
     }
     
     _quicklist_is_initialized = true;
@@ -257,45 +261,45 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-
-gboolean LauncherIcon::label_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
+void LauncherIcon::ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
 {
-  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
-  //printf ("label: %s\n", s);
-  
-  return true;
-}
+  g_return_if_fail (newitem);
 
-gboolean LauncherIcon::separator_handler (DbusmenuMenuitem * newitem, DbusmenuMenuitem * parent, DbusmenuClient * client)
-{
-  //const gchar* s = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
-  //printf ("separator: %s\n", s);
-
-  return true;
-}
-
-void LauncherIcon::child_realized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
-{
-  const gchar* label = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_LABEL);
   const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
+  const gchar* toggle_type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
   
   if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
   {
-    quicklist->AddMenuItem ("-----------------");
+    QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
   }
-  else
+  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
   {
-    quicklist->AddMenuItem (label);
+    QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
   }
-    
+  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+  {
+    QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+  else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+  {
+    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
+    quicklist->AddMenuItem (item);
+  }
+//   else
+//   {
+//     g_warning ("Unknown menu item type in file %s at line %s", G_STRFUNC, G_STRLOC);
+//   }
 }
 
-void LauncherIcon::root_changed (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
+void LauncherIcon::RootChanged (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
 {
   GList * child = NULL;
   for (child = dbusmenu_menuitem_get_children(newroot); child != NULL; child = g_list_next(child))
   {
-    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(child_realized), quicklist);    
+    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(ChildRealized), quicklist);    
   }
 }
 
