@@ -143,8 +143,14 @@ class QuicklistMenuItem : public nux::View
     
     bool _prelight;   //!< True when the mouse is over the item.
 
-    void DrawRoundedRectangle ();
-    
+    void DrawRoundedRectangle (cairo_t* cr,
+                               double   aspect,
+                               double   x,
+                               double   y,
+                               double   cornerRadius,
+                               double   width,
+                               double   height);
+
     friend class QuicklistView;
 };
 

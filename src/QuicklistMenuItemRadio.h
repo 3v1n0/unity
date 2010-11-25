@@ -93,13 +93,6 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
                          int&         height);
     void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
-    void DrawRoundedRectangle (cairo_t* cr,
-                               double   aspect,
-                               double   x,
-                               double   y,
-                               double   cornerRadius,
-                               double   width,
-                               double   height);
 };
 
 #endif // QUICKLISTMENUITEMRADIO_H

@@ -62,13 +62,6 @@ class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 
     virtual void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
-    void DrawRoundedRectangle (cairo_t* cr,
-                               double   aspect,
-                               double   x,
-                               double   y,
-                               double   cornerRadius,
-                               double   width,
-                               double   height);
 };
 
 #endif // QUICKLISTMENUITEMCHECKMARK_H
