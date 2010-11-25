@@ -56,7 +56,7 @@ vala_precompile (VALA_C unity-place-activation.vala
                  GENERATE_VAPI unity
 )
 
-add_library (${PKGNAME} SHARED ${VALA_C})
+add_library (${PKGNAME} SHARED ${VALA_C} ubus-server.c)
 set_target_properties (${PKGNAME} PROPERTIES
                        VERSION ${libunity_VERSION}
                        SOVERSION ${libunity_SOVERSION}
