@@ -57,7 +57,7 @@ LauncherController::PresentIconOwningWindow (Window window)
   {
     if ((*it)->IconOwnsWindow (window))
     {
-      (*it)->Present (600);
+      (*it)->Present (2, 600);
       return;
     }
   }
@@ -66,7 +66,7 @@ LauncherController::PresentIconOwningWindow (Window window)
   {
     if ((*it)->IconOwnsWindow (window))
     {
-      (*it)->Present (600);
+      (*it)->Present (2, 600);
       return;
     }
   }

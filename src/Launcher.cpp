@@ -691,7 +691,12 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
         
-        float icon_hide_offset = autohide_offset * (1.0f - present_progress);
+        float icon_hide_offset = autohide_offset;
+        
+        if (icon->PresentUrgency () == 1)
+          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
+        else if (icon->PresentUrgency () >= 2)
+          icon_hide_offset *= 1.0f - present_progress;
         
         // icon is crossing threshold, start folding
         center.z += folded_z_distance * folding_progress;
