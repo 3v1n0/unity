@@ -45,12 +45,6 @@ COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 static UnityScreen *uScreen = 0;
 
 void
-UnityScreen::preparePaint (int ms)
-{
-    cScreen->preparePaint (ms);
-}
-
-void
 UnityScreen::nuxPrologue ()
 {
     /* reset matrices */
@@ -135,13 +129,6 @@ UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib,
 {
     allowWindowPaint = false;
     gScreen->glPaintOutput (attrib, transform, region, output, mask);
-}
-
-/* paint cleanup */
-void
-UnityScreen::donePaint ()
-{
-    cScreen->donePaint ();
 }
 
 /* Grab changed nux regions and add damage rects for them */
@@ -231,18 +218,6 @@ UnityScreen::GetName ()
     return "Unity";
 }
 
-/* handle general window paint */
-bool
-UnityWindow::glPaint (const GLWindowPaintAttrib &attrib,
-		      const GLMatrix &transform,
-		      const CompRegion &region,
-		      unsigned int mask)
-{
-    bool ret;
-    ret = gWindow->glPaint (attrib, transform, region, mask);
-    return ret;
-}
-
 /* handle window painting in an opengl context
  *
  * we want to paint underneath other windows here,
@@ -273,82 +248,6 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
     bool ret = gWindow->glDraw (matrix, attrib, region, mask);
     
     return ret;
-}
-
-/* handle damages on windows */
-bool
-UnityWindow::damageRect (bool initial,
-			 const CompRect &rect)
-{
-    bool ret;
-
-    ret = cWindow->damageRect (initial, rect);
-
-    return ret;
-}
-
-/* This is called whenever the window is focussed */
-bool
-UnityWindow::focus ()
-{
-    bool ret;
-
-    ret = window->focus ();
-
-    return ret;
-}
-
-/* This is called whenever the window is activated */
-void
-UnityWindow::activate ()
-{
-    window->activate ();
-}
-
-/* This is called whenever the window is placed */
-bool
-UnityWindow::place (CompPoint &point)
-{
-    bool ret;
-
-    ret = window->place (point);
-    return ret;
-}
-
-/* This is called when a window is moved */
-void
-UnityWindow::moveNotify (int dx,
-            int dy,
-            bool immediate)
-{
-    window->moveNotify (dx, dy, immediate);
-}
-
-/* This is called whenever a window is resized */
-void
-UnityWindow::resizeNotify (int dx,
-              int dy,
-              int dwidth,
-              int dheight)
-{
-    window->resizeNotify (dx, dy, dwidth, dheight);
-}
-
-/* This is called on whenever a window is grabbed */
-void
-UnityWindow::grabNotify (int x,
-            int y,
-            unsigned int state,
-            unsigned int mask)
-{
-    window->grabNotify (x, y, state, mask);
-}
-
-/* This is called whenever a window is ungrabbed */
-void
-UnityWindow::ungrabNotify ()
-{
-    window->ungrabNotify ();
 }
 
 /* Called whenever a window is mapped, unmapped, minimized etc */
@@ -429,7 +328,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
     /* Wrap compiz interfaces */
     ScreenInterface::setHandler (screen);
-    CompositeScreenInterface::setHandler (cScreen);
     GLScreenInterface::setHandler (gScreen);
     
     StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
@@ -533,12 +431,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 /* Window init */
 UnityWindow::UnityWindow (CompWindow *window) :
     PluginClassHandler <UnityWindow, CompWindow> (window),
-    window (window), 
-    cWindow (CompositeWindow::get (window)),
+    window (window),
     gWindow (GLWindow::get (window))
 {
     WindowInterface::setHandler (window);
-    CompositeWindowInterface::setHandler (cWindow);
     GLWindowInterface::setHandler (gWindow);
 }
 

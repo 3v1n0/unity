@@ -58,10 +58,6 @@ class UnityScreen :
 	CompositeScreen *cScreen;
         GLScreen        *gScreen;
 
-	/* hook this function to determine animations before paint */
-	void
-	preparePaint (int);
-
 	/* prepares nux for drawing */	 
 	void
 	nuxPrologue ();
@@ -87,10 +83,6 @@ class UnityScreen :
 				       const CompRegion &,
 		       		       CompOutput *,
 				       unsigned int);
-
-
-	/* cleanup after painting */
-	void donePaint ();
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
@@ -149,7 +141,6 @@ class UnityScreen :
 
 class UnityWindow :
     public WindowInterface,
-    public CompositeWindowInterface,
     public GLWindowInterface,
     public PluginClassHandler <UnityWindow, CompWindow>
 {
@@ -161,15 +152,7 @@ class UnityWindow :
 	~UnityWindow ();
 
 	CompWindow      *window;
-	CompositeWindow *cWindow;
-        GLWindow        *gWindow;
-
-	/* basic window paint function */
-	bool
-	glPaint (const GLWindowPaintAttrib &,
-		 const GLMatrix &,
-		 const CompRegion &,
-		 unsigned int);
+	GLWindow	*gWindow;
 	
 	/* basic window draw function */
 	bool 
@@ -178,41 +161,7 @@ class UnityWindow :
 	        const CompRegion 	&region,
 	        unsigned int	mask);
 
-	/* handle damages on windows */
-	bool
-	damageRect (bool, const CompRect &);
-
-	/* This is called whenever the window is focussed */
-	bool
-	focus ();
-
-	/* This is called whenever the window is activated */
-	void
-	activate ();
-
-	/* handle placement */
-	bool
-	place (CompPoint &);
-
-	/* handle move */
-	void
-	moveNotify (int, int, bool);
-
-	/* handle resize */
-	void
-	resizeNotify (int, int, int, int);
-
-	/* handle grabs */
-	void
-	grabNotify (int, int, unsigned int, unsigned int);
-
-	/* handle ungrabs */
-	void
-	ungrabNotify ();
-
-	/* handle minimize, unmap, map, etc */
-	void
-	windowNotify (CompWindowNotify);
+	void windowNotify (CompWindowNotify n);
 
 };
 
