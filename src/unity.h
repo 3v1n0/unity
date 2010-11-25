@@ -41,10 +41,11 @@
 /* This is the options class header created for us automatically on build with BCOP */
 #include "unityshell_options.h"
 
+#include "Introspectable.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
-
+#include "IntrospectionDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
@@ -53,7 +54,8 @@
  * instance per screen.
  */
 
-class UnityScreen :
+class UnityScreen : 
+	public Introspectable,
     public sigc::trackable,
     /* You should inherit the ScreenInterface class if you want to dynamically hook
      * screen-level core functions. */
@@ -156,6 +158,15 @@ class UnityScreen :
 	
 	bool
 	initPluginForScreen (CompPlugin *p);
+
+	bool			doShellRepaint;
+	bool      allowWindowPaint;
+
+    protected:
+
+	const gchar* GetName ();
+
+	void AddProperties (GVariantBuilder *builder);
 	
     private:
     
@@ -176,7 +187,7 @@ class UnityScreen :
 
 	static void 
 	initUnity(nux::NThread* thread, void* InitData);
-	
+
 	static gboolean 
 	strutHackTimeout (gpointer data);
 	
@@ -187,6 +198,9 @@ class UnityScreen :
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
+	IntrospectionDBusInterface 		*debugger;
+
+  friend class UnityWindow;
 };
 
 class UnityWindow :
