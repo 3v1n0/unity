@@ -43,7 +43,10 @@ protected:
     void OnMouseClick (int button);
     std::list<DbusmenuClient *> GetMenus ();
     
+    void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
+    
+    bool IconOwnsWindow (Window w);
 
 private:
     BamfApplication *m_App;

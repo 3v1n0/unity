@@ -160,6 +160,7 @@ class UnityScreen :
 	initPluginForScreen (CompPlugin *p);
 
 	bool			doShellRepaint;
+	bool      allowWindowPaint;
 
     protected:
 
@@ -190,14 +191,16 @@ class UnityScreen :
 	static gboolean 
 	strutHackTimeout (gpointer data);
 	
-	Launcher               			*launcher;
-	LauncherController    	 		*controller;
-	PanelView              			*panelView;
-	nux::WindowThread      			*wt;
-	nux::BaseWindow        			*launcherWindow;
-	nux::BaseWindow        			*panelWindow;
-	nux::Geometry                   lastTooltipArea;
+	Launcher               *launcher;
+	LauncherController     *controller;
+	PanelView              *panelView;
+	nux::WindowThread      *wt;
+	nux::BaseWindow        *launcherWindow;
+	nux::BaseWindow        *panelWindow;
+	nux::Geometry           lastTooltipArea;
 	IntrospectionDBusInterface 		*debugger;
+
+  friend class UnityWindow;
 };
 
 class UnityWindow :

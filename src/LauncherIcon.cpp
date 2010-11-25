@@ -52,6 +52,8 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _related_windows = 0;
 
   _background_color = nux::Color::White;
+  _glow_color = nux::Color::White;
+  
   _mouse_inside = false;
   _tooltip = new nux::Tooltip ();
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
@@ -85,13 +87,18 @@ nux::Color LauncherIcon::BackgroundColor ()
   return _background_color;
 }
 
+nux::Color LauncherIcon::GlowColor ()
+{
+  return _glow_color;
+}
+
 nux::BaseTexture * LauncherIcon::TextureForSize (int size)
 {
   nux::BaseTexture * result = GetTextureForSize (size);
   return result;
 }
 
-nux::Color LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf)
+void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow)
 {
   unsigned int width = gdk_pixbuf_get_width (pixbuf);
   unsigned int height = gdk_pixbuf_get_height (pixbuf);
@@ -136,8 +143,11 @@ nux::Color LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf)
   v = .85f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
+  background = nux::Color (r, g, b);
   
-  return nux::Color (r, g, b);
+  v = 1.0f;
+  nux::HSVtoRGB (r, g, b, h, s, v);
+  glow = nux::Color (r, g, b);
 }
 
 nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size)
@@ -178,7 +188,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   if (GDK_IS_PIXBUF (pbuf))
   {
     result = nux::CreateTextureFromPixbuf (pbuf); 
-    _background_color = ColorForIcon (pbuf);
+    ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
   }
@@ -404,8 +414,13 @@ LauncherIcon::OnPresentTimeout (gpointer data)
   return false;
 }
 
+int LauncherIcon::PresentUrgency ()
+{
+  return _present_urgency;
+}
+
 void 
-LauncherIcon::Present (int length)
+LauncherIcon::Present (int present_urgency, int length)
 {
   if (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
     return;
@@ -413,6 +428,7 @@ LauncherIcon::Present (int length)
   if (length >= 0)
     _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
   
+  _present_urgency = present_urgency;
   SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, true);
 }
 
@@ -486,8 +502,10 @@ LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
   needs_redraw.emit (this);
   
   // Present on urgent as a general policy
-  if ((quirk == LAUNCHER_ICON_QUIRK_URGENT || quirk == LAUNCHER_ICON_QUIRK_VISIBLE) && value)
-    Present (1500);
+  if (quirk == LAUNCHER_ICON_QUIRK_VISIBLE && value)
+    Present (0, 1500);
+  if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
+    Present (1, 1500);
 }
 
 void

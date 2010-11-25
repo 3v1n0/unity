@@ -43,7 +43,8 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
-
+    void PresentIconOwningWindow (Window window);
+    
 private:
     BamfMatcher*     _matcher;
     CompAction*      _expo_action;
