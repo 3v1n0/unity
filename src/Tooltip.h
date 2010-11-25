@@ -47,12 +47,14 @@
 #define V_MARGIN             4
 #define FONT_FACE            "Ubuntu 13"
 
+class QuicklistMenuItem;
+  
 namespace nux
 {
   class VLayout;
   class HLayout;
   class SpaceLayout;
-  
+
   class Tooltip : public BaseWindow
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
@@ -75,7 +77,7 @@ namespace nux
 
     void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
   private:
-    void RecvCairoTextChanged (StaticCairoText& cairo_text);
+    void RecvCairoTextChanged (StaticCairoText* cairo_text);
 
     void PreLayoutManagement ();
 

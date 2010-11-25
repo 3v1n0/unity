@@ -25,14 +25,11 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
-#include "StaticCairoText.h"
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
+#include "QuicklistMenuItem.h"
 
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
@@ -50,6 +47,8 @@
 class VLayout;
 class HLayout;
 class SpaceLayout;
+class QuicklistMenuItem;
+class QuicklistMenuItemLabel;
 
 class QuicklistView : public nux::BaseWindow
 {
@@ -72,15 +71,28 @@ public:
   void SetText (nux::NString text);
   
   void RemoveAllMenuItem ();
-  void AddMenuItem (nux::NString str);
+  
+  void AddMenuItem (QuicklistMenuItem* item);
+  
   void RenderQuicklistView ();
 
   void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
   virtual void ShowWindow (bool b, bool StartModal = false);
   
+  int GetNumItems ();
+  QuicklistMenuItem* GetNthItems (int index);
+  QuicklistMenuItemType GetNthType  (int index);
+  std::list<QuicklistMenuItem*> GetChildren ();
+  
+  void TestMenuItems (DbusmenuMenuitem* root);
+  
 private:
-  void RecvCairoTextChanged (nux::StaticCairoText& cairo_text);
-  void RecvCairoTextColorChanged (nux::StaticCairoText& cairo_text);
+  void RecvCairoTextChanged (QuicklistMenuItem* item);
+  void RecvCairoTextColorChanged (QuicklistMenuItem* item);
+  void RecvItemMouseClick (QuicklistMenuItem* item);
+  void RecvItemMouseRelease (QuicklistMenuItem* item);
+  void RecvItemMouseEnter (QuicklistMenuItem* item);
+  void RecvItemMouseLeave (QuicklistMenuItem* item);
   
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -99,6 +111,9 @@ private:
 
   void NotifyConfigurationChange (int width, int height);
 
+  //! A convenience function to fill in the default quicklist with some random items.
+  void FillInDefaultItems ();
+  
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
@@ -107,9 +122,10 @@ private:
   int                   _dpiY;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
+  bool                  _mouse_down;
+  
   cairo_font_options_t* _fontOpts;
 
-  nux::StaticCairoText* _tooltip_text;
   nux::BaseTexture*     _texture_bg;
   nux::BaseTexture*     _texture_mask;
   nux::BaseTexture*     _texture_outline;
@@ -129,8 +145,8 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture ();
-  std::list<nux::StaticCairoText*> _item_list;
-  std::list<nux::StaticCairoText*> _default_item_list;
+  std::list<QuicklistMenuItem*> _item_list;
+  std::list<QuicklistMenuItem*> _default_item_list;
 };
 
 #endif // QUICKLISTVIEW_H

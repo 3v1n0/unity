@@ -36,10 +36,7 @@ LauncherModel::~LauncherModel()
 
 bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
 {
-  return icon->Type () == LAUNCHER_ICON_TYPE_END ||
-         icon->Type () == LAUNCHER_ICON_TYPE_TRASH || 
-         icon->Type () == LAUNCHER_ICON_TYPE_DEVICE ||
-         icon->Type () == LAUNCHER_ICON_TYPE_PLACE;
+  return icon->Type () == LAUNCHER_ICON_TYPE_TRASH; 
 }
 
 void 

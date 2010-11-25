@@ -28,6 +28,8 @@
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
 
+#include "QuicklistMenuItem.h"
+
 #include "Tooltip.h"
 
 namespace nux
@@ -211,7 +213,7 @@ namespace nux
     return result;
   }
 
-  void Tooltip::RecvCairoTextChanged (StaticCairoText& cairo_text)
+  void Tooltip::RecvCairoTextChanged (StaticCairoText* cairo_text)
   {
     _cairo_text_has_changed = true;
   }

@@ -17,6 +17,9 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com
  */
 
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+
 #include "Nux/Nux.h"
 #include "Nux/Layout.h"
 #include "Nux/HLayout.h"
@@ -27,76 +30,32 @@
 namespace nux
 {
   StaticCairoText::StaticCairoText (const TCHAR* text,
-                                       NUX_FILE_LINE_DECL) :
+                                    NUX_FILE_LINE_DECL) :
   View (NUX_FILE_LINE_PARAM)
 {
-#if defined(NUX_OS_WINDOWS)
-  _fontName   = TEXT ("Arial");
-#elif defined(NUX_OS_LINUX)
-  _fontName   = TEXT ("Ubuntu");
-#endif
-  _fontSize   = 12;
-  _fontStyle  = eNormalStyle;
-  _fontWeight = eNormalWeight;
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = TEXT (text);
-  _fontOpts   = cairo_font_options_create ();
   _texture2D  = 0;
 
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
-
   SetMinimumSize (1, 1);
-  // make sure _dpiX and _dpiY are initialized correctly
-  GetDPI ();
-}
-
-  StaticCairoText::StaticCairoText (const TCHAR* text,
-                                       NString      fontName,
-                                       float        fontSize,
-                                       eFontStyle   fontStyle,
-                                       eFontWeight  fontWeight,
-                                       Color        textColor,
-                                       NUX_FILE_LINE_DECL) :
-  View (NUX_FILE_LINE_PARAM)
-{
-  _text = TEXT (text);
-  _fontName = fontName;
-  _fontSize = fontSize;
-  _fontStyle = fontStyle;
-  _fontWeight = fontWeight;
-  _textColor = textColor;
-  _fontOpts  = cairo_font_options_create ();
-
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
-
-  // make sure _dpiX and _dpiY are initialized correctly
-  GetDPI ();
 }
 
 StaticCairoText::~StaticCairoText ()
 {
-  cairo_font_options_destroy (_fontOpts);
   delete (_cairoGraphics);
   delete (_texture2D);
 }
 
 void StaticCairoText::PreLayoutManagement ()
 {
-  int textWidth  = 0;
-  int textHeight = 0;
+  int          textWidth  = 0;
+  int          textHeight = 0;
+  GtkSettings* settings   = gtk_settings_get_default (); // not ref'ed
+  gchar*       fontName   = NULL;
 
-  NString str = NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
-  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  GetTextExtents (fontName, textWidth, textHeight);
+  g_free (fontName);
 
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
@@ -198,51 +157,7 @@ StaticCairoText::SetText (NString text)
   {
     _text = text;
     UpdateTexture ();
-    sigTextChanged.emit (*this);
-  }
-}
-
-void
-StaticCairoText::SetFontName (NString fontName)
-{
-  if (_fontName != fontName)
-  {
-    _fontName = fontName;
-    UpdateTexture ();
-    sigTextChanged.emit (*this);
-  }
-}
-
-void
-StaticCairoText::SetFontSize (float fontSize)
-{
-  if (_fontSize != fontSize)
-  {
-    _fontSize = fontSize;
-    UpdateTexture ();
-    sigTextChanged.emit (*this);
-  }
-}
-
-void
-StaticCairoText::SetFontWeight (eFontWeight fontWeight)
-{
-  if (_fontWeight != fontWeight)
-  {
-    _fontWeight = fontWeight;
-    UpdateTexture ();
-    sigTextChanged.emit (*this);
-  }
-}
-
-void
-StaticCairoText::SetFontStyle (eFontStyle fontStyle)
-{
-  if (_fontStyle != fontStyle)
-  {
-    _fontStyle = fontStyle;
-    UpdateTexture ();
-    sigTextChanged.emit (*this);
+    sigTextChanged.emit (this);
   }
 }
 
@@ -252,48 +167,18 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
-    sigTextColorChanged.emit (*this);
+    sigTextColorChanged.emit (this);
   }
-}
-
-void
-StaticCairoText::GetDPI ()
-{
-#if defined(NUX_OS_LINUX)
-  Display* display     = NULL;
-  int      screen      = 0;
-  double   dpyWidth    = 0.0;
-  double   dpyHeight   = 0.0;
-  double   dpyWidthMM  = 0.0;
-  double   dpyHeightMM = 0.0;
-  double   dpiX        = 0.0;
-  double   dpiY        = 0.0;
-
-  display = XOpenDisplay (NULL);
-  screen = DefaultScreen (display);
-
-  dpyWidth    = (double) DisplayWidth (display, screen);
-  dpyHeight   = (double) DisplayHeight (display, screen);
-  dpyWidthMM  = (double) DisplayWidthMM (display, screen);
-  dpyHeightMM = (double) DisplayHeightMM (display, screen);
-
-  dpiX = dpyWidth * 25.4 / dpyWidthMM;
-  dpiY = dpyHeight * 25.4 / dpyHeightMM;
-
-  _dpiX = (int) (dpiX + 0.5);
-  _dpiY = (int) (dpiY + 0.5);
-
-  XCloseDisplay (display);
-#elif defined(NUX_OS_WINDOWS)
-  _dpiX = 72;
-  _dpiY = 72;
-#endif
 }
 
 void StaticCairoText::GetTextExtents (int &width, int &height)
 {
-  NString str = NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
-  GetTextExtents (str.GetTCharPtr (), width, height);
+  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+  gchar*       fontName = NULL;
+
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  GetTextExtents (fontName, width, height);
+  g_free (fontName);
 }
 
 void StaticCairoText::GetTextExtents (const TCHAR* font,
@@ -306,6 +191,9 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        logRect  = {0, 0, 0, 0};
+  int                   dpi      = 0;
+  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
+  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
 
   // sanity check
   if (!font)
@@ -313,6 +201,7 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (font);
   pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
@@ -321,8 +210,19 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, _dpiX);
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
   pango_layout_context_changed (layout);
   pango_layout_get_extents (layout, NULL, &logRect);
 
@@ -346,22 +246,35 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
+  int                   dpi        = 0;
+  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
+  gchar*                fontName   = NULL;
 
-  NString str = NString::Printf(TEXT("%s %.2f"), _fontName.GetTCharPtr (), _fontSize);
-  GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  GetTextExtents (fontName, textWidth, textHeight);
 
-  cairo_set_font_options (cr, _fontOpts);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
-  //desc = pango_font_description_from_string ((char*) FONT_FACE);
-  desc = pango_font_description_from_string (str.GetTCharPtr ());
-  pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
+  desc = pango_font_description_from_string (fontName);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
 
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -376,6 +289,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   // clean up
   pango_font_description_free (desc);
   g_object_unref (layout);
+  g_free (fontName);
 }
 
 void StaticCairoText::UpdateTexture ()

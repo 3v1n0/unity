@@ -64,6 +64,15 @@ PanelView::HomeButton ()
   return _home_button;
 }
 
+const gchar* PanelView::GetName ()
+{
+	return "PanelView";
+}
+
+void PanelView::AddProperties (GVariantBuilder *builder)
+{
+}
+
 long
 PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {

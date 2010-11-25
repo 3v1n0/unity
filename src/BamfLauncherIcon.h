@@ -35,13 +35,18 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-    BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_PROTO);
+    BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
     ~BamfLauncherIcon();
     
     
 protected:
     void OnMouseClick (int button);
     std::list<DbusmenuClient *> GetMenus ();
+    
+    void UpdateIconGeometries (nux::Point3 center);
+    void OnCenterStabilized (nux::Point3 center);
+    
+    bool IconOwnsWindow (Window w);
 
 private:
     BamfApplication *m_App;
