@@ -66,9 +66,7 @@ FavoriteStoreGSettings::Init ()
         }
       g_free (output);
       g_free (cmd);
-  printf ("migrthere");
     }
-  printf ("there");
   g_free (latest_migration_update);
 
   g_signal_connect (m_settings, "changed",
