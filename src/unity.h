@@ -101,6 +101,9 @@ class UnityScreen :
 	void AddProperties (GVariantBuilder *builder);
 	
     private:
+
+	static gboolean
+	initPluginActions (gpointer data);
     
 	static void
 	initLauncher (nux::NThread* thread, void* InitData);

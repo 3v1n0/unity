@@ -167,44 +167,56 @@ UnityScreen::handleEvent (XEvent *event)
     }
 }			
 
+
+gboolean
+UnityScreen::initPluginActions (gpointer data)
+{
+    CompPlugin *p;
+
+    p = CompPlugin::find ("expo");
+
+    if (p)
+    {
+	foreach (CompOption &option, p->vTable->getOptions ())
+	{
+	    if (option.name () == "expo_key")
+	    {
+		CompAction *action = &option.value ().action ();
+		PluginAdapter::Default ()->SetExpoAction (action);
+		break;
+	    }
+	}
+    }
+
+    p = CompPlugin::find ("scale");
+
+    if (p)
+    {
+	foreach (CompOption &option, p->vTable->getOptions ())
+	{
+	    if (option.name () == "initiate_all_key")
+	    {
+		CompAction *action = &option.value ().action ();
+		PluginAdapter::Default ()->SetScaleAction (action);
+		break;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
 /* Set up expo and scale actions on the launcher */
 bool
 UnityScreen::initPluginForScreen (CompPlugin *p)
 {
-    if (g_strcmp0 (p->vTable->name ().c_str (), "expo") == 0)
+    if (p->vTable->name () == "expo" ||
+	p->vTable->name () == "scale")
     {
-        CompOption::Vector &options = p->vTable->getOptions ();
-        
-        foreach (CompOption& option, options)
-        {
-          if (g_strcmp0 (option.name ().c_str () , "expo_key") == 0)
-          {
-              CompAction *expoAction = &option.value ().action ();
-              
-              PluginAdapter::Default ()->SetExpoAction (expoAction);
-              break;
-          }
-        }
-    }
-    
-    if (g_strcmp0 (p->vTable->name ().c_str (), "scale") == 0)
-    {
-        CompOption::Vector &options = p->vTable->getOptions ();
-        
-        foreach (CompOption& option, options)
-        {
-          if (g_strcmp0 (option.name ().c_str () , "initiate_all_key") == 0)
-          {
-              CompAction *scaleAction = &option.value ().action ();
-              
-              PluginAdapter::Default ()->SetScaleAction (scaleAction);
-              break;
-          }
-        }
+        initPluginActions ((void *) this);
     }
 
-    screen->initPluginForScreen (p);
-    return true;
+    return screen->initPluginForScreen (p);
 }
 
 void
@@ -349,6 +361,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
     optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
     optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+
+    g_timeout_add (0, &UnityScreen::initPluginActions, this);
 }
 
 UnityScreen::~UnityScreen ()
@@ -423,9 +437,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->InputWindowEnableStruts(true);
   
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
-  
-  /*self->launcher->SetAutohide (true, (nux::View*) self->panelView->HomeButton ());
-  self->launcher->SetFloating (true);*/
 }
 
 /* Window init */
