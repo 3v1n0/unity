@@ -58,6 +58,7 @@ typedef enum
   LAUNCHER_ICON_QUIRK_URGENT,
   LAUNCHER_ICON_QUIRK_PRESENTED,
   LAUNCHER_ICON_QUIRK_STARTING,
+  LAUNCHER_ICON_QUIRK_SHIMMER,
   
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
@@ -116,6 +117,7 @@ public:
 protected:
     void SetQuirk (LauncherIconQuirk quirk, bool value);
 
+    void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
     void UpdateQuirkTime (LauncherIconQuirk quirk);
     void ResetQuirkTime (LauncherIconQuirk quirk);
 
@@ -157,10 +159,17 @@ protected:
     friend class LauncherController;
 
 private:
+    typedef struct
+    {
+      LauncherIcon *self;
+      LauncherIconQuirk quirk;
+    } DelayedUpdateArg;
+
     static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
     static void RootChanged (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
     static gboolean OnPresentTimeout (gpointer data);
     static gboolean OnCenterTimeout (gpointer data);
+    static gboolean OnDelayedUpdateTimeout (gpointer data);
 
     void ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow);
 
