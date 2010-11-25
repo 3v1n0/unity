@@ -120,6 +120,7 @@ private:
   float GetHoverProgress ();
   float AutohideProgress ();
   float IconPresentProgress     (LauncherIcon *icon, struct timespec current);
+  float IconUrgentProgress      (LauncherIcon *icon, struct timespec current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec current);
@@ -133,7 +134,7 @@ private:
                    std::list<Launcher::RenderArg> &shelf_args, 
                    nux::Geometry &box_geo, nux::Geometry &shelf_geo);
 
-  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg);
+  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo);
 
   void OnIconAdded    (void *icon_pointer);
   void OnIconRemoved  (void *icon_pointer);
@@ -147,6 +148,7 @@ private:
                    nux::Color bkg_color, 
                    float alpha, 
                    nux::Vector4 xform_coords[], 
+                   nux::Geometry geo,
                    bool render_indicators);
                 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
@@ -193,6 +195,7 @@ private:
   int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
+  int _icon_glow_size;
   int _dnd_delta;
   int _dnd_security;
   int _enter_y;
@@ -200,6 +203,7 @@ private:
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
+  nux::BaseTexture* _icon_glow_texture;
   nux::BaseTexture* _icon_2indicator;
   nux::BaseTexture* _icon_3indicator;
   nux::BaseTexture* _icon_4indicator;

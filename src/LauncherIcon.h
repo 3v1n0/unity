@@ -95,10 +95,12 @@ public:
     LauncherIconType Type ();
     
     nux::Color BackgroundColor ();
+    nux::Color GlowColor ();
     
     nux::BaseTexture * TextureForSize (int size);
     
     std::list<DbusmenuClient *> Menus ();
+    
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -119,7 +121,7 @@ protected:
     void SetRelatedWindows (int windows);
     void Remove ();
     
-    void Present (int length);
+    void Present (int length = 1500);
     void Unpresent ();
     
     void SetIconType (LauncherIconType type);
@@ -129,6 +131,7 @@ protected:
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
     virtual void OnCenterStabilized (nux::Point3 center) {};
+    virtual bool IconOwnsWindow (Window w) { return false; }
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
 
@@ -161,9 +164,10 @@ private:
     static gboolean OnPresentTimeout (gpointer data);
     static gboolean OnCenterTimeout (gpointer data);
 
-    nux::Color ColorForIcon (GdkPixbuf *pixbuf);
+    void ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow);
 
     nux::Color       _background_color;
+    nux::Color       _glow_color;
     int              _sort_priority;
     int              _related_windows;
     guint            _present_time_handle;

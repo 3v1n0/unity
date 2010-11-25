@@ -44,6 +44,7 @@ protected:
     std::list<DbusmenuClient *> GetMenus ();
     
     void OnCenterStabilized (nux::Point3 center);
+    bool IconOwnsWindow (Window w);
 
 private:
     BamfApplication *m_App;

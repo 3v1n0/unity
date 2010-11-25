@@ -189,6 +189,8 @@ class UnityScreen :
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
+
+  friend class UnityWindow;
 };
 
 class UnityWindow :

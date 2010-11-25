@@ -67,6 +67,30 @@ BamfLauncherIcon::~BamfLauncherIcon()
     g_object_unref (m_App);
 }
 
+bool
+BamfLauncherIcon::IconOwnsWindow (Window w)
+{
+  GList *children, *l;
+  BamfView *view;
+
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+        
+      if (xid == w)
+        return true;
+    }
+  }
+  
+  return false;
+}
+
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {

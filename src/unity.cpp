@@ -370,6 +370,9 @@ UnityWindow::ungrabNotify ()
 void
 UnityWindow::windowNotify (CompWindowNotify n)
 {
+    if (n == CompWindowNotifyMinimize)
+        uScreen->controller->PresentIconOwningWindow (window->id ());
+
     window->windowNotify (n);
 }
 
