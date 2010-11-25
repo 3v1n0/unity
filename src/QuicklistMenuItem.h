@@ -94,28 +94,16 @@ class QuicklistMenuItem : public nux::View
     sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
     sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
     
-    void SetText (nux::NString text);
-
-    void SetFontName (nux::NString fontName);
-
-    void SetFontSize (float fontSize);
-
-    void SetFontWeight (FontWeight fontWeight);
-
-    void SetFontStyle (FontStyle fontStyle);
-    
     virtual const gchar* GetLabel ();
 
     virtual bool GetEnabled ();
 
     virtual bool GetActive ();
-
-    virtual void SetColor (nux::Color color);
     
   protected:
     
-    nux::NString          _text;
-    nux::NString          _fontName;
+    gchar*                _text;
+    gchar*                _fontName;
     float                 _fontSize;
     FontStyle             _fontStyle;
     FontWeight            _fontWeight;
@@ -127,9 +115,12 @@ class QuicklistMenuItem : public nux::View
     int                   _pre_layout_height;
     nux::CairoGraphics*   _cairoGraphics;
     
+    nux::BaseTexture*     _normalTexture[2];
+    nux::BaseTexture*     _prelightTexture[2];
+    
     //! Return the size of the text + size of associated radio button or check box
     virtual void GetTextExtents (int &width, int &height);
-    void GetTextExtents (const TCHAR* font, int& width, int& height);
+    void GetTextExtents (const gchar* font, int& width, int& height);
     virtual void UpdateTexture () = 0;
     virtual int CairoSurfaceWidth () = 0;
 
@@ -146,17 +137,14 @@ class QuicklistMenuItem : public nux::View
     sigc::signal<void, QuicklistMenuItem*> sigMouseReleased;
     sigc::signal<void, QuicklistMenuItem*> sigMouseClick;
     
-    nux::BaseTexture* _normalTexture[2];
-    nux::BaseTexture* _activeTexture[2];
-    nux::BaseTexture* _insensitiveTexture;
     DbusmenuMenuitem* _menuItem;
-    nux::Color        _color;
-    bool              _debug;
     QuicklistMenuItemType _item_type;
     
-    bool _enabled;
-    bool _active;
-    bool _prelight;
+    nux::Color        _color;   //!< Item rendering color factor.
+    bool              _debug;
+    
+    
+    bool _prelight;   //!< True when the mouse is over the item.
 
     void DrawRoundedRectangle ();
     

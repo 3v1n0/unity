@@ -42,6 +42,8 @@ public:
 protected:
     void OnMouseClick (int button);
     std::list<DbusmenuClient *> GetMenus ();
+    
+    void OnCenterStabilized (nux::Point3 center);
 
 private:
     BamfApplication *m_App;

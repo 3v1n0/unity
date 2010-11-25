@@ -156,6 +156,8 @@ class UnityScreen :
 	
 	bool
 	initPluginForScreen (CompPlugin *p);
+
+	bool			doShellRepaint;
 	
     private:
     

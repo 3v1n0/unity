@@ -29,6 +29,7 @@
 #include "LauncherIcon.h"
 #include "LauncherController.h"
 #include "PluginAdapter.h"
+#include "StartupNotifyService.h"
 #include "unity.h"
 
 #include <dbus/dbus.h>
@@ -49,8 +50,6 @@ COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
  * and the current time of the execution of the functions in milliseconds). It's part of the composite
  * plugin's interface
  */
- 
-static bool paint_required = false;
 static UnityScreen *uScreen = 0;
 
 void
@@ -58,8 +57,8 @@ UnityScreen::preparePaint (int ms)
 {
     /* At the end of every function, you must call BaseClass->functionName (args) in order to pass on
      * the call chain */
+
     cScreen->preparePaint (ms);
-    paint_required = true;
 }
 
 void
@@ -108,6 +107,8 @@ UnityScreen::paintDisplay (const CompRegion &region)
     nuxPrologue ();
     wt->RenderInterfaceFromForeignCmd ();
     nuxEpilogue ();
+
+    doShellRepaint = false;
 }
 
 /* This is the guts of the paint function. You can transform the way the entire output is painted
@@ -123,12 +124,14 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib &attrib, // Some basic att
 {
     bool ret;
 
+    doShellRepaint = true;
+
     /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
     ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
-    
-    if (paint_required)
-        paintDisplay (region);
-    
+
+    if (doShellRepaint)
+	paintDisplay (region);
+
     return ret;
 }
 
@@ -191,9 +194,9 @@ UnityScreen::handleEvent (XEvent *event)
 
     if (screen->otherGrabExist ("deco", "move", NULL))
     {
-      wt->ProcessForeignEvent (event, NULL);
+	wt->ProcessForeignEvent (event, NULL);
     }
-}
+}			
 
 bool
 UnityScreen::initPluginForScreen (CompPlugin *p)
@@ -238,7 +241,6 @@ UnityScreen::initPluginForScreen (CompPlugin *p)
  * attributes like brightness/saturation etc to play around with. GLMatrix is the window's
  * transformation matrix. the unsigned int is the mask, have a look at opengl.h on what you can do
  * with it */
-
 bool
 UnityWindow::glPaint (const GLWindowPaintAttrib &attrib, // Brightness, Saturation, Opacity etc
       const GLMatrix &transform, // Transformation Matrix
@@ -256,22 +258,21 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
 			     const CompRegion 	&region,
 			     unsigned int	mask)
 {
-    bool ret;
-    
-    if (paint_required && uScreen && window->type () & (CompWindowTypeMenuMask | 
-                                                        CompWindowTypeDropdownMenuMask | 
-                                                        CompWindowTypePopupMenuMask |
-                                                        CompWindowTypeComboMask |
-                                                        CompWindowTypeTooltipMask |
-                                                        CompWindowTypeDndMask
-                                                        ))
+    if (uScreen->doShellRepaint)
     {
-        uScreen->paintDisplay (region);
-        paint_required = false;
+	const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
+
+	for (CompWindow *w = window; w && uScreen->doShellRepaint; w = w->prev)
+	{
+	    if (std::find (xwns.begin (), xwns.end (), w->id ()) != xwns.end ())
+	    {
+		uScreen->paintDisplay (region);
+	    }
+	}
     }
 
-    ret = gWindow->glDraw (matrix, attrib, region, mask);
-
+    bool ret = gWindow->glDraw (matrix, attrib, region, mask);
+    
     return ret;
 }
 /* This get's called whenever a window's rect is damaged. You can do stuff here or you can adjust the damage
@@ -424,7 +425,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     PluginClassHandler <UnityScreen, CompScreen> (screen), // Initiate PluginClassHandler class template
     screen (screen),
     cScreen (CompositeScreen::get (screen)),
-    gScreen (GLScreen::get (screen))
+    gScreen (GLScreen::get (screen)),
+    doShellRepaint (false)
 {
     int (*old_handler) (Display *, XErrorEvent *);
     old_handler = XSetErrorHandler (NULL);
@@ -438,6 +440,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompSc
     ScreenInterface::setHandler (screen); // Sets the screen function hook handler
     CompositeScreenInterface::setHandler (cScreen); // Ditto for cScreen
     GLScreenInterface::setHandler (gScreen); // Ditto for gScreen
+    
+    StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
 
     nux::NuxInitialize (0);
     wt = nux::CreateFromForeignWindow (cScreen->output (), 

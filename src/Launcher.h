@@ -119,7 +119,10 @@ private:
   float DnDExitProgress  ();
   float GetHoverProgress ();
   float AutohideProgress ();
-  float IconPresentProgress (LauncherIcon *icon, struct timespec current);
+  float IconPresentProgress     (LauncherIcon *icon, struct timespec current);
+  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec current);
+  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec current);
+  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec current);
 
   void SetHover   ();
   void UnsetHover ();
@@ -138,9 +141,18 @@ private:
 
   void OnIconNeedsRedraw (void *icon);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::BaseTexture *text, nux::Color bkg_color, float alpha);
-  void RenderIconImage(nux::GraphicsEngine& GfxContext, RenderArg arg);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, 
+                   RenderArg arg, 
+                   nux::BaseTexture *icon, 
+                   nux::Color bkg_color, 
+                   float alpha, 
+                   nux::Vector4 xform_coords[], 
+                   bool render_indicators);
+                
+  void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
+                     float x, float y, float w, float h, float z, std::string name);   
   void UpdateIconXForm (std::list<Launcher::RenderArg> args);
+  
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -164,6 +176,7 @@ private:
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
+  bool  _mouse_inside_launcher;
 
   float _folded_angle;
   float _neg_folded_angle;
