@@ -12,6 +12,7 @@ unity (3.2.0-0ubuntu1) UNRELEASED; urgency=low
       (LP: #677573)
     - The ws switcher is always visible if launcher in floating and autohide
       mode (LP: #677554)
+    - add application startup notification (LP: #638319)
   * debian/control:
     - don't recommend ubuntu-netbook-default-settings anymore
     - change the description
