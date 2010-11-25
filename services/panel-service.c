@@ -91,6 +91,10 @@ static void load_indicator  (PanelService    *self,
 static void load_indicators (PanelService    *self);
 static void sort_indicators (PanelService    *self);
 
+static GdkFilterReturn event_filter (GdkXEvent    *ev,
+                                     GdkEvent     *gev,
+                                     PanelService *self);
+
 /*
  * GObject stuff
  */
@@ -101,6 +105,8 @@ panel_service_class_dispose (GObject *object)
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
+
+  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
 
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
 }
@@ -148,6 +154,9 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
   XEvent *e = (XEvent *)ev;
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
+
+  if (!PANEL_IS_SERVICE (self))
+    return ret;
 
   if (!GTK_IS_WIDGET (self->priv->last_menu))
     return ret;
@@ -303,10 +312,12 @@ panel_service_get_n_indicators (PanelService *self)
 static gboolean
 actually_notify_object (IndicatorObject *object)
 {
-  if (!INDICATOR_IS_OBJECT (object)) return;
   PanelService *self;
   PanelServicePrivate *priv;
   gint position;
+
+  if (!INDICATOR_IS_OBJECT (object))
+    return FALSE;
 
   self = panel_service_get_default ();
   priv = self->priv;

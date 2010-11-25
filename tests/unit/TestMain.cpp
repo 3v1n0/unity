@@ -21,6 +21,7 @@
 #include "config.h"
 #include <glib.h>
 #include <glib-object.h>
+#include <gtk/gtk.h>
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
 
@@ -64,6 +65,7 @@ main (int argc, char **argv)
 
   g_type_init ();
   g_thread_init (NULL);
+  gtk_init (&argc, &argv);
 
   g_test_init (&argc, &argv, NULL);
 

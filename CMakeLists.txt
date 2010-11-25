@@ -8,8 +8,8 @@ subdirs (libunity services tests tools)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
-set (UNITY_MINOR 1)
-set (UNITY_MICRO 4)
+set (UNITY_MINOR 2)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
