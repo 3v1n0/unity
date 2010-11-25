@@ -1313,14 +1313,14 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
     
+    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
+
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetSeparateBlend (false,
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA,
                                                     GL_SRC_ALPHA,
                                                     GL_ONE_MINUS_SRC_ALPHA);
-          
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
 
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
