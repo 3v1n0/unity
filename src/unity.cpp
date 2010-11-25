@@ -57,7 +57,6 @@ UnityScreen::preparePaint (int ms)
 {
     /* At the end of every function, you must call BaseClass->functionName (args) in order to pass on
      * the call chain */
-
     cScreen->preparePaint (ms);
 }
 
@@ -125,6 +124,7 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib &attrib, // Some basic att
     bool ret;
 
     doShellRepaint = true;
+    allowWindowPaint = true;
 
     /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
     ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
@@ -145,6 +145,7 @@ UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib, // Som
 			      		 CompOutput 		*output, // Output properties. Use this to the get output width and height for the output being painted
 			      		 unsigned int		mask /* Some other paint properties, see opengl.h */)
 {
+    allowWindowPaint = false;
     /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
     gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
@@ -269,7 +270,7 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
 			     const CompRegion 	&region,
 			     unsigned int	mask)
 {
-    if (uScreen->doShellRepaint)
+    if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
     {
 	const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
 

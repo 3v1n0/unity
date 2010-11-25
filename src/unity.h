@@ -160,6 +160,7 @@ class UnityScreen :
 	initPluginForScreen (CompPlugin *p);
 
 	bool			doShellRepaint;
+	bool      allowWindowPaint;
 
     protected:
 
