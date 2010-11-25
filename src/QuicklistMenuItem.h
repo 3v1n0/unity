@@ -116,7 +116,7 @@ class QuicklistMenuItem : public nux::View
     nux::BaseTexture*     _prelightTexture[2];
     
     //! Return the size of the text + size of associated radio button or check box
-    virtual void GetTextExtents (int &width, int &height);
+    void GetTextExtents (int &width, int &height);
     void GetTextExtents (const gchar* font, int& width, int& height);
     virtual void UpdateTexture () = 0;
     virtual int CairoSurfaceWidth () = 0;

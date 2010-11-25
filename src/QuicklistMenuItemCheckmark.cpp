@@ -213,7 +213,8 @@ void QuicklistMenuItemCheckmark::PostDraw (nux::GraphicsEngine& gfxContext,
 {
 }
 
-void QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
+void
+QuicklistMenuItemCheckmark::DrawText (cairo_t*   cr,
                                       int        width,
                                       int        height,
                                       nux::Color color)

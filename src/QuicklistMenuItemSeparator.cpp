@@ -139,12 +139,6 @@ QuicklistMenuItemSeparator::PostDraw (nux::GraphicsEngine& gfxContext,
 {
 }
 
-void GetTextExtents (int &width, int &height)
-{
-  width = 64;
-  height = 3;
-}
-
 void
 QuicklistMenuItemSeparator::UpdateTexture ()
 {

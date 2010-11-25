@@ -38,8 +38,6 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
 
     ~QuicklistMenuItemSeparator ();
 
-    virtual void GetTextExtents (int &width, int &height) {};
-
   protected:
     
     void PreLayoutManagement ();
