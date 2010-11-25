@@ -40,7 +40,7 @@ struct _UBusServerPrivate
 };
 
 
-G_DEFINE_TYPE (UBusServer, ubus_server, G_TYPE_OBJECT);
+G_DEFINE_TYPE (UBusServer, ubus_server, G_TYPE_INITIALLY_UNOWNED);
 
 struct _UBusDispatchInfo
 {
@@ -148,10 +148,8 @@ ubus_server_finalize (GObject *object)
 {
   UBusServer *server = UBUS_SERVER (object);
   UBusServerPrivate *priv = server->priv;
-  g_hash_table_remove_all (priv->message_interest_table);
-  g_hash_table_remove_all (priv->dispatch_table);
-  g_free (priv->message_interest_table);
-  g_free (priv->dispatch_table);
+  g_hash_table_destroy (priv->message_interest_table);
+  g_hash_table_destroy (priv->dispatch_table);
 
   UBusMessageInfo *info = g_queue_pop_tail (priv->message_queue);
   for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
@@ -182,10 +180,14 @@ ubus_server_get_default ()
     {
       UBusServer *server;
       server = g_object_new (UBUS_TYPE_SERVER, NULL);
+      g_object_ref_sink (server);
       g_once_init_leave (&singleton, (gsize) server);
     }
 
-  return g_object_ref ((void *) singleton);
+  // we actually just want to hold our own reference and not let anything
+  // else reference us, because we never want to lose that reference, we are
+  // only allowed to initalise once
+  return (UBusServer *)singleton;
 }
 
 gulong
