@@ -29,7 +29,11 @@
 #include "NuxImage/CairoGraphics.h"
 
 #include "QuicklistView.h"
-
+#include "QuicklistMenuItem.h"
+#include "QuicklistMenuItemLabel.h"
+#include "QuicklistMenuItemSeparator.h"
+#include "QuicklistMenuItemCheckmark.h"
+#include "QuicklistMenuItemRadio.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
@@ -50,6 +54,7 @@ QuicklistView::QuicklistView ()
   _padding        = 13;
   _top_size       = 4;
 
+  SetGeometry (nux::Geometry (0, 0, 1, 1));
   _hlayout         = new nux::HLayout (TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout         = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
   _item_layout     = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
@@ -67,22 +72,12 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-  for (int i = 0; i < 2; i++)
-  {
-    nux::StaticCairoText* item_text;
-    item_text = new nux::StaticCairoText (TEXT ("Default Item"), NUX_TRACKER_LOCATION);
-
-    item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-    item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-    _default_item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-    _default_item_list.push_back (item_text);
-    item_text->Reference();
-  }
+  FillInDefaultItems ();
 
   _vlayout->AddLayout (_bottom_space, 0);
 
   _hlayout->AddLayout (_left_space, 0);
-  _hlayout->AddLayout (_vlayout, 1, nux::eCenter, nux::eFull);
+  _hlayout->AddLayout (_vlayout, 0, nux::eCenter, nux::eFull);
   _hlayout->AddLayout (_right_space, 0);
 
   SetWindowSizeMatchLayout (true);
@@ -95,19 +90,79 @@ QuicklistView::QuicklistView ()
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   
+  _mouse_down = false;
 }
 
 QuicklistView::~QuicklistView ()
 {
   if (_texture_bg)
     _texture_bg->UnReference ();
-
-  std::list<nux::StaticCairoText*>::iterator it;
+  
+  if (_texture_outline)
+    _texture_outline->UnReference ();
+  
+    if (_texture_mask)
+    _texture_mask->UnReference ();
+  
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->UnReference();
   }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
+  _default_item_list.clear ();
   _item_list.clear ();
+}
+
+// This function is for testing. It will go eventually
+void QuicklistView::FillInDefaultItems ()
+{
+  QuicklistMenuItemCheckmark* item = 0;
+  DbusmenuMenuitem* dbus_item = 0;
+  // Enabled and Active Checkmark 
+  dbus_item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark 0");
+  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+
+  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
+
+  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
+  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
+  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
+  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  
+  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+  _default_item_list.push_back (item);
+  item->Reference();
+
+  // Disabled and Active Checkmark 
+  dbus_item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark disabled");
+  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, false);
+  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+
+  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
+
+  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
+  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
+  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
+  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  
+  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+  _default_item_list.push_back (item);
+  item->Reference();
 }
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
@@ -133,13 +188,6 @@ void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 void QuicklistView::ShowWindow (bool b, bool start_modal)
 {
   BaseWindow::ShowWindow (b, start_modal);
-  
-  // Reset all colors to white
-  std::list<nux::StaticCairoText*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    (*it)->SetTextColor (nux::Color::White);
-  }
 }
 
 long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
@@ -164,15 +212,50 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   }
 
   // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
-  // This is meantto be easier since the quicklist has a atypical way of working.
-  // if (m_layout)
-  // ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
+  // This is meant to be easier since the quicklist has a atypical way of working.
+  if (m_layout)
+    ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
 
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+    {
+      _mouse_down = true;
+    }
+    else
+    {
+      _mouse_down = false;
+      if (IsVisible ())
+      {
+        CaptureMouseDownAnyWhereElse (false);
+        ForceStopFocus (1, 1);
+        UnGrabPointer ();
+        EnableInputWindow (false);
+        ShowWindow (false);
+      }
+      return nux::eMouseEventSolved;
+    }
+  }
+  else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
+  {
+    
+    _mouse_down = false;
+    if (IsVisible ())
+    {
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+    return nux::eMouseEventSolved;
+  }
+  
   // PostProcessEvent2 must always have its last parameter set to 0
   // because the m_BackgroundArea is the real physical limit of the window.
   // So the previous test about IsPointInside do not prevail over m_BackgroundArea
   // testing the event by itself.
-  ret = PostProcessEvent2 (ievent, ret, 0);
+  //ret = PostProcessEvent2 (ievent, ret, 0);
   return ret;    
 }
 
@@ -224,7 +307,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   nux::GetGraphicsEngine().GetRenderStates().SetBlend (false);
 
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->ProcessDraw(gfxContext, forceDraw);
@@ -234,7 +317,6 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   {
     (*it)->ProcessDraw(gfxContext, forceDraw);
   }
-  
 
   gfxContext.PopClippingRectangle ();
 }
@@ -249,7 +331,7 @@ void QuicklistView::PreLayoutManagement ()
   int MaxItemWidth = 0;
   int TotalItemHeight = 0;
   
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     int  textWidth  = 0;
@@ -269,12 +351,20 @@ void QuicklistView::PreLayoutManagement ()
       MaxItemWidth = textWidth;
     TotalItemHeight += textHeight;
   }
-  
+
   if(TotalItemHeight < _anchor_height)
   {
     _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
     _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
   }
+  else
+  {
+    _top_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+    _bottom_space->SetMinMaxSize(_padding + _corner_radius, _padding + _corner_radius);
+   }
+
+  _item_layout->SetMinimumWidth(MaxItemWidth);
+  _default_item_layout->SetMinimumWidth(MaxItemWidth);
 
   BaseWindow::PreLayoutManagement ();
 }
@@ -282,12 +372,13 @@ void QuicklistView::PreLayoutManagement ()
 long QuicklistView::PostLayoutManagement (long LayoutResult)
 {
   long result = BaseWindow::PostLayoutManagement (LayoutResult);
+  
   UpdateTexture ();
 
   int x = _padding + _anchor_width + _corner_radius;
   int y = _padding + _corner_radius;
 
-  std::list<nux::StaticCairoText*>::iterator it;
+  std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     (*it)->SetBaseX (x);
@@ -303,16 +394,79 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
 
     y += (*it)->GetBaseHeight ();
   }
+
+  // We must correct the width of line separators. The rendering of the separator can be smaller than the width of the
+  // quicklist. The reason for that is, the quicklist width is determined by the largest entry it contains. That size is 
+  // only after MaxItemWidth is computed in QuicklistView::PreLayoutManagement.
+  // The setting of the separator width is done here after the Layout cycle for this widget is over. The width of the separator 
+  // has bee set correctly during the layout cycle, but the cairo rendering still need to be adjusted.
+  int separator_width = nux::Max<int>(_default_item_layout->GetBaseWidth (), _item_layout->GetBaseWidth ());
   
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
+    if (item->CairoSurfaceWidth () != separator_width)
+    {
+      // Compute textures of the item.
+      item->UpdateTexture ();
+    }
+  }
+  
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
+    if (item->CairoSurfaceWidth () != separator_width)
+    {
+      // Compute textures of the item.
+      item->UpdateTexture ();
+    }
+  }
+
   return result;
 }
 
-void QuicklistView::RecvCairoTextChanged (nux::StaticCairoText& cairo_text)
+void QuicklistView::RecvCairoTextChanged (QuicklistMenuItem* cairo_text)
 {
   _cairo_text_has_changed = true;
 }
 
-void QuicklistView::RecvCairoTextColorChanged (nux::StaticCairoText& cairo_text)
+void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
+{
+  NeedRedraw ();
+}
+
+void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
+{
+  _mouse_down = false;
+  if (IsVisible ())
+  {
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
+  }
+}
+
+void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item)
+{
+  _mouse_down = false;
+  if (IsVisible ())
+  {
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
+  }  
+}
+
+void QuicklistView::RecvItemMouseEnter (QuicklistMenuItem* item)
+{
+  NeedRedraw ();
+}
+
+void QuicklistView::RecvItemMouseLeave (QuicklistMenuItem* item)
 {
   NeedRedraw ();
 }
@@ -348,58 +502,12 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 
 void QuicklistView::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  std::list<nux::StaticCairoText*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
-    {
-      (*it)->SetTextColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetTextColor (nux::Color::White);
-    }
-  }
-  
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
-    {
-      (*it)->SetTextColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetTextColor (nux::Color::White);
-    }
-  }  
+
 }
 
 void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  std::list<nux::StaticCairoText*>::iterator it;
-  for (it = _item_list.begin(); it != _item_list.end(); it++)
-  {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
-    {
-      (*it)->SetTextColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetTextColor (nux::Color::White);
-    }
-  }
-  
-  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
-  {
-    if ((*it)->GetGeometry ().IsPointInside (x, y))
-    {
-      (*it)->SetTextColor (nux::Color::DarkGray);
-    }
-    else
-    {
-      (*it)->SetTextColor (nux::Color::White);
-    }
-  }  
+
 }
   
 void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -417,21 +525,29 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 void QuicklistView::RemoveAllMenuItem ()
 {
   _item_list.clear ();
+  _default_item_list.clear ();
+  
   _item_layout->Clear ();
+  _default_item_layout->Clear ();
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
 }
 
-void QuicklistView::AddMenuItem (nux::NString str)
+void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
 {
-  nux::StaticCairoText* item_text;
-  item_text = new nux::StaticCairoText (str.GetTCharPtr (), NUX_TRACKER_LOCATION);
+  if (item == 0)
+    return;
 
-  item_text->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item_text->sigTextColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  _item_layout->AddView(item_text, 1, nux::eCenter, nux::eFull);
-  _item_list.push_back (item_text);
-  item_text->Reference();
+  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
+  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
+  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
+  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
+  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
+  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+   
+  _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
+  _item_list.push_back (item);
+  item->Reference();
   
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
@@ -442,10 +558,54 @@ void QuicklistView::RenderQuicklistView ()
 {
   
 }
-  
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////
+
+int QuicklistView::GetNumItems ()
+{
+  return _item_list.size () + _default_item_list.size ();
+}
+
+QuicklistMenuItem* QuicklistView::GetNthItems (int index)
+{
+  if (index < (int)_item_list.size ())
+  {
+    int i = 0;
+    std::list<QuicklistMenuItem*>::iterator it;
+    for (i = 0, it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    {
+      if (i == index)
+        return *it;
+    }
+  }
+
+  if (index < (int)_item_list.size () + (int)_default_item_list.size ())
+  {
+    int i = 0;
+    if (_item_list.size () > 0)
+      i = _item_list.size () -1;
+    std::list<QuicklistMenuItem*>::iterator it;
+    for (it = _item_list.begin(); it != _item_list.end(); i++, it++)
+    {
+      if (i == index)
+        return *it;
+    }
+  }
+
+  return 0;
+}
+
+QuicklistMenuItemType QuicklistView::GetNthType  (int index)
+{
+  QuicklistMenuItem* item = GetNthItems (index);
+  if (item)
+    return item->GetItemType ();
+  return MENUITEM_TYPE_UNKNOWN;
+}
+
+std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
+{
+  std::list<QuicklistMenuItem*> l;
+  return l;
+}
 
 static inline void ql_blurinner (guchar* pixel,
   gint   *zR,
@@ -1152,3 +1312,40 @@ void QuicklistView::SetText (nux::NString text)
   _labelText = text;
   UpdateTexture ();
 }
+
+void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
+{
+  RemoveAllMenuItem ();
+  
+  if (root == 0)
+    return;
+  
+  GList * child = NULL;
+  for (child = dbusmenu_menuitem_get_children(root); child != NULL; child = g_list_next(child))
+  {
+    const gchar* type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TYPE);
+    const gchar* toggle_type = dbusmenu_menuitem_property_get ((DbusmenuMenuitem*)child->data, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+    {
+      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)    
+    {
+      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)    
+    {
+      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+    else //if (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)    
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel ((DbusmenuMenuitem*)child->data, NUX_TRACKER_LOCATION);
+      AddMenuItem (item);
+    }
+  }
+}
+

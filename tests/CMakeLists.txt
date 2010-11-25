@@ -1,4 +1,10 @@
 #
+# Data
+#
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
+
+#
 # Unit tests
 #
 find_package (PkgConfig)
@@ -10,7 +16,7 @@ set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\"" 
+     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
      )
 add_definitions (${CFLAGS})
 
@@ -28,13 +34,29 @@ include_directories (. .. ../services ../src ${CMAKE_BINARY_DIR})
 add_executable (test-unit
                 unit/TestFavoriteStoreGSettings.cpp
                 unit/TestPanelService.cpp
+                unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
+                unit/TestUBus.cpp
+                ../libunity/ubus-server.c
+                ../libunity/ubus-server.h
                 ../services/panel-service.c
                 ../services/panel-service.h
                 ../src/FavoriteStore.cpp
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
+                ../src/QuicklistMenuItem.cpp
+                ../src/QuicklistMenuItem.h
+                ../src/QuicklistMenuItemCheckmark.cpp
+                ../src/QuicklistMenuItemCheckmark.h
+                ../src/QuicklistMenuItemLabel.cpp
+                ../src/QuicklistMenuItemLabel.h
+                ../src/QuicklistMenuItemRadio.cpp
+                ../src/QuicklistMenuItemRadio.h
+                ../src/QuicklistMenuItemSeparator.cpp
+                ../src/QuicklistMenuItemSeparator.h
+                ../src/QuicklistView.cpp
+                ../src/QuicklistView.h
                 )
 
 add_executable (test-panel

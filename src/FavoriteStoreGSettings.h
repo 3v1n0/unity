@@ -35,16 +35,20 @@ public:
   ~FavoriteStoreGSettings ();
 
   //Methods
-  virtual GSList * GetFavorites ();
-  virtual void     AddFavorite    (const char *desktop_path, guint32 position);
-  virtual void     RemoveFavorite (const char *desktop_path);
-  virtual void     MoveFavorite   (const char *desktop_path, guint32 position);
+  GSList * GetFavorites ();
+  void     AddFavorite    (const char *desktop_path, gint    position);
+  void     RemoveFavorite (const char *desktop_path);
+  void     MoveFavorite   (const char *desktop_path, gint position);
+
+  void     Changed        (const char *key);
 
 private:
+  void Init    ();
   void Refresh ();
 
   GSList    *m_favorites;
   GSettings *m_settings;
+  bool       m_ignore_signals;
 };
 
 #endif // FAVORITE_STORE_GSETTINGS_H
