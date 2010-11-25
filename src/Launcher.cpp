@@ -1452,6 +1452,15 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 {
 }
 
+const gchar* Launcher::GetName ()
+{
+	return "Launcher";
+}
+
+void Launcher::AddProperties (GVariantBuilder *builder)
+{
+}
+
 void Launcher::EventLogic ()
 { 
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
