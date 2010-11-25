@@ -183,7 +183,10 @@ BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer d
     self->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, running);
     
     if (running)
+    {
       self->EnsureWindowState ();
+      self->UpdateIconGeometries (self->GetCenter ());
+    }
 }
 
 void
@@ -221,6 +224,7 @@ BamfLauncherIcon::OnChildAdded (BamfView *view, BamfView *child, gpointer data)
 {
     BamfLauncherIcon *self = (BamfLauncherIcon*) data;
     self->EnsureWindowState ();
+    self->UpdateIconGeometries (self->GetCenter ());
 }
 
 void
@@ -251,8 +255,9 @@ BamfLauncherIcon::GetMenus ()
     return result;
 }
 
-void 
-BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
+
+void
+BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
 {
     GList *children, *l;
     BamfView *view;
@@ -278,4 +283,10 @@ BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
                              (unsigned char *) data, 4);
         }
     }
+}
+
+void 
+BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
+{
+  UpdateIconGeometries (center);
 }
