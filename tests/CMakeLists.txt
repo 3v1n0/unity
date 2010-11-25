@@ -16,7 +16,7 @@ set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\"" 
+     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
      )
 add_definitions (${CFLAGS})
 
@@ -35,6 +35,9 @@ add_executable (test-unit
                 unit/TestFavoriteStoreGSettings.cpp
                 unit/TestPanelService.cpp
                 unit/TestMain.cpp
+                unit/TestUBus.cpp
+                ../libunity/ubus-server.c
+                ../libunity/ubus-server.h
                 ../services/panel-service.c
                 ../services/panel-service.h
                 ../src/FavoriteStore.cpp
