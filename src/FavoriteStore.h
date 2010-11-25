@@ -46,12 +46,18 @@ public:
   // DO NOT RELY ON THE CHAR *, STRDUP THEM
   virtual GSList * GetFavorites () = 0;
   
-  // These will emit the relevant signals, so bare that in mind
-  virtual void AddFavorite    (const char *desktop_path, guint32 position) = 0;
+  // These will NOT emit the relevant signals, so bare that in mind
+  // i.e. don't hope that you can add stuff and hook the view up to
+  // favorite_added events to update the view. The signals only emit if
+  // there has been a change on the GSettings object from an external
+  // source
+  virtual void AddFavorite    (const char *desktop_path, gint position) = 0;
   virtual void RemoveFavorite (const char *desktop_path) = 0;
-  virtual void MoveFavorite   (const char *desktop_path, guint32 position) = 0;
+  virtual void MoveFavorite   (const char *desktop_path, gint position) = 0;
 
   // Signals
+  // Therse only emit if something has changed the GSettings object externally
+
   //desktop_path, position
   sigc::signal<void, const char *, guint32> favorite_added;
 

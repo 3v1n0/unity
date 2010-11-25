@@ -25,7 +25,10 @@
 
 #include <gio/gdesktopappinfo.h>
 
-BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_DECL)
+#include <core/core.h>
+#include <core/atoms.h>
+
+BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {
     m_App = app;
@@ -37,12 +40,12 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
     SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
     
     if (bamf_view_is_sticky (BAMF_VIEW (m_App)))
-      SetVisible (true);
+      SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
     else
-      SetVisible (bamf_view_user_visible (BAMF_VIEW (m_App)));
+      SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, bamf_view_user_visible (BAMF_VIEW (m_App)));
     
-    SetActive (bamf_view_is_active (BAMF_VIEW (m_App)));
-    SetRunning (bamf_view_is_running (BAMF_VIEW (m_App)));
+    SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, bamf_view_is_active (BAMF_VIEW (m_App)));
+    SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, bamf_view_is_running (BAMF_VIEW (m_App)));
     
     g_free (icon_name);
     
@@ -62,6 +65,30 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 BamfLauncherIcon::~BamfLauncherIcon()
 {
     g_object_unref (m_App);
+}
+
+bool
+BamfLauncherIcon::IconOwnsWindow (Window w)
+{
+  GList *children, *l;
+  BamfView *view;
+
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+        
+      if (xid == w)
+        return true;
+    }
+  }
+  
+  return false;
 }
 
 void
@@ -84,6 +111,9 @@ BamfLauncherIcon::OnMouseClick (int button)
       appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
       g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, NULL);
       g_object_unref (appInfo);
+      
+      UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+      
       return;
     }
     
@@ -143,31 +173,34 @@ BamfLauncherIcon::OnUserVisibleChanged (BamfView *view, gboolean visible, gpoint
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
     
     if (!bamf_view_is_sticky (BAMF_VIEW (self->m_App)))
-      self->SetVisible (visible);
+      self->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, visible);
 }
 
 void
 BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer data)
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-    self->SetRunning (running);
+    self->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, running);
     
     if (running)
+    {
       self->EnsureWindowState ();
+      self->UpdateIconGeometries (self->GetCenter ());
+    }
 }
 
 void
 BamfLauncherIcon::OnActiveChanged (BamfView *view, gboolean active, gpointer data)
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-    self->SetActive (active);
+    self->SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, active);
 }
 
 void
 BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data)
 {
     BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-    self->SetUrgent (urgent);
+    self->SetQuirk (LAUNCHER_ICON_QUIRK_URGENT, urgent);
 }
 
 void
@@ -191,6 +224,7 @@ BamfLauncherIcon::OnChildAdded (BamfView *view, BamfView *child, gpointer data)
 {
     BamfLauncherIcon *self = (BamfLauncherIcon*) data;
     self->EnsureWindowState ();
+    self->UpdateIconGeometries (self->GetCenter ());
 }
 
 void
@@ -219,4 +253,40 @@ BamfLauncherIcon::GetMenus ()
     }
     
     return result;
+}
+
+
+void
+BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
+{
+    GList *children, *l;
+    BamfView *view;
+    long data[4];
+
+    data[0] = center.x - 24;
+    data[1] = center.y - 24;
+    data[2] = 48;
+    data[3] = 48;
+
+    children = bamf_view_get_children (BAMF_VIEW (m_App));
+
+    for (l = children; l; l = l->next)
+    {
+        view = (BamfView *) l->data;
+    
+        if (BAMF_IS_WINDOW (view))
+        {
+            guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+            
+            XChangeProperty (m_Screen->dpy (), xid, Atoms::wmIconGeometry,
+                             XA_CARDINAL, 32, PropModeReplace,
+                             (unsigned char *) data, 4);
+        }
+    }
+}
+
+void 
+BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
+{
+  UpdateIconGeometries (center);
 }
