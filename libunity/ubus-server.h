@@ -39,7 +39,7 @@ typedef struct _UBusServerPrivate  UBusServerPrivate;
 
 struct _UBusServerClass
 {
-	GObjectClass parent_class;
+  GObjectClass parent_class;
 
   /* padding */
   void (*_unity_padding1) (void);
@@ -52,9 +52,9 @@ struct _UBusServerClass
 
 struct _UBusServer
 {
-	GObject parent_instance;
+  GObject parent_instance;
 
-	UBusServerPrivate *priv;
+  UBusServerPrivate *priv;
 };
 
 typedef void (*UBusCallback) (GVariant *data, gpointer *user_data);

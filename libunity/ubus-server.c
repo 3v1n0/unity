@@ -56,8 +56,8 @@ ubus_dispatch_info_new (UBusServer* server, const gchar *message,
                         UBusCallback callback, gpointer user_data)
 {
   g_return_val_if_fail (UBUS_IS_SERVER (server), NULL);
-	UBusServerPrivate *priv = server->priv;
-	UBusDispatchInfo *info;
+  UBusServerPrivate *priv = server->priv;
+  UBusDispatchInfo *info;
 
   if (priv->id_sequencial_number < 1)
     {
@@ -91,7 +91,7 @@ typedef struct _UBusMessageInfo UBusMessageInfo;
 UBusMessageInfo *
 ubus_message_info_new (const gchar *message, GVariant *data)
 {
-	UBusMessageInfo *info = g_new (UBusMessageInfo, 1);
+  UBusMessageInfo *info = g_new (UBusMessageInfo, 1);
   info->message = g_strdup (message);
   info->data = data;
 
@@ -136,7 +136,6 @@ ubus_server_init (UBusServer *server)
                                                 g_free,
                                                 (GDestroyNotify)ubus_dispatch_info_free);
 
-
   // for anyone thats wondering (hi kamstrup!), there are two hash tables so
   // that lookups are fast when sending messages and removing handlers
 
@@ -148,11 +147,11 @@ static void
 ubus_server_finalize (GObject *object)
 {
   UBusServer *server = UBUS_SERVER (object);
-	UBusServerPrivate *priv = server->priv;
-	g_hash_table_remove_all (priv->message_interest_table);
-	g_hash_table_remove_all (priv->dispatch_table);
-	g_free (priv->message_interest_table);
-	g_free (priv->dispatch_table);
+  UBusServerPrivate *priv = server->priv;
+  g_hash_table_remove_all (priv->message_interest_table);
+  g_hash_table_remove_all (priv->dispatch_table);
+  g_free (priv->message_interest_table);
+  g_free (priv->dispatch_table);
 
   UBusMessageInfo *info = g_queue_pop_tail (priv->message_queue);
   for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
@@ -164,15 +163,15 @@ ubus_server_finalize (GObject *object)
 
   g_queue_free (priv->message_queue);
 
-	G_OBJECT_CLASS (ubus_server_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ubus_server_parent_class)->finalize (object);
 }
 
 static void
 ubus_server_class_init (UBusServerClass *klass)
 {
-	GObjectClass* object_class = G_OBJECT_CLASS (klass);
+  GObjectClass* object_class = G_OBJECT_CLASS (klass);
   g_type_class_add_private (klass, sizeof (UBusServerPrivate));
-	object_class->finalize = ubus_server_finalize;
+  object_class->finalize = ubus_server_finalize;
 }
 
 UBusServer *
@@ -196,12 +195,12 @@ ubus_server_register_interest (UBusServer* server, const gchar *message,
   g_return_val_if_fail (UBUS_IS_SERVER (server), 0);
   g_return_val_if_fail (message != NULL, 0);
 
-	UBusServerPrivate *priv = server->priv;
-	GSequence *dispatch_list = g_hash_table_lookup (priv->message_interest_table,
+  UBusServerPrivate *priv = server->priv;
+  GSequence *dispatch_list = g_hash_table_lookup (priv->message_interest_table,
                                                  message);
   UBusDispatchInfo *info;
 
-	if (dispatch_list == NULL)
+  if (dispatch_list == NULL)
     {
       // not had this message before so add a new entry to the message_interest table
       gchar *key = g_strdup (message);
@@ -287,12 +286,12 @@ ubus_server_send_message (UBusServer *server, const gchar *message,
 {
   g_return_if_fail (UBUS_IS_SERVER (server));
   g_return_if_fail (message != NULL);
-	UBusServerPrivate *priv = server->priv;
+  UBusServerPrivate *priv = server->priv;
 
-	UBusMessageInfo *message_info = ubus_message_info_new (message, data);
-	g_queue_push_head (priv->message_queue, message_info);
+  UBusMessageInfo *message_info = ubus_message_info_new (message, data);
+  g_queue_push_head (priv->message_queue, message_info);
 
-	ubus_server_queue_message_pump (server);
+  ubus_server_queue_message_pump (server);
 }
 
 void
@@ -300,11 +299,11 @@ ubus_server_unregister_interest (UBusServer* server, gulong handle)
 {
   g_return_if_fail (UBUS_IS_SERVER (server));
   g_return_if_fail (handle > 0);
-	UBusServerPrivate *priv = server->priv;
+  UBusServerPrivate *priv = server->priv;
   UBusDispatchInfo *info;
   GSequence *dispatch_list;
 
-	// get our info
+  // get our info
   info = g_hash_table_lookup (priv->dispatch_table, &handle);
 
   if (info == NULL)
@@ -356,5 +355,5 @@ ubus_server_unregister_interest (UBusServer* server, gulong handle)
 void
 ubus_server_force_message_pump (UBusServer* server)
 {
-	ubus_server_pump_message_queue (server);
+  ubus_server_pump_message_queue (server);
 }
