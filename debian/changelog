@@ -10,10 +10,13 @@ unity (3.2.0-0ubuntu1) UNRELEASED; urgency=low
       (LP: #680873, #652785, #655175)
     - Launcher clickable-area does not extend to left edge of screen
       (LP: #677573)
+    - The ws switcher is always visible if launcher in floating and autohide
+      mode (LP: #677554)
   * debian/control:
     - don't recommend ubuntu-netbook-default-settings anymore
     - change the description
-    - depends on latest nux
+    - bump build-dep on latest nux
+    - add libstartup-notification0-dev build-dep
   * debian/rules:
     - try a slighter best solution for netbook-launcher virtual package, thanks
       geser

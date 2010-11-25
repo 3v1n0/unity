@@ -29,6 +29,7 @@ Build-Depends: cmake,
                xsltproc,
                libboost1.42-dev,
                libboost-serialization1.42-dev,
+               libstartup-notification0-dev,
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 
