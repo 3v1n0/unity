@@ -17,39 +17,13 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+
 #include "Nux/Nux.h"
 #include "QuicklistMenuItem.h"
 
 #include <X11/Xlib.h>
-
-void
-GetDPI (int &dpi_x, int &dpi_y)
-{
-  Display* display     = NULL;
-  int      screen      = 0;
-  double   dpyWidth    = 0.0;
-  double   dpyHeight   = 0.0;
-  double   dpyWidthMM  = 0.0;
-  double   dpyHeightMM = 0.0;
-  double   dpiX        = 0.0;
-  double   dpiY        = 0.0;
-
-  display = XOpenDisplay (NULL);
-  screen = DefaultScreen (display);
-
-  dpyWidth    = (double) DisplayWidth (display, screen);
-  dpyHeight   = (double) DisplayHeight (display, screen);
-  dpyWidthMM  = (double) DisplayWidthMM (display, screen);
-  dpyHeightMM = (double) DisplayHeightMM (display, screen);
-
-  dpiX = dpyWidth * 25.4 / dpyWidthMM;
-  dpiY = dpyHeight * 25.4 / dpyHeightMM;
-
-  dpi_x = (int) (dpiX + 0.5);
-  dpi_y = (int) (dpiY + 0.5);
-
-  XCloseDisplay (display);
-}
 
 static void
 OnPropertyChanged (gchar*             property,
@@ -79,18 +53,10 @@ View (NUX_FILE_LINE_PARAM)
   _debug      = false;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
   
-  _fontOpts           = cairo_font_options_create ();
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;
   _prelightTexture[0] = NULL;
   _prelightTexture[1] = NULL;
-  
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
   
   if (_menuItem)
   {
@@ -130,18 +96,10 @@ View (NUX_FILE_LINE_PARAM)
   _debug      = debug;
   _item_type  = MENUITEM_TYPE_UNKNOWN;
   
-  _fontOpts           = cairo_font_options_create ();
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;
   _prelightTexture[0] = NULL;
   _prelightTexture[1] = NULL;
-  
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
   
   if (_menuItem)
   {
@@ -173,9 +131,6 @@ QuicklistMenuItem::~QuicklistMenuItem ()
   
   if (_fontName)
     g_free (_fontName);
-  
-  cairo_font_options_destroy (_fontOpts);
-
 }
 
 QuicklistMenuItemType QuicklistMenuItem::GetItemType ()
@@ -283,6 +238,9 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        logRect  = {0, 0, 0, 0};
+  int                   dpi      = 0;
+  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
+  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
 
   // sanity check
   if (!font)
@@ -290,6 +248,7 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (font);
   pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
@@ -298,8 +257,19 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text, -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, _dpiX);
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
   pango_layout_context_changed (layout);
   pango_layout_get_extents (layout, NULL, &logRect);
 

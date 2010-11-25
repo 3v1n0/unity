@@ -59,9 +59,6 @@ class QuicklistMenuItemLabel : public QuicklistMenuItem
                    int        width,
                    int        height,
                    nux::Color color);
-//     virtual void GetTextExtents (const TCHAR* font,
-//                          int&         width,
-//                          int&         height);
     virtual void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
     void DrawRoundedRectangle (cairo_t* cr,

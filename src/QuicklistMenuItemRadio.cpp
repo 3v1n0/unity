@@ -16,6 +16,9 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemRadio.h"
 
@@ -65,28 +68,18 @@ QuicklistMenuItemRadio::Initialize (DbusmenuMenuitem* item)
   else
     _text = "QuicklistItem";
   
-  _fontOpts   = cairo_font_options_create ();
   _normalTexture[0]   = NULL;
   _normalTexture[1]   = NULL;
   _prelightTexture[0] = NULL;
   _prelightTexture[1] = NULL;
 
-  // FIXME: hard-coding these for the moment, as we don't have
-  // gsettings-support in place right now
-  cairo_font_options_set_antialias (_fontOpts, CAIRO_ANTIALIAS_SUBPIXEL);
-  cairo_font_options_set_hint_metrics (_fontOpts, CAIRO_HINT_METRICS_ON);
-  cairo_font_options_set_hint_style (_fontOpts, CAIRO_HINT_STYLE_SLIGHT);
-  cairo_font_options_set_subpixel_order (_fontOpts, CAIRO_SUBPIXEL_ORDER_RGB);
 
   SetMinimumSize (1, 1);
   // make sure _dpiX and _dpiY are initialized correctly
-  GetDPI (_dpiX, _dpiY);
 }
 
 QuicklistMenuItemRadio::~QuicklistMenuItemRadio ()
 {
-  cairo_font_options_destroy (_fontOpts);
-
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
@@ -206,15 +199,17 @@ QuicklistMenuItemRadio::DrawText (cairo_t*   cr,
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
+  int                   dpi      = 0;
+  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
+  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
 
   nux::NString str = nux::NString::Printf(TEXT("%s %.2f"),
                                           _fontName.GetTCharPtr (),
                                           _fontSize);
   GetTextExtents (str.GetTCharPtr (), textWidth, textHeight);
 
-  cairo_set_font_options (cr, _fontOpts);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
-  //desc = pango_font_description_from_string ((char*) FONT_FACE);
   desc = pango_font_description_from_string (str.GetTCharPtr ());
   pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
   pango_layout_set_font_description (layout, desc);
@@ -222,13 +217,19 @@ QuicklistMenuItemRadio::DrawText (cairo_t*   cr,
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
-
-  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
-  //cairo_paint (cr);
-  cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
 
   pango_layout_context_changed (layout);
 
@@ -240,11 +241,13 @@ QuicklistMenuItemRadio::DrawText (cairo_t*   cr,
   g_object_unref (layout);
 }
 
-void QuicklistMenuItemRadio::GetTextExtents (int &width, int &height)
+void
+QuicklistMenuItemRadio::GetTextExtents (int& width,
+                                        int& height)
 {
   nux::NString str = nux::NString::Printf (TEXT ("%s %.2f"),
-    _fontName.GetTCharPtr (),
-    _fontSize);
+                                           _fontName.GetTCharPtr (),
+                                           _fontSize);
   GetTextExtents (str.GetTCharPtr (), width, height);
 }
 
@@ -259,6 +262,9 @@ QuicklistMenuItemRadio::GetTextExtents (const TCHAR* font,
   PangoFontDescription* desc     = NULL;
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        logRect  = {0, 0, 0, 0};
+  int                   dpi      = 0;
+  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
+  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
 
   // sanity check
   if (!font)
@@ -266,6 +272,7 @@ QuicklistMenuItemRadio::GetTextExtents (const TCHAR* font,
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (font);
   pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
@@ -274,8 +281,20 @@ QuicklistMenuItemRadio::GetTextExtents (const TCHAR* font,
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, _dpiX);
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
+
   pango_layout_context_changed (layout);
   pango_layout_get_extents (layout, NULL, &logRect);
 

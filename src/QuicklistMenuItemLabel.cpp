@@ -17,6 +17,9 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
+#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemLabel.h"
 
@@ -50,9 +53,6 @@ QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
     _text = g_strdup (dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL));
   else
     _text = g_strdup ("Label");
-  
-  // make sure _dpiX and _dpiY are initialized correctly
-  GetDPI (_dpiX, _dpiY);
 
   int textWidth = 1;
   int textHeight = 1;
@@ -188,22 +188,24 @@ QuicklistMenuItemLabel::PostDraw (nux::GraphicsEngine& gfxContext,
 
 void
 QuicklistMenuItemLabel::DrawText (cairo_t*   cr,
-                                      int        width,
-                                      int        height,
-                                      nux::Color color)
+                                  int        width,
+                                  int        height,
+                                  nux::Color color)
 {
   int                   textWidth  = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
+  int                   dpi        = 0;
+  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
 
   gchar* font_str = g_strdup_printf ("%s %.2f", _fontName, _fontSize);
   GetTextExtents (font_str, textWidth, textHeight);
 
-  cairo_set_font_options (cr, _fontOpts);
+  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
-  //desc = pango_font_description_from_string ((char*) FONT_FACE);
   desc = pango_font_description_from_string (font_str);
   pango_font_description_set_weight (desc, (PangoWeight) _fontWeight);
   pango_layout_set_font_description (layout, desc);
@@ -211,13 +213,19 @@ QuicklistMenuItemLabel::DrawText (cairo_t*   cr,
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup (layout, _text, -1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx, _fontOpts);
-  pango_cairo_context_set_resolution (pangoCtx, (double) _dpiX);
-
-  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
-  //cairo_paint (cr);
-  //cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  if (dpi == -1)
+  {
+    // use some default DPI-value
+    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+  }
+  else
+  {
+    pango_cairo_context_set_resolution (pangoCtx,
+                                        (float) dpi / (float) PANGO_SCALE);
+  }
 
   pango_layout_context_changed (layout);
 
@@ -251,8 +259,6 @@ QuicklistMenuItemLabel::UpdateTexture ()
 
   DrawText (cr, width, height, nux::Color::White);
 
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/normal-unchecked.png");
-
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
   if (_normalTexture[0])
@@ -282,8 +288,6 @@ QuicklistMenuItemLabel::UpdateTexture ()
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
   DrawText (cr, width, height, transparent);
-
-  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/active-unchecked.png");
 
   bitmap = _cairoGraphics->GetBitmap ();
 

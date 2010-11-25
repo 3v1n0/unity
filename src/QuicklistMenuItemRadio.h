@@ -75,9 +75,6 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
     FontStyle             _fontStyle;
     FontWeight            _fontWeight;
     nux::Color            _textColor;
-    int                   _dpiX;
-    int                   _dpiY;
-    cairo_font_options_t* _fontOpts;
     int                   _pre_layout_width;
     int                   _pre_layout_height;
     nux::CairoGraphics*   _cairoGraphics;
