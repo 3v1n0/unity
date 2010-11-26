@@ -9,6 +9,8 @@ unity (3.2.0-0ubuntu3) UNRELEASED; urgency=low
     - install source_unity.py
   * debian/control:
     - depends on new compiz and libcompiz version containing the gconf CMake fix
+  * debian/libunity3.symbols:
+    - add new exported symbols as places are installed in buildd
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Nov 2010 13:24:41 +0100
 

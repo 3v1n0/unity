@@ -35,6 +35,8 @@ libunity.so.3 libunity3 #MINVER#
  unity_place__entryinfodata_dup@Base 3.1.3
  unity_place__entryinfodata_free@Base 3.1.3
  unity_place__entryinfodata_get_type@Base 3.1.3
+ unity_place__entrysignals_copy@Base 3.2.0
+ unity_place__entrysignals_destroy@Base 3.2.0
  unity_place__entrysignals_dup@Base 3.1.3
  unity_place__entrysignals_free@Base 3.1.3
  unity_place__entrysignals_get_type@Base 3.1.3
@@ -77,6 +79,9 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_browser_service_impl_get_dbus_path@Base 3.1.3
  unity_place_browser_service_impl_get_type@Base 3.1.3
  unity_place_browser_service_impl_new@Base 3.1.3
+ unity_place_browser_service_real_get_state@Base 3.2.0
+ unity_place_browser_service_real_go_back@Base 3.2.0
+ unity_place_browser_service_real_go_forward@Base 3.2.0
  unity_place_browsing_op_get_type@Base 3.1.3
  unity_place_controller_add_entry@Base 3.1.3
  unity_place_controller_construct@Base 3.1.3
@@ -144,6 +149,10 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_entry_service_impl_new@Base 3.1.3
  unity_place_entry_service_impl_queue_place_entry_info_changed_signal@Base 3.1.3
  unity_place_entry_service_impl_unexport@Base 3.1.3
+ unity_place_entry_service_real_set_active@Base 3.2.0
+ unity_place_entry_service_real_set_active_section@Base 3.2.0
+ unity_place_entry_service_real_set_global_search@Base 3.2.0
+ unity_place_entry_service_real_set_search@Base 3.2.0
  unity_place_entry_service_set_active@Base 3.1.3
  unity_place_entry_service_set_active_section@Base 3.1.3
  unity_place_entry_service_set_global_search@Base 3.1.3
@@ -200,6 +209,7 @@ libunity.so.3 libunity3 #MINVER#
  unity_place_service_impl_remove_entry@Base 3.1.3
  unity_place_service_impl_set_activation@Base 3.1.3
  unity_place_service_impl_unexport@Base 3.1.3
+ unity_place_service_real_get_entries@Base 3.2.0
  unity_place_stack_clear@Base 3.1.3
  unity_place_stack_construct@Base 3.1.3
  unity_place_stack_get_type@Base 3.1.3
