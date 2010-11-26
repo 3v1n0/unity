@@ -84,6 +84,9 @@ class UnityScreen :
 		       		       CompOutput *,
 				       unsigned int);
 
+	/* Pop our InputOutput windows from the paint list */
+	const CompWindowList & getWindowPaintList ();
+
 	/* handle X11 events */
 	void handleEvent (XEvent *);
 
@@ -138,6 +141,7 @@ class UnityScreen :
 	/* handle paint order */
 	bool	  doShellRepaint;
 	bool      allowWindowPaint;
+	CompWindowList _withRemovedNuxWindows;
 
 	friend class UnityWindow;
 };
@@ -156,10 +160,6 @@ class UnityWindow :
 
 	CompWindow      *window;
 	GLWindow	*gWindow;
-	
-	bool
-	glPaint (const GLWindowPaintAttrib &, const GLMatrix &,
-           const CompRegion &, unsigned int);
 	
 	/* basic window draw function */
 	bool 
