@@ -30,13 +30,14 @@
 
 struct _UBusServerPrivate
 {
-  GHashTable *message_interest_table;
-  GHashTable *dispatch_table;
+  GHashTable   *message_interest_table;
+  GHashTable   *dispatch_table;
 
-  GQueue     *message_queue;
+  GQueue       *message_queue;
+  GStringChunk *message_names;
 
-  gulong      id_sequencial_number;
-  gboolean    message_pump_queued;
+  gulong        id_sequencial_number;
+  gboolean      message_pump_queued;
 };
 
 
@@ -90,13 +91,20 @@ typedef struct _UBusMessageInfo UBusMessageInfo;
 
 /*
  * If @data is floating the constructed message info will
- * assume ownership of the ref
+ * assume ownership of the ref.
+ *
+ * The message member of the UBusMessageInfo struct is managed
+ * by the UBusServer owning the message. This is done to have
+ * "interned" strings representing the message names.
+ *
+ * Technically the interning is done with g_string_chunk_insert_const().
+ * This not only gives us imporved memory management, but also allows
+ * us to compare message names with direct pointer comparison.
  */
 static UBusMessageInfo *
-ubus_message_info_new (const gchar *message, GVariant *data)
+ubus_message_info_new (GVariant *data)
 {
   UBusMessageInfo *info = g_slice_new (UBusMessageInfo);
-  info->message = g_strdup (message);
   info->data = data;
 
   if (data != NULL)
@@ -109,7 +117,6 @@ ubus_message_info_free (UBusMessageInfo *info)
 {
   if (info->data != NULL)
     g_variant_unref (info->data);
-  g_free (info->message);
   g_slice_free (UBusMessageInfo, info);
 }
 
@@ -145,6 +152,7 @@ ubus_server_init (UBusServer *server)
   // that lookups are fast when sending messages and removing handlers
 
   priv->message_queue = g_queue_new ();
+  priv->message_names = g_string_chunk_new (512);
   priv->id_sequencial_number = 1;
 }
 
@@ -159,12 +167,11 @@ ubus_server_finalize (GObject *object)
   UBusMessageInfo *info = g_queue_pop_tail (priv->message_queue);
   for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
   {
-    if (info->data != NULL)
-      g_variant_unref (info->data);
-    g_free (info);
+    ubus_message_info_free (info);
   }
 
   g_queue_free (priv->message_queue);
+  g_string_chunk_free (priv->message_names);
 
   G_OBJECT_CLASS (ubus_server_parent_class)->finalize (object);
 }
@@ -293,7 +300,9 @@ ubus_server_send_message (UBusServer *server, const gchar *message,
   g_return_if_fail (message != NULL);
   UBusServerPrivate *priv = server->priv;
 
-  UBusMessageInfo *message_info = ubus_message_info_new (message, data);
+  UBusMessageInfo *message_info = ubus_message_info_new (data);
+  message_info->message = g_string_chunk_insert_const (priv->message_names,
+                                                       message);
   g_queue_push_head (priv->message_queue, message_info);
 
   ubus_server_queue_message_pump (server);
