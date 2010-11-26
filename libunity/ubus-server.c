@@ -92,7 +92,7 @@ typedef struct _UBusMessageInfo UBusMessageInfo;
  * If @data is floating the constructed message info will
  * assume ownership of the ref
  */
-UBusMessageInfo *
+static UBusMessageInfo *
 ubus_message_info_new (const gchar *message, GVariant *data)
 {
   UBusMessageInfo *info = g_slice_new (UBusMessageInfo);
@@ -104,7 +104,7 @@ ubus_message_info_new (const gchar *message, GVariant *data)
   return info;
 }
 
-void
+static void
 ubus_message_info_free (UBusMessageInfo *info)
 {
   if (info->data != NULL)
@@ -113,14 +113,14 @@ ubus_message_info_free (UBusMessageInfo *info)
   g_slice_free (UBusMessageInfo, info);
 }
 
-gboolean
+static gboolean
 ulong_equal (gconstpointer v1,
              gconstpointer v2)
 {
   return *((const gulong*) v1) == *((const gulong*) v2);
 }
 
-guint
+static guint
 ulong_hash (gconstpointer v)
 {
   return (guint) *(const gulong*) v;
@@ -227,7 +227,7 @@ ubus_server_register_interest (UBusServer* server, const gchar *message,
   return info->id;
 }
 
-gboolean
+static gboolean
 ubus_server_pump_message_queue (UBusServer *server)
 {
   g_return_val_if_fail (UBUS_IS_SERVER (server), FALSE);
@@ -272,7 +272,7 @@ ubus_server_pump_message_queue (UBusServer *server)
   return FALSE;
 }
 
-void
+static void
 ubus_server_queue_message_pump (UBusServer *server)
 {
   g_return_if_fail (UBUS_IS_SERVER (server));
