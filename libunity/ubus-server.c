@@ -45,16 +45,18 @@ G_DEFINE_TYPE (UBusServer, ubus_server, G_TYPE_INITIALLY_UNOWNED);
 
 struct _UBusDispatchInfo
 {
-  gulong    id;
-  UBusCallback callback;
-  gchar       *message;
-  gpointer    *user_data;
+  gulong        id;
+  UBusCallback  callback;
+  gchar        *message;
+  gpointer     *user_data;
 };
 typedef struct _UBusDispatchInfo UBusDispatchInfo;
 
 UBusDispatchInfo *
-ubus_dispatch_info_new (UBusServer* server, const gchar *message,
-                        UBusCallback callback, gpointer user_data)
+ubus_dispatch_info_new (UBusServer   *server,
+                        const gchar  *message,
+                        UBusCallback  callback,
+                        gpointer      user_data)
 {
   g_return_val_if_fail (UBUS_IS_SERVER (server), NULL);
   UBusServerPrivate *priv = server->priv;
@@ -65,10 +67,10 @@ ubus_dispatch_info_new (UBusServer* server, const gchar *message,
       g_critical (G_STRLOC ": ID's are overflowing");
     }
 
-  info = g_new (UBusDispatchInfo, 1);
+  info = g_slice_new (UBusDispatchInfo);
   info->id = priv->id_sequencial_number++;
   info->callback = callback;
-  info->message = g_strdup (message);
+  info->message = g_string_chunk_insert_const (priv->message_names, message);
   info->user_data = user_data;
 
   return info;
@@ -77,8 +79,7 @@ ubus_dispatch_info_new (UBusServer* server, const gchar *message,
 void
 ubus_dispatch_info_free (UBusDispatchInfo *info)
 {
-  g_free (info->message);
-  g_free (info);
+  g_slice_free (UBusDispatchInfo, info);
 }
 
 struct _UBusMessageInfo
