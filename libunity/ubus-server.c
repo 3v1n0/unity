@@ -36,7 +36,7 @@ struct _UBusServerPrivate
   GQueue       *message_queue;
   GStringChunk *message_names;
 
-  gulong        id_sequencial_number;
+  guint         id_sequencial_number;
   gboolean      message_pump_queued;
 };
 
@@ -45,7 +45,7 @@ G_DEFINE_TYPE (UBusServer, ubus_server, G_TYPE_INITIALLY_UNOWNED);
 
 struct _UBusDispatchInfo
 {
-  gulong        id;
+  guint         id;
   UBusCallback  callback;
   gchar        *message;
   gpointer     *user_data;
@@ -102,10 +102,12 @@ typedef struct _UBusMessageInfo UBusMessageInfo;
  * This not only gives us imporved memory management, but also allows
  * us to compare message names with direct pointer comparison.
  */
-static UBusMessageInfo *
+static UBusMessageInfo*
 ubus_message_info_new (GVariant *data)
 {
-  UBusMessageInfo *info = g_slice_new (UBusMessageInfo);
+  UBusMessageInfo *info;
+  
+  info = g_slice_new (UBusMessageInfo);
   info->data = data;
 
   if (data != NULL)
@@ -123,23 +125,11 @@ ubus_message_info_free (UBusMessageInfo *info)
   g_slice_free (UBusMessageInfo, info);
 }
 
-static gboolean
-ulong_equal (gconstpointer v1,
-             gconstpointer v2)
-{
-  return *((const gulong*) v1) == *((const gulong*) v2);
-}
-
-static guint
-ulong_hash (gconstpointer v)
-{
-  return (guint) *(const gulong*) v;
-}
-
 static void
 ubus_server_init (UBusServer *server)
 {
   UBusServerPrivate *priv;
+  
   priv = server->priv = UBUS_SERVER_GET_PRIVATE (server);
 
   /* message_interest_table holds the message/DispatchInfo relationship
@@ -150,10 +140,11 @@ ubus_server_init (UBusServer *server)
                                                         g_direct_equal,
                                                         NULL,
                                                         (GDestroyNotify) g_sequence_free);
-  // dispatch table holds the individial id/DispatchInfo pairs
-  priv->dispatch_table = g_hash_table_new_full (ulong_hash, ulong_equal,
-                                                g_free,
-                                                (GDestroyNotify)ubus_dispatch_info_free);
+  // dispatch_table holds the individial id/DispatchInfo pairs
+  priv->dispatch_table = g_hash_table_new_full (g_direct_hash,
+                                                g_direct_equal,
+                                                NULL,
+                                                (GDestroyNotify) ubus_dispatch_info_free);
 
   // for anyone thats wondering (hi kamstrup!), there are two hash tables so
   // that lookups are fast when sending messages and removing handlers
@@ -166,8 +157,11 @@ ubus_server_init (UBusServer *server)
 static void
 ubus_server_finalize (GObject *object)
 {
-  UBusServer *server = UBUS_SERVER (object);
-  UBusServerPrivate *priv = server->priv;
+  UBusServer        *server;
+  UBusServerPrivate *priv;
+  
+  server = UBUS_SERVER (object);
+  priv = server->priv;
   
   g_hash_table_destroy (priv->message_interest_table);
   g_hash_table_destroy (priv->dispatch_table);
@@ -195,10 +189,11 @@ ubus_server_class_init (UBusServerClass *klass)
 UBusServer *
 ubus_server_get_default ()
 {
+  UBusServer *server;
   static gsize singleton;
+  
   if (g_once_init_enter (&singleton))
-    {
-      UBusServer *server;
+    {      
       server = g_object_new (UBUS_TYPE_SERVER, NULL);
       g_object_ref_sink (server);
       g_once_init_leave (&singleton, (gsize) server);
@@ -210,22 +205,24 @@ ubus_server_get_default ()
   return (UBusServer *)singleton;
 }
 
-gulong
+guint
 ubus_server_register_interest (UBusServer   *server,
                                const gchar  *message,
                                UBusCallback  callback,
                                gpointer      user_data)
 {
-  gchar *interned_message;
+  UBusServerPrivate *priv;
+  GSequence         *dispatch_list;
+  gchar             *interned_message;
+  UBusDispatchInfo  *info;
 
   g_return_val_if_fail (UBUS_IS_SERVER (server), 0);
   g_return_val_if_fail (message != NULL, 0);
 
-  UBusServerPrivate *priv = server->priv;
+  priv = server->priv;
   interned_message = g_string_chunk_insert_const (priv->message_names, message);
-  GSequence *dispatch_list = g_hash_table_lookup (priv->message_interest_table,
-                                                  interned_message);
-  UBusDispatchInfo *info;
+  dispatch_list = g_hash_table_lookup (priv->message_interest_table,
+                                       interned_message);
 
   if (dispatch_list == NULL)
     {
@@ -238,9 +235,7 @@ ubus_server_register_interest (UBusServer   *server,
 
   // add the callback to the dispatch table
   info = ubus_dispatch_info_new (server, message, callback, user_data);
-  gulong *id = g_malloc (sizeof (gulong));
-  *id = info->id;
-  g_hash_table_insert (priv->dispatch_table, id, info);
+  g_hash_table_insert (priv->dispatch_table, GUINT_TO_POINTER (info->id), info);
 
   // add the dispatch info to the dispatch list in the message interest table
   g_sequence_append (dispatch_list, info);
@@ -329,20 +324,21 @@ ubus_server_send_message (UBusServer  *server,
 }
 
 void
-ubus_server_unregister_interest (UBusServer* server, gulong handle)
+ubus_server_unregister_interest (UBusServer* server, guint handle)
 {
+  UBusServerPrivate *priv;
+  GSequence         *dispatch_list;
+  UBusDispatchInfo  *info;
+  
   g_return_if_fail (UBUS_IS_SERVER (server));
   g_return_if_fail (handle > 0);
-  UBusServerPrivate *priv = server->priv;
-  UBusDispatchInfo *info;
-  GSequence *dispatch_list;
 
-  // get our info
-  info = g_hash_table_lookup (priv->dispatch_table, &handle);
+  priv = server->priv;  
+  info = g_hash_table_lookup (priv->dispatch_table, GUINT_TO_POINTER (handle));
 
   if (info == NULL)
     {
-      g_warning (G_STRLOC ": Handle %lu does not exist", handle);
+      g_warning (G_STRLOC ": Handle %u does not exist", handle);
       return;
     }
 

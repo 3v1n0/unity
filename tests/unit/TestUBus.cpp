@@ -53,7 +53,7 @@ TestAllocation ()
 }
 
 void
-test_handler_inc_counter (GVariant *data, gpointer *val)
+test_handler_inc_counter (GVariant *data, gpointer val)
 {
   // inc a counter when we get called
   gint *counter = (gint*)val;
@@ -61,7 +61,7 @@ test_handler_inc_counter (GVariant *data, gpointer *val)
 }
 
 void
-test_handler_inc_counter_2 (GVariant *data, gpointer *val)
+test_handler_inc_counter_2 (GVariant *data, gpointer val)
 {
   // inc a counter by two when called
   gint *counter = (gint*)val;
@@ -73,13 +73,13 @@ TestPropagation ()
 {
   UBusServer *ubus = ubus_server_get_default ();
   gint counter = 0;
-  gulong handler1 = ubus_server_register_interest (ubus, MESSAGE1,
-                                                   test_handler_inc_counter,
-                                                   &counter);
+  guint handler1 = ubus_server_register_interest (ubus, MESSAGE1,
+                                                  test_handler_inc_counter,
+                                                  &counter);
 
-  gulong handler2 = ubus_server_register_interest (ubus, MESSAGE2, // tests UNICODE
-                                                   test_handler_inc_counter_2,
-                                                   &counter);
+  guint handler2 = ubus_server_register_interest (ubus, MESSAGE2, // tests UNICODE
+                                                  test_handler_inc_counter_2,
+                                                  &counter);
 
   gint i;
   for (i=0; i<1000; i++)
@@ -120,7 +120,7 @@ main_loop_bailout (gpointer data)
 }
 
 void
-test_handler_mainloop (GVariant *data, gpointer *val)
+test_handler_mainloop (GVariant *data, gpointer val)
 {
   // inc a counter when we get called
   gint *counter = (gint*)val;
@@ -131,11 +131,13 @@ test_handler_mainloop (GVariant *data, gpointer *val)
 static void
 TestMainLoop ()
 {
-  GMainLoop *mainloop;
-  UBusServer *ubus = ubus_server_get_default ();
-  gint counter = 0;
-
+  GMainLoop  *mainloop;
+  UBusServer *ubus;
+  gint        counter = 0;
+  
+  ubus = ubus_server_get_default ();  
   mainloop = g_main_loop_new (NULL, TRUE);
+
   g_timeout_add_seconds (1, main_loop_bailout, mainloop);
 
   ubus_server_register_interest (ubus, MESSAGE1,
