@@ -1,4 +1,4 @@
-unity (3.2.0-0ubuntu3) UNRELEASED; urgency=low
+unity (3.2.0-0ubuntu3) natty; urgency=low
 
   * revert previous upload done which is breaking the gconf unity settings
   * debian/source_unity.py:
@@ -12,7 +12,7 @@ unity (3.2.0-0ubuntu3) UNRELEASED; urgency=low
   * debian/libunity3.symbols:
     - add new exported symbols as places are installed in buildd
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Nov 2010 13:24:41 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Nov 2010 20:34:58 +0100
 
 unity (3.2.0-0ubuntu2) natty; urgency=low
 
