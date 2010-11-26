@@ -110,6 +110,7 @@ ubus_message_info_new (GVariant *data)
 
   if (data != NULL)
     g_variant_ref_sink (data);
+  
   return info;
 }
 
@@ -118,6 +119,7 @@ ubus_message_info_free (UBusMessageInfo *info)
 {
   if (info->data != NULL)
     g_variant_unref (info->data);
+  
   g_slice_free (UBusMessageInfo, info);
 }
 
@@ -140,10 +142,14 @@ ubus_server_init (UBusServer *server)
   UBusServerPrivate *priv;
   priv = server->priv = UBUS_SERVER_GET_PRIVATE (server);
 
-  // message_interest_table holds the message/DispatchInfo relationship
-  priv->message_interest_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-                                                        g_free,
-                                                        (GDestroyNotify)g_sequence_free);
+  /* message_interest_table holds the message/DispatchInfo relationship
+   * We can use g_direct_* hash functions because we are interning all
+   * message names in our GStringChunk
+   */
+  priv->message_interest_table = g_hash_table_new_full (g_direct_hash,
+                                                        g_direct_equal,
+                                                        NULL,
+                                                        (GDestroyNotify) g_sequence_free);
   // dispatch table holds the individial id/DispatchInfo pairs
   priv->dispatch_table = g_hash_table_new_full (ulong_hash, ulong_equal,
                                                 g_free,
@@ -162,6 +168,7 @@ ubus_server_finalize (GObject *object)
 {
   UBusServer *server = UBUS_SERVER (object);
   UBusServerPrivate *priv = server->priv;
+  
   g_hash_table_destroy (priv->message_interest_table);
   g_hash_table_destroy (priv->dispatch_table);
 
@@ -204,23 +211,29 @@ ubus_server_get_default ()
 }
 
 gulong
-ubus_server_register_interest (UBusServer* server, const gchar *message,
-                               UBusCallback callback, gpointer user_data)
+ubus_server_register_interest (UBusServer   *server,
+                               const gchar  *message,
+                               UBusCallback  callback,
+                               gpointer      user_data)
 {
+  gchar *interned_message;
+
   g_return_val_if_fail (UBUS_IS_SERVER (server), 0);
   g_return_val_if_fail (message != NULL, 0);
 
   UBusServerPrivate *priv = server->priv;
+  interned_message = g_string_chunk_insert_const (priv->message_names, message);
   GSequence *dispatch_list = g_hash_table_lookup (priv->message_interest_table,
-                                                 message);
+                                                  interned_message);
   UBusDispatchInfo *info;
 
   if (dispatch_list == NULL)
     {
       // not had this message before so add a new entry to the message_interest table
-      gchar *key = g_strdup (message);
       dispatch_list = g_sequence_new (NULL); // we use a sequence because its a stable pointer
-      g_hash_table_insert (priv->message_interest_table, key, dispatch_list);
+      g_hash_table_insert (priv->message_interest_table,
+                           interned_message,
+                           dispatch_list);
     }
 
   // add the callback to the dispatch table
@@ -283,9 +296,11 @@ ubus_server_pump_message_queue (UBusServer *server)
 static void
 ubus_server_queue_message_pump (UBusServer *server)
 {
+  UBusServerPrivate *priv;
+  
   g_return_if_fail (UBUS_IS_SERVER (server));
-  UBusServerPrivate *priv = server->priv;
 
+  priv = server->priv;
   if (priv->message_pump_queued)
     return;
 
@@ -294,18 +309,22 @@ ubus_server_queue_message_pump (UBusServer *server)
 }
 
 void
-ubus_server_send_message (UBusServer *server, const gchar *message,
-                          GVariant *data)
+ubus_server_send_message (UBusServer  *server,
+                          const gchar *message,
+                          GVariant    *data)
 {
+  UBusServerPrivate *priv;
+  UBusMessageInfo   *message_info;
+  
   g_return_if_fail (UBUS_IS_SERVER (server));
-  g_return_if_fail (message != NULL);
-  UBusServerPrivate *priv = server->priv;
+  g_return_if_fail (message != NULL);  
 
-  UBusMessageInfo *message_info = ubus_message_info_new (data);
+  priv = server->priv;
+  message_info = ubus_message_info_new (data);
   message_info->message = g_string_chunk_insert_const (priv->message_names,
                                                        message);
-  g_queue_push_head (priv->message_queue, message_info);
 
+  g_queue_push_head (priv->message_queue, message_info);
   ubus_server_queue_message_pump (server);
 }
 
