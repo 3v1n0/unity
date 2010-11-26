@@ -1,8 +1,12 @@
 unity (3.2.0-0ubuntu3) UNRELEASED; urgency=low
 
   * revert previous upload done which is breaking the gconf unity settings
+  * debian/source_unity.py:
+    - let apport collect the same as it does for compiz, it will provide 
+      details on xorg and drivers in use for example
   * debian/unity.install:
     - install the gconf file
+    - install source_unity.py
   * debian/control:
     - depends on new compiz and libcompiz version containing the gconf CMake fix
 
