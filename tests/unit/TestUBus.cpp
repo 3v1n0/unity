@@ -71,17 +71,20 @@ test_handler_inc_counter_2 (GVariant *data, gpointer val)
 static void
 TestPropagation ()
 {
-  UBusServer *ubus = ubus_server_get_default ();
-  gint counter = 0;
-  guint handler1 = ubus_server_register_interest (ubus, MESSAGE1,
-                                                  test_handler_inc_counter,
-                                                  &counter);
+  UBusServer *ubus;
+  gint        counter, i;
+  guint       handler1, handler2;
+  
+  ubus = ubus_server_get_default ();
+  handler1 = ubus_server_register_interest (ubus, MESSAGE1,
+                                            test_handler_inc_counter,
+                                            &counter);
 
-  guint handler2 = ubus_server_register_interest (ubus, MESSAGE2, // tests UNICODE
-                                                  test_handler_inc_counter_2,
-                                                  &counter);
+  handler2 = ubus_server_register_interest (ubus, MESSAGE2, // tests UNICODE
+                                            test_handler_inc_counter_2,
+                                            &counter);
 
-  gint i;
+  counter = 0;
   for (i=0; i<1000; i++)
   {
     ubus_server_send_message (ubus, MESSAGE1, NULL);
