@@ -1,3 +1,20 @@
+unity (3.2.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * revert previous upload done which is breaking the gconf unity settings
+  * debian/unity.install:
+    - install the gconf file
+  * debian/control:
+    - depends on new compiz and libcompiz version containing the gconf CMake fix
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Nov 2010 13:24:41 +0100
+
+unity (3.2.0-0ubuntu2) natty; urgency=low
+
+  * FTBFS: install gconf schemas to fix --fail-missing
+  * Lintian: echo 1.0 > debian/source/format
+
+ -- Paul Sladen <sladen@ubuntu.com>  Thu, 25 Nov 2010 21:38:00 +0100
+
 unity (3.2.0-0ubuntu1) natty; urgency=low
 
   * New upstream release:
