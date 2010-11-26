@@ -512,6 +512,28 @@ LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
     Present (1, 1500);
 }
 
+gboolean
+LauncherIcon::OnDelayedUpdateTimeout (gpointer data)
+{
+  DelayedUpdateArg *arg = (DelayedUpdateArg *) data;
+  LauncherIcon *self = arg->self;
+
+  clock_gettime (CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
+  self->needs_redraw.emit (self);
+  
+  return false;
+}
+
+void
+LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk)
+{
+  DelayedUpdateArg *arg = new DelayedUpdateArg ();
+  arg->self = this;
+  arg->quirk = quirk;
+  
+  g_timeout_add (ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
+}
+
 void
 LauncherIcon::UpdateQuirkTime (LauncherIconQuirk quirk)
 {

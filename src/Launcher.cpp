@@ -331,24 +331,28 @@ void Launcher::EnsureAnimation ()
 
 bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec current)
 {
-    struct timespec visible_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
-    if (TimeDelta (&current, &visible_time) < ANIM_DURATION_SHORT)
+    struct timespec time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
+    if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
     
-    struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
-    if (TimeDelta (&current, &running_time) < ANIM_DURATION_SHORT)
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
+    if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
     
-    struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-    if (TimeDelta (&current, &starting_time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
         return true;
     
-    struct timespec urgent_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
-    if (TimeDelta (&current, &urgent_time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
+    if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
         return true;
     
-    struct timespec present_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
-    if (TimeDelta (&current, &present_time) < ANIM_DURATION)
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+    
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
+    if (TimeDelta (&current, &time) < ANIM_DURATION_LONG)
         return true;
     
     return false;
@@ -481,6 +485,13 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec current)
       return 1.0f - result;
 }
 
+float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec current)
+{
+    struct timespec shimmer_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
+    int shimmer_ms = TimeDelta (&current, &shimmer_time);
+    return CLAMP ((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+}
+
 float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec current)
 {
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
@@ -528,6 +539,29 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec cur
     }
     
     return result;
+}
+
+void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg)
+{
+    arg.icon           = icon;
+    arg.alpha          = 1.0f;
+    arg.running_arrow  = false;
+    arg.active_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
+    arg.folding_rads   = 0.0f;
+    arg.skip           = false;
+    
+    arg.window_indicators = MIN (4, icon->RelatedWindows ());
+    
+    // we dont need to show strays
+    if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+        arg.window_indicators = 0;
+    
+    arg.backlight_intensity = IconBackgroundIntensity (icon, current);
+    arg.shimmer_progress = IconShimmerProgress (icon, current);
+    
+    float urgent_progress = IconUrgentProgress (icon, current);
+    urgent_progress = CLAMP (urgent_progress * 3, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
+    arg.glow_intensity = urgent_progress;
 }
 
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
@@ -648,24 +682,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         RenderArg arg;
         LauncherIcon *icon = *it;
         
-        arg.icon           = icon;
-        arg.alpha          = 1.0f;
-        arg.running_arrow  = false;
-        arg.active_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
-        arg.folding_rads   = 0.0f;
-        arg.skip           = false;
-        
-        arg.window_indicators = MIN (4, icon->RelatedWindows ());
-        
-        // we dont need to show strays
-        if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-            arg.window_indicators = 0;
-        
-        arg.backlight_intensity = IconBackgroundIntensity (icon, current);
-        
-        float urgent_progress = IconUrgentProgress (icon, current);
-        urgent_progress = CLAMP (urgent_progress * 3, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
-        arg.glow_intensity = urgent_progress;
+        SetupRenderArg (icon, current, arg);
         
         // reset z
         center.z = 0;
@@ -721,22 +738,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
-        
-        arg.icon           = icon;
-        arg.alpha          = 1.0f;
-        arg.glow_intensity = 0.0f;
-        arg.running_arrow  = false;
-        arg.active_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
-        arg.folding_rads   = 0.0f;
-        arg.skip           = false;
-        
-        arg.window_indicators = MIN (4, icon->RelatedWindows ());
-        
-        // we dont need to show strays
-        if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-          arg.window_indicators = 0;
-        
-        arg.backlight_intensity = IconBackgroundIntensity (icon, current);
+
+        SetupRenderArg (icon, current, arg);        
         
         // reset z
         center.z = 0;
@@ -1240,6 +1243,30 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                arg.icon->_xform_coords["Glow"], 
                geo,
                false);
+  }
+  
+  if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
+  {
+    nux::Geometry base = GetGeometry ();
+    int x1 = base.x + base.width;
+    int x2 = base.x + base.width;
+    float shimmer_constant = 1.9f;
+    
+    x1 -= geo.width * arg.shimmer_progress * shimmer_constant;
+    GfxContext.PushClippingRectangle(nux::Geometry (x1, geo.y, x2 - x1, geo.height));
+    
+    float fade_out = 1.0f - CLAMP (((x2 - x1) - geo.width) / (geo.width * (shimmer_constant - 1.0f)), 0.0f, 1.0f);
+    
+    RenderIcon(GfxContext, 
+               arg, 
+               _icon_glow_texture,
+               arg.icon->GlowColor (), 
+               fade_out, 
+               arg.icon->_xform_coords["Glow"], 
+               geo,
+               false);
+    
+    GfxContext.PopClippingRectangle();
   }
 }
 
