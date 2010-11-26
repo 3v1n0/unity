@@ -88,24 +88,29 @@ struct _UBusMessageInfo
 
 typedef struct _UBusMessageInfo UBusMessageInfo;
 
+/*
+ * If @data is floating the constructed message info will
+ * assume ownership of the ref
+ */
 UBusMessageInfo *
 ubus_message_info_new (const gchar *message, GVariant *data)
 {
-  UBusMessageInfo *info = g_new (UBusMessageInfo, 1);
+  UBusMessageInfo *info = g_slice_new (UBusMessageInfo);
   info->message = g_strdup (message);
   info->data = data;
 
   if (data != NULL)
-    g_variant_ref (data);
+    g_variant_ref_sink (data);
   return info;
 }
 
 void
 ubus_message_info_free (UBusMessageInfo *info)
 {
-  g_variant_unref (info->data);
+  if (info->data != NULL)
+    g_variant_unref (info->data);
   g_free (info->message);
-  g_free (info);
+  g_slice_free (UBusMessageInfo, info);
 }
 
 gboolean
@@ -261,9 +266,7 @@ ubus_server_pump_message_queue (UBusServer *server)
           iter = next;
         }
 
-      if (info->data != NULL)
-        g_variant_unref (info->data);
-      g_free (info);
+      ubus_message_info_free (info);
     }
 
   return FALSE;
