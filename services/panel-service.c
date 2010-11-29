@@ -105,6 +105,7 @@ panel_service_class_dispose (GObject *object)
 {
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
+
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
 
