@@ -142,6 +142,10 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
 {
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
+  // Check if the texture have been computed. If they haven't, exit the function.
+  if (!_normalTexture[0])
+    return;
+  
   nux::Geometry base = GetGeometry ();
 
   gfxContext.PushClippingRectangle (base);
