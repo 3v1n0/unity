@@ -102,12 +102,6 @@ static GdkFilterReturn event_filter (GdkXEvent    *ev,
 /*
  * GObject stuff
  */
-static void
-nullify_everything (gpointer key, gpointer value, gpointer user_data)
-{
-  key = NULL;
-  value = NULL;
-}
 
 static void
 panel_service_class_dispose (GObject *object)
@@ -115,9 +109,6 @@ panel_service_class_dispose (GObject *object)
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
   gint i;
 
-  g_hash_table_foreach (priv->entry2indicator_hash,
-                        nullify_everything,
-                        NULL);
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
 
