@@ -38,6 +38,8 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          compiz-core, compiz-core-abiversion-${coreabiversion},
+         libglib2.0-bin,
+         python,
          unity-asset-pool (>= 0.8.18)
 Provides: indicator-renderer,
           netbook-launcher

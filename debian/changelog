@@ -1,3 +1,10 @@
+unity (3.2.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/control:
+    - add libglib2.0-bin and python dep for the migration script
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 29 Nov 2010 13:49:05 +0100
+
 unity (3.2.0-0ubuntu3) natty; urgency=low
 
   * revert previous upload done which is breaking the gconf unity settings
