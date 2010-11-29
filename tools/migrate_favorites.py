@@ -60,8 +60,12 @@ def register_new_app(launcher_location, apps_list):
 
     return apps_list
 
+try:
+    migration_level = subprocess.Popen(["gsettings", "get", "com.canonical.Unity.Launcher", "favorite-migration"], stdout=subprocess.PIPE).communicate()[0].strip()[1:-1]
+except OSError, e:
+    print "Gsettings not executable or not installed, postponing migration. The error was: %s" % e
+    sys.exit(1)
 
-migration_level = subprocess.Popen(["gsettings", "get", "com.canonical.Unity.Launcher", "favorite-migration"], stdout=subprocess.PIPE).communicate()[0].strip()[1:-1]
 if migration_level >= LAST_MIGRATION:
     print "Migration already done"
     sys.exit(0)
