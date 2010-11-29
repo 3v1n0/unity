@@ -133,6 +133,10 @@ void
 QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
                               bool                 forceDraw)
 {
+  // Check if the texture have been computed. If they haven't, exit the function.
+  if (_normalTexture[0] == NULL)
+    return;
+  
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
   nux::Geometry base = GetGeometry ();

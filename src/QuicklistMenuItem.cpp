@@ -237,6 +237,9 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
   if (!font)
     return;
 
+  if (_text == NULL)
+    return;
+  
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
@@ -395,6 +398,9 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
                              int        height,
                              nux::Color color)
 {
+  if (_text == NULL)
+    return;
+  
   int                   textWidth  = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
