@@ -33,6 +33,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_SERVICE, PanelServicePrivate))
 
 #define NOTIFY_TIMEOUT 80
+#define N_TIMEOUT_SLOTS 50
+
+static PanelService *static_service = NULL;
 
 struct _PanelServicePrivate
 {
@@ -40,7 +43,8 @@ struct _PanelServicePrivate
   GHashTable *id2entry_hash;
   GHashTable *entry2indicator_hash;
 
-  gint32 timeouts[100];
+  guint  initial_sync_id;
+  gint32 timeouts[N_TIMEOUT_SLOTS];
 
   GtkMenu *last_menu;
   guint32  last_menu_id;
@@ -98,15 +102,32 @@ static GdkFilterReturn event_filter (GdkXEvent    *ev,
 /*
  * GObject stuff
  */
+
 static void
 panel_service_class_dispose (GObject *object)
 {
   PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+  gint i;
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->entry2indicator_hash);
 
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+
+  if (priv->initial_sync_id)
+    {
+      g_source_remove (priv->initial_sync_id);
+      priv->initial_sync_id = 0;
+    }
+
+  for (i = 0; i < N_TIMEOUT_SLOTS; i++)
+    {
+      if (priv->timeouts[i] > 0)
+        {
+          g_source_remove (priv->timeouts[i]);
+          priv->timeouts[i] = 0;
+        }
+    }
 
   G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
 }
@@ -246,9 +267,10 @@ static gboolean
 initial_resync (PanelService *self)
 {
   if (PANEL_IS_SERVICE (self))
-    g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
-
-
+    {
+      g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
+      self->priv->initial_sync_id = 0;
+    }
   return FALSE;
 }
 
@@ -269,18 +291,16 @@ panel_service_init (PanelService *self)
   sort_indicators (self);
   suppress_signals = FALSE;
 
-  g_idle_add ((GSourceFunc)initial_resync, self);
+  priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
 }
 
 PanelService *
 panel_service_get_default ()
 {
-  static PanelService *service = NULL;
+  if (static_service == NULL || !PANEL_IS_SERVICE (static_service))
+    static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
 
-  if (service == NULL || !PANEL_IS_SERVICE (service))
-    service = g_object_new (PANEL_TYPE_SERVICE, NULL);
-
-  return service;
+  return static_service;
 }
 
 PanelService *
@@ -315,6 +335,9 @@ actually_notify_object (IndicatorObject *object)
   PanelService *self;
   PanelServicePrivate *priv;
   gint position;
+
+  if (!PANEL_IS_SERVICE (static_service))
+    return FALSE;
 
   if (!INDICATOR_IS_OBJECT (object))
     return FALSE;
