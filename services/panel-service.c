@@ -35,6 +35,8 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
 
+static PanelService *static_service = NULL;
+
 struct _PanelServicePrivate
 {
   GSList     *indicators;
@@ -304,12 +306,10 @@ panel_service_init (PanelService *self)
 PanelService *
 panel_service_get_default ()
 {
-  static PanelService *service = NULL;
+  if (static_service == NULL || !PANEL_IS_SERVICE (static_service))
+    static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
 
-  if (service == NULL || !PANEL_IS_SERVICE (service))
-    service = g_object_new (PANEL_TYPE_SERVICE, NULL);
-
-  return service;
+  return static_service;
 }
 
 PanelService *
@@ -344,6 +344,9 @@ actually_notify_object (IndicatorObject *object)
   PanelService *self;
   PanelServicePrivate *priv;
   gint position;
+
+  if (!PANEL_IS_SERVICE (static_service))
+    return FALSE;
 
   if (!INDICATOR_IS_OBJECT (object))
     return FALSE;
