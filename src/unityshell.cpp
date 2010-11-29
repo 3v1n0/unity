@@ -31,7 +31,7 @@
 #include "LauncherController.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
-#include "unity.h"
+#include "unityshell.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>

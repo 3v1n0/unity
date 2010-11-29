@@ -8,7 +8,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator;gee-1.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 
 set (CFLAGS
@@ -17,16 +17,17 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
+     "-I${CMAKE_BINARY_DIR}/libuntiy"
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES})
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} -lunity)
 link_libraries (${LIBS})
 
-set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
+set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS} ${CMAKE_BINARY_DIR}/libunity)
 link_directories (${LIB_PATHS})
 
-include_directories (. .. ../services ../src ${CMAKE_BINARY_DIR})
+include_directories (. .. ${CMAKE_BINARY_DIR}/libunity ../services ${CMAKE_BINARY_DIR})
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -81,11 +82,39 @@ add_executable (test-panel
                 )
 
 #
+# Vala tests
+#
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/vala)
+include(ValaPrecompile)
+include(ValaVersion)
+
+find_package (Vala)
+
+vala_precompile (VALA_C vala/test-unit.vala
+                        vala/test-place-browser.vala
+                        vala/test-place.vala
+                        vala/test-utils.vala
+                 PACKAGES gtk+-2.0
+                          gio-2.0
+                          glib-2.0
+                          gobject-2.0
+                          gee-1.0
+                          dbus-glib-1
+                          gee-1.0
+                 OPTIONS --thread
+                 CUSTOM_VAPIS ${CMAKE_SOURCE_DIR}/vapi/dee-1.0.vapi
+                              vala/test-const.vapi
+                              ${CMAKE_BINARY_DIR}/libunity/unity.vapi
+)
+
+add_executable(test-vala ${VALA_C} vala/numpty.cpp)
+
+#
 # check target
 #
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
-set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-unit-results.xml)
-set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-unit-results.html)
-set (TEST_UNIT_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit)
-add_custom_target (check COMMAND  ${TEST_UNIT_COMMAND} DEPENDS test-unit)
+set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
+set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
+set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit ./test-vala)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-vala)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
