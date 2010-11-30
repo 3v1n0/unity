@@ -123,6 +123,21 @@ LauncherController::RegisterIcon (LauncherIcon *icon)
 {
   _model->AddIcon (icon);
   _model->Sort (&LauncherController::CompareIcons);
+  
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    (*it)->SetSortPriority (i);
+    i++;
+  }
+  
+  for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
+  {
+    (*it)->SetSortPriority (i);
+    i++;
+  }
 }
 
 /* static private */

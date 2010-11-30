@@ -227,18 +227,6 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  if (_quicklist_is_initialized == false)
-  {
-    std::list<DbusmenuClient *> menus_list = Menus ();
-    std::list<DbusmenuClient *>::iterator it;
-    for (it = menus_list.begin (); it != menus_list.end (); it++)
-    {
-      g_signal_connect(G_OBJECT(*it), DBUSMENU_CLIENT_SIGNAL_ROOT_CHANGED, G_CALLBACK(&LauncherIcon::RootChanged), _quicklist);
-    }
-    
-    _quicklist_is_initialized = true;
-  }
-  
   if (_launcher->GetActiveQuicklist ())
   {
     // A quicklist is active
@@ -259,48 +247,6 @@ LauncherIcon::RecvMouseEnter ()
 void LauncherIcon::RecvMouseLeave ()
 {
   _tooltip->ShowWindow (false);
-}
-
-void LauncherIcon::ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist)
-{
-  g_return_if_fail (newitem);
-
-  const gchar* type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TYPE);
-  const gchar* toggle_type = dbusmenu_menuitem_property_get (newitem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-  
-  if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
-  {
-    QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
-  {
-    QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-  {
-    QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-  else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
-  {
-    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (newitem, NUX_TRACKER_LOCATION);
-    quicklist->AddMenuItem (item);
-  }
-//   else
-//   {
-//     g_warning ("Unknown menu item type in file %s at line %s", G_STRFUNC, G_STRLOC);
-//   }
-}
-
-void LauncherIcon::RootChanged (DbusmenuClient * client, DbusmenuMenuitem * newroot, QuicklistView *quicklist)
-{
-  GList * child = NULL;
-  for (child = dbusmenu_menuitem_get_children(newroot); child != NULL; child = g_list_next(child))
-  {
-    g_signal_connect(G_OBJECT(child->data), DBUSMENU_MENUITEM_SIGNAL_REALIZED, G_CALLBACK(ChildRealized), quicklist);    
-  }
 }
 
 void LauncherIcon::RecvMouseDown (int button)
@@ -329,14 +275,51 @@ void LauncherIcon::RecvMouseDown (int button)
     
     _tooltip->ShowWindow (false);
     
+    _quicklist->RemoveAllMenuItem ();
+    
+    std::list<DbusmenuMenuitem *> menus = Menus ();
+    if (menus.empty ())
+      return;
+
+    std::list<DbusmenuMenuitem *>::iterator it;
+    for (it = menus.begin (); it != menus.end (); it++)
+    {
+      DbusmenuMenuitem *menu_item = *it;
+    
+      const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
+      const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+
+      if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+      {
+        QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
+        _quicklist->AddMenuItem (item);
+      }
+      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+      {
+        QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
+        _quicklist->AddMenuItem (item);
+      }
+      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+      {
+        QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
+        _quicklist->AddMenuItem (item);
+      }
+      else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+      {
+        QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
+        _quicklist->AddMenuItem (item);
+      }
+    } 
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
     int tip_y = _center.y;
-
     _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+
     _quicklist->EnableInputWindow (true);
     _quicklist->GrabPointer ();
+
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+
     _quicklist->NeedRedraw ();
   }
 }
@@ -560,14 +543,13 @@ LauncherIcon::RelatedWindows ()
   return _related_windows;
 }
 
-std::list<DbusmenuClient *> LauncherIcon::Menus ()
+std::list<DbusmenuMenuitem *> LauncherIcon::Menus ()
 {
   return GetMenus ();
 }
 
-std::list<DbusmenuClient *> LauncherIcon::GetMenus ()
+std::list<DbusmenuMenuitem *> LauncherIcon::GetMenus ()
 {
-  std::list<DbusmenuClient *> result;
-
+  std::list<DbusmenuMenuitem *> result;
   return result;
 }

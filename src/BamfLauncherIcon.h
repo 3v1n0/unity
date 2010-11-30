@@ -41,7 +41,7 @@ public:
     
 protected:
     void OnMouseClick (int button);
-    std::list<DbusmenuClient *> GetMenus ();
+    std::list<DbusmenuMenuitem *> GetMenus ();
     
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
@@ -51,8 +51,11 @@ protected:
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
+    std::map<std::string, DbusmenuClient *> _menu_clients;
+    std::map<std::string, DbusmenuMenuitem *> _menu_items;
     
     void EnsureWindowState ();
+    void UpdateMenus ();
     
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
@@ -61,6 +64,9 @@ private:
     static void OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data);
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
+    
+    static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 
 #endif // BAMFLAUNCHERICON_H

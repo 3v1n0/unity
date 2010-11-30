@@ -31,6 +31,7 @@
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
+#include <libdbusmenu-glib/menuitem.h>
 
 #include "Tooltip.h"
 #include "QuicklistView.h"
@@ -101,7 +102,7 @@ public:
     
     nux::BaseTexture * TextureForSize (int size);
     
-    std::list<DbusmenuClient *> Menus ();
+    std::list<DbusmenuMenuitem *> Menus ();
     
     
     sigc::signal<void, int> MouseDown;
@@ -131,7 +132,7 @@ protected:
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
-    virtual std::list<DbusmenuClient *> GetMenus ();
+    virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
     virtual void OnCenterStabilized (nux::Point3 center) {};

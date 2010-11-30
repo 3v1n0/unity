@@ -72,8 +72,6 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
   
-  FillInDefaultItems ();
-
   _vlayout->AddLayout (_bottom_space, 0);
 
   _hlayout->AddLayout (_left_space, 0);
@@ -117,54 +115,6 @@ QuicklistView::~QuicklistView ()
   
   _default_item_list.clear ();
   _item_list.clear ();
-}
-
-// This function is for testing. It will go eventually
-void QuicklistView::FillInDefaultItems ()
-{
-  QuicklistMenuItemCheckmark* item = 0;
-  DbusmenuMenuitem* dbus_item = 0;
-  // Enabled and Active Checkmark 
-  dbus_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark 0");
-  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-
-  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
-
-  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
-  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
-  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
-  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
-  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
-  
-  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
-  _default_item_list.push_back (item);
-  item->Reference();
-
-  // Disabled and Active Checkmark 
-  dbus_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark disabled");
-  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, false);
-  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-
-  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
-
-  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
-  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
-  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
-  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
-  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
-  
-  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
-  _default_item_list.push_back (item);
-  item->Reference();
 }
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
@@ -467,6 +417,10 @@ void QuicklistView::CheckAndEmitItemSignal (int x, int y)
     if (geo.IsPointInside (x, y))
     {
       // An action is performed: send the signal back to the application
+      if ((*it)->_menuItem)
+      {
+        dbusmenu_menuitem_handle_event ((*it)->_menuItem, "clicked", NULL, 0);
+      }
     }
   }
 
@@ -478,6 +432,10 @@ void QuicklistView::CheckAndEmitItemSignal (int x, int y)
     if (geo.IsPointInside (x, y))
     {
       // An action is performed: send the signal back to the application
+      if ((*it)->_menuItem)
+      {
+        dbusmenu_menuitem_handle_event ((*it)->_menuItem, "clicked", NULL, 0);
+      }
     }
   } 
 }
@@ -618,6 +576,17 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 
 void QuicklistView::RemoveAllMenuItem ()
 {
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
   _item_list.clear ();
   _default_item_list.clear ();
   
