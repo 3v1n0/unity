@@ -289,11 +289,16 @@ BamfLauncherIcon::GetMenus ()
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Pin To Launcher");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_int (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
     
     _menu_items["Pin"] = menu_item;
   }
   
+  int checked = !bamf_view_is_sticky (BAMF_VIEW (m_App)) ? 
+                 DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
+  
+  dbusmenu_menuitem_property_set_int (_menu_items["Pin"], 
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, 
+                                      checked);
   result.push_back (_menu_items["Pin"]);
   
   if (_menu_items.find ("Quit") == _menu_items.end ())

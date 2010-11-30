@@ -198,7 +198,7 @@ QuicklistMenuItem::GetActive ()
   if (_menuItem == 0)
     return false;
   return dbusmenu_menuitem_property_get_bool (_menuItem,
-                                              DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
+                                              DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
 }
 
 void QuicklistMenuItem::ItemActivated ()
@@ -302,6 +302,10 @@ void QuicklistMenuItem::RecvMouseDown (int x, int y, unsigned long button_flags,
 void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   sigMouseReleased.emit (this);
+  if (_menuItem)
+  {
+    dbusmenu_menuitem_handle_event (_menuItem, "clicked", NULL, 0);
+  }
 }
 
 void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
