@@ -24,9 +24,10 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
-  SetMinimumHeight (3);
-  SetBaseSize (64, 3);
-  _normalTexture = NULL;
+  SetMinimumHeight (5);
+  SetBaseSize (64, 5);
+  //_normalTexture = NULL;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -37,9 +38,10 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
-  SetMinimumHeight (3);
-  SetBaseSize (64, 3);
-  _normalTexture = NULL;
+  SetMinimumHeight (5);
+  SetBaseSize (64, 5);
+  //_normalTexture = NULL;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -53,7 +55,7 @@ QuicklistMenuItemSeparator::PreLayoutManagement ()
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
 
-  if((_normalTexture == 0) )
+  if((_normalTexture[0] == 0) )
   {
     UpdateTexture ();
   }
@@ -102,6 +104,10 @@ void
 QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                                   bool                 forceDraw)
 {
+  // Check if the texture have been computed. If they haven't, exit the function.
+  if (_normalTexture[0] == 0)
+    return;  
+
   nux::Geometry base = GetGeometry ();
 
   gfxContext.PushClippingRectangle (base);
@@ -118,7 +124,7 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                             base.y,
                             base.width,
                             base.height,
-                            _normalTexture->GetDeviceTexture(),
+                            _normalTexture[0]->GetDeviceTexture(),
                             texxform,
                             _color);
 
@@ -154,25 +160,25 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   cairo_paint (cr);
   cairo_set_source_rgba (cr, _color.R (), _color.G (), _color.B (), _color.A ());
   cairo_set_line_width (cr, 1.0f);
-  cairo_move_to (cr, 0.5f, 1.5f);
-  cairo_line_to (cr, width - 0.5f, 1.5f);
+  cairo_move_to (cr, 0.5f, 2.5f);
+  cairo_line_to (cr, width - 0.5f, 2.5f);
   cairo_stroke (cr);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
-  if (_normalTexture)
-    _normalTexture->UnReference ();
+  if (_normalTexture[0])
+    _normalTexture[0]->UnReference ();
 
-  _normalTexture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _normalTexture->Update (bitmap);
+  _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture[0]->Update (bitmap);
 
   delete _cairoGraphics;
 }
 
 int QuicklistMenuItemSeparator::CairoSurfaceWidth ()
 {
-  if (_normalTexture)
-    return _normalTexture->GetWidth ();
+  if (_normalTexture[0])
+    return _normalTexture[0]->GetWidth ();
   
   return 0;
 }

@@ -30,6 +30,10 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#define ITEM_INDENT_ABS        16
+#define ITEM_CORNER_RADIUS_ABS 3
+#define ITEM_MARGIN            4
+
 typedef enum
 {
   MENUITEM_TYPE_UNKNOWN    = 0,
@@ -109,8 +113,9 @@ class QuicklistMenuItem : public nux::View
     
     sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
     sigc::signal<void, QuicklistMenuItem*> sigMouseLeave;
-    sigc::signal<void, QuicklistMenuItem*> sigMouseReleased;
-    sigc::signal<void, QuicklistMenuItem*> sigMouseClick;
+    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseReleased;
+    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseClick;
+    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
     
     DbusmenuMenuitem* _menuItem;
     QuicklistMenuItemType _item_type;

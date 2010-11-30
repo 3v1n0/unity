@@ -81,7 +81,7 @@ public:
   
   int GetNumItems ();
   QuicklistMenuItem* GetNthItems (int index);
-  QuicklistMenuItemType GetNthType  (int index);
+  QuicklistMenuItemType GetNthType (int index);
   std::list<QuicklistMenuItem*> GetChildren ();
   
   void TestMenuItems (DbusmenuMenuitem* root);
@@ -89,11 +89,12 @@ public:
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* item);
   void RecvCairoTextColorChanged (QuicklistMenuItem* item);
-  void RecvItemMouseClick (QuicklistMenuItem* item);
-  void RecvItemMouseRelease (QuicklistMenuItem* item);
+  void RecvItemMouseClick (QuicklistMenuItem* item, int x, int y);
+  void RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y);
   void RecvItemMouseEnter (QuicklistMenuItem* item);
   void RecvItemMouseLeave (QuicklistMenuItem* item);
-  
+  void RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y);
+
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -113,6 +114,11 @@ private:
 
   //! A convenience function to fill in the default quicklist with some random items.
   void FillInDefaultItems ();
+  
+  void CancelItemsPrelightStatus ();
+  
+  //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
+  void CheckAndEmitItemSignal (int x, int y);
   
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;

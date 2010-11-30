@@ -101,6 +101,7 @@ private:
     float         alpha;
     float         backlight_intensity;
     float         glow_intensity;
+    float         shimmer_progress;
     bool          running_arrow;
     bool          active_arrow;
     bool          skip;
@@ -126,6 +127,7 @@ private:
   float AutohideProgress ();
   float IconPresentProgress     (LauncherIcon *icon, struct timespec current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec current);
+  float IconShimmerProgress     (LauncherIcon *icon, struct timespec current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec current);
@@ -135,6 +137,8 @@ private:
   void SetHidden  (bool hidden);
   
   void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
+  
+  void SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg);
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
                    std::list<Launcher::RenderArg> &shelf_args, 
                    nux::Geometry &box_geo, nux::Geometry &shelf_geo);

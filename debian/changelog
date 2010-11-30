@@ -1,9 +1,11 @@
-unity (3.2.0-0ubuntu4) UNRELEASED; urgency=low
+unity (3.2.2-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/control:
     - add libglib2.0-bin and python dep for the migration script
+    - build again latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 29 Nov 2010 13:49:05 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 30 Nov 2010 17:02:52 +0100
 
 unity (3.2.0-0ubuntu3) natty; urgency=low
 

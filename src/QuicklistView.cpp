@@ -71,8 +71,6 @@ QuicklistView::QuicklistView ()
   _vlayout->AddLayout (_item_layout, 0);
   
   _vlayout->AddLayout (_default_item_layout, 0);
-  
-  FillInDefaultItems ();
 
   _vlayout->AddLayout (_bottom_space, 0);
 
@@ -117,52 +115,6 @@ QuicklistView::~QuicklistView ()
   
   _default_item_list.clear ();
   _item_list.clear ();
-}
-
-// This function is for testing. It will go eventually
-void QuicklistView::FillInDefaultItems ()
-{
-  QuicklistMenuItemCheckmark* item = 0;
-  DbusmenuMenuitem* dbus_item = 0;
-  // Enabled and Active Checkmark 
-  dbus_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark 0");
-  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-
-  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
-
-  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
-  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
-  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
-  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
-  
-  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
-  _default_item_list.push_back (item);
-  item->Reference();
-
-  // Disabled and Active Checkmark 
-  dbus_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-  dbusmenu_menuitem_property_set (dbus_item, DBUSMENU_MENUITEM_PROP_LABEL, "check mark disabled");
-  dbusmenu_menuitem_property_set_bool (dbus_item, DBUSMENU_MENUITEM_PROP_ENABLED, false);
-  dbusmenu_menuitem_property_set_int (dbus_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-
-  item = new QuicklistMenuItemCheckmark (dbus_item, NUX_TRACKER_LOCATION);
-
-  item->sigTextChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextChanged));
-  item->sigColorChanged.connect (sigc::mem_fun (this, &QuicklistView::RecvCairoTextColorChanged));
-  item->sigMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseClick));
-  item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
-  item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
-  item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
-  
-  _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
-  _default_item_list.push_back (item);
-  item->Reference();
 }
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
@@ -214,8 +166,12 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
   // This is meant to be easier since the quicklist has a atypical way of working.
   if (m_layout)
+  {
     ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
-
+  }
+  
+  // The quicklist itself does not process the evvent. Instead we do some analysis of the event 
+  // to detect the user action and perform the correct operation.
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
     if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
@@ -227,6 +183,7 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
       _mouse_down = false;
       if (IsVisible ())
       {
+        CancelItemsPrelightStatus ();
         CaptureMouseDownAnyWhereElse (false);
         ForceStopFocus (1, 1);
         UnGrabPointer ();
@@ -238,10 +195,10 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   }
   else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
   {
-    
     _mouse_down = false;
     if (IsVisible ())
     {
+      CancelItemsPrelightStatus ();
       CaptureMouseDownAnyWhereElse (false);
       ForceStopFocus (1, 1);
       UnGrabPointer ();
@@ -251,11 +208,7 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     return nux::eMouseEventSolved;
   }
   
-  // PostProcessEvent2 must always have its last parameter set to 0
-  // because the m_BackgroundArea is the real physical limit of the window.
-  // So the previous test about IsPointInside do not prevail over m_BackgroundArea
-  // testing the event by itself.
-  //ret = PostProcessEvent2 (ievent, ret, 0);
+  
   return ret;    
 }
 
@@ -435,11 +388,15 @@ void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
   NeedRedraw ();
 }
 
-void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
+void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
   if (IsVisible ())
   {
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
+
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -448,17 +405,109 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
   }
 }
 
-void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item)
+void QuicklistView::CheckAndEmitItemSignal (int x, int y)
+{ 
+  nux::Geometry geo;
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x, y))
+    {
+      // An action is performed: send the signal back to the application
+      if ((*it)->_menuItem)
+      {
+        dbusmenu_menuitem_handle_event ((*it)->_menuItem, "clicked", NULL, 0);
+      }
+    }
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _default_item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x, y))
+    {
+      // An action is performed: send the signal back to the application
+      if ((*it)->_menuItem)
+      {
+        dbusmenu_menuitem_handle_event ((*it)->_menuItem, "clicked", NULL, 0);
+      }
+    }
+  } 
+}
+
+void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
+  
+  
   if (IsVisible ())
   {
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
+    
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
     EnableInputWindow (false);
     ShowWindow (false);
   }  
+}
+
+void QuicklistView::CancelItemsPrelightStatus ()
+{
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    (*it)->_prelight = false;
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->_prelight = false;
+  }
+}
+
+void QuicklistView::RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y)
+{
+  nux::Geometry geo;
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x + item->GetBaseX (), y + item->GetBaseY ()))
+    {
+      (*it)->_prelight = true;
+    }
+    else
+    {
+      (*it)->_prelight = false;
+    }
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _default_item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x + item->GetBaseX (), y + item->GetBaseY ()))
+    {
+      (*it)->_prelight = true;
+    }
+    else
+    {
+      (*it)->_prelight = false;
+    }
+  }
+  
+  NeedRedraw ();
 }
 
 void QuicklistView::RecvItemMouseEnter (QuicklistMenuItem* item)
@@ -485,13 +534,15 @@ void QuicklistView::RecvMouseDown (int x, int y, unsigned long button_flags, uns
 
 void QuicklistView::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x, y);
 }
 
 void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   if (IsVisible ())
   {
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -514,6 +565,7 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 {
   if (IsVisible ())
   {
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -524,6 +576,17 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 
 void QuicklistView::RemoveAllMenuItem ()
 {
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->UnReference();
+  }
+  
   _item_list.clear ();
   _default_item_list.clear ();
   
@@ -544,6 +607,7 @@ void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
   item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
   item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
    
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
@@ -868,10 +932,10 @@ void ql_tint_dot_hl (cairo_t* cr,
     hl_size);
   cairo_pattern_add_color_stop_rgba (hl_pattern,
     0.0f,
-    1.0f,
-    1.0f,
-    1.0f,
-    0.65f);
+    rgba_hl[0],
+    rgba_hl[1],
+    rgba_hl[2],
+    rgba_hl[3]);
   cairo_pattern_add_color_stop_rgba (hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
   cairo_set_source (cr, hl_pattern);
   cairo_fill (cr);
@@ -1033,17 +1097,42 @@ void ql_compute_mask (cairo_t* cr)
 }
 
 void ql_compute_outline (cairo_t* cr,
-  gfloat   line_width,
-  gfloat*  rgba_line)
+                         gfloat   line_width,
+                         gfloat*  rgba_line,
+                         gfloat   size)
 {
+  cairo_pattern_t* pattern = NULL;
+  float            x       = 0.0f;
+  float            y       = 0.0f;
+  float            offset  = 2.5f * ANCHOR_WIDTH / size;
+
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba (cr,
+
+  pattern = cairo_pattern_create_linear (x, y, size, y);
+  cairo_pattern_add_color_stop_rgba (pattern, 0.0f,
     rgba_line[0],
     rgba_line[1],
     rgba_line[2],
     rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, offset,
+    rgba_line[0],
+    rgba_line[1],
+    rgba_line[2],
+    rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, 1.1f * offset,
+    rgba_line[0] * 0.65f,
+    rgba_line[1] * 0.65f,
+    rgba_line[2] * 0.65f,
+    rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, 1.0f,
+    rgba_line[0] * 0.65f,
+    rgba_line[1] * 0.65f,
+    rgba_line[2] * 0.65f,
+    rgba_line[3]);
+  cairo_set_source (cr, pattern);
   cairo_set_line_width (cr, line_width);
   cairo_stroke (cr);
+  cairo_pattern_destroy (pattern);
 }
 
 void ql_draw (cairo_t* cr,
@@ -1137,7 +1226,7 @@ void
   ql_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
   ql_surface_blur (surf, blur_coeff);
   ql_compute_mask (cr);
-  ql_compute_outline (cr, line_width, rgba_line);
+  ql_compute_outline (cr, line_width, rgba_line, width);
 }
 
 void ql_compute_full_mask (
@@ -1207,10 +1296,10 @@ void QuicklistView::UpdateTexture ()
   cairo_t *cr_outline = cairo_outline->GetContext ();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.80f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.15f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
+  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
+  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.75f};
+  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 //   float   anchor_width      = 10;
 //   float   anchor_height     = 18;

@@ -157,6 +157,10 @@ class UnityWindow :
 	CompWindow      *window;
 	GLWindow	*gWindow;
 	
+	bool
+	glPaint (const GLWindowPaintAttrib &, const GLMatrix &,
+           const CompRegion &, unsigned int);
+	
 	/* basic window draw function */
 	bool 
 	glDraw (const GLMatrix 	&matrix,

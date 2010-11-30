@@ -57,17 +57,23 @@ struct _UBusServer
   UBusServerPrivate *priv;
 };
 
-typedef void (*UBusCallback) (GVariant *data, gpointer *user_data);
+typedef void (*UBusCallback)                 (GVariant     *data,
+                                              gpointer      user_data);
 
-GType ubus_server_get_type (void) G_GNUC_CONST;
-UBusServer *ubus_server_get_default ();
-void   ubus_server_prime_context (UBusServer* server, GMainContext *context);
-gulong ubus_server_register_interest (UBusServer* server, const gchar *message,
-                                      UBusCallback callback, gpointer user_data);
-void   ubus_server_send_message (UBusServer* server, const gchar *message,
-                                 GVariant *data);
-void   ubus_server_unregister_interest (UBusServer* server, gulong handle);
-void   ubus_server_force_message_pump (UBusServer* server);
+GType        ubus_server_get_type            (void) G_GNUC_CONST;
+UBusServer*  ubus_server_get_default         ();
+void         ubus_server_prime_context       (UBusServer   *server,
+                                              GMainContext *context);
+guint        ubus_server_register_interest   (UBusServer   *server,
+                                              const gchar  *message,
+                                              UBusCallback  callback,
+                                              gpointer      user_data);
+void         ubus_server_send_message        (UBusServer   *server,
+                                              const gchar  *message,
+                                              GVariant     *data);
+void         ubus_server_unregister_interest (UBusServer   *server,
+                                              guint handle);
+void         ubus_server_force_message_pump  (UBusServer   *server);
 
 G_END_DECLS
 
