@@ -22,9 +22,6 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemRadio.h"
 
-#define ITEM_INDENT_ABS        20.0f
-#define ITEM_CORNER_RADIUS_ABS 4.0f
-
 static double
 _align (double val)
 {
@@ -69,8 +66,12 @@ QuicklistMenuItemRadio::Initialize (DbusmenuMenuitem* item)
   _prelightTexture[0] = NULL;
   _prelightTexture[1] = NULL;
 
-  SetMinimumSize (1, 1);
-  // make sure _dpiX and _dpiY are initialized correctly
+  int textWidth = 1;
+  int textHeight = 1;
+  GetTextExtents (textWidth, textHeight);
+  SetMinimumSize (textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                  textHeight + 2 * ITEM_MARGIN);
+
 }
 
 QuicklistMenuItemRadio::~QuicklistMenuItemRadio ()
@@ -224,7 +225,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  double x      = _align (ITEM_INDENT_ABS / 2.0f);
+  double x      = _align ((ITEM_INDENT_ABS + ITEM_MARGIN) / 2.0f);
   double y      = _align ((double) height / 2.0f);
   double radius = 3.5f;
 

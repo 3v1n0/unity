@@ -71,7 +71,7 @@ QuicklistView::QuicklistView ()
   _vlayout->AddLayout (_item_layout, 0);
   
   _vlayout->AddLayout (_default_item_layout, 0);
-  
+
   _vlayout->AddLayout (_bottom_space, 0);
 
   _hlayout->AddLayout (_left_space, 0);
@@ -932,10 +932,10 @@ void ql_tint_dot_hl (cairo_t* cr,
     hl_size);
   cairo_pattern_add_color_stop_rgba (hl_pattern,
     0.0f,
-    1.0f,
-    1.0f,
-    1.0f,
-    0.65f);
+    rgba_hl[0],
+    rgba_hl[1],
+    rgba_hl[2],
+    rgba_hl[3]);
   cairo_pattern_add_color_stop_rgba (hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
   cairo_set_source (cr, hl_pattern);
   cairo_fill (cr);
@@ -1097,17 +1097,42 @@ void ql_compute_mask (cairo_t* cr)
 }
 
 void ql_compute_outline (cairo_t* cr,
-  gfloat   line_width,
-  gfloat*  rgba_line)
+                         gfloat   line_width,
+                         gfloat*  rgba_line,
+                         gfloat   size)
 {
+  cairo_pattern_t* pattern = NULL;
+  float            x       = 0.0f;
+  float            y       = 0.0f;
+  float            offset  = 2.5f * ANCHOR_WIDTH / size;
+
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba (cr,
+
+  pattern = cairo_pattern_create_linear (x, y, size, y);
+  cairo_pattern_add_color_stop_rgba (pattern, 0.0f,
     rgba_line[0],
     rgba_line[1],
     rgba_line[2],
     rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, offset,
+    rgba_line[0],
+    rgba_line[1],
+    rgba_line[2],
+    rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, 1.1f * offset,
+    rgba_line[0] * 0.65f,
+    rgba_line[1] * 0.65f,
+    rgba_line[2] * 0.65f,
+    rgba_line[3]);
+  cairo_pattern_add_color_stop_rgba (pattern, 1.0f,
+    rgba_line[0] * 0.65f,
+    rgba_line[1] * 0.65f,
+    rgba_line[2] * 0.65f,
+    rgba_line[3]);
+  cairo_set_source (cr, pattern);
   cairo_set_line_width (cr, line_width);
   cairo_stroke (cr);
+  cairo_pattern_destroy (pattern);
 }
 
 void ql_draw (cairo_t* cr,
@@ -1201,7 +1226,7 @@ void
   ql_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
   ql_surface_blur (surf, blur_coeff);
   ql_compute_mask (cr);
-  ql_compute_outline (cr, line_width, rgba_line);
+  ql_compute_outline (cr, line_width, rgba_line, width);
 }
 
 void ql_compute_full_mask (
@@ -1271,10 +1296,10 @@ void QuicklistView::UpdateTexture ()
   cairo_t *cr_outline = cairo_outline->GetContext ();
 
   float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.80f};
-  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.15f};
-  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.20f};
+  float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.65f};
+  float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.10f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
-  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.75f};
+  float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.65f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
 //   float   anchor_width      = 10;
 //   float   anchor_height     = 18;

@@ -24,8 +24,10 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
-  SetMinimumHeight (3);
-  SetBaseSize (64, 3);
+  SetMinimumHeight (5);
+  SetBaseSize (64, 5);
+  //_normalTexture = NULL;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -36,8 +38,10 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
-  SetMinimumHeight (3);
-  SetBaseSize (64, 3);
+  SetMinimumHeight (5);
+  SetBaseSize (64, 5);
+  //_normalTexture = NULL;
+  _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -156,8 +160,8 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   cairo_paint (cr);
   cairo_set_source_rgba (cr, _color.R (), _color.G (), _color.B (), _color.A ());
   cairo_set_line_width (cr, 1.0f);
-  cairo_move_to (cr, 0.5f, 1.5f);
-  cairo_line_to (cr, width - 0.5f, 1.5f);
+  cairo_move_to (cr, 0.5f, 2.5f);
+  cairo_line_to (cr, width - 0.5f, 2.5f);
   cairo_stroke (cr);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
