@@ -30,6 +30,8 @@ public:
   PanelHomeButton ();
   ~PanelHomeButton ();
 
+  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+
 private:
   void Refresh ();
 
