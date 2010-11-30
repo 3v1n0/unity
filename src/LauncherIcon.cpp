@@ -315,7 +315,7 @@ void LauncherIcon::RecvMouseDown (int button)
     int tip_y = _center.y;
     _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
 
-    _quicklist->EnableInputWindow (true);
+    _quicklist->EnableInputWindow (true, 1);
     _quicklist->GrabPointer ();
 
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
