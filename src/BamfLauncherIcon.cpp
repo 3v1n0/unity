@@ -22,6 +22,7 @@
 #include "BamfLauncherIcon.h"
 #include "Launcher.h"
 #include "PluginAdapter.h"
+#include "FavoriteStore.h"
 
 #include <gio/gdesktopappinfo.h>
 
@@ -65,6 +66,14 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnUrgentChanged,      this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnRunningChanged,     this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnActiveChanged,      this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnUserVisibleChanged, this);
+  g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
+
   g_object_unref (m_App);
 }
 
@@ -284,7 +293,26 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
 void
 BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
 {
-  printf ("PIN\n");
+  BamfView *view = BAMF_VIEW (self->m_App);
+  bool sticky = bamf_view_is_sticky (view);
+  const gchar *desktop_file = bamf_application_get_desktop_file (self->m_App);
+  
+  if (sticky)
+  {
+    bamf_view_set_sticky (view, false);
+    if (bamf_view_is_closed (view))
+      self->Remove ();
+    
+    if (desktop_file && strlen (desktop_file) > 0)
+      FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+  }
+  else
+  {
+    bamf_view_set_sticky (view, true);
+    
+    if (desktop_file && strlen (desktop_file) > 0)
+      FavoriteStore::GetDefault ()->AddFavorite (desktop_file, self->SortPriority ());
+  }
 }
 
 std::list<DbusmenuMenuitem *>
