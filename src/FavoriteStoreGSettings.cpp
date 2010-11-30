@@ -173,7 +173,7 @@ FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
   int     n_total_favs;
   GSList *f;
   gint    i = 0;
-
+  
   g_return_if_fail (desktop_path);
   g_return_if_fail (position < (gint)g_slist_length (m_favorites));
   

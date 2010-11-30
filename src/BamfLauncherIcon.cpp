@@ -311,7 +311,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
     bamf_view_set_sticky (view, true);
     
     if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->AddFavorite (desktop_file, self->SortPriority ());
+      FavoriteStore::GetDefault ()->AddFavorite (desktop_file, -1); //self->SortPriority ());
   }
 }
 
