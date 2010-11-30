@@ -52,24 +52,28 @@ void
 LauncherController::PresentIconOwningWindow (Window window)
 {
   LauncherModel::iterator it;
+  LauncherIcon *owner = 0;
   
   for (it = _model->begin (); it != _model->end (); it++)
   {
     if ((*it)->IconOwnsWindow (window))
     {
-      (*it)->Present (2, 600);
-      return;
+      owner = *it;
+      break;
     }
   }
   
-  for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
+  for (it = _model->shelf_begin (); !owner && it != _model->shelf_end (); it++)
   {
     if ((*it)->IconOwnsWindow (window))
     {
-      (*it)->Present (2, 600);
-      return;
+      owner = *it;
+      break;
     }
   }
+  
+  owner->Present (2, 600);
+  owner->UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
 }
 
 void
@@ -119,6 +123,21 @@ LauncherController::RegisterIcon (LauncherIcon *icon)
 {
   _model->AddIcon (icon);
   _model->Sort (&LauncherController::CompareIcons);
+  
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    (*it)->SetSortPriority (i);
+    i++;
+  }
+  
+  for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
+  {
+    (*it)->SetSortPriority (i);
+    i++;
+  }
 }
 
 /* static private */

@@ -230,6 +230,22 @@ UnityScreen::GetName ()
     return "Unity";
 }
 
+bool
+UnityWindow::glPaint (const GLWindowPaintAttrib &attrib, const GLMatrix &matrix,
+	 const CompRegion &region, unsigned int mask)
+{
+  const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
+  GLWindowPaintAttrib new_tribs (attrib);
+
+  if (std::find (xwns.begin (), xwns.end (), window->id ()) != xwns.end ())
+  {
+    new_tribs.opacity = 0;
+  }
+
+
+  return gWindow->glPaint (new_tribs, matrix, region, mask);
+}
+
 /* handle window painting in an opengl context
  *
  * we want to paint underneath other windows here,

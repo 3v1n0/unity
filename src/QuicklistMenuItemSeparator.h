@@ -51,8 +51,6 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
     void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
 
     void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
-    
-    nux::BaseTexture*   _normalTexture;
 
     virtual void UpdateTexture ();
     
