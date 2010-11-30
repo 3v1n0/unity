@@ -23,9 +23,6 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemLabel.h"
 
-#define ITEM_INDENT_ABS        20
-#define ITEM_CORNER_RADIUS_ABS 4
-
 QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
                                                         NUX_FILE_LINE_DECL) :
 QuicklistMenuItem (item,
@@ -57,7 +54,8 @@ QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
   int textWidth = 1;
   int textHeight = 1;
   GetTextExtents (textWidth, textHeight);
-  SetMinimumSize (textWidth + ITEM_INDENT_ABS, textHeight);
+  SetMinimumSize (textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                  textHeight + 2 * ITEM_MARGIN);
 }
 
 QuicklistMenuItemLabel::~QuicklistMenuItemLabel ()
