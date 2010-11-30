@@ -64,6 +64,9 @@ private:
     static void OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data);
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
+    
+    static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 
 #endif // BAMFLAUNCHERICON_H
