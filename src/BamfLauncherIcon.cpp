@@ -342,6 +342,8 @@ BamfLauncherIcon::GetMenus ()
   if (_menu_items.find ("Pin") == _menu_items.end ())
   {
     menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Pin To Launcher");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
@@ -362,6 +364,8 @@ BamfLauncherIcon::GetMenus ()
   if (_menu_items.find ("Quit") == _menu_items.end ())
   {
     menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     
