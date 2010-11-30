@@ -41,7 +41,7 @@ public:
     
 protected:
     void OnMouseClick (int button);
-    std::list<DbusmenuClient *> GetMenus ();
+    std::list<DbusmenuMenuitem *> GetMenus ();
     
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
@@ -51,8 +51,11 @@ protected:
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
+    std::map<std::string, DbusmenuClient *> _menu_clients;
+    std::map<std::string, DbusmenuMenuitem *> _menu_items;
     
     void EnsureWindowState ();
+    void UpdateMenus ();
     
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
