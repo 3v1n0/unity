@@ -72,8 +72,6 @@ QuicklistView::QuicklistView ()
   
   _vlayout->AddLayout (_default_item_layout, 0);
 
-  //FillInDefaultItems ();  
-
   _vlayout->AddLayout (_bottom_space, 0);
 
   _hlayout->AddLayout (_left_space, 0);
