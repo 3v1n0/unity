@@ -221,7 +221,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  double x      = _align (ITEM_INDENT_ABS / 2.0f);
+  double x      = _align ((ITEM_INDENT_ABS + ITEM_MARGIN) / 2.0f);
   double y      = _align ((double) height / 2.0f);
   double radius = 3.5f;
 
