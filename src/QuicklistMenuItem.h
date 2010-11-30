@@ -31,7 +31,7 @@
 #include <pango/pangocairo.h>
 
 #define ITEM_INDENT_ABS        16
-#define ITEM_CORNER_RADIUS_ABS 4
+#define ITEM_CORNER_RADIUS_ABS 3
 #define ITEM_MARGIN            4
 
 typedef enum
