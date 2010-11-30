@@ -30,6 +30,10 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#define ITEM_INDENT_ABS        16
+#define ITEM_CORNER_RADIUS_ABS 4
+#define ITEM_MARGIN            4
+
 typedef enum
 {
   MENUITEM_TYPE_UNKNOWN    = 0,

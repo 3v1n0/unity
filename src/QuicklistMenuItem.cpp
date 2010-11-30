@@ -25,9 +25,6 @@
 
 #include <X11/Xlib.h>
 
-#define ITEM_INDENT_ABS        20
-#define ITEM_CORNER_RADIUS_ABS 4
-
 static void
 OnPropertyChanged (gchar*             property,
                    GValue*            value,
@@ -432,7 +429,9 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
 
   pango_layout_context_changed (layout);
 
-  cairo_move_to (cr, ITEM_INDENT_ABS, (float) (height - textHeight) / 2.0f);
+  cairo_move_to (cr,
+                 2 * ITEM_MARGIN + ITEM_INDENT_ABS,
+                 (float) (height - textHeight) / 2.0f);
   pango_cairo_show_layout (cr, layout);
 
   // clean up

@@ -23,9 +23,6 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemCheckmark.h"
 
-#define ITEM_INDENT_ABS        20
-#define ITEM_CORNER_RADIUS_ABS 4
-
 static double
 _align (double val)
 {
@@ -68,7 +65,8 @@ QuicklistMenuItemCheckmark::Initialize (DbusmenuMenuitem* item)
   int textWidth = 1;
   int textHeight = 1;
   GetTextExtents (textWidth, textHeight);
-  SetMinimumSize (textWidth + ITEM_INDENT_ABS, textHeight);
+  SetMinimumSize (textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                  textHeight + 2 * ITEM_MARGIN);
 }
 
 QuicklistMenuItemCheckmark::~QuicklistMenuItemCheckmark ()
@@ -253,8 +251,8 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_save (cr);
   cairo_translate (cr,
-                   _align ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
-                   _align (((double) height - 16.0f)/ 2.0f));
+                   _align ((ITEM_INDENT_ABS - 16.0f + ITEM_MARGIN) / 2.0f),
+                   _align (((double) height - 16.0f) / 2.0f));
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -313,7 +311,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
 
-  // draw active/prelight, unchecked version
+  // draw active/prelight, checked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
@@ -335,7 +333,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_save (cr);
   cairo_translate (cr,
-                   _align ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
+                   _align ((ITEM_INDENT_ABS - 16.0f + ITEM_MARGIN) / 2.0f),
                    _align (((double) height - 16.0f) / 2.0f));
 
   cairo_translate (cr, 3.0f, 1.0f);
