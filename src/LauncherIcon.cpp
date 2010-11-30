@@ -278,6 +278,9 @@ void LauncherIcon::RecvMouseDown (int button)
     _quicklist->RemoveAllMenuItem ();
     
     std::list<DbusmenuMenuitem *> menus = Menus ();
+    if (menus.empty ())
+      return;
+
     std::list<DbusmenuMenuitem *>::iterator it;
     for (it = menus.begin (); it != menus.end (); it++)
     {
