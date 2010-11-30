@@ -1106,10 +1106,6 @@ void ql_compute_outline (cairo_t* cr,
   float            y       = 0.0f;
   float            offset  = 2.5f * ANCHOR_WIDTH / size;
 
-  std::cout << "offset: " << offset << std::endl;
-  std::cout << "offset * 1.1: " << offset * 1.1f << std::endl;
-  std::cout << "size: " << size << std::endl;
-
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
   pattern = cairo_pattern_create_linear (x, y, size, y);
