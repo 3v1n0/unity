@@ -109,8 +109,9 @@ class QuicklistMenuItem : public nux::View
     
     sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
     sigc::signal<void, QuicklistMenuItem*> sigMouseLeave;
-    sigc::signal<void, QuicklistMenuItem*> sigMouseReleased;
+    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseReleased;
     sigc::signal<void, QuicklistMenuItem*> sigMouseClick;
+    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
     
     DbusmenuMenuitem* _menuItem;
     QuicklistMenuItemType _item_type;
