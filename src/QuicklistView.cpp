@@ -139,6 +139,7 @@ void QuicklistView::FillInDefaultItems ()
   item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
   item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
   
   _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _default_item_list.push_back (item);
@@ -159,6 +160,7 @@ void QuicklistView::FillInDefaultItems ()
   item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
   item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
   
   _default_item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _default_item_list.push_back (item);
@@ -214,8 +216,12 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   // We choose to test the quicklist items ourselves instead of processing them as it is usual in nux.
   // This is meant to be easier since the quicklist has a atypical way of working.
   if (m_layout)
+  {
     ret = m_layout->ProcessEvent (window_event, ret, ProcEvInfo);
-
+  }
+  
+  // The quicklist itself does not process the evvent. Instead we do some analysis of the event 
+  // to detect the user action and perform the correct operation.
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
     if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
@@ -227,6 +233,7 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
       _mouse_down = false;
       if (IsVisible ())
       {
+        CancelItemsPrelightStatus ();
         CaptureMouseDownAnyWhereElse (false);
         ForceStopFocus (1, 1);
         UnGrabPointer ();
@@ -238,10 +245,10 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
   }
   else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
   {
-    
     _mouse_down = false;
     if (IsVisible ())
     {
+      CancelItemsPrelightStatus ();
       CaptureMouseDownAnyWhereElse (false);
       ForceStopFocus (1, 1);
       UnGrabPointer ();
@@ -251,11 +258,7 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     return nux::eMouseEventSolved;
   }
   
-  // PostProcessEvent2 must always have its last parameter set to 0
-  // because the m_BackgroundArea is the real physical limit of the window.
-  // So the previous test about IsPointInside do not prevail over m_BackgroundArea
-  // testing the event by itself.
-  //ret = PostProcessEvent2 (ievent, ret, 0);
+  
   return ret;    
 }
 
@@ -440,6 +443,7 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
   _mouse_down = false;
   if (IsVisible ())
   {
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -448,17 +452,101 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
   }
 }
 
-void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item)
+void QuicklistView::CheckAndEmitItemSignal (int x, int y)
+{
+  nux::Geometry geo;
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x, y))
+    {
+      // An action is performed: send the signal back to the application
+    }
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _default_item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x, y))
+    {
+      // An action is performed: send the signal back to the application
+    }
+  } 
+}
+
+void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
+  
+  
   if (IsVisible ())
   {
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
+    
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
     EnableInputWindow (false);
     ShowWindow (false);
   }  
+}
+
+void QuicklistView::CancelItemsPrelightStatus ()
+{
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    (*it)->_prelight = false;
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    (*it)->_prelight = false;
+  }
+}
+
+void QuicklistView::RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y)
+{
+  nux::Geometry geo;
+  std::list<QuicklistMenuItem*>::iterator it;
+  for (it = _item_list.begin(); it != _item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x + item->GetBaseX (), y + item->GetBaseY ()))
+    {
+      (*it)->_prelight = true;
+    }
+    else
+    {
+      (*it)->_prelight = false;
+    }
+  }
+
+  for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
+  {
+    geo = (*it)->GetGeometry ();
+    geo.width = _default_item_layout->GetBaseWidth ();
+    
+    if (geo.IsPointInside (x + item->GetBaseX (), y + item->GetBaseY ()))
+    {
+      (*it)->_prelight = true;
+    }
+    else
+    {
+      (*it)->_prelight = false;
+    }
+  }
+  
+  NeedRedraw ();
 }
 
 void QuicklistView::RecvItemMouseEnter (QuicklistMenuItem* item)
@@ -485,13 +573,15 @@ void QuicklistView::RecvMouseDown (int x, int y, unsigned long button_flags, uns
 
 void QuicklistView::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x, y);
 }
 
 void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   if (IsVisible ())
   {
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -514,6 +604,7 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 {
   if (IsVisible ())
   {
+    CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
@@ -544,6 +635,7 @@ void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
   item->sigMouseReleased.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseRelease));
   item->sigMouseEnter.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseEnter));
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
+  item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
    
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);

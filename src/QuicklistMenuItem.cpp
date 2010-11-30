@@ -301,7 +301,7 @@ void QuicklistMenuItem::RecvMouseDown (int x, int y, unsigned long button_flags,
 
 void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  sigMouseReleased.emit (this);
+  sigMouseReleased.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -316,12 +316,12 @@ void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags
 
 void QuicklistMenuItem::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  
+  //printf ("[QuicklistMenuItem::RecvMouseMove]\n");
 }
 
 void QuicklistMenuItem::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  
+    sigMouseDrag.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
