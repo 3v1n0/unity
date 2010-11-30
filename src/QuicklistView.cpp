@@ -71,8 +71,8 @@ QuicklistView::QuicklistView ()
   _vlayout->AddLayout (_item_layout, 0);
   
   _vlayout->AddLayout (_default_item_layout, 0);
-  
-  FillInDefaultItems ();
+
+  //FillInDefaultItems ();  
 
   _vlayout->AddLayout (_bottom_space, 0);
 
@@ -1040,6 +1040,11 @@ void ql_compute_outline (cairo_t* cr,
   cairo_pattern_t* pattern = NULL;
   float            x       = 0.0f;
   float            y       = 0.0f;
+  float            offset  = 2.5f * ANCHOR_WIDTH / size;
+
+  std::cout << "offset: " << offset << std::endl;
+  std::cout << "offset * 1.1: " << offset * 1.1f << std::endl;
+  std::cout << "size: " << size << std::endl;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
@@ -1049,12 +1054,12 @@ void ql_compute_outline (cairo_t* cr,
     rgba_line[1],
     rgba_line[2],
     rgba_line[3]);
-  cairo_pattern_add_color_stop_rgba (pattern, 0.1f,
+  cairo_pattern_add_color_stop_rgba (pattern, offset,
     rgba_line[0],
     rgba_line[1],
     rgba_line[2],
     rgba_line[3]);
-  cairo_pattern_add_color_stop_rgba (pattern, 0.11f,
+  cairo_pattern_add_color_stop_rgba (pattern, 1.1f * offset,
     rgba_line[0] * 0.65f,
     rgba_line[1] * 0.65f,
     rgba_line[2] * 0.65f,
