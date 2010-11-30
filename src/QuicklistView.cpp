@@ -438,11 +438,14 @@ void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
   NeedRedraw ();
 }
 
-void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
+void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
   if (IsVisible ())
   {
+    // Check if the mouse was released over an item and emit the signal
+    CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
+
     CancelItemsPrelightStatus ();
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
@@ -453,7 +456,7 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item)
 }
 
 void QuicklistView::CheckAndEmitItemSignal (int x, int y)
-{
+{ 
   nux::Geometry geo;
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)

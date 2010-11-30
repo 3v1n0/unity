@@ -308,10 +308,9 @@ void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags
 {
   if (!GetEnabled ())
   {
-    sigMouseClick.emit (this);
     return;
   }
-  sigMouseClick.emit (this);
+  sigMouseClick.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)

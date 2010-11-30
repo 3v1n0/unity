@@ -89,7 +89,7 @@ public:
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* item);
   void RecvCairoTextColorChanged (QuicklistMenuItem* item);
-  void RecvItemMouseClick (QuicklistMenuItem* item);
+  void RecvItemMouseClick (QuicklistMenuItem* item, int x, int y);
   void RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y);
   void RecvItemMouseEnter (QuicklistMenuItem* item);
   void RecvItemMouseLeave (QuicklistMenuItem* item);
