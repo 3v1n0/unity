@@ -112,6 +112,28 @@ PluginAdapter::InitiateScale (std::string *match)
 }
     
 void 
+PluginAdapter::TerminateScale ()
+{
+    if (!m_ScaleAction)
+        return;
+
+    CompOption::Value value;
+    CompOption::Type  type;
+    CompOption::Vector argument;
+    char             *name;
+
+    name = (char *) "root";
+    type = CompOption::TypeInt;
+    value.set ((int) m_Screen->root ());
+    
+    CompOption arg = CompOption (name, type);
+    arg.set (value);
+    argument.push_back (arg);
+    
+    m_ScaleAction->terminate () (m_ScaleAction, 0, argument);
+}
+
+void 
 PluginAdapter::InitiateExpo ()
 {
     if (!m_ExpoAction)

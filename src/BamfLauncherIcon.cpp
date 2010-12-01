@@ -127,6 +127,9 @@ BamfLauncherIcon::OnMouseClick (int button)
     return;
   }
   
+  // Cancel any ongoing scale
+  PluginAdapter::Default ()->TerminateScale ();
+
   if (active)
   {
     std::list<Window> windowList;

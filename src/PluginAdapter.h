@@ -40,6 +40,8 @@ public:
     void SetExpoAction (CompAction *expo);
     
     void InitiateScale (std::string *match);
+
+    void TerminateScale ();
     
     void InitiateExpo ();
     
