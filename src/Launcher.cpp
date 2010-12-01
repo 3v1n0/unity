@@ -564,6 +564,15 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, Rend
     arg.glow_intensity = urgent_progress;
 }
 
+int Launcher::DragLimiter (int x)
+{
+  int result = (int) ((1 - std::pow (159.0 / 160,  std::abs (x))) * 160);
+  
+  if (x >= 0)
+    return result;
+  return -result;
+}
+
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
                            std::list<Launcher::RenderArg> &shelf_args, 
                            nux::Geometry &box_geo, nux::Geometry &shelf_geo)
@@ -629,13 +638,17 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         // logically dnd exit only restores to the clamped ranges
         // hover_progress restores to 0
+        float max = 0.0f;
+        float min = MIN (0.0f, launcher_height - sum);
+        
+        if (_dnd_delta > max)
+            delta_y = max + DragLimiter (delta_y - max);
+        else if (_dnd_delta < min)
+            delta_y = min + DragLimiter (delta_y - min);
         
         if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
             float dnd_progress = DnDExitProgress ();
-        
-            float max = 0.0f;
-            float min = MIN (0.0f, launcher_height - sum);
 
             if (_dnd_delta > max)
                 delta_y = max + (delta_y - max) * dnd_progress;
@@ -644,7 +657,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
             if (dnd_progress == 0.0f)
                 _dnd_delta = (int) delta_y;
-        }    
+        } 
 
         delta_y *= hover_progress;
         center.y += delta_y;
@@ -1324,6 +1337,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     
     /* draw shelf */
+
     nux::Color shelf_color = nux::Color (0xCC000000);
     nux::Color shelf_zero = nux::Color (0x00000000);
     int shelf_shadow_height = 35;

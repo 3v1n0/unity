@@ -137,6 +137,7 @@ private:
   void SetHidden  (bool hidden);
   
   void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
+  int  DragLimiter (int x);
   
   void SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg);
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
