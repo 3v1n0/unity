@@ -18,7 +18,7 @@
 
 #include "IntrospectionDBusInterface.h"
 
-#define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity.Debug"
+#define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
 
 void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
 					 const gchar*, const gchar*, GVariant*,
