@@ -55,7 +55,12 @@ private:
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     
     void EnsureWindowState ();
+    
     void UpdateMenus ();
+    
+    void OpenInstance ();
+    
+    void EnsureMenuItemsReady ();
     
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
@@ -65,6 +70,7 @@ private:
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
     
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };

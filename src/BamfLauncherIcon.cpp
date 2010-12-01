@@ -102,6 +102,18 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
 }
 
 void
+BamfLauncherIcon::OpenInstance ()
+{
+  GDesktopAppInfo *appInfo;
+
+  appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
+  g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, NULL);
+  g_object_unref (appInfo);
+  
+  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+}
+
+void
 BamfLauncherIcon::OnMouseClick (int button)
 {
   if (button != 1)
@@ -110,7 +122,6 @@ BamfLauncherIcon::OnMouseClick (int button)
   BamfView *view;
   GList *children, *l;
   bool active, running;
-  GDesktopAppInfo *appInfo;
   
   children = bamf_view_get_children (BAMF_VIEW (m_App));
   active = bamf_view_is_active (BAMF_VIEW (m_App));
@@ -118,12 +129,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   
   if (!running)
   {
-    appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
-    g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, NULL);
-    g_object_unref (appInfo);
-    
-    UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-    
+    OpenInstance ();
     return;
   }
   
@@ -269,6 +275,12 @@ BamfLauncherIcon::UpdateMenus ()
 }
 
 void
+BamfLauncherIcon::OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
+{
+  self->OpenInstance ();
+}
+
+void
 BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
 {
   GList *children, *l;
@@ -315,12 +327,67 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
   }
 }
 
+void
+BamfLauncherIcon::EnsureMenuItemsReady ()
+{
+  DbusmenuMenuitem *menu_item;
+
+  /* Launch */
+  if (_menu_items.find ("Launch") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open New Window");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnLaunch, this);
+    
+    _menu_items["Launch"] = menu_item;
+  }
+
+  /* Pin */
+  if (_menu_items.find ("Pin") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Keep In Launcher");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
+    
+    _menu_items["Pin"] = menu_item;
+  }
+  int checked = !bamf_view_is_sticky (BAMF_VIEW (m_App)) ? 
+                 DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
+  
+  dbusmenu_menuitem_property_set_int (_menu_items["Pin"], 
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, 
+                                      checked);
+  
+  
+  /* Quit */
+  if (_menu_items.find ("Quit") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
+    
+    _menu_items["Quit"] = menu_item;
+  }
+}
+
 std::list<DbusmenuMenuitem *>
 BamfLauncherIcon::GetMenus ()
 {
   std::map<std::string, DbusmenuClient *>::iterator it;
   std::list<DbusmenuMenuitem *> result;
-  DbusmenuMenuitem *menu_item;
   
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
@@ -339,42 +406,13 @@ BamfLauncherIcon::GetMenus ()
     }
   }
   
-  if (_menu_items.find ("Pin") == _menu_items.end ())
-  {
-    menu_item = dbusmenu_menuitem_new ();
-    g_object_ref (menu_item);
-    
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Pin To Launcher");
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
-    
-    _menu_items["Pin"] = menu_item;
-  }
-  
-  int checked = !bamf_view_is_sticky (BAMF_VIEW (m_App)) ? 
-                 DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
-  
-  dbusmenu_menuitem_property_set_int (_menu_items["Pin"], 
-                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, 
-                                      checked);
+  EnsureMenuItemsReady ();
+
+  result.push_back (_menu_items["Launch"]);
   result.push_back (_menu_items["Pin"]);
   
-  if (_menu_items.find ("Quit") == _menu_items.end ())
-  {
-    menu_item = dbusmenu_menuitem_new ();
-    g_object_ref (menu_item);
-    
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
-    
-    _menu_items["Quit"] = menu_item;
-  }
-  
-  result.push_back (_menu_items["Quit"]);
+  if (bamf_view_is_running (BAMF_VIEW (m_App)))
+    result.push_back (_menu_items["Quit"]);
   
   return result;
 }
