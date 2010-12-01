@@ -35,6 +35,7 @@
 
 #include "Tooltip.h"
 #include "QuicklistView.h"
+#include "Introspectable.h"
 
 class Launcher;
 class QuicklistView;
@@ -64,7 +65,7 @@ typedef enum
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
 
-class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable, public Introspectable
 {
 public:
     LauncherIcon(Launcher* launcher);
@@ -88,7 +89,7 @@ public:
     nux::Point3 GetCenter ();
     
     int SortPriority ();
-    
+
     int RelatedWindows ();
     int PresentUrgency ();
     
@@ -103,8 +104,8 @@ public:
     nux::BaseTexture * TextureForSize (int size);
     
     std::list<DbusmenuMenuitem *> Menus ();
-    
-    
+
+
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;
@@ -115,6 +116,7 @@ public:
     sigc::signal<void, void *> hide;
     sigc::signal<void, void *> remove;
     sigc::signal<void, void *> needs_redraw;
+
 protected:
     void SetQuirk (LauncherIconQuirk quirk, bool value);
 
@@ -128,7 +130,7 @@ protected:
     
     void Present (int urgency, int length);
     void Unpresent ();
-    
+
     void SetIconType (LauncherIconType type);
     void SetSortPriority (int priority);
 
@@ -155,6 +157,9 @@ protected:
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
 
+    // Introspection
+    const gchar* GetName ();
+    void AddProperties (GVariantBuilder *builder);
 
     friend class Launcher;
     friend class LauncherController;
@@ -189,6 +194,9 @@ private:
     
     bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
     struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
+    
+    // Introspection
+    gchar *_name;
     
 };
 

@@ -31,6 +31,8 @@
 
 #include "QuicklistMenuItem.h"
 
+#include "Introspectable.h"
+
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
@@ -50,7 +52,7 @@ class SpaceLayout;
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow
+class QuicklistView : public nux::BaseWindow, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (QuicklistView, nux::BaseWindow);
 public:
@@ -85,6 +87,10 @@ public:
   std::list<QuicklistMenuItem*> GetChildren ();
   
   void TestMenuItems (DbusmenuMenuitem* root);
+  
+  // Introspection
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
   
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* item);
@@ -153,6 +159,10 @@ private:
   void UpdateTexture ();
   std::list<QuicklistMenuItem*> _item_list;
   std::list<QuicklistMenuItem*> _default_item_list;
+  
+  // Introspection
+  gchar *_name;
+
 };
 
 #endif // QUICKLISTVIEW_H
