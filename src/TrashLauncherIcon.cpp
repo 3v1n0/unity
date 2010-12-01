@@ -18,6 +18,12 @@
 
 #include "TrashLauncherIcon.h"
 
+#include <gio/gio.h>
+
+void update_trash_info_cb (GObject      *source,
+                                  GAsyncResult *res,
+                                  gpointer      data);
+
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
@@ -26,6 +32,8 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
   SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
   SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
+
+  UpdateTrashIcon();
 }
 
 TrashLauncherIcon::~TrashLauncherIcon()
@@ -45,3 +53,40 @@ TrashLauncherIcon::OnMouseClick (int button)
       g_error_free (error);
   }
 }
+
+void
+TrashLauncherIcon::UpdateTrashIcon ()
+{
+	GFile *location;
+	location = g_file_new_for_uri ("trash:///");
+
+	g_file_query_info_async (location,
+				                   G_FILE_ATTRIBUTE_STANDARD_ICON, 
+                           G_FILE_QUERY_INFO_NONE, 
+                           0, 
+                           NULL, 
+                           &TrashLauncherIcon::UpdateTrashIconCb, 
+                           this);
+
+  g_object_unref(location);
+}
+
+void
+TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
+                                      GAsyncResult *res,
+                                      gpointer      data)
+{
+  TrashLauncherIcon *self = (TrashLauncherIcon*) data;
+  GFileInfo *info;
+  GIcon *icon;
+
+	info = g_file_query_info_finish (G_FILE (source), res, NULL);
+
+  if (info != NULL) {
+    icon = g_file_info_get_icon (info);
+    self->SetIconName (g_icon_to_string (icon));
+
+    g_object_unref(info);
+  }
+}
+

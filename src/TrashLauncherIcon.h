@@ -30,6 +30,10 @@ public:
 
 protected:
   void OnMouseClick (int button);
+  void UpdateTrashIcon ();
+
+private:
+  static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
 
 };
 
