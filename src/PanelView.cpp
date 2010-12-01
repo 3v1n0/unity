@@ -47,6 +47,8 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    _home_button = new PanelHomeButton ();
    _layout->AddView (_home_button, 0, nux::eCenter, nux::eFull);
 
+   AddChild (_home_button);
+
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
@@ -66,11 +68,21 @@ PanelView::HomeButton ()
 
 const gchar* PanelView::GetName ()
 {
-	return "PanelView";
+	return "Panel";
 }
 
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
+  nux::Geometry geo = GetGeometry ();
+
+  /* First add some properties from the backend */
+  _remote->AddProperties (builder);
+
+  /* Now some props from ourselves */
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
 
 long

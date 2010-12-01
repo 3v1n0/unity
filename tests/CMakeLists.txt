@@ -76,6 +76,8 @@ add_executable (test-panel
                 ../src/IndicatorObjectProxyRemote.h
                 ../src/IndicatorObjectEntryProxyRemote.cpp
                 ../src/IndicatorObjectEntryProxyRemote.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
                 ../src/PanelHomeButton.h
                 )
