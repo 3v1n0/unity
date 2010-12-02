@@ -88,6 +88,26 @@ LauncherIcon::~LauncherIcon()
   _center_stabilize_handle = 0;
 }
 
+const gchar *
+LauncherIcon::GetName ()
+{
+  return m_TooltipText.GetTCharPtr ();
+}
+
+void
+LauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "related_windows", g_variant_new_int32 (_related_windows));
+  g_variant_builder_add (builder, "{sv}", "_icon_type", g_variant_new_int32 (_icon_type));
+  
+  g_variant_builder_add (builder, "{sv}", "_sort_priority", g_variant_new_int32 (_sort_priority));
+  g_variant_builder_add (builder, "{sv}", "_quirk_active", g_variant_new_int32 (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
+  g_variant_builder_add (builder, "{sv}", "_quirk_visible", g_variant_new_int32 (GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE)));
+  g_variant_builder_add (builder, "{sv}", "_quirk_urgent", g_variant_new_int32 (GetQuirk (LAUNCHER_ICON_QUIRK_URGENT)));
+  g_variant_builder_add (builder, "{sv}", "_quirk_running", g_variant_new_int32 (GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING)));
+  g_variant_builder_add (builder, "{sv}", "_quirk_presented", g_variant_new_int32 (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED)));
+}
+
 nux::Color LauncherIcon::BackgroundColor ()
 {
   return _background_color;

@@ -35,6 +35,7 @@
 
 #include "Tooltip.h"
 #include "QuicklistView.h"
+#include "Introspectable.h"
 
 class Launcher;
 class QuicklistView;
@@ -64,7 +65,7 @@ typedef enum
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
 
-class LauncherIcon : public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
     LauncherIcon(Launcher* launcher);
@@ -116,6 +117,9 @@ public:
     sigc::signal<void, void *> remove;
     sigc::signal<void, void *> needs_redraw;
 protected:
+    const gchar * GetName ();
+    void AddProperties (GVariantBuilder *builder);
+
     void SetQuirk (LauncherIconQuirk quirk, bool value);
 
     void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
