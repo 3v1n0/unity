@@ -25,12 +25,16 @@
 class EventFaker
 {
   public:
-    EventFaker ();
+    EventFaker (nux::WindowThread* thread);
     ~EventFaker ();
 
-    void SendClick (nux::View*         view,
-                    nux::WindowThread* thread);
+    void SendClick (nux::View* view);
 
+    void doEvent (nux::View* view,
+                  XEvent*    event);
+
+  private:
+    nux::WindowThread* _thread;
 };
 
 #endif // EVENT_FAKER_H

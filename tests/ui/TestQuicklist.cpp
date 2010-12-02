@@ -36,6 +36,10 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 300
 
+QuicklistMenuItemCheckmark* checkmark = NULL;
+QuicklistMenuItemRadio*     radio     = NULL;
+QuicklistMenuItemLabel*     label     = NULL;
+
 void
 activatedCallback (DbusmenuMenuitem* item,
                    int               time,
@@ -142,20 +146,23 @@ void
 ThreadWidgetInit (nux::NThread* thread,
                   void*         initData)
 {
-  nux::VLayout*                 layout    = NULL;
-  QuicklistView::QuicklistView* quicklist = NULL;
+  nux::VLayout*                 layout     = NULL;
+  QuicklistView::QuicklistView* quicklist  = NULL;
 
   layout = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
   quicklist = new QuicklistView::QuicklistView ();
 
-  quicklist->AddMenuItem (createCheckmarkItem ());
-  quicklist->AddMenuItem (createRadioItem ());
-  quicklist->AddMenuItem (createLabelItem ());
+  checkmark = createCheckmarkItem ();
+  quicklist->AddMenuItem (checkmark);
+  radio = createRadioItem ();
+  quicklist->AddMenuItem (radio);
+  label = createLabelItem ();
+  quicklist->AddMenuItem (label);
 
-  quicklist->ShowQuicklistWithTipAt (30, 30);
-  quicklist->EnableInputWindow (true, 1);
-  quicklist->GrabPointer ();
-  quicklist->NeedRedraw ();
+  //quicklist->ShowQuicklistWithTipAt (120, 30);
+  //quicklist->EnableInputWindow (true, 1);
+  //quicklist->GrabPointer ();
+  //quicklist->NeedRedraw ();
 
   layout->AddView (quicklist, 1, nux::eCenter, nux::eFix);
   layout->SetContentDistribution (nux::eStackCenter);
@@ -166,25 +173,32 @@ ThreadWidgetInit (nux::NThread* thread,
 int
 main (int argc, char **argv)
 {
+  EventFaker*        eventFaker = NULL;
+  nux::WindowThread* wt         = NULL;
+
   g_type_init ();
   g_thread_init (NULL);
   gtk_init (&argc, &argv);
-
   dbus_g_thread_init ();
-
   nux::NuxInitialize (0);
 
-  nux::WindowThread* wt = NULL;
   wt = nux::CreateGUIThread (TEXT ("Unity Quicklist"),
                              WIN_WIDTH,
                              WIN_HEIGHT,
                              0,
                              &ThreadWidgetInit,
-                             0);
-  
+                             eventFaker);
+
+  eventFaker = new EventFaker (wt);
+    
   wt->Run (NULL);
 
+  eventFaker->SendClick (checkmark);
+  eventFaker->SendClick (radio);
+  eventFaker->SendClick (label);
+
   delete wt;
+  delete eventFaker;
 
   return 0;
 }

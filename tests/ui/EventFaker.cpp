@@ -21,8 +21,9 @@
 #include "NuxGraphics/GLWindowManager.h"
 #include <X11/Xlib.h>
 
-EventFaker::EventFaker ()
+EventFaker::EventFaker (nux::WindowThread* thread)
 {
+  _thread = thread;
 }
 
 EventFaker::~EventFaker ()
@@ -30,21 +31,17 @@ EventFaker::~EventFaker ()
 }
 
 void
-EventFaker::SendClick (nux::View*         view,
-                       nux::WindowThread* thread)
+EventFaker::SendClick (nux::View* view)
 {
-  XEvent*  event   = NULL;
   Display* display = NULL;
   int      x       = 0;
   int      y       = 0;
 
   // sanity check
-  if (!view || !thread)
+  if (!view)
     return;
 
   display = nux::GetThreadGLWindow()->GetX11Display ();
-  XUngrabPointer (display, CurrentTime);
-  XFlush (display);
 
   // get a point inside the view
   x = view->GetBaseX () + 1;
@@ -67,7 +64,26 @@ EventFaker::SendClick (nux::View*         view,
     True
   };
 
-  // send that button-click to the thread
-  event = (XEvent*) &buttonEvent;
-  thread->ProcessForeignEvent (event, NULL);
+  // send that button-click to the "thread"
+  doEvent (view, (XEvent*) &buttonEvent);
+}
+
+void
+EventFaker::doEvent (nux::View* view,
+                     XEvent*    event)
+{
+  Display* display = NULL;
+
+  // sanity check
+  if (!view || !event)
+    return;
+
+  display = nux::GetThreadGLWindow()->GetX11Display ();
+  XUngrabPointer (display, CurrentTime);
+  XFlush (display);
+
+  _thread->ProcessForeignEvent (event, NULL);
+
+  while (g_main_context_pending (NULL))
+    g_main_context_iteration (NULL, false);
 }
