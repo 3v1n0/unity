@@ -54,13 +54,13 @@ createCheckmarkItem ()
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       false);
+                                       true);
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
 
-  checkmark = new QuicklistMenuItemCheckmark (item, NUX_TRACKER_LOCATION);
+  checkmark = new QuicklistMenuItemCheckmark (item, true);
 
   return checkmark;
 }
@@ -87,7 +87,7 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
-                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
 
   radio = new QuicklistMenuItemRadio (item, true);
     
