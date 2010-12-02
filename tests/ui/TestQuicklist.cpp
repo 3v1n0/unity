@@ -190,12 +190,12 @@ main (int argc, char **argv)
                              eventFaker);
 
   eventFaker = new EventFaker (wt);
-    
-  wt->Run (NULL);
 
   eventFaker->SendClick (checkmark);
   eventFaker->SendClick (radio);
   eventFaker->SendClick (label);
+    
+  wt->Run (NULL);
 
   delete wt;
   delete eventFaker;
