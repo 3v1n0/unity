@@ -32,6 +32,7 @@ Build-Depends: cmake,
                libstartup-notification0-dev,
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
+Vcs-Bzr: https://code.launchpad.net/~unity-team/unity/packaging
 
 Package: unity
 Architecture: any
