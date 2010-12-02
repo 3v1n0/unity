@@ -230,20 +230,25 @@ UnityScreen::GetName ()
     return "Unity";
 }
 
-bool
-UnityWindow::glPaint (const GLWindowPaintAttrib &attrib, const GLMatrix &matrix,
-	 const CompRegion &region, unsigned int mask)
+const CompWindowList &
+UnityScreen::getWindowPaintList ()
 {
+  CompWindowList &pl = _withRemovedNuxWindows = cScreen->getWindowPaintList ();
+  CompWindowList::iterator it = pl.end ();
   const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
-  GLWindowPaintAttrib new_tribs (attrib);
 
-  if (std::find (xwns.begin (), xwns.end (), window->id ()) != xwns.end ())
+  while (it != pl.begin ())
   {
-    new_tribs.opacity = 0;
+    it--;
+
+    if (std::find (xwns.begin (), xwns.end (), (*it)->id ()) != xwns.end ())
+    {
+      CompWindowList::iterator pit = it;
+      pl.erase (pit);
+    }
   }
 
-
-  return gWindow->glPaint (new_tribs, matrix, region, mask);
+  return pl;
 }
 
 /* handle window painting in an opengl context
@@ -355,6 +360,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
     /* Wrap compiz interfaces */
     ScreenInterface::setHandler (screen);
+    CompositeScreenInterface::setHandler (cScreen);
     GLScreenInterface::setHandler (gScreen);
     
     StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
