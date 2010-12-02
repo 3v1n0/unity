@@ -333,7 +333,7 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
 
   g_variant_builder_add (builder, "{sv}", "backend", g_variant_new_string ("remote"));
   g_variant_builder_add (builder, "{sv}", "service-name", g_variant_new_string (name));
-  g_variant_builder_add (builder, "{sv}", "service-unique-name", g_variant_new_string (name));
+  g_variant_builder_add (builder, "{sv}", "service-unique-name", g_variant_new_string (uname));
   g_variant_builder_add (builder, "{sv}", "using-local-service", g_variant_new_boolean (g_getenv ("PANEL_USE_LOCAL_SERVICE") == NULL ? FALSE : TRUE));
 
   g_free (name);
