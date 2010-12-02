@@ -44,6 +44,7 @@ public:
 
 protected:
   const gchar * GetName ();
+  const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
 private:

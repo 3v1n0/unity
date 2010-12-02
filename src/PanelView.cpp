@@ -71,6 +71,12 @@ const gchar* PanelView::GetName ()
 	return "Panel";
 }
 
+const gchar *
+PanelView::GetChildsName ()
+{
+  return "indicators";
+}
+
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
   nux::Geometry geo = GetGeometry ();

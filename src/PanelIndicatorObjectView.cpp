@@ -120,6 +120,12 @@ PanelIndicatorObjectView::GetName ()
   return _proxy->GetName ().c_str ();
 }
 
+const gchar *
+PanelIndicatorObjectView::GetChildsName ()
+{
+  return "entries";
+}
+
 void
 PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
 {
