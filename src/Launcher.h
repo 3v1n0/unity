@@ -45,7 +45,7 @@ public:
 
     LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
     LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
-
+    
     bool TooltipNotify(LauncherIcon* Icon);
     bool MenuNotify(LauncherIcon* Icon);
     

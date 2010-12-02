@@ -269,6 +269,29 @@ Launcher::~Launcher()
 
 }
 
+/* Introspection */
+const gchar *
+Launcher::GetName ()
+{
+  return "Launcher";
+}
+
+void
+Launcher::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "hover_progress", g_variant_new_double ((double) GetHoverProgress ()));
+  g_variant_builder_add (builder, "{sv}", "dnd_exit_progress", g_variant_new_double ((double) DnDExitProgress ()));
+  g_variant_builder_add (builder, "{sv}", "autohide_progress", g_variant_new_double ((double) AutohideProgress ()));
+  
+  g_variant_builder_add (builder, "{sv}", "dnd_delta", g_variant_new_int32 (_dnd_delta));
+  g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
+  g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
+  g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
+  g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
+  g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
+  g_variant_builder_add (builder, "{sv}", "mouse_inside_launcher", g_variant_new_boolean (_mouse_inside_launcher));
+}
+
 /* Render Layout Logic */
 
 float Launcher::GetHoverProgress ()
@@ -1481,15 +1504,6 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 }
 
 void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags)
-{
-}
-
-const gchar* Launcher::GetName ()
-{
-	return "Launcher";
-}
-
-void Launcher::AddProperties (GVariantBuilder *builder)
 {
 }
 
