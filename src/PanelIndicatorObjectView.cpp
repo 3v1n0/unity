@@ -80,6 +80,8 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   _entries.push_back (view);
 
+  AddChild (view);
+
   this->ComputeChildLayout ();
   NeedRedraw ();  
 }
@@ -100,6 +102,7 @@ PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
     PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
     if (view->_proxy == proxy)
       {
+        RemoveChild (view);
         _entries.erase (it);
         _layout->RemoveChildObject (view);
 
@@ -109,4 +112,22 @@ PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
 
   this->ComputeChildLayout (); 
   NeedRedraw ();
+}
+
+const gchar *
+PanelIndicatorObjectView::GetName ()
+{
+  return _proxy->GetName ().c_str ();
+}
+
+void
+PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  /* Now some props from ourselves */
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }

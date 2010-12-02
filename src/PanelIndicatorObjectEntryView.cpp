@@ -301,3 +301,26 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);
 }
+
+const gchar *
+PanelIndicatorObjectEntryView::GetName ()
+{
+  const gchar *name = _proxy->GetId ();
+
+  if (g_strcmp0 (name, "|") == 0)
+    return NULL;
+  else
+   return name;
+}
+
+void
+PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
+{
+   nux::Geometry geo = GetGeometry ();
+
+  /* Now some props from ourselves */
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+}

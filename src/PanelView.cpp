@@ -199,7 +199,9 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
   // We could do this in a more special way, but who has the time for special?
   _layout->AddView (view, (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL), nux::eCenter, nux::eFull);
   _layout->SetContentDistribution (nux::eStackLeft);
-
+  
+  AddChild (view);
+  
   this->ComputeChildLayout (); 
   NeedRedraw ();
 }
