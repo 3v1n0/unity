@@ -21,21 +21,29 @@
 GVariant*
 Introspectable::Introspect ()
 {
+  GVariant		  *result;
   GVariant        *childResults;
   GVariantBuilder *builder;
 
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-  
-  AddProperties (builder);
-
-   for (std::list<Introspectable *>::iterator it = _children.begin (); it != _children.end (); it++)
+  for (std::list<Introspectable *>::iterator it = _children.begin (); it != _children.end (); it++)
   {
-    if ((*it)->GetName ())
-      g_variant_builder_add (builder, "{sv}", (*it)->GetName (), (*it)->Introspect () );
+    g_variant_builder_add (builder, "{sv}", (*it)->GetName (), (*it)->Introspect () );
   }
+  AddProperties (builder);
 
   childResults = g_variant_new ("(a{sv})", builder);
   g_variant_builder_unref (builder);
+
+  if (_children.size () > 0)
+  {
+    builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}") );
+    g_variant_builder_add (builder, "{sv}", GetName (), childResults);
+    result = g_variant_new ("(a{sv})", builder);
+    g_variant_builder_unref (builder);
+
+    return result;
+  }
 
   return childResults;
 }
