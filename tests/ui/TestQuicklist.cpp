@@ -36,6 +36,14 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 300
 
+void
+activatedCallback (DbusmenuMenuitem* item,
+                   int               time,
+                   gpointer          data)
+{
+  g_print ("activatedCallback() called\n");
+}
+
 QuicklistMenuItemCheckmark*
 createCheckmarkItem ()
 {
@@ -61,6 +69,11 @@ createCheckmarkItem ()
                                       DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
 
   checkmark = new QuicklistMenuItemCheckmark (item, true);
+
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    NULL);
 
   return checkmark;
 }
@@ -90,6 +103,11 @@ createRadioItem ()
                                       DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
 
   radio = new QuicklistMenuItemRadio (item, true);
+
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    NULL);
     
   return radio;
 }
@@ -111,6 +129,11 @@ createLabelItem ()
                                        true);
 
   label = new QuicklistMenuItemLabel (item, true);
+
+  g_signal_connect (item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (activatedCallback),
+                    NULL);
 
   return label;
 }
