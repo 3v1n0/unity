@@ -458,6 +458,7 @@ const gchar* QuicklistMenuItem::GetName ()
 
 void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
 {
+  g_variant_builder_add (builder, "{sv}", "text", g_variant_new_string (_text));
   g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (GetBaseX ()));
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (GetBaseY ()));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (GetBaseWidth ()));
