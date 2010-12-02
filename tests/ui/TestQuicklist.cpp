@@ -62,8 +62,6 @@ createCheckmarkItem ()
 
   checkmark = new QuicklistMenuItemCheckmark (item, NUX_TRACKER_LOCATION);
 
-  g_object_unref (item);
-
   return checkmark;
 }
 
@@ -93,8 +91,6 @@ createRadioItem ()
 
   radio = new QuicklistMenuItemRadio (item, true);
     
-  g_object_unref (item);
-
   return radio;
 }
 
@@ -115,8 +111,6 @@ createLabelItem ()
                                        true);
 
   label = new QuicklistMenuItemLabel (item, true);
-
-  g_object_unref (item);
 
   return label;
 }
