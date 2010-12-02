@@ -139,6 +139,7 @@ protected:
     virtual bool IconOwnsWindow (Window w) { return false; }
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
+    nux::BaseTexture * TextureFromPath     (const char *name, int size);
 
     nux::NString m_TooltipText;
     //! the window this icon belong too.

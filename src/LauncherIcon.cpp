@@ -213,6 +213,37 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   return result;
 }
 
+nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size)
+{
+
+  GdkPixbuf *pbuf;
+  nux::BaseTexture *result;
+  GError *error = NULL;
+  
+  if (!icon_name)
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
+  
+  pbuf = gdk_pixbuf_new_from_file_at_size (icon_name, size, size, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    ColorForIcon (pbuf, _background_color, _glow_color);
+  
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' icon: %s",
+               icon_name,
+               error ? error->message : "unknown");
+
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
+  }
+  
+  return result;
+}
+
 void LauncherIcon::SetTooltipText(const TCHAR* text)
 {
     m_TooltipText = text;

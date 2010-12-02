@@ -78,7 +78,10 @@ SimpleLauncherIcon::GetTextureForSize (int size)
     if (!m_IconName)
       return 0;
     
-    m_Icon = TextureFromGtkTheme (m_IconName, size);
+    if (g_str_has_prefix (m_IconName, "/"))
+        m_Icon = TextureFromPath (m_IconName, size);
+    else
+        m_Icon = TextureFromGtkTheme (m_IconName, size);
     return m_Icon;
 }
 
