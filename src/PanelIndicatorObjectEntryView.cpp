@@ -44,6 +44,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
   _proxy->Updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   
   Refresh ();

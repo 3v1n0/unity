@@ -25,9 +25,6 @@
 
 #include <X11/Xlib.h>
 
-#define ITEM_INDENT_ABS        20
-#define ITEM_CORNER_RADIUS_ABS 4
-
 static void
 OnPropertyChanged (gchar*             property,
                    GValue*            value,
@@ -198,7 +195,7 @@ QuicklistMenuItem::GetActive ()
   if (_menuItem == 0)
     return false;
   return dbusmenu_menuitem_property_get_bool (_menuItem,
-                                              DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
+                                              DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
 }
 
 void QuicklistMenuItem::ItemActivated ()
@@ -237,6 +234,9 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
   if (!font)
     return;
 
+  if (_text == NULL)
+    return;
+  
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
@@ -298,17 +298,16 @@ void QuicklistMenuItem::RecvMouseDown (int x, int y, unsigned long button_flags,
 
 void QuicklistMenuItem::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  sigMouseReleased.emit (this);
+  sigMouseReleased.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   if (!GetEnabled ())
   {
-    sigMouseClick.emit (this);
     return;
   }
-  sigMouseClick.emit (this);
+  sigMouseClick.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -318,7 +317,7 @@ void QuicklistMenuItem::RecvMouseMove (int x, int y, int dx, int dy, unsigned lo
 
 void QuicklistMenuItem::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  
+    sigMouseDrag.emit (this, x, y);
 }
 
 void QuicklistMenuItem::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -395,6 +394,9 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
                              int        height,
                              nux::Color color)
 {
+  if (_text == NULL)
+    return;
+  
   int                   textWidth  = 0;
   int                   textHeight = 0;
   PangoLayout*          layout     = NULL;
@@ -432,7 +434,9 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
 
   pango_layout_context_changed (layout);
 
-  cairo_move_to (cr, ITEM_INDENT_ABS, (float) (height - textHeight) / 2.0f);
+  cairo_move_to (cr,
+                 2 * ITEM_MARGIN + ITEM_INDENT_ABS,
+                 (float) (height - textHeight) / 2.0f);
   pango_cairo_show_layout (cr, layout);
 
   // clean up
