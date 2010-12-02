@@ -84,6 +84,18 @@ add_executable (test-quicklist
                 ui/TestQuicklist.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
+                ../src/QuicklistMenuItem.cpp
+                ../src/QuicklistMenuItem.h
+                ../src/QuicklistMenuItemCheckmark.cpp
+                ../src/QuicklistMenuItemCheckmark.h
+                ../src/QuicklistMenuItemLabel.cpp
+                ../src/QuicklistMenuItemLabel.h
+                ../src/QuicklistMenuItemRadio.cpp
+                ../src/QuicklistMenuItemRadio.h
+                ../src/QuicklistMenuItemSeparator.cpp
+                ../src/QuicklistMenuItemSeparator.h
+                ../src/QuicklistView.cpp
+                ../src/QuicklistView.h
                 )
 
 #

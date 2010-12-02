@@ -21,12 +21,10 @@
 #include "NuxGraphics/GLWindowManager.h"
 #include <X11/Xlib.h>
 
-void
 EventFaker::EventFaker ()
 {
 }
 
-void
 EventFaker::~EventFaker ()
 {
 }
@@ -35,9 +33,10 @@ void
 EventFaker::SendClick (nux::View*         view,
                        nux::WindowThread* thread)
 {
-  nux::Point point;
-  XEvent*    event   = NULL;
-  Display*   display = NULL;
+  XEvent*  event   = NULL;
+  Display* display = NULL;
+  int      x       = 0;
+  int      y       = 0;
 
   // sanity check
   if (!view || !thread)
@@ -48,7 +47,8 @@ EventFaker::SendClick (nux::View*         view,
   XFlush (display);
 
   // get a point inside the view
-  point = view->GetCenter ();
+  x = view->GetBaseX () + 1;
+  y = view->GetBaseY () + 1;
 
   // assemble a button-click event
   XButtonEvent buttonEvent = {
@@ -60,8 +60,8 @@ EventFaker::SendClick (nux::View*         view,
     0,
     0,
     CurrentTime,
-    point.x, point.y,
-    point.x, point.y,
+    x, y,
+    x, y,
     0,
     Button1,
     True

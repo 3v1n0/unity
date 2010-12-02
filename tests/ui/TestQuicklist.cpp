@@ -16,6 +16,10 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <dbus/dbus-glib.h>
+
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
@@ -32,36 +36,109 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 300
 
-/*Add first UI test which is creating ech of the QL menuitems, connecting to their
- dbusmenuitem's activate signal, adding the QL menu item to a nux window, and
- then sending a fake event using EventFaker and making sure that the
- dbusmenuitem's activate signal was called.*/
+QuicklistMenuItemCheckmark*
+createCheckmarkItem ()
+{
+  DbusmenuMenuitem*           item      = NULL;
+  QuicklistMenuItemCheckmark* checkmark = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "Unchecked");
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                  DBUSMENU_MENUITEM_TOGGLE_CHECK);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       false);
+
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
+
+  checkmark = new QuicklistMenuItemCheckmark (item, NUX_TRACKER_LOCATION);
+
+  g_object_unref (item);
+
+  return checkmark;
+}
+
+QuicklistMenuItemRadio*
+createRadioItem ()
+{
+  DbusmenuMenuitem*       item  = NULL;
+  QuicklistMenuItemRadio* radio = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "Radio Active");
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE,
+                                  DBUSMENU_MENUITEM_TOGGLE_RADIO);
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  dbusmenu_menuitem_property_set_int (item,
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
+                                      DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+
+  radio = new QuicklistMenuItemRadio (item, true);
+    
+  g_object_unref (item);
+
+  return radio;
+}
+
+QuicklistMenuItemLabel*
+createLabelItem ()
+{
+  DbusmenuMenuitem*       item  = NULL;
+  QuicklistMenuItemLabel* label = NULL;
+
+  item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  "A Label");
+
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+
+  label = new QuicklistMenuItemLabel (item, true);
+
+  g_object_unref (item);
+
+  return label;
+}
 
 void
 ThreadWidgetInit (nux::NThread* thread,
                   void*         initData)
 {
-  nux::VLayout* layout = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
-  QuicklistView::QuicklistView* quicklist = new QuicklistView::QuicklistView ();
+  nux::VLayout*                 layout    = NULL;
+  QuicklistView::QuicklistView* quicklist = NULL;
 
-  QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
-  quicklist->AddMenuItem (item);
+  layout = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
+  quicklist = new QuicklistView::QuicklistView ();
 
-  QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
-  quicklist->AddMenuItem (item);
+  quicklist->AddMenuItem (createCheckmarkItem ());
+  quicklist->AddMenuItem (createRadioItem ());
+  quicklist->AddMenuItem (createLabelItem ());
 
-  QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
-  quicklist->AddMenuItem (item);
-
-  QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
-  quicklist->AddMenuItem (item);
-
-  quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+  quicklist->ShowQuicklistWithTipAt (30, 30);
   quicklist->EnableInputWindow (true, 1);
   quicklist->GrabPointer ();
-  //nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
   quicklist->NeedRedraw ();
-
 
   layout->AddView (quicklist, 1, nux::eCenter, nux::eFix);
   layout->SetContentDistribution (nux::eStackCenter);
@@ -69,7 +146,7 @@ ThreadWidgetInit (nux::NThread* thread,
   nux::GetGraphicsThread()->SetLayout (layout);
 }
 
-/*int
+int
 main (int argc, char **argv)
 {
   g_type_init ();
@@ -78,7 +155,7 @@ main (int argc, char **argv)
 
   dbus_g_thread_init ();
 
-  nux::NuxInitialize(0);
+  nux::NuxInitialize (0);
 
   nux::WindowThread* wt = NULL;
   wt = nux::CreateGUIThread (TEXT ("Unity Quicklist"),
@@ -93,4 +170,4 @@ main (int argc, char **argv)
   delete wt;
 
   return 0;
-}*/
+}
