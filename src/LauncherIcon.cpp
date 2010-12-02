@@ -223,11 +223,44 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
     g_warning ("Unable to load '%s' from icon theme: %s",
                icon_name,
                error ? error->message : "unknown");
+    g_error_free (error);
 
     if (g_strcmp0 (icon_name, "folder") == 0)
       return NULL;
     else
       return TextureFromGtkTheme ("folder", size);
+  }
+  
+  return result;
+}
+
+nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size)
+{
+
+  GdkPixbuf *pbuf;
+  nux::BaseTexture *result;
+  GError *error = NULL;
+  
+  if (!icon_name)
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
+  
+  pbuf = gdk_pixbuf_new_from_file_at_size (icon_name, size, size, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    ColorForIcon (pbuf, _background_color, _glow_color);
+  
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' icon: %s",
+               icon_name,
+               error->message : "unknown");
+    g_error_free (error);
+
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
   }
   
   return result;
