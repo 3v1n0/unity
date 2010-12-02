@@ -30,6 +30,8 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#include "Introspectable.h"
+
 #define ITEM_INDENT_ABS        16
 #define ITEM_CORNER_RADIUS_ABS 3
 #define ITEM_MARGIN            4
@@ -43,7 +45,7 @@ typedef enum
   MENUITEM_TYPE_RADIO,
 } QuicklistMenuItemType;
 
-class QuicklistMenuItem : public nux::View
+class QuicklistMenuItem : public nux::View, public Introspectable
 {
   public:
     QuicklistMenuItem (DbusmenuMenuitem* item,
@@ -86,6 +88,9 @@ class QuicklistMenuItem : public nux::View
 
     virtual bool GetActive ();
     
+    // Introspection
+    const gchar* GetName ();
+    void AddProperties (GVariantBuilder *builder);
   protected:
     
     gchar*                _text;
@@ -139,6 +144,9 @@ class QuicklistMenuItem : public nux::View
                    int        height,
                    nux::Color color);
 
+    // Introspection
+    gchar *_name;
+    
     friend class QuicklistView;
 };
 

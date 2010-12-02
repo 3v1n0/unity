@@ -70,6 +70,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
   
+  // Add to introspection
+  AddChild (_quicklist);
+  AddChild (_tooltip);
+  
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
@@ -79,6 +83,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  // Remove from introspection
+  RemoveChild (_quicklist);
+  RemoveChild (_tooltip);
+  
   if (_present_time_handle)
     g_source_remove (_present_time_handle);
   _present_time_handle = 0;
