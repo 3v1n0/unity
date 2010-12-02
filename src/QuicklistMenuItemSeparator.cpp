@@ -24,6 +24,7 @@ QuicklistMenuItemSeparator::QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
+  _name = g_strdup ("QuicklistMenuItemSeparator");
   SetMinimumHeight (5);
   SetBaseSize (64, 5);
   //_normalTexture = NULL;
@@ -38,6 +39,7 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
+  _name = g_strdup ("QuicklistMenuItemSeparator");
   SetMinimumHeight (5);
   SetBaseSize (64, 5);
   //_normalTexture = NULL;

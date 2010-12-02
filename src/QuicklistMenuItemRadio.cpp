@@ -38,6 +38,7 @@ QuicklistMenuItemRadio::QuicklistMenuItemRadio (DbusmenuMenuitem* item,
 QuicklistMenuItem (item,
                    NUX_FILE_LINE_PARAM)
 {
+  _name = g_strdup ("QuicklistMenuItemRadio");
   Initialize (item);
 }
 
@@ -48,6 +49,7 @@ QuicklistMenuItem (item,
                    debug,
                    NUX_FILE_LINE_PARAM)
 {
+  _name = g_strdup ("QuicklistMenuItemRadio");
   Initialize (item);
 }
 

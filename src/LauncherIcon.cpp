@@ -44,6 +44,7 @@ QuicklistView *LauncherIcon::_current_quicklist = 0;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
+  _name = g_strdup ("Quicklist");
   _folding_angle = 0;
   _launcher = launcher;
   m_TooltipText = "blank";
@@ -65,10 +66,16 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _icon_type = LAUNCHER_ICON_TYPE_NONE;
   _sort_priority = 0;
 
+  // Add to introspection
+  AddChild (_tooltip);
+  
   _quicklist = new QuicklistView ();
   _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
   _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
+  
+  // Add to introspection
+  AddChild (_quicklist);
   
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -79,6 +86,13 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  // Remove from introspection
+  RemoveChild (_quicklist);
+  RemoveChild (_tooltip);
+  
+  if (_name)
+    g_free (_name);
+  
   if (_present_time_handle)
     g_source_remove (_present_time_handle);
   _present_time_handle = 0;
@@ -553,3 +567,17 @@ std::list<DbusmenuMenuitem *> LauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *> result;
   return result;
 }
+
+// Introspection
+
+const gchar* LauncherIcon::GetName ()
+{
+  return g_strdup (_name);
+}
+
+void LauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (_center.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (_center.y));
+}
+

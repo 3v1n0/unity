@@ -43,6 +43,7 @@ View (NUX_FILE_LINE_PARAM)
     g_warning ("Invalid DbusmenuMenuitem in file %s at line %s.", G_STRFUNC, G_STRLOC);
   }
   
+  _name       = 0;
   _text       = 0;
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 1.0f);
   _menuItem   = item;
@@ -118,6 +119,9 @@ View (NUX_FILE_LINE_PARAM)
 
 QuicklistMenuItem::~QuicklistMenuItem ()
 {
+  if (_name)
+    g_free (_name);
+  
   if (_text)
     g_free (_text);
 }
@@ -443,4 +447,17 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
   pango_font_description_free (desc);
   g_free (fontName);
   g_object_unref (layout);
+}
+
+// Introspection
+
+const gchar* QuicklistMenuItem::GetName ()
+{
+  return g_strdup (_name);
+}
+
+void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (GetBaseX ()));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (GetBaseY ()));
 }
