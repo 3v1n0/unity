@@ -24,13 +24,19 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-class PanelHomeButton : public nux::TextureArea
+#include "Introspectable.h"
+
+class PanelHomeButton : public nux::TextureArea, public Introspectable
 {
 public:
   PanelHomeButton ();
   ~PanelHomeButton ();
 
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+protected:
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
 
 private:
   void Refresh ();

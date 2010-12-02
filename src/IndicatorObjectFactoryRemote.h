@@ -43,6 +43,8 @@ public:
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
   void Sync (GVariant *args);
 
+  void AddProperties (GVariantBuilder *builder);
+
 private:
   IndicatorObjectProxyRemote* IndicatorForID (const char *id);
 private:

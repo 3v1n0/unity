@@ -21,31 +21,39 @@
 GVariant*
 Introspectable::Introspect ()
 {
-  GVariant		  *result;
-  GVariant        *childResults;
   GVariantBuilder *builder;
+  GVariant		    *result;
+  GVariantBuilder *child_builder;
+  gint             n_children = 0;
 
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-  for (std::list<Introspectable *>::iterator it = _children.begin (); it != _children.end (); it++)
-  {
-    g_variant_builder_add (builder, "{sv}", (*it)->GetName (), (*it)->Introspect () );
-  }
+
   AddProperties (builder);
 
-  childResults = g_variant_new ("(a{sv})", builder);
-  g_variant_builder_unref (builder);
+  child_builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
 
-  if (_children.size () > 0)
+  for (std::list<Introspectable *>::iterator it = _children.begin (); it != _children.end (); it++)
   {
-    builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}") );
-    g_variant_builder_add (builder, "{sv}", GetName (), childResults);
-    result = g_variant_new ("(a{sv})", builder);
-    g_variant_builder_unref (builder);
-
-    return result;
+    if ((*it)->GetName ())
+      {
+        g_variant_builder_add (child_builder, "{sv}", (*it)->GetName (), (*it)->Introspect () );
+        n_children++;
+      }
   }
 
-  return childResults;
+  if (n_children > 0)
+    {
+      GVariant        *child_results;
+
+      child_results = g_variant_new ("(a{sv})", child_builder);
+      g_variant_builder_add (builder, "{sv}", GetChildsName (), child_results);
+    }
+  g_variant_builder_unref (child_builder);
+
+  result = g_variant_new ("(a{sv})", builder);
+  g_variant_builder_unref (builder);
+
+  return result;
 }
 
 void
@@ -58,4 +66,10 @@ void
 Introspectable::RemoveChild (Introspectable *child)
 {
   _children.remove (child);
+}
+
+const gchar *
+Introspectable::GetChildsName ()
+{
+  return GetName ();
 }
