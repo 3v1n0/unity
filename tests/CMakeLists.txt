@@ -80,6 +80,12 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 )
 
+add_executable (test-quicklist
+                ui/TestQuicklist.cpp
+                ui/EventFaker.cpp
+                ui/EventFaker.h
+                )
+
 #
 # check target
 #
