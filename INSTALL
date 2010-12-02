@@ -1,0 +1,180 @@
+                                   Install                                      
+--------------------------------------------------------------------------------
+
+• Notes
+
+  - libunity is an independant library which has a client side API for talking
+    to Unity. However it does not depend on the main Unity codebase and the 
+    main Unity codebase does not depend on it.
+
+  - Unity and it's desktop environment modules are all modules of Compiz. We use
+    a patched version of Compiz which uses the GLib main loop instead of the
+    custom Compiz main loop. This allows us to use GNOME libraries easily inside
+    the Unity plugins.
+
+    We are currently working on getting this patch upstreamed, but until then
+    you will need to build this special version of Compiz.
+
+  - libunity is written in Vala and the rest of Unity in C++/C.
+
+  - Unity depends on a library called Nux (lp:nux) which let's us do OpenGL
+    layouts quickly and efficiently.
+
+
+• Dependancies
+
+  These are in Debian package name form, but it should be easy enough to
+  translate them to other systems:
+
+  libglib2.0-dev libgdk-pixbuf2.0-dev libcairo2-dev libpng12-dev libglew1.5-dev
+  libglewmx1.5-dev libxxf86vm-dev libgl1-mesa-dev libsigc++-2.0-dev
+  libpango1.0-dev doxygen cmake pkg-config valac intltool libgee-dev
+  libbamf-dev gsettings-desktop-schemas-dev libgconf2-dev  libglib2.0-dev
+  libdbusmenu-glib-dev libgtk2.0-dev libdee-dev libindicator-dev 
+  libboost-dev libboost-serialization-dev libmetacity-dev python-dev cython
+
+  However, as with any project, it's probably best to just run autogen/cmake
+  and figure out what you need/is missing. If your distro supports grabbing
+  all the packages needed to build a package, then at least do that for
+  Compiz, as I'm not going to detail everything it needs here.
+
+  In case your distro isn't packaging all the Ayatana software, these links
+  might come in handy:
+
+  https://launchpad.net/dee
+  https://launchpad.net/bamf
+  https://launchpad.net/libindicator
+
+  Also, although we don't hard depend on them, having a few indicators installed
+  will make your experience better:
+
+  https://launchpad.net/indicator-appmenu
+  https://launchpad.net/indicator-application
+  https://launchpad.net/indicator-network
+  https://launchpad.net/indicator-sound
+  https://launchpad.net/indicator-messages
+  https://launchpad.net/indicator-datetime
+  https://launchpad.net/indicator-me
+  https://launchpad.net/indicator-session
+
+• Build Compiz GLib
+  
+  This is taken from http://wiki.ubuntu.com/Unity/InstallationGuideFromSource and
+  was originally authored by Sam:
+
+  core:
+
+    git clone git://git.compiz.org/users/dbo/compiz-with-glib-mainloop
+    cd compiz-with-glib-mainloop
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unity
+    make
+    sudo make findcompiz_install
+    sudo make install
+
+  exporting paths:
+
+    export PKG_CONFIG_PATH=/opt/unity/lib/pkgconfig:${PKG_CONFIG_PATH}
+    export LD_LIBRARY_PATH=/opt/unity/lib:${LD_LIBRARY_PATH}
+    export LD_RUN_PATH=/opt/unity/lib:${LD_RUN_PATH}
+
+  libcompizconfig:
+
+    git clone git://git.compiz.org/compiz/compizconfig/libcompizconfig
+    cd libcompizconfig
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unity
+    make
+    sudo make install
+
+  compizconfig-python:
+
+    git clone git://git.compiz.org/compiz/compizconfig/compizconfig-python
+    cd compizconfig-python
+    python setup.py install --prefix=/opt/unity
+
+  ccsm:
+
+    git clone git://git.compiz.org/compiz/compizconfig/ccsm
+    cd ccsm
+    python setup.py install --prefix=/opt/unity
+
+  plugins-main:
+
+    git clone git://git.compiz.org/compiz/plugins-main
+    cd plugins-main
+    git submodule init
+    git pull origin master
+    git submodule update
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unity
+    make
+    sudo make install
+
+  plugins-extra:
+
+    git clone git://git.compiz.org/compiz/plugins-extra
+    cd plugins-extra
+    git submodule init
+    git pull origin master
+    git submodule update
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unity
+    make
+    sudo make install
+
+
+• Build Nux
+
+  bzr branch lp:nux
+  cd nux
+  ./autogen.sh --disable-documentation --prefix=/opt/unity
+  make
+  sudo make install
+
+
+• Build Unity
+
+  bzr branch lp:unity
+  cd unity
+  mkdir build; cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Debug -DCOMPIZ_PLUGIN_INSTALL_TYPE=package -DCMAKE_INSTALL_PREFIX=/opt/unity
+  make
+  sudo make install
+
+• Cleanup
+
+  unset PKG_CONFIG_PATH
+  unset LD_LIBRARY_PATH
+  unset LD_RUN_PATH
+
+
+• Testing
+
+  add this to your /home/$USER/.bashrc
+
+    function compiz-unity-setup-env
+    {
+        export PATH=/opt/unity/bin:${PATH}
+        export PYTHONPATH=/opt/unity/lib/python2.6/site-packages
+    }
+
+  Logout, login, then in a terminal do
+  
+    $ compiz-unity-setup-env
+    $ compiz --replace cpp &
+    $ ccsm
+
+  And then use the CompizConfig Settings Window to search for and enable the Unity plugin!
+
+
+• Bugs
+
+  If you find bugs in this installation guide or in Unity itself, please report them at
+  https://launchpad.net/unity/+filebug
+
+
