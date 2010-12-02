@@ -77,6 +77,14 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_object_unref (m_App);
 }
 
+void
+BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  LauncherIcon::AddProperties (builder);
+  
+  g_variant_builder_add (builder, "{sv}", "desktop-file", g_variant_new_string (bamf_application_get_desktop_file (m_App)));
+}
+
 bool
 BamfLauncherIcon::IconOwnsWindow (Window w)
 {

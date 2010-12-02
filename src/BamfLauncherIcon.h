@@ -47,6 +47,8 @@ protected:
     void OnCenterStabilized (nux::Point3 center);
     
     bool IconOwnsWindow (Window w);
+    
+    void AddProperties (GVariantBuilder *builder);
 
 private:
     BamfApplication *m_App;
