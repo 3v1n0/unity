@@ -316,11 +316,19 @@ PanelIndicatorObjectEntryView::GetName ()
 void
 PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
 {
-   nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetGeometry ();
 
-  /* Now some props from ourselves */
   g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+
+  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (_proxy->GetLabel ()));
+  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (_proxy->label_sensitive));
+  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (_proxy->label_visible));
+
+  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (_proxy->icon_sensitive));
+  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
+
+  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
 }

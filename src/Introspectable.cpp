@@ -21,7 +21,6 @@
 GVariant*
 Introspectable::Introspect ()
 {
-  GVariant		  *result;
   GVariant        *childResults;
   GVariantBuilder *builder;
 
@@ -37,17 +36,6 @@ Introspectable::Introspect ()
 
   childResults = g_variant_new ("(a{sv})", builder);
   g_variant_builder_unref (builder);
-
-  /*
-  if (_children.size () > 0)
-  {
-    builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}") );
-    g_variant_builder_add (builder, "{sv}", GetName (), childResults);
-    result = g_variant_new ("(a{sv})", builder);
-    g_variant_builder_unref (builder);
-
-    return result;
-  }*/
 
   return childResults;
 }
