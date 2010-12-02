@@ -58,7 +58,7 @@ PanelView::~PanelView ()
   delete _bg_layer;
 }
 
-PanelHomeButton * 
+PanelHomeButton *
 PanelView::HomeButton ()
 {
   return _home_button;
@@ -99,7 +99,7 @@ PanelView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   gPainter.PushLayer (GfxContext, GetGeometry (), _bg_layer);
-  
+
   _layout->ProcessDraw (GfxContext, force_draw);
 
   gPainter.PopBackground ();
@@ -162,7 +162,7 @@ PanelView::UpdateBackground ()
   rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
-  
+
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
@@ -188,7 +188,7 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
   _layout->AddView (view, (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL), nux::eCenter, nux::eFull);
   _layout->SetContentDistribution (nux::eStackLeft);
 
-  this->ComputeChildLayout (); 
+  this->ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -199,8 +199,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
   nux::Geometry hgeo = _home_button->GetGeometry ();
 
   if (x <= (hgeo.x + hgeo.width))
-    return; 
-  
+    return;
+
   if (x >= geo.x && x <= (geo.x + geo.width)
       && y >= geo.y && y <= (geo.y + geo.height))
     {
