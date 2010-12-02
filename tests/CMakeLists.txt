@@ -45,6 +45,7 @@ add_executable (test-unit
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
+                ../src/Introspectable.cpp
                 ../src/QuicklistMenuItem.cpp
                 ../src/QuicklistMenuItem.h
                 ../src/QuicklistMenuItemCheckmark.cpp
