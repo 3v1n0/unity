@@ -940,6 +940,8 @@ void Launcher::OnIconAdded (void *icon_pointer)
     
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+    
+    AddChild (icon);
 }
 
 void Launcher::OnIconRemoved (void *icon_pointer)
@@ -948,6 +950,8 @@ void Launcher::OnIconRemoved (void *icon_pointer)
     icon->UnReference ();
     
     EnsureAnimation();
+    
+    RemoveChild (icon);
 }
 
 void Launcher::OnOrderChanged ()
