@@ -37,6 +37,8 @@
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 300
 
+gboolean gResult[3] = {false, false, false};
+
 QuicklistView::QuicklistView* gQuicklist = NULL;
 QuicklistMenuItemCheckmark*   gCheckmark = NULL;
 QuicklistMenuItemRadio*       gRadio     = NULL;
@@ -47,7 +49,11 @@ activatedCallback (DbusmenuMenuitem* item,
                    int               time,
                    gpointer          data)
 {
-  g_print ("activatedCallback() called\n");
+  gboolean* result = (gboolean*) data;
+
+  *result = true;
+
+  g_print ("Quicklist-item activated\n");
 }
 
 QuicklistMenuItemCheckmark*
@@ -79,7 +85,7 @@ createCheckmarkItem ()
   g_signal_connect (item,
                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK (activatedCallback),
-                    NULL);
+                    &gResult[0]);
 
   return checkmark;
 }
@@ -113,7 +119,7 @@ createRadioItem ()
   g_signal_connect (item,
                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK (activatedCallback),
-                    NULL);
+                    &gResult[1]);
     
   return radio;
 }
@@ -139,7 +145,7 @@ createLabelItem ()
   g_signal_connect (item,
                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK (activatedCallback),
-                    NULL);
+                    &gResult[2]);
 
   return label;
 }
@@ -178,7 +184,7 @@ ControlThread (nux::NThread* thread,
   mainWindowThread->SetFakeEventMode (true);
   Display* display = mainWindowThread->GetWindow ().GetX11Display ();
 
-  // assemble a button-click event
+  // assemble first button-click event
   XEvent buttonPressEvent;
   buttonPressEvent.xbutton.type        = ButtonPress;
   buttonPressEvent.xbutton.serial      = 0;
@@ -225,6 +231,40 @@ ControlThread (nux::NThread* thread,
   while (!mainWindowThread->ReadyForNextFakeEvent ())
     nux::SleepForMilliseconds (10);
 
+  // assemble second button-click event
+  buttonPressEvent.xbutton.time = CurrentTime;
+  buttonPressEvent.xbutton.x    = 50;
+  buttonPressEvent.xbutton.y    = 45;
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonPressEvent);
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
+  buttonReleaseEvent.xbutton.time = CurrentTime;
+  buttonReleaseEvent.xbutton.x    = 50;
+  buttonReleaseEvent.xbutton.y    = 45;
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonReleaseEvent);
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
+  // assemble third button-click event
+  buttonPressEvent.xbutton.time = CurrentTime;
+  buttonPressEvent.xbutton.x    = 50;
+  buttonPressEvent.xbutton.y    = 60;
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonPressEvent);
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
+  buttonReleaseEvent.xbutton.time = CurrentTime;
+  buttonReleaseEvent.xbutton.x    = 50;
+  buttonReleaseEvent.xbutton.y    = 60;
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonReleaseEvent);
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
   mainWindowThread->SetFakeEventMode (false);
 }
 
@@ -256,6 +296,10 @@ main (int argc, char **argv)
   gQuicklist->UnReference ();
   delete st;
   delete wt;
+
+  g_assert_cmpint (gResult[0], ==, true);
+  g_assert_cmpint (gResult[1], ==, true);
+  g_assert_cmpint (gResult[2], ==, true);
 
   return 0;
 }
