@@ -32,13 +32,15 @@
 #include "QuicklistMenuItemRadio.h"
 
 #include "EventFaker.h"
+#include <X11/Xlib.h>
 
 #define WIN_WIDTH  400
 #define WIN_HEIGHT 300
 
-QuicklistMenuItemCheckmark* checkmark = NULL;
-QuicklistMenuItemRadio*     radio     = NULL;
-QuicklistMenuItemLabel*     label     = NULL;
+QuicklistView::QuicklistView* gQuicklist = NULL;
+QuicklistMenuItemCheckmark*   gCheckmark = NULL;
+QuicklistMenuItemRadio*       gRadio     = NULL;
+QuicklistMenuItemLabel*       gLabel     = NULL;
 
 void
 activatedCallback (DbusmenuMenuitem* item,
@@ -146,35 +148,91 @@ void
 ThreadWidgetInit (nux::NThread* thread,
                   void*         initData)
 {
-  nux::VLayout*                 layout     = NULL;
-  QuicklistView::QuicklistView* quicklist  = NULL;
+  gQuicklist = new QuicklistView::QuicklistView ();
+  gQuicklist->Reference ();
 
-  layout = new nux::VLayout (TEXT(""), NUX_TRACKER_LOCATION);
-  quicklist = new QuicklistView::QuicklistView ();
+  gCheckmark = createCheckmarkItem ();
+  gQuicklist->AddMenuItem (gCheckmark);
+  gRadio = createRadioItem ();
+  gQuicklist->AddMenuItem (gRadio);
+  gLabel = createLabelItem ();
+  gQuicklist->AddMenuItem (gLabel);
 
-  checkmark = createCheckmarkItem ();
-  quicklist->AddMenuItem (checkmark);
-  radio = createRadioItem ();
-  quicklist->AddMenuItem (radio);
-  label = createLabelItem ();
-  quicklist->AddMenuItem (label);
+  gQuicklist->EnableQuicklistForTesting (true);
 
-  //quicklist->ShowQuicklistWithTipAt (120, 30);
-  //quicklist->EnableInputWindow (true, 1);
-  //quicklist->GrabPointer ();
-  //quicklist->NeedRedraw ();
+  gQuicklist->SetBaseXY (0, 0);
+  gQuicklist->ShowWindow (true);
+}
 
-  layout->AddView (quicklist, 1, nux::eCenter, nux::eFix);
-  layout->SetContentDistribution (nux::eStackCenter);
+void
+ControlThread (nux::NThread* thread,
+               void*         data)
+{
+  // sleep for 3 seconds
+  nux::SleepForMilliseconds (3000);
+  printf ("ControlThread successfully started\n");
 
-  nux::GetGraphicsThread()->SetLayout (layout);
+  nux::WindowThread* mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, 
+                                                         data);
+
+  mainWindowThread->SetFakeEventMode (true);
+  Display* display = mainWindowThread->GetWindow ().GetX11Display ();
+
+  // assemble a button-click event
+  XEvent buttonPressEvent;
+  buttonPressEvent.xbutton.type        = ButtonPress;
+  buttonPressEvent.xbutton.serial      = 0;
+  buttonPressEvent.xbutton.send_event  = False;
+  buttonPressEvent.xbutton.display     = display;
+  buttonPressEvent.xbutton.window      = 0;
+  buttonPressEvent.xbutton.root        = 0;
+  buttonPressEvent.xbutton.subwindow   = 0;
+  buttonPressEvent.xbutton.time        = CurrentTime;
+  buttonPressEvent.xbutton.x           = 50;
+  buttonPressEvent.xbutton.y           = 30;
+  buttonPressEvent.xbutton.x_root      = 0;
+  buttonPressEvent.xbutton.y_root      = 0;
+  buttonPressEvent.xbutton.state       = 0;
+  buttonPressEvent.xbutton.button      = Button1;
+  buttonPressEvent.xbutton.same_screen = True;
+
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonPressEvent);
+
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
+  XEvent buttonReleaseEvent;
+  buttonReleaseEvent.xbutton.type        = ButtonRelease;
+  buttonReleaseEvent.xbutton.serial      = 0;
+  buttonReleaseEvent.xbutton.send_event  = False;
+  buttonReleaseEvent.xbutton.display     = display;
+  buttonReleaseEvent.xbutton.window      = 0;
+  buttonReleaseEvent.xbutton.root        = 0;
+  buttonReleaseEvent.xbutton.subwindow   = 0;
+  buttonReleaseEvent.xbutton.time        = CurrentTime;
+  buttonReleaseEvent.xbutton.x           = 50;
+  buttonReleaseEvent.xbutton.y           = 30;
+  buttonReleaseEvent.xbutton.x_root      = 0;
+  buttonReleaseEvent.xbutton.y_root      = 0;
+  buttonReleaseEvent.xbutton.state       = 0;
+  buttonReleaseEvent.xbutton.button      = Button1;
+  buttonReleaseEvent.xbutton.same_screen = True;
+
+  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
+                                           (XEvent*) &buttonReleaseEvent);
+
+  while (!mainWindowThread->ReadyForNextFakeEvent ())
+    nux::SleepForMilliseconds (10);
+
+  mainWindowThread->SetFakeEventMode (false);
 }
 
 int
 main (int argc, char **argv)
 {
-  EventFaker*        eventFaker = NULL;
-  nux::WindowThread* wt         = NULL;
+  nux::WindowThread* wt = NULL;
+  nux::SystemThread* st = NULL;
 
   g_type_init ();
   g_thread_init (NULL);
@@ -187,18 +245,17 @@ main (int argc, char **argv)
                              WIN_HEIGHT,
                              0,
                              &ThreadWidgetInit,
-                             eventFaker);
+                             NULL);
 
-  eventFaker = new EventFaker (wt);
+  st = nux::CreateSystemThread (NULL, ControlThread, wt);
+  if (st)
+    st->Start (NULL);
 
-  eventFaker->SendClick (checkmark);
-  eventFaker->SendClick (radio);
-  eventFaker->SendClick (label);
-    
   wt->Run (NULL);
 
+  gQuicklist->UnReference ();
+  delete st;
   delete wt;
-  delete eventFaker;
 
   return 0;
 }
