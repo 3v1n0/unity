@@ -312,7 +312,8 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
       guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
       CompWindow *window = self->m_Screen->findWindow ((Window) xid);
       
-      window->close (self->m_Screen->getCurrentTime ());
+      if (window)
+        window->close (self->m_Screen->getCurrentTime ());
     }
   }
 }
