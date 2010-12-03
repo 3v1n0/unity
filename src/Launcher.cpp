@@ -1192,7 +1192,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
     RenderIcon(GfxContext, 
                arg, 
                _icon_outline_texture, 
-               nux::Color(0xFF6D6D6D), 
+               nux::Color(0xAAFFFFFF), 
                1.0f - arg.backlight_intensity, 
                arg.icon->_xform_coords["Tile"], 
                geo,
