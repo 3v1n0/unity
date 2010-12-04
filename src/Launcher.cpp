@@ -49,7 +49,7 @@
 #define BACKLIGHT_STRENGTH  0.9f
 
 int
-TimeDelta (struct timespec *x, struct timespec *y)
+TimeDelta (struct timespec const *x, struct timespec const *y)
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
@@ -279,9 +279,12 @@ Launcher::GetName ()
 void
 Launcher::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress ()));
-  g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress ()));
-  g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress ()));
+  struct timespec current;
+  clock_gettime (CLOCK_MONOTONIC, &current);
+
+  g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
+  g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
+  g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
   
   g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
@@ -294,33 +297,24 @@ Launcher::AddProperties (GVariantBuilder *builder)
 
 /* Render Layout Logic */
 
-float Launcher::GetHoverProgress ()
+float Launcher::GetHoverProgress (struct timespec const &current)
 {
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);
-    
     if (_hovered)
         return CLAMP ((float) (TimeDelta (&current, &_enter_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
     else
         return 1.0f - CLAMP ((float) (TimeDelta (&current, &_exit_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::DnDExitProgress ()
+float Launcher::DnDExitProgress (struct timespec const &current)
 {
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);
-    
     return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
-float Launcher::AutohideProgress ()
+float Launcher::AutohideProgress (struct timespec const &current)
 {
     if (!_autohide)
         return 0.0f;
         
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);
-    
     if (_hidden)
         return CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     else
@@ -352,7 +346,7 @@ void Launcher::EnsureAnimation ()
         _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
 }
 
-bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec current)
+bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
     if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
@@ -442,7 +436,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
     timer->tv_nsec = current.tv_nsec;
 }
 
-float IconVisibleProgress (LauncherIcon *icon, struct timespec current)
+float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
 {
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE))
     {
@@ -458,7 +452,7 @@ float IconVisibleProgress (LauncherIcon *icon, struct timespec current)
     }
 }
 
-void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current)
+void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current)
 {
     LauncherIcon *anchor = 0;
     LauncherModel::iterator it;
@@ -484,7 +478,7 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
     }
 }
 
-float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec current)
+float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec icon_present_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
     int ms = TimeDelta (&current, &icon_present_time);
@@ -496,7 +490,7 @@ float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec current
         return 1.0f - result;
 }
 
-float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec current)
+float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec urgent_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
     int urgent_ms = TimeDelta (&current, &urgent_time);
@@ -508,14 +502,14 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec current)
       return 1.0f - result;
 }
 
-float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec current)
+float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec shimmer_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
     int shimmer_ms = TimeDelta (&current, &shimmer_time);
     return CLAMP ((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
-float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec current)
+float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
         return 1.0f; // we are full on in a normal condition
@@ -524,7 +518,7 @@ float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec curren
     return 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
-float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec current)
+float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
     int starting_ms = TimeDelta (&current, &starting_time);
@@ -533,7 +527,7 @@ float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec curr
     return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
-float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec current)
+float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current)
 {
     float result = 0.0f;
     struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
@@ -564,7 +558,7 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec cur
     return result;
 }
 
-void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg)
+void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg)
 {
     arg.icon            = icon;
     arg.alpha           = 1.0f;
@@ -605,12 +599,13 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     nux::Geometry geo = GetGeometry ();
     LauncherModel::iterator it;
     nux::Point3 center;
-    float hover_progress = GetHoverProgress ();
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
+    
+    float hover_progress = GetHoverProgress (current);
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
     int vertical_offset = _parent->GetGeometry ().y;
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);
 
     float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
@@ -661,7 +656,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
-            float dnd_progress = DnDExitProgress ();
+            float dnd_progress = DnDExitProgress (current);
 
             if (_dnd_delta > max)
                 delta_y = max + (delta_y - max) * dnd_progress;
@@ -680,7 +675,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         _dnd_delta = 0;
     }
     
-    float autohide_progress = AutohideProgress ();
+    float autohide_progress = AutohideProgress (current);
     float autohide_offset = 0.0f;
     if (_autohide && autohide_progress > 0.0f)
     {
