@@ -61,6 +61,8 @@ private:
     void UpdateMenus ();
     
     void OpenInstance ();
+    void Focus ();
+    void Spread ();
     
     void EnsureMenuItemsReady ();
     
