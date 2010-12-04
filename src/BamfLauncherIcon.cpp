@@ -308,6 +308,8 @@ BamfLauncherIcon::EnsureWindowState ()
   }
   
   SetRelatedWindows (count);
+  
+  g_list_free (children);
 }
 
 void
@@ -347,6 +349,8 @@ BamfLauncherIcon::UpdateMenus ()
     DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), path.c_str ());
     _menu_clients[path] = client;
   }
+  
+  g_list_free (children);
 }
 
 void
@@ -376,6 +380,8 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
         window->close (self->m_Screen->getCurrentTime ());
     }
   }
+  
+  g_list_free (children);
 }
 
 void
@@ -521,6 +527,8 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
                        (unsigned char *) data, 4);
     }
   }
+  
+  g_list_free (children);
 }
 
 void 
