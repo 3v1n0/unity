@@ -153,14 +153,20 @@ private:
 
   void OnIconNeedsRedraw (void *icon);
 
+  void RenderIndicators (nux::GraphicsEngine& GfxContext,
+                         RenderArg arg, 
+                         int running, 
+                         int active, 
+                         nux::Vector4 xform_coords[], 
+                         nux::Geometry geo);
+                         
   void RenderIcon (nux::GraphicsEngine& GfxContext, 
                    RenderArg arg, 
                    nux::BaseTexture *icon, 
                    nux::Color bkg_color, 
                    float alpha, 
                    nux::Vector4 xform_coords[], 
-                   nux::Geometry geo,
-                   bool render_indicators);
+                   nux::Geometry geo);
                 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
                      float x, float y, float w, float h, float z, std::string name);   

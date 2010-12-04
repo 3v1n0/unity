@@ -575,11 +575,12 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, Rend
     arg.folding_rads    = 0.0f;
     arg.skip            = false;
     
-    arg.window_indicators = MIN (4, icon->RelatedWindows ());
     
     // we dont need to show strays
-    if (arg.window_indicators == 1 || !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
         arg.window_indicators = 0;
+    else
+        arg.window_indicators = MIN (4, icon->RelatedWindows ());
     
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
@@ -1011,14 +1012,89 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
+void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext, 
+                                 RenderArg arg, 
+                                 int running, 
+                                 int active, 
+                                 nux::Vector4 xform_coords[], 
+                                 nux::Geometry geo)
+{
+  int markerCenter = (xform_coords[1].y + xform_coords[0].y) / 2;
+  
+  if (running > 0)
+  {
+    if (!m_RunningIndicator)
+    {
+      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/running_indicator.png", NULL);
+      m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
+      g_object_unref (pbuf);
+    }
+    nux::TexCoordXForm texxform;
+    
+    nux::Color color = nux::Color::White;
+    
+    if (arg.running_colored)
+      color = nux::Color::SkyBlue;
+    
+    std::vector<int> markers;
+    if (running == 1)
+    {
+      markers.push_back (markerCenter);
+    }
+    else if (running == 2)
+    {
+      markers.push_back (markerCenter - 2);
+      markers.push_back (markerCenter + 2);
+    }
+    else
+    {
+      markers.push_back (markerCenter - 4);
+      markers.push_back (markerCenter);
+      markers.push_back (markerCenter + 4);
+    }
+    
+    std::vector<int>::iterator it;
+    for (it = markers.begin (); it != markers.end (); it++)
+    {
+      int center = *it;
+      GfxContext.QRP_GLSL_1Tex (geo.x,
+                                center - (m_RunningIndicator->GetHeight () / 2), 
+                                (float) m_RunningIndicator->GetWidth(), 
+                                (float) m_RunningIndicator->GetHeight(), 
+                                m_RunningIndicator->GetDeviceTexture(), 
+                                texxform, 
+                                color);
+    }
+  }
+  
+  if (active > 0)
+  {
+    if (!m_ActiveIndicator)
+    {
+      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/focused_indicator.png", NULL);
+      m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
+      g_object_unref (pbuf);
+    }
+    nux::TexCoordXForm texxform;
+    
+    nux::Color color = nux::Color::White;
+    GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (), 
+                              markerCenter - (m_ActiveIndicator->GetHeight () / 2),
+                              (float) m_ActiveIndicator->GetWidth(), 
+                              (float) m_ActiveIndicator->GetHeight(), 
+                              m_ActiveIndicator->GetDeviceTexture(), 
+                              texxform, 
+                              color);
+  }
+}
+
 void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, 
                           RenderArg arg, 
                           nux::BaseTexture *icon, 
                           nux::Color bkg_color, 
                           float alpha, 
                           nux::Vector4 xform_coords[], 
-                          nux::Geometry geo,
-                          bool render_indicators)
+                          nux::Geometry geo)
 {
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
@@ -1165,43 +1241,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   {
     _AsmShaderProg->End();
   }
-  
-  int markerCenter = (v1.y + v0.y) / 2;
-  
-  if (arg.running_arrow && render_indicators)
-  {
-    if (!m_RunningIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/running_indicator.png", NULL);
-      m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
-    nux::TexCoordXForm texxform;
-    
-    nux::Color color = nux::Color::White;
-    
-    if (arg.running_colored)
-      color = nux::Color::SkyBlue;
-    
-    GfxContext.QRP_GLSL_1Tex (geo.x, 
-                              markerCenter - (m_RunningIndicator->GetHeight () / 2), 
-                              (float) m_RunningIndicator->GetWidth(), 
-                              (float) m_RunningIndicator->GetHeight(), 
-                              m_RunningIndicator->GetDeviceTexture(), 
-                              texxform, 
-                              color);
-  }
-  
-  if (arg.active_arrow && render_indicators)
-  {
-    if (!m_ActiveIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/focused_indicator.png", NULL);
-      m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
-    gPainter.Draw2DTexture (GfxContext, m_ActiveIndicator, (geo.x + geo.width) - m_ActiveIndicator->GetWidth (), markerCenter - (m_ActiveIndicator->GetHeight () / 2));
-  }
 }
 
 void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo)
@@ -1222,8 +1261,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                nux::Color(0xAAFFFFFF), 
                1.0f - arg.backlight_intensity, 
                arg.icon->_xform_coords["Tile"], 
-               geo,
-               false);
+               geo);
   }
   
   if (arg.backlight_intensity > 0.0f)
@@ -1234,8 +1272,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                arg.icon->BackgroundColor (), 
                arg.backlight_intensity, 
                arg.icon->_xform_coords["Tile"], 
-               geo,
-               false);
+               geo);
   }
   
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
@@ -1251,8 +1288,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
               nux::Color::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"],
-              geo,
-              true);
+              geo);
   
   if (arg.backlight_intensity > 0.0f)
   {
@@ -1262,42 +1298,41 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                nux::Color::White, 
                arg.backlight_intensity, 
                arg.icon->_xform_coords["Tile"], 
-               geo,
-               false);
+               geo);
   }
   
-  switch (arg.window_indicators)
+  if (false)
   {
-    case 2:
-      RenderIcon(GfxContext, 
-                 arg, 
-                 _icon_2indicator, 
-                 nux::Color::White, 
-                 1.0f, 
-                 arg.icon->_xform_coords["Tile"], 
-                 geo,
-                 false);
-      break;
-    case 3:
-      RenderIcon(GfxContext, 
-                  arg, 
-                  _icon_3indicator, 
-                  nux::Color::White, 
-                  1.0f, 
-                  arg.icon->_xform_coords["Tile"], 
-                  geo,
-                  false);
-      break;
-    case 4:
-      RenderIcon(GfxContext, 
-                 arg, 
-                 _icon_4indicator, 
-                 nux::Color::White, 
-                 1.0f, 
-                 arg.icon->_xform_coords["Tile"], 
-                 geo,
-                 false);
-      break;
+    switch (arg.window_indicators)
+    {
+      case 2:
+        RenderIcon(GfxContext, 
+                   arg, 
+                   _icon_2indicator, 
+                   nux::Color::White, 
+                   1.0f, 
+                   arg.icon->_xform_coords["Tile"], 
+                   geo);
+        break;
+      case 3:
+        RenderIcon(GfxContext, 
+                    arg, 
+                    _icon_3indicator, 
+                    nux::Color::White, 
+                    1.0f, 
+                    arg.icon->_xform_coords["Tile"], 
+                    geo);
+        break;
+      case 4:
+        RenderIcon(GfxContext, 
+                   arg, 
+                   _icon_4indicator, 
+                   nux::Color::White, 
+                   1.0f, 
+                   arg.icon->_xform_coords["Tile"], 
+                   geo);
+        break;
+    }
   }
   
   if (arg.glow_intensity > 0.0f)
@@ -1308,8 +1343,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                arg.icon->GlowColor (), 
                arg.glow_intensity, 
                arg.icon->_xform_coords["Glow"], 
-               geo,
-               false);
+               geo);
   }
   
   if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
@@ -1330,11 +1364,17 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                arg.icon->GlowColor (), 
                fade_out, 
                arg.icon->_xform_coords["Glow"], 
-               geo,
-               false);
+               geo);
     
     GfxContext.PopClippingRectangle();
   }
+  
+  RenderIndicators (GfxContext,
+                    arg, 
+                    arg.running_arrow ? arg.window_indicators : 0, 
+                    arg.active_arrow ? 1 : 0, 
+                    arg.icon->_xform_coords["Tile"], 
+                    geo);
 }
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
