@@ -1016,10 +1016,9 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  RenderArg arg, 
                                  int running, 
                                  int active, 
-                                 nux::Vector4 xform_coords[], 
                                  nux::Geometry geo)
 {
-  int markerCenter = (xform_coords[1].y + xform_coords[0].y) / 2;
+  int markerCenter = (int) arg.center.y;
   
   if (running > 0)
   {
@@ -1373,7 +1372,6 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nu
                     arg, 
                     arg.running_arrow ? arg.window_indicators : 0, 
                     arg.active_arrow ? 1 : 0, 
-                    arg.icon->_xform_coords["Tile"], 
                     geo);
 }
 

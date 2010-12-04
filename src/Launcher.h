@@ -157,7 +157,6 @@ private:
                          RenderArg arg, 
                          int running, 
                          int active, 
-                         nux::Vector4 xform_coords[], 
                          nux::Geometry geo);
                          
   void RenderIcon (nux::GraphicsEngine& GfxContext, 
