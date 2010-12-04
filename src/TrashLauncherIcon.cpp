@@ -35,6 +35,8 @@ TrashLauncherIcon::~TrashLauncherIcon()
 void
 TrashLauncherIcon::OnMouseClick (int button)
 {
+  SimpleLauncherIcon::OnMouseClick (button);
+
   if (button == 1)
   {
     GError *error = NULL;

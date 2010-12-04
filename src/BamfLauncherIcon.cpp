@@ -104,6 +104,10 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive();
+
+  SimpleLauncherIcon::OnMouseClick (button);
+
   if (button != 1)
     return;
   
@@ -127,11 +131,11 @@ BamfLauncherIcon::OnMouseClick (int button)
     return;
   }
   
-  // Cancel any ongoing scale
-  PluginAdapter::Default ()->TerminateScale ();
-
   if (active)
   {
+    if (scaleWasActive)
+      return;
+
     std::list<Window> windowList;
     for (l = children; l; l = l->next)
     {

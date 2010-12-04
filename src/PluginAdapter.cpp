@@ -17,6 +17,7 @@
  */
  
 #include <glib.h>
+#include <scale/scale.h>
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
@@ -111,10 +112,17 @@ PluginAdapter::InitiateScale (std::string *match)
     m_ScaleAction->initiate () (m_ScaleAction, 0, argument);
 }
     
+bool 
+PluginAdapter::IsScaleActive ()
+{
+    SCALE_SCREEN(m_Screen);
+    return (m_ScaleAction && ss && ss->hasGrab ());
+}
+
 void 
 PluginAdapter::TerminateScale ()
 {
-    if (!m_ScaleAction)
+    if (!IsScaleActive ())
         return;
 
     CompOption::Value value;

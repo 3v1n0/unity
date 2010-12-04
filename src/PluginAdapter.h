@@ -41,6 +41,8 @@ public:
     
     void InitiateScale (std::string *match);
 
+    bool IsScaleActive ();
+
     void TerminateScale ();
     
     void InitiateExpo ();
