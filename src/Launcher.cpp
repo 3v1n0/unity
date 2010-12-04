@@ -566,12 +566,14 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec cur
 
 void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg)
 {
-    arg.icon           = icon;
-    arg.alpha          = 1.0f;
-    arg.running_arrow  = icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING);
-    arg.active_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
-    arg.folding_rads   = 0.0f;
-    arg.skip           = false;
+    arg.icon            = icon;
+    arg.alpha           = 1.0f;
+    arg.running_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING);
+    arg.active_arrow    = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
+    arg.running_colored = icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT);
+    arg.active_colored  = false;
+    arg.folding_rads    = 0.0f;
+    arg.skip            = false;
     
     arg.window_indicators = MIN (4, icon->RelatedWindows ());
     
@@ -1174,7 +1176,20 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
       m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
       g_object_unref (pbuf);
     }
-    gPainter.Draw2DTexture (GfxContext, m_RunningIndicator, geo.x, markerCenter - (m_RunningIndicator->GetHeight () / 2));
+    nux::TexCoordXForm texxform;
+    
+    nux::Color color = nux::Color::White;
+    
+    if (arg.running_colored)
+      color = nux::Color::SkyBlue;
+    
+    GfxContext.QRP_GLSL_1Tex (geo.x, 
+                              markerCenter - (m_RunningIndicator->GetHeight () / 2), 
+                              (float) m_RunningIndicator->GetWidth(), 
+                              (float) m_RunningIndicator->GetHeight(), 
+                              m_RunningIndicator->GetDeviceTexture(), 
+                              texxform, 
+                              color);
   }
   
   if (arg.active_arrow && render_indicators)
