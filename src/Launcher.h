@@ -141,8 +141,7 @@ private:
   
   void SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg);
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
-                   std::list<Launcher::RenderArg> &shelf_args, 
-                   nux::Geometry &box_geo, nux::Geometry &shelf_geo);
+                   nux::Geometry &box_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo);
 
@@ -231,7 +230,6 @@ private:
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
-  nux::Geometry _last_shelf_area;
   LauncherModel* _model;
   
   /* event times */

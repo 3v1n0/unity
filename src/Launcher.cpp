@@ -568,7 +568,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec current, Rend
 {
     arg.icon           = icon;
     arg.alpha          = 1.0f;
-    arg.running_arrow  = false;
+    arg.running_arrow  = icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING);
     arg.active_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
     arg.folding_rads   = 0.0f;
     arg.skip           = false;
@@ -597,8 +597,7 @@ int Launcher::DragLimiter (int x)
 }
 
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
-                           std::list<Launcher::RenderArg> &shelf_args, 
-                           nux::Geometry &box_geo, nux::Geometry &shelf_geo)
+                           nux::Geometry &box_geo)
 {
     nux::Geometry geo = GetGeometry ();
     LauncherModel::iterator it;
@@ -620,19 +619,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     center.y = _space_between_icons;
     center.z = 0;
     
-    // compute required height of shelf
-    float shelf_sum = 0.0f;
-    for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
-    {
-        float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
-        shelf_sum += height;    
-    }
-    
-    // add bottom padding
-    if (shelf_sum > 0.0f)
-      shelf_sum += _space_between_icons;
-    
-    int launcher_height = geo.height - shelf_sum;
+    int launcher_height = geo.height;
     
     // compute required height of launcher AND folding threshold
     float sum = 0.0f + center.y;
@@ -648,10 +635,10 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
     }
-
+    
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
-        SetDndDelta (center.x, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height - shelf_sum), current);
+        SetDndDelta (center.x, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
 
     _enter_y = 0;
 
@@ -700,20 +687,15 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     // Inform the painter where to paint the box
     box_geo = geo;
 
-    if (_floating)
-        box_geo.height = sum + shelf_sum + _space_between_icons;
-    
     if (_autohide)
         box_geo.x += autohide_offset;
-    
-    shelf_geo = nux::Geometry (box_geo.x, box_geo.height - shelf_sum, box_geo.width, shelf_sum);
     
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
     // function is not smooth it is continuous, which is more important for our visual representation (icons
     // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
     // as bugs.
-    for (it = _model->begin (); it != _model->end (); it++)
+    for (it = _model->main_begin (); it != _model->main_end (); it++)
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
@@ -767,15 +749,28 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         launcher_args.push_back (arg);
     }
     
-    center.y = (box_geo.y + box_geo.height) - shelf_sum + _space_between_icons;
+    // compute maximum height of shelf
+    float shelf_sum = 0.0f;
+    for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
+    {
+        float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
+        shelf_sum += height;    
+    }
     
-    // Place shelf icons
+    // add bottom padding
+    if (shelf_sum > 0.0f)
+      shelf_sum += _space_between_icons;
+    
+    float shelf_delta = MAX (((launcher_height - shelf_sum) + _space_between_icons) - center.y, 0.0f);
+    folding_threshold += shelf_delta;
+    center.y += shelf_delta;
+    
     for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
-
-        SetupRenderArg (icon, current, arg);        
+        
+        SetupRenderArg (icon, current, arg);
         
         // reset z
         center.z = 0;
@@ -793,15 +788,35 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
             continue;
         }
         
-        float half_size = _icon_size / 2.0f;
-      
+        // goes for 0.0f when fully unfolded, to 1.0f folded
+        float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
+        float present_progress = IconPresentProgress (icon, current);
+        
+        folding_progress *= 1.0f - present_progress;
+        
+        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
+        
+        float icon_hide_offset = autohide_offset;
+        
+        if (icon->PresentUrgency () == 1)
+          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
+        else if (icon->PresentUrgency () >= 2)
+          icon_hide_offset *= 1.0f - present_progress;
+        
+        // icon is crossing threshold, start folding
+        center.z += folded_z_distance * folding_progress;
+        arg.folding_rads = animation_neg_rads * folding_progress;
+        
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 (center.x + autohide_offset, center.y, center.z);       // copy center
+        arg.center = nux::Point3 (center.x + icon_hide_offset, center.y, center.z);       // copy center
         icon->SetCenter (nux::Point3 (center.x, center.y + vertical_offset, center.z));
         center.y += half_size * size_modifier;   // move to end
-        center.y += _space_between_icons * size_modifier;
         
-        shelf_args.push_back (arg);
+        float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
+        //add spacing
+        center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
+        
+        launcher_args.push_back (arg);
     }
 }
 
@@ -909,9 +924,6 @@ void Launcher::SetHover ()
     
     _enter_y = (int) _mouse_position.y;
     
-    if (_last_shelf_area.y - _enter_y < 5 && _last_shelf_area.y - _enter_y >= 0)
-        _enter_y = _last_shelf_area.y - 5;
-    
     _hovered = true;
     SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
 }
@@ -969,7 +981,7 @@ void Launcher::OnIconRemoved (void *icon_pointer)
 
 void Launcher::OnOrderChanged ()
 {
-
+    EnsureAnimation ();
 }
 
 void Launcher::SetModel (LauncherModel *model)
@@ -1162,7 +1174,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
       m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
       g_object_unref (pbuf);
     }
-    gPainter.Draw2DTexture (GfxContext, m_RunningIndicator, geo.x, markerCenter - (m_ActiveIndicator->GetHeight () / 2));
+    gPainter.Draw2DTexture (GfxContext, m_RunningIndicator, geo.x, markerCenter - (m_RunningIndicator->GetHeight () / 2));
   }
   
   if (arg.active_arrow && render_indicators)
@@ -1315,17 +1327,16 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::Geometry base = GetGeometry();
     GfxContext.PushClippingRectangle(base);
     nux::Geometry bkg_box;
-    nux::Geometry shelf_box;
     std::list<Launcher::RenderArg> args;
-    std::list<Launcher::RenderArg> shelf_args; 
+    std::list<Launcher::RenderArg>::reverse_iterator rev_it;
+    std::list<Launcher::RenderArg>::iterator it;
     
     nux::ROPConfig ROP;
     ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    RenderArgs (args, shelf_args, bkg_box, shelf_box);
-    _last_shelf_area = shelf_box;
+    RenderArgs (args, bkg_box);
 
     // clear region    
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
@@ -1341,11 +1352,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
     
     UpdateIconXForm (args);
-    UpdateIconXForm (shelf_args);
     EventLogic ();
-    
-    /* drag launcher */
-    std::list<Launcher::RenderArg>::reverse_iterator rev_it;
+
+    /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
       if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
@@ -1354,7 +1363,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
     }
 
-    std::list<Launcher::RenderArg>::iterator it;
     for (it = args.begin(); it != args.end(); it++)
     {
       if ((*it).folding_rads < 0.0f || (*it).skip)
@@ -1363,22 +1371,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
     
-    /* draw shelf */
-    nux::Color shelf_color = nux::Color (0xCC000000);
-    nux::Color shelf_zero = nux::Color (0x00000000);
-    int shelf_shadow_height = 35;
-    
-    nux::Geometry shelf_shadow = nux::Geometry (shelf_box.x, shelf_box.y - shelf_shadow_height, shelf_box.width, shelf_shadow_height);
-    gPainter.Paint2DQuadColor (GfxContext, shelf_shadow, shelf_zero, shelf_color, shelf_color, shelf_zero);
-    gPainter.Paint2DQuadColor (GfxContext, shelf_box, shelf_color);
-
-    for (it = shelf_args.begin(); it != shelf_args.end(); it++)
-    {
-      if ((*it).skip)
-        continue;
-      
-      DrawRenderArg (GfxContext, *it, bkg_box);
-    }
     
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
 
@@ -1487,8 +1479,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   _mouse_position = nux::Point2 (x, y);
   _mouse_inside_launcher = true;
   
-  if (!_last_shelf_area.IsInside (nux::Point (x, y)))
-      SetHover ();
+  SetHover ();
 
   EventLogic ();
   EnsureAnimation ();
@@ -1510,13 +1501,7 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 {
   _mouse_position = nux::Point2 (x, y);
 
-  if (!_last_shelf_area.IsInside (nux::Point (x, y)))
-  {
-      SetHover ();
-      EnsureAnimation ();
-  }
   // Every time the mouse moves, we check if it is inside an icon...
-
   EventLogic ();
 }
 
@@ -1594,22 +1579,6 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   // We are looking for the icon at screen coordinates x, y;
   nux::Point2 mouse_position(x, y);
   int inside = 0;
-
-  for (it = _model->shelf_begin(); it != _model->shelf_end (); it++)
-  {
-    if (!(*it)->GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE))
-      continue;
-
-    nux::Point2 screen_coord [4];
-    for (int i = 0; i < 4; i++)
-    {
-      screen_coord [i].x = (*it)->_xform_coords["HitArea"] [i].x;
-      screen_coord [i].y = (*it)->_xform_coords["HitArea"] [i].y;
-    }
-    inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
-    if (inside)
-      return (*it);
-  }
 
   // Because of the way icons fold and stack on one another, we must proceed in 2 steps.
   for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
