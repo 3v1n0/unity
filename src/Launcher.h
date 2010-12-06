@@ -145,7 +145,7 @@ private:
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
                    nux::Geometry &box_geo);
 
-  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo);
+  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
   void OnIconAdded    (void *icon_pointer);
   void OnIconRemoved  (void *icon_pointer);
@@ -154,13 +154,13 @@ private:
   void OnIconNeedsRedraw (void *icon);
 
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
-                         RenderArg arg, 
+                         RenderArg const &arg, 
                          int running, 
                          int active, 
                          nux::Geometry geo);
                          
   void RenderIcon (nux::GraphicsEngine& GfxContext, 
-                   RenderArg arg, 
+                   RenderArg const &arg, 
                    nux::BaseTexture *icon, 
                    nux::Color bkg_color, 
                    float alpha, 
@@ -169,7 +169,7 @@ private:
                 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
                      float x, float y, float w, float h, float z, std::string name);   
-  void UpdateIconXForm (std::list<Launcher::RenderArg> args);
+  void UpdateIconXForm (std::list<Launcher::RenderArg> &args);
   
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();

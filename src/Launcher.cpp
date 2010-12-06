@@ -1009,7 +1009,7 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext, 
-                                 RenderArg arg, 
+                                 RenderArg const &arg, 
                                  int running, 
                                  int active, 
                                  nux::Geometry geo)
@@ -1084,7 +1084,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 }
 
 void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, 
-                          RenderArg arg, 
+                          RenderArg const &arg, 
                           nux::BaseTexture *icon, 
                           nux::Color bkg_color, 
                           float alpha, 
@@ -1238,7 +1238,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
 }
 
-void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo)
+void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo)
 {
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
@@ -1714,7 +1714,7 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
   vectors[3].w = v3.w;
 }
 
-void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> args)
+void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 {
   nux::Geometry geo = GetGeometry ();
   nux::Matrix4 ObjectMatrix;
