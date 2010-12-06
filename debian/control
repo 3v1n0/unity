@@ -63,7 +63,7 @@ Package: unity-common
 Architecture: all
 Depends: ${misc:Depends}
 Replaces: unity (<< 3.2.2-0ubuntu3)
-Conflicts: unity (<< 3.2.4-0ubuntu3)
+Conflicts: unity (<< 3.2.2-0ubuntu3)
 Description: Common files for the interface for Ubuntu Desktop Edition
  Unity is a graphical interface designed for Ubuntu Desktop Edition
  .
