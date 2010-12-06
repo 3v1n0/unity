@@ -669,6 +669,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
         delta_y *= hover_progress;
         center.y += delta_y;
+        folding_threshold += delta_y;
     } 
     else 
     {
