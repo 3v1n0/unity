@@ -584,11 +584,11 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.glow_intensity = urgent_progress;
 }
 
-int Launcher::DragLimiter (int x)
+float Launcher::DragLimiter (float x)
 {
-  int result = (int) ((1 - std::pow (159.0 / 160,  std::abs (x))) * 160);
+  float result = (1 - std::pow (159.0 / 160,  std::abs (x))) * 160;
   
-  if (x >= 0)
+  if (x >= 0.0f)
     return result;
   return -result;
 }
@@ -610,8 +610,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
     
-    int folded_size = (int) (_icon_size * folding_not_constant);
-    int folded_spacing = (int) (_space_between_icons * folding_not_constant);
+    float folded_size = _icon_size * folding_not_constant;
+    float folded_spacing = _space_between_icons * folding_not_constant;
     
     center.x = geo.width / 2;
     center.y = _space_between_icons;
@@ -621,7 +621,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     
     // compute required height of launcher AND folding threshold
     float sum = 0.0f + center.y;
-    int folding_threshold = launcher_height - _icon_size / 2.5f;
+    float folding_threshold = launcher_height - _icon_size / 2.5f;
     for (it = _model->begin (); it != _model->end (); it++)
     {
         float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
@@ -642,7 +642,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     if (hover_progress > 0.0f && _dnd_delta != 0)
     {
-        int delta_y = _dnd_delta;
+        float delta_y = _dnd_delta;
         
         // logically dnd exit only restores to the clamped ranges
         // hover_progress restores to 0
@@ -737,8 +737,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         arg.folding_rads = animation_neg_rads * folding_progress;
         
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 (center.x + icon_hide_offset, center.y, center.z);       // copy center
-        icon->SetCenter (nux::Point3 (center.x, center.y + vertical_offset, center.z));
+        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
+        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
         center.y += half_size * size_modifier;   // move to end
         
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
@@ -807,8 +807,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         arg.folding_rads = animation_neg_rads * folding_progress;
         
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 (center.x + icon_hide_offset, center.y, center.z);       // copy center
-        icon->SetCenter (nux::Point3 (center.x, center.y + vertical_offset, center.z));
+        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
+        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
         center.y += half_size * size_modifier;   // move to end
         
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
