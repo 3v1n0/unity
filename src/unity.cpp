@@ -292,6 +292,20 @@ UnityWindow::windowNotify (CompWindowNotify n)
   window->windowNotify (n);
 }
 
+void 
+UnityWindow::moveNotify (int x, int y, bool immediate)
+{
+  uScreen->launcher->OnWindowMoved (window);
+  window->moveNotify (x, y, immediate);
+}
+
+void 
+UnityWindow::resizeNotify (int x, int y, int w, int h)
+{
+  uScreen->launcher->OnWindowResized (window);
+  window->resizeNotify (x, y, w, h);
+}
+
 /* Configure callback for the launcher window */
 void 
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
@@ -413,7 +427,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   UnityScreen *self = (UnityScreen*) InitData;
   
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
-  self->launcher = new Launcher(self->launcherWindow);
+  self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();
