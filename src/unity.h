@@ -140,7 +140,8 @@ class UnityScreen :
 
 	/* handle paint order */
 	bool	  doShellRepaint;
-	bool      allowWindowPaint;
+	bool    allowWindowPaint;
+	bool    damaged;
 	CompWindowList _withRemovedNuxWindows;
 
 	friend class UnityWindow;

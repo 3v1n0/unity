@@ -129,64 +129,124 @@ BamfLauncherIcon::OpenInstance ()
 }
 
 void
+BamfLauncherIcon::Focus ()
+{
+  GList *children, *l;
+  BamfView *view;
+  
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+  
+  CompWindowList windows;
+  
+  /* get the list of windows */
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+  
+      CompWindow *window = m_Screen->findWindow ((Window) xid);
+  
+      if (window)
+        windows.push_back (window);
+    }
+  }
+  
+  if (windows.empty ())
+    return;
+
+  /* sort the list */
+  CompWindowList tmp;
+  CompWindowList::iterator it;
+  for (it = m_Screen->windows ().begin (); it != m_Screen->windows ().end (); it++)
+  {
+    if (std::find (windows.begin (), windows.end (), *it) != windows.end ())
+      tmp.push_back (*it);
+  }
+  windows = tmp;
+  
+  
+  /* filter based on workspace */
+  bool any_on_current = false;    
+  
+  for (it = windows.begin (); it != windows.end (); it++)
+  {
+    if ((*it)->defaultViewport () == m_Screen->vp ())
+    {
+      any_on_current = true;
+      break;
+    }
+  }
+  
+  /* activate our windows */
+  
+  if (any_on_current)
+  {
+    for (it = windows.begin (); it != windows.end (); it++)
+    {
+      if ((*it)->defaultViewport () == m_Screen->vp ())
+      {  
+        (*it)->activate ();
+      }
+    }
+  }
+  else
+  {
+    (*(windows.rbegin ()))->activate ();
+  }
+  
+  g_list_free (children);
+}
+
+void
+BamfLauncherIcon::Spread ()
+{
+  BamfView *view;
+  GList *children, *l;
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+  
+  std::list<Window> windowList;
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+        
+      windowList.push_back ((Window) xid);
+    }
+  }
+  
+  if (windowList.size () > 1)
+  {
+    std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    PluginAdapter::Default ()->InitiateScale (match);
+    delete match;
+  }
+  
+  g_list_free (children);
+}
+
+void
 BamfLauncherIcon::OnMouseClick (int button)
 {
   if (button != 1)
     return;
   
-  BamfView *view;
-  GList *children, *l;
   bool active, running;
   
-  children = bamf_view_get_children (BAMF_VIEW (m_App));
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
   
   if (!running)
-  {
     OpenInstance ();
-    return;
-  }
-  
-  if (active)
-  {
-    std::list<Window> windowList;
-    for (l = children; l; l = l->next)
-    {
-      view = (BamfView *) l->data;
-  
-      if (BAMF_IS_WINDOW (view))
-      {
-        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
-          
-        windowList.push_back ((Window) xid);
-      }
-    }
-    
-    if (windowList.size () > 1)
-    {
-      std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
-      PluginAdapter::Default ()->InitiateScale (match);
-      delete match;
-    }
-  }
+  else if (active)
+    Spread ();
   else
-  {
-    for (l = children; l; l = l->next)
-    {
-      view = (BamfView *) l->data;
-  
-      if (BAMF_IS_WINDOW (view))
-      {
-        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
-    
-        CompWindow *window = m_Screen->findWindow ((Window) xid);
-    
-        if (window)
-          window->activate ();
-      }
-    }
-  }
+    Focus ();
 }
 
 void
@@ -248,6 +308,8 @@ BamfLauncherIcon::EnsureWindowState ()
   }
   
   SetRelatedWindows (count);
+  
+  g_list_free (children);
 }
 
 void
@@ -287,6 +349,8 @@ BamfLauncherIcon::UpdateMenus ()
     DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), path.c_str ());
     _menu_clients[path] = client;
   }
+  
+  g_list_free (children);
 }
 
 void
@@ -316,6 +380,8 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
         window->close (self->m_Screen->getCurrentTime ());
     }
   }
+  
+  g_list_free (children);
 }
 
 void
@@ -461,6 +527,8 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
                        (unsigned char *) data, 4);
     }
   }
+  
+  g_list_free (children);
 }
 
 void 

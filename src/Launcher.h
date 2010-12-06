@@ -103,7 +103,9 @@ private:
     float         glow_intensity;
     float         shimmer_progress;
     bool          running_arrow;
+    bool          running_colored;
     bool          active_arrow;
+    bool          active_colored;
     bool          skip;
     int           window_indicators;
   } RenderArg;
@@ -115,34 +117,33 @@ private:
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
-  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec current);
+  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
   void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
   
   void EnsureAnimation    ();
   void SetupAutohideTimer ();
   
-  float DnDExitProgress  ();
-  float GetHoverProgress ();
-  float AutohideProgress ();
-  float IconPresentProgress     (LauncherIcon *icon, struct timespec current);
-  float IconUrgentProgress      (LauncherIcon *icon, struct timespec current);
-  float IconShimmerProgress     (LauncherIcon *icon, struct timespec current);
-  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec current);
-  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec current);
-  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec current);
+  float DnDExitProgress  (struct timespec const &current);
+  float GetHoverProgress (struct timespec const &current);
+  float AutohideProgress (struct timespec const &current);
+  float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
+  float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
+  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
   
-  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
+  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
   int  DragLimiter (int x);
   
-  void SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg);
+  void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
-                   std::list<Launcher::RenderArg> &shelf_args, 
-                   nux::Geometry &box_geo, nux::Geometry &shelf_geo);
+                   nux::Geometry &box_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo);
 
@@ -152,14 +153,19 @@ private:
 
   void OnIconNeedsRedraw (void *icon);
 
+  void RenderIndicators (nux::GraphicsEngine& GfxContext,
+                         RenderArg arg, 
+                         int running, 
+                         int active, 
+                         nux::Geometry geo);
+                         
   void RenderIcon (nux::GraphicsEngine& GfxContext, 
                    RenderArg arg, 
                    nux::BaseTexture *icon, 
                    nux::Color bkg_color, 
                    float alpha, 
                    nux::Vector4 xform_coords[], 
-                   nux::Geometry geo,
-                   bool render_indicators);
+                   nux::Geometry geo);
                 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
                      float x, float y, float w, float h, float z, std::string name);   
@@ -231,7 +237,6 @@ private:
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
-  nux::Geometry _last_shelf_area;
   LauncherModel* _model;
   
   /* event times */
