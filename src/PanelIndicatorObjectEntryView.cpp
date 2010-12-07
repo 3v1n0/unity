@@ -63,7 +63,7 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   if ((_proxy->label_visible && _proxy->label_sensitive)
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
-    _proxy->ShowMenu (GetGeometry ().x,
+    _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation
                       PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
@@ -73,7 +73,7 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
 void
 PanelIndicatorObjectEntryView::Activate ()
 {
-  _proxy->ShowMenu (GetGeometry ().x,
+  _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation FIXME: Make this into one function
                     PANEL_HEIGHT,
                     time (NULL),
                     1);
@@ -262,8 +262,8 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   int radius = 4;
   double x = 0;
   double y = 0;
-  double xos = 1.5;
-  double yos = 1.5;
+  double xos = 0.5;
+  double yos = 0.5;
   /* FIXME */
   double mpi = 3.14159265358979323846;
 
