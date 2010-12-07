@@ -740,8 +740,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         arg.folding_rads = animation_neg_rads * folding_progress;
 
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
-        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
+        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
+        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
         center.y += half_size * size_modifier;   // move to end
 
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
@@ -810,8 +810,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         arg.folding_rads = animation_neg_rads * folding_progress;
 
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
-        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
+        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
+        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
         center.y += half_size * size_modifier;   // move to end
 
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
