@@ -476,6 +476,25 @@ on_entry_moved (IndicatorObject      *object,
 }
 
 static void
+on_indicator_menu_show (IndicatorObject      *object,
+                        IndicatorObjectEntry *entry,
+                        guint32               timestamp,
+                        PanelService         *self)
+{
+  gchar *entry_id;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  g_debug ("%s: %p", G_STRFUNC, entry);
+
+  entry_id = g_strdup_printf ("%p", entry);
+
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
+
+  g_free (entry_id);
+}
+
+static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
@@ -497,6 +516,8 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_removed), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
                     G_CALLBACK (on_entry_moved), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
+                    G_CALLBACK (on_indicator_menu_show), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
