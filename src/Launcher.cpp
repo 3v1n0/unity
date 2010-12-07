@@ -168,7 +168,7 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
                                        float FarClipPlane,
                                        float Fovy);
 
-Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
+Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
 ,   m_RunningIndicator(0)
@@ -177,6 +177,7 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
 ,   _model (0)
 {
     _parent = parent;
+    _screen = screen;
     _active_quicklist = 0;
     
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -252,6 +253,8 @@ Launcher::Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_DECL)
     _autohide               = false;
     _hidden                 = false;
     _mouse_inside_launcher  = false;
+    _mouse_inside_trigger   = false;
+    _window_over_launcher   = false;
     
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -827,7 +830,7 @@ void Launcher::SetHidden (bool hidden)
         return;
         
     _hidden = hidden;
-    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION);
+    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION_SHORT);
     
     _parent->EnableInputWindow(!hidden);
     
@@ -838,36 +841,80 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
  
-    if (self->_hovered || self->_hidden)
-        return false;
-    
-    self->SetHidden (true);
-
+    self->EnsureHiddenState ();
     self->_autohide_handle = 0;
     return false;
 }
 
+void
+Launcher::EnsureHiddenState ()
+{
+  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher)
+    SetHidden (true);
+  else
+    SetHidden (false);
+}
+
+void
+Launcher::CheckWindowOverLauncher ()
+{
+  CompWindowList window_list = _screen->windows ();
+  CompWindowList::iterator it;
+  nux::Geometry geo = GetGeometry ();
+  
+  for (it = window_list.begin (); it != window_list.end (); it++)
+  {
+    CompWindow *window = *it;
+    
+    if (window->type () != CompWindowTypeNormalMask || window->invisible ())
+      continue;
+    
+    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    {
+      _window_over_launcher = true;
+      EnsureHiddenState ();
+      return;
+    }
+  }
+  
+  _window_over_launcher = false;
+  EnsureHiddenState ();
+}
+
+void
+Launcher::OnWindowMoved (CompWindow *window)
+{
+  if (_autohide)
+    CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnWindowResized (CompWindow *window)
+{
+  if (_autohide)
+    CheckWindowOverLauncher ();
+}
+
 void Launcher::OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-    if (!_autohide || !_hidden)
-        return;
-    
-    SetHidden (false);
+  _mouse_inside_trigger = true;
+  EnsureHiddenState ();
 }
 
 void Launcher::SetupAutohideTimer ()
 {
-    if (_autohide)
-    {
-        if (_autohide_handle > 0)
-            g_source_remove (_autohide_handle);
-        _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
-    }
+  if (_autohide)
+  {
+    if (_autohide_handle > 0)
+      g_source_remove (_autohide_handle);
+    _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
+  }
 }
 
 void Launcher::OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-    SetupAutohideTimer ();
+  _mouse_inside_trigger = false;
+  SetupAutohideTimer ();
 }
 
 bool Launcher::AutohideEnabled ()

@@ -21,6 +21,7 @@
 #define LAUNCHER_H
 
 #include <sys/time.h>
+#include <core/core.h>
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
@@ -35,7 +36,7 @@ class QuicklistView;
 class Launcher : public Introspectable, public nux::View
 {
 public:
-    Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
+    Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
     ~Launcher();
 
     virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -58,6 +59,9 @@ public:
     
     void SetAutohide (bool autohide, nux::View *show_trigger);
     bool AutohideEnabled ();
+    
+    void OnWindowMoved   (CompWindow *window);
+    void OnWindowResized (CompWindow *window);
     
     virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -121,8 +125,11 @@ private:
   bool AnimationInProgress ();
   void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
   
+  void EnsureHiddenState ();
   void EnsureAnimation    ();
   void SetupAutohideTimer ();
+  
+  void CheckWindowOverLauncher ();
   
   float DnDExitProgress  (struct timespec const &current);
   float GetHoverProgress (struct timespec const &current);
@@ -195,6 +202,8 @@ private:
   bool  _autohide;
   bool  _hidden;
   bool  _mouse_inside_launcher;
+  bool  _mouse_inside_trigger;
+  bool  _window_over_launcher;
 
   float _folded_angle;
   float _neg_folded_angle;
@@ -238,6 +247,8 @@ private:
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
   LauncherModel* _model;
+  
+  CompScreen* _screen;
   
   /* event times */
   struct timespec _enter_time;

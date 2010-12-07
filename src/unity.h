@@ -171,6 +171,9 @@ class UnityWindow :
 
 	void windowNotify (CompWindowNotify n);
 
+  void moveNotify (int x, int y, bool immediate);
+  
+  void resizeNotify (int x, int y, int w, int h);
 };
 
 #define EX_SCREEN (screen) \
