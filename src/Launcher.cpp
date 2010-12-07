@@ -1126,7 +1126,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     }
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Color::White;
+    nux::Color color = nux::Color::LightGrey;
     GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
                               markerCenter - (m_ActiveIndicator->GetHeight () / 2),
                               (float) m_ActiveIndicator->GetWidth(),
