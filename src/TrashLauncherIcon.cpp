@@ -29,6 +29,17 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
   SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
 
+  m_TrashMonitor = g_file_monitor_directory (
+    g_file_new_for_uri("trash:///"),
+    G_FILE_MONITOR_NONE,
+    NULL,
+    NULL);
+
+  g_signal_connect(m_TrashMonitor,
+                   "changed",
+                   G_CALLBACK (&TrashLauncherIcon::OnTrashChanged),
+                   this);
+
   UpdateTrashIcon ();
 }
 
@@ -84,5 +95,16 @@ TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
 
     g_object_unref(info);
   }
+}
+
+void
+TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
+                                   GFile               *file,
+                                   GFile               *other_file,
+                                   GFileMonitorEvent    event_type,
+                                   gpointer             data)
+{
+    TrashLauncherIcon *self = (TrashLauncherIcon*) data;
+    self->UpdateTrashIcon ();
 }
 

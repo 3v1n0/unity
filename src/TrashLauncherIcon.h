@@ -33,7 +33,10 @@ protected:
   void UpdateTrashIcon ();
 
 private:
+  GFileMonitor *m_TrashMonitor;
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
+  static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,
+                              GFileMonitorEvent event_type, gpointer data);
 
 };
 
