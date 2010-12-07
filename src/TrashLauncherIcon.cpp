@@ -20,10 +20,6 @@
 
 #include <gio/gio.h>
 
-void update_trash_info_cb (GObject      *source,
-                                  GAsyncResult *res,
-                                  gpointer      data);
-
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
@@ -33,7 +29,7 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
   SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
 
-  UpdateTrashIcon();
+  UpdateTrashIcon ();
 }
 
 TrashLauncherIcon::~TrashLauncherIcon()
@@ -46,9 +42,9 @@ TrashLauncherIcon::OnMouseClick (int button)
   if (button == 1)
   {
     GError *error = NULL;
-    
+
     g_spawn_command_line_async ("xdg-open trash://", &error);
-    
+
     if (error)
       g_error_free (error);
   }
@@ -57,11 +53,11 @@ TrashLauncherIcon::OnMouseClick (int button)
 void
 TrashLauncherIcon::UpdateTrashIcon ()
 {
-	GFile *location;
-	location = g_file_new_for_uri ("trash:///");
+  GFile *location;
+  location = g_file_new_for_uri ("trash:///");
 
-	g_file_query_info_async (location,
-				                   G_FILE_ATTRIBUTE_STANDARD_ICON, 
+  g_file_query_info_async (location,
+                           G_FILE_ATTRIBUTE_STANDARD_ICON, 
                            G_FILE_QUERY_INFO_NONE, 
                            0, 
                            NULL, 
@@ -80,7 +76,7 @@ TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
   GFileInfo *info;
   GIcon *icon;
 
-	info = g_file_query_info_finish (G_FILE (source), res, NULL);
+  info = g_file_query_info_finish (G_FILE (source), res, NULL);
 
   if (info != NULL) {
     icon = g_file_info_get_icon (info);
