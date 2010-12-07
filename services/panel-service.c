@@ -496,8 +496,7 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-  GList *entries, *e;
-
+  
   g_return_if_fail (PANEL_IS_SERVICE (self));
 
   entry_id = g_strdup_printf ("%p", entry);
