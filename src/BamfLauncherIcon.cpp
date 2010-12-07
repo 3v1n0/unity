@@ -77,6 +77,14 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_object_unref (m_App);
 }
 
+void
+BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  LauncherIcon::AddProperties (builder);
+  
+  g_variant_builder_add (builder, "{sv}", "desktop-file", g_variant_new_string (bamf_application_get_desktop_file (m_App)));
+}
+
 bool
 BamfLauncherIcon::IconOwnsWindow (Window w)
 {
@@ -102,70 +110,143 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
 }
 
 void
+BamfLauncherIcon::OpenInstance ()
+{
+  GDesktopAppInfo *appInfo;
+  GError *error = NULL;
+
+  appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
+  g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, &error);
+  g_object_unref (appInfo);
+  
+  if (error)
+  {
+    g_warning ("%s\n", error->message);
+    g_error_free (error);
+  }
+  
+  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+}
+
+void
+BamfLauncherIcon::Focus ()
+{
+  GList *children, *l;
+  BamfView *view;
+  
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+  
+  CompWindowList windows;
+  
+  /* get the list of windows */
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+  
+      CompWindow *window = m_Screen->findWindow ((Window) xid);
+  
+      if (window)
+        windows.push_back (window);
+    }
+  }
+  
+  if (windows.empty ())
+    return;
+
+  /* sort the list */
+  CompWindowList tmp;
+  CompWindowList::iterator it;
+  for (it = m_Screen->windows ().begin (); it != m_Screen->windows ().end (); it++)
+  {
+    if (std::find (windows.begin (), windows.end (), *it) != windows.end ())
+      tmp.push_back (*it);
+  }
+  windows = tmp;
+  
+  
+  /* filter based on workspace */
+  bool any_on_current = false;    
+  
+  for (it = windows.begin (); it != windows.end (); it++)
+  {
+    if ((*it)->defaultViewport () == m_Screen->vp ())
+    {
+      any_on_current = true;
+      break;
+    }
+  }
+  
+  /* activate our windows */
+  
+  if (any_on_current)
+  {
+    for (it = windows.begin (); it != windows.end (); it++)
+    {
+      if ((*it)->defaultViewport () == m_Screen->vp ())
+      {  
+        (*it)->activate ();
+      }
+    }
+  }
+  else
+  {
+    (*(windows.rbegin ()))->activate ();
+  }
+  
+  g_list_free (children);
+}
+
+void
+BamfLauncherIcon::Spread ()
+{
+  BamfView *view;
+  GList *children, *l;
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+  
+  std::list<Window> windowList;
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+        
+      windowList.push_back ((Window) xid);
+    }
+  }
+  
+  if (windowList.size () > 1)
+  {
+    std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    PluginAdapter::Default ()->InitiateScale (match);
+    delete match;
+  }
+  
+  g_list_free (children);
+}
+
+void
 BamfLauncherIcon::OnMouseClick (int button)
 {
   if (button != 1)
     return;
   
-  BamfView *view;
-  GList *children, *l;
   bool active, running;
-  GDesktopAppInfo *appInfo;
   
-  children = bamf_view_get_children (BAMF_VIEW (m_App));
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
   
   if (!running)
-  {
-    appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
-    g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, NULL);
-    g_object_unref (appInfo);
-    
-    UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-    
-    return;
-  }
-  
-  if (active)
-  {
-    std::list<Window> windowList;
-    for (l = children; l; l = l->next)
-    {
-      view = (BamfView *) l->data;
-  
-      if (BAMF_IS_WINDOW (view))
-      {
-        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
-          
-        windowList.push_back ((Window) xid);
-      }
-    }
-    
-    if (windowList.size () > 1)
-    {
-      std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
-      PluginAdapter::Default ()->InitiateScale (match);
-      delete match;
-    }
-  }
+    OpenInstance ();
+  else if (active)
+    Spread ();
   else
-  {
-    for (l = children; l; l = l->next)
-    {
-      view = (BamfView *) l->data;
-  
-      if (BAMF_IS_WINDOW (view))
-      {
-        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
-    
-        CompWindow *window = m_Screen->findWindow ((Window) xid);
-    
-        if (window)
-          window->activate ();
-      }
-    }
-  }
+    Focus ();
 }
 
 void
@@ -227,6 +308,8 @@ BamfLauncherIcon::EnsureWindowState ()
   }
   
   SetRelatedWindows (count);
+  
+  g_list_free (children);
 }
 
 void
@@ -266,6 +349,14 @@ BamfLauncherIcon::UpdateMenus ()
     DbusmenuClient *client = dbusmenu_client_new (bamf_indicator_get_remote_address (indicator), path.c_str ());
     _menu_clients[path] = client;
   }
+  
+  g_list_free (children);
+}
+
+void
+BamfLauncherIcon::OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
+{
+  self->OpenInstance ();
 }
 
 void
@@ -285,9 +376,12 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
       guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
       CompWindow *window = self->m_Screen->findWindow ((Window) xid);
       
-      window->close (self->m_Screen->getCurrentTime ());
+      if (window)
+        window->close (self->m_Screen->getCurrentTime ());
     }
   }
+  
+  g_list_free (children);
 }
 
 void
@@ -315,12 +409,67 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
   }
 }
 
+void
+BamfLauncherIcon::EnsureMenuItemsReady ()
+{
+  DbusmenuMenuitem *menu_item;
+
+  /* Launch */
+  if (_menu_items.find ("Launch") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open New Window");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnLaunch, this);
+    
+    _menu_items["Launch"] = menu_item;
+  }
+
+  /* Pin */
+  if (_menu_items.find ("Pin") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Keep In Launcher");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
+    
+    _menu_items["Pin"] = menu_item;
+  }
+  int checked = !bamf_view_is_sticky (BAMF_VIEW (m_App)) ? 
+                 DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
+  
+  dbusmenu_menuitem_property_set_int (_menu_items["Pin"], 
+                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, 
+                                      checked);
+  
+  
+  /* Quit */
+  if (_menu_items.find ("Quit") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+    
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
+    
+    _menu_items["Quit"] = menu_item;
+  }
+}
+
 std::list<DbusmenuMenuitem *>
 BamfLauncherIcon::GetMenus ()
 {
   std::map<std::string, DbusmenuClient *>::iterator it;
   std::list<DbusmenuMenuitem *> result;
-  DbusmenuMenuitem *menu_item;
   
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
@@ -339,42 +488,13 @@ BamfLauncherIcon::GetMenus ()
     }
   }
   
-  if (_menu_items.find ("Pin") == _menu_items.end ())
-  {
-    menu_item = dbusmenu_menuitem_new ();
-    g_object_ref (menu_item);
-    
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Pin To Launcher");
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
-    
-    _menu_items["Pin"] = menu_item;
-  }
-  
-  int checked = !bamf_view_is_sticky (BAMF_VIEW (m_App)) ? 
-                 DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED : DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
-  
-  dbusmenu_menuitem_property_set_int (_menu_items["Pin"], 
-                                      DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, 
-                                      checked);
+  EnsureMenuItemsReady ();
+
+  result.push_back (_menu_items["Launch"]);
   result.push_back (_menu_items["Pin"]);
   
-  if (_menu_items.find ("Quit") == _menu_items.end ())
-  {
-    menu_item = dbusmenu_menuitem_new ();
-    g_object_ref (menu_item);
-    
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
-    
-    _menu_items["Quit"] = menu_item;
-  }
-  
-  result.push_back (_menu_items["Quit"]);
+  if (bamf_view_is_running (BAMF_VIEW (m_App)))
+    result.push_back (_menu_items["Quit"]);
   
   return result;
 }
@@ -407,6 +527,8 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
                        (unsigned char *) data, 4);
     }
   }
+  
+  g_list_free (children);
 }
 
 void 

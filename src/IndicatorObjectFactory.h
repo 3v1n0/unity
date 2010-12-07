@@ -37,6 +37,9 @@ public:
   // Indicators (probably though a bunch of removed/added events)
   virtual void ForceRefresh () = 0;
 
+  // For adding factory-specific properties
+  virtual void AddProperties (GVariantBuilder *builder) = 0;
+
   // Signals
   sigc::signal<void, IndicatorObjectProxy *> OnObjectAdded;
   sigc::signal<void, IndicatorObjectProxy *> OnObjectRemoved;

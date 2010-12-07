@@ -31,6 +31,8 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#include "Introspectable.h"
+
 #if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
 #endif
@@ -55,7 +57,7 @@ namespace nux
   class HLayout;
   class SpaceLayout;
 
-  class Tooltip : public BaseWindow
+  class Tooltip : public BaseWindow, public Introspectable
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
   public:
@@ -76,6 +78,11 @@ namespace nux
     void SetText (NString text);
 
     void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
+    
+    // Introspection
+    const gchar* GetName ();
+    void AddProperties (GVariantBuilder *builder);
+  
   private:
     void RecvCairoTextChanged (StaticCairoText* cairo_text);
 
@@ -119,6 +126,9 @@ namespace nux
 
     bool _cairo_text_has_changed;
     void UpdateTexture ();
+    
+    // Introspection
+    gchar *_name;
   };
 }
 

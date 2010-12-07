@@ -70,6 +70,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
   
+  // Add to introspection
+  AddChild (_quicklist);
+  AddChild (_tooltip);
+  
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
@@ -79,6 +83,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  // Remove from introspection
+  RemoveChild (_quicklist);
+  RemoveChild (_tooltip);
+  
   if (_present_time_handle)
     g_source_remove (_present_time_handle);
   _present_time_handle = 0;
@@ -86,6 +94,26 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+}
+
+const gchar *
+LauncherIcon::GetName ()
+{
+  return m_TooltipText.GetTCharPtr ();
+}
+
+void
+LauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
+  g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
+  
+  g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
+  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_URGENT)));
+  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING)));
+  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED)));
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -203,11 +231,44 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
     g_warning ("Unable to load '%s' from icon theme: %s",
                icon_name,
                error ? error->message : "unknown");
+    g_error_free (error);
 
     if (g_strcmp0 (icon_name, "folder") == 0)
       return NULL;
     else
       return TextureFromGtkTheme ("folder", size);
+  }
+  
+  return result;
+}
+
+nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size)
+{
+
+  GdkPixbuf *pbuf;
+  nux::BaseTexture *result;
+  GError *error = NULL;
+  
+  if (!icon_name)
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
+  
+  pbuf = gdk_pixbuf_new_from_file_at_size (icon_name, size, size, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    ColorForIcon (pbuf, _background_color, _glow_color);
+  
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' icon: %s",
+               icon_name,
+               error->message);
+    g_error_free (error);
+
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
   }
   
   return result;

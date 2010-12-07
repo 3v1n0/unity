@@ -26,7 +26,9 @@
 
 #include "IndicatorObjectEntryProxy.h"
 
-class PanelIndicatorObjectEntryView : public nux::TextureArea
+#include "Introspectable.h"
+
+class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
 {
 public:
   PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy);
@@ -34,6 +36,10 @@ public:
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
+
+protected:
+  const gchar * GetName ();
+  void          AddProperties (GVariantBuilder *builder);
 
 public:
   IndicatorObjectEntryProxy *_proxy;

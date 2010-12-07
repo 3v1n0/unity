@@ -140,3 +140,21 @@ PanelHomeButton::RecvMouseClick (int x,
       g_object_unref (context);
     }
 }
+
+const gchar*
+PanelHomeButton::GetName ()
+{
+	return "HomeButton";
+}
+
+void
+PanelHomeButton::AddProperties (GVariantBuilder *builder)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  g_variant_builder_add (builder, "{sv}", "have-pixbuf", g_variant_new_boolean (GDK_IS_PIXBUF (_pixbuf)));
+}

@@ -35,10 +35,13 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "Introspectable.h"
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
 {
+  _name = g_strdup ("Quicklist");
   _texture_bg = 0;
   _texture_mask = 0;
   _texture_outline = 0;
@@ -93,6 +96,9 @@ QuicklistView::QuicklistView ()
 
 QuicklistView::~QuicklistView ()
 {
+  if (_name)
+    g_free (_name);
+  
   if (_texture_bg)
     _texture_bg->UnReference ();
   
@@ -105,11 +111,15 @@ QuicklistView::~QuicklistView ()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
@@ -579,11 +589,15 @@ void QuicklistView::RemoveAllMenuItem ()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
@@ -612,6 +626,8 @@ void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
   item->Reference();
+  // Add to introspection
+  AddChild (item);
   
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
@@ -1436,5 +1452,21 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
       AddMenuItem (item);
     }
   }
+}
+
+// Introspection
+
+const gchar* QuicklistView::GetName ()
+{
+  return g_strdup (_name);
+}
+
+void QuicklistView::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (GetBaseX ()));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (GetBaseY ()));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (GetBaseWidth ()));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
+  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (IsVisible ()));
 }
 
