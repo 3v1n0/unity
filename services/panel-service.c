@@ -847,6 +847,7 @@ panel_service_show_entry (PanelService *self,
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
 
   if (GTK_IS_MENU (priv->last_menu)
+      && (entry != NULL ? entry->menu != priv->last_menu : TRUE)
       && (button == 0 ? (entry != NULL && GTK_IS_MENU (entry->menu))
                       : TRUE))
     {
