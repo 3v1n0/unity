@@ -230,6 +230,12 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
   } 
 }
 
+void
+IndicatorObjectFactoryRemote::OnEntryActivateRequestReceived (const gchar *entry_id)
+{
+  OnEntryActivateRequest.emit (entry_id);
+}
+
 IndicatorObjectProxyRemote *
 IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
 {
@@ -435,6 +441,10 @@ on_proxy_signal_received (GDBusProxy *proxy,
   if (g_strcmp0 (signal_name, "EntryActivated") == 0)
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
+  }
+  else if (g_strcmp0 (signal_name, "EntryActivateRequest") == 0)
+  {
+    remote->OnEntryActivateRequestReceived (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
   }
   else if (g_strcmp0 (signal_name, "ReSync") == 0)
   {

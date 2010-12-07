@@ -64,6 +64,7 @@ enum
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
   ACTIVE_MENU_POINTER_MOTION,
+  ENTRY_ACTIVATE_REQUEST,
 
   LAST_SIGNAL
 };
@@ -167,6 +168,16 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
+
+ _service_signals[ENTRY_ACTIVATE_REQUEST] =
+    g_signal_new ("entry-activate-request",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
@@ -490,7 +501,7 @@ on_indicator_menu_show (IndicatorObject      *object,
 
   entry_id = g_strdup_printf ("%p", entry);
 
-  g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
 
   g_free (entry_id);
 }

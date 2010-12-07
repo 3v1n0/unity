@@ -36,8 +36,8 @@ public:
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
+  void Activate ();
 
-protected:
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
 

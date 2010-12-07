@@ -70,6 +70,15 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   }
 }
 
+void
+PanelIndicatorObjectEntryView::Activate ()
+{
+  _proxy->ShowMenu (GetGeometry ().x,
+                    PANEL_HEIGHT,
+                    time (NULL),
+                    1);
+}
+
 static char *
 fix_string (const char *string)
 {
