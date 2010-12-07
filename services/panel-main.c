@@ -141,8 +141,6 @@ handle_method_call (GDBusConnection       *connection,
       gint32  button;
       g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
 
-      g_debug ("button: %u", button);
-
       panel_service_show_entry (service, entry_id, timestamp, x, y, button);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
