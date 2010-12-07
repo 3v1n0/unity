@@ -110,7 +110,7 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "z", _center.z);
   g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
   g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
-  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ());
+  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
   
   g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
   g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
