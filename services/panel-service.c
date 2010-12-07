@@ -857,8 +857,17 @@ activate_next_prev_menu (PanelService         *self,
     }
   else
     {
-      g_debug ("Need to go to next/prev entry");
+      IndicatorObjectEntry *new_entry;
+      gchar *id;
+
+      new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
+      id = g_strdup_printf ("%p", new_entry);
+      g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
+
+      g_free (id);
     }
+
+  g_list_free (entries);
 }
 
 static void
@@ -867,7 +876,6 @@ on_active_menu_move_current (GtkMenu              *menu,
                              PanelService         *self)
 {
   PanelServicePrivate *priv;
-  GList               *children, *c;
   IndicatorObject     *object;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
@@ -879,21 +887,25 @@ on_active_menu_move_current (GtkMenu              *menu,
     return;
 
   /* We don't want to distrupt going into submenus */
-  children = gtk_container_get_children (GTK_CONTAINER (menu));
-  for (c = children; c; c = c->next)
+  if (direction == GTK_MENU_DIR_CHILD)
     {
-      GtkWidget *item = (GtkWidget *)c->data;
-
-      if (GTK_IS_MENU_ITEM (item)
-          && gtk_widget_get_state (item) == GTK_STATE_PRELIGHT
-          && gtk_menu_item_get_submenu (GTK_MENU_ITEM (item)))
+      GList               *children, *c;
+      children = gtk_container_get_children (GTK_CONTAINER (menu));
+      for (c = children; c; c = c->next)
         {
-          /* Skip direction due to there being a submenu,
-           * and we don't want to inhibit going into that */
-          return;
+          GtkWidget *item = (GtkWidget *)c->data;
+
+          if (GTK_IS_MENU_ITEM (item)
+              && gtk_widget_get_state (item) == GTK_STATE_PRELIGHT
+              && gtk_menu_item_get_submenu (GTK_MENU_ITEM (item)))
+            {
+              /* Skip direction due to there being a submenu,
+               * and we don't want to inhibit going into that */
+              return;
+            }
         }
+      g_list_free (children);
     }
-  g_list_free (children);
 
   /* Find the next/prev indicator */
   object = g_hash_table_lookup (priv->entry2indicator_hash, priv->last_entry);
