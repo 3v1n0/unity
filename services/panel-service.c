@@ -835,6 +835,40 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   return g_variant_builder_end (&b);
 }
 
+static void
+on_active_menu_move_current (GtkMenu              *menu,
+                             GtkMenuDirectionType  direction,
+                             PanelService         *self)
+{
+  GList *children, *c;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  /* Not interested in up or down */
+  if (direction == GTK_MENU_DIR_NEXT
+      || direction == GTK_MENU_DIR_PREV)
+    return;
+
+  /* We don't want to distrupt going into submenus */
+  children = gtk_container_get_children (GTK_CONTAINER (menu));
+  for (c = children; c; c = c->next)
+    {
+      GtkWidget *item = (GtkWidget *)c->data;
+
+      if (GTK_IS_MENU_ITEM (item)
+          && gtk_widget_get_state (item) == GTK_STATE_PRELIGHT
+          && gtk_menu_item_get_submenu (GTK_MENU_ITEM (item)))
+        {
+          /* Skip direction due to there being a submenu,
+           * and we don't want to inhibit going into that */
+          return;
+        }
+    }
+  g_list_free (children);
+
+  g_debug ("Move Current Direction: dir=%d", direction);
+}
+
 void
 panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
@@ -870,6 +904,9 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_button = button;
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
+      g_signal_connect_after (priv->last_menu, "move-current",
+                        G_CALLBACK (on_active_menu_move_current), self);
+
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
