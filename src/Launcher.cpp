@@ -830,7 +830,7 @@ void Launcher::SetHidden (bool hidden)
         return;
         
     _hidden = hidden;
-    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION);
+    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION_SHORT);
     
     _parent->EnableInputWindow(!hidden);
     
@@ -869,7 +869,7 @@ Launcher::CheckWindowOverLauncher ()
     if (window->type () != CompWindowTypeNormalMask)
       continue;
     
-    if (window->inputRegion ().intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
       EnsureHiddenState ();
