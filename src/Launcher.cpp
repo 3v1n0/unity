@@ -730,10 +730,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
         float icon_hide_offset = autohide_offset;
 
-        if (icon->PresentUrgency () == 1)
-          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
-        else if (icon->PresentUrgency () >= 2)
-          icon_hide_offset *= 1.0f - present_progress;
+        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
 
         // icon is crossing threshold, start folding
         center.z += folded_z_distance * folding_progress;
@@ -800,10 +797,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
         float icon_hide_offset = autohide_offset;
 
-        if (icon->PresentUrgency () == 1)
-          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
-        else if (icon->PresentUrgency () >= 2)
-          icon_hide_offset *= 1.0f - present_progress;
+        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
 
         // icon is crossing threshold, start folding
         center.z += folded_z_distance * folding_progress;
@@ -1086,7 +1080,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     }
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Color::White;
+    nux::Color color = nux::Color::LightGrey;
 
     if (arg.running_colored)
       color = nux::Color::SkyBlue;

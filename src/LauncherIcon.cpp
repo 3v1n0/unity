@@ -466,13 +466,13 @@ LauncherIcon::OnPresentTimeout (gpointer data)
   return false;
 }
 
-int LauncherIcon::PresentUrgency ()
+float LauncherIcon::PresentUrgency ()
 {
   return _present_urgency;
 }
 
 void 
-LauncherIcon::Present (int present_urgency, int length)
+LauncherIcon::Present (float present_urgency, int length)
 {
   if (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
     return;
@@ -480,7 +480,7 @@ LauncherIcon::Present (int present_urgency, int length)
   if (length >= 0)
     _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
   
-  _present_urgency = present_urgency;
+  _present_urgency = CLAMP (present_urgency, 0.0f, 1.0f);
   SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, true);
 }
 
@@ -555,9 +555,9 @@ LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
   
   // Present on urgent as a general policy
   if (quirk == LAUNCHER_ICON_QUIRK_VISIBLE && value)
-    Present (0, 1500);
+    Present (0.5f, 1500);
   if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
-    Present (1, 1500);
+    Present (0.5f, 1500);
 }
 
 gboolean

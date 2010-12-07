@@ -91,7 +91,7 @@ public:
     int SortPriority ();
     
     int RelatedWindows ();
-    int PresentUrgency ();
+    float PresentUrgency ();
     
     bool GetQuirk (LauncherIconQuirk quirk);
     struct timespec GetQuirkTime (LauncherIconQuirk quirk);
@@ -130,7 +130,7 @@ protected:
     void Remove ();
     
     
-    void Present (int urgency, int length);
+    void Present (float urgency, int length);
     void Unpresent ();
     
     void SetIconType (LauncherIconType type);
@@ -183,7 +183,7 @@ private:
     nux::Color       _glow_color;
     int              _sort_priority;
     int              _related_windows;
-    int              _present_urgency;
+    float            _present_urgency;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
