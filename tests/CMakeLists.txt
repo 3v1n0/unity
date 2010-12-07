@@ -81,6 +81,8 @@ add_executable (test-panel
                 ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
                 ../src/PanelHomeButton.h
+                ../src/PanelMenuView.cpp
+                ../src/PanelMenuView.h
                 )
 
 #

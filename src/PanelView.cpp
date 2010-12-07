@@ -46,8 +46,11 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    // Home button
    _home_button = new PanelHomeButton ();
    _layout->AddView (_home_button, 0, nux::eCenter, nux::eFull);
-
    AddChild (_home_button);
+
+   _menu_view = new PanelMenuView ();
+   _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
+   AddChild (_menu_view);
 
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
@@ -204,7 +207,11 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
 
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  _layout->AddView (view, (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL), nux::eCenter, nux::eFull);
+  if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
+    _menu_view->SetProxy (proxy);
+  else
+    _layout->AddView (view, 0, nux::eCenter, nux::eFull);
+
   _layout->SetContentDistribution (nux::eStackLeft);
   
   AddChild (view);
@@ -238,24 +245,24 @@ PanelView::OnMenuPointerMoved (int x, int y)
         geo = view->GetGeometry ();
         if (x >= geo.x && x <= (geo.x + geo.width)
             && y >= geo.y && y <= (geo.y + geo.height))
+        {
+          std::list<Area *>::iterator it2;
+
+          std::list<Area *> its_children = view->_layout->GetChildren ();
+          for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
           {
-            std::list<Area *>::iterator it2;
+            PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-            std::list<Area *> its_children = view->_layout->GetChildren ();
-            for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+            geo = entry->GetGeometry ();
+            if (x >= geo.x && x <= (geo.x + geo.width)
+                && y >= geo.y && y <= (geo.y + geo.height))
             {
-              PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-              geo = entry->GetGeometry ();
-              if (x >= geo.x && x <= (geo.x + geo.width)
-                  && y >= geo.y && y <= (geo.y + geo.height))
-                {
-                  entry->OnMouseDown (x, y, 0, 0);
-                  break;
-                }
+              entry->OnMouseDown (x, y, 0, 0);
+              break;
             }
-            break;
           }
+          break;
+        }
       }
     }
 }
@@ -281,11 +288,11 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
       if (g_strcmp0 (entry->GetName (), entry_id) == 0)
-        {
-          g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
-          entry->Activate ();
-          break;
-        }
+      {
+        g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
+        entry->Activate ();
+        break;
+      }
     }
   }
 }

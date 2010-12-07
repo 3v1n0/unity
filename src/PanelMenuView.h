@@ -16,40 +16,37 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PANEL_INDICATOR_OBJECT_VIEW_H
-#define PANEL_INDICATOR_OBJECT_VIEW_H
+#ifndef PANEL_MENU_VIEW_H
+#define PANEL_MENU_VIEW_H
 
 #include <Nux/View.h>
 
 #include "IndicatorObjectProxy.h"
-#include "PanelIndicatorObjectEntryView.h"
+
+#include "PanelIndicatorObjectView.h"
 
 #include "Introspectable.h"
 
-class PanelIndicatorObjectView : public nux::View, public Introspectable
+class PanelMenuView : public PanelIndicatorObjectView
 {
 public:
-  PanelIndicatorObjectView ();
-  PanelIndicatorObjectView (IndicatorObjectProxy *proxy);
-  ~PanelIndicatorObjectView ();
+  PanelMenuView ();
+  ~PanelMenuView ();
 
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
+  void SetProxy (IndicatorObjectProxy *proxy);
+
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
-  nux::HLayout *_layout;
-
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
-
-  IndicatorObjectProxy *_proxy;
-  std::vector<PanelIndicatorObjectEntryView *> _entries;
+  void          AddProperties (GVariantBuilder *builder); 
 };
 
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H

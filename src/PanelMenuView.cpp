@@ -24,40 +24,34 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "PanelIndicatorObjectView.h"
+#include "PanelMenuView.h"
 
 #include "IndicatorObjectEntryProxy.h"
 
 #include <glib.h>
 
-PanelIndicatorObjectView::PanelIndicatorObjectView ()
-: View (NUX_TRACKER_LOCATION),
-  _proxy (NULL),
-  _entries ()
+PanelMenuView::PanelMenuView ()
 {
-}
-
-PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
-: View (NUX_TRACKER_LOCATION),
-  _proxy (proxy),
-  _entries ()
-{
-  printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
+  //printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-
   SetCompositionLayout (_layout);
- 
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
 }
 
-PanelIndicatorObjectView::~PanelIndicatorObjectView ()
+PanelMenuView::~PanelMenuView ()
 {
+}
+void
+PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
+{
+  _proxy = proxy;
+ 
+  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
+  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
+  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRemoved));
 }
 
 long
-PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
@@ -65,13 +59,13 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 }
 
 void
-PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
 
 void
-PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
   _layout->ProcessDraw (GfxContext, force_draw);
@@ -79,7 +73,7 @@ PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool for
 }
 
 void
-PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
   _layout->AddView (view, 0, nux::eCenter, nux::eFull);
@@ -94,13 +88,13 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 }
 
 void
-PanelIndicatorObjectView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
+PanelMenuView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
 {
   printf ("ERROR: Moving IndicatorObjectEntry not supported\n");
 }
 
 void
-PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
+PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
   
@@ -122,19 +116,19 @@ PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
 }
 
 const gchar *
-PanelIndicatorObjectView::GetName ()
+PanelMenuView::GetName ()
 {
-  return _proxy->GetName ().c_str ();
+  return "MenuView";
 }
 
 const gchar *
-PanelIndicatorObjectView::GetChildsName ()
+PanelMenuView::GetChildsName ()
 {
   return "entries";
 }
 
 void
-PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
+PanelMenuView::AddProperties (GVariantBuilder *builder)
 {
   nux::Geometry geo = GetGeometry ();
 
