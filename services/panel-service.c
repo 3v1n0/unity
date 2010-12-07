@@ -497,8 +497,6 @@ on_indicator_menu_show (IndicatorObject      *object,
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
 
-  g_debug ("%s: %p", G_STRFUNC, entry);
-
   entry_id = g_strdup_printf ("%p", entry);
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
@@ -848,7 +846,9 @@ panel_service_show_entry (PanelService *self,
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
 
-  if (GTK_IS_MENU (priv->last_menu))
+  if (GTK_IS_MENU (priv->last_menu)
+      && (button == 0 ? (entry != NULL && GTK_IS_MENU (entry->menu))
+                      : TRUE))
     {
       priv->last_x = 0;
       priv->last_y = 0;
