@@ -869,7 +869,7 @@ Launcher::CheckWindowOverLauncher ()
     if (window->type () != CompWindowTypeNormalMask)
       continue;
     
-    if (window->frameRegion ().intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    if (window->inputRegion ().intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
       EnsureHiddenState ();
