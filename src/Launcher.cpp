@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
+#include "QuicklistManager.h"
 #include "QuicklistView.h"
 
 #define ANIM_DURATION_SHORT 125
@@ -265,6 +266,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _drag_end_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
     _autohide_time.tv_nsec = 0;
+
+    _quicklist_manager = new QuicklistManager();
 }
 
 Launcher::~Launcher()
@@ -912,9 +915,13 @@ void Launcher::SetupAutohideTimer ()
 {
   if (_autohide)
   {
-    if (_autohide_handle > 0)
-      g_source_remove (_autohide_handle);
-    _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
+    // Don't hide when a quicklist is visible
+    if (!_quicklist_manager->Current ())
+    {
+      if (_autohide_handle > 0)
+        g_source_remove (_autohide_handle);
+      _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
+    }
   }
 }
 
@@ -1966,5 +1973,10 @@ void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
 {
   if (_active_quicklist == quicklist)
     _active_quicklist = 0;
+}
+
+QuicklistManager *Launcher::GetQuicklistManager ()
+{
+  return _quicklist_manager;
 }
 

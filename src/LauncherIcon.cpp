@@ -66,9 +66,9 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _sort_priority = 0;
 
   _quicklist = new QuicklistView ();
-  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
-  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
+
+  _launcher->GetQuicklistManager ()->RegisterQuicklist (_quicklist);
   
   // Add to introspection
   AddChild (_quicklist);
@@ -292,7 +292,7 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  if (_launcher->GetActiveQuicklist ())
+  if (_launcher->GetQuicklistManager ()->Current ())
   {
     // A quicklist is active
     return;
@@ -318,24 +318,21 @@ void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
   {
-    if (_launcher->GetActiveQuicklist () == _quicklist)
+    if (_launcher->GetQuicklistManager ()->Current ())
     {
-      // this quicklist is already active
-      return;
-    }
-    
-    if (_launcher->GetActiveQuicklist ())
-    {
+      // We probably should let QuicklistManager deal with this case...
+      _launcher->GetQuicklistManager ()->HideQuicklist (_launcher->GetQuicklistManager ()->Current());
+
       // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
       // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
       // So the new quicklist that is about to be set as active will keep the grab of the pointer.
       // Also disable theinput window.
-      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
-      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
+      //_launcher->GetQuicklistManager ()->Current ()->EnableInputWindow (false);
+      //_launcher->GetQuicklistManager ()->Current ()->CaptureMouseDownAnyWhereElse (false);
       // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
       // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
       // and it set the active window to Null.
-      _launcher->GetActiveQuicklist ()->ShowWindow (false);
+      //_launcher->GetQuicklistManager ()->Current ()->ShowWindow (false);
     }
     
     _tooltip->ShowWindow (false);
@@ -378,14 +375,7 @@ void LauncherIcon::RecvMouseDown (int button)
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
     int tip_y = _center.y;
-    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
-
-    _quicklist->EnableInputWindow (true, 1);
-    _quicklist->GrabPointer ();
-
-    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
-
-    _quicklist->NeedRedraw ();
+    _launcher->GetQuicklistManager ()->ShowQuicklist (_quicklist, tip_x, tip_y);
   }
 }
 
@@ -396,16 +386,6 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
-}
-
-void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->SetActiveQuicklist (_quicklist);
-}
-
-void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->CancelActiveQuicklist (_quicklist);
 }
 
 void LauncherIcon::HideTooltip ()

@@ -27,6 +27,7 @@
 #include <Nux/BaseWindow.h>
 #include "Introspectable.h"
 #include "LauncherIcon.h"
+#include "QuicklistManager.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
@@ -79,6 +80,8 @@ public:
     QuicklistView *GetActiveQuicklist ();
     //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
     void CancelActiveQuicklist (QuicklistView *quicklist);
+
+    QuicklistManager *GetQuicklistManager ();
 
 protected:
     // Introspectable methods
@@ -198,6 +201,8 @@ private:
 
 
   QuicklistView* _active_quicklist;
+
+  QuicklistManager* _quicklist_manager;
 
   bool  _hovered;
   bool  _floating;
