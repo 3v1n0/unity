@@ -231,40 +231,40 @@ PanelView::OnMenuPointerMoved (int x, int y)
   
   if (x >= geo.x && x <= (geo.x + geo.width)
       && y >= geo.y && y <= (geo.y + geo.height))
+  {
+    std::list<Area *>::iterator it;
+
+    std::list<Area *> my_children = _layout->GetChildren ();
+    for (it = my_children.begin(); it != my_children.end(); it++)
     {
-      std::list<Area *>::iterator it;
+      PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+      
+      if (view->_layout == NULL)
+        continue;
 
-      std::list<Area *> my_children = _layout->GetChildren ();
-      for (it = my_children.begin(); it != my_children.end(); it++)
+      geo = view->GetGeometry ();
+      if (x >= geo.x && x <= (geo.x + geo.width)
+          && y >= geo.y && y <= (geo.y + geo.height))
       {
-        PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-        
-        if (view->_layout == NULL)
-          continue;
+        std::list<Area *>::iterator it2;
 
-        geo = view->GetGeometry ();
-        if (x >= geo.x && x <= (geo.x + geo.width)
-            && y >= geo.y && y <= (geo.y + geo.height))
+        std::list<Area *> its_children = view->_layout->GetChildren ();
+        for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
         {
-          std::list<Area *>::iterator it2;
+          PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-          std::list<Area *> its_children = view->_layout->GetChildren ();
-          for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+          geo = entry->GetGeometry ();
+          if (x >= geo.x && x <= (geo.x + geo.width)
+              && y >= geo.y && y <= (geo.y + geo.height))
           {
-            PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-            geo = entry->GetGeometry ();
-            if (x >= geo.x && x <= (geo.x + geo.width)
-                && y >= geo.y && y <= (geo.y + geo.height))
-            {
-              entry->OnMouseDown (x, y, 0, 0);
-              break;
-            }
+            entry->OnMouseDown (x, y, 0, 0);
+            break;
           }
-          break;
         }
+        break;
       }
     }
+  }
 }
 
 void

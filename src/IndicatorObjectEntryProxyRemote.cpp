@@ -96,14 +96,6 @@ IndicatorObjectEntryProxyRemote::GetPixbuf ()
   return ret;
 }
 
-static gboolean
-emit_updated (IndicatorObjectEntryProxyRemote *self)
-{
-  self->Updated.emit ();
-
-  return false;
-}
-
 void
 IndicatorObjectEntryProxyRemote::SetActive (bool active)
 {
@@ -112,9 +104,7 @@ IndicatorObjectEntryProxyRemote::SetActive (bool active)
 
   _active = active;
 
-  g_timeout_add (0, (GSourceFunc)emit_updated, this);
-
-  //Updated.emit ();
+  Updated.emit ();
 }
 
 bool

@@ -36,13 +36,19 @@ public:
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual void DrawLayout ();
 
   void SetProxy (IndicatorObjectProxy *proxy);
+ 
+  void OnMouseEnterRecv (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnMouseLeaveRecv (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
+  nux::HLayout *_title_layout;
+  nux::HLayout *_menu_layout;
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
