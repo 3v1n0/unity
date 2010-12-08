@@ -27,6 +27,7 @@
 #include <Nux/BaseWindow.h>
 #include "Introspectable.h"
 #include "LauncherIcon.h"
+#include "LauncherDragWindow.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
@@ -223,7 +224,8 @@ private:
   int _icon_image_size;
   int _icon_image_size_delta;
   int _icon_glow_size;
-  int _dnd_delta;
+  int _dnd_delta_y;
+  int _dnd_delta_x;
   int _dnd_security;
   int _enter_y;
 
@@ -249,6 +251,7 @@ private:
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
   LauncherModel* _model;
+  LauncherDragWindow* _drag_window;
 
   CompScreen* _screen;
 

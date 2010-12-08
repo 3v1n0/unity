@@ -245,7 +245,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     _enter_y                = 0;
     _dnd_security           = 15;
-    _dnd_delta              = 0;
+    _dnd_delta_y            = 0;
+    _dnd_delta_x            = 0;
     _anim_handle            = 0;
     _autohide_handle        = 0;
     _floating               = false;
@@ -265,6 +266,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _drag_end_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
     _autohide_time.tv_nsec = 0;
+    
+    _drag_window = NULL;
 }
 
 Launcher::~Launcher()
@@ -289,7 +292,7 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
   g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
 
-  g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta));
+  g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
@@ -469,10 +472,10 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
             if (*it == anchor)
             {
                 position += _icon_size / 2;
-                _dnd_delta = _enter_y - position;
+                _dnd_delta_y = _enter_y - position;
 
-                if (position + _icon_size / 2 + _dnd_delta > geo.height)
-                    _dnd_delta -= (position + _icon_size / 2 + _dnd_delta) - geo.height;
+                if (position + _icon_size / 2 + _dnd_delta_y > geo.height)
+                    _dnd_delta_y -= (position + _icon_size / 2 + _dnd_delta_y) - geo.height;
 
                 break;
             }
@@ -643,31 +646,31 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     _enter_y = 0;
 
-    if (hover_progress > 0.0f && _dnd_delta != 0)
+    if (hover_progress > 0.0f && _dnd_delta_y != 0)
     {
-        float delta_y = _dnd_delta;
+        float delta_y = _dnd_delta_y;
 
         // logically dnd exit only restores to the clamped ranges
         // hover_progress restores to 0
         float max = 0.0f;
         float min = MIN (0.0f, launcher_height - sum);
 
-        if (_dnd_delta > max)
+        if (_dnd_delta_y > max)
             delta_y = max + DragLimiter (delta_y - max);
-        else if (_dnd_delta < min)
+        else if (_dnd_delta_y < min)
             delta_y = min + DragLimiter (delta_y - min);
 
         if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
             float dnd_progress = DnDExitProgress (current);
 
-            if (_dnd_delta > max)
+            if (_dnd_delta_y > max)
                 delta_y = max + (delta_y - max) * dnd_progress;
-            else if (_dnd_delta < min)
+            else if (_dnd_delta_y < min)
                 delta_y = min + (delta_y - min) * dnd_progress;
 
             if (dnd_progress == 0.0f)
-                _dnd_delta = (int) delta_y;
+                _dnd_delta_y = (int) delta_y;
         }
 
         delta_y *= hover_progress;
@@ -676,7 +679,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     }
     else
     {
-        _dnd_delta = 0;
+        _dnd_delta_y = 0;
     }
 
     float autohide_progress = AutohideProgress (current);
@@ -1546,13 +1549,15 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   _mouse_position = nux::Point2 (x, y);
   nux::Geometry geo = GetGeometry ();
 
-  if (_launcher_action_state == ACTION_DRAG_LAUNCHER && !geo.IsInside(nux::Point(x, y)))
+  if (_launcher_action_state != ACTION_NONE && !geo.IsInside(nux::Point(x, y)))
   {
     // we are no longer hovered
     UnsetHover ();
   }
-
+  
   MouseUpLogic (x, y, button_flags, key_flags);
+  
+  printf ("Reset Action State\n");
   _launcher_action_state = ACTION_NONE;
   EnsureAnimation ();
 }
@@ -1561,9 +1566,12 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 {
   _mouse_position = nux::Point2 (x, y);
 
-  _dnd_delta += dy;
+  _dnd_delta_y += dy;
+  _dnd_delta_x += dx;
 
-  if (nux::Abs (_dnd_delta) < 15 && _launcher_action_state != ACTION_DRAG_LAUNCHER)
+  if (nux::Abs (_dnd_delta_y) < 15 &&
+      nux::Abs (_dnd_delta_x) < 15 && 
+      _launcher_action_state == ACTION_NONE)
       return;
 
   if (_icon_under_mouse)
@@ -1573,7 +1581,36 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     _icon_under_mouse = 0;
   }
 
-  _launcher_action_state = ACTION_DRAG_LAUNCHER;
+  if (_launcher_action_state == ACTION_NONE)
+  {
+    if (nux::Abs (_dnd_delta_y) >= nux::Abs (_dnd_delta_x))
+    {
+      printf ("Enter Launcher Drag\n");
+      _launcher_action_state = ACTION_DRAG_LAUNCHER;
+    }
+    else
+    {
+      printf ("Enter Icon Drag\n");
+      _launcher_action_state = ACTION_DRAG_ICON;
+      
+      if (!_drag_window)
+      {
+        _drag_window = new LauncherDragWindow ();
+        _drag_window->SetBaseSize (100, 100);
+      }
+      
+      _drag_window->SetBaseXY (x - 50, y - 50 + 24);
+
+      _drag_window->ShowWindow (true);
+      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
+    }
+  }
+  else if (_launcher_action_state == ACTION_DRAG_ICON)
+  {
+    _drag_window->SetBaseXY (x - 50, y - 50 + 24);
+    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
+  }
+  
   EnsureAnimation ();
 }
 
@@ -1593,7 +1630,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   _mouse_position = nux::Point2 (x, y);
   _mouse_inside_launcher = false;
 
-  if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
+  if (_launcher_action_state == ACTION_NONE)
       UnsetHover ();
 
   EventLogic ();
@@ -1614,7 +1651,7 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 
 void Launcher::EventLogic ()
 {
-  if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
+  if (_launcher_action_state != ACTION_NONE)
     return;
 
   LauncherIcon* launcher_icon = 0;
@@ -1658,7 +1695,7 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   {
     _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
 
-    if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
+    if (_launcher_action_state == ACTION_NONE)
       _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
   }
 
