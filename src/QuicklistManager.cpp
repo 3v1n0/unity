@@ -12,6 +12,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Jamal Fanaian <j@jamalfanaian.com>
  */
 
 #include "Nux/Nux.h"
@@ -28,7 +30,6 @@ QuicklistManager::QuicklistManager ()
 
 QuicklistManager::~QuicklistManager ()
 {
-  // TODO: Lots of stuff to free up
 }
 
 QuicklistView *QuicklistManager::Current ()
@@ -38,9 +39,17 @@ QuicklistView *QuicklistManager::Current ()
 
 void QuicklistManager::RegisterQuicklist (QuicklistView *quicklist)
 {
-  printf("--QuicklistManager::RegisterQuicklist\n");
+  std::list<QuicklistView*>::iterator it;
 
-  // TODO: Check for duplicate quicklist items
+  for (it = _quicklist_list.begin(); it != _quicklist_list.end(); it++)
+  {
+    if (*it == quicklist)
+    {
+      // quicklist has already been registered
+      return;
+    }
+  }
+
   _quicklist_list.push_back (quicklist);
 
   quicklist->sigVisible.connect (sigc::mem_fun (this, &QuicklistManager::RecvShowQuicklist));
@@ -50,8 +59,6 @@ void QuicklistManager::RegisterQuicklist (QuicklistView *quicklist)
 void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x, 
                                       int tip_y, bool hide_existing_if_open)
 {
-  printf("--QuicklistManager::ShowQuicklist\n");
-
   if (_current_quicklist == quicklist) 
   {
     // this quicklist is already active
@@ -69,8 +76,6 @@ void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x,
 
 void QuicklistManager::HideQuicklist (QuicklistView *quicklist)
 {
-  printf("--QuicklistManager::HideQuicklist\n");
-
   quicklist->Hide();
 }
 
