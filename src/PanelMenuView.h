@@ -37,7 +37,15 @@ public:
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual void DrawLayout ();
-
+  virtual long PostLayoutManagement (long LayoutResult);
+  virtual void PreLayoutManagement ();
+  
+  void RecvButtonMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvButtonMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvButtonMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvButtonMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvButtonMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  
   void SetProxy (IndicatorObjectProxy *proxy);
  
   void OnMouseEnterRecv (int x, int y, unsigned long button_flags, unsigned long key_flags);
