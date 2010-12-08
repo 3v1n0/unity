@@ -15,8 +15,10 @@
  */
 
 #include "Nux/Nux.h"
+#include "Nux/BaseWindow.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowCompositor.h"
+#include "QuicklistView.h"
 #include "QuicklistManager.h"
 
 QuicklistManager::QuicklistManager ()
@@ -40,46 +42,49 @@ void QuicklistManager::RegisterQuicklist (QuicklistView *quicklist)
 
   // TODO: Check for duplicate quicklist items
   _quicklist_list.push_back (quicklist);
+
+  quicklist->sigVisible.connect (sigc::mem_fun (this, &QuicklistManager::RecvShowQuicklist));
+  quicklist->sigHidden.connect (sigc::mem_fun (this, &QuicklistManager::RecvHideQuicklist));
 }
 
-void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x, int tip_y, bool hide_existing_if_open)
+void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x, 
+                                      int tip_y, bool hide_existing_if_open)
 {
   printf("--QuicklistManager::ShowQuicklist\n");
 
   if (_current_quicklist == quicklist) 
   {
     // this quicklist is already active
+    // do we want to still redraw in case the position has changed?
     return;
   }
 
-  _current_quicklist = quicklist;
+  if (hide_existing_if_open && _current_quicklist)
+  {
+    HideQuicklist (_current_quicklist);
+  }
 
   quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
-
-  quicklist->EnableInputWindow (true, 1);
-  quicklist->GrabPointer ();
-
-  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (quicklist);
-
-  quicklist->NeedRedraw ();
 }
 
 void QuicklistManager::HideQuicklist (QuicklistView *quicklist)
 {
   printf("--QuicklistManager::HideQuicklist\n");
 
-  quicklist->EnableInputWindow (false);
-  quicklist->CaptureMouseDownAnyWhereElse (false);
-  quicklist->ShowWindow(false);
+  quicklist->Hide();
+}
 
-  if (_current_quicklist == quicklist) 
+void QuicklistManager::RecvShowQuicklist (nux::BaseWindow *window)
+{
+  QuicklistView *quicklist = (QuicklistView*) window;
+  _current_quicklist = quicklist;
+}
+
+void QuicklistManager::RecvHideQuicklist (nux::BaseWindow *window)
+{
+  if (_current_quicklist == window) 
   { 
     _current_quicklist = 0;
-  }
-
-  if (_current_quicklist) 
-  {
-    printf("dangling current\n");
   }
 }
 

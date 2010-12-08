@@ -17,8 +17,6 @@
 #ifndef QUICKLISTMANAGER_H
 #define QUICKLISTMANAGER_H
 
-#include "QuicklistView.h"
-
 class QuicklistManager
 {
 public:
@@ -32,6 +30,9 @@ public:
   void RegisterQuicklist (QuicklistView *quicklist);
   void ShowQuicklist (QuicklistView *quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
   void HideQuicklist (QuicklistView *quicklist);
+
+  void RecvShowQuicklist (nux::BaseWindow *window);
+  void RecvHideQuicklist (nux::BaseWindow *window);
 
   sigc::signal<void, QuicklistView*> quicklist_opened;
   sigc::signal<void, QuicklistView*> quicklist_closed;

@@ -144,12 +144,36 @@ void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
   SetBaseX (x);
   SetBaseY (y);
   
-  ShowWindow (true);
+  Show ();
 }
 
 void QuicklistView::ShowWindow (bool b, bool start_modal)
 {
   BaseWindow::ShowWindow (b, start_modal);
+}
+
+void QuicklistView::Show ()
+{
+  if (!IsVisible())
+  {
+    EnableInputWindow (true, 1);
+    GrabPointer ();
+    NeedRedraw ();
+    ShowWindow (true);
+  }
+}
+
+void QuicklistView::Hide ()
+{
+  if (IsVisible())
+  {
+    CancelItemsPrelightStatus ();
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
+  }
 }
 
 long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
@@ -191,30 +215,14 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     else
     {
       _mouse_down = false;
-      if (IsVisible ())
-      {
-        CancelItemsPrelightStatus ();
-        CaptureMouseDownAnyWhereElse (false);
-        ForceStopFocus (1, 1);
-        UnGrabPointer ();
-        EnableInputWindow (false);
-        ShowWindow (false);
-      }
+      Hide ();
       return nux::eMouseEventSolved;
     }
   }
   else if ((ievent.e_event == nux::NUX_MOUSE_RELEASED) && _mouse_down)
   {
     _mouse_down = false;
-    if (IsVisible ())
-    {
-      CancelItemsPrelightStatus ();
-      CaptureMouseDownAnyWhereElse (false);
-      ForceStopFocus (1, 1);
-      UnGrabPointer ();
-      EnableInputWindow (false);
-      ShowWindow (false);
-    }
+    Hide ();
     return nux::eMouseEventSolved;
   }
   
@@ -406,12 +414,7 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
 
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    Hide ();
   }
 }
 
@@ -460,12 +463,7 @@ void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
     
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    Hide ();
   }  
 }
 
@@ -552,12 +550,7 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 {
   if (IsVisible ())
   {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    Hide ();
   }
 }
 
@@ -573,15 +566,7 @@ void QuicklistView::RecvMouseDrag (int x, int y, int dx, int dy, unsigned long b
   
 void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (IsVisible ())
-  {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
-  }
+  Hide ();
 }
 
 void QuicklistView::RemoveAllMenuItem ()
