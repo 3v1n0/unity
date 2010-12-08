@@ -109,8 +109,7 @@ def run_unity (verbose, debug, compiz_args, log_file):
 
 if __name__ == '__main__':
     usage = "usage: %prog [options]"
-    #parser = OptionParser(version= "%prog " + @VERSION@, usage=usage)
-    parser = OptionParser(version= "%prog " + "0.1", usage=usage)
+    parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
