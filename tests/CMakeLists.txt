@@ -62,6 +62,8 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/PanelStyle.cpp
+                ../src/PanelStyle.h
                 ../src/PanelView.cpp
                 ../src/PanelView.h
                 ../src/PanelIndicatorObjectView.cpp

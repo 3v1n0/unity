@@ -26,7 +26,7 @@ class PanelStyle {
     PanelStyle ();
     ~PanelStyle ();
 
-    PanelStyle* GetDefault ();
+    static PanelStyle* GetDefault ();
 
     void GetTextColor (nux::Color* color);
     void GetBackgroundTop (nux::Color* color);

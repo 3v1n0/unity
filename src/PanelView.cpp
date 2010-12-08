@@ -31,6 +31,7 @@
 #include <glib.h>
 
 #include "PanelView.h"
+#include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
 #include "PanelIndicatorObjectView.h"
@@ -155,8 +156,28 @@ PanelView::UpdateBackground ()
   cairo_set_line_width (cr, 1);
 
   cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
-  cairo_pattern_add_color_stop_rgb (pat, 0.0f, 89/255.0f, 88/255.0f, 83/255.0f);
-  cairo_pattern_add_color_stop_rgb (pat, 1.0f, 50/255.0f, 50/255.0f, 45/255.0f);
+
+  PanelStyle* style = PanelStyle::GetDefault ();
+  nux::Color  start;
+  nux::Color  end;
+
+  style->GetBackgroundTop (&start);
+  style->GetBackgroundBottom (&end);
+
+  cairo_pattern_add_color_stop_rgb (pat,
+                                    0.0f,
+                                    start.GetRed (),
+                                    start.GetGreen (),
+                                    start.GetBlue ());
+  cairo_pattern_add_color_stop_rgb (pat,
+                                    1.0f,
+                                    end.GetRed (),
+                                    end.GetGreen (),
+                                    end.GetBlue ());
+
+  //cairo_pattern_add_color_stop_rgb (pat, 0.0f, 89/255.0f, 88/255.0f, 83/255.0f);
+  //cairo_pattern_add_color_stop_rgb (pat, 1.0f, 50/255.0f, 50/255.0f, 45/255.0f);
+
   cairo_set_source (cr, pat);
   cairo_rectangle (cr, 0, 0, _last_width, _last_height);
   cairo_fill (cr);
