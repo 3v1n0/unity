@@ -241,8 +241,11 @@ BamfLauncherIcon::OnMouseClick (int button)
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
   
-  if (!running)
+  if (!running && !GetQuirk(LAUNCHER_ICON_QUIRK_RUNNING))
+  {
+    SetQuirk(LAUNCHER_ICON_QUIRK_RUNNING, true);
     OpenInstance ();
+  }
   else if (active)
     Spread ();
   else
