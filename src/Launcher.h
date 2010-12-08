@@ -27,7 +27,6 @@
 #include <Nux/BaseWindow.h>
 #include "Introspectable.h"
 #include "LauncherIcon.h"
-#include "QuicklistManager.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
@@ -74,14 +73,15 @@ public:
     virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
+    virtual void RecvQuicklistOpened (QuicklistView *quicklist);
+    virtual void RecvQuicklistClosed (QuicklistView *quicklist);
+
     //! Called by LauncherIcon to signal that a Quicklist is becoming active.
     void SetActiveQuicklist (QuicklistView *quicklist);
     //! Get the active qicklist
     QuicklistView *GetActiveQuicklist ();
     //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
     void CancelActiveQuicklist (QuicklistView *quicklist);
-
-    QuicklistManager *GetQuicklistManager ();
 
 protected:
     // Introspectable methods
@@ -201,8 +201,6 @@ private:
 
 
   QuicklistView* _active_quicklist;
-
-  QuicklistManager* _quicklist_manager;
 
   bool  _hovered;
   bool  _floating;

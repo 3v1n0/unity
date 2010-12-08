@@ -191,6 +191,9 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
 
+    QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
+    QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
+
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
 
@@ -266,8 +269,6 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _drag_end_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
     _autohide_time.tv_nsec = 0;
-
-    _quicklist_manager = new QuicklistManager();
 }
 
 Launcher::~Launcher()
@@ -846,7 +847,7 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 void
 Launcher::EnsureHiddenState ()
 {
-  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher)
+  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher && !QuicklistManager::Default ()->Current())
     SetHidden (true);
   else
     SetHidden (false);
@@ -915,13 +916,9 @@ void Launcher::SetupAutohideTimer ()
 {
   if (_autohide)
   {
-    // Don't hide when a quicklist is visible
-    if (!_quicklist_manager->Current ())
-    {
-      if (_autohide_handle > 0)
-        g_source_remove (_autohide_handle);
-      _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
-    }
+    if (_autohide_handle > 0)
+      g_source_remove (_autohide_handle);
+    _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
   }
 }
 
@@ -1619,6 +1616,20 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 {
 }
 
+void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)
+{
+  EventLogic ();
+  EnsureAnimation ();
+}
+
+void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
+{
+  SetupAutohideTimer ();
+
+  EventLogic ();
+  EnsureAnimation ();
+}
+
 void Launcher::EventLogic ()
 {
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
@@ -1973,10 +1984,5 @@ void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
 {
   if (_active_quicklist == quicklist)
     _active_quicklist = 0;
-}
-
-QuicklistManager *Launcher::GetQuicklistManager ()
-{
-  return _quicklist_manager;
 }
 

@@ -23,6 +23,16 @@
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 
+QuicklistManager * QuicklistManager::_default = 0;
+
+/* static */
+QuicklistManager *QuicklistManager::Default ()
+{
+  if (!_default)
+    _default = new QuicklistManager ();
+  return _default;
+}
+
 QuicklistManager::QuicklistManager ()
 {
   _current_quicklist = 0;
@@ -41,13 +51,10 @@ void QuicklistManager::RegisterQuicklist (QuicklistView *quicklist)
 {
   std::list<QuicklistView*>::iterator it;
 
-  for (it = _quicklist_list.begin(); it != _quicklist_list.end(); it++)
-  {
-    if (*it == quicklist)
-    {
-      // quicklist has already been registered
-      return;
-    }
+  if (std::find (_quicklist_list.begin(), _quicklist_list.end(), quicklist) != _quicklist_list.end()) {
+    // quicklist has already been registered
+    g_warning ("Attempted to register a quicklist that was previously registered");
+    return;
   }
 
   _quicklist_list.push_back (quicklist);
@@ -82,14 +89,21 @@ void QuicklistManager::HideQuicklist (QuicklistView *quicklist)
 void QuicklistManager::RecvShowQuicklist (nux::BaseWindow *window)
 {
   QuicklistView *quicklist = (QuicklistView*) window;
+
   _current_quicklist = quicklist;
+
+  quicklist_opened.emit (quicklist);
 }
 
 void QuicklistManager::RecvHideQuicklist (nux::BaseWindow *window)
 {
-  if (_current_quicklist == window) 
+  QuicklistView *quicklist = (QuicklistView*) window;
+
+  if (_current_quicklist == quicklist) 
   { 
     _current_quicklist = 0;
   }
+
+  quicklist_closed.emit (quicklist);
 }
 

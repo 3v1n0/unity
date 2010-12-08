@@ -19,15 +19,16 @@
 #ifndef QUICKLISTMANAGER_H
 #define QUICKLISTMANAGER_H
 
-class QuicklistManager
+class QuicklistManager : public sigc::trackable
 {
 public:
+  static QuicklistManager *Default ();
+
   QuicklistManager ();
 
   ~QuicklistManager ();
 
-  QuicklistManager * Default ();
-  QuicklistView * Current ();
+  QuicklistView *Current ();
 
   void RegisterQuicklist (QuicklistView *quicklist);
   void ShowQuicklist (QuicklistView *quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
@@ -40,6 +41,8 @@ public:
   sigc::signal<void, QuicklistView*> quicklist_closed;
 
 private:
+  static QuicklistManager *_default;
+
   std::list<QuicklistView*> _quicklist_list;
   QuicklistView *_current_quicklist;
 
