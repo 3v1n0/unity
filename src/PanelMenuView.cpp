@@ -34,13 +34,15 @@
 PanelMenuView::PanelMenuView ()
 {
   _title_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _title_layout->Reference ();
   nux::Button *but = new nux::Button ("Hello");
   _title_layout->AddView (but, 1, nux::eCenter, nux::eFull);
    
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _menu_layout->Reference ();
 
-  _layout = _menu_layout;
-  SetCompositionLayout (_layout);
+  _layout = _title_layout;
+  SetCompositionLayout (_title_layout);
 }
 
 PanelMenuView::~PanelMenuView ()
@@ -67,6 +69,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
   long ret = TraverseInfo;
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
+  OnEvent (ievent, TraverseInfo, ProcessEventInfo);
   return ret;
 }
 
@@ -94,12 +97,20 @@ void
 PanelMenuView::OnMouseEnterRecv (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   g_debug ("%s", G_STRFUNC);
+  SetCompositionLayout (_menu_layout);
+  _layout = _menu_layout;
+  this->ComputeChildLayout ();
+  NeedRedraw ();
 }
 
 void
 PanelMenuView::OnMouseLeaveRecv (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   g_debug ("%s", G_STRFUNC);
+  SetCompositionLayout (_title_layout);
+  _layout = _title_layout;
+  this->ComputeChildLayout ();
+  NeedRedraw ();
 }
 
 void
