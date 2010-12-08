@@ -26,6 +26,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <gconf/gconf-client.h>
 
 LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window)
 {
@@ -39,7 +40,13 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _favorite_store = FavoriteStore::GetDefault ();
 
   g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
-  InsertExpoAction ();
+  
+  _config = gconf_client_get_default (void);
+  _num_workspaces = gconf_client_get_int (_config, "/apps/compiz/general/screen0/options/hsize", NULL);
+  if(_num_workspaces > 1)
+  {
+    InsertExpoAction ();
+  }
   InsertTrash ();
 }
 

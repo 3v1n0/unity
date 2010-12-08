@@ -53,7 +53,9 @@ private:
     LauncherModel*   _model;
     nux::BaseWindow* _window;
     FavoriteStore*   _favorite_store;
+    GConfClient *    _config;
     int              _sort_priority;
+    int              _num_workspaces;
 
     void InsertExpoAction ();
     
