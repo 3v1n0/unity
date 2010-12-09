@@ -599,7 +599,11 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.shimmer_progress = IconShimmerProgress (icon, current);
 
     float urgent_progress = IconUrgentProgress (icon, current);
-    urgent_progress = CLAMP (urgent_progress * 3, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
+    
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+      urgent_progress = CLAMP (urgent_progress * 3.0f, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
+    else
+      urgent_progress = CLAMP (urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
     arg.glow_intensity = urgent_progress;
 }
 
