@@ -34,6 +34,8 @@ class PanelStyle : public nux::Object
     nux::Color& GetBackgroundBottom ();
     nux::Color& GetTextShadow ();
 
+    sigc::signal<void, PanelStyle&> sigChanged;
+
   private:
     static PanelStyle* _panel_style;
     nux::Color         _text;

@@ -22,11 +22,28 @@
 
 PanelStyle* PanelStyle::_panel_style = NULL;
 
+void
+OnStyleChanged (GObject*    gobject,
+                GParamSpec* pspec,
+                gpointer    data)
+{
+  PanelStyle* self = (PanelStyle*) data;
+
+  self->sigChanged.emit (*self);
+}
+
 PanelStyle*
 PanelStyle::GetDefault ()
 {
   if (_panel_style == NULL)
+  {
     _panel_style = new PanelStyle ();
+
+    g_signal_connect (gtk_settings_get_default (),
+                      "notify::gtk-theme-name",
+                      G_CALLBACK (OnStyleChanged),
+                      _panel_style);
+  }
 
   _panel_style->Reference (); 
   return _panel_style;
