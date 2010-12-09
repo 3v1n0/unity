@@ -319,12 +319,6 @@ void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
   {
-    if (QuicklistManager::Default ()->Current ())
-    {
-      // We probably should let QuicklistManager deal with this case...
-      QuicklistManager::Default ()->HideQuicklist (QuicklistManager::Default ()->Current());
-    }
-    
     _tooltip->ShowWindow (false);
     
     _quicklist->RemoveAllMenuItem ();
