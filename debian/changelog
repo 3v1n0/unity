@@ -1,4 +1,4 @@
-unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
+unity (3.2.6-0ubuntu1) natty; urgency=low
 
   [ Didier Roche ]
   * New upstream release:
@@ -40,7 +40,7 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
   * debian/source_unity.py:
     - reassign crashes due to the indicators to the right source directly
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Dec 2010 19:31:11 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Dec 2010 19:57:14 +0100
 
 unity (3.2.2-0ubuntu2) natty; urgency=low
 
