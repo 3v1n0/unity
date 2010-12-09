@@ -230,6 +230,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _launcher_action_state  = ACTION_NONE;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
+    _drag_icon              = NULL;
     _icon_image_size        = 48;
     _icon_glow_size         = 62;
     _icon_image_size_delta  = 6;
@@ -245,6 +246,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     _enter_y                = 0;
     _dnd_security           = 15;
+    _launcher_drag_delta    = 0;
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
     _anim_handle            = 0;
@@ -264,6 +266,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _exit_time.tv_nsec = 0;
     _drag_end_time.tv_sec = 0;
     _drag_end_time.tv_nsec = 0;
+    _drag_start_time.tv_sec = 0;
+    _drag_start_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
     _autohide_time.tv_nsec = 0;
     
@@ -314,6 +318,11 @@ float Launcher::GetHoverProgress (struct timespec const &current)
 float Launcher::DnDExitProgress (struct timespec const &current)
 {
     return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+}
+
+float Launcher::DnDStartProgress (struct timespec const &current)
+{
+  return CLAMP ((float) (TimeDelta (&current, &_drag_start_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::AutohideProgress (struct timespec const &current)
@@ -397,7 +406,11 @@ bool Launcher::AnimationInProgress ()
     // hover out animation
     if (TimeDelta (&current, &_exit_time) < ANIM_DURATION)
         return true;
-
+    
+    // drag start animation
+    if (TimeDelta (&current, &_drag_start_time) < ANIM_DURATION)
+        return true;
+    
     // drag end animation
     if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
         return true;
@@ -472,10 +485,10 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
             if (*it == anchor)
             {
                 position += _icon_size / 2;
-                _dnd_delta_y = _enter_y - position;
+                _launcher_drag_delta = _enter_y - position;
 
-                if (position + _icon_size / 2 + _dnd_delta_y > geo.height)
-                    _dnd_delta_y -= (position + _icon_size / 2 + _dnd_delta_y) - geo.height;
+                if (position + _icon_size / 2 + _launcher_drag_delta > geo.height)
+                    _launcher_drag_delta -= (position + _icon_size / 2 + _launcher_drag_delta) - geo.height;
 
                 break;
             }
@@ -590,6 +603,72 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.glow_intensity = urgent_progress;
 }
 
+void Launcher::FillRenderArg (LauncherIcon *icon,
+                              RenderArg &arg,
+                              nux::Point3 &center,
+                              float folding_threshold,
+                              float folded_size,
+                              float folded_spacing,
+                              float autohide_offset,
+                              float folded_z_distance,
+                              float animation_neg_rads,
+                              int vertical_offset,
+                              struct timespec const &current)
+{
+    SetupRenderArg (icon, current, arg);
+
+    // reset z
+    center.z = 0;
+    
+    float size_modifier = IconVisibleProgress (icon, current);
+    if (size_modifier < 1.0f)
+    {
+        arg.alpha = size_modifier;
+        center.z = 300.0f * (1.0f - size_modifier);
+    }
+
+    if (size_modifier <= 0.0f || icon == _drag_icon)
+        arg.skip = true;
+
+    if (icon == _drag_icon)
+        size_modifier *= 0.0f;
+
+    // goes for 0.0f when fully unfolded, to 1.0f folded
+    float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
+    float present_progress = IconPresentProgress (icon, current);
+
+    folding_progress *= 1.0f - present_progress;
+
+    float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
+
+    float icon_hide_offset = autohide_offset;
+
+    icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+
+    // icon is crossing threshold, start folding
+    center.z += folded_z_distance * folding_progress;
+    arg.folding_rads = animation_neg_rads * folding_progress;
+
+    float spacing_overlap = CLAMP ((float) (center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
+    float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
+    
+    // FIXME: jerky
+    if (_launcher_action_state == ACTION_DRAG_ICON)
+    {
+      if (_mouse_position.y >= center.y && _mouse_position.y < center.y + (half_size * 2.0f * size_modifier) + spacing)
+      {
+        center.y += (half_size * 2.0f * size_modifier) + spacing;
+      }
+    }
+    
+
+    center.y += half_size * size_modifier;   // move to center
+    arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
+    icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
+    center.y += (half_size * size_modifier) + spacing;   // move to end
+    
+}
+
 float Launcher::DragLimiter (float x)
 {
   float result = (1 - std::pow (159.0 / 160,  std::abs (x))) * 160;
@@ -646,31 +725,31 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     _enter_y = 0;
 
-    if (hover_progress > 0.0f && _dnd_delta_y != 0)
+    if (hover_progress > 0.0f && _launcher_drag_delta != 0)
     {
-        float delta_y = _dnd_delta_y;
+        float delta_y = _launcher_drag_delta;
 
         // logically dnd exit only restores to the clamped ranges
         // hover_progress restores to 0
         float max = 0.0f;
         float min = MIN (0.0f, launcher_height - sum);
 
-        if (_dnd_delta_y > max)
+        if (_launcher_drag_delta > max)
             delta_y = max + DragLimiter (delta_y - max);
-        else if (_dnd_delta_y < min)
+        else if (_launcher_drag_delta < min)
             delta_y = min + DragLimiter (delta_y - min);
 
         if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
             float dnd_progress = DnDExitProgress (current);
 
-            if (_dnd_delta_y > max)
+            if (_launcher_drag_delta > max)
                 delta_y = max + (delta_y - max) * dnd_progress;
-            else if (_dnd_delta_y < min)
+            else if (_launcher_drag_delta < min)
                 delta_y = min + (delta_y - min) * dnd_progress;
 
             if (dnd_progress == 0.0f)
-                _dnd_delta_y = (int) delta_y;
+                _launcher_drag_delta = (int) delta_y;
         }
 
         delta_y *= hover_progress;
@@ -679,7 +758,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     }
     else
     {
-        _dnd_delta_y = 0;
+        _launcher_drag_delta = 0;
     }
 
     float autohide_progress = AutohideProgress (current);
@@ -705,48 +784,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         RenderArg arg;
         LauncherIcon *icon = *it;
 
-        SetupRenderArg (icon, current, arg);
-
-        // reset z
-        center.z = 0;
-
-        float size_modifier = IconVisibleProgress (icon, current);
-        if (size_modifier < 1.0f)
-        {
-            arg.alpha = size_modifier;
-            center.z = 300.0f * (1.0f - size_modifier);
-        }
-
-        if (size_modifier <= 0.0f)
-        {
-            arg.skip = true;
-            continue;
-        }
-
-        // goes for 0.0f when fully unfolded, to 1.0f folded
-        float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-        float present_progress = IconPresentProgress (icon, current);
-
-        folding_progress *= 1.0f - present_progress;
-
-        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
-
-        float icon_hide_offset = autohide_offset;
-
-        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
-
-        // icon is crossing threshold, start folding
-        center.z += folded_z_distance * folding_progress;
-        arg.folding_rads = animation_neg_rads * folding_progress;
-
-        center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
-        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
-        center.y += half_size * size_modifier;   // move to end
-
-        float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-        //add spacing
-        center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
+        FillRenderArg (icon, arg, center, folding_threshold, folded_size, folded_spacing, 
+                       autohide_offset, folded_z_distance, animation_neg_rads, vertical_offset, current);
 
         launcher_args.push_back (arg);
     }
@@ -771,50 +810,10 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
-
-        SetupRenderArg (icon, current, arg);
-
-        // reset z
-        center.z = 0;
-
-        float size_modifier = IconVisibleProgress (icon, current);
-        if (size_modifier < 1.0f)
-        {
-            arg.alpha = size_modifier;
-            center.z = 300.0f * (1.0f - size_modifier);
-        }
-
-        if (size_modifier <= 0.0f)
-        {
-            arg.skip = true;
-            continue;
-        }
-
-        // goes for 0.0f when fully unfolded, to 1.0f folded
-        float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-        float present_progress = IconPresentProgress (icon, current);
-
-        folding_progress *= 1.0f - present_progress;
-
-        float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
-
-        float icon_hide_offset = autohide_offset;
-
-        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
-
-        // icon is crossing threshold, start folding
-        center.z += folded_z_distance * folding_progress;
-        arg.folding_rads = animation_neg_rads * folding_progress;
-
-        center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
-        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
-        center.y += half_size * size_modifier;   // move to end
-
-        float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-        //add spacing
-        center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
-
+        
+        FillRenderArg (icon, arg, center, folding_threshold, folded_size, folded_spacing, 
+                       autohide_offset, folded_z_distance, animation_neg_rads, vertical_offset, current);
+        
         launcher_args.push_back (arg);
     }
 }
@@ -1536,6 +1535,44 @@ void Launcher::NotifyMenuTermination(LauncherIcon* Icon)
 {
 }
 
+void Launcher::StartIconDrag (LauncherIcon *icon)
+{
+  if (!icon)
+    return;
+    
+  _drag_icon = icon;
+
+  if (_drag_window)
+  {
+    _drag_window->ShowWindow (false);
+    _drag_window->UnReference ();
+    _drag_window = NULL;
+  }
+
+  _drag_window = new LauncherDragWindow ();
+  _drag_window->ShowWindow (true);
+
+  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
+}
+
+void Launcher::EndIconDrag ()
+{
+  if (_drag_window)
+  {
+    _drag_window->ShowWindow (false);
+    _drag_window->UnReference ();
+    _drag_window = NULL;
+  }
+  
+  _drag_icon = 0;
+}
+
+void Launcher::UpdateDragWindowPosition (int x, int y)
+{
+  if (_drag_window)
+    _drag_window->SetBaseXY (x, y);
+}
+
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
@@ -1556,9 +1593,13 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   }
   
   MouseUpLogic (x, y, button_flags, key_flags);
-  
-  printf ("Reset Action State\n");
+
+  if (_launcher_action_state == ACTION_DRAG_ICON)
+    EndIconDrag ();
+
   _launcher_action_state = ACTION_NONE;
+  _dnd_delta_x = 0;
+  _dnd_delta_y = 0;
   EnsureAnimation ();
 }
 
@@ -1568,7 +1609,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
-
+  
   if (nux::Abs (_dnd_delta_y) < 15 &&
       nux::Abs (_dnd_delta_x) < 15 && 
       _launcher_action_state == ACTION_NONE)
@@ -1583,32 +1624,33 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (_launcher_action_state == ACTION_NONE)
   {
+    SetTimeStruct (&_drag_start_time);
+    
     if (nux::Abs (_dnd_delta_y) >= nux::Abs (_dnd_delta_x))
     {
-      printf ("Enter Launcher Drag\n");
+      _launcher_drag_delta += _dnd_delta_y;
       _launcher_action_state = ACTION_DRAG_LAUNCHER;
     }
     else
     {
-      printf ("Enter Icon Drag\n");
-      _launcher_action_state = ACTION_DRAG_ICON;
+      LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
       
-      if (!_drag_window)
+      if (drag_icon)
       {
-        _drag_window = new LauncherDragWindow ();
-        _drag_window->SetBaseSize (100, 100);
+        StartIconDrag (drag_icon);
+        _launcher_action_state = ACTION_DRAG_ICON;
+        UpdateDragWindowPosition (x - 50, y - 50 + 24);
       }
-      
-      _drag_window->SetBaseXY (x - 50, y - 50 + 24);
 
-      _drag_window->ShowWindow (true);
-      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
     }
+  }
+  else if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
+  {
+    _launcher_drag_delta += dy;
   }
   else if (_launcher_action_state == ACTION_DRAG_ICON)
   {
-    _drag_window->SetBaseXY (x - 50, y - 50 + 24);
-    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
+    UpdateDragWindowPosition (x - 50, y - 50 + 24);
   }
   
   EnsureAnimation ();

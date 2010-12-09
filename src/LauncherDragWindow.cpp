@@ -28,6 +28,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (LauncherDragWindow);
 
 LauncherDragWindow::LauncherDragWindow ()
 {
+  SetBaseSize (100, 100);
 }
 
 LauncherDragWindow::~LauncherDragWindow ()
@@ -45,10 +46,6 @@ void LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool forc
   geo.SetY (0);
   
   GfxContext.PushClippingRectangle (geo);
-  
-  
-  printf ("Drag Window Draw: %i,%i %ix%i\n", GetGeometry ().x, GetGeometry ().y, geo.width, geo.height);
   gPainter.Paint2DQuadColor (GfxContext, geo, nux::Color::SkyBlue);
-  
   GfxContext.PopClippingRectangle ();
 }
