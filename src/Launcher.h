@@ -74,12 +74,8 @@ public:
     virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-    //! Called by LauncherIcon to signal that a Quicklist is becoming active.
-    void SetActiveQuicklist (QuicklistView *quicklist);
-    //! Get the active qicklist
-    QuicklistView *GetActiveQuicklist ();
-    //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
-    void CancelActiveQuicklist (QuicklistView *quicklist);
+    virtual void RecvQuicklistOpened (QuicklistView *quicklist);
+    virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
 protected:
     // Introspectable methods

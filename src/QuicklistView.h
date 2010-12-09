@@ -80,6 +80,9 @@ public:
 
   void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
   virtual void ShowWindow (bool b, bool StartModal = false);
+
+  void Show ();
+  void Hide ();
   
   int GetNumItems ();
   QuicklistMenuItem* GetNthItems (int index);
