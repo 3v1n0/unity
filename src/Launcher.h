@@ -77,6 +77,7 @@ public:
     virtual void RecvQuicklistOpened (QuicklistView *quicklist);
     virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
+    sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
 protected:
     // Introspectable methods
     const gchar* GetName ();
@@ -229,9 +230,12 @@ private:
 
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
+  
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
+  
   LauncherIcon* _drag_icon;
+  LauncherIcon* _drag_icon_under_mouse;
 
   int _space_between_icons;
   int _icon_size;

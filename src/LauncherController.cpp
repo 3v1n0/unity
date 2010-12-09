@@ -41,11 +41,37 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   InsertExpoAction ();
   InsertTrash ();
+  
+  _launcher->request_reorder.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorder));
 }
 
 LauncherController::~LauncherController()
 {
   _favorite_store->UnReference ();
+}
+
+void
+LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *after)
+{
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    if ((*it) == icon)
+      continue;
+      
+    if ((*it) == after)
+    {
+      icon->SetSortPriority (i);
+      i++;
+    }
+    
+    (*it)->SetSortPriority (i);
+    i++;
+  }
+  
+  _model->Sort (&LauncherController::CompareIcons);
 }
 
 void 
@@ -55,15 +81,6 @@ LauncherController::PresentIconOwningWindow (Window window)
   LauncherIcon *owner = 0;
   
   for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it)->IconOwnsWindow (window))
-    {
-      owner = *it;
-      break;
-    }
-  }
-  
-  for (it = _model->shelf_begin (); !owner && it != _model->shelf_end (); it++)
   {
     if ((*it)->IconOwnsWindow (window))
     {
@@ -135,12 +152,6 @@ LauncherController::RegisterIcon (LauncherIcon *icon)
     (*it)->SetSortPriority (i);
     i++;
   }
-  
-  for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
-  {
-    (*it)->SetSortPriority (i);
-    i++;
-  }
 }
 
 /* static private */
@@ -193,7 +204,8 @@ LauncherController::CreateFavorite (const char *file_path)
   
   bamf_view_set_sticky (BAMF_VIEW (app), true);
   icon = new BamfLauncherIcon (_launcher, app, _screen);
-  icon->SetIconType (LAUNCHER_ICON_TYPE_FAVORITE);
+  icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  icon->SetSortPriority (_sort_priority++);
   
   return icon;
 }

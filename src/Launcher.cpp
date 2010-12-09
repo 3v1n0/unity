@@ -235,6 +235,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
+    _drag_icon_under_mouse  = NULL;
     _icon_image_size        = 48;
     _icon_glow_size         = 62;
     _icon_image_size_delta  = 6;
@@ -665,16 +666,15 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     {
       if (_mouse_position.y >= center.y && _mouse_position.y < center.y + (half_size * 2.0f * size_modifier) + spacing)
       {
+        _drag_icon_under_mouse = icon;
         center.y += (half_size * 2.0f * size_modifier) + spacing;
       }
     }
-    
 
     center.y += half_size * size_modifier;   // move to center
     arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
     icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
     center.y += (half_size * size_modifier) + spacing;   // move to end
-    
 }
 
 float Launcher::DragLimiter (float x)
@@ -1573,7 +1573,13 @@ void Launcher::EndIconDrag ()
     _drag_window = NULL;
   }
   
-  _drag_icon = 0;
+  if (_drag_icon && _drag_icon_under_mouse)
+  {
+    request_reorder.emit (_drag_icon, _drag_icon_under_mouse);
+  }
+  
+  _drag_icon_under_mouse = NULL;
+  _drag_icon = NULL;
 }
 
 void Launcher::UpdateDragWindowPosition (int x, int y)
