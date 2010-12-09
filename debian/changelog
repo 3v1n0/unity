@@ -12,6 +12,8 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - dep on latest nux
     - recommends nux-tools
+  * debian/libunity3.symbols:
+    - updated to include the new symbols
 
   [ Sebastien Bacher ]
   * debian/source_unity.py:
