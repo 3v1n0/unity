@@ -42,7 +42,7 @@ PanelMenuView::PanelMenuView ()
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _menu_layout->Reference ();
 
-  _layout = _menu_layout;
+  _layout = _title_layout;
   //SetCompositionLayout (_title_layout);
   
   but->OnMouseDown.connect (sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseDown));
@@ -83,14 +83,14 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
   
   if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
   {
-    if (_layout != _menu_layout)
+    if (_layout != _title_layout)
     {
       printf ("Mouse Out\n");
       // Let the _title_layout process the event before switching. The button inside
       // the _title_layout will recognize a "Mouse Leave" event
       ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
       
-      _layout = _menu_layout;
+      _layout = _title_layout;
       _layout->NeedRedraw ();
       NeedRedraw ();
       return ret;
@@ -98,10 +98,10 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
   }
   else
   {
-    if (_layout != _title_layout)
+    if (_layout != _menu_layout)
     {
       printf ("Mouse In\n");
-      _layout = _title_layout;
+      _layout = _menu_layout;
       
       _layout->NeedRedraw ();
       NeedRedraw ();
@@ -140,13 +140,29 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
 void
 PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry ();
 
+  GfxContext.PushClippingRectangle (geo);
+
+  nux::ROPConfig rop; 
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+ 
+  nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
+  gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
+
+  gPainter.PopBackground ();
+ 
+  GfxContext.PopClippingRectangle();
 }
 
 void
 PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry geo = GetGeometry ();
+
+  GfxContext.PushClippingRectangle (geo);
   _layout->ProcessDraw (GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
