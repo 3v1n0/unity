@@ -20,161 +20,79 @@
 
 #include "PanelStyle.h"
 
-PanelStyle* PanelStyle::_panelStyle = NULL;
+PanelStyle* PanelStyle::_panel_style = NULL;
 
 PanelStyle*
 PanelStyle::GetDefault ()
 {
-  if (_panelStyle == NULL)
-    _panelStyle = new PanelStyle ();
+  if (_panel_style == NULL)
+    _panel_style = new PanelStyle ();
 
-  return _panelStyle;
+  return _panel_style;
 }
 
-void
-PanelStyle::GetTextColor (nux::Color* color)
+nux::Color&
+PanelStyle::GetTextColor ()
 {
-  if (!color)
-    return;
+  nux::Color& color = _text;
 
-  color = &_text;
+  return color;
 }
 
-void
-PanelStyle::GetBackgroundTop (nux::Color* color)
+nux::Color&
+PanelStyle::GetBackgroundTop ()
 {
-  if (!color)
-    return;
+  nux::Color& color = _bg_top;
 
-  color = &_bgTop;
+  return color;
 }
 
-void
-PanelStyle::GetBackgroundBottom (nux::Color* color)
+nux::Color&
+PanelStyle::GetBackgroundBottom ()
 {
-  if (!color)
-    return;
+  nux::Color& color = _bg_bottom;
 
-  color = &_bgBottom;
+  return color;
 }
 
-void
-PanelStyle::GetTextShadow (nux::Color* color)
+nux::Color&
+PanelStyle::GetTextShadow ()
 {
-  if (!color)
-    return;
+  nux::Color& color = _text_shadow;
 
-  color = &_textShadow;
+  return color;
 }
 
 PanelStyle::PanelStyle ()
 {
-  GtkWidget* menuBar = NULL;
-  GtkStyle*  style   = NULL;
-  gint       i;
+  GtkWidget* menu_bar = NULL;
+  GtkStyle*  style    = NULL;
 
-  menuBar = gtk_menu_bar_new ();
-  style = gtk_widget_get_style (menuBar);
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "fg",
-             i,
-             (float) style->fg[i].red / (float) 0xffff,
-             (float) style->fg[i].green / (float) 0xffff,
-             (float) style->fg[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "bg",
-             i,
-             (float) style->bg[i].red / (float) 0xffff,
-             (float) style->bg[i].green / (float) 0xffff,
-             (float) style->bg[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "light",
-             i,
-             (float) style->light[i].red / (float) 0xffff,
-             (float) style->light[i].green / (float) 0xffff,
-             (float) style->light[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "dark",
-             i,
-             (float) style->dark[i].red / (float) 0xffff,
-             (float) style->dark[i].green / (float) 0xffff,
-             (float) style->dark[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "mid",
-             i,
-             (float) style->mid[i].red / (float) 0xffff,
-             (float) style->mid[i].green / (float) 0xffff,
-             (float) style->mid[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "text",
-             i,
-             (float) style->text[i].red / (float) 0xffff,
-             (float) style->text[i].green / (float) 0xffff,
-             (float) style->text[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
-
-  for (i = 0; i < 5; i++)
-  {
-    g_print ("%s[%d]: %4.3f/%4.3f/%4.3f\n",
-             "base",
-             i,
-             (float) style->base[i].red / (float) 0xffff,
-             (float) style->base[i].green / (float) 0xffff,
-             (float) style->base[i].blue / (float) 0xffff);
-  }
-  g_print ("\n");
+  menu_bar = gtk_menu_bar_new ();
+  style = gtk_widget_get_style (menu_bar);
 
   _text.SetRed (style->text[4].red / 0xffff);
   _text.SetGreen (style->text[4].green / 0xffff);
   _text.SetBlue (style->text[4].blue / 0xffff);
   _text.SetAlpha (1.0f);
 
-  _bgTop.SetRed (style->bg[1].red / 0xffff);
-  _bgTop.SetGreen (style->bg[1].green / 0xffff);
-  _bgTop.SetBlue (style->bg[1].blue / 0xffff);
-  _bgTop.SetAlpha (1.0f);
+  _bg_top.SetRed (style->bg[1].red / 0xffff);
+  _bg_top.SetGreen (style->bg[1].green / 0xffff);
+  _bg_top.SetBlue (style->bg[1].blue / 0xffff);
+  _bg_top.SetAlpha (1.0f);
 
-  _bgBottom.SetRed (style->bg[3].red / 0xffff);
-  _bgBottom.SetGreen (style->bg[3].green / 0xffff);
-  _bgBottom.SetBlue (style->bg[3].blue / 0xffff);
-  _bgBottom.SetAlpha (1.0f);
+  _bg_bottom.SetRed (style->bg[3].red / 0xffff);
+  _bg_bottom.SetGreen (style->bg[3].green / 0xffff);
+  _bg_bottom.SetBlue (style->bg[3].blue / 0xffff);
+  _bg_bottom.SetAlpha (1.0f);
 
-  _textShadow.SetRed (style->text[2].red / 0xffff);
-  _textShadow.SetGreen (style->text[2].green / 0xffff);
-  _textShadow.SetBlue (style->text[2].blue / 0xffff);
-  _textShadow.SetAlpha (1.0f);
+  _text_shadow.SetRed (style->text[2].red / 0xffff);
+  _text_shadow.SetGreen (style->text[2].green / 0xffff);
+  _text_shadow.SetBlue (style->text[2].blue / 0xffff);
+  _text_shadow.SetAlpha (1.0f);
 
   g_object_unref (style);
-  g_object_unref (menuBar);
+  g_object_unref (menu_bar);
 }
 
 PanelStyle::~PanelStyle ()

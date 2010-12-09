@@ -161,8 +161,8 @@ PanelView::UpdateBackground ()
   nux::Color  start;
   nux::Color  end;
 
-  style->GetBackgroundTop (&start);
-  style->GetBackgroundBottom (&end);
+  start = style->GetBackgroundTop ();
+  end = style->GetBackgroundBottom ();
 
   cairo_pattern_add_color_stop_rgb (pat,
                                     0.0f,

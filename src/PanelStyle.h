@@ -28,17 +28,17 @@ class PanelStyle {
 
     static PanelStyle* GetDefault ();
 
-    void GetTextColor (nux::Color* color);
-    void GetBackgroundTop (nux::Color* color);
-    void GetBackgroundBottom (nux::Color* color);
-    void GetTextShadow (nux::Color* color);
+    nux::Color& GetTextColor ();
+    nux::Color& GetBackgroundTop ();
+    nux::Color& GetBackgroundBottom ();
+    nux::Color& GetTextShadow ();
 
   private:
-    static PanelStyle* _panelStyle;
-    nux::Color  _text;
-    nux::Color  _bgTop;
-    nux::Color  _bgBottom;
-    nux::Color  _textShadow;
+    static PanelStyle* _panel_style;
+    nux::Color         _text;
+    nux::Color         _bg_top;
+    nux::Color         _bg_bottom;
+    nux::Color         _text_shadow;
 };
 
 #endif // PANEL_STYLE_H
