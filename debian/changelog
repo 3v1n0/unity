@@ -8,6 +8,8 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
     - add unity-common package and move some files there
   * debian/unity.install:
     - install new unity binary
+  * debian/control:
+    - dep on latest nux
 
   [ Sebastien Bacher ]
   * debian/source_unity.py:
