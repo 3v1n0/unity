@@ -163,10 +163,11 @@ void QuicklistView::Show ()
 {
   if (!IsVisible())
   {
+    // FIXME: ShowWindow shouldn't need to be called first
+    ShowWindow (true);
     EnableInputWindow (true, 1);
     GrabPointer ();
     NeedRedraw ();
-    ShowWindow (true);
   }
 }
 
