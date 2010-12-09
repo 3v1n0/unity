@@ -114,13 +114,11 @@ defaults_call = subprocess.Popen(["gsettings", "get", "com.canonical.Unity.Launc
 apps_list = [elem.strip()[1:-1] for elem in defaults_call.communicate()[0].strip()[1:-1].split(',')]
 
 log_file = get_log_file()
-if log_file:
-    log_file.write("Migration script called on %s\n" % str(datetime.datetime.now()))
+log("Migration script called on %s\n" % str(datetime.datetime.now()), log_file)
 
 # first migration to unity compiz
 if migration_level < '3.2.0':
-    if log_file:
-        log_file.write("======= Migration to 3.2.0 =======\n")
+    log("======= Migration to 3.2.0 =======\n", log_file)
 
     unity_mutter_favorites_list = client.get_list('/desktop/unity/launcher/favorites/favorites_list', gconf.VALUE_STRING)
     unity_mutter_launcher_ordered = {}
@@ -176,7 +174,7 @@ if migration_level < '3.2.0':
     
     if return_code != 0:
         print "Settings fail to transition to new unity compiz"
-        log_file.write("Settings fail to transition to new unity compiz\n\n")
+        log("Settings fail to transition to new unity compiz\n\n", log_file)
         if log_file:
             log_file.close()
         sys.exit(1)
@@ -186,8 +184,8 @@ if migration_level < '3.2.0':
     subprocess.call(["gconftool-2", "--recursive-unset", "/desktop/unity"])
     print "Settings successfully transitionned to new unity compiz"
 
+log("Migration script ended sucessfully\n\n", log_file)
 if log_file:
-    log_file.write("Migration script ended sucessfully\n\n")
     log_file.close()
 
 # stamp that all went well
