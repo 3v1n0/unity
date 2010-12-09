@@ -73,6 +73,10 @@ static const gchar introspection_xml[] =
   "     <arg type='i' name='y' />"
   "    </signal>"
   ""
+  "    <signal name='EntryActivateRequest'>"
+  "     <arg type='s' name='entry_id' />"
+  "    </signal>"
+  ""
   "  </interface>"
   "</node>";
 
@@ -136,8 +140,6 @@ handle_method_call (GDBusConnection       *connection,
       gint32  y;
       gint32  button;
       g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
-
-      g_debug ("button: %u", button);
 
       panel_service_show_entry (service, entry_id, timestamp, x, y, button);
 
@@ -211,6 +213,27 @@ on_service_active_menu_pointer_motion (PanelService    *service,
 }
 
 static void
+on_service_entry_activate_request (PanelService    *service,
+                                   const gchar     *entry_id,
+                                   GDBusConnection *connection)
+{
+  GError *error = NULL;
+  g_dbus_connection_emit_signal (connection,
+                                 S_NAME,
+                                 S_PATH,
+                                 S_IFACE,
+                                 "EntryActivateRequest",
+                                 g_variant_new ("(s)", entry_id),
+                                 &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit EntryActivateRequest signal: %s", error->message);
+      g_error_free (error);
+    }
+}
+
+static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
@@ -231,6 +254,8 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_entry_activated), connection);
   g_signal_connect (service, "active-menu-pointer-motion",
                     G_CALLBACK (on_service_active_menu_pointer_motion), connection);
+  g_signal_connect (service, "entry-activate-request",
+                    G_CALLBACK (on_service_entry_activate_request), connection);
 
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);

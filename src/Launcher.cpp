@@ -1149,6 +1149,9 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
                           nux::Vector4 xform_coords[],
                           nux::Geometry geo)
 {
+  if (icon == NULL || icon->IsNull ())
+    return;
+
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
   nux::Matrix4 ProjectionMatrix;
