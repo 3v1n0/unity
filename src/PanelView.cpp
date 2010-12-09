@@ -282,7 +282,6 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
 
       if (g_strcmp0 (entry->GetName (), entry_id) == 0)
         {
-          g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
           entry->Activate ();
           break;
         }
