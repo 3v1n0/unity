@@ -172,17 +172,14 @@ void QuicklistView::Show ()
 
 void QuicklistView::Hide ()
 {
-  if (IsVisible())
+  if (IsVisible() && !_enable_quicklist_for_testing)
   {
-    if (IsVisible())
-    {
-      CancelItemsPrelightStatus ();
-      CaptureMouseDownAnyWhereElse (false);
-      ForceStopFocus (1, 1);
-      UnGrabPointer ();
-      EnableInputWindow (false);
-      ShowWindow (false);
-    }
+    CancelItemsPrelightStatus ();
+    CaptureMouseDownAnyWhereElse (false);
+    ForceStopFocus (1, 1);
+    UnGrabPointer ();
+    EnableInputWindow (false);
+    ShowWindow (false);
   }
 }
 
