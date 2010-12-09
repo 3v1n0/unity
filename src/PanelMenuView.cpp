@@ -32,11 +32,24 @@
 
 #include "IndicatorObjectEntryProxy.h"
 
+#include <gio/gdesktopappinfo.h>
+
+static void on_active_window_changed (BamfMatcher   *matcher,
+                                      BamfView      *old_view,
+                                      BamfView      *new_view,
+                                      PanelMenuView *self);
+
+
 PanelMenuView::PanelMenuView ()
-: _title_layer (NULL),
+: _matcher (NULL),
+  _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
   _is_inside (false)
-{   
+{  
+  _matcher = bamf_matcher_get_default ();
+  g_signal_connect (_matcher, "active-window-changed",
+                    G_CALLBACK (on_active_window_changed), this);
+
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   /* This is for our parent and for PanelView to read indicator entries, we
@@ -153,12 +166,61 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
+gchar *
+PanelMenuView::GetActiveViewName ()
+{
+  gchar *label = NULL;
+
+  BamfApplication *app = bamf_matcher_get_active_application (_matcher);
+  if (BAMF_IS_APPLICATION (app))
+  {
+    const gchar     *filename;
+
+    filename = bamf_application_get_desktop_file (app);
+
+    if (filename && g_strcmp0 (filename, "") != 0)
+    {
+      GDesktopAppInfo *info;
+  
+      info = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (app));
+  
+      if (info)
+      {
+        label = g_strdup (g_app_info_get_display_name (G_APP_INFO (info)));
+        g_object_unref (info);
+      }
+      else
+      {
+        g_warning ("Unable to get GDesktopAppInfo for %s",
+                   bamf_application_get_desktop_file (app));
+      }
+    }
+
+    if (label == NULL)
+    {
+      BamfView *active_view;
+
+      active_view = (BamfView *)bamf_matcher_get_active_window (_matcher);
+      if (BAMF_IS_VIEW (active_view))
+        label = g_strdup (bamf_view_get_name (active_view));
+      else
+        label = g_strdup ("");
+    }
+  }
+  else
+  {
+    label = g_strdup (" ");
+  }
+
+  return label;
+}
+
 void
 PanelMenuView::Refresh ()
 {
 #define PADDING 12
   nux::Geometry         geo = GetGeometry ();
-  const char           *label = "www.google.com - Firefox";
+  char                 *label = GetActiveViewName ();
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
@@ -260,6 +322,7 @@ PanelMenuView::Refresh ()
 
     
   texture2D->UnReference ();
+  g_free (label);
 }
 
 void
@@ -327,4 +390,17 @@ PanelMenuView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+}
+
+/*
+ * C code for callbacks
+ */
+static void
+on_active_window_changed (BamfMatcher   *matcher,
+                          BamfView      *old_view,
+                          BamfView      *new_view,
+                          PanelMenuView *self)
+{
+  self->Refresh ();
+  self->NeedRedraw ();
 }

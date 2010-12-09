@@ -26,6 +26,8 @@
 #include "PanelIndicatorObjectView.h"
 #include "StaticCairoText.h"
 
+#include <libbamf/libbamf.h>
+
 class PanelMenuView : public PanelIndicatorObjectView
 {
 public:
@@ -43,21 +45,22 @@ public:
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
+  void Refresh ();
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
 private:
-  void Refresh ();
-
+  gchar * GetActiveViewName ();
+  
 private:
+  BamfMatcher* _matcher;
+
   nux::AbstractPaintLayer *_title_layer;
   nux::HLayout            *_menu_layout;
-
   nux::CairoGraphics       _util_cg;
 
-  bool _is_inside;
+  bool  _is_inside;
 };
-
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H
