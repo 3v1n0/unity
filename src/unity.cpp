@@ -384,6 +384,24 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+/* Handle changes in the number of workspaces by showing the switcher
+ * or not showing the switcher */
+bool
+UnityScreen::setOptionForPlugin(const char *plugin, const char *name, 
+                                CompOption::Value &v)
+{
+  bool status;
+  status = screen->setOptionForPlugin (plugin, name, v);
+  if (status)
+  {
+    if (strcmp (plugin, "core") == 0 && strcmp (name, "hsize") == 0)
+    {
+      controller->UpdateNumWorkspaces(screen->vpSize ().width ());
+    }
+  }
+  return status;
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :
     PluginClassHandler <UnityScreen, CompScreen> (screen),
     screen (screen),

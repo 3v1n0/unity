@@ -93,6 +93,11 @@ class UnityScreen :
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
+	
+	/* Handle changes in the number of workspaces by showing the switcher
+     * or not showing the switcher */
+	bool setOptionForPlugin(const char *plugin, const char *name, 
+                            CompOption::Value &v);
 
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);

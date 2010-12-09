@@ -46,18 +46,19 @@ public:
     void PresentIconOwningWindow (Window window);
     
 private:
-    BamfMatcher*     _matcher;
-    CompAction*      _expo_action;
-    CompScreen*      _screen;
-    Launcher*        _launcher;
-    LauncherModel*   _model;
-    nux::BaseWindow* _window;
-    FavoriteStore*   _favorite_store;
-    GConfClient *    _config;
-    int              _sort_priority;
-    int              _num_workspaces;
+    BamfMatcher*        _matcher;
+    CompAction*         _expo_action;
+    CompScreen*         _screen;
+    Launcher*           _launcher;
+    LauncherModel*      _model;
+    nux::BaseWindow*    _window;
+    FavoriteStore*      _favorite_store;
+    SimpleLauncherIcon* _expoIcon;
+    int                 _sort_priority;
+    int                 _num_workspaces;
 
     void InsertExpoAction ();
+    void RemoveExpoAction ();
     
     void InsertTrash ();
 
@@ -68,6 +69,8 @@ private:
     void SetupBamf ();
 
     void OnExpoClicked (int button);
+    
+    void UpdateNumWorkspaces(int workspaces);
     
     /* statics */
     

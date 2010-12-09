@@ -26,7 +26,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <gconf/gconf-client.h>
 
 LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window)
 {
@@ -41,8 +40,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
 
   g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   
-  _config = gconf_client_get_default (void);
-  _num_workspaces = gconf_client_get_int (_config, "/apps/compiz/general/screen0/options/hsize", NULL);
+  _num_workspaces = _screen->vpSize ().width ();
   if(_num_workspaces > 1)
   {
     InsertExpoAction ();
@@ -93,6 +91,21 @@ LauncherController::OnExpoClicked (int button)
 }
 
 void
+LauncherController::UpdateNumWorkspaces (int workspaces)
+{
+  if ((_num_workspaces == 0) && (workspaces > 0))
+  {
+    InsertExpoAction ();
+  }
+  else if((_num_workspaces > 0) && (workspaces == 0))
+  {
+    RemoveExpoAction ();
+  }
+  
+  _num_workspaces = workspaces;
+}
+
+void
 LauncherController::InsertTrash ()
 {
   TrashLauncherIcon *icon;
@@ -103,18 +116,23 @@ LauncherController::InsertTrash ()
 void
 LauncherController::InsertExpoAction ()
 {
-  SimpleLauncherIcon *expoIcon;
-  expoIcon = new SimpleLauncherIcon (_launcher);
+  _expoIcon = new SimpleLauncherIcon (_launcher);
   
-  expoIcon->SetTooltipText ("Workspace Switcher");
-  expoIcon->SetIconName ("workspace-switcher");
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
-  expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
+  _expoIcon->SetTooltipText ("Workspace Switcher");
+  _expoIcon->SetIconName ("workspace-switcher");
+  _expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
+  _expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
+  _expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
   
-  expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
+  _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   
-  RegisterIcon (expoIcon);
+  RegisterIcon (_expoIcon);
+}
+
+void
+LauncherController::RemoveExpoAction ()
+{
+  _model->RemoveIcon (_expoIcon);
 }
 
 bool
