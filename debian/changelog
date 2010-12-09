@@ -10,6 +10,7 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
     - install new unity binary
   * debian/control:
     - dep on latest nux
+    - recommends nux-tools
 
   [ Sebastien Bacher ]
   * debian/source_unity.py:
