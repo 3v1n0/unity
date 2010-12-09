@@ -42,12 +42,14 @@ public:
   
   void OnObjectAdded (IndicatorObjectProxy *proxy);
   void OnMenuPointerMoved (int x, int y);
+  void OnEntryActivateRequest (const char *entry_id);
   
   PanelHomeButton * HomeButton ();
 
 protected:
   // Introspectable methods
-  const gchar* GetName ();
+  const gchar * GetName ();
+  const gchar * GetChildsName (); 
   void AddProperties (GVariantBuilder *builder);
 
 private:

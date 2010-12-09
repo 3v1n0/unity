@@ -157,6 +157,14 @@ test_object_add_entry (TestObject  *self,
   return entry;
 }
 
+void
+test_object_show_entry (TestObject           *self,
+                        IndicatorObjectEntry *entry,
+                        guint                 timestamp)
+{
+  g_signal_emit (self, INDICATOR_OBJECT_SIGNAL_MENU_SHOW_ID, 0, entry, timestamp);
+}
+
 //----------------------- /TESTING INDICATOR STUFF ----------------------------
 
 //------------------------ USEFUL FUNCTIONS -----------------------------------
@@ -243,6 +251,7 @@ static void TestAllocation           (void);
 static void TestIndicatorLoading     (void);
 static void TestEmptyIndicatorObject (void);
 static void TestEntryAddition        (void);
+static void TestEntryActivateRequest (void);
 
 void
 TestPanelServiceCreateSuite ()
@@ -253,6 +262,7 @@ TestPanelServiceCreateSuite ()
   g_test_add_func (_DOMAIN"/IndicatorLoading", TestIndicatorLoading);
   g_test_add_func (_DOMAIN"/EmptyIndicatorObject", TestEmptyIndicatorObject);
   g_test_add_func (_DOMAIN"/EntryAddition", TestEntryAddition);
+  g_test_add_func (_DOMAIN"/EntryActivateRequest", TestEntryActivateRequest);
 }
 
 static void
@@ -347,6 +357,44 @@ TestEntryAddition ()
     }
 
   g_variant_unref (result);
+  g_list_free (objects);
+  g_object_unref (object);
+  g_object_unref (service);
+}
+
+static void
+OnEntryActivateRequest (IndicatorObject *object,
+                        const gchar     *entry_id,
+                        const gchar     *entry_id_should_be)
+{
+  g_assert_cmpstr (entry_id, ==, entry_id_should_be);
+}
+
+static void
+TestEntryActivateRequest ()
+{
+  PanelService *service;
+  TestObject   *object;
+  GList        *objects = NULL;
+  IndicatorObjectEntry *entry;
+  gchar        *id;
+  
+  object = (TestObject *)test_object_new ();
+  entry = test_object_add_entry (object, "Hello", "gtk-apply");
+  id = g_strdup_printf ("%p", entry);
+  g_assert (INDICATOR_IS_OBJECT (object));
+  objects = g_list_append (objects, object);
+
+  service = panel_service_get_default_with_indicators (objects);
+  g_assert (PANEL_IS_SERVICE (service));
+
+  g_signal_connect (service, "entry-activate-request",
+                    G_CALLBACK (OnEntryActivateRequest),
+                    id);
+
+  test_object_show_entry (object, entry, 1234);
+
+  g_free (id);
   g_list_free (objects);
   g_object_unref (object);
   g_object_unref (service);

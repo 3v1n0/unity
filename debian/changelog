@@ -1,16 +1,19 @@
-unity (3.2.2-0ubuntu4) UNRELEASED; urgency=low
+unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
 
   [ Didier Roche ]
+  * New upstream release:
   * Revert source 3, it's breaking daily build and hudson
   * remove the patch as well, fixed upstream
   * debian/control, debian/unity.install, debian/unity-common.install:
     - add unity-common package and move some files there
+  * debian/unity.install:
+    - install new unity binary
 
   [ Sebastien Bacher ]
   * debian/source_unity.py:
     - reassign crashes due to the indicators to the right source directly
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 09 Dec 2010 17:39:09 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Dec 2010 19:31:11 +0100
 
 unity (3.2.2-0ubuntu2) natty; urgency=low
 

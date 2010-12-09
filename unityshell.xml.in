@@ -32,6 +32,7 @@
 	    </relation>
 	    <requirement>
 		<plugin>opengl</plugin>
+		<plugin>wall</plugin>
 	    </requirement>
 	</deps>
 	<options>
