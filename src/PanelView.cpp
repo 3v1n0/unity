@@ -52,6 +52,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
+  _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
 }
 
 PanelView::~PanelView ()
@@ -230,6 +231,9 @@ PanelView::OnMenuPointerMoved (int x, int y)
       for (it = my_children.begin(); it != my_children.end(); it++)
       {
         PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+        
+        if (view->_layout == NULL)
+          continue;
 
         geo = view->GetGeometry ();
         if (x >= geo.x && x <= (geo.x + geo.width)
@@ -254,4 +258,34 @@ PanelView::OnMenuPointerMoved (int x, int y)
           }
       }
     }
+}
+
+void
+PanelView::OnEntryActivateRequest (const char *entry_id)
+{
+  std::list<Area *>::iterator it;
+
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+    {
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+      if (g_strcmp0 (entry->GetName (), entry_id) == 0)
+        {
+          g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
+          entry->Activate ();
+          break;
+        }
+    }
+  }
 }
