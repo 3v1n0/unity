@@ -1014,9 +1014,8 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
 }
 
-void Launcher::OnIconAdded (void *icon_pointer)
+void Launcher::OnIconAdded (LauncherIcon *icon)
 {
-    LauncherIcon *icon = (LauncherIcon *) icon_pointer;
     icon->Reference ();
     EnsureAnimation();
 
@@ -1032,9 +1031,8 @@ void Launcher::OnIconAdded (void *icon_pointer)
     AddChild (icon);
 }
 
-void Launcher::OnIconRemoved (void *icon_pointer)
+void Launcher::OnIconRemoved (LauncherIcon *icon)
 {
-    LauncherIcon *icon = (LauncherIcon *) icon_pointer;
     icon->UnReference ();
 
     EnsureAnimation();
@@ -1055,7 +1053,7 @@ void Launcher::SetModel (LauncherModel *model)
     _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
-void Launcher::OnIconNeedsRedraw (void *icon)
+void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)
 {
     EnsureAnimation();
 }

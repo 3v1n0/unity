@@ -166,11 +166,11 @@ private:
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
-  void OnIconAdded    (void *icon_pointer);
-  void OnIconRemoved  (void *icon_pointer);
+  void OnIconAdded    (LauncherIcon *icon);
+  void OnIconRemoved  (LauncherIcon *icon);
   void OnOrderChanged ();
 
-  void OnIconNeedsRedraw (void *icon);
+  void OnIconNeedsRedraw (LauncherIcon *icon);
 
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
