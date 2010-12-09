@@ -39,6 +39,8 @@
 
 #include <core/atoms.h>
 
+#include "../libunity/perf-logger-utility.h"
+
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
@@ -353,10 +355,12 @@ UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 void
 UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
+  START_FUNCTION ();
   initLauncher(thread, InitData);
 
   nux::ColorLayer background(nux::Color(0x00000000));
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
+  END_FUNCTION ();
 }
 
 void
@@ -384,6 +388,13 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+static gboolean
+write_logger_data_to_disk (gpointer data)
+{
+  perf_timeline_logger_write_log (perf_timeline_logger_get_default (), "/tmp/unity-perf.log");
+  return FALSE;
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :
     PluginClassHandler <UnityScreen, CompScreen> (screen),
     screen (screen),
@@ -391,6 +402,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
+  START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
 
@@ -426,6 +438,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
+  END_FUNCTION ();
 }
 
 UnityScreen::~UnityScreen ()
@@ -452,8 +465,11 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 /* Start up the launcher */
 void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 {
+  START_FUNCTION ();
+
   UnityScreen *self = (UnityScreen*) InitData;
 
+  LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
@@ -476,8 +492,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
 
   self->launcher->SetIconSize (54, 48);
+  LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
+  LOGGER_START_PROCESS ("initLauncher-Panel");
   self->panelView = new PanelView ();
   self->AddChild (self->panelView);
 
@@ -498,8 +516,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->ShowWindow(true);
   self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
-
+  LOGGER_END_PROCESS ("initLauncher-Panel");
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+
+  END_FUNCTION ();
 }
 
 /* Window init */

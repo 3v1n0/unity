@@ -92,6 +92,7 @@ QuicklistView::QuicklistView ()
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   
   _mouse_down = false;
+  _enable_quicklist_for_testing = false;
 }
 
 QuicklistView::~QuicklistView ()
@@ -125,6 +126,12 @@ QuicklistView::~QuicklistView ()
   
   _default_item_list.clear ();
   _item_list.clear ();
+}
+
+void
+QuicklistView::EnableQuicklistForTesting (bool enable_testing)
+{
+  _enable_quicklist_for_testing = enable_testing;
 }
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
@@ -193,12 +200,15 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
       _mouse_down = false;
       if (IsVisible ())
       {
-        CancelItemsPrelightStatus ();
-        CaptureMouseDownAnyWhereElse (false);
-        ForceStopFocus (1, 1);
-        UnGrabPointer ();
-        EnableInputWindow (false);
-        ShowWindow (false);
+        if (!_enable_quicklist_for_testing)
+        {
+          CancelItemsPrelightStatus ();
+          CaptureMouseDownAnyWhereElse (false);
+          ForceStopFocus (1, 1);
+          UnGrabPointer ();
+          EnableInputWindow (false);
+          ShowWindow (false);
+        }
       }
       return nux::eMouseEventSolved;
     }
@@ -208,17 +218,19 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     _mouse_down = false;
     if (IsVisible ())
     {
-      CancelItemsPrelightStatus ();
-      CaptureMouseDownAnyWhereElse (false);
-      ForceStopFocus (1, 1);
-      UnGrabPointer ();
-      EnableInputWindow (false);
-      ShowWindow (false);
+      if (!_enable_quicklist_for_testing)
+      {
+        CancelItemsPrelightStatus ();
+        CaptureMouseDownAnyWhereElse (false);
+        ForceStopFocus (1, 1);
+        UnGrabPointer ();
+        EnableInputWindow (false);
+        ShowWindow (false);
+      }
     }
     return nux::eMouseEventSolved;
   }
-  
-  
+
   return ret;    
 }
 
@@ -406,12 +418,15 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
 
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -459,14 +474,17 @@ void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
-    
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
-  }  
+
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+  }
 }
 
 void QuicklistView::CancelItemsPrelightStatus ()
@@ -552,12 +570,15 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 {
   if (IsVisible ())
   {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -575,12 +596,15 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 {
   if (IsVisible ())
   {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -1279,26 +1303,29 @@ void QuicklistView::UpdateTexture ()
     return;
 
   int size_above_anchor = -1; // equal to sise below
-  
-  if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
-  {
-    _top_size = 4;
-    size_above_anchor = _top_size;
-    int x = _anchorX - _padding;
-    int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
 
-    SetBaseX (x);
-    SetBaseY (y);
-  }
-  else
+  if (!_enable_quicklist_for_testing)
   {
-    _top_size = 0;
-    size_above_anchor = -1;
-    int x = _anchorX - _padding;
-    int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+    if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
+    {
+      _top_size = 4;
+      size_above_anchor = _top_size;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
 
-    SetBaseX (x);
-    SetBaseY (y);    
+      SetBaseX (x);
+      SetBaseY (y);
+    }
+    else
+    {
+      _top_size = 0;
+      size_above_anchor = -1;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);    
+    }
   }
   
   float blur_coef         = 6.0f;
