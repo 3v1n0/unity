@@ -124,7 +124,7 @@ if migration_level < '3.2.0':
 
     unity_mutter_favorites_list = client.get_list('/desktop/unity/launcher/favorites/favorites_list', gconf.VALUE_STRING)
     unity_mutter_launcher_ordered = {}
-        
+    migrating_chapter_log("unity mutter", apps_list, unity_mutter_favorites_list, log_file)
     for candidate in unity_mutter_favorites_list:
         candidate_path = '/desktop/unity/launcher/favorites/%s' % candidate
         if (client.get_string('%s/type' % candidate_path) == 'application'):
@@ -133,7 +133,6 @@ if migration_level < '3.2.0':
             if launcher_location:
                 # try to preserve the order, will be done in a second loop
                 unity_mutter_launcher_ordered[position] = launcher_location
-    migrating_chapter_log("unity mutter", apps_list, unity_mutter_launcher_ordered, log_file)
     for launcher_location in unity_mutter_launcher_ordered:    
         apps_list = register_new_app(launcher_location, apps_list, log_file)
 
