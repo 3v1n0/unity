@@ -80,9 +80,6 @@ public:
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
     
-    void RecvShowQuicklist (nux::BaseWindow *quicklist);
-    void RecvHideQuicklist (nux::BaseWindow *quicklist);
-    
     void HideTooltip ();
     
     void        SetCenter (nux::Point3 center);

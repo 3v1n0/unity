@@ -35,6 +35,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
+#include "QuicklistManager.h"
 #include "QuicklistView.h"
 
 #define ANIM_DURATION_SHORT 125
@@ -189,6 +190,9 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     OnMouseLeave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
     OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
+
+    QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
+    QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
@@ -843,7 +847,7 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 void
 Launcher::EnsureHiddenState ()
 {
-  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher)
+  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher && !QuicklistManager::Default ()->Current())
     SetHidden (true);
   else
     SetHidden (false);
@@ -1615,6 +1619,20 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 {
 }
 
+void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)
+{
+  EventLogic ();
+  EnsureAnimation ();
+}
+
+void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
+{
+  SetupAutohideTimer ();
+
+  EventLogic ();
+  EnsureAnimation ();
+}
+
 void Launcher::EventLogic ()
 {
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
@@ -1952,22 +1970,5 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //       glVertex4f(X+W, Y, Z, 1.0f);
 //     }
 //     glEnd();
-}
-
-void Launcher::SetActiveQuicklist (QuicklistView *quicklist)
-{
-  // Assert: _active_quicklist should be 0
-  _active_quicklist = quicklist;
-}
-
-QuicklistView *Launcher::GetActiveQuicklist ()
-{
-  return _active_quicklist;
-}
-
-void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
-{
-  if (_active_quicklist == quicklist)
-    _active_quicklist = 0;
 }
 
