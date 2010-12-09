@@ -83,6 +83,25 @@ BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
   LauncherIcon::AddProperties (builder);
   
   g_variant_builder_add (builder, "{sv}", "desktop-file", g_variant_new_string (bamf_application_get_desktop_file (m_App)));
+  
+  GList *children, *l;
+  BamfView *view;
+  
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+  GVariant* xids[(int) g_list_length (children)];
+  
+  int i = 0;
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+    
+    if (BAMF_IS_WINDOW (view))
+    {
+      xids[i++] = g_variant_new_uint32 (bamf_window_get_xid (BAMF_WINDOW (view)));
+    }    
+  }
+  g_list_free (children);
+  g_variant_builder_add (builder, "{sv}", "xids", g_variant_new_array (G_VARIANT_TYPE_UINT32, xids, i));
 }
 
 bool
@@ -90,6 +109,7 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
 {
   GList *children, *l;
   BamfView *view;
+  bool owns = false;
 
   children = bamf_view_get_children (BAMF_VIEW (m_App));
 
@@ -102,11 +122,12 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
       guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
         
       if (xid == w)
-        return true;
+        owns = true;
     }
   }
   
-  return false;
+  g_list_free (children);
+  return owns;
 }
 
 void
