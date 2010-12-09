@@ -355,7 +355,6 @@ UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 void
 UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
-  initLauncher(thread, InitData);
   START_FUNCTION ();
   initLauncher(thread, InitData);
 
