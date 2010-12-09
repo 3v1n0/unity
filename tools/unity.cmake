@@ -95,7 +95,6 @@ def process_and_start_unity (verbose, debug, compiz_args, log_file):
 def run_unity (verbose, debug, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
-    print "there"
     try:
         unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)    
         unity_instance.wait()
