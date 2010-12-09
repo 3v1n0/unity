@@ -24,7 +24,9 @@
 #include "IndicatorObjectProxy.h"
 #include "PanelIndicatorObjectEntryView.h"
 
-class PanelIndicatorObjectView : public nux::View
+#include "Introspectable.h"
+
+class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:
   PanelIndicatorObjectView (IndicatorObjectProxy *proxy);
@@ -39,6 +41,12 @@ public:
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
   nux::HLayout *_layout;
+
+protected:
+  const gchar * GetName ();
+  const gchar * GetChildsName ();
+  void          AddProperties (GVariantBuilder *builder);
+
 private:
   IndicatorObjectProxy *_proxy;
   std::vector<PanelIndicatorObjectEntryView *> _entries;

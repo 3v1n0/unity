@@ -35,10 +35,13 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "Introspectable.h"
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
 {
+  _name = g_strdup ("Quicklist");
   _texture_bg = 0;
   _texture_mask = 0;
   _texture_outline = 0;
@@ -89,10 +92,14 @@ QuicklistView::QuicklistView ()
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   
   _mouse_down = false;
+  _enable_quicklist_for_testing = false;
 }
 
 QuicklistView::~QuicklistView ()
 {
+  if (_name)
+    g_free (_name);
+  
   if (_texture_bg)
     _texture_bg->UnReference ();
   
@@ -105,16 +112,26 @@ QuicklistView::~QuicklistView ()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
   _default_item_list.clear ();
   _item_list.clear ();
+}
+
+void
+QuicklistView::EnableQuicklistForTesting (bool enable_testing)
+{
+  _enable_quicklist_for_testing = enable_testing;
 }
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
@@ -183,12 +200,15 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
       _mouse_down = false;
       if (IsVisible ())
       {
-        CancelItemsPrelightStatus ();
-        CaptureMouseDownAnyWhereElse (false);
-        ForceStopFocus (1, 1);
-        UnGrabPointer ();
-        EnableInputWindow (false);
-        ShowWindow (false);
+        if (!_enable_quicklist_for_testing)
+        {
+          CancelItemsPrelightStatus ();
+          CaptureMouseDownAnyWhereElse (false);
+          ForceStopFocus (1, 1);
+          UnGrabPointer ();
+          EnableInputWindow (false);
+          ShowWindow (false);
+        }
       }
       return nux::eMouseEventSolved;
     }
@@ -198,17 +218,19 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     _mouse_down = false;
     if (IsVisible ())
     {
-      CancelItemsPrelightStatus ();
-      CaptureMouseDownAnyWhereElse (false);
-      ForceStopFocus (1, 1);
-      UnGrabPointer ();
-      EnableInputWindow (false);
-      ShowWindow (false);
+      if (!_enable_quicklist_for_testing)
+      {
+        CancelItemsPrelightStatus ();
+        CaptureMouseDownAnyWhereElse (false);
+        ForceStopFocus (1, 1);
+        UnGrabPointer ();
+        EnableInputWindow (false);
+        ShowWindow (false);
+      }
     }
     return nux::eMouseEventSolved;
   }
-  
-  
+
   return ret;    
 }
 
@@ -396,12 +418,15 @@ void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
 
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -449,14 +474,17 @@ void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
-    
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
-  }  
+
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
+  }
 }
 
 void QuicklistView::CancelItemsPrelightStatus ()
@@ -542,12 +570,15 @@ void QuicklistView::RecvMouseClick (int x, int y, unsigned long button_flags, un
 {
   if (IsVisible ())
   {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -565,12 +596,15 @@ void QuicklistView::RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long
 {
   if (IsVisible ())
   {
-    CancelItemsPrelightStatus ();
-    CaptureMouseDownAnyWhereElse (false);
-    ForceStopFocus (1, 1);
-    UnGrabPointer ();
-    EnableInputWindow (false);
-    ShowWindow (false);
+    if (!_enable_quicklist_for_testing)
+    {
+      CancelItemsPrelightStatus ();
+      CaptureMouseDownAnyWhereElse (false);
+      ForceStopFocus (1, 1);
+      UnGrabPointer ();
+      EnableInputWindow (false);
+      ShowWindow (false);
+    }
   }
 }
 
@@ -579,11 +613,15 @@ void QuicklistView::RemoveAllMenuItem ()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Remove from introspection
+    RemoveChild (*it);
     (*it)->UnReference();
   }
   
@@ -612,6 +650,8 @@ void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
   _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
   item->Reference();
+  // Add to introspection
+  AddChild (item);
   
   _cairo_text_has_changed = true;
   nux::GetGraphicsThread ()->AddObjectToRefreshList (this);
@@ -1263,26 +1303,29 @@ void QuicklistView::UpdateTexture ()
     return;
 
   int size_above_anchor = -1; // equal to sise below
-  
-  if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
-  {
-    _top_size = 4;
-    size_above_anchor = _top_size;
-    int x = _anchorX - _padding;
-    int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
 
-    SetBaseX (x);
-    SetBaseY (y);
-  }
-  else
+  if (!_enable_quicklist_for_testing)
   {
-    _top_size = 0;
-    size_above_anchor = -1;
-    int x = _anchorX - _padding;
-    int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+    if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
+    {
+      _top_size = 4;
+      size_above_anchor = _top_size;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
 
-    SetBaseX (x);
-    SetBaseY (y);    
+      SetBaseX (x);
+      SetBaseY (y);
+    }
+    else
+    {
+      _top_size = 0;
+      size_above_anchor = -1;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);    
+    }
   }
   
   float blur_coef         = 6.0f;
@@ -1436,5 +1479,21 @@ void QuicklistView::TestMenuItems (DbusmenuMenuitem* root)
       AddMenuItem (item);
     }
   }
+}
+
+// Introspection
+
+const gchar* QuicklistView::GetName ()
+{
+  return g_strdup (_name);
+}
+
+void QuicklistView::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (GetBaseX ()));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (GetBaseY ()));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (GetBaseWidth ()));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
+  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (IsVisible ()));
 }
 

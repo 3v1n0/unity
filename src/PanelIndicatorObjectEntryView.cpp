@@ -63,11 +63,20 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   if ((_proxy->label_visible && _proxy->label_sensitive)
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
-    _proxy->ShowMenu (GetGeometry ().x,
+    _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation
                       PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
+}
+
+void
+PanelIndicatorObjectEntryView::Activate ()
+{
+  _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation FIXME: Make this into one function
+                    PANEL_HEIGHT,
+                    time (NULL),
+                    1);
 }
 
 static char *
@@ -253,8 +262,8 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   int radius = 4;
   double x = 0;
   double y = 0;
-  double xos = 1.5;
-  double yos = 1.5;
+  double xos = 0.5;
+  double yos = 0.5;
   /* FIXME */
   double mpi = 3.14159265358979323846;
 
@@ -300,4 +309,35 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);
+}
+
+const gchar *
+PanelIndicatorObjectEntryView::GetName ()
+{
+  const gchar *name = _proxy->GetId ();
+
+  if (g_strcmp0 (name, "|") == 0)
+    return NULL;
+  else
+   return name;
+}
+
+void
+PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+
+  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (_proxy->GetLabel ()));
+  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (_proxy->label_sensitive));
+  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (_proxy->label_visible));
+
+  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (_proxy->icon_sensitive));
+  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
+
+  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
 }

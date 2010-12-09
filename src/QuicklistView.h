@@ -31,6 +31,8 @@
 
 #include "QuicklistMenuItem.h"
 
+#include "Introspectable.h"
+
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
@@ -50,7 +52,7 @@ class SpaceLayout;
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow
+class QuicklistView : public nux::BaseWindow, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (QuicklistView, nux::BaseWindow);
 public:
@@ -86,6 +88,12 @@ public:
   
   void TestMenuItems (DbusmenuMenuitem* root);
   
+  // Introspection
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
+
+  void EnableQuicklistForTesting (bool enable_testing);
+
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* item);
   void RecvCairoTextColorChanged (QuicklistMenuItem* item);
@@ -129,7 +137,11 @@ private:
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
   bool                  _mouse_down;
-  
+
+  //iIf true, suppress the Quicklist behaviour that is expected in Unity.
+  // Keep the Quicklist on screen for testing and automation.
+  bool                  _enable_quicklist_for_testing;
+
   cairo_font_options_t* _fontOpts;
 
   nux::BaseTexture*     _texture_bg;
@@ -153,6 +165,10 @@ private:
   void UpdateTexture ();
   std::list<QuicklistMenuItem*> _item_list;
   std::list<QuicklistMenuItem*> _default_item_list;
+  
+  // Introspection
+  gchar *_name;
+
 };
 
 #endif // QUICKLISTVIEW_H
