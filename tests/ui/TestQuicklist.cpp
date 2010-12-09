@@ -154,7 +154,7 @@ void
 ThreadWidgetInit (nux::NThread* thread,
                   void*         initData)
 {
-  gQuicklist = new QuicklistView::QuicklistView ();
+  gQuicklist = new QuicklistView ();
   gQuicklist->Reference ();
 
   gCheckmark = createCheckmarkItem ();
