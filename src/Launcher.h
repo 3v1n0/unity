@@ -76,13 +76,6 @@ public:
     virtual void RecvQuicklistOpened (QuicklistView *quicklist);
     virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
-    //! Called by LauncherIcon to signal that a Quicklist is becoming active.
-    void SetActiveQuicklist (QuicklistView *quicklist);
-    //! Get the active qicklist
-    QuicklistView *GetActiveQuicklist ();
-    //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
-    void CancelActiveQuicklist (QuicklistView *quicklist);
-
 protected:
     // Introspectable methods
     const gchar* GetName ();

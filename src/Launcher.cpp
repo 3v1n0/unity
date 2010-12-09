@@ -1972,20 +1972,3 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     glEnd();
 }
 
-void Launcher::SetActiveQuicklist (QuicklistView *quicklist)
-{
-  // Assert: _active_quicklist should be 0
-  _active_quicklist = quicklist;
-}
-
-QuicklistView *Launcher::GetActiveQuicklist ()
-{
-  return _active_quicklist;
-}
-
-void Launcher::CancelActiveQuicklist (QuicklistView *quicklist)
-{
-  if (_active_quicklist == quicklist)
-    _active_quicklist = 0;
-}
-
