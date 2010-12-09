@@ -69,6 +69,8 @@ def register_new_app(launcher_location, apps_list, log_file):
     if os.path.exists(launcher_location):
         log("  == %s: exists" % launcher_location, log_file)
         # try to strip the full path we had in unity mutter if it's part of a xdg path:
+        # or try to get that for other desktop file based on name.
+        candidate_desktop_filename = launcher_location.split("/")[-1]
         for xdg_dir in BaseDirectory.xdg_data_dirs:
             xdg_app_dir = os.path.join(xdg_dir, "applications", "")
             if launcher_location.startswith(xdg_app_dir):
@@ -77,9 +79,14 @@ def register_new_app(launcher_location, apps_list, log_file):
                 if not '/' in candidate_desktop_file:
                     entry = candidate_desktop_file
                     break
+            # second chance: try to see if the desktop filename is in xdg path and so, assume it's a match
+            if os.path.exists("%s/%s" % (xdg_app_dir, candidate_desktop_filename)):
+                entry = candidate_desktop_filename
+                break
+            
         if not entry:
             entry = launcher_location
-            log("  %s: real entry is %s" % (launcher_location, entry), log_file)
+        log("  %s: real entry is %s" % (launcher_location, entry), log_file)
         if entry not in apps_list:
             log("  --- adding %s as not in app_list" % entry, log_file)
             apps_list.append(entry)
