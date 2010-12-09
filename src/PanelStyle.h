@@ -21,7 +21,8 @@
 
 #include "Nux/Nux.h"
 
-class PanelStyle {
+class PanelStyle : public nux::Object
+{
   public:
     PanelStyle ();
     ~PanelStyle ();

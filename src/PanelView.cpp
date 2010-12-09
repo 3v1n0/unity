@@ -175,9 +175,6 @@ PanelView::UpdateBackground ()
                                     end.GetGreen (),
                                     end.GetBlue ());
 
-  //cairo_pattern_add_color_stop_rgb (pat, 0.0f, 89/255.0f, 88/255.0f, 83/255.0f);
-  //cairo_pattern_add_color_stop_rgb (pat, 1.0f, 50/255.0f, 50/255.0f, 45/255.0f);
-
   cairo_set_source (cr, pat);
   cairo_rectangle (cr, 0, 0, _last_width, _last_height);
   cairo_fill (cr);

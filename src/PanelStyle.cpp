@@ -28,6 +28,7 @@ PanelStyle::GetDefault ()
   if (_panel_style == NULL)
     _panel_style = new PanelStyle ();
 
+  _panel_style->Reference (); 
   return _panel_style;
 }
 
@@ -71,24 +72,26 @@ PanelStyle::PanelStyle ()
   menu_bar = gtk_menu_bar_new ();
   style = gtk_widget_get_style (menu_bar);
 
-  _text.SetRed (style->text[4].red / 0xffff);
-  _text.SetGreen (style->text[4].green / 0xffff);
-  _text.SetBlue (style->text[4].blue / 0xffff);
+  _text.SetRed ((float) style->text[4].red / (float) 0xffff);
+  _text.SetGreen ((float) style->text[4].green / (float) 0xffff);
+  _text.SetBlue ((float) style->text[4].blue / (float) 0xffff);
   _text.SetAlpha (1.0f);
 
-  _bg_top.SetRed (style->bg[1].red / 0xffff);
-  _bg_top.SetGreen (style->bg[1].green / 0xffff);
-  _bg_top.SetBlue (style->bg[1].blue / 0xffff);
+  _bg_top.SetRed ((float) style->bg[4].red / (float) 0xffff);
+  _bg_top.SetGreen ((float) style->bg[4].green / (float) 0xffff);
+  _bg_top.SetBlue ((float) style->bg[4].blue / (float) 0xffff);
+  _bg_top = 0.4f * _bg_top;
   _bg_top.SetAlpha (1.0f);
 
-  _bg_bottom.SetRed (style->bg[3].red / 0xffff);
-  _bg_bottom.SetGreen (style->bg[3].green / 0xffff);
-  _bg_bottom.SetBlue (style->bg[3].blue / 0xffff);
+  _bg_bottom.SetRed ((float) style->bg[4].red / (float) 0xffff);
+  _bg_bottom.SetGreen ((float) style->bg[4].green / (float) 0xffff);
+  _bg_bottom.SetBlue ((float) style->bg[4].blue / (float) 0xffff);
+  _bg_bottom = 0.22f * _bg_bottom;
   _bg_bottom.SetAlpha (1.0f);
 
-  _text_shadow.SetRed (style->text[2].red / 0xffff);
-  _text_shadow.SetGreen (style->text[2].green / 0xffff);
-  _text_shadow.SetBlue (style->text[2].blue / 0xffff);
+  _text_shadow.SetRed ((float) style->text[2].red / (float) 0xffff);
+  _text_shadow.SetGreen ((float) style->text[2].green / (float) 0xffff);
+  _text_shadow.SetBlue ((float) style->text[2].blue / (float) 0xffff);
   _text_shadow.SetAlpha (1.0f);
 
   g_object_unref (style);
@@ -97,4 +100,6 @@ PanelStyle::PanelStyle ()
 
 PanelStyle::~PanelStyle ()
 {
+  if (GetReferenceCount () != 0)
+    g_warning ("PanelStyle::~PanelStyle() - Reference-counter is not 0!");
 }
