@@ -39,6 +39,7 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
 
     ~QuicklistMenuItemRadio ();
 
+  protected:
     void PreLayoutManagement ();
 
     long PostLayoutManagement (long layoutResult);
@@ -56,19 +57,9 @@ class QuicklistMenuItemRadio : public QuicklistMenuItem
     void PostDraw (nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-  private:
-    nux::NString          _text;
-    nux::Color            _textColor;
-    int                   _pre_layout_width;
-    int                   _pre_layout_height;
-    nux::CairoGraphics*   _cairoGraphics;
-
-    nux::BaseTexture* _normalTexture[2];
-    nux::BaseTexture* _prelightTexture[2];
-
     void Initialize (DbusmenuMenuitem* item);
     
-    void UpdateTexture ();
+    virtual void UpdateTexture ();
     virtual int CairoSurfaceWidth ();
 };
 

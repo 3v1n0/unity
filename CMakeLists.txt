@@ -74,7 +74,7 @@ endif (${GETTEXT_FOUND} STREQUAL "TRUE")
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
@@ -82,6 +82,7 @@ compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR}"
+               LIBRARIES "unity"
                )
 
 #
