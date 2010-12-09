@@ -22,7 +22,7 @@ def get_desktop_dir():
     
     possible_desktop_folder = None
     try:
-        for line in file(os.path.expanduser('~/.config/user-dirs.dirs')):
+        for line in file('%s/user-dirs.dirs' % BaseDirectory.xdg_config_home):
             values = line.split('=')
             if values[0] == 'XDG_DESKTOP_DIR':
                 try:
