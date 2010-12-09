@@ -18,6 +18,8 @@
 
 #include "TrashLauncherIcon.h"
 
+#include <gio/gio.h>
+
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
@@ -26,10 +28,23 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
   SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
   SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
+
+  m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
+					     G_FILE_MONITOR_NONE,
+					     NULL,
+					     NULL);
+
+  g_signal_connect(m_TrashMonitor,
+                   "changed",
+                   G_CALLBACK (&TrashLauncherIcon::OnTrashChanged),
+                   this);
+
+  UpdateTrashIcon ();
 }
 
 TrashLauncherIcon::~TrashLauncherIcon()
 {
+  g_object_unref (m_TrashMonitor);
 }
 
 void
@@ -38,10 +53,58 @@ TrashLauncherIcon::OnMouseClick (int button)
   if (button == 1)
   {
     GError *error = NULL;
-    
+
     g_spawn_command_line_async ("xdg-open trash://", &error);
-    
+
     if (error)
       g_error_free (error);
   }
 }
+
+void
+TrashLauncherIcon::UpdateTrashIcon ()
+{
+  GFile *location;
+  location = g_file_new_for_uri ("trash:///");
+
+  g_file_query_info_async (location,
+                           G_FILE_ATTRIBUTE_STANDARD_ICON, 
+                           G_FILE_QUERY_INFO_NONE, 
+                           0, 
+                           NULL, 
+                           &TrashLauncherIcon::UpdateTrashIconCb, 
+                           this);
+
+  g_object_unref(location);
+}
+
+void
+TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
+                                      GAsyncResult *res,
+                                      gpointer      data)
+{
+  TrashLauncherIcon *self = (TrashLauncherIcon*) data;
+  GFileInfo *info;
+  GIcon *icon;
+
+  info = g_file_query_info_finish (G_FILE (source), res, NULL);
+
+  if (info != NULL) {
+    icon = g_file_info_get_icon (info);
+    self->SetIconName (g_icon_to_string (icon));
+
+    g_object_unref(info);
+  }
+}
+
+void
+TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
+                                   GFile               *file,
+                                   GFile               *other_file,
+                                   GFileMonitorEvent    event_type,
+                                   gpointer             data)
+{
+    TrashLauncherIcon *self = (TrashLauncherIcon*) data;
+    self->UpdateTrashIcon ();
+}
+

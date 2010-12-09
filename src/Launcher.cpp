@@ -55,7 +55,7 @@ TimeDelta (struct timespec const *x, struct timespec const *y)
 }
 
 static bool USE_ARB_SHADERS = true;
-/*                                                                                                       
+/*
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
 	        the fragment shader to perform the texture perspective correct division.
 	        This shader assume the following:
@@ -67,8 +67,8 @@ static bool USE_ARB_SHADERS = true;
 	        The texture coordinates s=u/w, t=v/w and q=1w are interpolated linearly in screen coordinates.
 	        In the fragment shader we get the texture coordinates used for the sampling by dividing
 	        s and t resulting from the interpolation by q.
-        	                                                                                                                
-        */                                                                                                                    
+
+        */
 
 nux::NString gPerspectiveCorrectShader = TEXT (
 "[Vertex Shader]                                                        \n\
@@ -179,7 +179,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _parent = parent;
     _screen = screen;
     _active_quicklist = 0;
-    
+
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
     OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
@@ -205,7 +205,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     {
       _AsmShaderProg = nux::GetThreadGLDeviceFactory()->CreateAsmShaderProgram();
       _AsmShaderProg->LoadVertexShader (TCHAR_TO_ANSI (*PerspectiveCorrectVtx) );
-      
+
       if ((nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
         (nux::GetThreadGLDeviceFactory()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE () || nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE ()))
       {
@@ -234,7 +234,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_glow_size         = 62;
     _icon_image_size_delta  = 6;
     _icon_size              = _icon_image_size + _icon_image_size_delta;
-    
+
     _icon_bkg_texture       = nux::CreateTextureFromFile (PKGDATADIR"/round_corner_54x54.png");
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
@@ -242,7 +242,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_2indicator        = nux::CreateTextureFromFile (PKGDATADIR"/2indicate_54x54.png");
     _icon_3indicator        = nux::CreateTextureFromFile (PKGDATADIR"/3indicate_54x54.png");
     _icon_4indicator        = nux::CreateTextureFromFile (PKGDATADIR"/4indicate_54x54.png");
-    
+
     _enter_y                = 0;
     _dnd_security           = 15;
     _dnd_delta              = 0;
@@ -255,7 +255,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _window_over_launcher   = false;
-    
+
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
     _enter_time.tv_nsec = 0;
@@ -288,7 +288,7 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
   g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
-  
+
   g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
@@ -317,7 +317,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
 {
     if (!_autohide)
         return 0.0f;
-        
+
     if (_hidden)
         return CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     else
@@ -327,12 +327,12 @@ float Launcher::AutohideProgress (struct timespec const &current)
 gboolean Launcher::AnimationTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
-    
+
     self->NeedRedraw ();
-    
+
     if (self->AnimationInProgress ())
       return true;
-    
+
     // zero out handle so we know we are done
     self->_anim_handle = 0;
     return false;
@@ -342,9 +342,9 @@ void Launcher::EnsureAnimation ()
 {
     if (_anim_handle)
       return;
-    
+
     NeedRedraw ();
-    
+
     if (AnimationInProgress ())
         _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
 }
@@ -354,27 +354,27 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     struct timespec time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
     if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
-    
+
     time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
     if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
-    
+
     time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
     if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
         return true;
-    
+
     time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
     if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
         return true;
-    
+
     time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
-    
+
     time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
     if (TimeDelta (&current, &time) < ANIM_DURATION_LONG)
         return true;
-    
+
     return false;
 }
 
@@ -386,28 +386,28 @@ bool Launcher::AnimationInProgress ()
     // short circuit to avoid unneeded calculations
     struct timespec current;
     clock_gettime (CLOCK_MONOTONIC, &current);
-    
+
     // hover in animation
     if (TimeDelta (&current, &_enter_time) < ANIM_DURATION)
        return true;
-    
+
     // hover out animation
     if (TimeDelta (&current, &_exit_time) < ANIM_DURATION)
         return true;
-    
+
     // drag end animation
     if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
         return true;
-    
+
     if (TimeDelta (&current, &_autohide_time) < ANIM_DURATION_SHORT)
         return true;
-    
+
     // animations happening on specific icons
     LauncherModel::iterator it;
     for (it = _model->begin  (); it != _model->end (); it++)
         if (IconNeedsAnimation (*it, current))
             return true;
-    
+
     return false;
 }
 
@@ -415,17 +415,17 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 {
     struct timespec current;
     clock_gettime (CLOCK_MONOTONIC, &current);
-    
+
     if (sister)
     {
         int diff = TimeDelta (&current, sister);
-        
+
         if (diff < sister_relation)
         {
             int remove = sister_relation - diff;
             current.tv_sec -= remove / 1000;
             remove = remove % 1000;
-            
+
             if (remove > current.tv_nsec / 1000000)
             {
                 current.tv_sec--;
@@ -434,7 +434,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
             current.tv_nsec -= remove * 1000000;
         }
     }
-    
+
     timer->tv_sec = current.tv_sec;
     timer->tv_nsec = current.tv_nsec;
 }
@@ -460,7 +460,7 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
     LauncherIcon *anchor = 0;
     LauncherModel::iterator it;
     anchor = MouseIconIntersection (x, _enter_y);
-    
+
     if (anchor)
     {
         float position = y;
@@ -470,10 +470,10 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
             {
                 position += _icon_size / 2;
                 _dnd_delta = _enter_y - position;
-                
+
                 if (position + _icon_size / 2 + _dnd_delta > geo.height)
                     _dnd_delta -= (position + _icon_size / 2 + _dnd_delta) - geo.height;
-                
+
                 break;
             }
             position += (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
@@ -486,7 +486,7 @@ float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec const &
     struct timespec icon_present_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
     int ms = TimeDelta (&current, &icon_present_time);
     float result = CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
-    
+
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
         return result;
     else
@@ -498,7 +498,7 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &c
     struct timespec urgent_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
     int urgent_ms = TimeDelta (&current, &urgent_time);
     float result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
-    
+
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
       return result;
     else
@@ -516,7 +516,7 @@ float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const 
 {
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
         return 1.0f; // we are full on in a normal condition
-        
+
     double urgent_progress = (double) IconUrgentProgress (icon, current);
     return 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
@@ -526,7 +526,7 @@ float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec cons
     struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
     int starting_ms = TimeDelta (&current, &starting_time);
     double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
-    
+
     return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
@@ -540,14 +540,14 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     // After we finish a fade in from running, we can reset the quirk
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING) && running_progress == 1.0f)
         icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-     
+
     result = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
 
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
     {
         // running progress fades in whatever the pulsing did not fill in already
         result += running_progress * (BACKLIGHT_STRENGTH - result);
-        
+
         // urgent serves to bring the total down only
         if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
             result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
@@ -557,7 +557,7 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
         // modestly evil
         result += BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
     }
-    
+
     return result;
 }
 
@@ -571,17 +571,17 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.active_colored  = false;
     arg.folding_rads    = 0.0f;
     arg.skip            = false;
-    
-    
+
+
     // we dont need to show strays
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
         arg.window_indicators = 0;
     else
         arg.window_indicators = MIN (4, icon->RelatedWindows ());
-    
+
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
-    
+
     float urgent_progress = IconUrgentProgress (icon, current);
     urgent_progress = CLAMP (urgent_progress * 3, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
     arg.glow_intensity = urgent_progress;
@@ -590,13 +590,13 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
 float Launcher::DragLimiter (float x)
 {
   float result = (1 - std::pow (159.0 / 160,  std::abs (x))) * 160;
-  
+
   if (x >= 0.0f)
     return result;
   return -result;
 }
 
-void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
+void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
                            nux::Geometry &box_geo)
 {
     nux::Geometry geo = GetGeometry ();
@@ -604,7 +604,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     nux::Point3 center;
     struct timespec current;
     clock_gettime (CLOCK_MONOTONIC, &current);
-    
+
     float hover_progress = GetHoverProgress (current);
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
@@ -612,16 +612,16 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
-    
+
     float folded_size = _icon_size * folding_not_constant;
     float folded_spacing = _space_between_icons * folding_not_constant;
-    
+
     center.x = geo.width / 2;
     center.y = _space_between_icons;
     center.z = 0;
-    
+
     int launcher_height = geo.height;
-    
+
     // compute required height of launcher AND folding threshold
     float sum = 0.0f + center.y;
     float folding_threshold = launcher_height - _icon_size / 2.5f;
@@ -629,14 +629,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
         sum += height;
-        
+
         // magic constant must some day be explained, for now suffice to say this constant prevents the bottom from "marching";
         float magic_constant = 1.2f;
-        
+
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
     }
-    
+
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
         SetDndDelta (center.x, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
@@ -646,17 +646,17 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     if (hover_progress > 0.0f && _dnd_delta != 0)
     {
         float delta_y = _dnd_delta;
-        
+
         // logically dnd exit only restores to the clamped ranges
         // hover_progress restores to 0
         float max = 0.0f;
         float min = MIN (0.0f, launcher_height - sum);
-        
+
         if (_dnd_delta > max)
             delta_y = max + DragLimiter (delta_y - max);
         else if (_dnd_delta < min)
             delta_y = min + DragLimiter (delta_y - min);
-        
+
         if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
         {
             float dnd_progress = DnDExitProgress (current);
@@ -665,33 +665,33 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
                 delta_y = max + (delta_y - max) * dnd_progress;
             else if (_dnd_delta < min)
                 delta_y = min + (delta_y - min) * dnd_progress;
-        
+
             if (dnd_progress == 0.0f)
                 _dnd_delta = (int) delta_y;
-        } 
+        }
 
         delta_y *= hover_progress;
         center.y += delta_y;
         folding_threshold += delta_y;
-    } 
-    else 
+    }
+    else
     {
         _dnd_delta = 0;
     }
-    
+
     float autohide_progress = AutohideProgress (current);
     float autohide_offset = 0.0f;
     if (_autohide && autohide_progress > 0.0f)
     {
         autohide_offset -= geo.width * autohide_progress;
     }
-    
+
     // Inform the painter where to paint the box
     box_geo = geo;
 
     if (_autohide)
         box_geo.x += autohide_offset;
-    
+
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
     // function is not smooth it is continuous, which is more important for our visual representation (icons
@@ -701,123 +701,117 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
-        
+
         SetupRenderArg (icon, current, arg);
-        
+
         // reset z
         center.z = 0;
-        
+
         float size_modifier = IconVisibleProgress (icon, current);
         if (size_modifier < 1.0f)
         {
             arg.alpha = size_modifier;
             center.z = 300.0f * (1.0f - size_modifier);
         }
-        
+
         if (size_modifier <= 0.0f)
         {
             arg.skip = true;
             continue;
         }
-        
+
         // goes for 0.0f when fully unfolded, to 1.0f folded
         float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
         float present_progress = IconPresentProgress (icon, current);
-        
+
         folding_progress *= 1.0f - present_progress;
-        
+
         float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
-        
+
         float icon_hide_offset = autohide_offset;
-        
-        if (icon->PresentUrgency () == 1)
-          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
-        else if (icon->PresentUrgency () >= 2)
-          icon_hide_offset *= 1.0f - present_progress;
-        
+
+        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+
         // icon is crossing threshold, start folding
         center.z += folded_z_distance * folding_progress;
         arg.folding_rads = animation_neg_rads * folding_progress;
-        
+
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
-        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
+        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
+        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
         center.y += half_size * size_modifier;   // move to end
-        
+
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
         //add spacing
         center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
-        
+
         launcher_args.push_back (arg);
     }
-    
+
     // compute maximum height of shelf
     float shelf_sum = 0.0f;
     for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
     {
         float height = (_icon_size + _space_between_icons) * IconVisibleProgress (*it, current);
-        shelf_sum += height;    
+        shelf_sum += height;
     }
-    
+
     // add bottom padding
     if (shelf_sum > 0.0f)
       shelf_sum += _space_between_icons;
-    
+
     float shelf_delta = MAX (((launcher_height - shelf_sum) + _space_between_icons) - center.y, 0.0f);
     folding_threshold += shelf_delta;
     center.y += shelf_delta;
-    
+
     for (it = _model->shelf_begin (); it != _model->shelf_end (); it++)
     {
         RenderArg arg;
         LauncherIcon *icon = *it;
-        
+
         SetupRenderArg (icon, current, arg);
-        
+
         // reset z
         center.z = 0;
-        
+
         float size_modifier = IconVisibleProgress (icon, current);
         if (size_modifier < 1.0f)
         {
             arg.alpha = size_modifier;
             center.z = 300.0f * (1.0f - size_modifier);
         }
-        
+
         if (size_modifier <= 0.0f)
         {
             arg.skip = true;
             continue;
         }
-        
+
         // goes for 0.0f when fully unfolded, to 1.0f folded
         float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
         float present_progress = IconPresentProgress (icon, current);
-        
+
         folding_progress *= 1.0f - present_progress;
-        
+
         float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
-        
+
         float icon_hide_offset = autohide_offset;
-        
-        if (icon->PresentUrgency () == 1)
-          icon_hide_offset *= 0.5f + 0.5f * (1.0f - present_progress);
-        else if (icon->PresentUrgency () >= 2)
-          icon_hide_offset *= 1.0f - present_progress;
-        
+
+        icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+
         // icon is crossing threshold, start folding
         center.z += folded_z_distance * folding_progress;
         arg.folding_rads = animation_neg_rads * folding_progress;
-        
+
         center.y += half_size * size_modifier;   // move to center
-        arg.center = nux::Point3 ((int) (center.x + icon_hide_offset), (int) center.y, (int) center.z);       // copy center
-        icon->SetCenter (nux::Point3 ((int) center.x, (int) (center.y + vertical_offset), (int) center.z));
+        arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
+        icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
         center.y += half_size * size_modifier;   // move to end
-        
+
         float spacing_overlap = CLAMP ((float) (center.y + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
         //add spacing
         center.y += (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
-        
+
         launcher_args.push_back (arg);
     }
 }
@@ -828,19 +822,19 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-        
+
     _hidden = hidden;
     SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION_SHORT);
-    
+
     _parent->EnableInputWindow(!hidden);
-    
+
     EnsureAnimation ();
 }
 
 gboolean Launcher::OnAutohideTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
- 
+
     self->EnsureHiddenState ();
     self->_autohide_handle = 0;
     return false;
@@ -861,14 +855,14 @@ Launcher::CheckWindowOverLauncher ()
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
   nux::Geometry geo = GetGeometry ();
-  
+
   for (it = window_list.begin (); it != window_list.end (); it++)
   {
     CompWindow *window = *it;
-    
+
     if (window->type () != CompWindowTypeNormalMask || window->invisible ())
       continue;
-    
+
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
@@ -876,7 +870,7 @@ Launcher::CheckWindowOverLauncher ()
       return;
     }
   }
-  
+
   _window_over_launcher = false;
   EnsureHiddenState ();
 }
@@ -890,6 +884,19 @@ Launcher::OnWindowMoved (CompWindow *window)
 
 void
 Launcher::OnWindowResized (CompWindow *window)
+{
+  if (_autohide)
+    CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnWindowAppear (CompWindow *window)
+{
+  if (_autohide)
+    CheckWindowOverLauncher ();
+}
+void
+Launcher::OnWindowDisappear (CompWindow *window)
 {
   if (_autohide)
     CheckWindowOverLauncher ();
@@ -927,7 +934,7 @@ gboolean Launcher::StrutHack (gpointer data)
     Launcher *self = (Launcher *) data;
     self->_parent->InputWindowEnableStruts(false);
     self->_parent->InputWindowEnableStruts(true);
-    
+
     return false;
 }
 
@@ -935,7 +942,7 @@ void Launcher::SetAutohide (bool autohide, nux::View *trigger)
 {
     if (_autohide == autohide)
         return;
-    
+
     if (autohide)
     {
         _parent->InputWindowEnableStruts(false);
@@ -949,7 +956,7 @@ void Launcher::SetAutohide (bool autohide, nux::View *trigger)
         g_timeout_add (1000, &Launcher::StrutHack, this);
         _parent->InputWindowEnableStruts(true);
     }
-    
+
     _autohide = autohide;
     EnsureAnimation ();
 }
@@ -958,7 +965,7 @@ void Launcher::SetFloating (bool floating)
 {
     if (_floating == floating)
         return;
-    
+
     _floating = floating;
     EnsureAnimation ();
 }
@@ -967,9 +974,9 @@ void Launcher::SetHover ()
 {
     if (_hovered)
         return;
-    
+
     _enter_y = (int) _mouse_position.y;
-    
+
     _hovered = true;
     SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
 }
@@ -978,7 +985,7 @@ void Launcher::UnsetHover ()
 {
     if (!_hovered)
         return;
-    
+
     _hovered = false;
     SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
     SetupAutohideTimer ();
@@ -987,13 +994,13 @@ void Launcher::UnsetHover ()
 void Launcher::SetIconSize(int tile_size, int icon_size)
 {
     nux::Geometry geo = _parent->GetGeometry ();
-    
+
     _icon_size = tile_size;
     _icon_image_size = icon_size;
     _icon_image_size_delta = tile_size - icon_size;
-    
+
     // recreate tile textures
-    
+
     _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
 }
 
@@ -1002,16 +1009,16 @@ void Launcher::OnIconAdded (void *icon_pointer)
     LauncherIcon *icon = (LauncherIcon *) icon_pointer;
     icon->Reference ();
     EnsureAnimation();
-    
+
     // How to free these properly?
     icon->_xform_coords["HitArea"] = new nux::Vector4[4];
     icon->_xform_coords["Image"]   = new nux::Vector4[4];
     icon->_xform_coords["Tile"]    = new nux::Vector4[4];
     icon->_xform_coords["Glow"]    = new nux::Vector4[4];
-    
+
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
-    
+
     AddChild (icon);
 }
 
@@ -1019,9 +1026,9 @@ void Launcher::OnIconRemoved (void *icon_pointer)
 {
     LauncherIcon *icon = (LauncherIcon *) icon_pointer;
     icon->UnReference ();
-    
+
     EnsureAnimation();
-    
+
     RemoveChild (icon);
 }
 
@@ -1055,14 +1062,14 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
-void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext, 
-                                 RenderArg const &arg, 
-                                 int running, 
-                                 int active, 
+void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
+                                 RenderArg const &arg,
+                                 int running,
+                                 int active,
                                  nux::Geometry geo)
 {
   int markerCenter = (int) arg.center.y;
-  
+
   if (running > 0)
   {
     if (!m_RunningIndicator)
@@ -1072,12 +1079,12 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
       g_object_unref (pbuf);
     }
     nux::TexCoordXForm texxform;
-    
-    nux::Color color = nux::Color::White;
-    
+
+    nux::Color color = nux::Color::LightGrey;
+
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
-    
+
     std::vector<int> markers;
     if (running == 1)
     {
@@ -1094,21 +1101,21 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
       markers.push_back (markerCenter);
       markers.push_back (markerCenter + 4);
     }
-    
+
     std::vector<int>::iterator it;
     for (it = markers.begin (); it != markers.end (); it++)
     {
       int center = *it;
       GfxContext.QRP_GLSL_1Tex (geo.x,
-                                center - (m_RunningIndicator->GetHeight () / 2), 
-                                (float) m_RunningIndicator->GetWidth(), 
-                                (float) m_RunningIndicator->GetHeight(), 
-                                m_RunningIndicator->GetDeviceTexture(), 
-                                texxform, 
+                                center - (m_RunningIndicator->GetHeight () / 2),
+                                (float) m_RunningIndicator->GetWidth(),
+                                (float) m_RunningIndicator->GetHeight(),
+                                m_RunningIndicator->GetDeviceTexture(),
+                                texxform,
                                 color);
     }
   }
-  
+
   if (active > 0)
   {
     if (!m_ActiveIndicator)
@@ -1118,31 +1125,31 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
       g_object_unref (pbuf);
     }
     nux::TexCoordXForm texxform;
-    
-    nux::Color color = nux::Color::White;
-    GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (), 
+
+    nux::Color color = nux::Color::LightGrey;
+    GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
                               markerCenter - (m_ActiveIndicator->GetHeight () / 2),
-                              (float) m_ActiveIndicator->GetWidth(), 
-                              (float) m_ActiveIndicator->GetHeight(), 
-                              m_ActiveIndicator->GetDeviceTexture(), 
-                              texxform, 
+                              (float) m_ActiveIndicator->GetWidth(),
+                              (float) m_ActiveIndicator->GetHeight(),
+                              m_ActiveIndicator->GetDeviceTexture(),
+                              texxform,
                               color);
   }
 }
 
-void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext, 
-                          RenderArg const &arg, 
-                          nux::BaseTexture *icon, 
-                          nux::Color bkg_color, 
-                          float alpha, 
-                          nux::Vector4 xform_coords[], 
+void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
+                          RenderArg const &arg,
+                          nux::BaseTexture *icon,
+                          nux::Color bkg_color,
+                          float alpha,
+                          nux::Vector4 xform_coords[],
                           nux::Geometry geo)
 {
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
-  
+
   if(nux::Abs (arg.folding_rads) < 0.01f)
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
@@ -1172,7 +1179,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
   nux::Color color = nux::Color::White;
-  
+
   if (icon->Type ().IsDerivedFromType(nux::TextureRectangle::StaticObjectType))
   {
     s0 = 0.0f;                                  t0 = 0.0f;
@@ -1214,7 +1221,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
-    
+
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
     if(TextureObjectLocation != -1)
@@ -1252,9 +1259,9 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
   }
-  
+
   bkg_color.SetAlpha (bkg_color.A () * alpha);
-  
+
   if(!USE_ARB_SHADERS)
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
@@ -1267,7 +1274,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
-  
+
   if(VertexLocation != -1)
     CHECKGL( glDisableVertexAttribArrayARB(VertexLocation) );
   if(TextureCoord0Location != -1)
@@ -1294,127 +1301,127 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                                                 GL_ONE);
 
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-  
+
   if (arg.backlight_intensity < 1.0f)
   {
-    RenderIcon(GfxContext, 
-               arg, 
-               _icon_outline_texture, 
-               nux::Color(0xAAFFFFFF), 
-               1.0f - arg.backlight_intensity, 
-               arg.icon->_xform_coords["Tile"], 
+    RenderIcon(GfxContext,
+               arg,
+               _icon_outline_texture,
+               nux::Color(0xAAFFFFFF),
+               1.0f - arg.backlight_intensity,
+               arg.icon->_xform_coords["Tile"],
                geo);
   }
-  
+
   if (arg.backlight_intensity > 0.0f)
   {
-    RenderIcon(GfxContext, 
-               arg, 
-               _icon_bkg_texture, 
-               arg.icon->BackgroundColor (), 
-               arg.backlight_intensity, 
-               arg.icon->_xform_coords["Tile"], 
+    RenderIcon(GfxContext,
+               arg,
+               _icon_bkg_texture,
+               arg.icon->BackgroundColor (),
+               arg.backlight_intensity,
+               arg.icon->_xform_coords["Tile"],
                geo);
   }
-  
+
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
                                                 GL_ONE_MINUS_SRC_ALPHA,
                                                 GL_ONE_MINUS_DST_ALPHA,
                                                 GL_ONE);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
-  
-  RenderIcon (GfxContext, 
-              arg, 
-              arg.icon->TextureForSize (_icon_image_size), 
+
+  RenderIcon (GfxContext,
+              arg,
+              arg.icon->TextureForSize (_icon_image_size),
               nux::Color::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"],
               geo);
-  
+
   if (arg.backlight_intensity > 0.0f)
   {
-    RenderIcon(GfxContext, 
-               arg, 
-               _icon_shine_texture, 
-               nux::Color::White, 
-               arg.backlight_intensity, 
-               arg.icon->_xform_coords["Tile"], 
+    RenderIcon(GfxContext,
+               arg,
+               _icon_shine_texture,
+               nux::Color::White,
+               arg.backlight_intensity,
+               arg.icon->_xform_coords["Tile"],
                geo);
   }
-  
+
   if (false)
   {
     switch (arg.window_indicators)
     {
       case 2:
-        RenderIcon(GfxContext, 
-                   arg, 
-                   _icon_2indicator, 
-                   nux::Color::White, 
-                   1.0f, 
-                   arg.icon->_xform_coords["Tile"], 
+        RenderIcon(GfxContext,
+                   arg,
+                   _icon_2indicator,
+                   nux::Color::White,
+                   1.0f,
+                   arg.icon->_xform_coords["Tile"],
                    geo);
         break;
       case 3:
-        RenderIcon(GfxContext, 
-                    arg, 
-                    _icon_3indicator, 
-                    nux::Color::White, 
-                    1.0f, 
-                    arg.icon->_xform_coords["Tile"], 
+        RenderIcon(GfxContext,
+                    arg,
+                    _icon_3indicator,
+                    nux::Color::White,
+                    1.0f,
+                    arg.icon->_xform_coords["Tile"],
                     geo);
         break;
       case 4:
-        RenderIcon(GfxContext, 
-                   arg, 
-                   _icon_4indicator, 
-                   nux::Color::White, 
-                   1.0f, 
-                   arg.icon->_xform_coords["Tile"], 
+        RenderIcon(GfxContext,
+                   arg,
+                   _icon_4indicator,
+                   nux::Color::White,
+                   1.0f,
+                   arg.icon->_xform_coords["Tile"],
                    geo);
         break;
     }
   }
-  
+
   if (arg.glow_intensity > 0.0f)
   {
-    RenderIcon(GfxContext, 
-               arg, 
+    RenderIcon(GfxContext,
+               arg,
                _icon_glow_texture,
-               arg.icon->GlowColor (), 
-               arg.glow_intensity, 
-               arg.icon->_xform_coords["Glow"], 
+               arg.icon->GlowColor (),
+               arg.glow_intensity,
+               arg.icon->_xform_coords["Glow"],
                geo);
   }
-  
+
   if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
   {
     nux::Geometry base = GetGeometry ();
     int x1 = base.x + base.width;
     int x2 = base.x + base.width;
     float shimmer_constant = 1.9f;
-    
+
     x1 -= geo.width * arg.shimmer_progress * shimmer_constant;
     GfxContext.PushClippingRectangle(nux::Geometry (x1, geo.y, x2 - x1, geo.height));
-    
+
     float fade_out = 1.0f - CLAMP (((x2 - x1) - geo.width) / (geo.width * (shimmer_constant - 1.0f)), 0.0f, 1.0f);
-    
-    RenderIcon(GfxContext, 
-               arg, 
+
+    RenderIcon(GfxContext,
+               arg,
                _icon_glow_texture,
-               arg.icon->GlowColor (), 
-               fade_out, 
-               arg.icon->_xform_coords["Glow"], 
+               arg.icon->GlowColor (),
+               fade_out,
+               arg.icon->_xform_coords["Glow"],
                geo);
-    
+
     GfxContext.PopClippingRectangle();
   }
-  
+
   RenderIndicators (GfxContext,
-                    arg, 
-                    arg.running_arrow ? arg.window_indicators : 0, 
-                    arg.active_arrow ? 1 : 0, 
+                    arg,
+                    arg.running_arrow ? arg.window_indicators : 0,
+                    arg.active_arrow ? 1 : 0,
                     geo);
 }
 
@@ -1426,7 +1433,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg> args;
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     std::list<Launcher::RenderArg>::iterator it;
-    
+
     nux::ROPConfig ROP;
     ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
@@ -1434,9 +1441,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     RenderArgs (args, bkg_box);
 
-    // clear region    
+    // clear region
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
-    
+
     // clip vertically but not horizontally
     GfxContext.PushClippingRectangle(nux::Geometry (base.x, bkg_box.y, base.width, bkg_box.height));
     GfxContext.GetRenderStates ().SetSeparateBlend (true,
@@ -1444,9 +1451,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                     GL_ONE_MINUS_SRC_ALPHA,
                                                     GL_ONE_MINUS_DST_ALPHA,
                                                     GL_ONE);
-    
+
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
-    
+
     UpdateIconXForm (args);
     EventLogic ();
 
@@ -1455,7 +1462,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
         continue;
-      
+
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
     }
 
@@ -1463,11 +1470,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if ((*it).folding_rads < 0.0f || (*it).skip)
         continue;
-      
+
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-    
-    
+
+
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
 
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
@@ -1500,7 +1507,7 @@ long Launcher::PostLayoutManagement(long LayoutResult)
   View::PostLayoutManagement(LayoutResult);
 
   _mouse_position = nux::Point2 (0, 0);
-  
+
   return nux::eCompliantHeight | nux::eCompliantWidth;
 }
 
@@ -1529,7 +1536,7 @@ void Launcher::NotifyMenuTermination(LauncherIcon* Icon)
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
-  
+
   MouseDownLogic (x, y, button_flags, key_flags);
   EnsureAnimation ();
 }
@@ -1553,19 +1560,19 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_position = nux::Point2 (x, y);
-  
+
   _dnd_delta += dy;
 
   if (nux::Abs (_dnd_delta) < 15 && _launcher_action_state != ACTION_DRAG_LAUNCHER)
       return;
-  
+
   if (_icon_under_mouse)
   {
     _icon_under_mouse->MouseLeave.emit ();
     _icon_under_mouse->_mouse_inside = false;
     _icon_under_mouse = 0;
   }
-  
+
   _launcher_action_state = ACTION_DRAG_LAUNCHER;
   EnsureAnimation ();
 }
@@ -1574,7 +1581,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 {
   _mouse_position = nux::Point2 (x, y);
   _mouse_inside_launcher = true;
-  
+
   SetHover ();
 
   EventLogic ();
@@ -1585,10 +1592,10 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   _mouse_position = nux::Point2 (x, y);
   _mouse_inside_launcher = false;
-  
+
   if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
       UnsetHover ();
-  
+
   EventLogic ();
   EnsureAnimation ();
 }
@@ -1606,12 +1613,12 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 }
 
 void Launcher::EventLogic ()
-{ 
+{
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
     return;
-  
+
   LauncherIcon* launcher_icon = 0;
-  
+
   if (_mouse_inside_launcher)
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
@@ -1650,7 +1657,7 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
     _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
-    
+
     if (_launcher_action_state != ACTION_DRAG_LAUNCHER)
       _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
   }
@@ -1659,12 +1666,12 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   {
     launcher_icon->MouseUp.emit (nux::GetEventButton (button_flags));
   }
-  
+
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
   {
     SetTimeStruct (&_drag_end_time);
   }
-  
+
   _icon_mouse_down = 0;
 }
 
@@ -1712,14 +1719,14 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   return 0;
 }
 
-void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
+void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
                              float x, float y, float w, float h, float z, std::string name)
 {
   nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
   nux::Vector4 v1 = nux::Vector4(x,   y+h,  z, 1.0f);
   nux::Vector4 v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
   nux::Vector4 v3 = nux::Vector4(x+w, y,    z, 1.0f);
-  
+
   v0 = ViewProjectionMatrix * v0;
   v1 = ViewProjectionMatrix * v1;
   v2 = ViewProjectionMatrix * v2;
@@ -1742,7 +1749,7 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
 
 
   nux::Vector4* vectors = icon->_xform_coords[name];
-  
+
   vectors[0].x = v0.x;
   vectors[0].y = v0.y;
   vectors[0].z = v0.z;
@@ -1777,12 +1784,12 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
   {
     if ((*it).skip)
       continue;
-    
+
     LauncherIcon* launcher_icon = (*it).icon;
-    
+
     // We to store the icon angle in the icons itself. Makes one thing easier afterward.
     launcher_icon->_folding_angle = (*it).folding_rads;
-    
+
     float w = _icon_size;
     float h = _icon_size;
     float x = (*it).center.x - w/2.0f; // x: top left corner
@@ -1796,29 +1803,29 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Tile");
-    
+
     w = _icon_image_size;
     h = _icon_image_size;
     x = (*it).center.x - _icon_size/2.0f + _icon_image_size_delta/2.0f;
     y = (*it).center.y - _icon_size/2.0f + _icon_image_size_delta/2.0f;
     z = (*it).center.z;
-    
+
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
-    
+
     w = _icon_glow_size;
     h = _icon_glow_size;
     x = (*it).center.x - _icon_glow_size/2.0f;
     y = (*it).center.y - _icon_glow_size/2.0f;
     z = (*it).center.z;
-    
+
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Glow");
-    
+
     w = geo.width + 2;
     h = _icon_size + _space_between_icons;
     x = (*it).center.x - w/2.0f;
     y = (*it).center.y - h/2.0f;
     z = (*it).center.z;
-    
+
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
   }
 }
@@ -1843,7 +1850,7 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
      x_cs = AspectRatio*y_cs
      y_cs/z_cs = tanf(Fovy/2) ==> z_cs = y_cs*1/tanf(Fovy/2) (this is the absolute value the quad depth value will be -z_cs since we are using OpenGL right hand coord system).
 
-  The quad (in camera space) facing the camera and centered around the camera view axis is defined by the points (-x_cs, y_cs) (top-left) 
+  The quad (in camera space) facing the camera and centered around the camera view axis is defined by the points (-x_cs, y_cs) (top-left)
   and the point (x_cs, -y_cs) (bottom-right). If we move that quad along the camera view axis and place it at a distance z_cs of the camera,
   then its 4 corners are each on the 4 lines of the view frustum.
 
@@ -1860,7 +1867,7 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
                          (x_cs, -y_cs)
 
   The full-screen quad (in screen space) is defined by the point (0, 0) (top-left) and (WindowWidth, WindowHeight) (bottom-right).
-  We can choose and arbitrary value y_cs and compute the z_cs position in camera space that will produce a quad in camera space that projects into 
+  We can choose and arbitrary value y_cs and compute the z_cs position in camera space that will produce a quad in camera space that projects into
   the full-screen space.
 
     (0, 0)            Screen Space
@@ -1880,7 +1887,7 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
   Screen Space           Camera Space
        x        ---->    x_ = x*2*x_cs/WindowWidth - x_cs
        y        ---->    y_ = -y*2*y_cs/WindowHeight + y_cs
-       z        ---->    z_ = A*z -y_cs*1/tanf(Fovy/2)  
+       z        ---->    z_ = A*z -y_cs*1/tanf(Fovy/2)
      where A is a coefficient that can attenuate the rate of change in depth when the quad moves along the camera axis
 
   If the following is the projection matrix:
@@ -1903,7 +1910,7 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
   float x_cs = y_cs*AspectRatio;
   //float CameraToScreenDistance = -y_cs*1.0f/(tanf(0.5f*Fovy/* *3.1415926/180.0f*/));
 
-  ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) * 
+  ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
     nux::Matrix4::SCALE(2.0f*x_cs/ViewportWidth, -2.0f*y_cs/ViewportHeight, -2.0f * 3 * y_cs/ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/ );
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
@@ -1915,7 +1922,7 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //   float X = (ViewportWidth - W)/2.0;
 //   float Y = (ViewportHeight - H)/2.0;
 //   float Z = 0.0f;
-// 
+//
 //   {
 //     glPushMatrix();
 //     // Local Transformation of the object
@@ -1924,20 +1931,20 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     glRotatef(cameraAngleY, 1, 0, 0);
 //     glRotatef(cameraAngleX, 0, 1, 0);
 //     glTranslatef(-X - W/2.0f, -Y - H/2.0f, 0.0f);
-// 
+//
 //     glBegin(GL_QUADS);
 //     {
 //       glNormal3f(0.0f, 0.0f, 1.0f);
-// 
+//
 //       glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
 //       glVertex4f(X, Y, Z, 1.0f);
-// 
+//
 //       glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
 //       glVertex4f(X, Y+H, Z, 1.0f);
-// 
+//
 //       glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
 //       glVertex4f(X+W, Y+H, Z, 1.0f);
-// 
+//
 //       glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
 //       glVertex4f(X+W, Y, Z, 1.0f);
 //     }
