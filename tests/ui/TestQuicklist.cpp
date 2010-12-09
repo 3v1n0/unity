@@ -39,7 +39,7 @@
 
 gboolean gResult[3] = {false, false, false};
 
-QuicklistView::QuicklistView* gQuicklist = NULL;
+QuicklistView*                gQuicklist = NULL;
 QuicklistMenuItemCheckmark*   gCheckmark = NULL;
 QuicklistMenuItemRadio*       gRadio     = NULL;
 QuicklistMenuItemLabel*       gLabel     = NULL;
