@@ -2,6 +2,7 @@ unity (3.2.2-0ubuntu4) UNRELEASED; urgency=low
 
   [ Didier Roche ]
   * Revert source 3, it's breaking daily build and hudson
+  * remove the patch as well, fixed upstream
   * debian/control, debian/unity.install, debian/unity-common.install:
     - add unity-common package and move some files there
 
