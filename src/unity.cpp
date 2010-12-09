@@ -39,6 +39,8 @@
 
 #include <core/atoms.h>
 
+#include "../libunity/perf-logger-utility.h"
+
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
@@ -107,7 +109,7 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
   doShellRepaint = true;
   allowWindowPaint = true;
-  
+
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
 
@@ -139,17 +141,17 @@ UnityScreen::damageNuxRegions ()
   std::vector<nux::Geometry>::iterator it;
   std::vector<nux::Geometry> dirty = wt->GetDrawList ();
   nux::Geometry geo;
-  
+
   for (it = dirty.begin (); it != dirty.end (); it++)
   {
     geo = *it;
     cScreen->damageRegion (CompRegion (geo.x, geo.y, geo.width, geo.height));
   }
-    
+
   geo = wt->GetWindowCompositor ().GetTooltipMainWindowGeometry();
   cScreen->damageRegion (CompRegion (geo.x, geo.y, geo.width, geo.height));
   cScreen->damageRegion (CompRegion (lastTooltipArea.x, lastTooltipArea.y, lastTooltipArea.width, lastTooltipArea.height));
-    
+
   lastTooltipArea = geo;
 
   wt->ClearDrawList ();
@@ -165,7 +167,7 @@ UnityScreen::handleEvent (XEvent *event)
   {
     wt->ProcessForeignEvent (event, NULL);
   }
-}			
+}
 
 
 gboolean
@@ -258,7 +260,7 @@ UnityScreen::getWindowPaintList ()
  * stacked on top of one of the nux input windows
  * and if so paint nux and stop us from painting
  * other windows or on top of the whole screen */
-bool 
+bool
 UnityWindow::glDraw (const GLMatrix 	&matrix,
 		     GLFragment::Attrib &attrib,
 		     const CompRegion 	&region,
@@ -286,20 +288,48 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
 void
 UnityWindow::windowNotify (CompWindowNotify n)
 {
-  if (n == CompWindowNotifyMinimize)
-    uScreen->controller->PresentIconOwningWindow (window->id ());
+  switch (n)
+  {
+    case CompWindowNotifyMinimize:
+      uScreen->controller->PresentIconOwningWindow (window->id ());
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyUnminimize:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyShade:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyUnshade:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyHide:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyShow:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyMap:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyUnmap:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    default:
+      break;
+  }
 
   window->windowNotify (n);
 }
 
-void 
+void
 UnityWindow::moveNotify (int x, int y, bool immediate)
 {
   uScreen->launcher->OnWindowMoved (window);
   window->moveNotify (x, y, immediate);
 }
 
-void 
+void
 UnityWindow::resizeNotify (int x, int y, int w, int h)
 {
   uScreen->launcher->OnWindowResized (window);
@@ -307,7 +337,7 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
 }
 
 /* Configure callback for the launcher window */
-void 
+void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
   int OurWindowHeight = WindowHeight - 24;
@@ -315,23 +345,26 @@ UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, 
 }
 
 /* Configure callback for the panel window */
-void 
+void
 UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
   geo = nux::Geometry(0, 0, WindowWidth, 24);
 }
 
 /* Start up nux after OpenGL is initialized */
-void 
+void
 UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
   initLauncher(thread, InitData);
-    
+  START_FUNCTION ();
+  initLauncher(thread, InitData);
+
   nux::ColorLayer background(nux::Color(0x00000000));
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
+  END_FUNCTION ();
 }
 
-void 
+void
 UnityScreen::onRedrawRequested ()
 {
   damageNuxRegions ();
@@ -356,6 +389,13 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+static gboolean
+write_logger_data_to_disk (gpointer data)
+{
+  perf_timeline_logger_write_log (perf_timeline_logger_get_default (), "/tmp/unity-perf.log");
+  return FALSE;
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :
     PluginClassHandler <UnityScreen, CompScreen> (screen),
     screen (screen),
@@ -363,30 +403,31 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
+  START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
-  
+
   g_thread_init (NULL);
   dbus_g_thread_init ();
   gtk_init (NULL, NULL);
-  
+
   XSetErrorHandler (old_handler);
 
   /* Wrap compiz interfaces */
   ScreenInterface::setHandler (screen);
   CompositeScreenInterface::setHandler (cScreen);
   GLScreenInterface::setHandler (gScreen);
-  
+
   StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
 
   nux::NuxInitialize (0);
-  wt = nux::CreateFromForeignWindow (cScreen->output (), 
-                                     glXGetCurrentContext (),	
+  wt = nux::CreateFromForeignWindow (cScreen->output (),
+                                     glXGetCurrentContext (),
                                      &UnityScreen::initUnity,
                                      this);
-  
+
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
-  
+
   wt->Run (NULL);
   uScreen = this;
 
@@ -398,6 +439,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
+  END_FUNCTION ();
 }
 
 UnityScreen::~UnityScreen ()
@@ -407,25 +449,28 @@ UnityScreen::~UnityScreen ()
 /* Can't create windows until after we have initialized everything */
 gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
-  UnityScreen *self = (UnityScreen*) data;  
-  
+  UnityScreen *self = (UnityScreen*) data;
+
   if (!self->launcher->AutohideEnabled ())
   {
     self->launcherWindow->InputWindowEnableStruts(false);
     self->launcherWindow->InputWindowEnableStruts(true);
   }
-  
+
   self->panelWindow->InputWindowEnableStruts(false);
   self->panelWindow->InputWindowEnableStruts(true);
-  
+
   return FALSE;
 }
 
 /* Start up the launcher */
 void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 {
+  START_FUNCTION ();
+
   UnityScreen *self = (UnityScreen*) InitData;
-  
+
+  LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
@@ -448,8 +493,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
 
   self->launcher->SetIconSize (54, 48);
+  LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
+  LOGGER_START_PROCESS ("initLauncher-Panel");
   self->panelView = new PanelView ();
   self->AddChild (self->panelView);
 
@@ -468,10 +515,12 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->panelWindow->SetBlurredBackground(false);
   self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true);  
+  self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
-  
+  LOGGER_END_PROCESS ("initLauncher-Panel");
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+
+  END_FUNCTION ();
 }
 
 /* Window init */

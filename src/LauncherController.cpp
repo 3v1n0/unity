@@ -74,7 +74,7 @@ LauncherController::PresentIconOwningWindow (Window window)
   
   if (owner)
   {
-    owner->Present (2, 600);
+    owner->Present (0.5f, 600);
     owner->UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
   }
 }

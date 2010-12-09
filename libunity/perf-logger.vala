@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2009-2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,9 +17,8 @@
  *
  */
 
-namespace Unity
+namespace Perf
 {
-  
   public class ProcessInfo
   {
     public ProcessInfo (string name)
@@ -32,82 +31,86 @@ namespace Unity
     public double start;
     public double end;
   }
-  
+
   public static TimelineLogger? timeline_singleton;
-  public static bool is_logging; 
-  
+  public static bool is_logging;
+
   public class TimelineLogger : Object
   {
     private Timer global_timer;
     private Gee.HashMap<string, ProcessInfo> process_map;
-    
-    public static unowned Unity.TimelineLogger get_default ()
+
+    public static unowned Perf.TimelineLogger get_default ()
     {
-      if (Unity.timeline_singleton == null)
+      if (Perf.timeline_singleton == null)
       {
-        Unity.timeline_singleton = new Unity.TimelineLogger ();
+        Perf.timeline_singleton = new Perf.TimelineLogger ();
       }
-      
-      return Unity.timeline_singleton;
+
+      return Perf.timeline_singleton;
     }
-    
+
     construct
     {
       this.process_map = new Gee.HashMap<string, ProcessInfo> ();
-      this.global_timer = new Timer ();      
+      this.global_timer = new Timer ();
       this.global_timer.start ();
     }
-    
+
     public void start_process (string name)
     {
+      debug ("shoop de whoop");
       if (name in this.process_map.keys)
       {
         warning ("already started process: %s", name);
         return;
       }
-      
+
       var info = new ProcessInfo (name);
       this.process_map[name] = info;
       info.start = this.global_timer.elapsed ();
     }
-    
+
     public void end_process (string name)
     {
+      debug ("shonk le donk");
       double end_time = this.global_timer.elapsed ();
-      
+      print ("the end time is %f", end_time);
+
       if (name in this.process_map.keys)
       {
         this.process_map[name].end = end_time;
       }
-      else 
+      else
       {
         warning ("process %s not started", name);
       }
     }
-    
+
     public void write_log (string filename)
     {
       debug ("Writing performance log file: %s...", filename);
       var log_file = File.new_for_path (filename);
       FileOutputStream file_stream;
-      try 
+      try
       {
         if (!log_file.query_exists (null)) {
           file_stream = log_file.create (FileCreateFlags.NONE, null);
         }
-        else 
+        else
         {
           file_stream = log_file.replace (null, false, FileCreateFlags.NONE, null);
         }
-        
+
         var output_stream = new DataOutputStream (file_stream);
-        
+
         foreach (ProcessInfo info in this.process_map.values)
         {
-          string outline = "%s, %f, %f\n".printf(info.name, info.start, info.end);
-            output_stream.put_string (outline, null); 
+          string name = info.name.replace (",", ";");
+          string outline = "%s, %f, %f\n".printf(name, info.start, info.end);
+            output_stream.put_string (outline, null);
         }
-        
+
         file_stream.close (null);
       } catch (Error e)
       {
