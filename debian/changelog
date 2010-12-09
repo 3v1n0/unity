@@ -2,6 +2,27 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
 
   [ Didier Roche ]
   * New upstream release:
+   - Autohide option should be more like Intellihide (LP: #685861)
+   - Add an unity binary (LP: #599716)
+   - Dock icons disappearing on reopen (all programs) (LP: #687466)
+   - Application with .desktop file containing "icon=/absolute/path" doesn't
+     have an icon in unity panel (LP: #683444)
+   - Indicators are mis-aligned (LP: #646740)
+   - Navigating between indicator gives focus back to other dialogs during
+     transition (LP: #637143)
+   - Migration script should dump a lot of migrated items for debugging
+     (LP: #687721)
+   - Add desktop action support to launcher quicklists (LP: #687403)
+   - Rendering of Quicklist radio-button-item still way off (LP: #684048)
+   - Clicking on a launcher icon does not raise most recent window (LP: #677577)
+   - Quicklist menu item testing - Part 2 (LP: #676040)
+   - Panel does not behave like a menu bar (keyboard scrubbing) (LP: #686655)
+   - Separated menus: no keyboard shortcuts for menus (LP: #684060)
+   - No installation instructions in source (LP: #683792)
+   - Unity plugin should depend on "Desktop Wall" plugin (LP: #683211)
+   - Network indicator shows up on the left-hand side of the panel (LP: #680545)
+   - Scrubbing menu items or indicators in panel prematurely ends (LP: #677601)
+   - fix trash icon not being updated (LP: #683241)
   * Revert source 3, it's breaking daily build and hudson
   * remove the patch as well, fixed upstream
   * debian/control, debian/unity.install, debian/unity-common.install:
