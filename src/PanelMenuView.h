@@ -22,10 +22,9 @@
 #include <Nux/View.h>
 
 #include "IndicatorObjectProxy.h"
-
-#include "PanelIndicatorObjectView.h"
-
 #include "Introspectable.h"
+#include "PanelIndicatorObjectView.h"
+#include "StaticCairoText.h"
 
 class PanelMenuView : public PanelIndicatorObjectView
 {
@@ -36,31 +35,29 @@ public:
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void DrawLayout ();
   virtual long PostLayoutManagement (long LayoutResult);
-  virtual void PreLayoutManagement ();
-  
-  void RecvButtonMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvButtonMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvButtonMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvButtonMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvButtonMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   
   void SetProxy (IndicatorObjectProxy *proxy);
  
-  void OnMouseEnterRecv (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnMouseLeaveRecv (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
-  nux::HLayout *_title_layout;
-  nux::HLayout *_menu_layout;
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder); 
+  void          AddProperties (GVariantBuilder *builder);
+
+private:
+  void Refresh ();
+
+private:
+  nux::AbstractPaintLayer *_title_layer;
+  nux::HLayout            *_menu_layout;
+
+  nux::CairoGraphics       _util_cg;
+
+  bool _is_inside;
 };
 
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H

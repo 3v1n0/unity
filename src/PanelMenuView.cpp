@@ -15,12 +15,14 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
+#include <glib.h>
+#include <pango/pangocairo.h>
+#include <gtk/gtk.h>
 
 #include "Nux/Nux.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
-#include "Nux/Button.h"
-#include "Nux/PushButton.h"
+#include <Nux/TextureArea.h>
 
 #include "NuxGraphics/GLThread.h"
 #include "Nux/BaseWindow.h"
@@ -30,34 +32,25 @@
 
 #include "IndicatorObjectEntryProxy.h"
 
-#include <glib.h>
-
 PanelMenuView::PanelMenuView ()
-{
-  _title_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-  _title_layout->Reference ();
-  nux::PushButton *but = new nux::PushButton ("Hello");
-  _title_layout->AddView (but, 1, nux::eCenter, nux::eFull);
-   
+: _title_layer (NULL),
+  _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
+  _is_inside (false)
+{   
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-  _menu_layout->Reference ();
 
-  _layout = _title_layout;
-  //SetCompositionLayout (_title_layout);
-  
-  but->OnMouseDown.connect (sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseDown));
-  but->OnMouseUp.connect   (sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseUp));
-//   but->OnMouseClick.connect(sigc::mem_fun  (this, &PanelMenuView::RecvMouseClick));
-  but->OnMouseEnter.connect(sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseEnter));
-  but->OnMouseLeave.connect(sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseLeave));
-  but->OnMouseMove.connect (sigc::mem_fun  (this, &PanelMenuView::RecvButtonMouseMove));
-//   but->OnMouseDrag.connect (sigc::mem_fun  (this, &PanelMenuView::RecvMouseDrag));  
+  /* This is for our parent and for PanelView to read indicator entries, we
+   * shouldn't touch this again
+   */
+  _layout = _menu_layout;
+
+  Refresh ();
 }
 
 PanelMenuView::~PanelMenuView ()
 {
-  // Unrefrence the layouts.
-  _title_layout->UnReference ();
+  if (_title_layer)
+    delete _title_layer;
   _menu_layout->UnReference ();
 }
 
@@ -70,9 +63,6 @@ PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
   _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
   _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
   _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRemoved));
-
-  OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseEnterRecv));
-  OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseLeaveRecv));
 }
 
 long
@@ -80,43 +70,28 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 {
   long ret = TraverseInfo;
   nux::Geometry geo = GetGeometry ();
-  
-  if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
+
+  if (geo.IsPointInside (ievent.e_x, ievent.e_y))
   {
-    if (_layout != _title_layout)
+    if (_is_inside != true)
     {
-      printf ("Mouse Out\n");
-      // Let the _title_layout process the event before switching. The button inside
-      // the _title_layout will recognize a "Mouse Leave" event
-      ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
-      
-      _layout = _title_layout;
-      _layout->NeedRedraw ();
+      _is_inside = true;
+      _menu_layout->NeedRedraw ();
       NeedRedraw ();
-      return ret;
     }
   }
   else
   {
-    if (_layout != _menu_layout)
+    if (_is_inside != false)
     {
-      printf ("Mouse In\n");
-      _layout = _menu_layout;
-      
-      _layout->NeedRedraw ();
+      _is_inside = false;
+      _menu_layout->NeedRedraw ();
       NeedRedraw ();
     }
   }
-  
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
-  //OnEvent (ievent, ret, ProcessEventInfo);
+  ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
-}
-
-void PanelMenuView::PreLayoutManagement ()
-{
-  View::PreLayoutManagement ();
 }
 
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
@@ -124,15 +99,17 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   long res = View::PostLayoutManagement (LayoutResult);
   // The size of this widget has been computed. Get its geometry;
   nux::Geometry geo = GetGeometry ();
+  geo.x += 12;
+  geo.width -= 12;
   // geo.x and geo.y represent the position of the top left corner of this widget on the screen
   // geo.width and geo.height represent the position of the width and size of this widget on the screen
 
   
-  // Here, we explicitely set the size of the layouts to the size and position of the panel view.
+  // Here, we explicitely set the size of the layouts to the size and position of the panel view.  
   _menu_layout->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   _menu_layout->ComputeLayout2();
-  _title_layout->SetGeometry (geo.x, geo.y, geo.width, geo.height);
-  _title_layout->ComputeLayout2();
+
+  Refresh ();
   
   return res;
 }
@@ -144,6 +121,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
+  /* "Clear" out the background */
   nux::ROPConfig rop; 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
@@ -151,6 +129,9 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
  
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
+
+  if (!_is_inside)
+    gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
 
   gPainter.PopBackground ();
  
@@ -163,34 +144,122 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry geo = GetGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
-  _layout->ProcessDraw (GfxContext, force_draw);
+
+  if (_is_inside)
+  {
+    _layout->ProcessDraw (GfxContext, force_draw);
+  }
+
   GfxContext.PopClippingRectangle();
 }
 
 void
-PanelMenuView::DrawLayout ()
+PanelMenuView::Refresh ()
 {
-  //_layout->Draw ();
-}
+#define PADDING 12
+  nux::Geometry         geo = GetGeometry ();
+  const char           *label = "www.google.com - Firefox";
+  PangoLayout          *layout = NULL;
+  PangoFontDescription *desc = NULL;
+  GtkSettings          *settings = gtk_settings_get_default ();
+  cairo_t              *cr;
+  char                 *font_description = NULL;
+  GdkScreen            *screen = gdk_screen_get_default ();
+  int                   dpi = 0;
 
-void
-PanelMenuView::OnMouseEnterRecv (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  //g_debug ("%s", G_STRFUNC);
-  //SetCompositionLayout (_menu_layout);
-  //_layout = _menu_layout;
-  //this->ComputeChildLayout ();
-  NeedRedraw ();
-}
+  int  x = 0;
+  int  y = 0;
+  int  width = geo.width;
+  int  height = geo.height;
+  int  text_width = 0;
+  int  text_height = 0;
 
-void
-PanelMenuView::OnMouseLeaveRecv (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  //g_debug ("%s", G_STRFUNC);
-  //SetCompositionLayout (_title_layout);
-  //_layout = _title_layout;
-  //this->ComputeChildLayout ();
-  //NeedRedraw ();
+  if (label)
+  {
+    PangoContext *cxt;
+    PangoRectangle log_rect;
+
+    cr = _util_cg.GetContext ();
+
+    g_object_get (settings,
+                  "gtk-font-name", &font_description,
+                  "gtk-xft-dpi", &dpi,
+                  NULL);
+    desc = pango_font_description_from_string (font_description);
+    pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
+
+    layout = pango_cairo_create_layout (cr);
+    pango_layout_set_font_description (layout, desc);
+    pango_layout_set_text (layout, label, -1);
+    
+    cxt = pango_layout_get_context (layout);
+    pango_cairo_context_set_font_options (cxt, gdk_screen_get_font_options (screen));
+    pango_cairo_context_set_resolution (cxt, (float)dpi/(float)PANGO_SCALE);
+    pango_layout_context_changed (layout);
+
+    pango_layout_get_extents (layout, NULL, &log_rect);
+    text_width = log_rect.width / PANGO_SCALE;
+    text_height = log_rect.height / PANGO_SCALE;
+
+    pango_font_description_free (desc);
+    g_free (font_description);
+    cairo_destroy (cr);
+  }
+
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
+  cr = cairo_graphics.GetContext();
+  cairo_set_line_width (cr, 1);
+
+  x = PADDING;
+  y = 0;
+
+  if (label)
+  {
+    pango_cairo_update_layout (cr, layout);
+
+    // Once for the homies that couldn't be here
+    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
+    cairo_move_to (cr, x, ((height - text_height)/2)-1);
+    pango_cairo_show_layout (cr, layout);
+    cairo_stroke (cr);
+
+    // Once again for the homies that could
+    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f, 1.0f);
+    cairo_move_to (cr, x, (height - text_height)/2);
+    pango_cairo_show_layout (cr, layout);
+    cairo_stroke (cr);
+  }
+
+  cairo_destroy (cr);
+  if (layout)
+    g_object_unref (layout);
+
+  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
+
+  // The Texture is created with a reference count of 1. 
+  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  texture2D->Update(bitmap);
+  delete bitmap;
+
+  if (_title_layer)
+    delete _title_layer;
+  
+  nux::TexCoordXForm texxform;
+  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  
+  nux::ROPConfig rop; 
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
+                                        texxform,
+                                        nux::Color::White,
+                                        false, 
+                                        rop);
+
+    
+  texture2D->UnReference ();
 }
 
 void
@@ -259,35 +328,3 @@ PanelMenuView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
-
-void PanelMenuView::RecvButtonMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-    // The button is not connected to the PanelMenuView in anyway. So we explicitely call a redraw on the 
-    // PanelMenuView so it render itself and the button that is in the current layout.
-    printf ("Button Down\n");
-    NeedRedraw ();
-}
-
-void PanelMenuView::RecvButtonMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-    // The button is not connected to the PanelMenuView in anyway. So we explicitely call a redraw on the 
-    // PanelMenuView so it render itself and the button that is in the current layout.
-    printf ("Button Up\n");
-    NeedRedraw ();
-}
-
-void PanelMenuView::RecvButtonMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  printf ("Button Enter\n");
-}
-
-void PanelMenuView::RecvButtonMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  printf ("Button Leave\n");
-}
-
-void PanelMenuView::RecvButtonMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-  //printf ("Button Move\n");
-}
-

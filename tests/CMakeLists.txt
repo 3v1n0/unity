@@ -83,6 +83,8 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
                 )
 
 #
