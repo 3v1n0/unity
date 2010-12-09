@@ -87,6 +87,8 @@ add_executable (test-quicklist
                 ui/TestQuicklist.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
                 ../src/QuicklistMenuItem.cpp
                 ../src/QuicklistMenuItem.h
                 ../src/QuicklistMenuItemCheckmark.cpp
