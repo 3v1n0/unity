@@ -241,9 +241,9 @@ BamfLauncherIcon::OnMouseClick (int button)
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
   
-  if (!running && !GetQuirk(LAUNCHER_ICON_QUIRK_RUNNING))
+  if (!running && !GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
   {
-    SetQuirk(LAUNCHER_ICON_QUIRK_RUNNING, true);
+    SetQuirk  (LAUNCHER_ICON_QUIRK_STARTING, true);
     OpenInstance ();
   }
   else if (active)
@@ -280,6 +280,11 @@ BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer d
   {
     self->EnsureWindowState ();
     self->UpdateIconGeometries (self->GetCenter ());
+  }
+  else
+  {
+    self->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
+    self->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
   }
 }
 
