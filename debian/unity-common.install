@@ -1,2 +1,2 @@
-usr/lib/unity/migrate*
+usr/lib/unity/*.py
 usr/share/glib-2.0

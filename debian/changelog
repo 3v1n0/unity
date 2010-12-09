@@ -6,6 +6,7 @@ unity (3.2.6-0ubuntu1) UNRELEASED; urgency=low
   * remove the patch as well, fixed upstream
   * debian/control, debian/unity.install, debian/unity-common.install:
     - add unity-common package and move some files there
+    - install the new perf bootchart there as well
   * debian/unity.install:
     - install new unity binary
   * debian/control:

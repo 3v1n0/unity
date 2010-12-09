@@ -62,7 +62,8 @@ Description: Interface for Ubuntu Desktop Edition
 
 Package: unity-common
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
+         python,
 Replaces: unity (<< 3.2.2-0ubuntu3)
 Conflicts: unity (<< 3.2.2-0ubuntu3)
 Description: Common files for the interface for Ubuntu Desktop Edition
