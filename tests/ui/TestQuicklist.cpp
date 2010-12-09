@@ -234,7 +234,7 @@ ControlThread (nux::NThread* thread,
   // assemble second button-click event
   buttonPressEvent.xbutton.time = CurrentTime;
   buttonPressEvent.xbutton.x    = 50;
-  buttonPressEvent.xbutton.y    = 45;
+  buttonPressEvent.xbutton.y    = 50;
   mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
                                            (XEvent*) &buttonPressEvent);
   while (!mainWindowThread->ReadyForNextFakeEvent ())
@@ -242,7 +242,7 @@ ControlThread (nux::NThread* thread,
 
   buttonReleaseEvent.xbutton.time = CurrentTime;
   buttonReleaseEvent.xbutton.x    = 50;
-  buttonReleaseEvent.xbutton.y    = 45;
+  buttonReleaseEvent.xbutton.y    = 50;
   mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
                                            (XEvent*) &buttonReleaseEvent);
   while (!mainWindowThread->ReadyForNextFakeEvent ())
@@ -251,7 +251,7 @@ ControlThread (nux::NThread* thread,
   // assemble third button-click event
   buttonPressEvent.xbutton.time = CurrentTime;
   buttonPressEvent.xbutton.x    = 50;
-  buttonPressEvent.xbutton.y    = 60;
+  buttonPressEvent.xbutton.y    = 70;
   mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
                                            (XEvent*) &buttonPressEvent);
   while (!mainWindowThread->ReadyForNextFakeEvent ())
@@ -259,7 +259,7 @@ ControlThread (nux::NThread* thread,
 
   buttonReleaseEvent.xbutton.time = CurrentTime;
   buttonReleaseEvent.xbutton.x    = 50;
-  buttonReleaseEvent.xbutton.y    = 60;
+  buttonReleaseEvent.xbutton.y    = 70;
   mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
                                            (XEvent*) &buttonReleaseEvent);
   while (!mainWindowThread->ReadyForNextFakeEvent ())
