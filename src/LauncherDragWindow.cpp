@@ -26,9 +26,11 @@
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow ()
+LauncherDragWindow::LauncherDragWindow (LauncherIcon *icon, int size)
 {
-  SetBaseSize (100, 100);
+  _size = size;
+  _icon = icon;
+  SetBaseSize (size, size);
 }
 
 LauncherDragWindow::~LauncherDragWindow ()
@@ -46,6 +48,18 @@ void LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool forc
   geo.SetY (0);
   
   GfxContext.PushClippingRectangle (geo);
-  gPainter.Paint2DQuadColor (GfxContext, geo, nux::Color::SkyBlue);
+  
+  nux::BaseTexture *texture = _icon->TextureForSize (_size);
+  nux::TexCoordXForm texxform;
+
+  nux::Color color = nux::Color::LightGrey;
+  GfxContext.QRP_GLSL_1Tex (0,
+                            0,
+                            (float) texture->GetWidth(),
+                            (float) texture->GetHeight(),
+                            texture->GetDeviceTexture(),
+                            texxform,
+                            nux::Color::White);
+  
   GfxContext.PopClippingRectangle ();
 }

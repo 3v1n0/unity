@@ -1549,7 +1549,7 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window = NULL;
   }
 
-  _drag_window = new LauncherDragWindow ();
+  _drag_window = new LauncherDragWindow (icon, _icon_size);
   _drag_window->ShowWindow (true);
 
   nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
@@ -1570,7 +1570,10 @@ void Launcher::EndIconDrag ()
 void Launcher::UpdateDragWindowPosition (int x, int y)
 {
   if (_drag_window)
-    _drag_window->SetBaseXY (x, y);
+  {
+    nux::Geometry geo = _drag_window->GetGeometry ();
+    _drag_window->SetBaseXY (x - geo.width / 2 + _parent->GetGeometry ().x, y - geo.height / 2 + _parent->GetGeometry ().y);
+  }
 }
 
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -1639,7 +1642,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       {
         StartIconDrag (drag_icon);
         _launcher_action_state = ACTION_DRAG_ICON;
-        UpdateDragWindowPosition (x - 50, y - 50 + 24);
+        UpdateDragWindowPosition (x, y);
       }
 
     }
@@ -1650,7 +1653,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   }
   else if (_launcher_action_state == ACTION_DRAG_ICON)
   {
-    UpdateDragWindowPosition (x - 50, y - 50 + 24);
+    UpdateDragWindowPosition (x, y);
   }
   
   EnsureAnimation ();

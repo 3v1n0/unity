@@ -24,11 +24,13 @@
 #include "Nux/BaseWindow.h"
 #include "NuxGraphics/GraphicsEngine.h"
 
+#include "LauncherIcon.h"
+
 class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow ();
+  LauncherDragWindow (LauncherIcon *icon, int size);
 
   ~LauncherDragWindow ();
 
@@ -39,7 +41,10 @@ public:
     bool             forceDraw);
 
 private:
-
+  
+  LauncherIcon *_icon;
+  int _size;
+  
 
 };
 
