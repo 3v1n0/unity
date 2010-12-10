@@ -103,6 +103,9 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
     if (!icon)
       continue;
     
+    if (!icon->IsSticky ())
+      continue;
+    
     const char* desktop_file = icon->DesktopFile ();
     
     if (desktop_file && strlen (desktop_file) > 0)
