@@ -30,6 +30,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
+#include "PlaceFactoryFile.h"
 #include "IntrospectionDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
