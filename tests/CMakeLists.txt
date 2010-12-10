@@ -34,6 +34,7 @@ include_directories (. .. ../services ../src ${CMAKE_BINARY_DIR})
 add_executable (test-unit
                 unit/TestFavoriteStoreGSettings.cpp
                 unit/TestPanelService.cpp
+                unit/TestPlaceFactoryFile.cpp
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
@@ -46,6 +47,11 @@ add_executable (test-unit
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
                 ../src/Introspectable.cpp
+                ../src/PlaceEntry.h
+                ../src/PlaceFactoryFile.cpp
+                ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.h
+                ../src/Place.h
                 ../src/QuicklistMenuItem.cpp
                 ../src/QuicklistMenuItem.h
                 ../src/QuicklistMenuItemCheckmark.cpp
