@@ -302,6 +302,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   {
     SetQuirk  (LAUNCHER_ICON_QUIRK_STARTING, true);
     OpenInstance ();
+    return;
   }
   else if (active)
     Spread ();
