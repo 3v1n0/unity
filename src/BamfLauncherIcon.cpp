@@ -98,6 +98,18 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_object_unref (m_App);
 }
 
+bool 
+BamfLauncherIcon::IsSticky ()
+{
+  return bamf_view_is_sticky (BAMF_VIEW (m_App));
+}
+
+const char* 
+BamfLauncherIcon::DesktopFile ()
+{
+  return bamf_application_get_desktop_file (m_App);
+}
+
 void
 BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
 {
@@ -145,7 +157,7 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
       if (xid == w)
       {
         owns = true;
-	break;
+        break;
       }
     }
   }

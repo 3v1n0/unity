@@ -27,6 +27,7 @@
 #include <Nux/BaseWindow.h>
 #include "Introspectable.h"
 #include "LauncherIcon.h"
+#include "LauncherDragWindow.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
@@ -76,6 +77,7 @@ public:
     virtual void RecvQuicklistOpened (QuicklistView *quicklist);
     virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
+    sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
 protected:
     // Introspectable methods
     const gchar* GetName ();
@@ -129,9 +131,10 @@ private:
 
   void CheckWindowOverLauncher ();
 
-  float DnDExitProgress  (struct timespec const &current);
-  float GetHoverProgress (struct timespec const &current);
-  float AutohideProgress (struct timespec const &current);
+  float DnDStartProgress        (struct timespec const &current);
+  float DnDExitProgress         (struct timespec const &current);
+  float GetHoverProgress        (struct timespec const &current);
+  float AutohideProgress        (struct timespec const &current);
   float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
@@ -147,16 +150,28 @@ private:
   float  DragLimiter (float x);
 
   void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
+  void FillRenderArg (LauncherIcon *icon,
+                      RenderArg &arg,
+                      nux::Point3 &center,
+                      float folding_threshold,
+                      float folded_size,
+                      float folded_spacing,
+                      float autohide_offset,
+                      float folded_z_distance,
+                      float animation_neg_rads,
+                      int vertical_offset,
+                      struct timespec const &current);
+                      
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
                    nux::Geometry &box_geo);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
-  void OnIconAdded    (void *icon_pointer);
-  void OnIconRemoved  (void *icon_pointer);
+  void OnIconAdded    (LauncherIcon *icon);
+  void OnIconRemoved  (LauncherIcon *icon);
   void OnOrderChanged ();
 
-  void OnIconNeedsRedraw (void *icon);
+  void OnIconNeedsRedraw (LauncherIcon *icon);
 
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
@@ -180,6 +195,10 @@ private:
   void EventLogic ();
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
+  void StartIconDrag (LauncherIcon *icon);
+  void EndIconDrag ();
+  void UpdateDragWindowPosition (int x, int y);
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
@@ -211,15 +230,21 @@ private:
 
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
+  
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
+  
+  LauncherIcon* _drag_icon;
+  LauncherIcon* _drag_icon_under_mouse;
 
   int _space_between_icons;
   int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
   int _icon_glow_size;
-  int _dnd_delta;
+  int _dnd_delta_y;
+  int _dnd_delta_x;
+  int _launcher_drag_delta;
   int _dnd_security;
   int _enter_y;
 
@@ -245,6 +270,7 @@ private:
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
   LauncherModel* _model;
+  LauncherDragWindow* _drag_window;
 
   CompScreen* _screen;
 
@@ -252,6 +278,7 @@ private:
   struct timespec _enter_time;
   struct timespec _exit_time;
   struct timespec _drag_end_time;
+  struct timespec _drag_start_time;
   struct timespec _autohide_time;
 };
 
