@@ -843,7 +843,11 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 void
 Launcher::EnsureHiddenState ()
 {
-  if (!_mouse_inside_trigger && !_mouse_inside_launcher && _window_over_launcher && !QuicklistManager::Default ()->Current())
+  if (!_mouse_inside_trigger && 
+      !_mouse_inside_launcher && 
+       _launcher_action_state == ACTION_NONE &&
+      !QuicklistManager::Default ()->Current() &&
+      _window_over_launcher) 
     SetHidden (true);
   else
     SetHidden (false);
