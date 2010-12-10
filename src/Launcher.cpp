@@ -551,6 +551,12 @@ float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec cons
     int starting_ms = TimeDelta (&current, &starting_time);
     double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
+    if (starting_progress == 1.0f && !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    {
+        icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
+        icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    }
+
     return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
@@ -562,8 +568,11 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 
     // After we finish a fade in from running, we can reset the quirk
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING) && running_progress == 1.0f)
-        icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    if (running_progress == 1.0f && icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    {
+         icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
+         icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    }   
 
     result = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
 
