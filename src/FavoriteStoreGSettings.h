@@ -39,6 +39,7 @@ public:
   void     AddFavorite    (const char *desktop_path, gint    position);
   void     RemoveFavorite (const char *desktop_path);
   void     MoveFavorite   (const char *desktop_path, gint position);
+  void     SetFavorites   (std::list<const char *> desktop_paths);
 
   void     Changed        (const char *key);
 
