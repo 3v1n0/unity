@@ -55,7 +55,7 @@ private:
     FavoriteStore*   _favorite_store;
     int              _sort_priority;
 
-    void OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *after);
+    void OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other);
 
     void InsertExpoAction ();
     

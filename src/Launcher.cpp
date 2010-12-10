@@ -397,6 +397,9 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
 
 bool Launcher::AnimationInProgress ()
 {
+    // HACK
+    if (_launcher_action_state == ACTION_DRAG_ICON)
+      return true;
     // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
     // this way extra checks may be avoided
 
@@ -639,9 +642,6 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     if (size_modifier <= 0.0f || icon == _drag_icon)
         arg.skip = true;
 
-    if (icon == _drag_icon)
-        size_modifier *= 0.0f;
-
     // goes for 0.0f when fully unfolded, to 1.0f folded
     float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
     float present_progress = IconPresentProgress (icon, current);
@@ -661,16 +661,6 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float spacing_overlap = CLAMP ((float) (center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
     float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
     
-    // FIXME: jerky
-    if (_launcher_action_state == ACTION_DRAG_ICON)
-    {
-      if (_mouse_position.y >= center.y && _mouse_position.y < center.y + (half_size * 2.0f * size_modifier) + spacing)
-      {
-        _drag_icon_under_mouse = icon;
-        center.y += (half_size * 2.0f * size_modifier) + spacing;
-      }
-    }
-
     center.y += half_size * size_modifier;   // move to center
     arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
     icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
@@ -1573,11 +1563,6 @@ void Launcher::EndIconDrag ()
     _drag_window = NULL;
   }
   
-  if (_drag_icon && _drag_icon_under_mouse)
-  {
-    request_reorder.emit (_drag_icon, _drag_icon_under_mouse);
-  }
-  
   _drag_icon_under_mouse = NULL;
   _drag_icon = NULL;
 }
@@ -1588,6 +1573,13 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
   {
     nux::Geometry geo = _drag_window->GetGeometry ();
     _drag_window->SetBaseXY (x - geo.width / 2 + _parent->GetGeometry ().x, y - geo.height / 2 + _parent->GetGeometry ().y);
+    
+    LauncherIcon *hovered_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
+    
+    if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
+    {
+      request_reorder.emit (_drag_icon, hovered_icon);
+    }
   }
 }
 
@@ -1893,8 +1885,6 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
   std::list<Launcher::RenderArg>::iterator it;
   for(it = args.begin(); it != args.end(); it++)
   {
-    if ((*it).skip)
-      continue;
 
     LauncherIcon* launcher_icon = (*it).icon;
 
@@ -1907,6 +1897,14 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     float y = (*it).center.y - h/2.0f; // y: top left corner
     float z = (*it).center.z;
 
+    if ((*it).skip)
+    {
+      w = 1;
+      h = 1;
+      x = -100;
+      y = -100;
+    }
+    
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
       nux::Matrix4::ROTATEX((*it).folding_rads) *              // rotate the icon
       nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)

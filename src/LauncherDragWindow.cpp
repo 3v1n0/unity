@@ -13,8 +13,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Jay Taoko <jay.taoko@canonical.com>
-* Authored by: Mirco Müller <mirco.mueller@canonical.com
+* Authored by: Jason Smith <jason.smith@canonical.com>
 */
 
 #include "Nux/Nux.h"

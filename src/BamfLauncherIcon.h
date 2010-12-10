@@ -38,6 +38,8 @@ public:
     BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
     ~BamfLauncherIcon();
 
+    const char* DesktopFile ();
+    bool IsSticky ();
 
 protected:
     void OnMouseClick (int button);

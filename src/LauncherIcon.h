@@ -102,7 +102,6 @@ public:
     
     std::list<DbusmenuMenuitem *> Menus ();
     
-    
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;

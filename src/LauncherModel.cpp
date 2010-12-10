@@ -114,6 +114,7 @@ LauncherModel::Sort (SortFunc func)
   _inner_main.sort (func);
   
   Populate ();
+  order_changed.emit ();
 }
 
 int
