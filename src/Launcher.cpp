@@ -570,7 +570,7 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     // After we finish a fade in from running, we can reset the quirk
     if (running_progress == 1.0f && icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
     {
-         icon->SetQuirk(LAUNCHER_ICON_QUIRK_STARTING, false);
+         icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
          icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
     }   
 
