@@ -326,11 +326,6 @@ BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer d
     self->EnsureWindowState ();
     self->UpdateIconGeometries (self->GetCenter ());
   }
-  else
-  {
-    self->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
-    self->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-  }
 }
 
 void
