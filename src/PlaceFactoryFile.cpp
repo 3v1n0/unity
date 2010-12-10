@@ -115,6 +115,8 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
     return;
   }
 
+  read_directory = true;
+
   g_object_unref (enumerator);
 }
 

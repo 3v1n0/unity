@@ -43,8 +43,9 @@ public:
   void OnDirectoryEnumerationReady (GObject      *source,
                                     GAsyncResult *result);
 
-private:
-  void Init ();
+public:
+  /* For Debugging */
+  bool read_directory;  
 
 private:
   char  *_directory;
