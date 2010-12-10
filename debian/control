@@ -69,7 +69,7 @@ Conflicts: unity (<< 3.2.2-0ubuntu3)
 Description: Common files for the interface for Ubuntu Desktop Edition
  Unity is a graphical interface designed for Ubuntu Desktop Edition
  .
- This package contains commons file that are architecture independant.
+ This package contains commons file that are architecture independent.
 
 #Package: unity-dbg
 #Section: debug
