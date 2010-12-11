@@ -43,13 +43,15 @@ public:
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
 
-  const guint32  GetPosition  ();
+  guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
 
   const std::map<gchar *, gchar *>& GetHints ();
 
-  const bool IsSensitive ();
-  const bool IsActive    ();
+  bool IsSensitive  ();
+  bool IsActive     ();
+  bool ShowInGlobal ();
+  bool IsVisible    ();
 
   /* Other methods */
   Place * GetParent ();
@@ -57,6 +59,7 @@ public:
 
 private:
   Place   *_parent;
+  gchar   *_dbus_path;
   gchar   *_name;
   gchar   *_icon;
   gchar   *_description;
@@ -66,6 +69,8 @@ private:
   bool     _sensitive;
   bool     _active;
   bool     _valid;
+  bool     _show_in_global;
+  bool     _visible;
 };
 
 #endif // PLACE_REMOTE_H

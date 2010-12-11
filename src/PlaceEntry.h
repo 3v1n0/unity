@@ -31,13 +31,27 @@ public:
   virtual const gchar * GetIcon        () = 0;
   virtual const gchar * GetDescription () = 0;
 
-  virtual const guint32  GetPosition  () = 0;
+  // For ordering entries within a place
+  virtual guint32        GetPosition  () = 0;
+
+  // For DND, what can this entry handle
   virtual const gchar ** GetMimetypes () = 0;
 
   virtual const std::map<gchar *, gchar *>& GetHints () = 0;
 
-  virtual const bool IsSensitive () = 0;
-  virtual const bool IsActive    () = 0;
+  // I.e. shown but cannot be clicked
+  virtual bool IsSensitive () = 0;
+
+  // This is not really useful for views
+  virtual bool IsActive    () = 0;
+
+  // Include as part of global search results
+  // NOTE: IsVisible has no effect, i.e. a entry might only ever want to be
+  // shown in global search and never on the launcher
+  virtual bool ShowInGlobal () = 0;
+
+  // Should be shown on launcher
+  virtual bool IsVisible    () = 0;
 };
 
 #endif // PLACE_ENTRY_H

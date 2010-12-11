@@ -110,15 +110,19 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
     name = g_file_info_get_name (info);
     if (g_str_has_suffix (name, ".place"))
     {
-      gchar *path;
-      Place *place;
+      PlaceRemote *place;
+      gchar       *path;
 
       path = g_build_filename (_directory, name, NULL);
 
       place = new PlaceRemote (path);
-      _places.push_back (place);
-
-      place_added.emit (place);
+      if (place->IsValid ())
+      {
+        _places.push_back (place);
+        place_added.emit (place);
+      }
+      else
+        delete place;
     }
 
     g_object_unref (info);

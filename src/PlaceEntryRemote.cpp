@@ -18,22 +18,30 @@
 
 #include "PlaceEntryRemote.h"
 
+#include <glib/gi18n-lib.h>
+
+#define DBUS_PATH "DBusObjectPath"
+
 PlaceEntryRemote::PlaceEntryRemote (Place *parent)
 : _parent (parent),
+  _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
   _description (NULL),
   _position (0),
   _mimetypes (NULL),
-  _sensitive (false),
+  _sensitive (true),
   _active (false),
-  _valid (false)
+  _valid (false),
+  _show_in_global (false),
+  _visible (true)
 {
 }
 
 PlaceEntryRemote::~PlaceEntryRemote ()
 {
   g_free (_name);
+  g_free (_dbus_path);
   g_free (_icon);
   g_free (_description);
   g_strfreev (_mimetypes);
@@ -43,8 +51,73 @@ void
 PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
                                    const gchar *group)
 {
+  GError *error = NULL;
+  gchar  *domain;
+  gchar  *name;
+  gchar  *icon;
+  gchar  *description;
+
+  _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
+  if (_dbus_path == NULL
+      || g_strcmp0 (_dbus_path, "") == 0
+      || _dbus_path[0] != '/'
+      || error)
+  {
+    g_warning ("Unable to load PlaceEntry '%s': Does not contain valid '"DBUS_PATH"' (%s)",
+               group,
+               error ? error->message : "");
+    if (error)
+      g_error_free (error);
+    return;
+  }
+
+  domain = g_key_file_get_string (key_file, G_KEY_FILE_DESKTOP_GROUP,
+                                  "X-Ubuntu-Gettext-Domain", &error);
+  if (error)
+  {
+    // I'm messaging here because it probably should contain one
+    g_message ("PlaceEntry %s does not contain a translation gettext name: %s",
+               group,
+               error->message);
+    g_error_free (error);
+    error = NULL;
+  }
+
+  name = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_NAME, NULL);
+  icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
+  description = g_key_file_get_string (key_file, group, "Description", NULL);
+
+  if (domain)
+  {
+    _name = dgettext (domain, name);
+    _icon = dgettext (domain, icon);
+    _description = dgettext (domain, description);
+  }
+  else
+  {
+    _name = name;
+    _icon = icon;
+    _description = description;
+
+    name = NULL;
+    icon = NULL;
+    description = NULL;
+  }
+
+  /* Finally the two that should default to true */
+  if (g_key_file_has_key (key_file, group, "ShowGlobal", NULL))
+    _show_in_global = g_key_file_get_boolean (key_file, group, "ShowGlobal", NULL);
+
+  if (g_key_file_has_key (key_file, group, "ShowEntry", NULL))
+    _visible = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
 
   _valid = true;
+
+  g_debug ("PlaceEntry: %s", _name);
+
+  g_free (name);
+  g_free (icon);
+  g_free (description);
 }
 
 /* Other methods */
@@ -73,7 +146,7 @@ PlaceEntryRemote::GetDescription ()
   return _description;
 }
 
-const guint32
+guint32
 PlaceEntryRemote::GetPosition  ()
 {
   return _position;
@@ -91,16 +164,28 @@ PlaceEntryRemote::GetHints ()
   return _hints;
 }
 
-const bool
+bool
 PlaceEntryRemote::IsSensitive ()
 {
   return _sensitive;
 }
 
-const bool
+bool
 PlaceEntryRemote::IsActive ()
 {
   return _active;
+}
+
+bool
+PlaceEntryRemote::ShowInGlobal ()
+{
+  return _show_in_global;
+}
+
+bool
+PlaceEntryRemote::IsVisible ()
+{
+  return _visible;
 }
 
 Place *

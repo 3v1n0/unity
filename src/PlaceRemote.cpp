@@ -35,7 +35,8 @@ PlaceRemote::PlaceRemote (const char *path)
   _dbus_name (NULL),
   _dbus_path (NULL),
   _uri_regex (NULL),
-  _mime_regex (NULL)
+  _mime_regex (NULL),
+  _valid (false)
 {
   GKeyFile *key_file;
   GError   *error = NULL;
@@ -148,6 +149,8 @@ PlaceRemote::PlaceRemote (const char *path)
   }
 
   LoadKeyFileEntries (key_file);
+
+  _valid = true;
     
   g_key_file_free (key_file);
 }
@@ -216,4 +219,10 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
   }
 
   g_strfreev (groups);
+}
+
+bool
+PlaceRemote::IsValid ()
+{
+  return _valid;
 }

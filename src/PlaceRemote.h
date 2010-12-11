@@ -38,6 +38,8 @@ public:
   std::vector<PlaceEntry *>& GetEntries ();
   guint32                    GetNEntries ();
 
+  bool IsValid ();
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
 
@@ -48,6 +50,8 @@ private:
 
   GRegex *_uri_regex;
   GRegex *_mime_regex;
+
+  bool _valid;
 };
 
 #endif // PLACE_REMOTE_H
