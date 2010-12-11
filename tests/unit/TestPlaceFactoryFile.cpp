@@ -41,7 +41,8 @@ TestAllocation ()
   factory = new PlaceFactoryFile ();
   g_assert (factory);
 
-  while (!factory->read_directory)
+//  while (!factory->read_directory)
+  while (1)
     g_main_context_iteration (NULL, TRUE);
 
   delete factory;

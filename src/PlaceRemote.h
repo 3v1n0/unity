@@ -40,18 +40,24 @@ public:
 
   bool IsValid ();
 
+  /* Callbacks */
+  void OnServiceProxyReady (GObject *source, GAsyncResult *result);
+  void OnEntriesReceived   (GVariant *args);
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
+  void Connect ();
 
 private:
-  char *_path;
-  char *_dbus_name;
-  char *_dbus_path;
-
+  char   *_path;
+  char   *_dbus_name;
+  char   *_dbus_path;
   GRegex *_uri_regex;
   GRegex *_mime_regex;
+  bool    _valid;
 
-  bool _valid;
+  GDBusProxy *_service_proxy;
+  GDBusProxy *_activation_proxy;
 };
 
 #endif // PLACE_REMOTE_H

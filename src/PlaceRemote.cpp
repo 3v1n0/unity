@@ -30,13 +30,31 @@
 #define URI_PATTERN      "URIPattern"
 #define MIME_PATTERN     "MimetypePattern"
 
+#define PLACE_IFACE "com.canonical.Unity.Place"
+
+static void on_service_proxy_ready (GObject      *source,
+                                    GAsyncResult *result,
+                                    gpointer      user_data);
+
+static void on_service_proxy_signal_received (GDBusProxy *proxy,
+                                              gchar      *sender_name,
+                                              gchar      *signal_name,
+                                              GVariant   *parameters,
+                                              gpointer    user_data);
+
+static void on_service_proxy_get_entries_received (GObject      *source,
+                                                   GAsyncResult *result,
+                                                   gpointer      user_data);
+
 PlaceRemote::PlaceRemote (const char *path)
 : _path (NULL),
   _dbus_name (NULL),
   _dbus_path (NULL),
   _uri_regex (NULL),
   _mime_regex (NULL),
-  _valid (false)
+  _valid (false),
+  _service_proxy (NULL),
+  _activation_proxy (NULL)
 {
   GKeyFile *key_file;
   GError   *error = NULL;
@@ -151,6 +169,8 @@ PlaceRemote::PlaceRemote (const char *path)
   LoadKeyFileEntries (key_file);
 
   _valid = true;
+
+  Connect ();
     
   g_key_file_free (key_file);
 }
@@ -175,6 +195,26 @@ PlaceRemote::~PlaceRemote ()
     g_regex_unref (_uri_regex);
   if (_mime_regex)
     g_regex_unref (_mime_regex);
+
+  if (_service_proxy)
+    g_object_unref (_service_proxy);
+
+  if (_activation_proxy)
+    g_object_unref (_activation_proxy);
+}
+
+void
+PlaceRemote::Connect ()
+{
+  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                            NULL,
+                            _dbus_name,
+                            _dbus_path,
+                            PLACE_IFACE,
+                            NULL,
+                            on_service_proxy_ready,
+                            this);
 }
 
 std::vector<PlaceEntry *>&
@@ -225,4 +265,133 @@ bool
 PlaceRemote::IsValid ()
 {
   return _valid;
+}
+
+void
+PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
+{
+  GError *error = NULL;
+  gchar  *name_owner = NULL;
+
+  _service_proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
+  name_owner = g_dbus_proxy_get_name_owner (_service_proxy);
+
+  if (error || !name_owner)
+  {
+    g_warning ("Unable to connect to PlaceEntry %s: %s",
+               _dbus_name,
+               error ? error->message : "No name owner");
+    if (error)
+      g_error_free (error);
+
+    g_free (name_owner);
+    return;
+  }
+
+  g_signal_connect (_service_proxy, "g-signal",
+                    G_CALLBACK (on_service_proxy_signal_received), this);
+  g_dbus_proxy_call (_service_proxy,
+                     "GetEntries",
+                     NULL,
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1, 
+                     NULL,
+                     on_service_proxy_get_entries_received,
+                     this);
+  
+  g_free (name_owner);
+}
+
+void
+PlaceRemote::OnEntriesReceived (GVariant *args)
+{
+  GVariantIter *iter;
+  gchar        *dbus_path;
+  gchar        *name;
+  gchar        *icon;
+  guint32       position;
+  gchar       **mimetypes;
+  gboolean      sensitive;
+  gchar        *sections_model;
+  GVariantIter *hints;
+  gchar        *entry_renderer;
+  gchar        *entry_groups_model;
+  gchar        *entry_results_model;
+  GVariantIter *entry_hints;
+  gchar        *global_renderer;
+  gchar        *global_groups_model;
+  gchar        *global_results_model;
+  GVariantIter *global_hints;
+
+  g_debug ("%s %s", G_STRFUNC, "(a(sssuasbsa{ss}(sssa{ss})(sssa{ss})))");
+
+  g_variant_get (args, "(a(sssuasbsa{ss}(sssa{ss})(sssa{ss})))", &iter);
+  while (g_variant_iter_loop (iter, "(sssuasbsa{ss}(sssa{ss})(sssa{ss}))",
+                              &dbus_path,
+                              &name,
+                              &icon,
+                              &position,
+                              &mimetypes,
+                              &sensitive,
+                              &sections_model,
+                              &hints,
+                              &entry_renderer,
+                              &entry_groups_model,
+                              &entry_results_model,
+                              &entry_hints,
+                              &global_renderer,
+                              &global_groups_model,
+                              &global_results_model,
+                              &global_hints))
+  {
+    g_debug ("%s %s %s", dbus_path, sections_model, entry_results_model);
+  }
+
+  g_variant_iter_free (iter);
+}
+
+/*
+ * C callbacks
+ */
+static void
+on_service_proxy_ready (GObject      *source,
+                        GAsyncResult *result,
+                        gpointer      user_data)
+{
+  PlaceRemote *self = static_cast<PlaceRemote *> (user_data);
+
+  self->OnServiceProxyReady (source, result);
+}
+
+static void
+on_service_proxy_signal_received (GDBusProxy *proxy,
+                                  gchar      *sender_name,
+                                  gchar      *signal_name,
+                                  GVariant   *parameters,
+                                  gpointer    user_data)
+{
+  g_debug ("Signal: %s", signal_name);
+}
+
+static void
+on_service_proxy_get_entries_received (GObject      *source,
+                                       GAsyncResult *result,
+                                       gpointer      user_data)
+{
+  PlaceRemote *self = static_cast<PlaceRemote *> (user_data);
+  GVariant    *args;
+  GError      *error = NULL;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy *)source, result, &error);
+  if (error)
+  {
+    g_warning ("Unable to call GetEntries() on: %s",
+               error->message);
+    g_error_free (error);
+    return;
+  }
+
+  self->OnEntriesReceived (args);
+
+  g_variant_unref (args);
 }
