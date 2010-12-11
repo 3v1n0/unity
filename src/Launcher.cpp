@@ -873,7 +873,7 @@ Launcher::CheckWindowOverLauncher ()
   {
     CompWindow *window = *it;
 
-    if (window->type () != CompWindowTypeNormalMask || window->invisible ())
+    if (window->type () != CompWindowTypeNormalMask || !window->focus())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
@@ -891,6 +891,7 @@ Launcher::CheckWindowOverLauncher ()
 void
 Launcher::OnWindowMoved (CompWindow *window)
 {
+  g_debug("OnWindowMoved");
   if (_autohide)
     CheckWindowOverLauncher ();
 }
@@ -898,6 +899,7 @@ Launcher::OnWindowMoved (CompWindow *window)
 void
 Launcher::OnWindowResized (CompWindow *window)
 {
+  g_debug("OnWindowResized");
   if (_autohide)
     CheckWindowOverLauncher ();
 }
@@ -905,12 +907,14 @@ Launcher::OnWindowResized (CompWindow *window)
 void
 Launcher::OnWindowAppear (CompWindow *window)
 {
+  g_debug("OnWindowAppear");
   if (_autohide)
     CheckWindowOverLauncher ();
 }
 void
 Launcher::OnWindowDisappear (CompWindow *window)
 {
+  g_debug("OnWindowDisappear");
   if (_autohide)
     CheckWindowOverLauncher ();
 }
