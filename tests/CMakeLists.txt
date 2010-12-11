@@ -51,6 +51,8 @@ add_executable (test-unit
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
                 ../src/PlaceFactory.h
+                ../src/PlaceRemote.cpp
+                ../src/PlaceRemote.h
                 ../src/Place.h
                 ../src/QuicklistMenuItem.cpp
                 ../src/QuicklistMenuItem.h

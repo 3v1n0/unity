@@ -31,7 +31,12 @@ class Place : public sigc::trackable
 public:
   // This could be empty, if the loading of entries is async, so you
   // should be listening to the signals too
-  virtual std::vector<PlaceEntry *>& GetEntries () = 0;
+  virtual std::vector<PlaceEntry *>& GetEntries  () = 0;
+  virtual guint32                    GetNEntries () = 0;
+
+  // Signals
+  sigc::signal<void, PlaceEntry *> entry_added;
+  sigc::signal<void, PlaceEntry *> entry_removed;
 
 protected:
   std::vector<PlaceEntry *> _entries;

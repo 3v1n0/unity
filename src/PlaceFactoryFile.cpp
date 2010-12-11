@@ -19,6 +19,8 @@
 
 #include "PlaceFactoryFile.h"
 
+#include "PlaceRemote.h"
+
 static void on_directory_enumeration_ready (GObject      *source,
                                             GAsyncResult *result,
                                             gpointer      user_data);
@@ -50,6 +52,16 @@ PlaceFactoryFile::PlaceFactoryFile (const char *directory)
 
 PlaceFactoryFile::~PlaceFactoryFile ()
 {
+  std::vector<Place*>::iterator it;
+  
+  for (it = _places.begin(); it != _places.end(); it++)
+  {
+    Place *place = static_cast<Place *> (*it);
+    delete place;
+  }
+
+  _places.erase (_places.begin (), _places.end ());
+
   g_free (_directory);
   g_object_unref (_dir);
 }
@@ -98,7 +110,15 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
     name = g_file_info_get_name (info);
     if (g_str_has_suffix (name, ".place"))
     {
-      g_print ("Found Place: %s\n", name);
+      gchar *path;
+      Place *place;
+
+      path = g_build_filename (_directory, name, NULL);
+
+      place = new PlaceRemote (path);
+      _places.push_back (place);
+
+      place_added.emit (place);
     }
 
     g_object_unref (info);
