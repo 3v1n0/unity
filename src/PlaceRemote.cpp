@@ -200,10 +200,16 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
 
     if (g_str_has_prefix (group, ENTRY_PREFIX))
     {
-      PlaceEntryRemote *entry = new PlaceEntryRemote (key_file, group);
+      PlaceEntryRemote *entry = new PlaceEntryRemote (this);
+      entry->InitFromKeyFile (key_file, group);
       
-      _entries.push_back (entry);
-      entry_added.emit (entry);
+      if (entry->IsValid ())
+      {
+        _entries.push_back (entry);
+        entry_added.emit (entry);
+      }
+      else
+        delete entry;
     }
 
     i++;

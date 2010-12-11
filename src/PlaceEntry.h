@@ -15,10 +15,10 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
-
 #ifndef PLACE_ENTRY_H
 #define PLACE_ENTRY_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include <sigc++/signal.h>
@@ -27,7 +27,17 @@
 class PlaceEntry : public sigc::trackable
 {
 public:
-  virtual const char * GetName () = 0;
+  virtual const gchar * GetName        () = 0;
+  virtual const gchar * GetIcon        () = 0;
+  virtual const gchar * GetDescription () = 0;
+
+  virtual const guint32  GetPosition  () = 0;
+  virtual const gchar ** GetMimetypes () = 0;
+
+  virtual const std::map<gchar *, gchar *>& GetHints () = 0;
+
+  virtual const bool IsSensitive () = 0;
+  virtual const bool IsActive    () = 0;
 };
 
 #endif // PLACE_ENTRY_H

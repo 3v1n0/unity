@@ -27,17 +27,45 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include "Place.h"
 #include "PlaceEntry.h"
 
 class PlaceEntryRemote : public PlaceEntry
 {
 public:
-  PlaceEntryRemote (GKeyFile *key_file, const gchar *group);
+  PlaceEntryRemote (Place *parent);
   ~PlaceEntryRemote ();
 
+  void InitFromKeyFile (GKeyFile *key_file, const gchar *group);
+  
+  /* Overrides */
   const gchar * GetName ();
+  const gchar * GetIcon        ();
+  const gchar * GetDescription ();
+
+  const guint32  GetPosition  ();
+  const gchar ** GetMimetypes ();
+
+  const std::map<gchar *, gchar *>& GetHints ();
+
+  const bool IsSensitive ();
+  const bool IsActive    ();
+
+  /* Other methods */
+  Place * GetParent ();
+  bool IsValid ();
 
 private:
+  Place   *_parent;
+  gchar   *_name;
+  gchar   *_icon;
+  gchar   *_description;
+  guint32  _position;
+  gchar  **_mimetypes;
+  std::map<gchar *, gchar *> _hints;
+  bool     _sensitive;
+  bool     _active;
+  bool     _valid;
 };
 
 #endif // PLACE_REMOTE_H
