@@ -873,7 +873,7 @@ Launcher::CheckWindowOverLauncher ()
   {
     CompWindow *window = *it;
 
-    if (window->type () != CompWindowTypeNormalMask || !window->focus ())
+    if (window->type () != CompWindowTypeNormalMask || !window->isViewable ())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
