@@ -27,7 +27,7 @@ class SimpleLauncherIcon : public LauncherIcon
 {
 public:
     SimpleLauncherIcon(Launcher* IconManager);
-    ~SimpleLauncherIcon();
+    virtual ~SimpleLauncherIcon();
     
     /* override */
     nux::BaseTexture * GetTextureForSize (int size);

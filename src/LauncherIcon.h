@@ -69,7 +69,7 @@ class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, 
 {
 public:
     LauncherIcon(Launcher* launcher);
-    ~LauncherIcon();
+    virtual ~LauncherIcon();
 
     void SetTooltipText (const TCHAR* text);
     

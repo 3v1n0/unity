@@ -1037,9 +1037,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 void Launcher::OnIconRemoved (LauncherIcon *icon)
 {
     icon->UnReference ();
-
     EnsureAnimation();
-
     RemoveChild (icon);
 }
 

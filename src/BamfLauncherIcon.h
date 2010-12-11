@@ -36,7 +36,7 @@ class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
     BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
-    ~BamfLauncherIcon();
+    virtual ~BamfLauncherIcon();
 
     const char* DesktopFile ();
     bool IsSticky ();

@@ -81,9 +81,10 @@ LauncherModel::RemoveIcon (LauncherIcon *icon)
   _inner.remove (icon);
 
   if (size != _inner.size ())
+  {
     icon_removed.emit (icon);
-  
-  icon->UnReference ();
+    icon->UnReference ();
+  }
 }
 
 gboolean
