@@ -18,6 +18,8 @@
 
 #include "PlaceRemote.h"
 
+#include "PlaceEntryRemote.h"
+
 #define PLACE_GROUP      "Place"
 #define DBUS_NAME        "DBusName"
 #define DBUS_PATH        "DBusObjectPath"
@@ -144,6 +146,8 @@ PlaceRemote::PlaceRemote (const char *path)
     g_free (uri_match);
     g_free (mime_match);
   }
+
+  LoadKeyFileEntries (key_file);
     
   g_key_file_free (key_file);
 }
@@ -180,4 +184,30 @@ guint32
 PlaceRemote::GetNEntries ()
 {
   return _entries.size ();
+}
+
+void
+PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
+{
+  gchar **groups;
+  gint    i = 0;
+
+  groups = g_key_file_get_groups (key_file, NULL);
+
+  while (groups[i])
+  {
+    const gchar *group = groups[i];
+
+    if (g_str_has_prefix (group, ENTRY_PREFIX))
+    {
+      PlaceEntryRemote *entry = new PlaceEntryRemote (key_file, group);
+      
+      _entries.push_back (entry);
+      entry_added.emit (entry);
+    }
+
+    i++;
+  }
+
+  g_strfreev (groups);
 }

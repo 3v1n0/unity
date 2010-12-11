@@ -47,6 +47,8 @@ add_executable (test-unit
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
                 ../src/Introspectable.cpp
+                ../src/PlaceEntryRemote.cpp
+                ../src/PlaceEntryRemote.h
                 ../src/PlaceEntry.h
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h

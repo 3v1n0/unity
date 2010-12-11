@@ -16,38 +16,15 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACE_REMOTE_H
-#define PLACE_REMOTE_H
+#include "PlaceEntryRemote.h"
 
-#include <glib.h>
-#include <gio/gio.h>
-
-#include <string>
-#include <vector>
-#include <sigc++/signal.h>
-#include <sigc++/trackable.h>
-
-#include "Place.h"
-
-class PlaceRemote : public Place
+PlaceEntryRemote::PlaceEntryRemote (GKeyFile    *key_file,
+                                    const gchar *group)
 {
-public:
-  PlaceRemote (const char *path);
-  ~PlaceRemote ();
+}
 
-  std::vector<PlaceEntry *>& GetEntries ();
-  guint32                    GetNEntries ();
-
-private:
-  void LoadKeyFileEntries (GKeyFile *key_file);
-
-private:
-  char *_path;
-  char *_dbus_name;
-  char *_dbus_path;
-
-  GRegex *_uri_regex;
-  GRegex *_mime_regex;
-};
-
-#endif // PLACE_REMOTE_H
+const gchar *
+PlaceEntryRemote::GetName ()
+{
+  return "Booya";
+}

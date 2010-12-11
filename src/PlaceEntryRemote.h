@@ -16,8 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACE_REMOTE_H
-#define PLACE_REMOTE_H
+#ifndef PLACE_ENTRY_REMOTE_H
+#define PLACE_ENTRY_REMOTE_H
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -27,27 +27,17 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include "Place.h"
+#include "PlaceEntry.h"
 
-class PlaceRemote : public Place
+class PlaceEntryRemote : public PlaceEntry
 {
 public:
-  PlaceRemote (const char *path);
-  ~PlaceRemote ();
+  PlaceEntryRemote (GKeyFile *key_file, const gchar *group);
+  ~PlaceEntryRemote ();
 
-  std::vector<PlaceEntry *>& GetEntries ();
-  guint32                    GetNEntries ();
-
-private:
-  void LoadKeyFileEntries (GKeyFile *key_file);
+  const gchar * GetName ();
 
 private:
-  char *_path;
-  char *_dbus_name;
-  char *_dbus_path;
-
-  GRegex *_uri_regex;
-  GRegex *_mime_regex;
 };
 
 #endif // PLACE_REMOTE_H
