@@ -39,25 +39,29 @@ public:
 
   virtual const std::map<gchar *, gchar *>& GetHints () = 0;
 
-  // Should be shown on launcher
+  // Whether the entry is sensitive to input (clicks/DND)
   virtual bool IsSensitive () = 0;
 
   // This is not really useful for views
   virtual bool IsActive    () = 0;
 
+  // Show this entry in the launcher
+  virtual bool ShowInLauncher () = 0;
+
   // Include as part of global search results
-  // NOTE: IsSensitive has no effect, i.e. a entry might only ever want to be
-  // shown in global search and never on the launcher
   virtual bool ShowInGlobal () = 0;
 
   // Signals
 
   // This covers: name, icon and description properties
-  sigc::signal<void, const gchar *>           state_changed;
+  sigc::signal<void>                          state_changed;
 
   sigc::signal<void, guint32>                 position_changed;
   sigc::signal<void, const gchar **>          mimetypes_changed;
   sigc::signal<void, bool>                    sensitive_changed;
+
+  // If ShowInLauncher or ShowInGlobal changes
+  sigc::signal<void>                          visibility_changed;
 
   // We don't use this too much right now
   sigc::signal<void>                          hints_changed;

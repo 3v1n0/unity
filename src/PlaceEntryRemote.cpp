@@ -23,7 +23,8 @@
 #define DBUS_PATH "DBusObjectPath"
 
 PlaceEntryRemote::PlaceEntryRemote (Place *parent)
-: _parent (parent),
+: dirty (false),
+  _parent (parent),
   _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
@@ -33,7 +34,8 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent)
   _sensitive (true),
   _active (false),
   _valid (false),
-  _show_in_global (false)
+  _show_in_launcher (true),
+  _show_in_global (true)
 {
 }
 
@@ -53,7 +55,6 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   GError *error = NULL;
   gchar  *domain;
   gchar  *name;
-  gchar  *icon;
   gchar  *description;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
@@ -83,24 +84,18 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   }
 
   name = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_NAME, NULL);
-  icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
+  _icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
   description = g_key_file_get_string (key_file, group, "Description", NULL);
 
   if (domain)
   {
-    _name = dgettext (domain, name);
-    _icon = dgettext (domain, icon);
-    _description = dgettext (domain, description);
+    _name = g_strdup (dgettext (domain, name));
+    _description = g_strdup (dgettext (domain, description));
   }
   else
   {
-    _name = name;
-    _icon = icon;
-    _description = description;
-
-    name = NULL;
-    icon = NULL;
-    description = NULL;
+    _name = g_strdup (name);
+    _description = g_strdup (description);
   }
 
   /* Finally the two that should default to true */
@@ -108,14 +103,15 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
     _show_in_global = g_key_file_get_boolean (key_file, group, "ShowGlobal", NULL);
 
   if (g_key_file_has_key (key_file, group, "ShowEntry", NULL))
-    _sensitive = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
+    _show_in_launcher = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
 
   _valid = true;
+
+  Connect ();
 
   g_debug ("PlaceEntry: %s", _name);
 
   g_free (name);
-  g_free (icon);
   g_free (description);
 }
 
@@ -150,9 +146,88 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
                           const gchar  *global_results_model,
                           GVariantIter *global_hints)
 {
+  bool _state_changed           = false;
+  bool _vis_changed             = false;
+  bool _entry_renderer_changed  = false;
+  bool _global_renderer_changed = false;
 
+  if (_dbus_path)
+    g_assert_cmpstr (_dbus_path, ==, dbus_path);
+ 
+  // Hold on tight
+  if (g_strcmp0 (_name, name) != 0)
+  {
+    g_free (_name);
+    _name = g_strdup (name);
+    _state_changed = true;
+  }
+  return;
+
+  if (g_strcmp0 (_icon, icon) != 0)
+  {
+    g_free (_icon);
+    _icon = g_strdup (icon);
+    _state_changed = true;
+  }
+
+  if (_state_changed)
+    state_changed.emit ();
+
+  if (_position != position)
+  {
+    _position = position;
+    position_changed.emit (_position);
+  }
+
+  // FIXME: Need to handle mimetypes
+
+  if (_sensitive != sensitive)
+  {
+    _sensitive = sensitive;
+    sensitive_changed.emit (_sensitive);
+  }
+
+  // FIXME: Handle sections model name
+  // FIXME: Handle place entry hints
+
+  // FIXME: Spec says if entry_renderer == "", then ShowInLauncher () == false, but currently
+  //        both places return ""
+  
+  // FIXME: Handle entry groups model name
+  // FIXME: Handle entry results model name
+  // FIXME: Handle entry renderer hints
+
+  // FIXME: Spec says if global_renderer == "", then ShowInGlobal () == false, but currently
+  //        both places return ""
+
+  // FIXME: Handle global groups model name
+  // FIXME: Handle global results model name
+  // FIXME: Handle global renderer hints
+
+  if (_vis_changed)
+    visibility_changed.emit ();
+
+  if (_entry_renderer_changed)
+    entry_renderer_changed.emit ();
+
+  if (_global_renderer_changed)
+    global_renderer_changed.emit ();
+
+  // If this was the first time we know the path, let's do the Connect dance
+  if (_dbus_path == NULL)
+  {
+    _dbus_path = g_strdup (dbus_path);
+    Connect ();
+  }
+
+  _valid = true;
 }
 
+void
+PlaceEntryRemote::Connect ()
+{
+  g_debug ("BOO");
+}
 
 /* Overrides */
 const gchar *
@@ -201,6 +276,12 @@ bool
 PlaceEntryRemote::IsActive ()
 {
   return _active;
+}
+
+bool
+PlaceEntryRemote::ShowInLauncher ()
+{
+  return _show_in_launcher;
 }
 
 bool

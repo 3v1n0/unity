@@ -48,14 +48,16 @@ public:
 
   const std::map<gchar *, gchar *>& GetHints ();
 
-  bool IsSensitive  ();
-  bool IsActive     ();
-  bool ShowInGlobal ();
+  bool IsSensitive    ();
+  bool IsActive       ();
+  bool ShowInLauncher ();
+  bool ShowInGlobal   ();
 
   /* Other methods */
   Place       * GetParent ();
   bool          IsValid ();
   const gchar * GetPath ();
+  void          Connect ();
 
   void Update (const gchar  *dbus_path,
                const gchar  *name,
@@ -90,6 +92,7 @@ private:
   bool     _sensitive;
   bool     _active;
   bool     _valid;
+  bool     _show_in_launcher;
   bool     _show_in_global;
 };
 

@@ -47,6 +47,8 @@ public:
   void OnEntryAdded   (GVariant    *args);
   void OnEntryRemoved (const gchar *dbus_path);
 
+  const gchar * GetDBusName ();
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
   void Connect ();
