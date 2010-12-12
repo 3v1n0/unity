@@ -39,7 +39,7 @@ public:
 
   virtual const std::map<gchar *, gchar *>& GetHints () = 0;
 
-  // I.e. shown but cannot be clicked
+  // Should be shown on launcher
   virtual bool IsSensitive () = 0;
 
   // This is not really useful for views
@@ -50,8 +50,8 @@ public:
   // shown in global search and never on the launcher
   virtual bool ShowInGlobal () = 0;
 
-  // Should be shown on launcher
-  virtual bool IsVisible    () = 0;
+  // Signals
+  sigc::signal<void, const gchar *> name_changed;
 };
 
 #endif // PLACE_ENTRY_H

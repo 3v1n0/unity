@@ -51,11 +51,32 @@ public:
   bool IsSensitive  ();
   bool IsActive     ();
   bool ShowInGlobal ();
-  bool IsVisible    ();
 
   /* Other methods */
-  Place * GetParent ();
-  bool IsValid ();
+  Place       * GetParent ();
+  bool          IsValid ();
+  const gchar * GetPath ();
+
+  void Update (const gchar  *dbus_path,
+               const gchar  *name,
+               const gchar  *icon,
+               guint32       position,
+               const gchar **mimetypes,
+               gboolean      sensitive,
+               const gchar  *sections_model_name,
+               GVariantIter *hints,
+               const gchar  *entry_renderer,
+               const gchar  *entry_groups_model,
+               const gchar  *entry_results_model,
+               GVariantIter *entry_hints,
+               const gchar  *global_renderer,
+               const gchar  *global_groups_model,
+               const gchar  *global_results_model,
+               GVariantIter *global_hints);
+
+public:
+  // For our parents use, we don't touch it
+  bool dirty;
 
 private:
   Place   *_parent;
@@ -70,7 +91,6 @@ private:
   bool     _active;
   bool     _valid;
   bool     _show_in_global;
-  bool     _visible;
 };
 
 #endif // PLACE_REMOTE_H

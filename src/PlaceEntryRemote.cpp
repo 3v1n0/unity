@@ -33,8 +33,7 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent)
   _sensitive (true),
   _active (false),
   _valid (false),
-  _show_in_global (false),
-  _visible (true)
+  _show_in_global (false)
 {
 }
 
@@ -109,7 +108,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
     _show_in_global = g_key_file_get_boolean (key_file, group, "ShowGlobal", NULL);
 
   if (g_key_file_has_key (key_file, group, "ShowEntry", NULL))
-    _visible = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
+    _sensitive = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
 
   _valid = true;
 
@@ -126,6 +125,34 @@ PlaceEntryRemote::IsValid ()
 {
   return _valid;
 }
+
+const gchar *
+PlaceEntryRemote::GetPath ()
+{
+  return _dbus_path;
+}
+
+void
+PlaceEntryRemote::Update (const gchar  *dbus_path,
+                          const gchar  *name,
+                          const gchar  *icon,
+                          guint32       position,
+                          const gchar **mimetypes,
+                          gboolean      sensitive,
+                          const gchar  *sections_model_name,
+                          GVariantIter *hints,
+                          const gchar  *entry_renderer,
+                          const gchar  *entry_groups_model,
+                          const gchar  *entry_results_model,
+                          GVariantIter *entry_hints,
+                          const gchar  *global_renderer,
+                          const gchar  *global_groups_model,
+                          const gchar  *global_results_model,
+                          GVariantIter *global_hints)
+{
+
+}
+
 
 /* Overrides */
 const gchar *
@@ -180,12 +207,6 @@ bool
 PlaceEntryRemote::ShowInGlobal ()
 {
   return _show_in_global;
-}
-
-bool
-PlaceEntryRemote::IsVisible ()
-{
-  return _visible;
 }
 
 Place *

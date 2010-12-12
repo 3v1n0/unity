@@ -322,9 +322,18 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
   gchar        *global_groups_model;
   gchar        *global_results_model;
   GVariantIter *global_hints;
+  std::vector<PlaceEntry*>::iterator it;
+  
 
-  g_debug ("%s %s", G_STRFUNC, "(a(sssuasbsa{ss}(sssa{ss})(sssa{ss})))");
+  // Clear the main entries vector as we now need to figure out if there is a diff between
+  // what was sent and what we loaded from the place file
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
 
+    entry->dirty = true;
+  }
+  
   g_variant_get (args, "(a(sssuasbsa{ss}(sssa{ss})(sssa{ss})))", &iter);
   while (g_variant_iter_loop (iter, "(sssuasbsa{ss}(sssa{ss})(sssa{ss}))",
                               &dbus_path,
@@ -344,7 +353,41 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
                               &global_results_model,
                               &global_hints))
   {
-    g_debug ("%s %s %s", dbus_path, sections_model, entry_results_model);
+    PlaceEntryRemote *existing = NULL;
+
+    for (it = _entries.begin (); it != _entries.end (); it++)
+    {
+      PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+
+      if (g_strcmp0 (entry->GetPath (), dbus_path) == 0)
+      {
+        existing = entry;
+      }
+    }
+
+    if (existing)
+    {
+      existing->Update (dbus_path,
+                        name,
+                        icon,
+                        position,
+                        (const gchar**)mimetypes,
+                        sensitive,
+                        sections_model,
+                        hints,
+                        entry_renderer,
+                        entry_groups_model,
+                        entry_results_model,
+                        entry_hints,
+                        global_renderer,
+                        global_groups_model,
+                        global_results_model,
+                        global_hints);
+    }
+    else
+    {
+      g_print ("New: %s\n", dbus_path);
+    }
   }
 
   g_variant_iter_free (iter);
