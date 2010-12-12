@@ -51,7 +51,26 @@ public:
   virtual bool ShowInGlobal () = 0;
 
   // Signals
-  sigc::signal<void, const gchar *> name_changed;
+
+  // This covers: name, icon and description properties
+  sigc::signal<void, const gchar *>           state_changed;
+
+  sigc::signal<void, guint32>                 position_changed;
+  sigc::signal<void, const gchar **>          mimetypes_changed;
+  sigc::signal<void, bool>                    sensitive_changed;
+
+  // We don't use this too much right now
+  sigc::signal<void>                          hints_changed;
+ 
+  // Should be very rare
+  sigc::signal<void>                          sections_model_changed;
+
+  // Definitely connect to this, as your setting sections the places might want
+  // to update it's views accordingly
+  sigc::signal<void>                          entry_renderer_changed;
+  
+  // This is not important outside of a global search aggregator
+  sigc::signal<void>                          global_renderer_changed;
 };
 
 #endif // PLACE_ENTRY_H

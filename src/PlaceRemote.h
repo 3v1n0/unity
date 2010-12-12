@@ -44,6 +44,9 @@ public:
   void OnServiceProxyReady (GObject *source, GAsyncResult *result);
   void OnEntriesReceived   (GVariant *args);
 
+  void OnEntryAdded   (GVariant    *args);
+  void OnEntryRemoved (const gchar *dbus_path);
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
   void Connect ();

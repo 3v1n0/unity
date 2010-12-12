@@ -418,6 +418,101 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
   g_variant_iter_free (iter);
 }
 
+void
+PlaceRemote::OnEntryAdded (GVariant *args)
+{
+  gchar        *dbus_path = NULL;
+  gchar        *name = NULL;
+  gchar        *icon = NULL;
+  guint32       position = 0;
+  gchar       **mimetypes = NULL;
+  gboolean      sensitive = true;
+  gchar        *sections_model = NULL;
+  GVariantIter *hints = NULL;
+  gchar        *entry_renderer = NULL;
+  gchar        *entry_groups_model = NULL;
+  gchar        *entry_results_model = NULL;
+  GVariantIter *entry_hints = NULL;
+  gchar        *global_renderer = NULL;
+  gchar        *global_groups_model = NULL;
+  gchar        *global_results_model = NULL;
+  GVariantIter *global_hints = NULL;
+  PlaceEntryRemote *entry;
+
+  g_variant_get (args, "(sssuasbsa{ss}(sssa{ss})(sssa{ss}))",
+                 &dbus_path,
+                 &name,
+                 &icon,
+                 &position,
+                 &mimetypes,
+                 &sensitive,
+                 &sections_model,
+                 &hints,
+                 &entry_renderer,
+                 &entry_groups_model,
+                 &entry_results_model,
+                 &entry_hints,
+                 &global_renderer,
+                 &global_groups_model,
+                 &global_results_model,
+                 &global_hints);
+
+  entry = new PlaceEntryRemote (this);
+  entry->Update (dbus_path,
+                 name,
+                 icon,
+                 position,
+                 (const gchar **)mimetypes,
+                 sensitive,
+                 sections_model,
+                 hints,
+                 entry_renderer,
+                 entry_groups_model,
+                 entry_results_model,
+                 entry_hints,
+                 global_renderer,
+                 global_groups_model,
+                 global_results_model,
+                 global_hints);
+  
+  _entries.push_back (entry);
+  entry_added.emit (entry);
+  
+  g_free (dbus_path);
+  g_free (name);
+  g_free (icon);
+  g_strfreev (mimetypes);
+  g_free (sections_model);
+  g_variant_iter_free (hints);
+  g_free (entry_renderer);
+  g_free (entry_groups_model);
+  g_free (entry_results_model);
+  g_variant_iter_free (entry_hints);
+  g_free (global_renderer);
+  g_free (global_groups_model);
+  g_free (global_results_model);
+  g_variant_iter_free (global_hints);
+}
+
+void
+PlaceRemote::OnEntryRemoved (const gchar *dbus_path)
+{
+  std::vector<PlaceEntry *>::iterator it;
+
+  for (it = _entries.begin (); it != _entries.end (); it++)
+  {
+    PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+
+    if (g_strcmp0 (entry->GetPath (), dbus_path) == 0)
+    {
+      entry_removed.emit (entry);
+      _entries.erase (it);
+      delete entry;
+      break;
+    }
+  }
+}
+
 /*
  * C callbacks
  */
@@ -437,8 +532,17 @@ on_service_proxy_signal_received (GDBusProxy *proxy,
                                   gchar      *signal_name,
                                   GVariant   *parameters,
                                   gpointer    user_data)
-{
-  g_debug ("Signal: %s", signal_name);
+{ 
+  PlaceRemote *self = static_cast<PlaceRemote *> (user_data);
+  
+  if (g_strcmp0 (signal_name, "EntryAdded") == 0)
+  {
+    self->OnEntryAdded (parameters);
+  }
+  else if (g_strcmp0 (signal_name, "EntryRemoved") == 0)
+  {
+    self->OnEntryRemoved (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
+  }
 }
 
 static void
