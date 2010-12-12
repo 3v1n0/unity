@@ -1560,6 +1560,8 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
   }
 
   _drag_window = new LauncherDragWindow (icon, _icon_size);
+  _drag_window->SinkReference ();
+  
   _drag_window->ShowWindow (true);
 
   nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
