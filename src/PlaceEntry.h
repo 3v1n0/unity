@@ -46,7 +46,7 @@ public:
   virtual bool IsActive    () = 0;
 
   // Include as part of global search results
-  // NOTE: IsVisible has no effect, i.e. a entry might only ever want to be
+  // NOTE: IsSensitive has no effect, i.e. a entry might only ever want to be
   // shown in global search and never on the launcher
   virtual bool ShowInGlobal () = 0;
 

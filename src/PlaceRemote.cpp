@@ -18,6 +18,7 @@
 
 #include "PlaceRemote.h"
 
+#include <algorithm>
 #include "PlaceEntryRemote.h"
 
 #define PLACE_GROUP      "Place"
@@ -323,6 +324,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
   gchar        *global_results_model;
   GVariantIter *global_hints;
   std::vector<PlaceEntry*>::iterator it;
+  std::vector<PlaceEntry*> old;
   
 
   // Clear the main entries vector as we now need to figure out if there is a diff between
@@ -362,31 +364,54 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
       if (g_strcmp0 (entry->GetPath (), dbus_path) == 0)
       {
         existing = entry;
+        break;
       }
     }
 
-    if (existing)
+    if (!existing)
     {
-      existing->Update (dbus_path,
-                        name,
-                        icon,
-                        position,
-                        (const gchar**)mimetypes,
-                        sensitive,
-                        sections_model,
-                        hints,
-                        entry_renderer,
-                        entry_groups_model,
-                        entry_results_model,
-                        entry_hints,
-                        global_renderer,
-                        global_groups_model,
-                        global_results_model,
-                        global_hints);
+      existing = new PlaceEntryRemote (this);
+
+      _entries.push_back (existing);
+      entry_added.emit (existing);
     }
-    else
+
+    existing->Update (dbus_path,
+                      name,
+                      icon,
+                      position,
+                      (const gchar**)mimetypes,
+                      sensitive,
+                      sections_model,
+                      hints,
+                      entry_renderer,
+                      entry_groups_model,
+                      entry_results_model,
+                      entry_hints,
+                      global_renderer,
+                      global_groups_model,
+                      global_results_model,
+                      global_hints);
+
+    existing->dirty = false;
+  }
+
+  for (it = _entries.begin (); it != _entries.end (); it++)
+  {
+    PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+    if (entry->dirty)
+      old.push_back (entry);
+  }
+  for (it = old.begin (); it != old.end (); it++)
+  {
+    PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+    std::vector<PlaceEntry *>::iterator i;
+
+    if ((i = std::find (_entries.begin (), _entries.end (), entry)) != _entries.end ())
     {
-      g_print ("New: %s\n", dbus_path);
+       entry_removed.emit (entry);
+      _entries.erase (i);
+      delete entry;
     }
   }
 
