@@ -29,7 +29,7 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow (nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon, int size);
+  LauncherDragWindow (nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon);
 
   ~LauncherDragWindow ();
 
@@ -42,7 +42,6 @@ public:
 private:
   
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _icon;
-  int _size;
   
 
 };

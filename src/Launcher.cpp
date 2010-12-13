@@ -1495,13 +1495,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       drag_args.push_front (arg);
       UpdateIconXForm (drag_args);
       
-      SetOffscreenRenderTarget (_icon_size, _icon_size);
-
-      GfxContext.PushClippingRectangle(nux::Geometry (0, 0, _icon_size, _icon_size));
+      SetOffscreenRenderTarget ();
       DrawRenderArg (nux::GetGraphicsEngine (), arg, nux::Geometry (0, 0, _icon_size, _icon_size));
-      GfxContext.PopClippingRectangle();
-
       RestoreSystemRenderTarget ();
+      
+      _drag_window->ShowWindow (true);
+      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
       
       _render_drag_window = false;
     }
@@ -1614,14 +1613,11 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window = NULL;
   }
   
-  _render_drag_window = true;
-  
-  _drag_window = new LauncherDragWindow (_offscreen_rt_texture, _icon_size);
+  _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+  _drag_window = new LauncherDragWindow (_offscreen_rt_texture);
   _drag_window->SinkReference ();
   
-  _drag_window->ShowWindow (true);
-
-  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
+  _render_drag_window = true;
 }
 
 void Launcher::EndIconDrag ()
@@ -1635,6 +1631,7 @@ void Launcher::EndIconDrag ()
   
   _drag_icon_under_mouse = NULL;
   _drag_icon = NULL;
+  _render_drag_window = false;
 }
 
 void Launcher::UpdateDragWindowPosition (int x, int y)
@@ -2128,10 +2125,11 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     glEnd();
 }
 
-void Launcher::SetOffscreenRenderTarget (int width, int height)
+void Launcher::SetOffscreenRenderTarget ()
 {
-  _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (width, height, 1, nux::BITFMT_R8G8B8A8);
-
+  int width = _offscreen_rt_texture->GetWidth ();
+  int height = _offscreen_rt_texture->GetHeight ();
+  
   nux::GetThreadGLDeviceFactory ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
   nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, _offscreen_rt_texture->GetSurfaceLevel (0));
   nux::GetThreadGLDeviceFactory ()->ActivateFrameBuffer ();
@@ -2145,5 +2143,4 @@ void Launcher::SetOffscreenRenderTarget (int width, int height)
 void Launcher::RestoreSystemRenderTarget ()
 {
   nux::GetWindowCompositor ().RestoreRenderingSurface ();
-
 }

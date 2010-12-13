@@ -207,7 +207,7 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget (int width, int height);
+  void SetOffscreenRenderTarget ();
   void RestoreSystemRenderTarget ();
 
   nux::HLayout* m_Layout;
