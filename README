@@ -3,11 +3,14 @@
 
 • Installation
 
+  Please see INSTALL or http://wiki.ubuntu.com/Unity/InstallationGuideFromSource
+
 • Tests
 
   - You can run `make check` in the build directory to run all GTester tests
   - In the build directory, ./tests/test-panel will start the panel in
     standalone mode, which is great for testing
+
 
 • Environmental Variables
 
@@ -16,6 +19,6 @@
     D-Bus activation. This is used for testing how the panel reacts when it
     starts before the service does.
 
-• Code Style
 
-astyle -s2 -b -S -N -w -Y -M80 -p -H -d -j -k3 -n -z2
+• Code Style
+  astyle -s2 -b -S -N -w -Y -M80 -p -H -d -j -k3 -n -z2

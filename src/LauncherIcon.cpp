@@ -31,6 +31,7 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
+#include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemSeparator.h"
@@ -66,9 +67,13 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _sort_priority = 0;
 
   _quicklist = new QuicklistView ();
-  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
-  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
+
+  QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
+  
+  // Add to introspection
+  AddChild (_quicklist);
+  AddChild (_tooltip);
   
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
@@ -79,6 +84,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  // Remove from introspection
+  RemoveChild (_quicklist);
+  RemoveChild (_tooltip);
+  
   if (_present_time_handle)
     g_source_remove (_present_time_handle);
   _present_time_handle = 0;
@@ -86,6 +95,30 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+}
+
+const gchar *
+LauncherIcon::GetName ()
+{
+  return "LauncherIcon";
+}
+
+void
+LauncherIcon::AddProperties (GVariantBuilder *builder)
+{
+  g_variant_builder_add (builder, "{sv}", "x", _center.x);
+  g_variant_builder_add (builder, "{sv}", "y", _center.y);
+  g_variant_builder_add (builder, "{sv}", "z", _center.z);
+  g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
+  g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
+  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
+  
+  g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
+  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_URGENT)));
+  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING)));
+  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED)));
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -203,11 +236,44 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
     g_warning ("Unable to load '%s' from icon theme: %s",
                icon_name,
                error ? error->message : "unknown");
+    g_error_free (error);
 
     if (g_strcmp0 (icon_name, "folder") == 0)
       return NULL;
     else
       return TextureFromGtkTheme ("folder", size);
+  }
+  
+  return result;
+}
+
+nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size)
+{
+
+  GdkPixbuf *pbuf;
+  nux::BaseTexture *result;
+  GError *error = NULL;
+  
+  if (!icon_name)
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
+  
+  pbuf = gdk_pixbuf_new_from_file_at_size (icon_name, size, size, &error);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    result = nux::CreateTextureFromPixbuf (pbuf); 
+    ColorForIcon (pbuf, _background_color, _glow_color);
+  
+    g_object_unref (pbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' icon: %s",
+               icon_name,
+               error->message);
+    g_error_free (error);
+
+    return TextureFromGtkTheme (DEFAULT_ICON, size);
   }
   
   return result;
@@ -227,14 +293,14 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  if (_launcher->GetActiveQuicklist ())
+  if (QuicklistManager::Default ()->Current ())
   {
     // A quicklist is active
     return;
   }
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -253,26 +319,6 @@ void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
   {
-    if (_launcher->GetActiveQuicklist () == _quicklist)
-    {
-      // this quicklist is already active
-      return;
-    }
-    
-    if (_launcher->GetActiveQuicklist ())
-    {
-      // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
-      // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
-      // So the new quicklist that is about to be set as active will keep the grab of the pointer.
-      // Also disable theinput window.
-      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
-      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
-      // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
-      // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
-      // and it set the active window to Null.
-      _launcher->GetActiveQuicklist ()->ShowWindow (false);
-    }
-    
     _tooltip->ShowWindow (false);
     
     _quicklist->RemoveAllMenuItem ();
@@ -312,15 +358,9 @@ void LauncherIcon::RecvMouseDown (int button)
     } 
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = _center.y;
-    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
-
-    _quicklist->EnableInputWindow (true, 1);
-    _quicklist->GrabPointer ();
-
+    int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
-
-    _quicklist->NeedRedraw ();
   }
 }
 
@@ -331,16 +371,6 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
-}
-
-void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->SetActiveQuicklist (_quicklist);
-}
-
-void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->CancelActiveQuicklist (_quicklist);
 }
 
 void LauncherIcon::HideTooltip ()
@@ -369,10 +399,10 @@ LauncherIcon::SetCenter (nux::Point3 center)
   _center = center;
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
     
   if (_quicklist->IsVisible ())
-    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
   else if (_tooltip->IsVisible ())
     _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
     
@@ -388,6 +418,13 @@ LauncherIcon::GetCenter ()
   return _center;
 }
 
+void
+LauncherIcon::SaveCenter ()
+{
+  _saved_center = _center;
+  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+}
+
 gboolean
 LauncherIcon::OnPresentTimeout (gpointer data)
 {
@@ -401,13 +438,13 @@ LauncherIcon::OnPresentTimeout (gpointer data)
   return false;
 }
 
-int LauncherIcon::PresentUrgency ()
+float LauncherIcon::PresentUrgency ()
 {
   return _present_urgency;
 }
 
 void 
-LauncherIcon::Present (int present_urgency, int length)
+LauncherIcon::Present (float present_urgency, int length)
 {
   if (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
     return;
@@ -415,7 +452,7 @@ LauncherIcon::Present (int present_urgency, int length)
   if (length >= 0)
     _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
   
-  _present_urgency = present_urgency;
+  _present_urgency = CLAMP (present_urgency, 0.0f, 1.0f);
   SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, true);
 }
 
@@ -490,9 +527,9 @@ LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
   
   // Present on urgent as a general policy
   if (quirk == LAUNCHER_ICON_QUIRK_VISIBLE && value)
-    Present (0, 1500);
+    Present (0.5f, 1500);
   if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
-    Present (1, 1500);
+    Present (0.5f, 1500);
 }
 
 gboolean

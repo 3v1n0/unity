@@ -31,6 +31,7 @@ public:
 
 protected:
   virtual const gchar *GetName () = 0;
+  virtual const gchar *GetChildsName ();
   virtual void AddProperties (GVariantBuilder *builder) = 0;
   /*
    * AddProperties should be implemented as such ...

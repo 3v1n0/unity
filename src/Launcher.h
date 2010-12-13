@@ -21,11 +21,13 @@
 #define LAUNCHER_H
 
 #include <sys/time.h>
+#include <core/core.h>
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include "Introspectable.h"
 #include "LauncherIcon.h"
+#include "LauncherDragWindow.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 
@@ -35,7 +37,7 @@ class QuicklistView;
 class Launcher : public Introspectable, public nux::View
 {
 public:
-    Launcher(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
+    Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
     ~Launcher();
 
     virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -48,17 +50,24 @@ public:
 
     bool TooltipNotify(LauncherIcon* Icon);
     bool MenuNotify(LauncherIcon* Icon);
-    
+
     void SetIconSize(int tile_size, int icon_size);
     void NotifyMenuTermination(LauncherIcon* Icon);
-    
+
     void SetModel (LauncherModel *model);
-    
+
     void SetFloating (bool floating);
-    
+
     void SetAutohide (bool autohide, nux::View *show_trigger);
     bool AutohideEnabled ();
     
+    nux::BaseWindow* GetParent () { return _parent; };
+
+    void OnWindowMoved   (CompWindow *window);
+    void OnWindowResized (CompWindow *window);
+    void OnWindowAppear  (CompWindow *window);
+    void OnWindowDisappear (CompWindow *window);
+
     virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
@@ -67,17 +76,14 @@ public:
     virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
     virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-    //! Called by LauncherIcon to signal that a Quicklist is becoming active.
-    void SetActiveQuicklist (QuicklistView *quicklist);
-    //! Get the active qicklist
-    QuicklistView *GetActiveQuicklist ();
-    //! Called by LauncherIcon to signal that a Quicklist is becoming unactive.
-    void CancelActiveQuicklist (QuicklistView *quicklist);
+    virtual void RecvQuicklistOpened (QuicklistView *quicklist);
+    virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
-protected:	
-	// Introspectable methods
-	const gchar* GetName ();
-	void AddProperties (GVariantBuilder *builder);
+    sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
+protected:
+    // Introspectable methods
+    const gchar* GetName ();
+    void AddProperties (GVariantBuilder *builder);
 
 private:
   typedef enum
@@ -92,87 +98,117 @@ private:
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
   } LauncherActionState;
-  
+
   typedef struct
   {
     LauncherIcon *icon;
-    nux::Point3   center;
+    nux::Point3   render_center;
+    nux::Point3   logical_center;
     float         folding_rads;
     float         alpha;
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
     bool          running_arrow;
+    bool          running_colored;
     bool          active_arrow;
+    bool          active_colored;
     bool          skip;
     int           window_indicators;
   } RenderArg;
-  
+
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
-  
+
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  
-  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec current);
+
+  bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
   void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
-  
+
+  void EnsureHiddenState ();
   void EnsureAnimation    ();
   void SetupAutohideTimer ();
-  
-  float DnDExitProgress  ();
-  float GetHoverProgress ();
-  float AutohideProgress ();
-  float IconPresentProgress     (LauncherIcon *icon, struct timespec current);
-  float IconUrgentProgress      (LauncherIcon *icon, struct timespec current);
-  float IconShimmerProgress     (LauncherIcon *icon, struct timespec current);
-  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec current);
-  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec current);
-  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec current);
+
+  void CheckWindowOverLauncher ();
+
+  float DnDStartProgress        (struct timespec const &current);
+  float DnDExitProgress         (struct timespec const &current);
+  float GetHoverProgress        (struct timespec const &current);
+  float AutohideProgress        (struct timespec const &current);
+  float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
+  float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
+  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
+  float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
-  
-  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec current);
-  
-  void SetupRenderArg (LauncherIcon *icon, struct timespec current, RenderArg &arg);
-  void RenderArgs (std::list<Launcher::RenderArg> &launcher_args, 
-                   std::list<Launcher::RenderArg> &shelf_args, 
-                   nux::Geometry &box_geo, nux::Geometry &shelf_geo);
 
-  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg arg, nux::Geometry geo);
+  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
+  float  DragLimiter (float x);
 
-  void OnIconAdded    (void *icon_pointer);
-  void OnIconRemoved  (void *icon_pointer);
+  void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
+  void FillRenderArg (LauncherIcon *icon,
+                      RenderArg &arg,
+                      nux::Point3 &center,
+                      float folding_threshold,
+                      float folded_size,
+                      float folded_spacing,
+                      float autohide_offset,
+                      float folded_z_distance,
+                      float animation_neg_rads,
+                      struct timespec const &current);
+                      
+  void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
+                   nux::Geometry &box_geo);
+
+  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
+
+  void OnIconAdded    (LauncherIcon *icon);
+  void OnIconRemoved  (LauncherIcon *icon);
   void OnOrderChanged ();
 
-  void OnIconNeedsRedraw (void *icon);
+  void OnIconNeedsRedraw (LauncherIcon *icon);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, 
-                   RenderArg arg, 
-                   nux::BaseTexture *icon, 
-                   nux::Color bkg_color, 
-                   float alpha, 
-                   nux::Vector4 xform_coords[], 
-                   nux::Geometry geo,
-                   bool render_indicators);
-                
-  void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo, 
-                     float x, float y, float w, float h, float z, std::string name);   
-  void UpdateIconXForm (std::list<Launcher::RenderArg> args);
-  
+  void RenderIndicators (nux::GraphicsEngine& GfxContext,
+                         RenderArg const &arg,
+                         int running,
+                         int active,
+                         nux::Geometry geo);
+
+  void RenderIcon (nux::GraphicsEngine& GfxContext,
+                   RenderArg const &arg,
+                   nux::BaseTexture *icon,
+                   nux::Color bkg_color,
+                   float alpha,
+                   nux::Vector4 xform_coords[],
+                   nux::Geometry geo);
+
+  void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+                     float x, float y, float w, float h, float z, std::string name);
+  void UpdateIconXForm (std::list<Launcher::RenderArg> &args);
+
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
+  void StartIconDrag (LauncherIcon *icon);
+  void EndIconDrag ();
+  void UpdateDragWindowPosition (int x, int y);
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
- 
+
+  void SetOffscreenRenderTarget ();
+  void RestoreSystemRenderTarget ();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -180,14 +216,17 @@ private:
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
 
-  
+
   QuicklistView* _active_quicklist;
-  
+
   bool  _hovered;
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
   bool  _mouse_inside_launcher;
+  bool  _mouse_inside_trigger;
+  bool  _window_over_launcher;
+  bool  _render_drag_window;
 
   float _folded_angle;
   float _neg_folded_angle;
@@ -197,15 +236,21 @@ private:
 
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
+  
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
+  
+  LauncherIcon* _drag_icon;
+  LauncherIcon* _drag_icon_under_mouse;
 
   int _space_between_icons;
   int _icon_size;
   int _icon_image_size;
   int _icon_image_size_delta;
   int _icon_glow_size;
-  int _dnd_delta;
+  int _dnd_delta_y;
+  int _dnd_delta_x;
+  int _launcher_drag_delta;
   int _dnd_security;
   int _enter_y;
 
@@ -216,6 +261,8 @@ private:
   nux::BaseTexture* _icon_2indicator;
   nux::BaseTexture* _icon_3indicator;
   nux::BaseTexture* _icon_4indicator;
+  
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_rt_texture;
 
   guint _anim_handle;
   guint _autohide_handle;
@@ -230,13 +277,16 @@ private:
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
-  nux::Geometry _last_shelf_area;
   LauncherModel* _model;
-  
+  LauncherDragWindow* _drag_window;
+
+  CompScreen* _screen;
+
   /* event times */
   struct timespec _enter_time;
   struct timespec _exit_time;
   struct timespec _drag_end_time;
+  struct timespec _drag_start_time;
   struct timespec _autohide_time;
 };
 

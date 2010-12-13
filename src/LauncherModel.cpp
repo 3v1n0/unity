@@ -39,6 +39,20 @@ bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
   return icon->Type () == LAUNCHER_ICON_TYPE_TRASH; 
 }
 
+void
+LauncherModel::Populate ()
+{
+  _inner.clear ();
+  
+  iterator it;
+  
+  for (it = main_begin (); it != main_end (); it++)
+    _inner.push_back (*it);
+  
+  for (it = shelf_begin (); it != shelf_end (); it++)
+    _inner.push_back (*it);
+}
+
 void 
 LauncherModel::AddIcon (LauncherIcon *icon)
 {
@@ -47,8 +61,10 @@ LauncherModel::AddIcon (LauncherIcon *icon)
   if (IconShouldShelf (icon))
     _inner_shelf.push_front (icon);
   else
-    _inner_launcher.push_front (icon);
-    
+    _inner_main.push_front (icon);
+  
+  Populate ();
+  
   icon_added.emit (icon);
   icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
 }
@@ -58,19 +74,17 @@ LauncherModel::RemoveIcon (LauncherIcon *icon)
 {
   size_t size;
   
-  size = _inner_shelf.size ();
   _inner_shelf.remove (icon);
-
-  if (size != _inner_shelf.size ())
-    icon_removed.emit (icon);
+  _inner_main.remove (icon);
   
-  size = _inner_launcher.size ();
-  _inner_launcher.remove (icon);
+  size = _inner.size ();
+  _inner.remove (icon);
 
-  if (size != _inner_launcher.size ())
+  if (size != _inner.size ())
+  {
     icon_removed.emit (icon);
-  
-  icon->UnReference ();
+    icon->UnReference ();
+  }
 }
 
 gboolean
@@ -85,10 +99,10 @@ LauncherModel::RemoveCallback (gpointer data)
 }
 
 void 
-LauncherModel::OnIconRemove (void *icon_pointer)
+LauncherModel::OnIconRemove (LauncherIcon *icon)
 {
   RemoveArg *arg = (RemoveArg*) g_malloc0 (sizeof (RemoveArg));
-  arg->icon = (LauncherIcon*) icon_pointer;
+  arg->icon = icon;
   arg->self = this;
   
   g_timeout_add (1000, &LauncherModel::RemoveCallback, arg);
@@ -97,38 +111,65 @@ LauncherModel::OnIconRemove (void *icon_pointer)
 void 
 LauncherModel::Sort (SortFunc func)
 {
-  _inner_launcher.sort (func);
-  _inner_shelf.sort (func);
+  _inner.sort (func);
+  _inner_main.sort (func);
+  
+  Populate ();
+  order_changed.emit ();
 }
 
 int
 LauncherModel::Size ()
 {
-  return _inner_shelf.size () + _inner_launcher.size ();
+  return _inner.size ();
 }
     
 LauncherModel::iterator 
 LauncherModel::begin ()
 {
-  return _inner_launcher.begin ();
+  return _inner.begin ();
 }
 
 LauncherModel::iterator 
 LauncherModel::end ()
 {
-  return _inner_launcher.end ();
+  return _inner.end ();
 }
 
 LauncherModel::reverse_iterator 
 LauncherModel::rbegin ()
 {
-  return _inner_launcher.rbegin ();
+  return _inner.rbegin ();
 }
 
 LauncherModel::reverse_iterator 
 LauncherModel::rend ()
 {
-  return _inner_launcher.rend ();
+  return _inner.rend ();
+}
+
+LauncherModel::iterator 
+LauncherModel::main_begin ()
+{
+  return _inner_main.begin ();
+}
+
+LauncherModel::iterator 
+LauncherModel::main_end ()
+{
+  return _inner_main.end ();
+}
+
+LauncherModel::reverse_iterator 
+LauncherModel::main_rbegin ()
+{
+  return _inner_main.rbegin ();
+}
+
+LauncherModel::reverse_iterator 
+LauncherModel::main_rend ()
+{
+  return _inner_main.rend ();
 }
 
 LauncherModel::iterator 
