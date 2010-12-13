@@ -25,7 +25,8 @@
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow (LauncherIcon *icon, int size)
+LauncherDragWindow::LauncherDragWindow (nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon, int size)
+: nux::BaseWindow ("")
 {
   _size = size;
   _icon = icon;
@@ -48,15 +49,14 @@ void LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool forc
   
   GfxContext.PushClippingRectangle (geo);
   
-  nux::BaseTexture *texture = _icon->TextureForSize (_size);
+  gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (0, 0, _size, _size), nux::Color::Aubergine);
+  
   nux::TexCoordXForm texxform;
-
-  nux::Color color = nux::Color::LightGrey;
   GfxContext.QRP_GLSL_1Tex (0,
                             0,
-                            (float) texture->GetWidth(),
-                            (float) texture->GetHeight(),
-                            texture->GetDeviceTexture(),
+                            _icon->GetWidth(),
+                            _icon->GetHeight(),
+                            _icon,
                             texxform,
                             nux::Color::White);
   

@@ -207,6 +207,8 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
+  void SetOffscreenRenderTarget (int width, int height);
+  void RestoreSystemRenderTarget ();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -224,6 +226,7 @@ private:
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
   bool  _window_over_launcher;
+  bool  _render_drag_window;
 
   float _folded_angle;
   float _neg_folded_angle;
@@ -258,6 +261,8 @@ private:
   nux::BaseTexture* _icon_2indicator;
   nux::BaseTexture* _icon_3indicator;
   nux::BaseTexture* _icon_4indicator;
+  
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_rt_texture;
 
   guint _anim_handle;
   guint _autohide_handle;

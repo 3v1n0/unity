@@ -263,6 +263,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _window_over_launcher   = false;
+    _render_drag_window     = false;
 
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -277,6 +278,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _autohide_time.tv_nsec = 0;
     
     _drag_window = NULL;
+    _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 }
 
 Launcher::~Launcher()
@@ -1461,7 +1463,6 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
     nux::Geometry base = GetGeometry();
-    GfxContext.PushClippingRectangle(base);
     nux::Geometry bkg_box;
     std::list<Launcher::RenderArg> args;
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
@@ -1474,7 +1475,40 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     RenderArgs (args, bkg_box);
 
+    if (_drag_icon && _render_drag_window)
+    {
+      RenderArg arg;
+      struct timespec current;
+      clock_gettime (CLOCK_MONOTONIC, &current);
+      
+      SetupRenderArg (_drag_icon, current, arg);
+      arg.render_center = nux::Point3 (_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
+      arg.logical_center = arg.render_center;
+      arg.folding_rads = 0.0f;
+      arg.running_arrow = false;
+      arg.active_arrow = false;
+      arg.skip = false;
+      arg.window_indicators = 0;
+      arg.alpha = 1.0f;
+
+      std::list<Launcher::RenderArg> drag_args;
+      drag_args.push_front (arg);
+      UpdateIconXForm (drag_args);
+      
+      SetOffscreenRenderTarget (_icon_size, _icon_size);
+
+      GfxContext.PushClippingRectangle(nux::Geometry (0, 0, _icon_size, _icon_size));
+      DrawRenderArg (nux::GetGraphicsEngine (), arg, nux::Geometry (0, 0, _icon_size, _icon_size));
+      GfxContext.PopClippingRectangle();
+
+      RestoreSystemRenderTarget ();
+      
+      _render_drag_window = false;
+    }
+
+
     // clear region
+    GfxContext.PushClippingRectangle(base);
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
     // clip vertically but not horizontally
@@ -1579,8 +1613,10 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window->UnReference ();
     _drag_window = NULL;
   }
-
-  _drag_window = new LauncherDragWindow (icon, _icon_size);
+  
+  _render_drag_window = true;
+  
+  _drag_window = new LauncherDragWindow (_offscreen_rt_texture, _icon_size);
   _drag_window->SinkReference ();
   
   _drag_window->ShowWindow (true);
@@ -2092,3 +2128,22 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 //     glEnd();
 }
 
+void Launcher::SetOffscreenRenderTarget (int width, int height)
+{
+  _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (width, height, 1, nux::BITFMT_R8G8B8A8);
+
+  nux::GetThreadGLDeviceFactory ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
+  nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, _offscreen_rt_texture->GetSurfaceLevel (0));
+  nux::GetThreadGLDeviceFactory ()->ActivateFrameBuffer ();
+
+  nux::GetThreadGraphicsContext ()->SetContext   (0, 0, width, height);
+  nux::GetThreadGraphicsContext ()->SetViewport  (0, 0, width, height);
+  nux::GetThreadGraphicsContext ()->Push2DWindow (width, height);
+  nux::GetThreadGraphicsContext ()->EmptyClippingRegion();
+}
+
+void Launcher::RestoreSystemRenderTarget ()
+{
+  nux::GetWindowCompositor ().RestoreRenderingSurface ();
+
+}
