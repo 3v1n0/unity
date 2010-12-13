@@ -49,6 +49,8 @@ void LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool forc
   GfxContext.PushClippingRectangle (geo);
   
   nux::TexCoordXForm texxform;
+  texxform.FlipVCoord (true);
+  
   GfxContext.QRP_GLSL_1Tex (0,
                             0,
                             _icon->GetWidth(),
