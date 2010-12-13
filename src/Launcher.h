@@ -60,6 +60,8 @@ public:
 
     void SetAutohide (bool autohide, nux::View *show_trigger);
     bool AutohideEnabled ();
+    
+    nux::BaseWindow* GetParent () { return _parent; };
 
     void OnWindowMoved   (CompWindow *window);
     void OnWindowResized (CompWindow *window);
@@ -100,7 +102,8 @@ private:
   typedef struct
   {
     LauncherIcon *icon;
-    nux::Point3   center;
+    nux::Point3   render_center;
+    nux::Point3   logical_center;
     float         folding_rads;
     float         alpha;
     float         backlight_intensity;
@@ -141,6 +144,7 @@ private:
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
+  float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
   void UnsetHover ();
@@ -159,7 +163,6 @@ private:
                       float autohide_offset,
                       float folded_z_distance,
                       float animation_neg_rads,
-                      int vertical_offset,
                       struct timespec const &current);
                       
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,

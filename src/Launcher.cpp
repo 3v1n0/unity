@@ -392,6 +392,11 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     if (TimeDelta (&current, &time) < ANIM_DURATION_LONG)
         return true;
 
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+
+
     return false;
 }
 
@@ -536,6 +541,13 @@ float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &
     return CLAMP ((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
+float Launcher::IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec save_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+    int save_ms = TimeDelta (&current, &save_time);
+    return CLAMP ((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+}
+
 float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
@@ -633,7 +645,6 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
                               float autohide_offset,
                               float folded_z_distance,
                               float animation_neg_rads,
-                              int vertical_offset,
                               struct timespec const &current)
 {
     SetupRenderArg (icon, current, arg);
@@ -651,6 +662,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     if (size_modifier <= 0.0f || icon == _drag_icon)
         arg.skip = true;
 
+    
     // goes for 0.0f when fully unfolded, to 1.0f folded
     float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
     float present_progress = IconPresentProgress (icon, current);
@@ -658,7 +670,6 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     folding_progress *= 1.0f - present_progress;
 
     float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
-
     float icon_hide_offset = autohide_offset;
 
     icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
@@ -669,10 +680,21 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
 
     float spacing_overlap = CLAMP ((float) (center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
     float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
+
+    nux::Point3 centerOffset;
+    float center_transit_progress = IconCenterTransitionProgress (icon, current);
+    if (center_transit_progress <= 1.0f)
+    {
+      centerOffset.y = (icon->_saved_center.y - (center.y + (half_size * size_modifier))) * (1.0f - center_transit_progress);
+    }
     
     center.y += half_size * size_modifier;   // move to center
-    arg.center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));       // copy center
-    icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y + vertical_offset), roundf (center.z)));
+    
+    arg.render_center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y + centerOffset.y), roundf (center.z));
+    arg.logical_center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));
+    
+    icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y), roundf (center.z)));
+    
     center.y += (half_size * size_modifier) + spacing;   // move to end
 }
 
@@ -697,7 +719,6 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     float hover_progress = GetHoverProgress (current);
     float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
     float animation_neg_rads = _neg_folded_angle * (1.0f - hover_progress);
-    int vertical_offset = _parent->GetGeometry ().y;
 
     float folding_constant = 0.25f;
     float folding_not_constant = folding_constant + ((1.0f - folding_constant) * hover_progress);
@@ -792,7 +813,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         LauncherIcon *icon = *it;
 
         FillRenderArg (icon, arg, center, folding_threshold, folded_size, folded_spacing, 
-                       autohide_offset, folded_z_distance, animation_neg_rads, vertical_offset, current);
+                       autohide_offset, folded_z_distance, animation_neg_rads, current);
 
         launcher_args.push_back (arg);
     }
@@ -819,7 +840,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         LauncherIcon *icon = *it;
         
         FillRenderArg (icon, arg, center, folding_threshold, folded_size, folded_spacing, 
-                       autohide_offset, folded_z_distance, animation_neg_rads, vertical_offset, current);
+                       autohide_offset, folded_z_distance, animation_neg_rads, current);
         
         launcher_args.push_back (arg);
     }
@@ -1077,7 +1098,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  int active,
                                  nux::Geometry geo)
 {
-  int markerCenter = (int) arg.center.y;
+  int markerCenter = (int) arg.render_center.y;
 
   if (running > 0)
   {
@@ -1590,9 +1611,7 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
     LauncherIcon *hovered_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
     
     if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
-    {
       request_reorder.emit (_drag_icon, hovered_icon);
-    }
   }
 }
 
@@ -1906,9 +1925,9 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 
     float w = _icon_size;
     float h = _icon_size;
-    float x = (*it).center.x - w/2.0f; // x: top left corner
-    float y = (*it).center.y - h/2.0f; // y: top left corner
-    float z = (*it).center.z;
+    float x = (*it).render_center.x - w/2.0f; // x: top left corner
+    float y = (*it).render_center.y - h/2.0f; // y: top left corner
+    float z = (*it).render_center.z;
 
     if ((*it).skip)
     {
@@ -1928,25 +1947,25 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 
     w = _icon_image_size;
     h = _icon_image_size;
-    x = (*it).center.x - _icon_size/2.0f + _icon_image_size_delta/2.0f;
-    y = (*it).center.y - _icon_size/2.0f + _icon_image_size_delta/2.0f;
-    z = (*it).center.z;
+    x = (*it).render_center.x - _icon_size/2.0f + _icon_image_size_delta/2.0f;
+    y = (*it).render_center.y - _icon_size/2.0f + _icon_image_size_delta/2.0f;
+    z = (*it).render_center.z;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
 
     w = _icon_glow_size;
     h = _icon_glow_size;
-    x = (*it).center.x - _icon_glow_size/2.0f;
-    y = (*it).center.y - _icon_glow_size/2.0f;
-    z = (*it).center.z;
+    x = (*it).render_center.x - _icon_glow_size/2.0f;
+    y = (*it).render_center.y - _icon_glow_size/2.0f;
+    z = (*it).render_center.z;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Glow");
 
     w = geo.width + 2;
     h = _icon_size + _space_between_icons;
-    x = (*it).center.x - w/2.0f;
-    y = (*it).center.y - h/2.0f;
-    z = (*it).center.z;
+    x = (*it).logical_center.x - w/2.0f;
+    y = (*it).logical_center.y - h/2.0f;
+    z = (*it).logical_center.z;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
   }
