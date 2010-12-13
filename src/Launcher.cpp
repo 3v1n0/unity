@@ -404,9 +404,6 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
 
 bool Launcher::AnimationInProgress ()
 {
-    // HACK
-    if (_launcher_action_state == ACTION_DRAG_ICON)
-      return true;
     // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
     // this way extra checks may be avoided
 
