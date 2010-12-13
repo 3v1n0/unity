@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -27,31 +28,31 @@
 class PluginAdapter : public sigc::trackable
 {
 public:
-    static PluginAdapter * Default ();
+  static PluginAdapter * Default ();
 
-    static void Initialize (CompScreen *screen);
+  static void Initialize (CompScreen *screen);
 
-    ~PluginAdapter();
-    
-    std::string * MatchStringForXids (std::list<Window> *windows);
-    
-    void SetScaleAction (CompAction *scale);
-    
-    void SetExpoAction (CompAction *expo);
-    
-    void InitiateScale (std::string *match);
-    
-    void InitiateExpo ();
-    
+  ~PluginAdapter();
+  
+  std::string * MatchStringForXids (std::list<Window> *windows);
+  
+  void SetScaleAction (CompAction *scale);
+  
+  void SetExpoAction (CompAction *expo);
+  
+  void InitiateScale (std::string *match);
+  
+  void InitiateExpo ();
+  
 protected:
-    PluginAdapter(CompScreen *screen);
+  PluginAdapter(CompScreen *screen);
 
 private:
-    CompScreen *m_Screen;
-    CompAction *m_ExpoAction;
-    CompAction *m_ScaleAction;
-    
-    static PluginAdapter *_default;
+  CompScreen *m_Screen;
+  CompAction *m_ExpoAction;
+  CompAction *m_ScaleAction;
+  
+  static PluginAdapter *_default;
 };
 
 #endif

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.h
  *

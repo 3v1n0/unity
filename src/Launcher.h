@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -37,51 +38,51 @@ class QuicklistView;
 class Launcher : public Introspectable, public nux::View
 {
 public:
-    Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
-    ~Launcher();
+  Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
+  ~Launcher();
 
-    virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
-    LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+  LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
+  LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
 
-    bool TooltipNotify(LauncherIcon* Icon);
-    bool MenuNotify(LauncherIcon* Icon);
+  bool TooltipNotify(LauncherIcon* Icon);
+  bool MenuNotify(LauncherIcon* Icon);
 
-    void SetIconSize(int tile_size, int icon_size);
-    void NotifyMenuTermination(LauncherIcon* Icon);
+  void SetIconSize(int tile_size, int icon_size);
+  void NotifyMenuTermination(LauncherIcon* Icon);
 
-    void SetModel (LauncherModel *model);
+  void SetModel (LauncherModel *model);
 
-    void SetFloating (bool floating);
+  void SetFloating (bool floating);
 
-    void SetAutohide (bool autohide, nux::View *show_trigger);
-    bool AutohideEnabled ();
+  void SetAutohide (bool autohide, nux::View *show_trigger);
+  bool AutohideEnabled ();
 
-    void OnWindowMoved   (CompWindow *window);
-    void OnWindowResized (CompWindow *window);
-    void OnWindowAppear  (CompWindow *window);
-    void OnWindowDisappear (CompWindow *window);
+  void OnWindowMoved   (CompWindow *window);
+  void OnWindowResized (CompWindow *window);
+  void OnWindowAppear  (CompWindow *window);
+  void OnWindowDisappear (CompWindow *window);
 
-    virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-    virtual void RecvQuicklistOpened (QuicklistView *quicklist);
-    virtual void RecvQuicklistClosed (QuicklistView *quicklist);
+  virtual void RecvQuicklistOpened (QuicklistView *quicklist);
+  virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
-    sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
+  sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
 protected:
-    // Introspectable methods
-    const gchar* GetName ();
-    void AddProperties (GVariantBuilder *builder);
+  // Introspectable methods
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
 
 private:
   typedef enum

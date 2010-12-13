@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -68,128 +69,128 @@ typedef enum
 class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, public sigc::trackable
 {
 public:
-    LauncherIcon(Launcher* launcher);
-    virtual ~LauncherIcon();
+  LauncherIcon(Launcher* launcher);
+  virtual ~LauncherIcon();
 
-    void SetTooltipText (const TCHAR* text);
-    
-    nux::NString GetTooltipText ();
-    
-    void RecvMouseEnter ();
-    void RecvMouseLeave ();
-    void RecvMouseDown (int button);
-    void RecvMouseUp (int button);
-    
-    void HideTooltip ();
-    
-    void        SetCenter (nux::Point3 center);
-    nux::Point3 GetCenter ();
-    
-    int SortPriority ();
-    
-    int RelatedWindows ();
-    float PresentUrgency ();
-    
-    bool GetQuirk (LauncherIconQuirk quirk);
-    struct timespec GetQuirkTime (LauncherIconQuirk quirk);
-    
-    LauncherIconType Type ();
-    
-    nux::Color BackgroundColor ();
-    nux::Color GlowColor ();
-    
-    nux::BaseTexture * TextureForSize (int size);
-    
-    std::list<DbusmenuMenuitem *> Menus ();
-    
-    sigc::signal<void, int> MouseDown;
-    sigc::signal<void, int> MouseUp;
-    sigc::signal<void>      MouseEnter;
-    sigc::signal<void>      MouseLeave;
-    sigc::signal<void, int> MouseClick;
-    
-    sigc::signal<void, LauncherIcon *> show;
-    sigc::signal<void, LauncherIcon *> hide;
-    sigc::signal<void, LauncherIcon *> remove;
-    sigc::signal<void, LauncherIcon *> needs_redraw;
+  void SetTooltipText (const TCHAR* text);
+  
+  nux::NString GetTooltipText ();
+  
+  void RecvMouseEnter ();
+  void RecvMouseLeave ();
+  void RecvMouseDown (int button);
+  void RecvMouseUp (int button);
+  
+  void HideTooltip ();
+  
+  void        SetCenter (nux::Point3 center);
+  nux::Point3 GetCenter ();
+  
+  int SortPriority ();
+  
+  int RelatedWindows ();
+  float PresentUrgency ();
+  
+  bool GetQuirk (LauncherIconQuirk quirk);
+  struct timespec GetQuirkTime (LauncherIconQuirk quirk);
+  
+  LauncherIconType Type ();
+  
+  nux::Color BackgroundColor ();
+  nux::Color GlowColor ();
+  
+  nux::BaseTexture * TextureForSize (int size);
+  
+  std::list<DbusmenuMenuitem *> Menus ();
+  
+  sigc::signal<void, int> MouseDown;
+  sigc::signal<void, int> MouseUp;
+  sigc::signal<void>      MouseEnter;
+  sigc::signal<void>      MouseLeave;
+  sigc::signal<void, int> MouseClick;
+  
+  sigc::signal<void, LauncherIcon *> show;
+  sigc::signal<void, LauncherIcon *> hide;
+  sigc::signal<void, LauncherIcon *> remove;
+  sigc::signal<void, LauncherIcon *> needs_redraw;
 protected:
-    const gchar * GetName ();
-    void AddProperties (GVariantBuilder *builder);
+  const gchar * GetName ();
+  void AddProperties (GVariantBuilder *builder);
 
-    void SetQuirk (LauncherIconQuirk quirk, bool value);
+  void SetQuirk (LauncherIconQuirk quirk, bool value);
 
-    void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
-    void UpdateQuirkTime (LauncherIconQuirk quirk);
-    void ResetQuirkTime (LauncherIconQuirk quirk);
+  void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
+  void UpdateQuirkTime (LauncherIconQuirk quirk);
+  void ResetQuirkTime (LauncherIconQuirk quirk);
 
-    void SetRelatedWindows (int windows);
-    void Remove ();
-    
-    
-    void Present (float urgency, int length);
-    void Unpresent ();
-    
-    void SetIconType (LauncherIconType type);
-    void SetSortPriority (int priority);
+  void SetRelatedWindows (int windows);
+  void Remove ();
+  
+  
+  void Present (float urgency, int length);
+  void Unpresent ();
+  
+  void SetIconType (LauncherIconType type);
+  void SetSortPriority (int priority);
 
-    virtual std::list<DbusmenuMenuitem *> GetMenus ();
-    virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
-    
-    virtual void OnCenterStabilized (nux::Point3 center) {};
-    virtual bool IconOwnsWindow (Window w) { return false; }
+  virtual std::list<DbusmenuMenuitem *> GetMenus ();
+  virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
+  
+  virtual void OnCenterStabilized (nux::Point3 center) {};
+  virtual bool IconOwnsWindow (Window w) { return false; }
 
-    nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
-    nux::BaseTexture * TextureFromPath     (const char *name, int size);
+  nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
+  nux::BaseTexture * TextureFromPath     (const char *name, int size);
 
-    nux::NString m_TooltipText;
-    //! the window this icon belong too.
-    nux::BaseWindow* m_Window;
-    Launcher* _launcher;
+  nux::NString m_TooltipText;
+  //! the window this icon belong too.
+  nux::BaseWindow* m_Window;
+  Launcher* _launcher;
 
-    std::map<std::string, nux::Vector4*> _xform_coords;
-    bool          _mouse_inside;
-    float         _folding_angle;
+  std::map<std::string, nux::Vector4*> _xform_coords;
+  bool          _mouse_inside;
+  float         _folding_angle;
 
-    nux::Tooltip *_tooltip;
-    QuicklistView *_quicklist;
+  nux::Tooltip *_tooltip;
+  QuicklistView *_quicklist;
 
-    static nux::Tooltip *_current_tooltip;
-    static QuicklistView *_current_quicklist;
+  static nux::Tooltip *_current_tooltip;
+  static QuicklistView *_current_quicklist;
 
 
-    friend class Launcher;
-    friend class LauncherController;
+  friend class Launcher;
+  friend class LauncherController;
 
 private:
-    typedef struct
-    {
-      LauncherIcon *self;
-      LauncherIconQuirk quirk;
-    } DelayedUpdateArg;
+  typedef struct
+  {
+    LauncherIcon *self;
+    LauncherIconQuirk quirk;
+  } DelayedUpdateArg;
 
-    static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
-    static void RootChanged (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
-    static gboolean OnPresentTimeout (gpointer data);
-    static gboolean OnCenterTimeout (gpointer data);
-    static gboolean OnDelayedUpdateTimeout (gpointer data);
+  static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
+  static void RootChanged (DbusmenuClient * client, DbusmenuMenuitem *newroot, QuicklistView *quicklist);
+  static gboolean OnPresentTimeout (gpointer data);
+  static gboolean OnCenterTimeout (gpointer data);
+  static gboolean OnDelayedUpdateTimeout (gpointer data);
 
-    void ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow);
+  void ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow);
 
-    nux::Color       _background_color;
-    nux::Color       _glow_color;
-    int              _sort_priority;
-    int              _related_windows;
-    float            _present_urgency;
-    guint            _present_time_handle;
-    guint            _center_stabilize_handle;
-    bool             _quicklist_is_initialized;
-    
-    nux::Point3      _center;
-    nux::Point3      _last_stable;
-    LauncherIconType _icon_type;
-    
-    bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
-    struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
+  nux::Color       _background_color;
+  nux::Color       _glow_color;
+  int              _sort_priority;
+  int              _related_windows;
+  float            _present_urgency;
+  guint            _present_time_handle;
+  guint            _center_stabilize_handle;
+  bool             _quicklist_is_initialized;
+  
+  nux::Point3      _center;
+  nux::Point3      _last_stable;
+  LauncherIconType _icon_type;
+  
+  bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
+  struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
     
 };
 
