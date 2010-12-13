@@ -132,7 +132,7 @@ BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
     if (BAMF_IS_WINDOW (view))
     {
       xids[i++] = g_variant_new_uint32 (bamf_window_get_xid (BAMF_WINDOW (view)));
-    }    
+    }
   }
   g_list_free (children);
   g_variant_builder_add (builder, "{sv}", "xids", g_variant_new_array (G_VARIANT_TYPE_UINT32, xids, i));

@@ -60,37 +60,44 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
   LauncherModel::iterator it;
   
   int i = 0;
+  int j = 0;
   bool skipped = false;
   for (it = _model->begin (); it != _model->end (); it++)
   {
     if ((*it) == icon)
     {
       skipped = true;
+      j++;
       continue;
     }
-     
+    
     if ((*it) == other)
     {
       if (!skipped)
       {
         icon->SetSortPriority (i);
+        if (i != j) (*it)->SaveCenter ();
         i++;
       }
       
       (*it)->SetSortPriority (i);
+      if (i != j) (*it)->SaveCenter ();
       i++;
       
       if (skipped)
       {
         icon->SetSortPriority (i);
+        if (i != j) (*it)->SaveCenter ();
         i++;
       }
     }
     else
     {
       (*it)->SetSortPriority (i);
+      if (i != j) (*it)->SaveCenter ();
       i++;
     }
+    j++;
   }
   
   _model->Sort (&LauncherController::CompareIcons);

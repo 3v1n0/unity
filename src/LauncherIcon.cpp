@@ -301,7 +301,7 @@ LauncherIcon::RecvMouseEnter ()
   }
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -359,7 +359,7 @@ void LauncherIcon::RecvMouseDown (int button)
     } 
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = _center.y;
+    int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
   }
@@ -400,7 +400,7 @@ LauncherIcon::SetCenter (nux::Point3 center)
   _center = center;
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
     
   if (_quicklist->IsVisible ())
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
@@ -417,6 +417,13 @@ nux::Point3
 LauncherIcon::GetCenter ()
 {
   return _center;
+}
+
+void
+LauncherIcon::SaveCenter ()
+{
+  _saved_center = _center;
+  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
 }
 
 gboolean
