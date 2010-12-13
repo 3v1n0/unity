@@ -38,7 +38,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         unity-common (= ${binary:Version}),
+         unity-common (= ${source:Version}),
          compiz-core, compiz-core-abiversion-${coreabiversion},
          libglib2.0-bin,
          python,
