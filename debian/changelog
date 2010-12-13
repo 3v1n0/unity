@@ -3,6 +3,7 @@ unity (3.2.6-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - fix typo in description
     - set nux-tools as a dep rather than recommends
+    - ensure we build/run with latest compiz-core (abi breakage)
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 10 Dec 2010 14:29:50 +0100
 
