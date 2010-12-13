@@ -190,6 +190,8 @@ BamfLauncherIcon::Focus ()
 {
   GList *children, *l;
   BamfView *view;
+  bool any_urgent = false;
+  bool any_on_current = false;
 
   children = bamf_view_get_children (BAMF_VIEW (m_App));
 
@@ -207,13 +209,21 @@ BamfLauncherIcon::Focus ()
       CompWindow *window = m_Screen->findWindow ((Window) xid);
 
       if (window)
+      {
+        if (window->state () & CompWindowStateDemandsAttentionMask)
+          any_urgent = true;
         windows.push_back (window);
+      }
     }
   }
 
+  // not a good sign
   if (windows.empty ())
+  {
+    g_list_free (children);
     return;
-
+  }
+  
   /* sort the list */
   CompWindowList tmp;
   CompWindowList::iterator it;
@@ -224,10 +234,7 @@ BamfLauncherIcon::Focus ()
   }
   windows = tmp;
 
-
   /* filter based on workspace */
-  bool any_on_current = false;
-
   for (it = windows.begin (); it != windows.end (); it++)
   {
     if ((*it)->defaultViewport () == m_Screen->vp ())
@@ -237,9 +244,18 @@ BamfLauncherIcon::Focus ()
     }
   }
 
-  /* activate our windows */
-
-  if (any_on_current)
+  if (any_urgent)
+  {
+    for (it = windows.begin (); it != windows.end (); it++)
+    {
+      if ((*it)->state () & CompWindowStateDemandsAttentionMask)
+      {
+        (*it)->activate ();
+        break;
+      }
+    }
+  }
+  else if (any_on_current)
   {
     for (it = windows.begin (); it != windows.end (); it++)
     {
