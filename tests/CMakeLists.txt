@@ -58,6 +58,7 @@ add_executable (test-unit
                 ../src/QuicklistMenuItemSeparator.h
                 ../src/QuicklistView.cpp
                 ../src/QuicklistView.h
+                ../src/
                 )
 
 add_executable (test-panel
@@ -81,6 +82,21 @@ add_executable (test-panel
                 ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
                 ../src/PanelHomeButton.h
+                ../libunity/ubus-server.c
+                ../libunity/ubus-server.h
+                )
+
+add_executable (test-places
+                TestPlaces.cpp
+                ../src/PlacesController.cpp
+                ../src/PlacesController.h
+                ../src/PlacesView.cpp
+                ../src/PlacesView.h
+                ../src/UBusMessages.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../libunity/ubus-server.c
+                ../libunity/ubus-server.h
                 )
 
 add_executable (test-quicklist

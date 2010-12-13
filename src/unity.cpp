@@ -517,6 +517,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
   LOGGER_END_PROCESS ("initLauncher-Panel");
+
+  /* Setup Places */
+  self->placesController = new PlacesController ();
+
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();
