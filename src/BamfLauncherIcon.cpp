@@ -630,11 +630,34 @@ BamfLauncherIcon::GetMenus ()
 
   EnsureMenuItemsReady ();
 
-  result.push_back (_menu_items["Launch"]);
-  result.push_back (_menu_items["Pin"]);
+  std::map<std::string, DbusmenuMenuitem *>::iterator it_m;
+  std::list<DbusmenuMenuitem *>::iterator it_l;
+  bool exists;
+  for (it_m = _menu_items.begin (); it_m != _menu_items.end (); it_m++)
+  {
+    const char* key = ((*it_m).first).c_str();
+    if (g_strcmp0 (key , "Quit") == 0 && !bamf_view_is_running (BAMF_VIEW (m_App)))
+      continue;
 
-  if (bamf_view_is_running (BAMF_VIEW (m_App)))
-    result.push_back (_menu_items["Quit"]);
+    exists = false;
+    std::string label_default = dbusmenu_menuitem_property_get ((*it_m).second, DBUSMENU_MENUITEM_PROP_LABEL);
+    for(it_l = result.begin(); it_l != result.end(); it_l++)
+    {
+      const gchar* type = dbusmenu_menuitem_property_get (*it_l, DBUSMENU_MENUITEM_PROP_TYPE);
+      if (type == NULL)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+      {
+        std::string label_menu = dbusmenu_menuitem_property_get (*it_l, DBUSMENU_MENUITEM_PROP_LABEL);
+        if (label_menu.compare(label_default) == 0)
+        { 
+          exists = true; 
+          break;
+        }
+      }
+    }
+    
+    if (!exists)
+      result.push_back((*it_m).second);
+  }
 
   return result;
 }
