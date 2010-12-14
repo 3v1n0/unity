@@ -1553,6 +1553,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.PopClippingRectangle();
     GfxContext.PopClippingRectangle();
 
+    // rely on the compiz event loop to come back to us in a nice throttling
     if (AnimationInProgress ())   
       g_timeout_add (0, &Launcher::AnimationTimeout, this);
 }
