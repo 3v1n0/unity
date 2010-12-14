@@ -104,7 +104,9 @@ private:
     LauncherIcon *icon;
     nux::Point3   render_center;
     nux::Point3   logical_center;
-    float         folding_rads;
+    float         x_rotation;
+    float         y_rotation;
+    float         z_rotation;
     float         alpha;
     float         backlight_intensity;
     float         glow_intensity;

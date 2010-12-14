@@ -613,7 +613,9 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.active_arrow    = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
     arg.running_colored = icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT);
     arg.active_colored  = false;
-    arg.folding_rads    = 0.0f;
+    arg.x_rotation      = 0.0f;
+    arg.y_rotation      = 0.0f;
+    arg.z_rotation      = 0.0f;
     arg.skip            = false;
 
 
@@ -675,7 +677,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
 
     // icon is crossing threshold, start folding
     center.z += folded_z_distance * folding_progress;
-    arg.folding_rads = animation_neg_rads * folding_progress;
+    arg.x_rotation = animation_neg_rads * folding_progress;
 
     float spacing_overlap = CLAMP ((float) (center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
     float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
@@ -1195,7 +1197,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
-  if(nux::Abs (arg.folding_rads) < 0.01f)
+  if(nux::Abs (arg.x_rotation) < 0.01f)
     icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
     icon->GetDeviceTexture()->SetFiltering(GL_LINEAR, GL_LINEAR);
@@ -1494,7 +1496,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       SetupRenderArg (_drag_icon, current, arg);
       arg.render_center = nux::Point3 (_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
       arg.logical_center = arg.render_center;
-      arg.folding_rads = 0.0f;
+      arg.x_rotation = 0.0f;
       arg.running_arrow = false;
       arg.active_arrow = false;
       arg.skip = false;
@@ -1536,7 +1538,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
-      if ((*rev_it).folding_rads >= 0.0f || (*rev_it).skip)
+      if ((*rev_it).x_rotation >= 0.0f || (*rev_it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
@@ -1544,7 +1546,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (it = args.begin(); it != args.end(); it++)
     {
-      if ((*it).folding_rads < 0.0f || (*it).skip)
+      if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *it, bkg_box);
@@ -1981,7 +1983,7 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     LauncherIcon* launcher_icon = (*it).icon;
 
     // We to store the icon angle in the icons itself. Makes one thing easier afterward.
-    launcher_icon->_folding_angle = (*it).folding_rads;
+    launcher_icon->_folding_angle = (*it).x_rotation;
 
     float w = _icon_size;
     float h = _icon_size;
@@ -1998,7 +2000,9 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     }
     
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
-      nux::Matrix4::ROTATEX((*it).folding_rads) *              // rotate the icon
+      nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
+      nux::Matrix4::ROTATEY((*it).y_rotation) *
+      nux::Matrix4::ROTATEZ((*it).z_rotation) *
       nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
 
     ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
