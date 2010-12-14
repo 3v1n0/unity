@@ -244,7 +244,7 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
 
     if (g_str_has_prefix (group, ENTRY_PREFIX))
     {
-      PlaceEntryRemote *entry = new PlaceEntryRemote (this);
+      PlaceEntryRemote *entry = new PlaceEntryRemote (_dbus_name);
       entry->InitFromKeyFile (key_file, group);
       
       if (entry->IsValid ())
@@ -279,7 +279,7 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   if (error || !name_owner)
   {
-    g_warning ("Unable to connect to PlaceEntry %s: %s",
+    g_warning ("Unable to connect to PlaceRemote %s: %s",
                _dbus_name,
                error ? error->message : "No name owner");
     if (error)
@@ -370,7 +370,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
 
     if (!existing)
     {
-      existing = new PlaceEntryRemote (this);
+      existing = new PlaceEntryRemote (_dbus_name);
 
       _entries.push_back (existing);
       entry_added.emit (existing);
@@ -457,7 +457,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
                  &global_results_model,
                  &global_hints);
 
-  entry = new PlaceEntryRemote (this);
+  entry = new PlaceEntryRemote (_dbus_name);
   entry->Update (dbus_path,
                  name,
                  icon,

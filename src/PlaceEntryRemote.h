@@ -27,13 +27,13 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include "Place.h"
+#include "PlaceRemote.h"
 #include "PlaceEntry.h"
 
 class PlaceEntryRemote : public PlaceEntry
 {
 public:
-  PlaceEntryRemote (Place *parent);
+  PlaceEntryRemote (const gchar *dbus_name);
   ~PlaceEntryRemote ();
 
   void InitFromKeyFile (GKeyFile *key_file, const gchar *group);
@@ -54,10 +54,11 @@ public:
   bool ShowInGlobal   ();
 
   /* Other methods */
-  Place       * GetParent ();
   bool          IsValid ();
   const gchar * GetPath ();
   void          Connect ();
+
+  void          OnServiceProxyReady (GObject *source, GAsyncResult *res);
 
   void Update (const gchar  *dbus_path,
                const gchar  *name,
@@ -81,7 +82,7 @@ public:
   bool dirty;
 
 private:
-  Place   *_parent;
+  gchar   *_dbus_name;
   gchar   *_dbus_path;
   gchar   *_name;
   gchar   *_icon;
@@ -94,6 +95,8 @@ private:
   bool     _valid;
   bool     _show_in_launcher;
   bool     _show_in_global;
+
+  GDBusProxy *_proxy;
 };
 
-#endif // PLACE_REMOTE_H
+#endif // PLACE_ENTRY_REMOTE_H

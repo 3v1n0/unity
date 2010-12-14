@@ -20,11 +20,22 @@
 
 #include <glib/gi18n-lib.h>
 
+#define PLACE_ENTRY_IFACE "com.canonical.Unity.PlaceEntry"
+
 #define DBUS_PATH "DBusObjectPath"
 
-PlaceEntryRemote::PlaceEntryRemote (Place *parent)
+static void on_proxy_ready (GObject      *source,
+                            GAsyncResult *result,
+                            gpointer      user_data);
+
+static void on_proxy_signal_received (GDBusProxy *proxy,
+                                              gchar      *sender_name,
+                                              gchar      *signal_name,
+                                              GVariant   *parameters,
+                                              gpointer    user_data);
+
+PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
 : dirty (false),
-  _parent (parent),
   _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
@@ -35,8 +46,10 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent)
   _active (false),
   _valid (false),
   _show_in_launcher (true),
-  _show_in_global (true)
+  _show_in_global (true),
+  _proxy (NULL)
 {
+  _dbus_name = g_strdup (dbus_name);
 }
 
 PlaceEntryRemote::~PlaceEntryRemote ()
@@ -113,6 +126,67 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 
   g_free (name);
   g_free (description);
+}
+
+/* Overrides */
+const gchar *
+PlaceEntryRemote::GetName ()
+{
+  return _name;
+}
+
+const gchar *
+PlaceEntryRemote::GetIcon ()
+{
+  return _icon;
+}
+
+const gchar *
+PlaceEntryRemote::GetDescription ()
+{
+  return _description;
+}
+
+guint32
+PlaceEntryRemote::GetPosition  ()
+{
+  return _position;
+}
+
+const gchar **
+PlaceEntryRemote::GetMimetypes ()
+{
+  return (const gchar **)_mimetypes;
+}
+
+const std::map<gchar *, gchar *>&
+PlaceEntryRemote::GetHints ()
+{
+  return _hints;
+}
+
+bool
+PlaceEntryRemote::IsSensitive ()
+{
+  return _sensitive;
+}
+
+bool
+PlaceEntryRemote::IsActive ()
+{
+  return _active;
+}
+
+bool
+PlaceEntryRemote::ShowInLauncher ()
+{
+  return _show_in_launcher;
+}
+
+bool
+PlaceEntryRemote::ShowInGlobal ()
+{
+  return _show_in_global;
 }
 
 /* Other methods */
@@ -226,72 +300,68 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 void
 PlaceEntryRemote::Connect ()
 {
-  g_debug ("BOO");
+  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                            NULL,
+                            _dbus_name,
+                            _dbus_path,
+                            PLACE_ENTRY_IFACE,
+                            NULL,
+                            on_proxy_ready,
+                            this);
 }
 
-/* Overrides */
-const gchar *
-PlaceEntryRemote::GetName ()
+void
+PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 {
-  return _name;
+  GError *error = NULL;
+  gchar  *name_owner = NULL;
+
+  _proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
+  name_owner = g_dbus_proxy_get_name_owner (_proxy);
+
+  if (error || !name_owner)
+  {
+    g_warning ("Unable to connect to PlaceEntryRemote %s: %s",
+               _dbus_name,
+               error ? error->message : "No name owner");
+    if (error)
+      g_error_free (error);
+
+    g_free (name_owner);
+    return;
+  }
+
+  g_debug ("Connected to proxy");
+
+  g_signal_connect (_proxy, "g-signal",
+                    G_CALLBACK (on_proxy_signal_received), this);
+
+  g_free (name_owner);
 }
 
-const gchar *
-PlaceEntryRemote::GetIcon ()
+
+/*
+ * C -> C++ glue
+ */
+static void
+on_proxy_ready (GObject      *source,
+                GAsyncResult *result,
+                gpointer      user_data)
 {
-  return _icon;
+  PlaceEntryRemote *self = static_cast<PlaceEntryRemote *> (user_data);
+
+  self->OnServiceProxyReady (source, result);
 }
 
-const gchar *
-PlaceEntryRemote::GetDescription ()
-{
-  return _description;
-}
+static void
+on_proxy_signal_received (GDBusProxy *proxy,
+                                  gchar      *sender_name,
+                                  gchar      *signal_name,
+                                  GVariant   *parameters,
+                                  gpointer    user_data)
+{ 
+  PlaceEntryRemote *self = static_cast<PlaceEntryRemote *> (user_data);  
 
-guint32
-PlaceEntryRemote::GetPosition  ()
-{
-  return _position;
-}
-
-const gchar **
-PlaceEntryRemote::GetMimetypes ()
-{
-  return (const gchar **)_mimetypes;
-}
-
-const std::map<gchar *, gchar *>&
-PlaceEntryRemote::GetHints ()
-{
-  return _hints;
-}
-
-bool
-PlaceEntryRemote::IsSensitive ()
-{
-  return _sensitive;
-}
-
-bool
-PlaceEntryRemote::IsActive ()
-{
-  return _active;
-}
-
-bool
-PlaceEntryRemote::ShowInLauncher ()
-{
-  return _show_in_launcher;
-}
-
-bool
-PlaceEntryRemote::ShowInGlobal ()
-{
-  return _show_in_global;
-}
-
-Place *
-PlaceEntryRemote::GetParent ()
-{
-  return _parent;
+  g_debug ("%p: %s", self, sender_name);
 }
