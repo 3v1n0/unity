@@ -288,6 +288,8 @@ UnityWindow::glDraw (const GLMatrix 	&matrix,
 void
 UnityWindow::windowNotify (CompWindowNotify n)
 {
+  PluginAdapter::Default ()->Notify (window, n);
+  
   switch (n)
   {
     case CompWindowNotifyMinimize:
@@ -320,6 +322,13 @@ UnityWindow::windowNotify (CompWindowNotify n)
   }
 
   window->windowNotify (n);
+}
+
+void 
+UnityWindow::stateChangeNotify (unsigned int lastState)
+{
+  PluginAdapter::Default ()->NotifyStateChange (window, window->state (), lastState);
+  window->stateChangeNotify (lastState);
 }
 
 void
