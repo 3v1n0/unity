@@ -147,7 +147,8 @@ LauncherController::PresentIconOwningWindow (Window window)
 void
 LauncherController::OnExpoClicked (int button)
 {
-  PluginAdapter::Default ()->InitiateExpo ();
+  if (button == 1)
+    PluginAdapter::Default ()->InitiateExpo ();
 }
 
 void
