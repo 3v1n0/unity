@@ -122,6 +122,8 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
 
+  g_setenv ("UNITY_ENABLE_PLACES", "1", FALSE);
+
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places"),
                             1024, 600,

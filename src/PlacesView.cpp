@@ -27,13 +27,13 @@
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 :   BaseWindow("", NUX_FILE_LINE_PARAM)
 {
-  SetBaseSize (800, 600);
+  //~ SetBaseSize (800, 600);
   //SetWidth (800);
   //SetHeight (600);
-  SetBaseX (0);
-  SetBaseY (200);
-  SetMaximumSize (600, 200);
-  SetMinimumSize (600, 200);
+  //~ SetBaseX (0);
+  //~ SetBaseY (200);
+  //~ SetMaximumSize (600, 200);
+  //~ SetMinimumSize (600, 200);
   //SetGeometry (nux::Geometry (0, 0, 100, 100));
   IsVisible = false;
 }
