@@ -346,26 +346,13 @@ float Launcher::AutohideProgress (struct timespec const &current)
 gboolean Launcher::AnimationTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
-
     self->NeedRedraw ();
-
-    if (self->AnimationInProgress ())
-      return true;
-
-    // zero out handle so we know we are done
-    self->_anim_handle = 0;
     return false;
 }
 
 void Launcher::EnsureAnimation ()
 {
-    if (_anim_handle)
-      return;
-
     NeedRedraw ();
-
-    if (AnimationInProgress ())
-        _anim_handle = g_timeout_add (1000 / 60 - 1, &Launcher::AnimationTimeout, this);
 }
 
 bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &current)
@@ -1565,6 +1552,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
     GfxContext.PopClippingRectangle();
+
+    if (AnimationInProgress ())   
+      g_timeout_add (0, &Launcher::AnimationTimeout, this);
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
