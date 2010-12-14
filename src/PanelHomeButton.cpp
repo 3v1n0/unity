@@ -116,37 +116,10 @@ PanelHomeButton::RecvMouseClick (int x,
                                  unsigned long button_flags,
                                  unsigned long key_flags)
 {
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_ACTIVATED, NULL);
-  g_debug ("sent message");
-
-  // not removing the nautilus behaviour until we can launch applications in places :)
-
-#define APPS_URI "file:///usr/share/applications"
-
-  /* FIXME: This is just for Alpha 1, so we have some feedback on clicking the
-   * PanelHomeButton, and especially because we don't have any other way of
-   * launching non-launcher apps right now
-   */
   if (nux::GetEventButton (button_flags) == 1)
     {
-      GdkAppLaunchContext *context;
-      GError *error = NULL;
-
-      context = gdk_app_launch_context_new ();
-      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
-      gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
-
-      if (!g_app_info_launch_default_for_uri (APPS_URI,
-                                              (GAppLaunchContext *)context,
-                                              &error))
-        {
-          g_warning ("Unable to launcher applications folder: %s",
-                     error->message);
-          g_error_free (error);
-        }
-
-      g_object_unref (context);
+      UBusServer *ubus = ubus_server_get_default ();
+      ubus_server_send_message (ubus, UBUS_HOME_BUTTON_ACTIVATED, NULL);
     }
 }
 

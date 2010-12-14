@@ -31,9 +31,10 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   //SetWidth (800);
   //SetHeight (600);
   SetBaseX (0);
-  SetBaseY (0);
-  SetMaximumSize (800, 600);
-  SetGeometry (nux::Geometry (0, 0, 800, 600));
+  SetBaseY (200);
+  SetMaximumSize (600, 200);
+  SetMinimumSize (600, 200);
+  //SetGeometry (nux::Geometry (0, 0, 100, 100));
   IsVisible = false;
 }
 

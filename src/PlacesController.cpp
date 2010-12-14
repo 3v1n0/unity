@@ -22,6 +22,9 @@
 #include "Nux/HLayout.h"
 
 #include "NuxGraphics/GLThread.h"
+#include <glib.h>
+#include <pango/pangocairo.h>
+#include <gtk/gtk.h>
 
 #include "../libunity/ubus-server.h"
 #include "UBusMessages.h"
@@ -57,7 +60,6 @@ void PlacesController::Show ()
 {
   // show called
   g_debug ("Places Show");
-
   _Window->Show ();
 
 }
@@ -87,9 +89,39 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 void
 PlacesController::ExternalActivation (GVariant *data, void *val)
 {
-  g_debug ("got external activation");
-  PlacesController *self = (PlacesController*)val;
-  self->ToggleShowHide ();
+  g_debug ("external activation");
+  if (g_getenv ("UNITY_ENABLE_PLACES"))
+    {
+      PlacesController *self = (PlacesController*)val;
+      self->ToggleShowHide ();
+    }
+  else
+    {
+    // not removing the nautilus behaviour until we can launch applications in places :)
+    #define APPS_URI "file:///usr/share/applications"
+
+    /* FIXME: This is just for Alpha 1, so we have some feedback on clicking the
+     * PanelHomeButton, and especially because we don't have any other way of
+     * launching non-launcher apps right now
+     */
+      GdkAppLaunchContext *context;
+      GError *error = NULL;
+
+      context = gdk_app_launch_context_new ();
+      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
+      gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
+
+      if (!g_app_info_launch_default_for_uri (APPS_URI,
+                                              (GAppLaunchContext *)context,
+                                              &error))
+        {
+          g_warning ("Unable to launcher applications folder: %s",
+                     error->message);
+          g_error_free (error);
+        }
+
+      g_object_unref (context);
+    }
 }
 
 void
