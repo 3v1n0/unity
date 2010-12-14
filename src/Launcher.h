@@ -128,6 +128,7 @@ private:
   bool AnimationInProgress ();
   void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
 
+  void EnsureHoverState ();
   void EnsureHiddenState ();
   void EnsureAnimation    ();
   void SetupAutohideTimer ();

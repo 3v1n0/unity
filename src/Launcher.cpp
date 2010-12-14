@@ -1003,6 +1003,19 @@ void Launcher::SetFloating (bool floating)
     EnsureAnimation ();
 }
 
+void
+Launcher::EnsureHoverState ()
+{
+  if (_mouse_inside_launcher || QuicklistManager::Default ()->Current() || _launcher_action_state != ACTION_NONE)
+  {
+    SetHover ();
+  }
+  else
+  {
+    UnsetHover ();
+  }
+}
+
 void Launcher::SetHover ()
 {
     if (_hovered)
@@ -1661,7 +1674,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   if (_launcher_action_state != ACTION_NONE && !geo.IsInside(nux::Point(x, y)))
   {
     // we are no longer hovered
-    UnsetHover ();
+    EnsureHoverState ();
   }
   
   MouseUpLogic (x, y, button_flags, key_flags);
@@ -1733,7 +1746,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   _mouse_position = nux::Point2 (x, y);
   _mouse_inside_launcher = true;
 
-  SetHover ();
+  EnsureHoverState ();
 
   EventLogic ();
   EnsureAnimation ();
@@ -1745,7 +1758,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   _mouse_inside_launcher = false;
 
   if (_launcher_action_state == ACTION_NONE)
-      UnsetHover ();
+      EnsureHoverState ();
 
   EventLogic ();
   EnsureAnimation ();
@@ -1781,6 +1794,7 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)
 {
   EventLogic ();
+  EnsureHoverState ();
   EnsureAnimation ();
 }
 
@@ -1789,6 +1803,7 @@ void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
   SetupAutohideTimer ();
 
   EventLogic ();
+  EnsureHoverState ();
   EnsureAnimation ();
 }
 
