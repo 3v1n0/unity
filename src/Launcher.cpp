@@ -1467,6 +1467,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     std::list<Launcher::RenderArg>::iterator it;
 
+    // rely on the compiz event loop to come back to us in a nice throttling
+    if (AnimationInProgress ())   
+      g_timeout_add (0, &Launcher::AnimationTimeout, this);
+
     nux::ROPConfig ROP;
     ROP.Blend = false;
     ROP.SrcBlend = GL_SRC_ALPHA;
@@ -1552,10 +1556,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
     GfxContext.PopClippingRectangle();
-
-    // rely on the compiz event loop to come back to us in a nice throttling
-    if (AnimationInProgress ())   
-      g_timeout_add (0, &Launcher::AnimationTimeout, this);
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
