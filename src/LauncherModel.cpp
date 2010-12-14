@@ -81,9 +81,10 @@ LauncherModel::RemoveIcon (LauncherIcon *icon)
   _inner.remove (icon);
 
   if (size != _inner.size ())
+  {
     icon_removed.emit (icon);
-  
-  icon->UnReference ();
+    icon->UnReference ();
+  }
 }
 
 gboolean
@@ -98,10 +99,10 @@ LauncherModel::RemoveCallback (gpointer data)
 }
 
 void 
-LauncherModel::OnIconRemove (void *icon_pointer)
+LauncherModel::OnIconRemove (LauncherIcon *icon)
 {
   RemoveArg *arg = (RemoveArg*) g_malloc0 (sizeof (RemoveArg));
-  arg->icon = (LauncherIcon*) icon_pointer;
+  arg->icon = icon;
   arg->self = this;
   
   g_timeout_add (1000, &LauncherModel::RemoveCallback, arg);
@@ -114,6 +115,7 @@ LauncherModel::Sort (SortFunc func)
   _inner_main.sort (func);
   
   Populate ();
+  order_changed.emit ();
 }
 
 int

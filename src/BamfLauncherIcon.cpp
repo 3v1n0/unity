@@ -98,6 +98,18 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_object_unref (m_App);
 }
 
+bool 
+BamfLauncherIcon::IsSticky ()
+{
+  return bamf_view_is_sticky (BAMF_VIEW (m_App));
+}
+
+const char* 
+BamfLauncherIcon::DesktopFile ()
+{
+  return bamf_application_get_desktop_file (m_App);
+}
+
 void
 BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
 {
@@ -119,7 +131,7 @@ BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
     if (BAMF_IS_WINDOW (view))
     {
       xids[i++] = g_variant_new_uint32 (bamf_window_get_xid (BAMF_WINDOW (view)));
-    }    
+    }
   }
   g_list_free (children);
   g_variant_builder_add (builder, "{sv}", "xids", g_variant_new_array (G_VARIANT_TYPE_UINT32, xids, i));
@@ -145,7 +157,7 @@ BamfLauncherIcon::IconOwnsWindow (Window w)
       if (xid == w)
       {
         owns = true;
-	break;
+        break;
       }
     }
   }
@@ -178,6 +190,8 @@ BamfLauncherIcon::Focus ()
 {
   GList *children, *l;
   BamfView *view;
+  bool any_urgent = false;
+  bool any_on_current = false;
 
   children = bamf_view_get_children (BAMF_VIEW (m_App));
 
@@ -195,13 +209,21 @@ BamfLauncherIcon::Focus ()
       CompWindow *window = m_Screen->findWindow ((Window) xid);
 
       if (window)
+      {
+        if (window->state () & CompWindowStateDemandsAttentionMask)
+          any_urgent = true;
         windows.push_back (window);
+      }
     }
   }
 
+  // not a good sign
   if (windows.empty ())
+  {
+    g_list_free (children);
     return;
-
+  }
+  
   /* sort the list */
   CompWindowList tmp;
   CompWindowList::iterator it;
@@ -212,10 +234,7 @@ BamfLauncherIcon::Focus ()
   }
   windows = tmp;
 
-
   /* filter based on workspace */
-  bool any_on_current = false;
-
   for (it = windows.begin (); it != windows.end (); it++)
   {
     if ((*it)->defaultViewport () == m_Screen->vp ())
@@ -225,9 +244,18 @@ BamfLauncherIcon::Focus ()
     }
   }
 
-  /* activate our windows */
-
-  if (any_on_current)
+  if (any_urgent)
+  {
+    for (it = windows.begin (); it != windows.end (); it++)
+    {
+      if ((*it)->state () & CompWindowStateDemandsAttentionMask)
+      {
+        (*it)->activate ();
+        break;
+      }
+    }
+  }
+  else if (any_on_current)
   {
     for (it = windows.begin (); it != windows.end (); it++)
     {
@@ -285,9 +313,15 @@ BamfLauncherIcon::OnMouseClick (int button)
 
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
-
+  
   if (!running)
+  {
+    if (GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
+      return;
+    SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, true);
     OpenInstance ();
+    return;
+  }
   else if (active)
     Spread ();
   else

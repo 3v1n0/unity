@@ -61,6 +61,7 @@ typedef enum
   LAUNCHER_ICON_QUIRK_PRESENTED,
   LAUNCHER_ICON_QUIRK_STARTING,
   LAUNCHER_ICON_QUIRK_SHIMMER,
+  LAUNCHER_ICON_QUIRK_CENTER_SAVED,
   
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
@@ -69,7 +70,7 @@ class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, 
 {
 public:
     LauncherIcon(Launcher* launcher);
-    ~LauncherIcon();
+    virtual ~LauncherIcon();
 
     void SetTooltipText (const TCHAR* text);
     
@@ -84,6 +85,8 @@ public:
     
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
+    
+    void SaveCenter ();
     
     int SortPriority ();
     
@@ -102,17 +105,16 @@ public:
     
     std::list<DbusmenuMenuitem *> Menus ();
     
-    
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;
     sigc::signal<void>      MouseLeave;
     sigc::signal<void, int> MouseClick;
     
-    sigc::signal<void, void *> show;
-    sigc::signal<void, void *> hide;
-    sigc::signal<void, void *> remove;
-    sigc::signal<void, void *> needs_redraw;
+    sigc::signal<void, LauncherIcon *> show;
+    sigc::signal<void, LauncherIcon *> hide;
+    sigc::signal<void, LauncherIcon *> remove;
+    sigc::signal<void, LauncherIcon *> needs_redraw;
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
@@ -187,6 +189,7 @@ private:
     
     nux::Point3      _center;
     nux::Point3      _last_stable;
+    nux::Point3      _saved_center;
     LauncherIconType _icon_type;
     
     bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
