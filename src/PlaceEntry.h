@@ -51,6 +51,14 @@ public:
   // Include as part of global search results
   virtual bool ShowInGlobal () = 0;
 
+  // Important to call this when the view is active/inactive, so the place can reset itself
+  // if necessary
+  virtual void SetActive        (bool is_active) = 0;
+
+  virtual void SetSearch        (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
+  virtual void SetActiveSection (guint32 section_id) = 0;
+  virtual void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
+
   // Signals
 
   // This covers: name, icon and description properties

@@ -53,6 +53,11 @@ public:
   bool ShowInLauncher ();
   bool ShowInGlobal   ();
 
+  void SetActive        (bool is_active);
+  void SetSearch        (const gchar *search, std::map<gchar*, gchar*>& hints);
+  void SetActiveSection (guint32 section_id);
+  void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();

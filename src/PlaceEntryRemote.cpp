@@ -189,6 +189,61 @@ PlaceEntryRemote::ShowInGlobal ()
   return _show_in_global;
 }
 
+void
+PlaceEntryRemote::SetActive (bool is_active)
+{
+  g_dbus_proxy_call (_proxy,
+                     "SetActive",
+                     g_variant_new ("(b)", (gboolean)is_active),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1, 
+                     NULL,
+                     NULL,
+                     NULL);
+}
+
+void
+PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
+{
+  /* FIXME: I'm ignoring hints because we don't use them currently */
+  g_dbus_proxy_call (_proxy,
+                     "SetSearch",
+                     g_variant_new ("(sa{ss})", search, NULL),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+}
+
+void
+PlaceEntryRemote::SetActiveSection (guint32 section_id)
+{
+  g_dbus_proxy_call (_proxy,
+                     "SetActiveSection",
+                     g_variant_new ("(u)", section_id),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+}
+
+void
+PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
+{
+  /* FIXME: I'm ignoring hints because we don't use them currently */
+  g_dbus_proxy_call (_proxy,
+                     "SetGlobalSearch",
+                     g_variant_new ("(sa{ss})", search, NULL),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+}
+
+
 /* Other methods */
 bool
 PlaceEntryRemote::IsValid ()
