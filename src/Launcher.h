@@ -107,6 +107,8 @@ private:
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
+    float         progress;
+    float         progress_bias;
     bool          running_arrow;
     bool          running_colored;
     bool          active_arrow;
@@ -145,6 +147,7 @@ private:
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
+  float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
@@ -185,11 +188,13 @@ private:
 
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,
-                   nux::BaseTexture *icon,
+                   nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                    nux::Color bkg_color,
                    float alpha,
-                   nux::Vector4 xform_coords[],
-                   nux::Geometry geo);
+                   nux::Vector4 xform_coords[]);
+                   
+  void RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, float progress_fill, float bias);
 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
                      float x, float y, float w, float h, float z, std::string name);
@@ -208,7 +213,7 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget ();
+  void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
 
   nux::HLayout* m_Layout;
@@ -259,11 +264,11 @@ private:
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_glow_texture;
-  nux::BaseTexture* _icon_2indicator;
-  nux::BaseTexture* _icon_3indicator;
-  nux::BaseTexture* _icon_4indicator;
+  nux::BaseTexture* _progress_bar_trough;
+  nux::BaseTexture* _progress_bar_fill;
   
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_rt_texture;
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
   guint _anim_handle;
   guint _autohide_handle;

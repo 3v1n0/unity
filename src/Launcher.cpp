@@ -255,9 +255,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
     _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
-    _icon_2indicator        = nux::CreateTextureFromFile (PKGDATADIR"/2indicate_54x54.png");
-    _icon_3indicator        = nux::CreateTextureFromFile (PKGDATADIR"/3indicate_54x54.png");
-    _icon_4indicator        = nux::CreateTextureFromFile (PKGDATADIR"/4indicate_54x54.png");
+    _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
+    _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -288,7 +287,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _autohide_time.tv_nsec = 0;
     
     _drag_window = NULL;
-    _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 }
 
 Launcher::~Launcher()
@@ -395,6 +395,9 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
 
+    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PROGRESS);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
 
     return false;
 }
@@ -602,6 +605,18 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     return result;
 }
 
+float Launcher::IconProgressBias (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec icon_progress_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PROGRESS);
+    int ms = TimeDelta (&current, &icon_progress_time);
+    float result = CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_PROGRESS))
+        return -1.0f + result;
+    else
+        return result;
+}
+
 void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg)
 {
     arg.icon            = icon;
@@ -614,7 +629,8 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.y_rotation      = 0.0f;
     arg.z_rotation      = 0.0f;
     arg.skip            = false;
-
+    arg.progress_bias   = IconProgressBias (icon, current);
+    arg.progress        = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
     // we dont need to show strays
     if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
@@ -1035,10 +1051,10 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     EnsureAnimation();
 
     // How to free these properly?
-    icon->_xform_coords["HitArea"] = new nux::Vector4[4];
-    icon->_xform_coords["Image"]   = new nux::Vector4[4];
-    icon->_xform_coords["Tile"]    = new nux::Vector4[4];
-    icon->_xform_coords["Glow"]    = new nux::Vector4[4];
+    icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
+    icon->_xform_coords["Image"]        = new nux::Vector4[4];
+    icon->_xform_coords["Tile"]         = new nux::Vector4[4];
+    icon->_xform_coords["Glow"]         = new nux::Vector4[4];
 
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
@@ -1160,13 +1176,12 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
 void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
                           RenderArg const &arg,
-                          nux::BaseTexture *icon,
+                          nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                           nux::Color bkg_color,
                           float alpha,
-                          nux::Vector4 xform_coords[],
-                          nux::Geometry geo)
+                          nux::Vector4 xform_coords[])
 {
-  if (icon == NULL || icon->IsNull ())
+  if (icon == NULL)
     return;
 
   nux::Matrix4 ObjectMatrix;
@@ -1175,9 +1190,9 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   nux::Matrix4 ViewProjectionMatrix;
 
   if(nux::Abs (arg.x_rotation) < 0.01f)
-    icon->GetDeviceTexture()->SetFiltering(GL_NEAREST, GL_NEAREST);
+    icon->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
-    icon->GetDeviceTexture()->SetFiltering(GL_LINEAR, GL_LINEAR);
+    icon->SetFiltering(GL_LINEAR, GL_LINEAR);
 
   nux::Vector4 v0;
   nux::Vector4 v1;
@@ -1204,7 +1219,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   float s0, t0, s1, t1, s2, t2, s3, t3;
   nux::Color color = nux::Color::White;
 
-  if (icon->Type ().IsDerivedFromType(nux::TextureRectangle::StaticObjectType))
+  if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
     s0 = 0.0f;                                  t0 = 0.0f;
     s1 = 0.0f;                                  t1 = icon->GetHeight();
@@ -1326,27 +1341,27 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
 
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
+  /* draw tile */
   if (arg.backlight_intensity < 1.0f)
   {
     RenderIcon(GfxContext,
                arg,
-               _icon_outline_texture,
+               _icon_outline_texture->GetDeviceTexture (),
                nux::Color(0xAAFFFFFF),
                1.0f - arg.backlight_intensity,
-               arg.icon->_xform_coords["Tile"],
-               geo);
+               arg.icon->_xform_coords["Tile"]);
   }
 
   if (arg.backlight_intensity > 0.0f)
   {
     RenderIcon(GfxContext,
                arg,
-               _icon_bkg_texture,
+               _icon_bkg_texture->GetDeviceTexture (),
                arg.icon->BackgroundColor (),
                arg.backlight_intensity,
-               arg.icon->_xform_coords["Tile"],
-               geo);
+               arg.icon->_xform_coords["Tile"]);
   }
+  /* end tile draw */
 
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
@@ -1355,70 +1370,37 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                                                 GL_ONE);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
+  /* draw icon */
   RenderIcon (GfxContext,
               arg,
-              arg.icon->TextureForSize (_icon_image_size),
+              arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
               nux::Color::White,
               arg.alpha,
-              arg.icon->_xform_coords["Image"],
-              geo);
+              arg.icon->_xform_coords["Image"]);
 
+  /* draw overlay shine */
   if (arg.backlight_intensity > 0.0f)
   {
     RenderIcon(GfxContext,
                arg,
-               _icon_shine_texture,
+               _icon_shine_texture->GetDeviceTexture (),
                nux::Color::White,
                arg.backlight_intensity,
-               arg.icon->_xform_coords["Tile"],
-               geo);
+               arg.icon->_xform_coords["Tile"]);
   }
 
-  if (false)
-  {
-    switch (arg.window_indicators)
-    {
-      case 2:
-        RenderIcon(GfxContext,
-                   arg,
-                   _icon_2indicator,
-                   nux::Color::White,
-                   1.0f,
-                   arg.icon->_xform_coords["Tile"],
-                   geo);
-        break;
-      case 3:
-        RenderIcon(GfxContext,
-                    arg,
-                    _icon_3indicator,
-                    nux::Color::White,
-                    1.0f,
-                    arg.icon->_xform_coords["Tile"],
-                    geo);
-        break;
-      case 4:
-        RenderIcon(GfxContext,
-                   arg,
-                   _icon_4indicator,
-                   nux::Color::White,
-                   1.0f,
-                   arg.icon->_xform_coords["Tile"],
-                   geo);
-        break;
-    }
-  }
-
+  /* draw glow */
   if (arg.glow_intensity > 0.0f)
   {
     RenderIcon(GfxContext,
                arg,
-               _icon_glow_texture,
+               _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
                arg.glow_intensity,
-               arg.icon->_xform_coords["Glow"],
-               geo);
+               arg.icon->_xform_coords["Glow"]);
   }
-
+  
+  /* draw shimmer */
   if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
   {
     nux::Geometry base = GetGeometry ();
@@ -1433,15 +1415,30 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
 
     RenderIcon(GfxContext,
                arg,
-               _icon_glow_texture,
+               _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
                fade_out,
-               arg.icon->_xform_coords["Glow"],
-               geo);
+               arg.icon->_xform_coords["Glow"]);
 
     GfxContext.PopClippingRectangle();
   }
+  
+  /* draw progress bar */
+  if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
+  {
+    if (_offscreen_progress_texture->GetWidth () != _icon_size || _offscreen_progress_texture->GetHeight () != _icon_size)
+      _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+    RenderProgressToTexture (GfxContext, _offscreen_progress_texture, arg.progress, arg.progress_bias);
+    
+    RenderIcon(GfxContext,
+               arg,
+               _offscreen_progress_texture,
+               nux::Color::White,
+               1.0f,
+               arg.icon->_xform_coords["Tile"]);
+  }
 
+  /* draw indicators */
   RenderIndicators (GfxContext,
                     arg,
                     arg.running_arrow ? arg.window_indicators : 0,
@@ -1470,28 +1467,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_drag_icon && _render_drag_window)
     {
-      RenderArg arg;
-      struct timespec current;
-      clock_gettime (CLOCK_MONOTONIC, &current);
-      
-      SetupRenderArg (_drag_icon, current, arg);
-      arg.render_center = nux::Point3 (_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
-      arg.logical_center = arg.render_center;
-      arg.x_rotation = 0.0f;
-      arg.running_arrow = false;
-      arg.active_arrow = false;
-      arg.skip = false;
-      arg.window_indicators = 0;
-      arg.alpha = 1.0f;
-
-      std::list<Launcher::RenderArg> drag_args;
-      drag_args.push_front (arg);
-      UpdateIconXForm (drag_args);
-      
-      SetOffscreenRenderTarget ();
-      DrawRenderArg (nux::GetGraphicsEngine (), arg, nux::Geometry (0, 0, _icon_size, _icon_size));
-      RestoreSystemRenderTarget ();
-      
+      RenderIconToTexture (GfxContext, _drag_icon, _offscreen_drag_texture);
       _drag_window->ShowWindow (true);
       nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
       
@@ -1606,8 +1582,8 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window = NULL;
   }
   
-  _offscreen_rt_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
-  _drag_window = new LauncherDragWindow (_offscreen_rt_texture);
+  _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+  _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
   _drag_window->SinkReference ();
   
   _render_drag_window = true;
@@ -2092,58 +2068,118 @@ void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& P
 
   float AspectRatio = (float)ViewportWidth/(float)ViewportHeight;
   float CameraToScreenDistance = -1.0f;
-  float y_cs = -CameraToScreenDistance*tanf(0.5f*Fovy/* *3.1415926/180.0f*/);
+  float y_cs = -CameraToScreenDistance*tanf(0.5f*Fovy/* *M_PI/180.0f*/);
   float x_cs = y_cs*AspectRatio;
-  //float CameraToScreenDistance = -y_cs*1.0f/(tanf(0.5f*Fovy/* *3.1415926/180.0f*/));
 
   ViewMatrix = nux::Matrix4::TRANSLATE(-x_cs, y_cs, CameraToScreenDistance) *
     nux::Matrix4::SCALE(2.0f*x_cs/ViewportWidth, -2.0f*y_cs/ViewportHeight, -2.0f * 3 * y_cs/ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/ );
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
-
-//   // Example usage with the matrices above:
-//   float W = 300;
-//   float H = 300;
-//   // centered quad
-//   float X = (ViewportWidth - W)/2.0;
-//   float Y = (ViewportHeight - H)/2.0;
-//   float Z = 0.0f;
-//
-//   {
-//     glPushMatrix();
-//     // Local Transformation of the object
-//     glTranslatef(0.0f, 0.0f, ObjectDistanceToCamera);
-//     glTranslatef(X  + W/2.0f, Y + H/2.0f, 0.0f);
-//     glRotatef(cameraAngleY, 1, 0, 0);
-//     glRotatef(cameraAngleX, 0, 1, 0);
-//     glTranslatef(-X - W/2.0f, -Y - H/2.0f, 0.0f);
-//
-//     glBegin(GL_QUADS);
-//     {
-//       glNormal3f(0.0f, 0.0f, 1.0f);
-//
-//       glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-//       glVertex4f(X, Y, Z, 1.0f);
-//
-//       glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-//       glVertex4f(X, Y+H, Z, 1.0f);
-//
-//       glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-//       glVertex4f(X+W, Y+H, Z, 1.0f);
-//
-//       glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
-//       glVertex4f(X+W, Y, Z, 1.0f);
-//     }
-//     glEnd();
 }
 
-void Launcher::SetOffscreenRenderTarget ()
+void
+Launcher::RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
 {
-  int width = _offscreen_rt_texture->GetWidth ();
-  int height = _offscreen_rt_texture->GetHeight ();
+  RenderArg arg;
+  struct timespec current;
+  clock_gettime (CLOCK_MONOTONIC, &current);
+  
+  SetupRenderArg (icon, current, arg);
+  arg.render_center = nux::Point3 (_icon_size / 2.0f, _icon_size / 2.0f, 0.0f);
+  arg.logical_center = arg.render_center;
+  arg.x_rotation = 0.0f;
+  arg.running_arrow = false;
+  arg.active_arrow = false;
+  arg.skip = false;
+  arg.window_indicators = 0;
+  arg.alpha = 1.0f;
+
+  std::list<Launcher::RenderArg> drag_args;
+  drag_args.push_front (arg);
+  UpdateIconXForm (drag_args);
+  
+  SetOffscreenRenderTarget (texture);
+  DrawRenderArg (nux::GetGraphicsEngine (), arg, nux::Geometry (0, 0, _icon_size, _icon_size));
+  RestoreSystemRenderTarget ();
+}
+
+void
+Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, float progress_fill, float bias)
+{
+  int width = texture->GetWidth ();
+  int height = texture->GetHeight ();
+  
+  int progress_width = _progress_bar_trough->GetWidth ();
+  int progress_height = _progress_bar_trough->GetHeight ();
+
+  int fill_width = _progress_bar_fill->GetWidth ();
+  int fill_height = _progress_bar_fill->GetHeight ();
+  
+  int fill_offset = (progress_width - fill_width) / 2;
+
+  /* We need to perform a barn doors effect to acheive the slide in and out */
+
+  int left_edge = width / 2 - progress_width / 2;
+  int right_edge = width / 2 + progress_width / 2;
+  
+  if (bias < 0.0f)
+  {
+    // pulls the right edge in
+    right_edge -= (int) (-bias * (float) progress_width);
+  }
+  else if (bias > 0.0f)
+  {
+    // pulls the left edge in
+    left_edge += (int) (bias * progress_width);
+  }
+  
+  int fill_y = (height - fill_height) / 2;
+  int progress_y = (height - progress_height) / 2;
+  int half_size = (right_edge - left_edge) / 2;
+  
+  SetOffscreenRenderTarget (texture);
+  
+  // FIXME
+  glClear (GL_COLOR_BUFFER_BIT);
+  nux::TexCoordXForm texxform;
+  
+  fill_width *= progress_fill;
+
+  // left door
+  GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
+  
+  GfxContext.QRP_GLSL_1Tex (left_edge, progress_y, progress_width, progress_height, 
+                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
+                            
+  GfxContext.QRP_GLSL_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
+                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);  
+
+  GfxContext.PopClippingRectangle (); 
+
+
+  // right door
+  GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
+  
+  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
+                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
+  
+  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
+                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);
+  
+  GfxContext.PopClippingRectangle (); 
+
+  
+  RestoreSystemRenderTarget ();
+}
+
+void 
+Launcher::SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+{
+  int width = texture->GetWidth ();
+  int height = texture->GetHeight ();
   
   nux::GetThreadGLDeviceFactory ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, _offscreen_rt_texture->GetSurfaceLevel (0));
+  nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
   nux::GetThreadGLDeviceFactory ()->ActivateFrameBuffer ();
 
   nux::GetThreadGraphicsContext ()->SetContext   (0, 0, width, height);
@@ -2152,7 +2188,8 @@ void Launcher::SetOffscreenRenderTarget ()
   nux::GetThreadGraphicsContext ()->EmptyClippingRegion();
 }
 
-void Launcher::RestoreSystemRenderTarget ()
+void 
+Launcher::RestoreSystemRenderTarget ()
 {
   nux::GetWindowCompositor ().RestoreRenderingSurface ();
 }

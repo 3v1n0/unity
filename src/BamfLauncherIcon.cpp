@@ -85,6 +85,9 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   UpdateMenus ();
   
   PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  
+  /* hack */
+  SetProgress (0.5f);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -383,6 +386,7 @@ BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer dat
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
   self->SetQuirk (LAUNCHER_ICON_QUIRK_URGENT, urgent);
+  self->SetQuirk (LAUNCHER_ICON_QUIRK_PROGRESS, urgent);
 }
 
 void
