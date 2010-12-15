@@ -225,7 +225,7 @@ BamfLauncherIcon::Focus ()
 
       if (window)
       {
-        if (window->state () & CompWindowStateDemandsAttentionMask)
+        if (bamf_view_is_urgent (view))
           any_urgent = true;
         windows.push_back (window);
       }
@@ -261,12 +261,30 @@ BamfLauncherIcon::Focus ()
 
   if (any_urgent)
   {
-    for (it = windows.begin (); it != windows.end (); it++)
+    // we cant use the compiz tracking since it is currently broken
+    /*for (it = windows.begin (); it != windows.end (); it++)
     {
       if ((*it)->state () & CompWindowStateDemandsAttentionMask)
       {
         (*it)->activate ();
         break;
+      }
+    }*/
+    for (l = children; l; l = l->next)
+    {
+      view = (BamfView *) l->data;
+
+      if (BAMF_IS_WINDOW (view))
+      {
+        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+
+        CompWindow *window = m_Screen->findWindow ((Window) xid);
+
+        if (window && bamf_view_is_urgent (view))
+        {
+          window->activate ();
+          break;
+        }
       }
     }
   }
