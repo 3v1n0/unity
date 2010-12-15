@@ -34,6 +34,9 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#define PADDING 12
+#define BUTTONS_WIDTH 72
+
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
                                       BamfView      *new_view,
@@ -110,15 +113,13 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
 {
   long res = View::PostLayoutManagement (LayoutResult);
-  // The size of this widget has been computed. Get its geometry;
-  nux::Geometry geo = GetGeometry ();
-  geo.x += 12;
-  geo.width -= 12;
-  // geo.x and geo.y represent the position of the top left corner of this widget on the screen
-  // geo.width and geo.height represent the position of the width and size of this widget on the screen
-
   
-  // Here, we explicitely set the size of the layouts to the size and position of the panel view.  
+  nux::Geometry geo = GetGeometry ();
+  
+  /* Explicitly set the size and position of the widgets */
+  geo.x += PADDING + BUTTONS_WIDTH + PADDING;
+  geo.width -= PADDING + BUTTONS_WIDTH + PADDING;
+
   _menu_layout->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   _menu_layout->ComputeLayout2();
 
@@ -131,7 +132,7 @@ void
 PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
-
+  
   GfxContext.PushClippingRectangle (geo);
 
   /* "Clear" out the background */
@@ -143,8 +144,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (!_is_inside)
-    gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
+  if (_is_inside)
+    geo.width = PADDING + BUTTONS_WIDTH;
+ 
+  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
 
   gPainter.PopBackground ();
  
@@ -218,7 +221,6 @@ PanelMenuView::GetActiveViewName ()
 void
 PanelMenuView::Refresh ()
 {
-#define PADDING 12
   nux::Geometry         geo = GetGeometry ();
   char                 *label = GetActiveViewName ();
   PangoLayout          *layout = NULL;
