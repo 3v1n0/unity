@@ -41,7 +41,7 @@ PlacesController::PlacesController ()
                                  this);
 
   _Window = new PlacesView ();
-
+  _Window->Reference ();
   _Window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   //_Window->SetBlurredBackground(true);
   _Window->ShowWindow(false);
@@ -49,7 +49,7 @@ PlacesController::PlacesController ()
   //_Window->InputWindowEnableStruts(false);
 
   _Window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
-  _Window->Reference ();
+
 }
 
 PlacesController::~PlacesController ()
