@@ -910,9 +910,6 @@ Launcher::CheckWindowOverLauncher ()
 void
 Launcher::OnWindowMaybeIntellihide (CompWindow *window)
 {
-  if (window->type () != CompWindowTypeNormalMask || !window->isMapped ())
-    return;
-  
   if (_autohide)
     CheckWindowOverLauncher ();
 }
