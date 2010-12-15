@@ -30,6 +30,8 @@
 
 #include "PanelMenuView.h"
 
+#include "WindowManager.h"
+
 #include "IndicatorObjectEntryProxy.h"
 
 #include <gio/gdesktopappinfo.h>
@@ -60,6 +62,8 @@ PanelMenuView::PanelMenuView ()
    * shouldn't touch this again
    */
   _layout = _menu_layout;
+
+  _window_buttons = new WindowButtons ();
 
   Refresh ();
 }
@@ -94,6 +98,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     {
       _is_inside = true;
       _menu_layout->NeedRedraw ();
+      _window_buttons->NeedRedraw ();
       NeedRedraw ();
     }
   }
@@ -103,11 +108,16 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     {
       _is_inside = false;
       _menu_layout->NeedRedraw ();
+      _window_buttons->NeedRedraw ();
       NeedRedraw ();
     }
   }
 
-  ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (_window_buttons->GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+    ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
+  else
+    ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+
   return ret;
 }
 
@@ -116,6 +126,9 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   long res = View::PostLayoutManagement (LayoutResult);
   
   nux::Geometry geo = GetGeometry ();
+
+  _window_buttons->SetGeometry (geo.x, geo.y, BUTTONS_WIDTH, geo.height);
+  _window_buttons->ComputeLayout2 ();
   
   /* Explicitly set the size and position of the widgets */
   geo.x += PADDING + BUTTONS_WIDTH + PADDING;
@@ -165,6 +178,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   if (_is_inside || _last_active_view)
   {
     _layout->ProcessDraw (GfxContext, force_draw);
+    _window_buttons->ProcessDraw (GfxContext, force_draw);
   }
 
   GfxContext.PopClippingRectangle();
@@ -433,6 +447,11 @@ on_active_window_changed (BamfMatcher   *matcher,
                           BamfView      *new_view,
                           PanelMenuView *self)
 {
+  bool                  is_maxmized = false;
+  bool                  can_maximize = false;
+
+  WindowManager::Default ()->GetWindowMaximizedState (0, is_maxmized, can_maximize);
+  
   self->Refresh ();
   self->NeedRedraw ();
 }

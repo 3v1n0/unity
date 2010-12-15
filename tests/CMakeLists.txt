@@ -85,6 +85,10 @@ add_executable (test-panel
                 ../src/PanelMenuView.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
+                ../src/WindowButtons.cpp
+                ../src/WindowButtons.h
+                ../src/WindowManager.cpp
+                ../src/WindowManager.h
                 )
 
 add_executable (test-quicklist

@@ -25,6 +25,7 @@
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
 #include "StaticCairoText.h"
+#include "WindowButtons.h"
 
 #include <libbamf/libbamf.h>
 
@@ -65,5 +66,7 @@ private:
 
   bool  _is_inside;
   PanelIndicatorObjectEntryView *_last_active_view;
+
+  WindowButtons *_window_buttons;
 };
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H
