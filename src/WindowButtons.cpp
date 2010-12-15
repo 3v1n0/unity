@@ -29,33 +29,173 @@
 
 #include <glib.h>
 
+
+// FIXME: This will be all automatic in the future
+#define AMBIANCE "/usr/share/themes/Ambiance/metacity-1"
+
+enum
+{
+  BUTTON_CLOSE=0,
+  BUTTON_MINIMISE,
+  BUTTON_UNMAXIMISE
+};
+
 class WindowButton : public nux::Button
 {
 public:
-  WindowButton ()
+  WindowButton (int type)
   : nux::Button ("X", NUX_TRACKER_LOCATION)
   {
+    if (type == BUTTON_CLOSE)
+      LoadImages ("close");
+    else if (type == BUTTON_MINIMISE)
+      LoadImages ("minimize");
+    else
+      LoadImages ("unmaximize");
 
+    LoadTextures ();
   }
 
   ~WindowButton ()
   {
-
+    delete _normal_layer;
+    delete _prelight_layer;
+    delete _pressed_layer;
   }
+
+  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+  {
+    nux::Geometry geo = GetGeometry ();
+    nux::AbstractPaintLayer *alayer;
+  
+    GfxContext.PushClippingRectangle (geo);
+    
+    nux::ROPConfig rop; 
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+ 
+    nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
+    gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
+
+    if (HasMouseFocus ())
+      alayer = _pressed_layer;
+    else if (IsMouseInside ())
+      alayer = _prelight_layer;
+    else
+      alayer = _normal_layer;
+
+    gPainter.PushDrawLayer (GfxContext, GetGeometry (), alayer);
+
+    gPainter.PopBackground ();
+ 
+    GfxContext.PopClippingRectangle();
+  }
+
+  void LoadImages (const char *name)
+  {
+    gchar  *filename;
+    GError *error = NULL;
+
+    filename = g_strdup_printf ("%s/%s.png", AMBIANCE, name);
+    _normal = gdk_pixbuf_new_from_file (filename, &error);
+    if (error)
+    {
+      g_warning ("Unable to load window button %s: %s", filename, error->message);
+      g_error_free (error);
+      error = NULL;
+    }
+    g_free (filename);
+
+    filename = g_strdup_printf ("%s/%s_focused_prelight.png", AMBIANCE, name);
+    _prelight = gdk_pixbuf_new_from_file (filename, &error);
+    if (error)
+    {
+      g_warning ("Unable to load window button %s: %s", filename, error->message);
+      g_error_free (error);
+      error = NULL;
+    }
+    g_free (filename);
+
+    filename = g_strdup_printf ("%s/%s_focused_pressed.png", AMBIANCE, name);
+    _pressed = gdk_pixbuf_new_from_file (filename, &error);
+    if (error)
+    {
+      g_warning ("Unable to load window button %s: %s", name, error->message);
+      g_error_free (error);
+      error = NULL;
+    }
+    g_free (filename);
+  }
+
+  void LoadTextures ()
+  {
+    nux::BaseTexture *texture;   
+    nux::ROPConfig rop; 
+    nux::TexCoordXForm texxform;
+
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    
+    texture = nux::CreateTextureFromPixbuf (_normal);
+    _normal_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
+                                          texxform,
+                                          nux::Color::White,
+                                          false, 
+                                          rop);
+    texture->UnReference ();
+
+    texture = nux::CreateTextureFromPixbuf (_prelight);
+    _prelight_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
+                                             texxform,
+                                             nux::Color::White,
+                                             false, 
+                                             rop);
+    texture->UnReference ();
+    
+    texture = nux::CreateTextureFromPixbuf (_pressed);
+    _pressed_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
+                                            texxform,
+                                            nux::Color::White,
+                                            false, 
+                                            rop);
+
+    SetMinimumSize (texture->GetWidth (), texture->GetHeight ());
+
+    texture->UnReference ();
+
+    g_object_unref (_normal);
+    g_object_unref (_prelight);
+    g_object_unref (_pressed);
+  }
+
+private:
+  GdkPixbuf *_normal;
+  GdkPixbuf *_prelight;
+  GdkPixbuf *_pressed;
+
+  nux::AbstractPaintLayer *_normal_layer;
+  nux::AbstractPaintLayer *_prelight_layer;
+  nux::AbstractPaintLayer *_pressed_layer;
 };
+
 
 WindowButtons::WindowButtons ()
 {
   WindowButton *but;
 
-  but = new WindowButton ();
-  AddView (but, 0, nux::eCenter, nux::eFull);
+  but = new WindowButton (BUTTON_CLOSE);
+  AddView (but, 0, nux::eCenter, nux::eFix);
 
-  but = new WindowButton ();
-  AddView (but, 0, nux::eCenter, nux::eFull);
+  but = new WindowButton (BUTTON_MINIMISE);
+  AddView (but, 0, nux::eCenter, nux::eFix);
 
-  but = new WindowButton ();
-  AddView (but, 0, nux::eCenter, nux::eFull);
+  but = new WindowButton (BUTTON_UNMAXIMISE);
+  AddView (but, 0, nux::eCenter, nux::eFix);
   
   SetContentDistribution (nux::eStackLeft);
 }
