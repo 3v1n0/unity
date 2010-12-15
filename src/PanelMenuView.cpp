@@ -47,7 +47,8 @@ PanelMenuView::PanelMenuView ()
 : _matcher (NULL),
   _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
-  _is_inside (false)
+  _is_inside (false),
+  _last_active_view (NULL)
 {  
   _matcher = bamf_matcher_get_default ();
   g_signal_connect (_matcher, "active-window-changed",
@@ -144,7 +145,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_inside)
+  if (_is_inside || _last_active_view)
     geo.width = PADDING + BUTTONS_WIDTH;
  
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
@@ -161,7 +162,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (_is_inside)
+  if (_is_inside || _last_active_view)
   {
     _layout->ProcessDraw (GfxContext, force_draw);
   }
@@ -328,9 +329,28 @@ PanelMenuView::Refresh ()
 }
 
 void
+PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
+                                bool                           is_active)
+{
+  if (is_active)
+    _last_active_view = view;
+  else
+  {
+    if (_last_active_view == view)
+    {
+      _last_active_view = NULL;
+    }
+  }
+
+  _menu_layout->NeedRedraw ();
+  NeedRedraw ();
+}
+
+void
 PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
+  view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
@@ -367,6 +387,16 @@ PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
   }
 
   this->ComputeChildLayout (); 
+  NeedRedraw ();
+}
+
+void
+PanelMenuView::AllMenusClosed ()
+{
+  _is_inside = false;
+  _last_active_view = false;
+
+  _menu_layout->NeedRedraw ();
   NeedRedraw ();
 }
 

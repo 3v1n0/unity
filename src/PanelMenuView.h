@@ -44,8 +44,10 @@ public:
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
+  void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
 
   void Refresh ();
+  void AllMenusClosed ();
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
@@ -62,5 +64,6 @@ private:
   nux::CairoGraphics       _util_cg;
 
   bool  _is_inside;
+  PanelIndicatorObjectEntryView *_last_active_view;
 };
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H

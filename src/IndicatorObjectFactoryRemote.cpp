@@ -227,7 +227,9 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
-  } 
+  }
+
+  IndicatorObjectFactory::OnEntryActivated.emit (entry_id);
 }
 
 void

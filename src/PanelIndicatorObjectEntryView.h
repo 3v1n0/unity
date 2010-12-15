@@ -37,9 +37,12 @@ public:
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
   void Activate ();
+  void OnActiveChanged (bool is_active);
 
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
+
+  sigc::signal<void, PanelIndicatorObjectEntryView *, bool> active_changed;
 
 public:
   IndicatorObjectEntryProxy *_proxy;

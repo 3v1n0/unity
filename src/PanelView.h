@@ -44,6 +44,7 @@ public:
   void OnObjectAdded (IndicatorObjectProxy *proxy);
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
+  void OnEntryActivated (const char *entry_id);
   
   PanelHomeButton * HomeButton ();
 

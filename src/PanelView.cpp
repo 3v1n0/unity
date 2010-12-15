@@ -56,6 +56,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
   _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
+  _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
 }
 
 PanelView::~PanelView ()
@@ -295,4 +296,11 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
       }
     }
   }
+}
+
+void
+PanelView::OnEntryActivated (const char *entry_id)
+{
+  if (g_strcmp0 (entry_id, "") == 0)
+    _menu_view->AllMenusClosed ();
 }
