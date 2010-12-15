@@ -24,7 +24,9 @@
 
 #include <sigc++/sigc++.h>
 
-class PluginAdapter : public sigc::trackable
+#include "WindowManager.h"
+
+class PluginAdapter : public sigc::trackable, public WindowManager
 {
 public:
     static PluginAdapter * Default ();
@@ -46,6 +48,9 @@ public:
     void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
     
     void Notify (CompWindow *window, CompWindowNotify notify);
+
+    // WindowManager implementation
+    bool IsWindowMaximized (guint xid);
     
     sigc::signal<void, CompWindow *> window_maximized;
     sigc::signal<void, CompWindow *> window_restored;

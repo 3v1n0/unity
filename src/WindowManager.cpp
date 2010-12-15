@@ -22,10 +22,9 @@ static WindowManager *window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
-  void GetWindowMaximizedState (guint32 xid, bool& is_maxmized, bool& can_maximize)
+  bool IsWindowMaximized (guint32 xid)
   {
-    is_maxmized = false;
-    can_maximize = true;
+    return false;
   }
 };
 

@@ -50,6 +50,7 @@ PanelMenuView::PanelMenuView ()
   _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
   _is_inside (false),
+  _is_maximized (false),
   _last_active_view (NULL)
 {  
   _matcher = bamf_matcher_get_default ();
@@ -160,8 +161,9 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (_is_inside || _last_active_view)
     geo.width = PADDING + BUTTONS_WIDTH;
- 
-  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
+
+  if (!_is_maximized)
+    gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
 
   gPainter.PopBackground ();
  
@@ -178,8 +180,10 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   if (_is_inside || _last_active_view)
   {
     _layout->ProcessDraw (GfxContext, force_draw);
-    _window_buttons->ProcessDraw (GfxContext, force_draw);
   }
+
+  if (_is_maximized)
+    _window_buttons->ProcessDraw (GfxContext, force_draw);
 
   GfxContext.PopClippingRectangle();
 }
@@ -357,6 +361,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
   }
 
   _menu_layout->NeedRedraw ();
+  _window_buttons->NeedRedraw ();
   NeedRedraw ();
 }
 
@@ -411,6 +416,25 @@ PanelMenuView::AllMenusClosed ()
   _last_active_view = false;
 
   _menu_layout->NeedRedraw ();
+  _window_buttons->NeedRedraw ();
+  NeedRedraw ();
+}
+
+void
+PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
+                                      BamfView *new_view)
+{
+  _is_maximized = false;
+
+  if (BAMF_IS_WINDOW (new_view))
+  {
+    BamfWindow *window = BAMF_WINDOW (new_view);
+    _is_maximized = WindowManager::Default ()->IsWindowMaximized (bamf_window_get_xid (window));
+  }
+
+  Refresh ();
+  _menu_layout->NeedRedraw ();
+  _window_buttons->NeedRedraw ();
   NeedRedraw ();
 }
 
@@ -447,11 +471,5 @@ on_active_window_changed (BamfMatcher   *matcher,
                           BamfView      *new_view,
                           PanelMenuView *self)
 {
-  bool                  is_maxmized = false;
-  bool                  can_maximize = false;
-
-  WindowManager::Default ()->GetWindowMaximizedState (0, is_maxmized, can_maximize);
-  
-  self->Refresh ();
-  self->NeedRedraw ();
+  self->OnActiveWindowChanged (old_view, new_view);
 }

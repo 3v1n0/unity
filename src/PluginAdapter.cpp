@@ -175,3 +175,19 @@ PluginAdapter::InitiateExpo ()
     
     m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
 }
+
+// WindowManager implementation
+bool
+PluginAdapter::IsWindowMaximized (guint xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    return window->state () & MAXIMIZE_STATE;
+  }
+
+  return false;
+}

@@ -46,6 +46,7 @@ public:
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
+  void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
 
   void Refresh ();
   void AllMenusClosed ();
@@ -64,7 +65,8 @@ private:
   nux::HLayout            *_menu_layout;
   nux::CairoGraphics       _util_cg;
 
-  bool  _is_inside;
+  bool _is_inside;
+  bool _is_maximized; 
   PanelIndicatorObjectEntryView *_last_active_view;
 
   WindowButtons *_window_buttons;

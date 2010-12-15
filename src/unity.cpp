@@ -442,6 +442,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   debugger = new IntrospectionDBusInterface (this);
 
   PluginAdapter::Initialize (screen);
+  WindowManager::SetDefault (PluginAdapter::Default ());
 
   optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
