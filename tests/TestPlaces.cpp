@@ -58,8 +58,6 @@ TestRunner::~TestRunner ()
 void TestRunner::Init ()
 {
   controller = new PlacesController ();
-  controller->_Window->SetBaseXY (0, 0);
-  controller->_Window->SetBaseSize (800, 600);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

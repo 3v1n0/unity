@@ -439,6 +439,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   END_FUNCTION ();
+  g_timeout_add (5000, write_logger_data_to_disk, NULL);
 }
 
 UnityScreen::~UnityScreen ()

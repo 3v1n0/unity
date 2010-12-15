@@ -60,15 +60,11 @@ PlacesController::~PlacesController ()
 void PlacesController::Show ()
 {
   // show called
-  g_debug ("Places Show");
   _Window->Show ();
-
 }
 
 void PlacesController::Hide ()
 {
-  g_debug ("Places Hide");
-
   _Window->Hide ();
 }
 
@@ -84,13 +80,14 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  geo = nux::Geometry(0, 0, 1024, 600);
+  GdkScreen *screen = gdk_screen_get_default ();
+  int height = gdk_screen_get_height (screen) - 12;
+  geo = nux::Geometry(30, 12, 1024, height);
 }
 
 void
 PlacesController::ExternalActivation (GVariant *data, void *val)
 {
-  g_debug ("external activation");
   if (g_getenv ("UNITY_ENABLE_PLACES"))
     {
       PlacesController *self = (PlacesController*)val;
