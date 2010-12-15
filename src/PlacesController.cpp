@@ -82,7 +82,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 {
   GdkScreen *screen = gdk_screen_get_default ();
   int height = gdk_screen_get_height (screen) - 12;
-  geo = nux::Geometry(30, 12, 1024, height);
+  geo = nux::Geometry(32, 12, 1024, height);
 }
 
 void
