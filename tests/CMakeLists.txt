@@ -113,6 +113,18 @@ add_executable (test-quicklist
                 ../src/QuicklistView.h
                 )
 
+add_executable (test-places-backend
+                TestPlacesBackend.cpp
+                ../src/PlaceEntryRemote.cpp
+                ../src/PlaceEntryRemote.h
+                ../src/PlaceEntry.h
+                ../src/PlaceFactoryFile.cpp
+                ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.h
+                ../src/PlaceRemote.cpp
+                ../src/PlaceRemote.h
+                ../src/Place.h
+                )
 #
 # check target
 #
