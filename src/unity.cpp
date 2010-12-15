@@ -3,6 +3,7 @@
  *
  * Copyright (c) 2010 Sam Spilsbury <smspillaz@gmail.com>
  *                    Jason Smith <jason.smith@canonical.com>
+ * Copyright (c) 2010 Canonical Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -29,6 +30,7 @@
 #include "LauncherIcon.h"
 #include "LauncherController.h"
 #include "PluginAdapter.h"
+#include "StartupNotifyService.h"
 #include "unity.h"
 
 #include <dbus/dbus.h>
@@ -37,455 +39,449 @@
 
 #include <core/atoms.h>
 
-/* You must also call this. This creates a proper vTable for a plugin name in the 
- * first argument (it's a macro, so you don't need a string). This changes from
- * time to time as the vTable changes, so it is a good way of ensure plugins keep
- * current */
+#include "../libunity/perf-logger-utility.h"
 
+/* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
-/* This is the function that is called before the screen is 're-painted'. It is used for animation
- * and such because it gives you a time difference between when the last time the screen was repainted
- * and the current time of the execution of the functions in milliseconds). It's part of the composite
- * plugin's interface
- */
- 
-static bool paint_required = false;
 static UnityScreen *uScreen = 0;
-
-void
-UnityScreen::preparePaint (int ms)
-{
-    /* At the end of every function, you must call BaseClass->functionName (args) in order to pass on
-     * the call chain */
-    cScreen->preparePaint (ms);
-    paint_required = true;
-}
 
 void
 UnityScreen::nuxPrologue ()
 {
-    glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
-    
-    glMatrixMode (GL_PROJECTION);
-    glPushMatrix ();
-    
-    glMatrixMode (GL_MODELVIEW);
-    glPushMatrix ();
+  /* reset matrices */
+  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
-    glGetError();
+  glMatrixMode (GL_PROJECTION);
+  glPushMatrix ();
+
+  glMatrixMode (GL_MODELVIEW);
+  glPushMatrix ();
+
+  glGetError();
 }
 
 void
 UnityScreen::nuxEpilogue ()
 {
-    (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
 
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity ();
-    glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity ();
-    glDepthRange (0, 1);
-    glViewport (-1, -1, 2, 2);
-    glRasterPos2f (0, 0);
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity ();
+  glMatrixMode (GL_MODELVIEW);
+  glLoadIdentity ();
+  glDepthRange (0, 1);
+  glViewport (-1, -1, 2, 2);
+  glRasterPos2f (0, 0);
 
-    gScreen->resetRasterPos ();
+  gScreen->resetRasterPos ();
 
-    glMatrixMode (GL_PROJECTION);
-    glPopMatrix ();
-    glMatrixMode (GL_MODELVIEW);
-    glPopMatrix ();
+  glMatrixMode (GL_PROJECTION);
+  glPopMatrix ();
+  glMatrixMode (GL_MODELVIEW);
+  glPopMatrix ();
 
-    glDrawBuffer (GL_BACK);
-    glReadBuffer (GL_BACK);
+  glDrawBuffer (GL_BACK);
+  glReadBuffer (GL_BACK);
 
-    glPopAttrib ();
+  glPopAttrib ();
 }
 
 void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
-    nuxPrologue ();
-    wt->RenderInterfaceFromForeignCmd ();
-    nuxEpilogue ();
+  nuxPrologue ();
+  wt->RenderInterfaceFromForeignCmd ();
+  nuxEpilogue ();
+
+  doShellRepaint = false;
 }
 
-/* This is the guts of the paint function. You can transform the way the entire output is painted
- * or you can just draw things on screen with openGL. The unsigned int here is a mask for painting
- * the screen, see opengl/opengl.h on how you can change it */
-
+/* called whenever we need to repaint parts of the screen */
 bool
-UnityScreen::glPaintOutput (const GLScreenPaintAttrib &attrib, // Some basic attribs on how the screen should be painted
-			      const GLMatrix		&transform, // Screen transformation matrix
-			      const CompRegion		&region, // Region of screen being painted
-			      CompOutput 		*output, // Output properties. Use this to the get output width and height for the output being painted
-			      unsigned int		mask /* Some other paint properties, see opengl.h */)
+UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
+			    const GLMatrix		&transform,
+			    const CompRegion		&region,
+			    CompOutput 			*output,
+			    unsigned int		mask)
 {
-    bool ret;
+  bool ret;
 
-    /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
-    ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
-    
-    if (paint_required)
-        paintDisplay (region);
-    
-    return ret;
+  doShellRepaint = true;
+  allowWindowPaint = true;
+
+  /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
+  ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
+
+  if (doShellRepaint)
+    paintDisplay (region);
+
+  return ret;
 }
 
-/* This is called when the output is transformed by a matrix. Basically the same, but core has
- * done a few things for us like clip planes etc */
+/* called whenever a plugin needs to paint the entire scene
+ * transformed */
 
 void
-UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib, // Some basic attribs on how the screen should be painted
-			      		 const GLMatrix		&transform, // Screen transformation matrix
-			      		 const CompRegion	&region, // Region of screen being painted
-			      		 CompOutput 		*output, // Output properties. Use this to the get output width and height for the output being painted
-			      		 unsigned int		mask /* Some other paint properties, see opengl.h */)
+UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib,
+			      	       const GLMatrix		 &transform,
+			      	       const CompRegion		 &region,
+			      	       CompOutput 		 *output,
+			      	       unsigned int		 mask)
 {
-    /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
-    gScreen->glPaintOutput (attrib, transform, region, output, mask);
+  allowWindowPaint = false;
+  gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
 
-/* This is called after screen painting is finished. It gives you a chance to do any cleanup and or
- * call another repaint with screen->damageScreen (). It's also part of the composite plugin's
- * interface.
- */
-
-void
-UnityScreen::donePaint ()
-{
-    cScreen->donePaint ();
-}
-
+/* Grab changed nux regions and add damage rects for them */
 void
 UnityScreen::damageNuxRegions ()
 {
-    CompRegion region;
-    std::vector<nux::Geometry>::iterator it;
-    std::vector<nux::Geometry> dirty = wt->GetDrawList ();
-    nux::Geometry geo;
-	    
-    for (it = dirty.begin (); it != dirty.end (); it++)
-    {
-       	geo = *it;
-      	cScreen->damageRegion (CompRegion (geo.x, geo.y, geo.width, geo.height));
-    }
-	    
-    geo = wt->GetWindowCompositor ().GetTooltipMainWindowGeometry();
+  CompRegion region;
+  std::vector<nux::Geometry>::iterator it;
+  std::vector<nux::Geometry> dirty = wt->GetDrawList ();
+  nux::Geometry geo;
+
+  for (it = dirty.begin (); it != dirty.end (); it++)
+  {
+    geo = *it;
     cScreen->damageRegion (CompRegion (geo.x, geo.y, geo.width, geo.height));
-    cScreen->damageRegion (CompRegion (lastTooltipArea.x, lastTooltipArea.y, lastTooltipArea.width, lastTooltipArea.height));
-	    
-    lastTooltipArea = geo;
-    
-    wt->ClearDrawList ();
+  }
+
+  geo = wt->GetWindowCompositor ().GetTooltipMainWindowGeometry();
+  cScreen->damageRegion (CompRegion (geo.x, geo.y, geo.width, geo.height));
+  cScreen->damageRegion (CompRegion (lastTooltipArea.x, lastTooltipArea.y, lastTooltipArea.width, lastTooltipArea.height));
+
+  lastTooltipArea = geo;
+
+  wt->ClearDrawList ();
 }
 
-/* This is our event handler. It directly hooks into the screen's X Event handler and allows us to handle
- * our raw X Events
- */
-
+/* handle X Events */
 void
 UnityScreen::handleEvent (XEvent *event)
 {
-    screen->handleEvent (event);
+  screen->handleEvent (event);
 
-    if (screen->otherGrabExist ("deco", "move", NULL))
-    {
-      wt->ProcessForeignEvent (event, NULL);
-    }
+  if (screen->otherGrabExist ("deco", "move", NULL))
+  {
+    wt->ProcessForeignEvent (event, NULL);
+  }
 }
 
+
+gboolean
+UnityScreen::initPluginActions (gpointer data)
+{
+  CompPlugin *p;
+
+  p = CompPlugin::find ("expo");
+
+  if (p)
+  {
+    foreach (CompOption &option, p->vTable->getOptions ())
+    {
+      if (option.name () == "expo_key")
+      {
+        CompAction *action = &option.value ().action ();
+        PluginAdapter::Default ()->SetExpoAction (action);
+        break;
+      }
+    }
+  }
+
+  p = CompPlugin::find ("scale");
+
+  if (p)
+  {
+    foreach (CompOption &option, p->vTable->getOptions ())
+    {
+      if (option.name () == "initiate_all_key")
+      {
+        CompAction *action = &option.value ().action ();
+        PluginAdapter::Default ()->SetScaleAction (action);
+        break;
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+/* Set up expo and scale actions on the launcher */
 bool
 UnityScreen::initPluginForScreen (CompPlugin *p)
 {
-    if (g_strcmp0 (p->vTable->name ().c_str (), "expo") == 0)
-    {
-        CompOption::Vector &options = p->vTable->getOptions ();
-        
-        foreach (CompOption& option, options)
-        {
-          if (g_strcmp0 (option.name ().c_str () , "expo_key") == 0)
-          {
-              CompAction *expoAction = &option.value ().action ();
-              
-              PluginAdapter::Default ()->SetExpoAction (expoAction);
-              break;
-          }
-        }
-    }
-    
-    if (g_strcmp0 (p->vTable->name ().c_str (), "scale") == 0)
-    {
-        CompOption::Vector &options = p->vTable->getOptions ();
-        
-        foreach (CompOption& option, options)
-        {
-          if (g_strcmp0 (option.name ().c_str () , "initiate_all_key") == 0)
-          {
-              CompAction *scaleAction = &option.value ().action ();
-              
-              PluginAdapter::Default ()->SetScaleAction (scaleAction);
-              break;
-          }
-        }
-    }
+  if (p->vTable->name () == "expo" ||
+      p->vTable->name () == "scale")
+  {
+    initPluginActions ((void *) this);
+  }
 
-    screen->initPluginForScreen (p);
-    return true;
+  return screen->initPluginForScreen (p);
 }
 
-/* This gets called whenever the window needs to be repainted. WindowPaintAttrib gives you some
- * attributes like brightness/saturation etc to play around with. GLMatrix is the window's
- * transformation matrix. the unsigned int is the mask, have a look at opengl.h on what you can do
- * with it */
-
-bool
-UnityWindow::glPaint (const GLWindowPaintAttrib &attrib, // Brightness, Saturation, Opacity etc
-      const GLMatrix &transform, // Transformation Matrix
-      const CompRegion &region, // Repaint region
-      unsigned int mask) // Other flags. See opengl.h
+void
+UnityScreen::AddProperties (GVariantBuilder *builder)
 {
-    bool ret;
-    ret = gWindow->glPaint (attrib, transform, region, mask);
-    return ret;
 }
 
-bool 
+const gchar*
+UnityScreen::GetName ()
+{
+  return "Unity";
+}
+
+const CompWindowList &
+UnityScreen::getWindowPaintList ()
+{
+  CompWindowList &pl = _withRemovedNuxWindows = cScreen->getWindowPaintList ();
+  CompWindowList::iterator it = pl.end ();
+  const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
+
+  while (it != pl.begin ())
+  {
+    it--;
+
+    if (std::find (xwns.begin (), xwns.end (), (*it)->id ()) != xwns.end ())
+    {
+      CompWindowList::iterator pit = it;
+      pl.erase (pit);
+    }
+  }
+
+  return pl;
+}
+
+/* handle window painting in an opengl context
+ *
+ * we want to paint underneath other windows here,
+ * so we need to find if this window is actually
+ * stacked on top of one of the nux input windows
+ * and if so paint nux and stop us from painting
+ * other windows or on top of the whole screen */
+bool
 UnityWindow::glDraw (const GLMatrix 	&matrix,
-			     GLFragment::Attrib &attrib,
-			     const CompRegion 	&region,
-			     unsigned int	mask)
+		     GLFragment::Attrib &attrib,
+		     const CompRegion 	&region,
+		     unsigned int	mask)
 {
-    bool ret;
-    
-    if (paint_required && uScreen && window->type () & (CompWindowTypeMenuMask | 
-                                                        CompWindowTypeDropdownMenuMask | 
-                                                        CompWindowTypePopupMenuMask |
-                                                        CompWindowTypeComboMask |
-                                                        CompWindowTypeTooltipMask |
-                                                        CompWindowTypeDndMask
-                                                        ))
+  if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
+  {
+    const std::list <Window> &xwns = nux::XInputWindow::NativeHandleList ();
+
+    for (CompWindow *w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
+      if (std::find (xwns.begin (), xwns.end (), w->id ()) != xwns.end ())
+      {
         uScreen->paintDisplay (region);
-        paint_required = false;
+      }
     }
+  }
 
-    ret = gWindow->glDraw (matrix, attrib, region, mask);
+  bool ret = gWindow->glDraw (matrix, attrib, region, mask);
 
-    return ret;
-}
-/* This get's called whenever a window's rect is damaged. You can do stuff here or you can adjust the damage
- * rectangle so that the window will update properly. Part of the CompositeWindowInterface.
- */
-
-bool
-UnityWindow::damageRect (bool initial, // initial damage?
-    const CompRect &rect) // The actual rect. Modifyable.
-{
-    bool ret;
-
-    ret = cWindow->damageRect (initial, rect);
-
-    return ret;
+  return ret;
 }
 
-/* This is called whenever the window is focussed */
-
-bool
-UnityWindow::focus ()
-{
-    bool ret;
-
-    ret = window->focus ();
-
-    return ret;
-}
-
-/* This is called whenever the window is activated */
-
-void
-UnityWindow::activate ()
-{
-    window->activate ();
-}
-
-/* This is called whenever the window must be placed. You can alter the placement position by altering
- * the CompPoint & */
-
-bool
-UnityWindow::place (CompPoint &point)
-{
-    bool ret;
-
-    ret = window->place (point);
-    return ret;
-}
-
-/* This is called whenever the window is moved. It tells you how far it's been moved and whether that
- * move should be immediate or animated. (Immediate is usually for a sudden move, false for that
- * usually means the user moved the window */
-
-void
-UnityWindow::moveNotify (int dx,
-            int dy,
-            bool immediate)
-{
-    window->moveNotify (dx, dy, immediate);
-}
-
-/* This is called whenever the window is resized. It tells you how much the window has been resized */
-
-void
-UnityWindow::resizeNotify (int dx,
-              int dy,
-              int dwidth,
-              int dheight)
-{
-    window->resizeNotify (dx, dy, dwidth, dheight);
-}
-
-/* This is called when another plugin deems a window to be 'grabbed'. You can't actually 'grab' a
- * window in X, but it is useful in case you need to know when a user has grabbed a window for some reason */
-
-void
-UnityWindow::grabNotify (int x,
-            int y,
-            unsigned int state,
-            unsigned int mask)
-{
-    window->grabNotify (x, y, state, mask);
-}
-
-/* This is called when a window in released from a grab. See above */
-
-void
-UnityWindow::ungrabNotify ()
-{
-    window->ungrabNotify ();
-}
-
-/* This is called when another misc notification arises, such as Map/Unmap etc */
-
+/* Called whenever a window is mapped, unmapped, minimized etc */
 void
 UnityWindow::windowNotify (CompWindowNotify n)
 {
-    window->windowNotify (n);
+  PluginAdapter::Default ()->Notify (window, n);
+  
+  switch (n)
+  {
+    case CompWindowNotifyMinimize:
+      uScreen->controller->PresentIconOwningWindow (window->id ());
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyUnminimize:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyShade:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyUnshade:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyHide:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    case CompWindowNotifyShow:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyMap:
+      uScreen->launcher->OnWindowAppear (window);
+      break;
+    case CompWindowNotifyUnmap:
+      uScreen->launcher->OnWindowDisappear (window);
+      break;
+    default:
+      break;
+  }
+
+  window->windowNotify (n);
 }
 
-
 void 
+UnityWindow::stateChangeNotify (unsigned int lastState)
+{
+  PluginAdapter::Default ()->NotifyStateChange (window, window->state (), lastState);
+  window->stateChangeNotify (lastState);
+}
+
+void
+UnityWindow::moveNotify (int x, int y, bool immediate)
+{
+  uScreen->launcher->OnWindowMoved (window);
+  window->moveNotify (x, y, immediate);
+}
+
+void
+UnityWindow::resizeNotify (int x, int y, int w, int h)
+{
+  uScreen->launcher->OnWindowResized (window);
+  window->resizeNotify (x, y, w, h);
+}
+
+/* Configure callback for the launcher window */
+void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-    int OurWindowHeight = WindowHeight - 24;
-    geo = nux::Geometry(0, 24, geo.width, OurWindowHeight);
+  int OurWindowHeight = WindowHeight - 24;
+  geo = nux::Geometry(0, 24, geo.width, OurWindowHeight);
 }
 
-void 
+/* Configure callback for the panel window */
+void
 UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-    geo = nux::Geometry(0, 0, WindowWidth, 24);
+  geo = nux::Geometry(0, 0, WindowWidth, 24);
 }
 
-
-void 
+/* Start up nux after OpenGL is initialized */
+void
 UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
-    initLauncher(thread, InitData);
-      
-    nux::ColorLayer background(nux::Color(0x00000000));
-    static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
+  START_FUNCTION ();
+  initLauncher(thread, InitData);
+
+  nux::ColorLayer background(nux::Color(0x00000000));
+  static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
+  END_FUNCTION ();
 }
 
-void 
+void
 UnityScreen::onRedrawRequested ()
 {
   damageNuxRegions ();
 }
 
+/* Handle option changes and plug that into nux windows */
 void
 UnityScreen::optionChanged (CompOption            *opt,
 			    UnityshellOptions::Options num)
 {
-    switch (num)
-    {
-        case UnityshellOptions::LauncherAutohide:
-	          launcher->SetAutohide (optionGetLauncherAutohide (),
-                                   (nux::View *) panelView->HomeButton ());
-            break;
-        case UnityshellOptions::LauncherFloat:
-            launcher->SetFloating (optionGetLauncherFloat ());
-	          break;
-        default:
-            break;
-    }
+  switch (num)
+  {
+    case UnityshellOptions::LauncherAutohide:
+      launcher->SetAutohide (optionGetLauncherAutohide (),
+                             (nux::View *) panelView->HomeButton ());
+      break;
+    case UnityshellOptions::LauncherFloat:
+      launcher->SetFloating (optionGetLauncherFloat ());
+      break;
+    default:
+      break;
+  }
 }
 
-UnityScreen::UnityScreen (CompScreen *screen) :// The constructor takes a CompScreen *,
-    PluginClassHandler <UnityScreen, CompScreen> (screen), // Initiate PluginClassHandler class template
+static gboolean
+write_logger_data_to_disk (gpointer data)
+{
+  perf_timeline_logger_write_log (perf_timeline_logger_get_default (), "/tmp/unity-perf.log");
+  return FALSE;
+}
+
+UnityScreen::UnityScreen (CompScreen *screen) :
+    PluginClassHandler <UnityScreen, CompScreen> (screen),
     screen (screen),
     cScreen (CompositeScreen::get (screen)),
-    gScreen (GLScreen::get (screen))
+    gScreen (GLScreen::get (screen)),
+    doShellRepaint (false)
 {
-    int (*old_handler) (Display *, XErrorEvent *);
-    old_handler = XSetErrorHandler (NULL);
-    
-    g_thread_init (NULL);
-    dbus_g_thread_init ();
-    gtk_init (NULL, NULL);
-    
-    XSetErrorHandler (old_handler);
-    
-    ScreenInterface::setHandler (screen); // Sets the screen function hook handler
-    CompositeScreenInterface::setHandler (cScreen); // Ditto for cScreen
-    GLScreenInterface::setHandler (gScreen); // Ditto for gScreen
+  START_FUNCTION ();
+  int (*old_handler) (Display *, XErrorEvent *);
+  old_handler = XSetErrorHandler (NULL);
 
-    nux::NuxInitialize (0);
-    wt = nux::CreateFromForeignWindow (cScreen->output (), 
-                                       glXGetCurrentContext (),	
-                                       &UnityScreen::initUnity,
-                                       this);
-    
-    wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
-    
-    wt->Run (NULL);
-    uScreen = this;
-    
-    PluginAdapter::Initialize (screen);
+  g_thread_init (NULL);
+  dbus_g_thread_init ();
+  gtk_init (NULL, NULL);
 
-    optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-    optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  XSetErrorHandler (old_handler);
+
+  /* Wrap compiz interfaces */
+  ScreenInterface::setHandler (screen);
+  CompositeScreenInterface::setHandler (cScreen);
+  GLScreenInterface::setHandler (gScreen);
+
+  StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
+
+  nux::NuxInitialize (0);
+  wt = nux::CreateFromForeignWindow (cScreen->output (),
+                                     glXGetCurrentContext (),
+                                     &UnityScreen::initUnity,
+                                     this);
+
+  wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
+
+  wt->Run (NULL);
+  uScreen = this;
+
+  debugger = new IntrospectionDBusInterface (this);
+
+  PluginAdapter::Initialize (screen);
+
+  optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+
+  g_timeout_add (0, &UnityScreen::initPluginActions, this);
+  END_FUNCTION ();
 }
-
-/* This is the destructor. It is called when the class is destroyed. If you allocated any
- * memory or need to do some cleanup, here is where you do it. Note the tilde (~)?
- */
 
 UnityScreen::~UnityScreen ()
 {
 }
 
+/* Can't create windows until after we have initialized everything */
 gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
-    UnityScreen *self = (UnityScreen*) data;  
-    
-    if (!self->launcher->AutohideEnabled ())
-    {
-        self->launcherWindow->InputWindowEnableStruts(false);
-        self->launcherWindow->InputWindowEnableStruts(true);
-    }
-    
-    self->panelWindow->InputWindowEnableStruts(false);
-    self->panelWindow->InputWindowEnableStruts(true);
-    
-    return FALSE;
+  UnityScreen *self = (UnityScreen*) data;
+
+  if (!self->launcher->AutohideEnabled ())
+  {
+    self->launcherWindow->InputWindowEnableStruts(false);
+    self->launcherWindow->InputWindowEnableStruts(true);
+  }
+
+  self->panelWindow->InputWindowEnableStruts(false);
+  self->panelWindow->InputWindowEnableStruts(true);
+
+  return FALSE;
 }
 
+/* Start up the launcher */
 void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 {
+  START_FUNCTION ();
+
   UnityScreen *self = (UnityScreen*) InitData;
-  
+
+  LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
-  self->launcher = new Launcher(self->launcherWindow);
+  self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();
 
@@ -505,9 +501,12 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
 
   self->launcher->SetIconSize (54, 48);
+  LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
+  LOGGER_START_PROCESS ("initLauncher-Panel");
   self->panelView = new PanelView ();
+  self->AddChild (self->panelView);
 
   layout = new nux::HLayout();
 
@@ -524,47 +523,39 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->panelWindow->SetBlurredBackground(false);
   self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true);  
+  self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
-  
+  LOGGER_END_PROCESS ("initLauncher-Panel");
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
-  
-  /*self->launcher->SetAutohide (true, (nux::View*) self->panelView->HomeButton ());
-  self->launcher->SetFloating (true);*/
+
+  END_FUNCTION ();
 }
 
+/* Window init */
 UnityWindow::UnityWindow (CompWindow *window) :
-    PluginClassHandler <UnityWindow, CompWindow> (window), // Initiate our PrivateHandler class template
-    window (window), 
-    cWindow (CompositeWindow::get (window)),
+    PluginClassHandler <UnityWindow, CompWindow> (window),
+    window (window),
     gWindow (GLWindow::get (window))
 {
-    WindowInterface::setHandler (window); // Sets the window function hook handler
-    CompositeWindowInterface::setHandler (cWindow); // Ditto for cWindow
-    GLWindowInterface::setHandler (gWindow); // Ditto for gWindow
+  WindowInterface::setHandler (window);
+  GLWindowInterface::setHandler (gWindow);
 }
 
 UnityWindow::~UnityWindow ()
 {
 }
 
-/* This is the very first function compiz calls. It kicks off plugin initialization */
-
+/* vtable init */
 bool
 UnityPluginVTable::init ()
 {
-    /* Calls to checkPluginABI check the ABI of a particular plugin to see if it is loaded
-     * and in sync with your current build. If it fails the plugin will not load otherwise
-     * compiz will crash.
-     */
+  if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
+    return false;
+  if (!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI))
+    return false;
+  if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
+    return false;
 
-    if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
-	 return false;
-    if (!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI))
-	 return false;
-    if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
-	 return false;
-
-    return true;
+  return true;
 }
 

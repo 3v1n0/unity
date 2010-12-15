@@ -33,8 +33,17 @@
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
 #define S_IFACE "com.canonical.Unity.Panel.Service"
 
+typedef struct
+{
+  GDBusProxy *proxy;
+  gchar *entry_id;
+  int x;
+  int y;
+  guint timestamp;
+  guint32 button;
 
-// Enums
+} ShowEntryData;
+
 
 // Forwards
 static void on_proxy_ready_cb (GObject      *source,
@@ -125,6 +134,35 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
                      this);
 }
 
+static gboolean
+send_show_entry (ShowEntryData *data)
+{
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
+  
+  /* Re-flush 'cos X is crap like that */
+  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  XFlush (d);
+  
+  g_dbus_proxy_call (data->proxy,
+                     "ShowEntry",
+                     g_variant_new ("(suiii)",
+                                    data->entry_id,
+                                    0,
+                                    data->x,
+                                    data->y,
+                                    data->button),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+
+  g_free (data->entry_id);
+  g_slice_free (ShowEntryData, data);
+  return FALSE;
+}
+
 void
 IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
                                                          int         x,
@@ -136,19 +174,18 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
   XUngrabPointer(d, CurrentTime);
   XFlush (d);
 
-  g_dbus_proxy_call (_proxy,
-                     "ShowEntry",
-                     g_variant_new ("(suiii)",
-                                    entry_id,
-                                    0,
-                                    x,
-                                    y,
-                                    button),
-                     G_DBUS_CALL_FLAGS_NONE,
-                     -1,
-                     NULL,
-                     NULL,
-                     NULL);
+  // We have to do this because on certain systems X won't have time to 
+  // respond to our request for XUngrabPointer and this will cause the
+  // menu not to show
+  ShowEntryData *data = g_slice_new0 (ShowEntryData);
+  data->proxy = _proxy;
+  data->entry_id = g_strdup (entry_id);
+  data->x = x;
+  data->y = y;
+  data->timestamp = timestamp;
+  data->button = button;
+
+  g_timeout_add (0, (GSourceFunc)send_show_entry, data);
 
   // --------------------------------------------------------------------------
   // FIXME: This is a workaround until the non-paired events issue is fixed in
@@ -191,6 +228,12 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
   } 
+}
+
+void
+IndicatorObjectFactoryRemote::OnEntryActivateRequestReceived (const gchar *entry_id)
+{
+  OnEntryActivateRequest.emit (entry_id);
 }
 
 IndicatorObjectProxyRemote *
@@ -283,6 +326,27 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
   g_variant_iter_free (iter);
 }
 
+void
+IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
+{
+  gchar *name = NULL;
+  gchar *uname = NULL;
+  
+  g_object_get (_proxy,
+                "g-name", &name,
+                "g-name-owner", &uname,
+                NULL);
+
+  g_variant_builder_add (builder, "{sv}", "backend", g_variant_new_string ("remote"));
+  g_variant_builder_add (builder, "{sv}", "service-name", g_variant_new_string (name));
+  g_variant_builder_add (builder, "{sv}", "service-unique-name", g_variant_new_string (uname));
+  g_variant_builder_add (builder, "{sv}", "using-local-service", g_variant_new_boolean (g_getenv ("PANEL_USE_LOCAL_SERVICE") == NULL ? FALSE : TRUE));
+
+  g_free (name);
+  g_free (uname);
+}
+
+  
 //
 // C callbacks, they just link to class methods and aren't interesting
 //
@@ -377,6 +441,10 @@ on_proxy_signal_received (GDBusProxy *proxy,
   if (g_strcmp0 (signal_name, "EntryActivated") == 0)
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
+  }
+  else if (g_strcmp0 (signal_name, "EntryActivateRequest") == 0)
+  {
+    remote->OnEntryActivateRequestReceived (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
   }
   else if (g_strcmp0 (signal_name, "ReSync") == 0)
   {

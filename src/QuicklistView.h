@@ -25,14 +25,13 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/TextureArea.h"
 #include "NuxImage/CairoGraphics.h"
-#include "StaticCairoText.h"
 
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
+#include "QuicklistMenuItem.h"
+
+#include "Introspectable.h"
 
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
@@ -50,8 +49,10 @@
 class VLayout;
 class HLayout;
 class SpaceLayout;
+class QuicklistMenuItem;
+class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow
+class QuicklistView : public nux::BaseWindow, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (QuicklistView, nux::BaseWindow);
 public:
@@ -72,16 +73,39 @@ public:
   void SetText (nux::NString text);
   
   void RemoveAllMenuItem ();
-  void AddMenuItem (nux::NString str);
+  
+  void AddMenuItem (QuicklistMenuItem* item);
+  
   void RenderQuicklistView ();
 
   void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
   virtual void ShowWindow (bool b, bool StartModal = false);
+
+  void Show ();
+  void Hide ();
   
+  int GetNumItems ();
+  QuicklistMenuItem* GetNthItems (int index);
+  QuicklistMenuItemType GetNthType (int index);
+  std::list<QuicklistMenuItem*> GetChildren ();
+  
+  void TestMenuItems (DbusmenuMenuitem* root);
+  
+  // Introspection
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
+
+  void EnableQuicklistForTesting (bool enable_testing);
+
 private:
-  void RecvCairoTextChanged (nux::StaticCairoText& cairo_text);
-  void RecvCairoTextColorChanged (nux::StaticCairoText& cairo_text);
-  
+  void RecvCairoTextChanged (QuicklistMenuItem* item);
+  void RecvCairoTextColorChanged (QuicklistMenuItem* item);
+  void RecvItemMouseClick (QuicklistMenuItem* item, int x, int y);
+  void RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y);
+  void RecvItemMouseEnter (QuicklistMenuItem* item);
+  void RecvItemMouseLeave (QuicklistMenuItem* item);
+  void RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y);
+
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -99,6 +123,14 @@ private:
 
   void NotifyConfigurationChange (int width, int height);
 
+  //! A convenience function to fill in the default quicklist with some random items.
+  void FillInDefaultItems ();
+  
+  void CancelItemsPrelightStatus ();
+  
+  //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
+  void CheckAndEmitItemSignal (int x, int y);
+  
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
@@ -107,9 +139,14 @@ private:
   int                   _dpiY;
   int                   _top_size; // size of the segment from point 13 to 14. See figure in ql_compute_full_mask_path.
 
+  bool                  _mouse_down;
+
+  //iIf true, suppress the Quicklist behaviour that is expected in Unity.
+  // Keep the Quicklist on screen for testing and automation.
+  bool                  _enable_quicklist_for_testing;
+
   cairo_font_options_t* _fontOpts;
 
-  nux::StaticCairoText* _tooltip_text;
   nux::BaseTexture*     _texture_bg;
   nux::BaseTexture*     _texture_mask;
   nux::BaseTexture*     _texture_outline;
@@ -129,8 +166,12 @@ private:
 
   bool _cairo_text_has_changed;
   void UpdateTexture ();
-  std::list<nux::StaticCairoText*> _item_list;
-  std::list<nux::StaticCairoText*> _default_item_list;
+  std::list<QuicklistMenuItem*> _item_list;
+  std::list<QuicklistMenuItem*> _default_item_list;
+  
+  // Introspection
+  gchar *_name;
+
 };
 
 #endif // QUICKLISTVIEW_H

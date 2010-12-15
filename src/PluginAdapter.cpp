@@ -50,6 +50,49 @@ PluginAdapter::~PluginAdapter()
 }
 
 void
+PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
+{
+  if (!(last_state & MAXIMIZE_STATE) && (state & MAXIMIZE_STATE))
+    window_maximized.emit (window);
+  else if ((last_state & MAXIMIZE_STATE) && !(state & MAXIMIZE_STATE))
+    window_restored.emit (window);
+}
+
+void 
+PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
+{
+  switch (notify)
+  {
+    case CompWindowNotifyMinimize:
+      window_minimized.emit (window);
+      break;
+    case CompWindowNotifyUnminimize:
+      window_unminimized.emit (window);
+      break;
+    case CompWindowNotifyShade:
+      window_shaded.emit (window);
+      break;
+    case CompWindowNotifyUnshade:
+      window_unshaded.emit (window);
+      break;
+    case CompWindowNotifyHide:
+      window_hidden.emit (window);
+      break;
+    case CompWindowNotifyShow:
+      window_shown.emit (window);
+      break;
+    case CompWindowNotifyMap:
+      window_mapped.emit (window);
+      break;
+    case CompWindowNotifyUnmap:
+      window_unmapped.emit (window);
+      break;
+    default:
+      break;
+  }
+}
+
+void
 PluginAdapter::SetExpoAction (CompAction *expo)
 {
     m_ExpoAction = expo;

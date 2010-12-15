@@ -40,10 +40,11 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-    LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window, NUX_FILE_LINE_PROTO);
+    LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
-
+    void PresentIconOwningWindow (Window window);
+    
 private:
     BamfMatcher*     _matcher;
     CompAction*      _expo_action;
@@ -54,7 +55,11 @@ private:
     FavoriteStore*   _favorite_store;
     int              _sort_priority;
 
+    void OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other);
+
     void InsertExpoAction ();
+    
+    void InsertTrash ();
 
     void RegisterIcon (LauncherIcon *icon);
     

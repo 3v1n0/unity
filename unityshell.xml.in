@@ -5,10 +5,34 @@
 	<_long>Plugin to draw the Unity Shell</_long>
 	<deps>
 	    <relation type="after">
+		<plugin>bailer</plugin>
+		<plugin>detection</plugin>
+		<plugin>composite</plugin>
+		<plugin>opengl</plugin>
+		<plugin>mousepoll</plugin>
+		<plugin>move</plugin>
+		<plugin>resize</plugin>
 		<plugin>decor</plugin>
+		<plugin>compiztoolbox</plugin>
+		<plugin>place</plugin>
+		<plugin>session</plugin>
+		<plugin>animation</plugin>
+		<plugin>regex</plugin>
+		<plugin>cube</plugin>
+		<plugin>rotate</plugin>
+		<plugin>cubeaddon</plugin>
+		<plugin>gnomecompat</plugin>
+		<plugin>vpswitch</plugin>
+		<plugin>fade</plugin>
+		<plugin>staticswitcher</plugin>
+		<plugin>scale</plugin>
+		<plugin>expo</plugin>
+		<plugin>ezoom</plugin>
+		<plugin>wall</plugin>
 	    </relation>
 	    <requirement>
 		<plugin>opengl</plugin>
+		<plugin>wall</plugin>
 	    </requirement>
 	</deps>
 	<options>

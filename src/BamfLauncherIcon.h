@@ -35,20 +35,40 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-    BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen, NUX_FILE_LINE_PROTO);
-    ~BamfLauncherIcon();
-    
-    
+    BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
+    virtual ~BamfLauncherIcon();
+
+    const char* DesktopFile ();
+    bool IsSticky ();
+
 protected:
     void OnMouseClick (int button);
-    std::list<DbusmenuClient *> GetMenus ();
+    std::list<DbusmenuMenuitem *> GetMenus ();
+
+    void UpdateIconGeometries (nux::Point3 center);
+    void OnCenterStabilized (nux::Point3 center);
+
+    bool IconOwnsWindow (Window w);
+
+    void AddProperties (GVariantBuilder *builder);
 
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
-    
+    std::map<std::string, DbusmenuClient *> _menu_clients;
+    std::map<std::string, DbusmenuMenuitem *> _menu_items;
+    DbusmenuMenuitem *_menu_desktop_shortcuts;
+
     void EnsureWindowState ();
-    
+
+    void UpdateMenus ();
+
+    void OpenInstance ();
+    void Focus ();
+    void Spread ();
+
+    void EnsureMenuItemsReady ();
+
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
     static void OnActiveChanged (BamfView *view, gboolean active, gpointer data);
@@ -56,6 +76,10 @@ private:
     static void OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data);
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
+
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 
 #endif // BAMFLAUNCHERICON_H

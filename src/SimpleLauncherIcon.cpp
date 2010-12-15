@@ -22,23 +22,23 @@
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"
 
-SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager, NUX_FILE_LINE_DECL)
+SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
 :   LauncherIcon(IconManager)
 {
-    m_Icon = 0;
-    m_IconName = 0;
-    
-    LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
-    LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
-    LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
-    LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
-    LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+  m_Icon = 0;
+  m_IconName = 0;
+  
+  LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
+  LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
+  LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
+  LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
+  LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
-    if (m_Icon)
-      m_Icon->UnReference ();
+  if (m_Icon)
+    m_Icon->UnReference ();
 }
 
 void
@@ -69,21 +69,34 @@ SimpleLauncherIcon::OnMouseLeave ()
 nux::BaseTexture *
 SimpleLauncherIcon::GetTextureForSize (int size)
 {
-    if (m_Icon && size == m_Icon->GetHeight ())
-      return m_Icon;
-      
-    if (m_Icon)
-      m_Icon->UnReference ();
-    
-    if (!m_IconName)
-      return 0;
-    
-    m_Icon = TextureFromGtkTheme (m_IconName, size);
+  if (m_Icon && size == m_Icon->GetHeight ())
     return m_Icon;
+    
+  if (m_Icon)
+    m_Icon->UnReference ();
+  
+  if (!m_IconName)
+    return 0;
+  
+  if (g_str_has_prefix (m_IconName, "/"))
+    m_Icon = TextureFromPath (m_IconName, size);
+  else
+    m_Icon = TextureFromGtkTheme (m_IconName, size);
+  return m_Icon;
 }
 
 void 
 SimpleLauncherIcon::SetIconName (const char *name)
 {
-    m_IconName = g_strdup (name);
+  if (m_IconName)
+    g_free (m_IconName);
+  m_IconName = g_strdup (name);
+  
+  if (m_Icon)
+  {
+    m_Icon->UnReference ();
+    m_Icon = 0;
+  }
+  
+  needs_redraw.emit (this);
 }

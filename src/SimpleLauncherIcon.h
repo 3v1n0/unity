@@ -19,13 +19,6 @@
 #ifndef SIMPLELAUNCHERICON_H
 #define SIMPLELAUNCHERICON_H
 
-/* Compiz */
-#include <core/core.h>
-
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-#include <sigc++/sigc++.h>
-
 #include "LauncherIcon.h"
 
 class Launcher;
@@ -33,8 +26,8 @@ class Launcher;
 class SimpleLauncherIcon : public LauncherIcon
 {
 public:
-    SimpleLauncherIcon(Launcher* IconManager, NUX_FILE_LINE_PROTO);
-    ~SimpleLauncherIcon();
+    SimpleLauncherIcon(Launcher* IconManager);
+    virtual ~SimpleLauncherIcon();
     
     /* override */
     nux::BaseTexture * GetTextureForSize (int size);

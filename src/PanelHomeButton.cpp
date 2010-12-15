@@ -37,6 +37,9 @@ PanelHomeButton::PanelHomeButton ()
 {
   _pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/bfb.png", NULL);
   SetMinMaxSize (BUTTON_WIDTH, PANEL_HEIGHT);
+
+  OnMouseClick.connect (sigc::mem_fun (this, &PanelHomeButton::RecvMouseClick));
+
   Refresh ();
 }
 
@@ -102,4 +105,56 @@ PanelHomeButton::Refresh ()
   delete texture_layer;
   
   NeedRedraw ();
+}
+
+void
+PanelHomeButton::RecvMouseClick (int x,
+                                 int y,
+                                 unsigned long button_flags,
+                                 unsigned long key_flags)
+{
+#define APPS_URI "file:///usr/share/applications"
+
+  /* FIXME: This is just for Alpha 1, so we have some feedback on clicking the
+   * PanelHomeButton, and especially because we don't have any other way of
+   * launching non-launcher apps right now
+   */
+  if (nux::GetEventButton (button_flags) == 1)
+    {
+      GdkAppLaunchContext *context;
+      GError *error = NULL;
+      
+      context = gdk_app_launch_context_new ();
+      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
+      gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
+      
+      if (!g_app_info_launch_default_for_uri (APPS_URI,
+                                              (GAppLaunchContext *)context,
+                                              &error))
+        {
+          g_warning ("Unable to launcher applications folder: %s",
+                     error->message);
+          g_error_free (error);
+        }
+
+      g_object_unref (context);
+    }
+}
+
+const gchar*
+PanelHomeButton::GetName ()
+{
+	return "HomeButton";
+}
+
+void
+PanelHomeButton::AddProperties (GVariantBuilder *builder)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  g_variant_builder_add (builder, "{sv}", "have-pixbuf", g_variant_new_boolean (GDK_IS_PIXBUF (_pixbuf)));
 }
