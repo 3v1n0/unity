@@ -49,10 +49,12 @@ PlacesController::PlacesController ()
   //_Window->InputWindowEnableStruts(false);
 
   _Window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+  _Window->Reference ();
 }
 
 PlacesController::~PlacesController ()
 {
+  _Window->UnReference ();
 }
 
 void PlacesController::Show ()
