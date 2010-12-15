@@ -139,7 +139,6 @@ protected:
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
     virtual void OnCenterStabilized (nux::Point3 center) {};
-    virtual bool IconOwnsWindow (Window w) { return false; }
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);

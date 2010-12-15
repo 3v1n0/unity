@@ -183,16 +183,26 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-    OnMouseDown.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
-    OnMouseUp.connect(sigc::mem_fun(this, &Launcher::RecvMouseUp));
-    OnMouseDrag.connect(sigc::mem_fun(this, &Launcher::RecvMouseDrag));
-    OnMouseEnter.connect(sigc::mem_fun(this, &Launcher::RecvMouseEnter));
-    OnMouseLeave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
-    OnMouseMove.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
-    OnMouseWheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
+    OnMouseDown.connect  (sigc::mem_fun (this, &Launcher::RecvMouseDown));
+    OnMouseUp.connect    (sigc::mem_fun (this, &Launcher::RecvMouseUp));
+    OnMouseDrag.connect  (sigc::mem_fun (this, &Launcher::RecvMouseDrag));
+    OnMouseEnter.connect (sigc::mem_fun (this, &Launcher::RecvMouseEnter));
+    OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
+    OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
+    OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
+    
+    PluginAdapter::Default ()->window_maximized.connect   (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_restored.connect    (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_unminimized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_mapped.connect      (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_unmapped.connect    (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_shown.connect       (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_hidden.connect      (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_resized.connect     (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    PluginAdapter::Default ()->window_moved.connect       (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
@@ -882,7 +892,7 @@ Launcher::CheckWindowOverLauncher ()
   {
     CompWindow *window = *it;
 
-    if (window->type () != CompWindowTypeNormalMask || window->invisible ())
+    if (window->type () != CompWindowTypeNormalMask || !window->isMapped ())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
@@ -898,28 +908,11 @@ Launcher::CheckWindowOverLauncher ()
 }
 
 void
-Launcher::OnWindowMoved (CompWindow *window)
+Launcher::OnWindowMaybeIntellihide (CompWindow *window)
 {
-  if (_autohide)
-    CheckWindowOverLauncher ();
-}
-
-void
-Launcher::OnWindowResized (CompWindow *window)
-{
-  if (_autohide)
-    CheckWindowOverLauncher ();
-}
-
-void
-Launcher::OnWindowAppear (CompWindow *window)
-{
-  if (_autohide)
-    CheckWindowOverLauncher ();
-}
-void
-Launcher::OnWindowDisappear (CompWindow *window)
-{
+  if (window->type () != CompWindowTypeNormalMask || !window->isMapped ())
+    return;
+  
   if (_autohide)
     CheckWindowOverLauncher ();
 }

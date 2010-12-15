@@ -122,28 +122,6 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
   _favorite_store->SetFavorites (desktop_paths);
 }
 
-void 
-LauncherController::PresentIconOwningWindow (Window window)
-{
-  LauncherModel::iterator it;
-  LauncherIcon *owner = 0;
-  
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it)->IconOwnsWindow (window))
-    {
-      owner = *it;
-      break;
-    }
-  }
-  
-  if (owner)
-  {
-    owner->Present (0.5f, 600);
-    owner->UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
-  }
-}
-
 void
 LauncherController::OnExpoClicked (int button)
 {

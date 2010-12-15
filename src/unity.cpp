@@ -289,38 +289,6 @@ void
 UnityWindow::windowNotify (CompWindowNotify n)
 {
   PluginAdapter::Default ()->Notify (window, n);
-  
-  switch (n)
-  {
-    case CompWindowNotifyMinimize:
-      uScreen->controller->PresentIconOwningWindow (window->id ());
-      uScreen->launcher->OnWindowDisappear (window);
-      break;
-    case CompWindowNotifyUnminimize:
-      uScreen->launcher->OnWindowAppear (window);
-      break;
-    case CompWindowNotifyShade:
-      uScreen->launcher->OnWindowDisappear (window);
-      break;
-    case CompWindowNotifyUnshade:
-      uScreen->launcher->OnWindowAppear (window);
-      break;
-    case CompWindowNotifyHide:
-      uScreen->launcher->OnWindowDisappear (window);
-      break;
-    case CompWindowNotifyShow:
-      uScreen->launcher->OnWindowAppear (window);
-      break;
-    case CompWindowNotifyMap:
-      uScreen->launcher->OnWindowAppear (window);
-      break;
-    case CompWindowNotifyUnmap:
-      uScreen->launcher->OnWindowDisappear (window);
-      break;
-    default:
-      break;
-  }
-
   window->windowNotify (n);
 }
 
@@ -334,14 +302,14 @@ UnityWindow::stateChangeNotify (unsigned int lastState)
 void
 UnityWindow::moveNotify (int x, int y, bool immediate)
 {
-  uScreen->launcher->OnWindowMoved (window);
+  PluginAdapter::Default ()->NotifyMoved (window, x, y);
   window->moveNotify (x, y, immediate);
 }
 
 void
 UnityWindow::resizeNotify (int x, int y, int w, int h)
 {
-  uScreen->launcher->OnWindowResized (window);
+  PluginAdapter::Default ()->NotifyResized (window, x, y, w, h);
   window->resizeNotify (x, y, w, h);
 }
 
@@ -426,6 +394,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   CompositeScreenInterface::setHandler (cScreen);
   GLScreenInterface::setHandler (gScreen);
 
+  PluginAdapter::Initialize (screen);
   StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
 
   nux::NuxInitialize (0);
@@ -441,7 +410,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new IntrospectionDBusInterface (this);
 
-  PluginAdapter::Initialize (screen);
 
   optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
