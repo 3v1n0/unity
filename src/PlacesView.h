@@ -28,8 +28,9 @@
 
 #include "Introspectable.h"
 
-class PlacesView : public Introspectable, public nux::BaseWindow
+class PlacesView : public nux::BaseWindow, public Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::BaseWindow);
 public:
   PlacesView (NUX_FILE_LINE_PROTO);
   ~PlacesView ();
@@ -42,8 +43,6 @@ public:
 
   void Show ();
   void Hide ();
-
-  bool IsVisible;
 
 protected:
 

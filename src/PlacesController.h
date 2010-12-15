@@ -38,7 +38,7 @@ public:
   void Hide ();
   void ToggleShowHide ();
 
-
+  PlacesView *_Window;
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
@@ -49,7 +49,7 @@ protected:
 
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  PlacesView *_Window;
+
   nux::Layout *_Layout;
 };
 

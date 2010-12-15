@@ -24,8 +24,10 @@
 
 #include "PlacesView.h"
 
+NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
+
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
-:   BaseWindow("", NUX_FILE_LINE_PARAM)
+:   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
 {
   //~ SetBaseSize (800, 600);
   //SetWidth (800);
@@ -35,7 +37,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   //~ SetMaximumSize (600, 200);
   //~ SetMinimumSize (600, 200);
   //SetGeometry (nux::Geometry (0, 0, 100, 100));
-  IsVisible = false;
+  Hide ();
 }
 
 PlacesView::~PlacesView ()
@@ -98,15 +100,14 @@ void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 
 void PlacesView::ShowWindow (bool b, bool start_modal)
 {
-  BaseWindow::ShowWindow (b, start_modal);
+  nux::BaseWindow::ShowWindow (b, start_modal);
 }
 
 void PlacesView::Show ()
 {
-  if (IsVisible)
+  if (IsVisible ())
     return;
 
-  IsVisible = true;
   // FIXME: ShowWindow shouldn't need to be called first
   ShowWindow (true, false);
   EnableInputWindow (true, 1);
@@ -118,10 +119,9 @@ void PlacesView::Show ()
 
 void PlacesView::Hide ()
 {
-  if (!IsVisible)
+  if (!IsVisible ())
     return;
 
-  IsVisible = false;
   CaptureMouseDownAnyWhereElse (false);
   ForceStopFocus (1, 1);
   UnGrabPointer ();

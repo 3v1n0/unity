@@ -43,11 +43,10 @@ PlacesController::PlacesController ()
   _Window = new PlacesView ();
 
   _Window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  _Window->SetBlurredBackground(true);
+  //_Window->SetBlurredBackground(true);
   _Window->ShowWindow(false);
-  _Window->EnableInputWindow(false);
-  _Window->InputWindowEnableStruts(false);
-  _Window->SetBaseXY (0, 0);
+  //_Window->EnableInputWindow(false);
+  //_Window->InputWindowEnableStruts(false);
 
   _Window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 }
@@ -73,7 +72,7 @@ void PlacesController::Hide ()
 
 void PlacesController::ToggleShowHide ()
 {
-  if (_Window->IsVisible)
+  if (_Window->IsVisible ())
     Hide ();
   else
     Show ();
@@ -83,7 +82,7 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  geo = nux::Geometry(100, 100, 1024, 600);
+  geo = nux::Geometry(0, 0, 1024, 600);
 }
 
 void
