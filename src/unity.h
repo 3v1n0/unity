@@ -174,6 +174,8 @@ class UnityWindow :
   void moveNotify (int x, int y, bool immediate);
   
   void resizeNotify (int x, int y, int w, int h);
+  
+  void stateChangeNotify (unsigned int lastState);
 };
 
 #define EX_SCREEN (screen) \

@@ -778,6 +778,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
   priv->last_menu_move_id = 0;
+  priv->last_entry = NULL;
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
 }
@@ -957,7 +958,7 @@ panel_service_show_entry (PanelService *self,
 
   if (priv->last_entry == entry)
     return;
-
+  
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;

@@ -16,36 +16,35 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef SIMPLELAUNCHERICON_H
-#define SIMPLELAUNCHERICON_H
+#ifndef LAUNCHERDRAGWINDOW_H
+#define LAUNCHERDRAGWINDOW_H
+
+#include "Nux/Nux.h"
+#include "Nux/BaseWindow.h"
+#include "NuxGraphics/GraphicsEngine.h"
 
 #include "LauncherIcon.h"
 
-class Launcher;
-
-class SimpleLauncherIcon : public LauncherIcon
+class LauncherDragWindow : public nux::BaseWindow
 {
+  NUX_DECLARE_OBJECT_TYPE (LauncherDragWindow, nux::BaseWindow);
 public:
-    SimpleLauncherIcon(Launcher* IconManager);
-    virtual ~SimpleLauncherIcon();
-    
-    /* override */
-    nux::BaseTexture * GetTextureForSize (int size);
-    
-    void SetIconName (const char *name);
+  LauncherDragWindow (nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon);
 
-protected:
-    virtual void OnMouseDown (int button);
-    virtual void OnMouseUp (int button);
-    virtual void OnMouseClick (int button);
-    virtual void OnMouseEnter ();
-    virtual void OnMouseLeave ();
+  ~LauncherDragWindow ();
+
+  void Draw (nux::GraphicsEngine& gfxContext,
+    bool             forceDraw);
+
+  void DrawContent (nux::GraphicsEngine& gfxContext,
+    bool             forceDraw);
+
 private:
-    
-    char *m_IconName;
-    nux::BaseTexture *m_Icon;
+  
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _icon;
+  
 
 };
 
-#endif // BAMFLAUNCHERICON_H
+#endif // LAUNCHERDRAGWINDOW_H
 
