@@ -115,6 +115,8 @@ find_package (Vala)
 
 vala_precompile (VALA_C vala/test-unit.vala
                         vala/test-place-browser.vala
+                        vala/test-appinfo-manager.vala
+                        vala/test-io.vala
                         vala/test-place.vala
                         vala/test-utils.vala
                  PACKAGES gtk+-2.0

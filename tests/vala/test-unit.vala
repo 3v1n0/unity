@@ -26,8 +26,8 @@ public class Main
   {
     PlaceSuite place;
     PlaceBrowserSuite place_browser;
-    //IOSuite io;
-    //AppInfoManagerSuite appinfo_manager;
+    IOSuite io;
+    AppInfoManagerSuite appinfo_manager;
 
     Gtk.init (ref args);
     Test.init (ref args);
@@ -36,11 +36,9 @@ public class Main
     place = new PlaceSuite ();
     place_browser = new PlaceBrowserSuite ();
 
-    /* FIXME:  IO utility tests */
-    //io = new IOSuite ();
-
-    /* FIXME: This needs to be re-enabled in mikkels branch 
-    appinfo_manager = new AppInfoManagerSuite ();*/
+    /* IO utility tests */
+    io = new IOSuite ();
+    appinfo_manager = new AppInfoManagerSuite ();
 
     Test.run ();
 
