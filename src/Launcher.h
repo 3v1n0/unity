@@ -49,11 +49,7 @@ public:
   LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
   LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
 
-  bool TooltipNotify(LauncherIcon* Icon);
-  bool MenuNotify(LauncherIcon* Icon);
-
   void SetIconSize(int tile_size, int icon_size);
-  void NotifyMenuTermination(LauncherIcon* Icon);
 
   void SetModel (LauncherModel *model);
 
@@ -75,7 +71,8 @@ public:
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
-  sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
+  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
+  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -122,6 +119,10 @@ private:
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
+  
+  void SetMousePosition (int x, int y);
+  
+  bool MouseBeyondDragThreshold ();
 
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -141,6 +142,7 @@ private:
   float DnDExitProgress         (struct timespec const &current);
   float GetHoverProgress        (struct timespec const &current);
   float AutohideProgress        (struct timespec const &current);
+  float DragThresholdProgress   (struct timespec const &current);
   float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
@@ -270,7 +272,6 @@ private:
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  guint _anim_handle;
   guint _autohide_handle;
 
   nux::Matrix4  _view_matrix;
@@ -293,6 +294,7 @@ private:
   struct timespec _exit_time;
   struct timespec _drag_end_time;
   struct timespec _drag_start_time;
+  struct timespec _drag_threshold_time;
   struct timespec _autohide_time;
 };
 

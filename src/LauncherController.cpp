@@ -42,7 +42,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   InsertExpoAction ();
   InsertTrash ();
   
-  _launcher->request_reorder.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorder));
+  _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
+  _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 }
 
 LauncherController::~LauncherController()
@@ -51,7 +52,74 @@ LauncherController::~LauncherController()
 }
 
 void
-LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other)
+LauncherController::SortAndSave ()
+{
+  LauncherModel::iterator it;
+  _model->Sort (&LauncherController::CompareIcons);
+  
+  std::list<const char*> desktop_paths;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    BamfLauncherIcon *icon;
+    icon = dynamic_cast<BamfLauncherIcon*> (*it);
+    
+    if (!icon)
+      continue;
+    
+    if (!icon->IsSticky ())
+      continue;
+    
+    const char* desktop_file = icon->DesktopFile ();
+    
+    if (desktop_file && strlen (desktop_file) > 0)
+      desktop_paths.push_back (desktop_file);
+  }
+  
+  _favorite_store->SetFavorites (desktop_paths);
+}
+
+void
+LauncherController::OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save)
+{
+  if (icon == other)
+    return;
+
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  int j = 0;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    if ((*it) == icon)
+    {
+      j++;
+      continue;
+    }
+    
+    if ((*it) == other)
+    {
+      icon->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
+  }
+  
+  SortAndSave ();
+}
+
+void
+LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
 {
   if (icon == other)
     return;
@@ -75,51 +143,31 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
       if (!skipped)
       {
         icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
+        if (i != j && save) (*it)->SaveCenter ();
         i++;
       }
       
       (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
+      if (i != j && save) (*it)->SaveCenter ();
       i++;
       
       if (skipped)
       {
         icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
+        if (i != j && save) (*it)->SaveCenter ();
         i++;
       }
     }
     else
     {
       (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
+      if (i != j && save) (*it)->SaveCenter ();
       i++;
     }
     j++;
   }
   
-  _model->Sort (&LauncherController::CompareIcons);
-  
-  std::list<const char*> desktop_paths;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    BamfLauncherIcon *icon;
-    icon = dynamic_cast<BamfLauncherIcon*> (*it);
-    
-    if (!icon)
-      continue;
-    
-    if (!icon->IsSticky ())
-      continue;
-    
-    const char* desktop_file = icon->DesktopFile ();
-    
-    if (desktop_file && strlen (desktop_file) > 0)
-      desktop_paths.push_back (desktop_file);
-  }
-  
-  _favorite_store->SetFavorites (desktop_paths);
+  SortAndSave ();
 }
 
 void

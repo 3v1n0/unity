@@ -53,7 +53,10 @@ private:
     FavoriteStore*   _favorite_store;
     int              _sort_priority;
 
-    void OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other);
+    void SortAndSave ();
+
+    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
+    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
 
     void InsertExpoAction ();
     

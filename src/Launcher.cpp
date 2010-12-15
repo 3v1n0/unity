@@ -263,7 +263,6 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _launcher_drag_delta    = 0;
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
-    _anim_handle            = 0;
     _autohide_handle        = 0;
     _floating               = false;
     _hovered                = false;
@@ -283,6 +282,8 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _drag_end_time.tv_nsec = 0;
     _drag_start_time.tv_sec = 0;
     _drag_start_time.tv_nsec = 0;
+    _drag_threshold_time.tv_sec = 0;
+    _drag_threshold_time.tv_nsec = 0;
     _autohide_time.tv_sec = 0;
     _autohide_time.tv_nsec = 0;
     
@@ -322,8 +323,21 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "mouse-inside-launcher", g_variant_new_boolean (_mouse_inside_launcher));
 }
 
-/* Render Layout Logic */
+void Launcher::SetMousePosition (int x, int y)
+{
+    bool beyond_drag_threshold = MouseBeyondDragThreshold ();
+    _mouse_position = nux::Point2 (x, y);
+    
+    if (beyond_drag_threshold != MouseBeyondDragThreshold ())
+      SetTimeStruct (&_drag_threshold_time, &_drag_threshold_time, ANIM_DURATION_SHORT);
+}
 
+bool Launcher::MouseBeyondDragThreshold ()
+{
+    return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
+}
+
+/* Render Layout Logic */
 float Launcher::GetHoverProgress (struct timespec const &current)
 {
     if (_hovered)
@@ -351,6 +365,14 @@ float Launcher::AutohideProgress (struct timespec const &current)
         return CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     else
         return 1.0f - CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+}
+
+float Launcher::DragThresholdProgress (struct timespec const &current)
+{
+  if (MouseBeyondDragThreshold ())
+    return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_threshold_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  else
+    return CLAMP ((float) (TimeDelta (&current, &_drag_threshold_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -428,6 +450,9 @@ bool Launcher::AnimationInProgress ()
         return true;
 
     if (TimeDelta (&current, &_autohide_time) < ANIM_DURATION_SHORT)
+        return true;
+        
+    if (TimeDelta (&current, &_drag_threshold_time) < ANIM_DURATION_SHORT)
         return true;
 
     // animations happening on specific icons
@@ -672,6 +697,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         arg.alpha = size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
     }
+
+    if (icon == _drag_icon)
+        size_modifier *= DragThresholdProgress (current);
 
     if (size_modifier <= 0.0f || icon == _drag_icon)
         arg.skip = true;
@@ -1541,30 +1569,12 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);
 
-  _mouse_position = nux::Point2 (0, 0);
+  SetMousePosition (0, 0);
 
   return nux::eCompliantHeight | nux::eCompliantWidth;
 }
 
 void Launcher::PositionChildLayout(float offsetX, float offsetY)
-{
-}
-
-bool Launcher::TooltipNotify(LauncherIcon* Icon)
-{
-    if(GetActiveMenuIcon())
-        return false;
-    return true;
-}
-
-bool Launcher::MenuNotify(LauncherIcon* Icon)
-{
-
-
-    return true;
-}
-
-void Launcher::NotifyMenuTermination(LauncherIcon* Icon)
 {
 }
 
@@ -1612,14 +1622,23 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
     
     LauncherIcon *hovered_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
     
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
     if (_drag_icon && hovered_icon && _drag_icon != hovered_icon)
-      request_reorder.emit (_drag_icon, hovered_icon);
+    {
+      float progress = DragThresholdProgress (current);
+      
+      if (progress >= 1.0f)
+        request_reorder_smart.emit (_drag_icon, hovered_icon, true);
+      else if (progress == 0.0f)
+        request_reorder_before.emit (_drag_icon, hovered_icon, false);
+    }
   }
 }
 
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
 
   MouseDownLogic (x, y, button_flags, key_flags);
   EnsureAnimation ();
@@ -1627,7 +1646,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
   nux::Geometry geo = GetGeometry ();
 
   if (_launcher_action_state != ACTION_NONE && !geo.IsInside(nux::Point(x, y)))
@@ -1649,7 +1668,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
 
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
@@ -1702,7 +1721,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
   _mouse_inside_launcher = true;
 
   EnsureHoverState ();
@@ -1713,7 +1732,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
   _mouse_inside_launcher = false;
 
   if (_launcher_action_state == ACTION_NONE)
@@ -1725,7 +1744,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  _mouse_position = nux::Point2 (x, y);
+  SetMousePosition (x, y);
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic ();
