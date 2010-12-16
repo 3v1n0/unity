@@ -70,6 +70,11 @@ PanelMenuView::PanelMenuView ()
   _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
   _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
 
+  WindowManager::Default ()->window_maximized.connect (sigc::mem_fun (this,
+                                                                      &PanelMenuView::OnWindowMaximized));
+  WindowManager::Default ()->window_restored.connect (sigc::mem_fun (this,
+                                                                     &PanelMenuView::OnWindowRestored));
+
   Refresh ();
 }
 
@@ -79,6 +84,14 @@ PanelMenuView::~PanelMenuView ()
     delete _title_layer;
   _menu_layout->UnReference ();
   _window_buttons->UnReference ();
+}
+
+void
+PanelMenuView::FullRedraw ()
+{
+  _menu_layout->NeedRedraw ();
+  _window_buttons->NeedRedraw ();
+  NeedRedraw ();
 }
 
 void
@@ -103,9 +116,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     if (_is_inside != true)
     {
       _is_inside = true;
-      _menu_layout->NeedRedraw ();
-      _window_buttons->NeedRedraw ();
-      NeedRedraw ();
+      FullRedraw ();
     }
   }
   else
@@ -113,9 +124,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     if (_is_inside != false)
     {
       _is_inside = false;
-      _menu_layout->NeedRedraw ();
-      _window_buttons->NeedRedraw ();
-      NeedRedraw ();
+      FullRedraw ();
     }
   }
 
@@ -383,10 +392,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
       _last_active_view = NULL;
     }
   }
-
-  _menu_layout->NeedRedraw ();
-  _window_buttons->NeedRedraw ();
-  NeedRedraw ();
+  FullRedraw ();
 }
 
 void
@@ -439,9 +445,7 @@ PanelMenuView::AllMenusClosed ()
   _is_inside = false;
   _last_active_view = false;
 
-  _menu_layout->NeedRedraw ();
-  _window_buttons->NeedRedraw ();
-  NeedRedraw ();
+  FullRedraw ();
 }
 
 void
@@ -457,9 +461,37 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
   }
 
   Refresh ();
-  _menu_layout->NeedRedraw ();
-  _window_buttons->NeedRedraw ();
-  NeedRedraw ();
+  FullRedraw ();
+}
+
+void
+PanelMenuView::OnWindowMaximized (guint xid)
+{
+  BamfWindow *window;
+
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
+  {
+    _is_maximized = true;
+
+    Refresh ();
+    FullRedraw ();
+  }
+}
+
+void
+PanelMenuView::OnWindowRestored (guint xid)
+{
+  BamfWindow *window;
+  
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
+  {
+    _is_maximized = false;
+
+    Refresh ();
+    FullRedraw ();
+  }
 }
 
 void

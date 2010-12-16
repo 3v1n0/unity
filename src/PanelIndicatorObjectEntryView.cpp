@@ -31,9 +31,6 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
-#define PANEL_HEIGHT 24
-#define PADDING 6
-#define SPACING 3
 
 static void draw_menu_bg (cairo_t *cr, int width, int height);
 

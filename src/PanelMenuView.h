@@ -35,6 +35,8 @@ public:
   PanelMenuView ();
   ~PanelMenuView ();
 
+  void FullRedraw ();
+
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -47,6 +49,8 @@ public:
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
+  void OnWindowMaximized (guint32 xid);
+  void OnWindowRestored  (guint32 xid);
 
   void Refresh ();
   void AllMenusClosed ();
