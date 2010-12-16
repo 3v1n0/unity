@@ -44,7 +44,10 @@ class WindowButton : public nux::Button
 {
 public:
   WindowButton (int type)
-  : nux::Button ("X", NUX_TRACKER_LOCATION)
+  : nux::Button ("X", NUX_TRACKER_LOCATION),
+    _normal_tex (NULL),
+    _prelight_tex (NULL),
+    _pressed_tex (NULL)
   {
     if (type == BUTTON_CLOSE)
       LoadImages ("close");
@@ -52,52 +55,58 @@ public:
       LoadImages ("minimize");
     else
       LoadImages ("unmaximize");
-
-    LoadTextures ();
   }
 
   ~WindowButton ()
   {
-    delete _normal_layer;
-    delete _prelight_layer;
-    delete _pressed_layer;
+    _normal_tex->UnReference ();
+    _prelight_tex->UnReference ();
+    _pressed_tex->UnReference ();
   }
 
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
   {
-    nux::Geometry geo = GetGeometry ();
-    nux::AbstractPaintLayer *alayer;
-  
-    GfxContext.PushClippingRectangle (geo);
-    
-    nux::ROPConfig rop; 
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    nux::Geometry      geo  = GetGeometry ();
+    nux::BaseTexture  *tex;
+    nux::TexCoordXForm texxform;
  
-    nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
-    gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
+    GfxContext.PushClippingRectangle (geo);
 
     if (HasMouseFocus ())
     {
-      alayer = _pressed_layer;
+      tex = _normal_tex;
       g_debug ("pressed");
     }
     else if (IsMouseInside ())
     {
-      alayer = _prelight_layer;
+      tex = _prelight_tex;
       g_debug ("prelight");
     }
     else
     {
-      alayer = _normal_layer;
+      tex = _pressed_tex;
       g_debug ("normal");
     }
 
-    gPainter.PushDrawLayer (GfxContext, GetGeometry (), alayer);
-
-    gPainter.PopBackground ();
- 
+    GfxContext.GetRenderStates ().SetSeparateBlend (true,
+                                                    GL_SRC_ALPHA,
+                                                    GL_ONE_MINUS_SRC_ALPHA,
+                                                    GL_ONE_MINUS_DST_ALPHA,
+                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    if (tex)
+      GfxContext.QRP_GLSL_1Tex (geo.x,
+                                geo.y,
+                                (float)geo.width,
+                                (float)geo.height,
+                                tex->GetDeviceTexture (),
+                                texxform,
+                                nux::Color::White);
+    GfxContext.GetRenderStates ().SetSeparateBlend (false,
+                                                    GL_SRC_ALPHA,
+                                                    GL_ONE_MINUS_SRC_ALPHA,
+                                                    GL_ONE_MINUS_DST_ALPHA,
+                                                    GL_ONE);
     GfxContext.PopClippingRectangle();
   }
 
@@ -105,6 +114,9 @@ public:
   {
     gchar  *filename;
     GError *error = NULL;
+    GdkPixbuf *_normal;
+    GdkPixbuf *_prelight;
+    GdkPixbuf *_pressed;
 
     filename = g_strdup_printf ("%s/%s.png", AMBIANCE, name);
     _normal = gdk_pixbuf_new_from_file (filename, &error);
@@ -114,7 +126,10 @@ public:
       g_error_free (error);
       error = NULL;
     }
+    else
+      _normal_tex = nux::CreateTextureFromPixbuf (_normal);
     g_free (filename);
+    g_object_unref (_normal);
 
     filename = g_strdup_printf ("%s/%s_focused_prelight.png", AMBIANCE, name);
     _prelight = gdk_pixbuf_new_from_file (filename, &error);
@@ -124,7 +139,10 @@ public:
       g_error_free (error);
       error = NULL;
     }
+    else
+      _prelight_tex = nux::CreateTextureFromPixbuf (_prelight);
     g_free (filename);
+    g_object_unref (_prelight);
 
     filename = g_strdup_printf ("%s/%s_focused_pressed.png", AMBIANCE, name);
     _pressed = gdk_pixbuf_new_from_file (filename, &error);
@@ -134,62 +152,19 @@ public:
       g_error_free (error);
       error = NULL;
     }
+    else
+      _pressed_tex = nux::CreateTextureFromPixbuf (_pressed);
     g_free (filename);
-  }
-
-  void LoadTextures ()
-  {
-    nux::BaseTexture *texture;   
-    nux::ROPConfig rop; 
-    nux::TexCoordXForm texxform;
-
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    
-    texture = nux::CreateTextureFromPixbuf (_normal);
-    _normal_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
-                                          texxform,
-                                          nux::Color::White,
-                                          false, 
-                                          rop);
-    texture->UnReference ();
-
-    texture = nux::CreateTextureFromPixbuf (_prelight);
-    _prelight_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
-                                             texxform,
-                                             nux::Color::White,
-                                             false, 
-                                             rop);
-    texture->UnReference ();
-    
-    texture = nux::CreateTextureFromPixbuf (_pressed);
-    _pressed_layer = new nux::TextureLayer (texture->GetDeviceTexture(),
-                                            texxform,
-                                            nux::Color::White,
-                                            false, 
-                                            rop);
-
-    SetMinimumSize (texture->GetWidth (), texture->GetHeight ());
-
-    texture->UnReference ();
-
-    g_object_unref (_normal);
-    g_object_unref (_prelight);
     g_object_unref (_pressed);
+
+    if (_normal_tex)
+      SetMinimumSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
   }
 
 private:
-  GdkPixbuf *_normal;
-  GdkPixbuf *_prelight;
-  GdkPixbuf *_pressed;
-
-  nux::AbstractPaintLayer *_normal_layer;
-  nux::AbstractPaintLayer *_prelight_layer;
-  nux::AbstractPaintLayer *_pressed_layer;
+  nux::BaseTexture *_normal_tex;
+  nux::BaseTexture *_prelight_tex;
+  nux::BaseTexture *_pressed_tex;
 };
 
 
