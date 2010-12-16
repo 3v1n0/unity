@@ -404,7 +404,6 @@ BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer dat
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
   self->SetQuirk (LAUNCHER_ICON_QUIRK_URGENT, urgent);
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_PROGRESS, urgent);
 }
 
 void

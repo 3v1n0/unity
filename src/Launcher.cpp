@@ -654,6 +654,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.y_rotation      = 0.0f;
     arg.z_rotation      = 0.0f;
     arg.skip            = false;
+    arg.stick_thingy    = false;
     arg.progress_bias   = IconProgressBias (icon, current);
     arg.progress        = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
@@ -699,11 +700,15 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     }
 
     if (icon == _drag_icon)
-        size_modifier *= DragThresholdProgress (current);
-
-    if (size_modifier <= 0.0f || icon == _drag_icon)
+    {
+        if (MouseBeyondDragThreshold ())
+          arg.stick_thingy = true;
         arg.skip = true;
-
+        size_modifier *= DragThresholdProgress (current);
+    }
+    
+    if (size_modifier <= 0.0f)
+        arg.skip = true;
     
     // goes for 0.0f when fully unfolded, to 1.0f folded
     float folding_progress = CLAMP ((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
@@ -1523,6 +1528,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
+      if ((*rev_it).stick_thingy)
+        gPainter.Paint2DQuadColor (GfxContext, 
+                                   nux::Geometry (bkg_box.x, (*rev_it).render_center.y - 3, bkg_box.width, 2), 
+                                   nux::Color(0xAAFFFFFF));
+      
       if ((*rev_it).x_rotation >= 0.0f || (*rev_it).skip)
         continue;
 
@@ -1531,6 +1541,11 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (it = args.begin(); it != args.end(); it++)
     {
+      if ((*it).stick_thingy)
+        gPainter.Paint2DQuadColor (GfxContext, 
+                                   nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
+                                   nux::Color(0xAAFFFFFF));
+                                   
       if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
 

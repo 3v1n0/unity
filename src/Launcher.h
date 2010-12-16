@@ -111,6 +111,7 @@ private:
     bool          active_arrow;
     bool          active_colored;
     bool          skip;
+    bool          stick_thingy;
     int           window_indicators;
   } RenderArg;
 
