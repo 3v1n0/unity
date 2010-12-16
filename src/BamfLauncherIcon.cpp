@@ -526,6 +526,7 @@ BamfLauncherIcon::UpdateMenus ()
       }
 
       _menu_desktop_shortcuts = root;
+      g_key_file_free (keyfile);
 
     }
   }
