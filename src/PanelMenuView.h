@@ -49,6 +49,8 @@ public:
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
+  
+  void OnWindowUnmapped (guint xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
 

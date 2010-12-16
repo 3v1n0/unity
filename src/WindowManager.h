@@ -30,12 +30,15 @@ public:
   static void            SetDefault (WindowManager *manager);
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
+  virtual bool IsWindowDecorated (guint32 xid) = 0;
 
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;
   virtual void Close (guint32 xid) = 0;
 
   // Signals
+  sigc::signal<void, guint32> window_mapped;
+  sigc::signal<void, guint32> window_unmapped;
   sigc::signal<void, guint32> window_maximized;
   sigc::signal<void, guint32> window_restored;
 };

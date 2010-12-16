@@ -36,7 +36,6 @@
 
 #include <gio/gdesktopappinfo.h>
 
-#define PADDING 12
 #define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
@@ -52,7 +51,9 @@ PanelMenuView::PanelMenuView ()
   _is_inside (false),
   _is_maximized (false),
   _last_active_view (NULL)
-{  
+{
+  WindowManager *win_manager;
+
   _matcher = bamf_matcher_get_default ();
   g_signal_connect (_matcher, "active-window-changed",
                     G_CALLBACK (on_active_window_changed), this);
@@ -71,10 +72,10 @@ PanelMenuView::PanelMenuView ()
   _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
   _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
 
-  WindowManager::Default ()->window_maximized.connect (sigc::mem_fun (this,
-                                                                      &PanelMenuView::OnWindowMaximized));
-  WindowManager::Default ()->window_restored.connect (sigc::mem_fun (this,
-                                                                     &PanelMenuView::OnWindowRestored));
+  win_manager = WindowManager::Default ();
+  win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
+  win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
+  win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
 
   Refresh ();
 }
@@ -465,6 +466,12 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 
   Refresh ();
   FullRedraw ();
+}
+
+void
+PanelMenuView::OnWindowUnmapped (guint32 xid)
+{
+  g_debug ("unmapped");
 }
 
 void

@@ -88,10 +88,12 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
       window_shown.emit (window);
       break;
     case CompWindowNotifyMap:
-      window_mapped.emit (window);
+      PluginAdapter::window_mapped.emit (window);
+      WindowManager::window_mapped.emit (window->id ());
       break;
     case CompWindowNotifyUnmap:
-      window_unmapped.emit (window);
+      PluginAdapter::window_unmapped.emit (window);
+      WindowManager::window_unmapped.emit (window->id ());
       break;
     default:
       break;
@@ -196,6 +198,22 @@ PluginAdapter::IsWindowMaximized (guint xid)
   }
 
   return false;
+}
+
+bool
+PluginAdapter::IsWindowDecorated (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    unsigned int decor = window->mwmDecor ();
+
+    return decor & (MwmDecorAll | MwmDecorTitle);
+  }
+  return true;
 }
 
 void
