@@ -43,9 +43,10 @@ public:
     
     void InitiateExpo ();
     
-    void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
-    
     void Notify (CompWindow *window, CompWindowNotify notify);
+    void NotifyMoved (CompWindow *window, int x, int y);
+    void NotifyResized (CompWindow *window, int x, int y, int w, int h);
+    void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
     
     sigc::signal<void, CompWindow *> window_maximized;
     sigc::signal<void, CompWindow *> window_restored;
@@ -57,6 +58,8 @@ public:
     sigc::signal<void, CompWindow *> window_unmapped;
     sigc::signal<void, CompWindow *> window_shown;
     sigc::signal<void, CompWindow *> window_hidden;
+    sigc::signal<void, CompWindow *> window_resized;
+    sigc::signal<void, CompWindow *> window_moved;
     
 protected:
     PluginAdapter(CompScreen *screen);

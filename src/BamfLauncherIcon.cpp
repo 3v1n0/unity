@@ -78,11 +78,16 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
   g_signal_connect (app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
   g_signal_connect (app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
-
+  
   g_object_ref (m_App);
 
   EnsureWindowState ();
   UpdateMenus ();
+  
+  PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  
+  /* hack */
+  SetProgress (0.5f);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -96,6 +101,16 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref (m_App);
+}
+
+void
+BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
+{
+  if (!OwnsWindow (window->id ()))
+    return;
+  
+  Present (0.5f, 600);
+  UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
 }
 
 bool 
@@ -138,7 +153,7 @@ BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
 }
 
 bool
-BamfLauncherIcon::IconOwnsWindow (Window w)
+BamfLauncherIcon::OwnsWindow (Window w)
 {
   GList *children, *l;
   BamfView *view;
@@ -210,7 +225,7 @@ BamfLauncherIcon::Focus ()
 
       if (window)
       {
-        if (window->state () & CompWindowStateDemandsAttentionMask)
+        if (bamf_view_is_urgent (view))
           any_urgent = true;
         windows.push_back (window);
       }
@@ -246,12 +261,30 @@ BamfLauncherIcon::Focus ()
 
   if (any_urgent)
   {
-    for (it = windows.begin (); it != windows.end (); it++)
+    // we cant use the compiz tracking since it is currently broken
+    /*for (it = windows.begin (); it != windows.end (); it++)
     {
       if ((*it)->state () & CompWindowStateDemandsAttentionMask)
       {
         (*it)->activate ();
         break;
+      }
+    }*/
+    for (l = children; l; l = l->next)
+    {
+      view = (BamfView *) l->data;
+
+      if (BAMF_IS_WINDOW (view))
+      {
+        guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+
+        CompWindow *window = m_Screen->findWindow ((Window) xid);
+
+        if (window && bamf_view_is_urgent (view))
+        {
+          window->activate ();
+          break;
+        }
       }
     }
   }

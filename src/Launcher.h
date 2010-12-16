@@ -30,6 +30,7 @@
 #include "LauncherDragWindow.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
+#include "PluginAdapter.h"
 
 class LauncherModel;
 class QuicklistView;
@@ -37,53 +38,45 @@ class QuicklistView;
 class Launcher : public Introspectable, public nux::View
 {
 public:
-    Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
-    ~Launcher();
+  Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
+  ~Launcher();
 
-    virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-    virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-    virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
-    LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+  LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
+  LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
 
-    bool TooltipNotify(LauncherIcon* Icon);
-    bool MenuNotify(LauncherIcon* Icon);
+  void SetIconSize(int tile_size, int icon_size);
 
-    void SetIconSize(int tile_size, int icon_size);
-    void NotifyMenuTermination(LauncherIcon* Icon);
+  void SetModel (LauncherModel *model);
 
-    void SetModel (LauncherModel *model);
+  void SetFloating (bool floating);
 
-    void SetFloating (bool floating);
+  void SetAutohide (bool autohide, nux::View *show_trigger);
+  bool AutohideEnabled ();
+  
+  nux::BaseWindow* GetParent () { return _parent; };
 
-    void SetAutohide (bool autohide, nux::View *show_trigger);
-    bool AutohideEnabled ();
-    
-    nux::BaseWindow* GetParent () { return _parent; };
+  virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-    void OnWindowMoved   (CompWindow *window);
-    void OnWindowResized (CompWindow *window);
-    void OnWindowAppear  (CompWindow *window);
-    void OnWindowDisappear (CompWindow *window);
+  virtual void RecvQuicklistOpened (QuicklistView *quicklist);
+  virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
-    virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
-
-    virtual void RecvQuicklistOpened (QuicklistView *quicklist);
-    virtual void RecvQuicklistClosed (QuicklistView *quicklist);
-
-    sigc::signal<void, LauncherIcon *, LauncherIcon *> request_reorder;
+  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
+  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
 protected:
-    // Introspectable methods
-    const gchar* GetName ();
-    void AddProperties (GVariantBuilder *builder);
+  // Introspectable methods
+  const gchar* GetName ();
+  void AddProperties (GVariantBuilder *builder);
 
 private:
   typedef enum
@@ -111,17 +104,26 @@ private:
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
+    float         progress;
+    float         progress_bias;
     bool          running_arrow;
     bool          running_colored;
     bool          active_arrow;
     bool          active_colored;
     bool          skip;
+    bool          stick_thingy;
     int           window_indicators;
   } RenderArg;
+
+  void OnWindowMaybeIntellihide (CompWindow *window);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
+  
+  void SetMousePosition (int x, int y);
+  
+  bool MouseBeyondDragThreshold ();
 
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -141,12 +143,14 @@ private:
   float DnDExitProgress         (struct timespec const &current);
   float GetHoverProgress        (struct timespec const &current);
   float AutohideProgress        (struct timespec const &current);
+  float DragThresholdProgress   (struct timespec const &current);
   float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
+  float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
@@ -187,11 +191,13 @@ private:
 
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,
-                   nux::BaseTexture *icon,
+                   nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                    nux::Color bkg_color,
                    float alpha,
-                   nux::Vector4 xform_coords[],
-                   nux::Geometry geo);
+                   nux::Vector4 xform_coords[]);
+                   
+  void RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, float progress_fill, float bias);
 
   void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
                      float x, float y, float w, float h, float z, std::string name);
@@ -210,7 +216,7 @@ private:
   virtual long PostLayoutManagement(long LayoutResult);
   virtual void PositionChildLayout(float offsetX, float offsetY);
 
-  void SetOffscreenRenderTarget ();
+  void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
 
   nux::HLayout* m_Layout;
@@ -261,13 +267,12 @@ private:
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_glow_texture;
-  nux::BaseTexture* _icon_2indicator;
-  nux::BaseTexture* _icon_3indicator;
-  nux::BaseTexture* _icon_4indicator;
+  nux::BaseTexture* _progress_bar_trough;
+  nux::BaseTexture* _progress_bar_fill;
   
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_rt_texture;
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  guint _anim_handle;
   guint _autohide_handle;
 
   nux::Matrix4  _view_matrix;
@@ -290,6 +295,7 @@ private:
   struct timespec _exit_time;
   struct timespec _drag_end_time;
   struct timespec _drag_start_time;
+  struct timespec _drag_threshold_time;
   struct timespec _autohide_time;
 };
 

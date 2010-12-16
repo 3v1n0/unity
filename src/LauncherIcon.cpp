@@ -580,6 +580,22 @@ LauncherIcon::RelatedWindows ()
   return _related_windows;
 }
 
+void
+LauncherIcon::SetProgress (float progress)
+{
+  if (progress == _progress)
+    return;
+  
+  _progress = progress;
+  needs_redraw.emit (this);
+}
+
+float
+LauncherIcon::GetProgress ()
+{
+  return _progress;
+}
+
 std::list<DbusmenuMenuitem *> LauncherIcon::Menus ()
 {
   return GetMenus ();
