@@ -72,6 +72,14 @@ if (${GETTEXT_FOUND} STREQUAL "TRUE")
 endif (${GETTEXT_FOUND} STREQUAL "TRUE")
 
 #
+# Enable or disable boot logging
+# 
+option (BOOT_LOGGER "Enable startup performance logging" OFF)
+if (BOOT_LOGGER)
+    SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
+endif (BOOT_LOGGER)
+
+#
 # src (Compiz Plugin)
 #
 set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
@@ -81,10 +89,10 @@ include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR}"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG}"
                LIBRARIES "unity"
                )
-
+               
 #
 # GSettings Schema
 #
