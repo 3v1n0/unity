@@ -20,6 +20,7 @@
 #define WINDOW_MANAGER_H
 
 #include <glib.h>
+#include <sigc++/sigc++.h>
 
 class WindowManager
 {
@@ -30,7 +31,13 @@ public:
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
 
-  virtual void Maximize (guint32 xid) = 0;
+  virtual void Restore (guint32 xid) = 0;
+  virtual void Minimize (guint32 xid) = 0;
+  virtual void Close (guint32 xid) = 0;
+
+  // Signals
+  sigc::signal<void, guint32> window_maximized;
+  sigc::signal<void, guint32> window_restored;
 };
 
 #endif // WINDOW_MANAGER_H

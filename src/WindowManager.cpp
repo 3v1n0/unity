@@ -27,7 +27,17 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
-  void Maximize (guint32 xid)
+  void Restore (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
+  void Minimize (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
+ void Close (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
   }

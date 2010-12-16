@@ -53,9 +53,15 @@ void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
   if (!(last_state & MAXIMIZE_STATE) && (state & MAXIMIZE_STATE))
-    window_maximized.emit (window);
+  {
+    PluginAdapter::window_maximized.emit (window);
+    WindowManager::window_maximized.emit (window->id ());
+  }
   else if ((last_state & MAXIMIZE_STATE) && !(state & MAXIMIZE_STATE))
-    window_restored.emit (window);
+  {
+    PluginAdapter::window_restored.emit (window);
+    WindowManager::window_restored.emit (window->id ());
+  }
 }
 
 void 
@@ -193,12 +199,34 @@ PluginAdapter::IsWindowMaximized (guint xid)
 }
 
 void
-PluginAdapter::Maximize (guint32 xid)
+PluginAdapter::Restore (guint32 xid)
 {
   Window win = (Window)xid;
   CompWindow *window;
 
   window = m_Screen->findWindow (win);
   if (window)
-    window->maximize ();
+    window->maximize (0);
+}
+
+void
+PluginAdapter::Minimize (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->minimize ();
+}
+
+void
+PluginAdapter::Close (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->close (CurrentTime);
 }

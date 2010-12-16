@@ -465,19 +465,31 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 void
 PanelMenuView::OnCloseClicked ()
 {
-  g_debug ("close");
+  BamfWindow *window;
+
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window))
+    WindowManager::Default ()->Close (bamf_window_get_xid (window));
 }
 
 void
 PanelMenuView::OnMinimizeClicked ()
 {
-  g_debug ("minimize");
+  BamfWindow *window;
+
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window))
+    WindowManager::Default ()->Minimize (bamf_window_get_xid (window));
 }
 
 void
 PanelMenuView::OnRestoreClicked ()
 {
-  g_debug ("restore");
+  BamfWindow *window;
+
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window))
+    WindowManager::Default ()->Restore (bamf_window_get_xid (window));
 }
 
 
