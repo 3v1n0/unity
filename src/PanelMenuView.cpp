@@ -184,7 +184,9 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
-    gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
+    gPainter.PushDrawLayer (GfxContext,
+                            geo,
+                            _title_layer);
 
   gPainter.PopBackground ();
  
@@ -471,7 +473,7 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 void
 PanelMenuView::OnWindowUnmapped (guint32 xid)
 {
-  g_debug ("unmapped");
+  _decor_map.erase (xid);
 }
 
 void
@@ -482,6 +484,19 @@ PanelMenuView::OnWindowMaximized (guint xid)
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
+    // We could probably just check if a key is available, but who wants to do that
+    if (_decor_map.find (xid) == _decor_map.end ())
+      _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
+  
+    if (_decor_map[xid])
+    {
+      g_debug ("Undecorate");
+    }
+    else
+    {
+      g_debug ("Already undecorated, leaving");
+    }
+
     _is_maximized = true;
 
     Refresh ();
@@ -498,6 +513,15 @@ PanelMenuView::OnWindowRestored (guint xid)
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     _is_maximized = false;
+
+    if (_decor_map[xid])
+    {
+      g_debug ("Redecorating<F2>");
+    }
+    else
+    {
+      g_debug ("Was already undecorated, leaving");
+    }
 
     Refresh ();
     FullRedraw ();

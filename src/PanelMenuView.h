@@ -20,6 +20,7 @@
 #define PANEL_MENU_VIEW_H
 
 #include <Nux/View.h>
+#include <map>
 
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
@@ -82,5 +83,7 @@ private:
   PanelIndicatorObjectEntryView *_last_active_view;
 
   WindowButtons *_window_buttons;
+
+  std::map<guint32, bool> _decor_map;
 };
 #endif
