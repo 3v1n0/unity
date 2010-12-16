@@ -1693,6 +1693,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   _launcher_action_state = ACTION_NONE;
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
+  EnsureHoverState ();
   EnsureAnimation ();
 }
 
