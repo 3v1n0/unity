@@ -245,7 +245,6 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
-    _drag_icon_under_mouse  = NULL;
     _icon_image_size        = 48;
     _icon_glow_size         = 62;
     _icon_image_size_delta  = 6;
@@ -334,6 +333,8 @@ void Launcher::SetMousePosition (int x, int y)
 
 bool Launcher::MouseBeyondDragThreshold ()
 {
+    if (_launcher_action_state != ACTION_DRAG_ICON)
+      return false;
     return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
 }
 
@@ -703,7 +704,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     {
         if (MouseBeyondDragThreshold ())
           arg.stick_thingy = true;
-        arg.skip = true;
+        
+        if (_launcher_action_state == ACTION_DRAG_ICON || (_drag_window && _drag_window->Animating ()))
+          arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
     
@@ -741,6 +744,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     arg.logical_center = nux::Point3 (roundf (center.x + icon_hide_offset), roundf (center.y), roundf (center.z));
     
     icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y), roundf (center.z)));
+    
+    if (icon == _drag_icon && _drag_window && _drag_window->Animating ())
+      _drag_window->SetAnimationTarget ((int) center.x, (int) center.y + _parent->GetGeometry ().y);
     
     center.y += (half_size * size_modifier) + spacing;   // move to end
 }
@@ -1593,6 +1599,14 @@ void Launcher::PositionChildLayout(float offsetX, float offsetY)
 {
 }
 
+void Launcher::OnDragWindowAnimCompleted ()
+{
+  if (_drag_window)
+    _drag_window->ShowWindow (false);
+  
+  EnsureAnimation ();
+}
+
 void Launcher::StartIconDrag (LauncherIcon *icon)
 {
   if (!icon)
@@ -1618,13 +1632,14 @@ void Launcher::EndIconDrag ()
 {
   if (_drag_window)
   {
-    _drag_window->ShowWindow (false);
-    _drag_window->UnReference ();
-    _drag_window = NULL;
+    _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
+    _drag_window->StartAnimation ();
+    _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
   }
   
-  _drag_icon_under_mouse = NULL;
-  _drag_icon = NULL;
+  if (MouseBeyondDragThreshold ())
+    SetTimeStruct (&_drag_threshold_time, &_drag_threshold_time, ANIM_DURATION_SHORT);
+  
   _render_drag_window = false;
 }
 
@@ -1678,6 +1693,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   _launcher_action_state = ACTION_NONE;
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
+  EnsureHoverState ();
   EnsureAnimation ();
 }
 

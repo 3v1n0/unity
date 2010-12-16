@@ -125,6 +125,7 @@ private:
   
   bool MouseBeyondDragThreshold ();
 
+  void OnDragWindowAnimCompleted ();
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
@@ -248,9 +249,7 @@ private:
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
-  
   LauncherIcon* _drag_icon;
-  LauncherIcon* _drag_icon_under_mouse;
 
   int _space_between_icons;
   int _icon_size;
