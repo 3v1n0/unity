@@ -69,6 +69,7 @@ PanelMenuView::PanelMenuView ()
   _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
   _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
   _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
 
   WindowManager::Default ()->window_maximized.connect (sigc::mem_fun (this,
                                                                       &PanelMenuView::OnWindowMaximized));
@@ -192,6 +193,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  printf ("PanelMenuView::DrawContent\n");
   nux::Geometry geo = GetGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
@@ -202,7 +204,10 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   }
 
   if (_is_maximized)
-    _window_buttons->ProcessDraw (GfxContext, force_draw);
+  {
+    printf ("WindowButtons Draw \n");
+    _window_buttons->ProcessDraw (GfxContext, true);
+  }
 
   GfxContext.PopClippingRectangle();
 }
@@ -524,6 +529,12 @@ PanelMenuView::OnRestoreClicked ()
     WindowManager::Default ()->Restore (bamf_window_get_xid (window));
 }
 
+void
+PanelMenuView::OnWindowButtonsRedraw ()
+{
+  printf ("PanelMenuView::OnWindowButtonsRedraw \n");
+  NeedRedraw ();
+}
 
 // Introspectable
 const gchar *

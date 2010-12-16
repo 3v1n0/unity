@@ -169,21 +169,28 @@ private:
 
 
 WindowButtons::WindowButtons ()
+: HLayout ("", NUX_TRACKER_LOCATION)
 {
   WindowButton *but;
 
   but = new WindowButton (BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
+  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
+  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
 
   but = new WindowButton (BUTTON_MINIMISE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
+  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
+  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
 
   but = new WindowButton (BUTTON_UNMAXIMISE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
-  
+  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
+  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+
   SetContentDistribution (nux::eStackLeft);
 }
 
@@ -233,3 +240,17 @@ WindowButtons::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
+
+void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  printf ("Mouse Enter \n");
+  redraw_signal.emit ();
+}
+
+void WindowButtons::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  printf ("Mouse Leave \n");
+  redraw_signal.emit ();
+}
+
+

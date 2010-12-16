@@ -58,6 +58,7 @@ public:
   void OnCloseClicked ();
   void OnMinimizeClicked ();
   void OnRestoreClicked ();
+  void OnWindowButtonsRedraw ();
 
 protected:
   const gchar * GetName ();
