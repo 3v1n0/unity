@@ -191,3 +191,14 @@ PluginAdapter::IsWindowMaximized (guint xid)
 
   return false;
 }
+
+void
+PluginAdapter::Maximize (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->maximize ();
+}

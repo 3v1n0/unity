@@ -50,6 +50,11 @@ public:
 
   void Refresh ();
   void AllMenusClosed ();
+  
+  void OnCloseClicked ();
+  void OnMinimizeClicked ();
+  void OnRestoreClicked ();
+
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
@@ -71,4 +76,4 @@ private:
 
   WindowButtons *_window_buttons;
 };
-#endif // PANEL_INDICATOR_OBJECT_VIEW_H
+#endif

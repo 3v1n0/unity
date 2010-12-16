@@ -29,10 +29,19 @@ public:
   WindowButtons ();
   ~WindowButtons ();
 
+  sigc::signal<void> close_clicked;
+  sigc::signal<void> minimize_clicked;
+  sigc::signal<void> restore_clicked;
+
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
+
+private:
+  void OnCloseClicked ();
+  void OnMinimizeClicked ();
+  void OnRestoreClicked ();
 
 private:
   nux::HLayout *_layout;

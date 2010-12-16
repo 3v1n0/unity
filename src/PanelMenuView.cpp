@@ -66,6 +66,9 @@ PanelMenuView::PanelMenuView ()
 
   _window_buttons = new WindowButtons ();
   _window_buttons->NeedRedraw ();
+  _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
+  _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
+  _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
 
   Refresh ();
 }
@@ -459,6 +462,26 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
   NeedRedraw ();
 }
 
+void
+PanelMenuView::OnCloseClicked ()
+{
+  g_debug ("close");
+}
+
+void
+PanelMenuView::OnMinimizeClicked ()
+{
+  g_debug ("minimize");
+}
+
+void
+PanelMenuView::OnRestoreClicked ()
+{
+  g_debug ("restore");
+}
+
+
+// Introspectable
 const gchar *
 PanelMenuView::GetName ()
 {

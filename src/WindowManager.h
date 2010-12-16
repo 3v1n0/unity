@@ -29,6 +29,8 @@ public:
   static void            SetDefault (WindowManager *manager);
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
+
+  virtual void Maximize (guint32 xid) = 0;
 };
 
 #endif // WINDOW_MANAGER_H

@@ -24,7 +24,12 @@ class WindowManagerDummy : public WindowManager
 {
   bool IsWindowMaximized (guint32 xid)
   {
-    return false;
+    return true;
+  }
+
+  void Maximize (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
   }
 };
 

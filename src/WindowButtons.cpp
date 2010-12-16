@@ -199,12 +199,15 @@ WindowButtons::WindowButtons ()
 
   but = new WindowButton (BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
 
   but = new WindowButton (BUTTON_MINIMISE);
   AddView (but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
 
   but = new WindowButton (BUTTON_UNMAXIMISE);
   AddView (but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
   
   SetContentDistribution (nux::eStackLeft);
 }
@@ -212,6 +215,24 @@ WindowButtons::WindowButtons ()
 
 WindowButtons::~WindowButtons ()
 {
+}
+
+void
+WindowButtons::OnCloseClicked ()
+{
+  close_clicked.emit ();
+}
+
+void
+WindowButtons::OnMinimizeClicked ()
+{
+  minimize_clicked.emit ();
+}
+
+void
+WindowButtons::OnRestoreClicked ()
+{
+  restore_clicked.emit ();
 }
 
 const gchar *

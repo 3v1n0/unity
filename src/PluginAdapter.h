@@ -51,6 +51,7 @@ public:
 
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
+    void Maximize (guint32 xid);
     
     sigc::signal<void, CompWindow *> window_maximized;
     sigc::signal<void, CompWindow *> window_restored;
