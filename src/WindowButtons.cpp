@@ -79,11 +79,20 @@ public:
     gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
     if (HasMouseFocus ())
+    {
       alayer = _pressed_layer;
+      g_debug ("pressed");
+    }
     else if (IsMouseInside ())
+    {
       alayer = _prelight_layer;
+      g_debug ("prelight");
+    }
     else
+    {
       alayer = _normal_layer;
+      g_debug ("normal");
+    }
 
     gPainter.PushDrawLayer (GfxContext, GetGeometry (), alayer);
 

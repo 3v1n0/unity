@@ -65,6 +65,7 @@ PanelMenuView::PanelMenuView ()
   _layout = _menu_layout;
 
   _window_buttons = new WindowButtons ();
+  _window_buttons->NeedRedraw ();
 
   Refresh ();
 }
@@ -74,6 +75,7 @@ PanelMenuView::~PanelMenuView ()
   if (_title_layer)
     delete _title_layer;
   _menu_layout->UnReference ();
+  _window_buttons->UnReference ();
 }
 
 void
@@ -114,10 +116,8 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     }
   }
 
-  if (_window_buttons->GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
-    ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
-  else
-    ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
+  ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
 }
@@ -125,19 +125,21 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
 {
   long res = View::PostLayoutManagement (LayoutResult);
+  int w = _window_buttons->GetContentWidth ();
   
   nux::Geometry geo = GetGeometry ();
 
-  _window_buttons->SetGeometry (geo.x, geo.y, BUTTONS_WIDTH, geo.height);
+  _window_buttons->SetGeometry (geo.x + PADDING, geo.y, w, geo.height);
   _window_buttons->ComputeLayout2 ();
   
   /* Explicitly set the size and position of the widgets */
-  geo.x += PADDING + BUTTONS_WIDTH + PADDING;
-  geo.width -= PADDING + BUTTONS_WIDTH + PADDING;
+  geo.x += PADDING + w + PADDING;
+  geo.width -= PADDING + w + PADDING;
 
   _menu_layout->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   _menu_layout->ComputeLayout2();
 
+  
   Refresh ();
   
   return res;
@@ -160,9 +162,14 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
   if (_is_inside || _last_active_view)
-    geo.width = PADDING + BUTTONS_WIDTH;
+    geo.width = PADDING + _window_buttons->GetContentWidth ();
 
-  if (!_is_maximized)
+  if (_is_maximized)
+  {
+    if (!_is_inside)
+      gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
+  }
+  else
     gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
 
   gPainter.PopBackground ();
@@ -193,45 +200,56 @@ PanelMenuView::GetActiveViewName ()
 {
   gchar *label = NULL;
 
-  BamfApplication *app = bamf_matcher_get_active_application (_matcher);
-  if (BAMF_IS_APPLICATION (app))
+  if (_is_maximized)
   {
-    const gchar     *filename;
+    BamfWindow *window = bamf_matcher_get_active_window (_matcher);
 
-    filename = bamf_application_get_desktop_file (app);
-
-    if (filename && g_strcmp0 (filename, "") != 0)
-    {
-      GDesktopAppInfo *info;
-  
-      info = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (app));
-  
-      if (info)
-      {
-        label = g_strdup (g_app_info_get_display_name (G_APP_INFO (info)));
-        g_object_unref (info);
-      }
-      else
-      {
-        g_warning ("Unable to get GDesktopAppInfo for %s",
-                   bamf_application_get_desktop_file (app));
-      }
-    }
-
-    if (label == NULL)
-    {
-      BamfView *active_view;
-
-      active_view = (BamfView *)bamf_matcher_get_active_window (_matcher);
-      if (BAMF_IS_VIEW (active_view))
-        label = g_strdup (bamf_view_get_name (active_view));
-      else
-        label = g_strdup ("");
-    }
+    if (BAMF_IS_WINDOW (window))
+      label = g_strdup (bamf_view_get_name (BAMF_VIEW (window)));
   }
-  else
+
+  if (!label)
   {
-    label = g_strdup (" ");
+    BamfApplication *app = bamf_matcher_get_active_application (_matcher);
+    if (BAMF_IS_APPLICATION (app))
+    {
+      const gchar     *filename;
+
+      filename = bamf_application_get_desktop_file (app);
+
+      if (filename && g_strcmp0 (filename, "") != 0)
+      {
+        GDesktopAppInfo *info;
+    
+        info = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (app));
+    
+        if (info)
+        {
+          label = g_strdup (g_app_info_get_display_name (G_APP_INFO (info)));
+          g_object_unref (info);
+        }
+        else
+        {
+          g_warning ("Unable to get GDesktopAppInfo for %s",
+                     bamf_application_get_desktop_file (app));
+        }
+      }
+
+      if (label == NULL)
+      {
+        BamfView *active_view;
+
+        active_view = (BamfView *)bamf_matcher_get_active_window (_matcher);
+        if (BAMF_IS_VIEW (active_view))
+          label = g_strdup (bamf_view_get_name (active_view));
+        else
+          label = g_strdup ("");
+      }
+    }
+    else
+    {
+      label = g_strdup (" ");
+    }
   }
 
   return label;
@@ -295,6 +313,9 @@ PanelMenuView::Refresh ()
 
   x = PADDING;
   y = 0;
+
+  if (_is_maximized)
+    x += _window_buttons->GetContentWidth () + PADDING;
 
   if (label)
   {
