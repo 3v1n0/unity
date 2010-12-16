@@ -400,7 +400,7 @@ UnityScreen::optionChanged (CompOption            *opt,
 static gboolean
 write_logger_data_to_disk (gpointer data)
 {
-  perf_timeline_logger_write_log (perf_timeline_logger_get_default (), "/tmp/unity-perf.log");
+  LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
   return FALSE;
 }
 
@@ -447,6 +447,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
+  g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
   END_FUNCTION ();
 }
 
