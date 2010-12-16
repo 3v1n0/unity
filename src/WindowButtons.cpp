@@ -74,18 +74,15 @@ public:
 
     if (HasMouseFocus ())
     {
-      tex = _normal_tex;
-      g_debug ("pressed");
+      tex = _pressed_tex;
     }
     else if (IsMouseInside ())
     {
       tex = _prelight_tex;
-      g_debug ("prelight");
     }
     else
     {
-      tex = _pressed_tex;
-      g_debug ("normal");
+      tex = _normal_tex;
     }
 
     GfxContext.GetRenderStates ().SetSeparateBlend (true,
@@ -243,13 +240,11 @@ WindowButtons::AddProperties (GVariantBuilder *builder)
 
 void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  printf ("Mouse Enter \n");
   redraw_signal.emit ();
 }
 
 void WindowButtons::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  printf ("Mouse Leave \n");
   redraw_signal.emit ();
 }
 

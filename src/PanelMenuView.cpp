@@ -193,7 +193,6 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  printf ("PanelMenuView::DrawContent\n");
   nux::Geometry geo = GetGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
@@ -205,7 +204,6 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   if (_is_maximized)
   {
-    printf ("WindowButtons Draw \n");
     _window_buttons->ProcessDraw (GfxContext, true);
   }
 
@@ -532,8 +530,7 @@ PanelMenuView::OnRestoreClicked ()
 void
 PanelMenuView::OnWindowButtonsRedraw ()
 {
-  printf ("PanelMenuView::OnWindowButtonsRedraw \n");
-  NeedRedraw ();
+  FullRedraw ();
 }
 
 // Introspectable
