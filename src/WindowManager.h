@@ -36,6 +36,9 @@ public:
   virtual void Minimize (guint32 xid) = 0;
   virtual void Close (guint32 xid) = 0;
 
+  virtual void Decorate   (guint32 xid);
+  virtual void Undecorate (guint32 xid);
+
   // Signals
   sigc::signal<void, guint32> window_mapped;
   sigc::signal<void, guint32> window_unmapped;

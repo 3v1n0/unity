@@ -490,11 +490,7 @@ PanelMenuView::OnWindowMaximized (guint xid)
   
     if (_decor_map[xid])
     {
-      g_debug ("Undecorate");
-    }
-    else
-    {
-      g_debug ("Already undecorated, leaving");
+      WindowManager::Default ()->Undecorate (xid);
     }
 
     _is_maximized = true;
@@ -516,11 +512,7 @@ PanelMenuView::OnWindowRestored (guint xid)
 
     if (_decor_map[xid])
     {
-      g_debug ("Redecorating<F2>");
-    }
-    else
-    {
-      g_debug ("Was already undecorated, leaving");
+      WindowManager::Default ()->Decorate (xid);
     }
 
     Refresh ();
