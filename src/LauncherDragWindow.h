@@ -34,16 +34,22 @@ public:
 
   ~LauncherDragWindow ();
 
-  void Draw (nux::GraphicsEngine& gfxContext,
-    bool             forceDraw);
-
-  void DrawContent (nux::GraphicsEngine& gfxContext,
-    bool             forceDraw);
+  void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  
+  void SetAnimationTarget (int x, int y);
+  void StartAnimation ();
+  
+  bool Animating ();
+  
+  sigc::signal<void> anim_completed;
 
 private:
   
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _icon;
+  static gboolean OnAnimationTimeout (gpointer data);
   
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _icon;
+  nux::Point2 _animation_target;
+  guint32 _anim_handle;
 
 };
 

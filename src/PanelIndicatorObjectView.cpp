@@ -31,6 +31,13 @@
 
 #include <glib.h>
 
+PanelIndicatorObjectView::PanelIndicatorObjectView ()
+: View (NUX_TRACKER_LOCATION),
+  _proxy (NULL),
+  _entries ()
+{
+}
+
 PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
 : View (NUX_TRACKER_LOCATION),
   _proxy (proxy),

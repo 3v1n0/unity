@@ -44,6 +44,7 @@ public:
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
   void Sync (GVariant *args);
   void OnEntryActivateRequestReceived (const char *entry_id);
+  void Reconnect ();
 
   void AddProperties (GVariantBuilder *builder);
 

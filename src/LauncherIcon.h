@@ -63,6 +63,7 @@ typedef enum
   LAUNCHER_ICON_QUIRK_STARTING,
   LAUNCHER_ICON_QUIRK_SHIMMER,
   LAUNCHER_ICON_QUIRK_CENTER_SAVED,
+  LAUNCHER_ICON_QUIRK_PROGRESS,
   
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
@@ -92,7 +93,10 @@ public:
   int SortPriority ();
   
   int RelatedWindows ();
+  
   float PresentUrgency ();
+  
+  float GetProgress ();
   
   bool GetQuirk (LauncherIconQuirk quirk);
   struct timespec GetQuirkTime (LauncherIconQuirk quirk);
@@ -129,6 +133,7 @@ protected:
   void SetRelatedWindows (int windows);
   void Remove ();
   
+  void SetProgress (float progress);
   
   void Present (float urgency, int length);
   void Unpresent ();
@@ -140,7 +145,6 @@ protected:
   virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
   
   virtual void OnCenterStabilized (nux::Point3 center) {};
-  virtual bool IconOwnsWindow (Window w) { return false; }
 
   nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
   nux::BaseTexture * TextureFromPath     (const char *name, int size);
@@ -184,6 +188,7 @@ private:
   int              _sort_priority;
   int              _related_windows;
   float            _present_urgency;
+  float            _progress;
   guint            _present_time_handle;
   guint            _center_stabilize_handle;
   bool             _quicklist_is_initialized;

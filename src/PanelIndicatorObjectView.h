@@ -30,6 +30,7 @@
 class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:
+  PanelIndicatorObjectView ();
   PanelIndicatorObjectView (IndicatorObjectProxy *proxy);
   ~PanelIndicatorObjectView ();
 
@@ -48,7 +49,6 @@ protected:
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
-private:
   IndicatorObjectProxy *_proxy;
   std::vector<PanelIndicatorObjectEntryView *> _entries;
 };

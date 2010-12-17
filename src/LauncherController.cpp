@@ -43,7 +43,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   InsertExpoAction ();
   InsertTrash ();
   
-  _launcher->request_reorder.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorder));
+  _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
+  _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 }
 
 LauncherController::~LauncherController()
@@ -52,54 +53,9 @@ LauncherController::~LauncherController()
 }
 
 void
-LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other)
+LauncherController::SortAndSave ()
 {
-  if (icon == other)
-    return;
-
   LauncherModel::iterator it;
-  
-  int i = 0;
-  int j = 0;
-  bool skipped = false;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it) == icon)
-    {
-      skipped = true;
-      j++;
-      continue;
-    }
-    
-    if ((*it) == other)
-    {
-      if (!skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
-        i++;
-      }
-      
-      (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
-      i++;
-      
-      if (skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
-        i++;
-      }
-    }
-    else
-    {
-      (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
-      i++;
-    }
-    j++;
-  }
-  
   _model->Sort (&LauncherController::CompareIcons);
   
   std::list<const char*> desktop_paths;
@@ -123,32 +79,103 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
   _favorite_store->SetFavorites (desktop_paths);
 }
 
-void 
-LauncherController::PresentIconOwningWindow (Window window)
+void
+LauncherController::OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save)
 {
+  if (icon == other)
+    return;
+
   LauncherModel::iterator it;
-  LauncherIcon *owner = 0;
   
+  int i = 0;
+  int j = 0;
   for (it = _model->begin (); it != _model->end (); it++)
   {
-    if ((*it)->IconOwnsWindow (window))
+    if ((*it) == icon)
     {
-      owner = *it;
-      break;
+      j++;
+      continue;
     }
+    
+    if ((*it) == other)
+    {
+      icon->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
   }
   
-  if (owner)
+  SortAndSave ();
+}
+
+void
+LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
+{
+  if (icon == other)
+    return;
+
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  int j = 0;
+  bool skipped = false;
+  for (it = _model->begin (); it != _model->end (); it++)
   {
-    owner->Present (0.5f, 600);
-    owner->UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
+    if ((*it) == icon)
+    {
+      skipped = true;
+      j++;
+      continue;
+    }
+    
+    if ((*it) == other)
+    {
+      if (!skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      if (skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
   }
+  
+  SortAndSave ();
 }
 
 void
 LauncherController::OnExpoClicked (int button)
 {
-  PluginAdapter::Default ()->InitiateExpo ();
+  if (button == 1)
+    PluginAdapter::Default ()->InitiateExpo ();
 }
 
 void

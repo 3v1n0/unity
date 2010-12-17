@@ -57,6 +57,10 @@ static void on_proxy_signal_received (GDBusProxy *proxy,
                                       GVariant   *parameters,
                                       IndicatorObjectFactoryRemote *remote);
 
+static void on_proxy_name_owner_changed (GDBusProxy *proxy,
+                                         GParamSpec *pspec,
+                                         IndicatorObjectFactoryRemote *remote);
+
 static void on_sync_ready_cb (GObject      *source,
                               GAsyncResult *res,
                               gpointer      data);
@@ -66,25 +70,9 @@ static bool reconnect_to_service (gpointer data);
 
 // Public Methods
 IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
+: _proxy (NULL)
 {
-  if (g_getenv ("PANEL_USE_LOCAL_SERVICE"))
-  {
-    run_local_panel_service ();
-    g_timeout_add_seconds (1, (GSourceFunc)reconnect_to_service, this);
-  }
-  else
-  {
-    // We want to grab the Panel Service object. This is async, which is fine
-    g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                              G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                              NULL,
-                              S_NAME,
-                              S_PATH,
-                              S_IFACE,
-                              NULL,
-                              on_proxy_ready_cb,
-                              this);
-  }
+  Reconnect ();
 }
 
 IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
@@ -116,14 +104,39 @@ IndicatorObjectFactoryRemote::ForceRefresh ()
 }
 
 void
+IndicatorObjectFactoryRemote::Reconnect ()
+{
+  if (g_getenv ("PANEL_USE_LOCAL_SERVICE"))
+  {
+    run_local_panel_service ();
+    g_timeout_add_seconds (1, (GSourceFunc)reconnect_to_service, this);
+  }
+  else
+  {
+    // We want to grab the Panel Service object. This is async, which is fine
+    reconnect_to_service (this);
+  }
+}
+
+void
 IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
 {
-  _proxy = proxy;
+  if (_proxy)
+  {
+    // We've been connected before; We don't need new proxy, just continue
+    // rocking with the old one.
+    g_object_unref (proxy);
+  }
+  else
+  {
+    _proxy = proxy;
 
-  // Connect to interesting signals
-  // FIXME: Add auto-restarting bits here
-  g_signal_connect (_proxy, "g-signal",
-                   G_CALLBACK (on_proxy_signal_received), this);
+    // Connect to interesting signals
+    g_signal_connect (_proxy, "g-signal",
+                      G_CALLBACK (on_proxy_signal_received), this);
+    g_signal_connect (_proxy, "notify::g-name-owner",
+                      G_CALLBACK (on_proxy_name_owner_changed), this);
+  }
 
   g_dbus_proxy_call (_proxy,
                      "Sync",
@@ -228,7 +241,9 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
-  } 
+  }
+
+  IndicatorObjectFactory::OnEntryActivated.emit (entry_id);
 }
 
 void
@@ -469,6 +484,24 @@ on_proxy_signal_received (GDBusProxy *proxy,
 
       remote->OnMenuPointerMoved.emit (x, y);
     }
+}
+
+static void
+on_proxy_name_owner_changed (GDBusProxy *proxy,
+                             GParamSpec *pspec,
+                             IndicatorObjectFactoryRemote *remote)
+{
+  char *name_owner;
+
+  name_owner = g_dbus_proxy_get_name_owner (proxy);
+
+  if (name_owner == NULL)
+  {
+    // The panel service has stopped for some reason.  Restart it.
+    remote->Reconnect ();
+  }
+
+  g_free (name_owner);
 }
 
 static void

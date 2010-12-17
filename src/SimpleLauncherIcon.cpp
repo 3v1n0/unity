@@ -22,6 +22,7 @@
 
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"
+#include "PluginAdapter.h"
 
 SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
 :   LauncherIcon(IconManager)
@@ -55,6 +56,8 @@ SimpleLauncherIcon::OnMouseUp (int button)
 void
 SimpleLauncherIcon::OnMouseClick (int button)
 {
+  if (button == 1)
+    PluginAdapter::Default ()->TerminateScale ();
 }
 
 void
