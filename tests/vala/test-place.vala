@@ -97,8 +97,8 @@ namespace Unity.Tests.Unit
 
       var entry_paths = ctl.get_entry_paths();
       assert (entry_paths.length == 2);
-      assert (entry_paths[0] == entry_path1);
-      assert (entry_paths[1] == entry_path2);
+      assert (entry_path1 in entry_paths);
+      assert (entry_path2 in entry_paths);
 
       var entries = ctl.get_entries ();
       assert (entries.length == 2);
