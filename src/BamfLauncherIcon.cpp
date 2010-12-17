@@ -78,14 +78,14 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   g_signal_connect (app, "active-changed", (GCallback) &BamfLauncherIcon::OnActiveChanged, this);
   g_signal_connect (app, "user-visible-changed", (GCallback) &BamfLauncherIcon::OnUserVisibleChanged, this);
   g_signal_connect (app, "closed", (GCallback) &BamfLauncherIcon::OnClosed, this);
-  
+
   g_object_ref (m_App);
 
   EnsureWindowState ();
   UpdateMenus ();
-  
+
   PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
-  
+
   /* hack */
   SetProgress (0.5f);
 }
@@ -108,18 +108,18 @@ BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
 {
   if (!OwnsWindow (window->id ()))
     return;
-  
+
   Present (0.5f, 600);
   UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
 }
 
-bool 
+bool
 BamfLauncherIcon::IsSticky ()
 {
   return bamf_view_is_sticky (BAMF_VIEW (m_App));
 }
 
-const char* 
+const char*
 BamfLauncherIcon::DesktopFile ()
 {
   return bamf_application_get_desktop_file (m_App);
@@ -131,18 +131,18 @@ BamfLauncherIcon::AddProperties (GVariantBuilder *builder)
   LauncherIcon::AddProperties (builder);
 
   g_variant_builder_add (builder, "{sv}", "desktop-file", g_variant_new_string (bamf_application_get_desktop_file (m_App)));
-  
+
   GList *children, *l;
   BamfView *view;
-  
+
   children = bamf_view_get_children (BAMF_VIEW (m_App));
   GVariant* xids[(int) g_list_length (children)];
-  
+
   int i = 0;
   for (l = children; l; l = l->next)
   {
     view = (BamfView *) l->data;
-    
+
     if (BAMF_IS_WINDOW (view))
     {
       xids[i++] = g_variant_new_uint32 (bamf_window_get_xid (BAMF_WINDOW (view)));
@@ -238,7 +238,7 @@ BamfLauncherIcon::Focus ()
     g_list_free (children);
     return;
   }
-  
+
   /* sort the list */
   CompWindowList tmp;
   CompWindowList::iterator it;
@@ -346,7 +346,7 @@ BamfLauncherIcon::OnMouseClick (int button)
 
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
-  
+
   if (!running)
   {
     if (GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
@@ -467,44 +467,68 @@ BamfLauncherIcon::UpdateMenus ()
 
   // make a client for desktop file actions
   if (!DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts) &&
-      bamf_application_get_desktop_file (m_App) != NULL)
+      g_strcmp0 (DesktopFile (), """"))
   {
+    GKeyFile *keyfile;
+    GError *error = NULL;
 
-    DbusmenuMenuitem *root = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_set_root (root, TRUE);
-    desktop_shortcuts = indicator_desktop_shortcuts_new (bamf_application_get_desktop_file (m_App),
-                                                         "Unity");
-    const gchar **nicks = indicator_desktop_shortcuts_get_nicks (desktop_shortcuts);
+    // check that we have the X-Ayatana-Desktop-Shortcuts flag
+    // not sure if we should do this or if libindicator should shut up
+    // and not report errors when it can't find the key.
+    // so FIXME when ted is around
+    keyfile = g_key_file_new ();
+    g_key_file_load_from_file (keyfile, DesktopFile (), G_KEY_FILE_NONE, &error);
 
-    int index = 0;
-    if (nicks) {
-      while (((gpointer*) nicks)[index]) {
-        const char* name;
-        DbusmenuMenuitem *item;
-        name = g_strdup (indicator_desktop_shortcuts_nick_get_name (desktop_shortcuts,
-                                                                    nicks[index]));
-        ShortcutData *data = g_slice_new0 (ShortcutData);
-        data->self = this;
-        data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS (g_object_ref (desktop_shortcuts));
-        data->nick = g_strdup (nicks[index]);
-
-        item = dbusmenu_menuitem_new ();
-        dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, name);
-        dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
-        dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-        g_signal_connect_data (item, "item-activated",
-                              (GCallback) shortcut_activated, (gpointer) data,
-                              (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
-
-        dbusmenu_menuitem_child_append (root, item);
-
-        index++;
-
-        g_free ((void *)name);
-      }
+    if (error != NULL)
+    {
+      g_warning ("Could not load desktop file for: %s" , DesktopFile ());
+      g_error_free (error);
+      return;
     }
 
-    _menu_desktop_shortcuts = root;
+    if (g_key_file_has_key (keyfile, G_KEY_FILE_DESKTOP_GROUP,
+                            "X-Ayatana-Desktop-Shortcuts", NULL))
+    {
+      DbusmenuMenuitem *root = dbusmenu_menuitem_new ();
+      dbusmenu_menuitem_set_root (root, TRUE);
+      desktop_shortcuts = indicator_desktop_shortcuts_new (bamf_application_get_desktop_file (m_App),
+                                                           "Unity");
+      const gchar **nicks = indicator_desktop_shortcuts_get_nicks (desktop_shortcuts);
+
+      int index = 0;
+      if (nicks)
+      {
+        while (((gpointer*) nicks)[index])
+        {
+          const char* name;
+          DbusmenuMenuitem *item;
+          name = g_strdup (indicator_desktop_shortcuts_nick_get_name (desktop_shortcuts,
+                                                                      nicks[index]));
+          ShortcutData *data = g_slice_new0 (ShortcutData);
+          data->self = this;
+          data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS (g_object_ref (desktop_shortcuts));
+          data->nick = g_strdup (nicks[index]);
+
+          item = dbusmenu_menuitem_new ();
+          dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, name);
+          dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+          dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
+          g_signal_connect_data (item, "item-activated",
+                                (GCallback) shortcut_activated, (gpointer) data,
+                                (GClosureNotify) shortcut_data_destroy, (GConnectFlags)0);
+
+          dbusmenu_menuitem_child_append (root, item);
+
+          index++;
+
+          g_free ((void *)name);
+        }
+      }
+
+      _menu_desktop_shortcuts = root;
+      g_key_file_free (keyfile);
+
+    }
   }
 
 }
@@ -681,13 +705,13 @@ BamfLauncherIcon::GetMenus ()
       {
         std::string label_menu = dbusmenu_menuitem_property_get (*it_l, DBUSMENU_MENUITEM_PROP_LABEL);
         if (label_menu.compare(label_default) == 0)
-        { 
-          exists = true; 
+        {
+          exists = true;
           break;
         }
       }
     }
-    
+
     if (!exists)
       result.push_back((*it_m).second);
   }
