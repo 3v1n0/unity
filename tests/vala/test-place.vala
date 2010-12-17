@@ -102,8 +102,8 @@ namespace Unity.Tests.Unit
 
       var entries = ctl.get_entries ();
       assert (entries.length == 2);
-      assert (entries[0] == entry1);
-      assert (entries[1] == entry2);
+      assert (entry1 in entries);
+      assert (entry2 in entries);
 
       /* Assert we can't add them twice */
 
