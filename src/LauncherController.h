@@ -43,8 +43,6 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
-    void PresentIconOwningWindow (Window window);
-    
 private:
     BamfMatcher*     _matcher;
     CompAction*      _expo_action;
@@ -54,6 +52,11 @@ private:
     nux::BaseWindow* _window;
     FavoriteStore*   _favorite_store;
     int              _sort_priority;
+
+    void SortAndSave ();
+
+    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
+    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
 
     void InsertExpoAction ();
     

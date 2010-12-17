@@ -40,7 +40,7 @@ public:
     void Sort (SortFunc func);
     int  Size ();
 
-    void OnIconRemove (void *icon);
+    void OnIconRemove (LauncherIcon *icon);
     
     iterator begin ();
     iterator end ();
@@ -57,8 +57,8 @@ public:
     reverse_iterator shelf_rbegin ();
     reverse_iterator shelf_rend ();
     
-    sigc::signal<void, void *> icon_added;
-    sigc::signal<void, void *> icon_removed;
+    sigc::signal<void, LauncherIcon *> icon_added;
+    sigc::signal<void, LauncherIcon *> icon_removed;
     sigc::signal<void> order_changed;
     
 private:

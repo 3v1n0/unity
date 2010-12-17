@@ -106,13 +106,13 @@ static UBusMessageInfo*
 ubus_message_info_new (GVariant *data)
 {
   UBusMessageInfo *info;
-  
+
   info = g_slice_new (UBusMessageInfo);
   info->data = data;
 
   if (data != NULL)
     g_variant_ref_sink (data);
-  
+
   return info;
 }
 
@@ -121,7 +121,7 @@ ubus_message_info_free (UBusMessageInfo *info)
 {
   if (info->data != NULL)
     g_variant_unref (info->data);
-  
+
   g_slice_free (UBusMessageInfo, info);
 }
 
@@ -129,7 +129,7 @@ static void
 ubus_server_init (UBusServer *server)
 {
   UBusServerPrivate *priv;
-  
+
   priv = server->priv = UBUS_SERVER_GET_PRIVATE (server);
 
   /* message_interest_table holds the message/DispatchInfo relationship
@@ -159,10 +159,10 @@ ubus_server_finalize (GObject *object)
 {
   UBusServer        *server;
   UBusServerPrivate *priv;
-  
+
   server = UBUS_SERVER (object);
   priv = server->priv;
-  
+
   g_hash_table_destroy (priv->message_interest_table);
   g_hash_table_destroy (priv->dispatch_table);
 
@@ -191,9 +191,9 @@ ubus_server_get_default ()
 {
   UBusServer *server;
   static gsize singleton;
-  
+
   if (g_once_init_enter (&singleton))
-    {      
+    {
       server = g_object_new (UBUS_TYPE_SERVER, NULL);
       g_object_ref_sink (server);
       g_once_init_leave (&singleton, (gsize) server);
@@ -250,13 +250,12 @@ ubus_server_pump_message_queue (UBusServer *server)
   UBusServerPrivate *priv = server->priv;
   UBusMessageInfo *info;
 
-  priv->message_pump_queued = TRUE;
+  priv->message_pump_queued = FALSE;
 
   // loop through each message queued and call the dispatch functions associated
   // with it. something in the back of my mind says it would be quicker in some
   // situations to sort the queue first so that duplicate messages can re-use
   // the same dispatch_list lookups.. but thats a specific case.
-
 
   info = g_queue_pop_tail (priv->message_queue);
   for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
@@ -266,7 +265,9 @@ ubus_server_pump_message_queue (UBusServer *server)
                                            info->message);
 
       if (dispatch_list == NULL)
-        continue; // no handlers for this message
+        {
+          continue; // no handlers for this message
+        }
 
       GSequenceIter *iter = g_sequence_get_begin_iter (dispatch_list);
       GSequenceIter *end = g_sequence_get_end_iter (dispatch_list);
@@ -292,7 +293,7 @@ static void
 ubus_server_queue_message_pump (UBusServer *server)
 {
   UBusServerPrivate *priv;
-  
+
   g_return_if_fail (UBUS_IS_SERVER (server));
 
   priv = server->priv;
@@ -310,9 +311,9 @@ ubus_server_send_message (UBusServer  *server,
 {
   UBusServerPrivate *priv;
   UBusMessageInfo   *message_info;
-  
+
   g_return_if_fail (UBUS_IS_SERVER (server));
-  g_return_if_fail (message != NULL);  
+  g_return_if_fail (message != NULL);
 
   priv = server->priv;
   message_info = ubus_message_info_new (data);
@@ -329,11 +330,11 @@ ubus_server_unregister_interest (UBusServer* server, guint handle)
   UBusServerPrivate *priv;
   GSequence         *dispatch_list;
   UBusDispatchInfo  *info;
-  
+
   g_return_if_fail (UBUS_IS_SERVER (server));
   g_return_if_fail (handle > 0);
 
-  priv = server->priv;  
+  priv = server->priv;
   info = g_hash_table_lookup (priv->dispatch_table, GUINT_TO_POINTER (handle));
 
   if (info == NULL)

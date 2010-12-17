@@ -50,6 +50,8 @@ find_package (Vala)
 vala_precompile (VALA_C unity-place-activation.vala
                         unity-place-browser.vala
                         unity-place.vala
+                        unity-io.vala
+                        unity-appinfo-manager.vala
                         perf-logger.vala
                  PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib-1 gio-unix-2.0
                  OPTIONS --thread

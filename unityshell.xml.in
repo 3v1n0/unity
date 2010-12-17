@@ -3,6 +3,7 @@
     <plugin name="unityshell" useBcop="true">
 	<_short>Ubuntu Unity Plugin</_short>
 	<_long>Plugin to draw the Unity Shell</_long>
+	<category>Desktop</category>
 	<deps>
 	    <relation type="after">
 		<plugin>bailer</plugin>

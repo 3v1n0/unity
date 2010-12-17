@@ -61,6 +61,8 @@ typedef enum
   LAUNCHER_ICON_QUIRK_PRESENTED,
   LAUNCHER_ICON_QUIRK_STARTING,
   LAUNCHER_ICON_QUIRK_SHIMMER,
+  LAUNCHER_ICON_QUIRK_CENTER_SAVED,
+  LAUNCHER_ICON_QUIRK_PROGRESS,
   
   LAUNCHER_ICON_QUIRK_LAST,
 } LauncherIconQuirk;
@@ -69,7 +71,7 @@ class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, 
 {
 public:
     LauncherIcon(Launcher* launcher);
-    ~LauncherIcon();
+    virtual ~LauncherIcon();
 
     void SetTooltipText (const TCHAR* text);
     
@@ -80,18 +82,20 @@ public:
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
     
-    void RecvShowQuicklist (nux::BaseWindow *quicklist);
-    void RecvHideQuicklist (nux::BaseWindow *quicklist);
-    
     void HideTooltip ();
     
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
     
+    void SaveCenter ();
+    
     int SortPriority ();
     
     int RelatedWindows ();
+    
     float PresentUrgency ();
+    
+    float GetProgress ();
     
     bool GetQuirk (LauncherIconQuirk quirk);
     struct timespec GetQuirkTime (LauncherIconQuirk quirk);
@@ -105,17 +109,16 @@ public:
     
     std::list<DbusmenuMenuitem *> Menus ();
     
-    
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;
     sigc::signal<void>      MouseLeave;
     sigc::signal<void, int> MouseClick;
     
-    sigc::signal<void, void *> show;
-    sigc::signal<void, void *> hide;
-    sigc::signal<void, void *> remove;
-    sigc::signal<void, void *> needs_redraw;
+    sigc::signal<void, LauncherIcon *> show;
+    sigc::signal<void, LauncherIcon *> hide;
+    sigc::signal<void, LauncherIcon *> remove;
+    sigc::signal<void, LauncherIcon *> needs_redraw;
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
@@ -129,6 +132,7 @@ protected:
     void SetRelatedWindows (int windows);
     void Remove ();
     
+    void SetProgress (float progress);
     
     void Present (float urgency, int length);
     void Unpresent ();
@@ -140,7 +144,6 @@ protected:
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
     virtual void OnCenterStabilized (nux::Point3 center) {};
-    virtual bool IconOwnsWindow (Window w) { return false; }
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);
@@ -184,12 +187,14 @@ private:
     int              _sort_priority;
     int              _related_windows;
     float            _present_urgency;
+    float            _progress;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;
+    nux::Point3      _saved_center;
     LauncherIconType _icon_type;
     
     bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];

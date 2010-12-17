@@ -36,8 +36,10 @@ class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
     BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
-    ~BamfLauncherIcon();
+    virtual ~BamfLauncherIcon();
 
+    const char* DesktopFile ();
+    bool IsSticky ();
 
 protected:
     void OnMouseClick (int button);
@@ -46,7 +48,6 @@ protected:
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
 
-    bool IconOwnsWindow (Window w);
 
     void AddProperties (GVariantBuilder *builder);
 
@@ -66,6 +67,9 @@ private:
     void Spread ();
 
     void EnsureMenuItemsReady ();
+    
+    void OnWindowMinimized (CompWindow *window);
+    bool OwnsWindow (Window w);
 
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
