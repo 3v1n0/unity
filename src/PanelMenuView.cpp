@@ -48,6 +48,8 @@ PanelMenuView::PanelMenuView ()
 : _matcher (NULL),
   _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
+  _gradient_texture (NULL),
+  _title_tex (NULL),
   _is_inside (false),
   _is_maximized (false),
   _last_active_view (NULL)
@@ -84,6 +86,9 @@ PanelMenuView::~PanelMenuView ()
 {
   if (_title_layer)
     delete _title_layer;
+  if (_title_tex)
+    _title_tex->UnReference ();
+
   _menu_layout->UnReference ();
   _window_buttons->UnReference ();
 }
@@ -152,7 +157,6 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
 
   _menu_layout->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   _menu_layout->ComputeLayout2();
-
   
   Refresh ();
   
@@ -163,7 +167,10 @@ void
 PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
-  
+  int button_width = PADDING + _window_buttons->GetContentWidth () + PADDING;
+  float factor = 4;
+  button_width /= factor;
+    
   GfxContext.PushClippingRectangle (geo);
 
   /* "Clear" out the background */
@@ -175,18 +182,81 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_inside || _last_active_view)
-    geo.width = PADDING + _window_buttons->GetContentWidth ();
-
   if (_is_maximized)
   {
     if (!_is_inside)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
-    gPainter.PushDrawLayer (GfxContext,
-                            geo,
-                            _title_layer);
+  {
+    if (_is_inside || _last_active_view)
+    {
+      if (_gradient_texture == NULL)
+      {
+        nux::NTextureData texture_data (nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
+        nux::ImageSurface surface = texture_data.GetSurface (0);
+        nux::SURFACE_LOCKED_RECT lockrect;
+        BYTE *dest;
+        int num_row;
+            
+       _gradient_texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
+
+        _gradient_texture->LockRect (0, &lockrect, 0);
+
+        dest = (BYTE *) lockrect.pBits;
+        num_row = surface.GetBlockHeight ();
+
+        for (int y = 0; y < num_row; y++)
+        {
+          for (int x = 0; x < geo.width; x++)
+          {
+            *(dest + y * lockrect.Pitch + 4*x + 0) = 223; //red
+            *(dest + y * lockrect.Pitch + 4*x + 1) = 219; //green
+            *(dest + y * lockrect.Pitch + 4*x + 2) = 210; //blue
+
+            if (x < button_width * (factor - 1))
+            {
+              *(dest + y * lockrect.Pitch + 4*x + 3) = 0xff;
+            }
+            else if (x < button_width * factor)
+            {
+              *(dest + y * lockrect.Pitch + 4*x + 3) = 255 - 255 * (((float)x-(button_width * (factor -1)))/(float)(button_width));
+            }
+            else
+            {
+              *(dest + y * lockrect.Pitch + 4*x + 3) = 0x00;
+            }
+          }
+        }
+        _gradient_texture->UnlockRect (0);
+      }
+      GfxContext.GetRenderStates ().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      nux::TexCoordXForm texxform0;
+      nux::TexCoordXForm texxform1;
+
+      // Modulate the checkboard and the gradient texture
+      GfxContext.QRP_2TexMod(geo.x, geo.y,
+                             geo.width, geo.height,
+                             _gradient_texture, texxform0,
+                             nux::Color::White,
+                             _title_tex->GetDeviceTexture (),
+                             texxform1,
+                             nux::Color::White);
+
+      GfxContext.GetRenderStates ().SetBlend(false);
+
+      geo.width = button_width * (factor - 1);
+      gPainter.PushDrawLayer (GfxContext, geo, _title_layer);
+      geo = GetGeometry ();  
+    }
+    else
+    {
+      gPainter.PushDrawLayer (GfxContext,
+                              geo,
+                              _title_layer);
+    }
+  }
 
   gPainter.PopBackground ();
  
@@ -380,8 +450,12 @@ PanelMenuView::Refresh ()
                                         false, 
                                         rop);
 
-    
-  texture2D->UnReference ();
+  
+  if (_title_tex)
+    _title_tex->UnReference ();
+
+  _title_tex = texture2D;
+
   g_free (label);
 }
 

@@ -42,7 +42,7 @@ class WindowManagerDummy : public WindowManager
 {
   bool IsWindowMaximized (guint32 xid)
   {
-    return true;
+    return false;
   }
 
   bool IsWindowDecorated (guint32 xid)
