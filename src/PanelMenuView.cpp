@@ -135,7 +135,8 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     }
   }
 
-  ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (_is_maximized)
+    ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
   ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
