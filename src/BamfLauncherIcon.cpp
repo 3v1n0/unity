@@ -339,6 +339,10 @@ BamfLauncherIcon::Spread ()
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive();
+
+  SimpleLauncherIcon::OnMouseClick (button);
+
   if (button != 1)
     return;
 
@@ -355,10 +359,10 @@ BamfLauncherIcon::OnMouseClick (int button)
     OpenInstance ();
     return;
   }
-  else if (active)
-    Spread ();
-  else
+  else if (!active)
     Focus ();
+  else if (!scaleWasActive)
+    Spread ();
 }
 
 void
