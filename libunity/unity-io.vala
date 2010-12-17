@@ -47,15 +47,19 @@ namespace Unity.IO {
     /* Since the free func of the MemoryOutputStream is null, we own the
      * ref to the internal buffer when the stream is finalized */
     var output = new MemoryOutputStream (null, realloc, null);
-    yield output.splice_async (input, OutputStreamSpliceFlags.NONE,
+    yield output.splice_async (input,
+                               OutputStreamSpliceFlags.CLOSE_SOURCE,
                                io_priority, cancellable);
+    
+    /* We can close the mem stream synchronously without risk,
+     * and we must close() it before stealing the data */
+    output.close (null);
     
     data = output.steal_data();
     size = output.get_data_size ();
     
     /* Start closing the input stream, but don't wait for it to happen */
-    input.close_async.begin(Priority.LOW, null);
-    output.close (null);    
+    input.close_async.begin(Priority.LOW, null);    
   }
   
   /**

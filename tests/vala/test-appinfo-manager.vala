@@ -91,7 +91,6 @@ namespace Unity.Tests.Unit
       var manager = AppInfoManager.get_instance();
       
       Environment.set_variable ("XDG_DATA_HOME", Config.TESTVALADIR+"/data", true);
-      debug ("XDG %s", Config.TESTVALADIR+"/data");
       
       var info = manager.lookup ("ubuntu-about.desktop");
       assert (info != null);

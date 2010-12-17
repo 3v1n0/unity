@@ -38,7 +38,7 @@ Icon=test_desktop_icon.png
   
     public IOSuite ()
     {
-      Test.add_data_func ("/Unit/IO/AsyncDektopFile",
+      Test.add_data_func ("/Unit/IO/AsyncDesktopFile",
                           IOSuite.test_async_find_and_load);
     }
 
