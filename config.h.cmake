@@ -6,5 +6,6 @@
 #cmakedefine LOCALE_DIR "@LOCALE_DIR@"
 #cmakedefine VERSION "@VERSION@"
 #cmakedefine BUILDDIR "@BUILDDIR@"
+#cmakedefine TESTVALADIR "@TESTVALADIR@"
 
 #endif // CONFIG_H
