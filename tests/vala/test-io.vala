@@ -61,10 +61,10 @@ Icon=test_desktop_icon.png
           assert (input is FileInputStream);
           
           /* Read in small chunks to test reading across buffer pages */
-          uchar[] buf = new uchar[16];
-          void* data;
+          uint8[] data;
           size_t data_size;
-          yield IO.read_stream_async (input, buf, 16, Priority.DEFAULT,  null,
+          yield IO.read_stream_async (input,
+                                      Priority.LOW, null,
                                       out data, out data_size);
           
           /* The test file is 177 bytes long */
