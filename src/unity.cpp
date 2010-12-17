@@ -395,6 +395,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   GLScreenInterface::setHandler (gScreen);
 
   PluginAdapter::Initialize (screen);
+  WindowManager::SetDefault (PluginAdapter::Default ());
+
   StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
 
   nux::NuxInitialize (0);
@@ -409,7 +411,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   uScreen = this;
 
   debugger = new IntrospectionDBusInterface (this);
-
 
   optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));

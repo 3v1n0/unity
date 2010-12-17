@@ -82,6 +82,14 @@ add_executable (test-panel
                 ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
                 ../src/PanelHomeButton.h
+                ../src/PanelMenuView.cpp
+                ../src/PanelMenuView.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                ../src/WindowButtons.cpp
+                ../src/WindowButtons.h
+                ../src/WindowManager.cpp
+                ../src/WindowManager.h
                 ../libunity/ubus-server.c
                 ../libunity/ubus-server.h
                 )

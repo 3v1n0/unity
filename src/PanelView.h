@@ -24,6 +24,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "PanelHomeButton.h"
+#include "PanelMenuView.h"
 #include "IndicatorObjectFactoryRemote.h"
 #include "Introspectable.h"
 
@@ -43,6 +44,7 @@ public:
   void OnObjectAdded (IndicatorObjectProxy *proxy);
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
+  void OnEntryActivated (const char *entry_id);
   
   PanelHomeButton * HomeButton ();
 
@@ -59,6 +61,7 @@ private:
   IndicatorObjectFactoryRemote *_remote;
 
   PanelHomeButton         *_home_button;
+  PanelMenuView           *_menu_view;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
 

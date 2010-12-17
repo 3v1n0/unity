@@ -65,9 +65,15 @@ void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
   if (!(last_state & MAXIMIZE_STATE) && (state & MAXIMIZE_STATE))
-    window_maximized.emit (window);
+  {
+    PluginAdapter::window_maximized.emit (window);
+    WindowManager::window_maximized.emit (window->id ());
+  }
   else if ((last_state & MAXIMIZE_STATE) && !(state & MAXIMIZE_STATE))
-    window_restored.emit (window);
+  {
+    PluginAdapter::window_restored.emit (window);
+    WindowManager::window_restored.emit (window->id ());
+  }
 }
 
 void 
@@ -94,10 +100,12 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
       window_shown.emit (window);
       break;
     case CompWindowNotifyMap:
-      window_mapped.emit (window);
+      PluginAdapter::window_mapped.emit (window);
+      WindowManager::window_mapped.emit (window->id ());
       break;
     case CompWindowNotifyUnmap:
-      window_unmapped.emit (window);
+      PluginAdapter::window_unmapped.emit (window);
+      WindowManager::window_unmapped.emit (window->id ());
       break;
     default:
       break;
@@ -215,4 +223,69 @@ PluginAdapter::InitiateExpo ()
     argument.push_back (arg);
     
     m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
+}
+
+// WindowManager implementation
+bool
+PluginAdapter::IsWindowMaximized (guint xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    return window->state () & MAXIMIZE_STATE;
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowDecorated (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    unsigned int decor = window->mwmDecor ();
+
+    return decor & (MwmDecorAll | MwmDecorTitle);
+  }
+  return true;
+}
+
+void
+PluginAdapter::Restore (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->maximize (0);
+}
+
+void
+PluginAdapter::Minimize (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->minimize ();
+}
+
+void
+PluginAdapter::Close (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->close (CurrentTime);
 }
