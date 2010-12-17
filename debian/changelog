@@ -1,3 +1,23 @@
+unity (3.2.8-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - unity-panel-service should be autorestarted by unity when crashing
+      (lp: #686591)
+    - App name in panel menu is truncated (lp: #619477)
+    - Removing the appmenu indicator left-aligns all other indicators 
+      (lp: #688764)
+    - unity support for firefox menubar (lp: #690447)
+    - the unityshell plugin has no icon in ccsm (lp: #688594)
+    - the unityshell plugin has an "unknown category" in ccsm (lp: #688592)
+  * debian/control:
+    - updated the dee and nux requirement.
+  * debian/libunity3.symbols:
+    - updated to include the new symbols
+  * debian/unity.install:
+    - install the ccsm icons there
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 17 Dec 2010 17:31:04 +0100
+
 unity (3.2.6-0ubuntu2) natty; urgency=low
 
   * debian/control:

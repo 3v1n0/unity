@@ -31,9 +31,6 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
-#define PANEL_HEIGHT 24
-#define PADDING 6
-#define SPACING 3
 
 static void draw_menu_bg (cairo_t *cr, int width, int height);
 
@@ -43,7 +40,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
-  _proxy->Updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   
@@ -52,6 +50,12 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
 
 PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 {
+}
+
+void
+PanelIndicatorObjectEntryView::OnActiveChanged (bool is_active)
+{
+  active_changed.emit (this, is_active);
 }
 
 void

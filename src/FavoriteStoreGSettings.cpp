@@ -323,6 +323,36 @@ FavoriteStoreGSettings::MoveFavorite (const char *desktop_path,
   Refresh ();
 }
 
+void 
+FavoriteStoreGSettings::SetFavorites (std::list<const char *> desktop_paths)
+{
+  char *favs[desktop_paths.size () + 1];
+  favs[desktop_paths.size ()] = NULL;  
+  
+  int i = 0;
+  std::list<const char*>::iterator it;
+  for (it = desktop_paths.begin (); it != desktop_paths.end (); it++)
+  {
+    favs[i] = get_basename_or_path (*it);
+    i++;
+  }
+  
+  m_ignore_signals = true;
+  if (!g_settings_set_strv (m_settings, "favorites", favs))
+    g_warning ("Unable to set favorites from list");
+  m_ignore_signals = false;
+  
+  i = 0;
+  while (favs[i] != NULL)
+  {
+    g_free (favs[i]);
+    favs[i] = NULL;
+    i++;
+  }
+  
+  Refresh ();
+}
+
 void
 FavoriteStoreGSettings::Changed (const gchar *key)
 {

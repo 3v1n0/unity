@@ -2,6 +2,7 @@ usr/bin/
 usr/lib/compiz
 usr/lib/unity/*service
 usr/share/compiz/unityshell.xml
+usr/share/ccsm
 usr/share/dbus-1
 usr/share/gconf
 usr/share/locale

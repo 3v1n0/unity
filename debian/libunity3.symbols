@@ -32,6 +32,22 @@ libunity.so.3 libunity3 #MINVER#
  ubus_server_register_interest@Base 3.2.0
  ubus_server_send_message@Base 3.2.0
  ubus_server_unregister_interest@Base 3.2.0
+ unity_app_info_manager_clear@Base 3.2.8
+ unity_app_info_manager_get_categories@Base 3.2.8
+ unity_app_info_manager_get_instance@Base 3.2.8
+ unity_app_info_manager_get_type@Base 3.2.8
+ unity_app_info_manager_lookup@Base 3.2.8
+ unity_app_info_manager_lookup_async@Base 3.2.8
+ unity_app_info_manager_lookup_finish@Base 3.2.8
+ unity_io_get_system_data_dirs@Base 3.2.8
+ unity_io_open_from_data_dirs@Base 3.2.8
+ unity_io_open_from_data_dirs_finish@Base 3.2.8
+ unity_io_open_from_dirs@Base 3.2.8
+ unity_io_open_from_dirs_finish@Base 3.2.8
+ unity_io_read_stream_async@Base 3.2.8
+ unity_io_read_stream_finish@Base 3.2.8
+ unity_io_system_data_dirs@Base 3.2.8
+ unity_io_system_data_dirs_length1@Base 3.2.8
  unity_place__browsingstate_copy@Base 3.1.3
  unity_place__browsingstate_destroy@Base 3.1.3
  unity_place__browsingstate_dup@Base 3.1.3

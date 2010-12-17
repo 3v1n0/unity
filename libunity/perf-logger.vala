@@ -59,7 +59,6 @@ namespace Perf
 
     public void start_process (string name)
     {
-      debug ("shoop de whoop");
       if (name in this.process_map.keys)
       {
         warning ("already started process: %s", name);
@@ -73,7 +72,6 @@ namespace Perf
 
     public void end_process (string name)
     {
-      debug ("shonk le donk");
       double end_time = this.global_timer.elapsed ();
       print ("the end time is %f", end_time);
 

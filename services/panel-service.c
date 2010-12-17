@@ -955,6 +955,7 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
   if (priv->last_entry == entry)
     return;
@@ -987,6 +988,7 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
                                                         G_CALLBACK (on_active_menu_move_current), self);
 
+      indicator_object_entry_activate (object, entry, CurrentTime);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);

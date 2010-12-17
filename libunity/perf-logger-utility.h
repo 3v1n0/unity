@@ -21,14 +21,23 @@
 
 #include <libunity/unity.h>
 
-#define START_FUNCTION() G_STMT_START { \
-                          perf_timeline_logger_start_process (perf_timeline_logger_get_default(), G_STRFUNC);\
-                       } G_STMT_END
-#define LOGGER_START_PROCESS(process) { perf_timeline_logger_start_process (perf_timeline_logger_get_default(), process);}
+#ifdef ENABLE_LOGGER
+  #define START_FUNCTION() G_STMT_START { \
+                            perf_timeline_logger_start_process (perf_timeline_logger_get_default(), G_STRFUNC);\
+                         } G_STMT_END
+  #define LOGGER_START_PROCESS(process) { perf_timeline_logger_start_process (perf_timeline_logger_get_default(), process);}
 
-#define END_FUNCTION() G_STMT_START { \
-                          perf_timeline_logger_end_process (perf_timeline_logger_get_default(), G_STRFUNC);\
-                       } G_STMT_END
-#define LOGGER_END_PROCESS(process) { perf_timeline_logger_end_process (perf_timeline_logger_get_default(), process);}
+  #define END_FUNCTION() G_STMT_START { \
+                            perf_timeline_logger_end_process (perf_timeline_logger_get_default(), G_STRFUNC);\
+                         } G_STMT_END
+  #define LOGGER_END_PROCESS(process) { perf_timeline_logger_end_process (perf_timeline_logger_get_default(), process);}
+  #define LOGGER_WRITE_LOG(file) { perf_timeline_logger_write_log (perf_timeline_logger_get_default(), file);}
+#else
+  #define START_FUNCTION()
+  #define LOGGER_START_PROCESS(process)
+  #define END_FUNCTION()
+  #define LOGGER_END_PROCESS(process)
+  #define LOGGER_WRITE_LOG(file)
+#endif /* ENABLE_LOGGER */
 
 #endif /* PERF_LOGGER_H */

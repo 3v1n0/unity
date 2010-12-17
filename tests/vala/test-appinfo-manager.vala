@@ -18,7 +18,6 @@
  *
  */
 using Unity;
-using Unity.Place;
 using Unity.Testing;
 
 namespace Unity.Tests.Unit
@@ -91,8 +90,7 @@ namespace Unity.Tests.Unit
       string old_datadir = Environment.get_user_data_dir ();
       var manager = AppInfoManager.get_instance();
       
-      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR+"/data", true);
-      debug ("XDG %s", Config.TESTUNITDIR+"/data");
+      Environment.set_variable ("XDG_DATA_HOME", Config.TESTVALADIR+"/data", true);
       
       var info = manager.lookup ("ubuntu-about.desktop");
       assert (info != null);
@@ -121,7 +119,7 @@ namespace Unity.Tests.Unit
       string old_datadir = Environment.get_user_data_dir ();
       var manager = AppInfoManager.get_instance();
       
-      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR+"/data", true);      
+      Environment.set_variable ("XDG_DATA_HOME", Config.TESTVALADIR+"/data", true);      
       
       try{
         var info = yield manager.lookup_async ("ubuntu-about.desktop");
