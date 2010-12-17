@@ -25,6 +25,9 @@
 
 class WindowButtons : public nux::HLayout, public Introspectable
 {
+  // These are the [close][minimize][maximize] buttons on the panel when there
+  // is a maximized window
+
 public:
   WindowButtons ();
   ~WindowButtons ();

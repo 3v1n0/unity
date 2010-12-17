@@ -246,6 +246,8 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
       GfxContext.GetRenderStates ().SetBlend(false);
 
+      // The previous blend is too aggressive on the texture and therefore there
+      // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
       gPainter.PushDrawLayer (GfxContext, geo, _title_layer);
       geo = GetGeometry ();  
@@ -403,7 +405,7 @@ PanelMenuView::Refresh ()
   y = 0;
 
   if (_is_maximized)
-    x += _window_buttons->GetContentWidth () + PADDING;
+    x += _window_buttons->GetContentWidth () + PADDING + PADDING;
 
   if (label)
   {

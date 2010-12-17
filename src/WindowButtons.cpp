@@ -42,6 +42,7 @@ enum
 
 class WindowButton : public nux::Button
 {
+  // A single window button
 public:
   WindowButton (int type)
   : nux::Button ("X", NUX_TRACKER_LOCATION),
@@ -109,6 +110,8 @@ public:
 
   void LoadImages (const char *name)
   {
+    //FIXME: We need to somehow be theme aware. Or, at least support the themes
+    //       we know and have a good default fallback
     gchar  *filename;
     GError *error = NULL;
     GdkPixbuf *_normal;

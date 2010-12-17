@@ -24,8 +24,16 @@
 
 class WindowManager
 {
-public:
+  // This is a glue interface that breaks the dependancy of Unity with Compiz
+  // Basically it has a default implementation that does nothing useful, but
+  // the idea is that unity.cpp uses SetDefault() early enough in it's
+  // initialization so the things that require it get a usable implementation
+  //
+  // Currently only the Panel uses it but hopefully we'll get more of
+  // PluginAdaptor features moved into here and also get the Launcher to use
+  // it.
 
+public:
   static WindowManager * Default ();
   static void            SetDefault (WindowManager *manager);
 
