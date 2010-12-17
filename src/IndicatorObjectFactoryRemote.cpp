@@ -69,6 +69,7 @@ static bool reconnect_to_service (gpointer data);
 
 // Public Methods
 IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
+: _proxy (NULL)
 {
   Reconnect ();
 }
