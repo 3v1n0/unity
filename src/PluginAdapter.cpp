@@ -25,28 +25,39 @@ PluginAdapter * PluginAdapter::_default = 0;
 PluginAdapter *
 PluginAdapter::Default ()
 {
-    if (!_default)
-        return 0;
-    return _default;
+  if (!_default)
+      return 0;
+  return _default;
 }
 
 /* static */
 void
 PluginAdapter::Initialize (CompScreen *screen)
 {
-    _default = new PluginAdapter (screen);
+  _default = new PluginAdapter (screen);
 }
 
 PluginAdapter::PluginAdapter(CompScreen *screen)
 {
-    m_Screen = screen;
-    m_ExpoAction = 0;
-    m_ScaleAction = 0;
+  m_Screen = screen;
+  m_ExpoAction = 0;
+  m_ScaleAction = 0;
 }
 
 PluginAdapter::~PluginAdapter()
 {
+}
 
+void 
+PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
+{
+  window_resized.emit (window);
+}
+
+void 
+PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
+{
+  window_moved.emit (window);
 }
 
 void
