@@ -17,11 +17,11 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-I${CMAKE_BINARY_DIR}/libuntiy"
+     "-I${CMAKE_BINARY_DIR}/libunity"
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} -lunity)
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} unity)
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS} ${CMAKE_BINARY_DIR}/libunity)
