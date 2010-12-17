@@ -129,6 +129,7 @@ vala_precompile (VALA_C vala/test-unit.vala
                  OPTIONS --thread
                  CUSTOM_VAPIS ${CMAKE_SOURCE_DIR}/vapi/dee-1.0.vapi
                               vala/test-const.vapi
+                              vala/config.vapi
                               ${CMAKE_BINARY_DIR}/libunity/unity.vapi
 )
 
