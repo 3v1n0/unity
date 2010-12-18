@@ -540,7 +540,13 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
   if (BAMF_IS_WINDOW (new_view))
   {
     BamfWindow *window = BAMF_WINDOW (new_view);
-    _is_maximized = WindowManager::Default ()->IsWindowMaximized (bamf_window_get_xid (window));
+    guint32 xid = bamf_window_get_xid (window);
+    _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
+
+    if (_decor_map.find (xid) == _decor_map.end ())
+    {
+      _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
+    }
   }
 
   Refresh ();
@@ -568,6 +574,7 @@ PanelMenuView::OnWindowMaximized (guint xid)
     if (_decor_map[xid])
     {
       WindowManager::Default ()->Undecorate (xid);
+      _decor_map[xid] = false;
     }
 
     _is_maximized = true;
@@ -587,9 +594,10 @@ PanelMenuView::OnWindowRestored (guint xid)
   {
     _is_maximized = false;
 
-    if (_decor_map[xid])
+    if (!_decor_map[xid] && _decor_map.count (xid))
     {
       WindowManager::Default ()->Decorate (xid);
+      _decor_map[xid] = true;
     }
 
     Refresh ();
