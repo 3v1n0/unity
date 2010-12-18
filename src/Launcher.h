@@ -38,6 +38,13 @@ class QuicklistView;
 class Launcher : public Introspectable, public nux::View
 {
 public:
+  typedef enum
+  {
+    LAUNCH_ANIMATION_NONE,
+    LAUNCH_ANIMATION_PULSE,
+    LAUNCH_ANIMATION_BLINK,
+  } LaunchAnimation;
+
   Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
@@ -60,6 +67,9 @@ public:
 
   void SetBacklightAlwaysOn (bool always_on);
   bool GetBacklightAlwaysOn ();
+  
+  void SetLaunchAnimation (LaunchAnimation animation);
+  LaunchAnimation GetLaunchAnimation ();
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -152,6 +162,7 @@ private:
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingBlinkValue  (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
   float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
@@ -250,6 +261,7 @@ private:
 
   LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
+  LaunchAnimation _launch_animation;
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;

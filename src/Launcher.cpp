@@ -242,6 +242,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _folded_z_distance      = 10.0f;
     _launcher_state         = LAUNCHER_FOLDED;
     _launcher_action_state  = ACTION_NONE;
+    _launch_animation       = LAUNCH_ANIMATION_BLINK;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
@@ -272,6 +273,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _window_over_launcher   = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
+    
 
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -583,6 +585,14 @@ float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const 
     return 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
+float Launcher::IconStartingBlinkValue (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    int starting_ms = TimeDelta (&current, &starting_time);
+    double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
+    return 0.5f + (float) (std::cos (M_PI * (_backlight_always_on ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
+}
+
 float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
@@ -595,10 +605,7 @@ float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec cons
         icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
     }
 
-    if (_backlight_always_on)
-      return 0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
-    else
-      return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
+    return 0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
 }
 
 float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current)
@@ -608,37 +615,46 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
     int running_ms = TimeDelta (&current, &running_time);
     float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    
+    if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+      running_progress = 1.0f - running_progress;
 
     // After we finish a fade in from running, we can reset the quirk
     if (running_progress == 1.0f && icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-    {
-         icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
-         icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-    }   
+       icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
     
+    float backlight_strength;
     if (_backlight_always_on)
-    {
-      result = BACKLIGHT_STRENGTH;
-    }
+      backlight_strength = BACKLIGHT_STRENGTH;
     else
+      backlight_strength = BACKLIGHT_STRENGTH * running_progress;
+      
+    switch (_launch_animation)
     {
-      result = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
-
-      if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-      {
-          // running progress fades in whatever the pulsing did not fill in already
-          result += running_progress * (BACKLIGHT_STRENGTH - result);
-
-          // urgent serves to bring the total down only
-          if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
-              result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
-      }
-      else
-      {
-          // modestly evil
-          result += BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
-      }
+      case LAUNCH_ANIMATION_NONE:
+        result = backlight_strength;
+        break;
+      case LAUNCH_ANIMATION_BLINK:
+        if (_backlight_always_on)
+          result = IconStartingBlinkValue (icon, current);
+        else
+          result = backlight_strength;
+        break;
+      case LAUNCH_ANIMATION_PULSE:
+        if (running_progress == 1.0f && icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+          icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+        
+        result = backlight_strength;
+        if (_backlight_always_on)
+          result *= CLAMP (running_progress + IconStartingPulseValue (icon, current), 0.0f, 1.0f);
+        else
+          result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue (icon, current));
+        break;
     }
+    
+      // urgent serves to bring the total down only
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+      result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
     
     return result;
 }
@@ -1061,6 +1077,21 @@ void Launcher::SetBacklightAlwaysOn (bool always_on)
 bool Launcher::GetBacklightAlwaysOn ()
 {
   return _backlight_always_on;
+}
+
+void 
+Launcher::SetLaunchAnimation (LaunchAnimation animation)
+{
+  if (_launch_animation == animation)
+    return;
+    
+  _launch_animation = animation;  
+}
+
+Launcher::LaunchAnimation 
+Launcher::GetLaunchAnimation ()
+{
+  return _launch_animation;
 }
 
 void

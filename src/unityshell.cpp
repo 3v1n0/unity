@@ -360,6 +360,9 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
       break;
+    case UnityshellOptions::LaunchAnimation:
+      launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
+      break;
     default:
       break;
   }
@@ -414,6 +417,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
