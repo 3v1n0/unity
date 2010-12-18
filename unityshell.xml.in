@@ -42,11 +42,6 @@
 	    <_long>Make the launcher hide automatically after some time inactive</_long>
 	    <default>false</default>
 	    </option>
-	    <option name="launcher_float" type="bool">
-	    <_short>Float Launcher</_short>
-	    <_long>Make the launcher appear above other windows</_long>
-	    <default>false</default>
-	    </option>
 	    <option name="backlight_always_on" type="bool">
 	    <_short>Backlight Always On</_short>
 	    <_long>Make the launcher icons always have a backlight</_long>

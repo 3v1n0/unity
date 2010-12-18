@@ -357,9 +357,6 @@ UnityScreen::optionChanged (CompOption            *opt,
       launcher->SetAutohide (optionGetLauncherAutohide (),
                              (nux::View *) panelView->HomeButton ());
       break;
-    case UnityshellOptions::LauncherFloat:
-      launcher->SetFloating (optionGetLauncherFloat ());
-      break;
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
       break;
@@ -416,7 +413,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   debugger = new IntrospectionDBusInterface (this);
 
   optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLauncherFloatNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
