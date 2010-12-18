@@ -47,6 +47,11 @@
 	    <_long>Make the launcher appear above other windows</_long>
 	    <default>false</default>
 	    </option>
+	    <option name="backlight_always_on" type="bool">
+	    <_short>Backlight Always On</_short>
+	    <_long>Make the launcher icons always have a backlight</_long>
+	    <default>true</default>
+	    </option>
 	</options>
     </plugin>
 </compiz>

@@ -360,6 +360,9 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::LauncherFloat:
       launcher->SetFloating (optionGetLauncherFloat ());
       break;
+    case UnityshellOptions::BacklightAlwaysOn:
+      launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
+      break;
     default:
       break;
   }
@@ -412,8 +415,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new IntrospectionDBusInterface (this);
 
-  optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherFloatNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -471,6 +475,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
 
   self->launcher->SetIconSize (54, 48);
+  self->launcher->SetBacklightAlwaysOn (true);
   LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */

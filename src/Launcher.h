@@ -57,6 +57,9 @@ public:
 
   void SetAutohide (bool autohide, nux::View *show_trigger);
   bool AutohideEnabled ();
+
+  void SetBacklightAlwaysOn (bool always_on);
+  bool GetBacklightAlwaysOn ();
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -237,6 +240,7 @@ private:
   bool  _mouse_inside_trigger;
   bool  _window_over_launcher;
   bool  _render_drag_window;
+  bool  _backlight_always_on;
 
   float _folded_angle;
   float _neg_folded_angle;
