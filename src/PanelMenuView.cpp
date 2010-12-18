@@ -185,7 +185,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (_is_maximized)
   {
-    if (!_is_inside)
+    if (!_is_inside && !_last_active_view)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
