@@ -242,7 +242,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _folded_z_distance      = 10.0f;
     _launcher_state         = LAUNCHER_FOLDED;
     _launcher_action_state  = ACTION_NONE;
-    _launch_animation       = LAUNCH_ANIMATION_BLINK;
+    _launch_animation       = LAUNCH_ANIMATION_PULSE;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;

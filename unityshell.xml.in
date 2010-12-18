@@ -52,7 +52,7 @@
         <_long>Animation played when a launcher icon is in the process of spawning a process</_long>
         <min>0</min>
         <max>2</max>
-        <default>2</default>
+        <default>1</default>
         <desc>
           <value>0</value>
           <_name>None</_name>
