@@ -110,6 +110,7 @@ if __name__ == '__main__':
     usage = "usage: %prog [options]"
     parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
+    parser.add_option("--replace", action="store_true", help="Run unity")
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
     parser.add_option("--log", action="store",
@@ -123,5 +124,5 @@ if __name__ == '__main__':
     set_unity_env()
     if options.reset:
         reset_unity_compiz_profile ()
-
+		
     run_unity (options.verbose, options.advanced_debug, args, options.log)
