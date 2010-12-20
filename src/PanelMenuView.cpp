@@ -540,7 +540,11 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
   if (BAMF_IS_WINDOW (new_view))
   {
     BamfWindow *window = BAMF_WINDOW (new_view);
-    _is_maximized = WindowManager::Default ()->IsWindowMaximized (bamf_window_get_xid (window));
+    guint32 xid = bamf_window_get_xid (window);
+    _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
+
+    if (_decor_map.find (xid) == _decor_map.end ())
+      _decor_map[xid] = true;
   }
 
   Refresh ();
