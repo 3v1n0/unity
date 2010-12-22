@@ -505,6 +505,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
+  self->launcher->SetAutohide (true, (nux::View *) self->panelView->HomeButton ());
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();
