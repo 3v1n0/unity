@@ -45,6 +45,13 @@ public:
     LAUNCH_ANIMATION_BLINK,
   } LaunchAnimation;
 
+  typedef enum
+  {
+    URGENT_ANIMATION_NONE,
+    URGENT_ANIMATION_PULSE,
+    URGENT_ANIMATION_WIGGLE,
+  } UrgentAnimation;
+
   Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
@@ -71,6 +78,9 @@ public:
   void SetLaunchAnimation (LaunchAnimation animation);
   LaunchAnimation GetLaunchAnimation ();
   
+  void SetUrgentAnimation (UrgentAnimation animation);
+  UrgentAnimation GetUrgentAnimation ();
+  
   nux::BaseWindow* GetParent () { return _parent; };
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -92,12 +102,6 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  typedef enum
-  {
-    LAUNCHER_FOLDED,
-    LAUNCHER_UNFOLDED
-  } LauncherState;
-
   typedef enum
   {
     ACTION_NONE,
@@ -162,6 +166,7 @@ private:
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentWiggleValue   (LauncherIcon *icon, struct timespec const &current);
   float IconStartingBlinkValue  (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
@@ -259,9 +264,9 @@ private:
   float _launcher_top_y;
   float _launcher_bottom_y;
 
-  LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
+  UrgentAnimation _urgent_animation;
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;

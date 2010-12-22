@@ -1,71 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <compiz>
     <plugin name="unityshell" useBcop="true">
-	<_short>Ubuntu Unity Plugin</_short>
-	<_long>Plugin to draw the Unity Shell</_long>
-	<category>Desktop</category>
-	<deps>
-	    <relation type="after">
-		<plugin>bailer</plugin>
-		<plugin>detection</plugin>
-		<plugin>composite</plugin>
-		<plugin>opengl</plugin>
-		<plugin>mousepoll</plugin>
-		<plugin>move</plugin>
-		<plugin>resize</plugin>
-		<plugin>decor</plugin>
-		<plugin>compiztoolbox</plugin>
-		<plugin>place</plugin>
-		<plugin>session</plugin>
-		<plugin>animation</plugin>
-		<plugin>regex</plugin>
-		<plugin>cube</plugin>
-		<plugin>rotate</plugin>
-		<plugin>cubeaddon</plugin>
-		<plugin>gnomecompat</plugin>
-		<plugin>vpswitch</plugin>
-		<plugin>fade</plugin>
-		<plugin>staticswitcher</plugin>
-		<plugin>scale</plugin>
-		<plugin>expo</plugin>
-		<plugin>ezoom</plugin>
-		<plugin>wall</plugin>
-	    </relation>
-	    <requirement>
-		<plugin>opengl</plugin>
-		<plugin>wall</plugin>
-	    </requirement>
-	</deps>
-	<options>
-	    <option name="launcher_autohide" type="bool">
-        <_short>Autohide Launcher</_short>
-        <_long>Make the launcher hide automatically after some time inactive</_long>
-        <default>true</default>
-	    </option>
-	    <option name="backlight_always_on" type="bool">
-	      <_short>Backlight Always On</_short>
-	      <_long>Make the launcher icons always have a backlight</_long>
-	      <default>true</default>
-	    </option>
-	    <option name="launch_animation" type="int">
-        <_short>Launch Animation</_short>
-        <_long>Animation played when a launcher icon is in the process of spawning a process</_long>
-        <min>0</min>
-        <max>2</max>
-        <default>1</default>
-        <desc>
-          <value>0</value>
-          <_name>None</_name>
-        </desc>
-        <desc>
-          <value>1</value>
-          <_name>Pulse Until Running</_name>
-        </desc>
-        <desc>
-          <value>2</value>
-          <_name>Blink</_name>
-        </desc>
-      </option>
-	</options>
+        <_short>Ubuntu Unity Plugin</_short>
+        <_long>Plugin to draw the Unity Shell</_long>
+        <category>Desktop</category>
+        <deps>
+            <relation type="after">
+                <plugin>bailer</plugin>
+                <plugin>detection</plugin>
+                <plugin>composite</plugin>
+                <plugin>opengl</plugin>
+                <plugin>mousepoll</plugin>
+                <plugin>move</plugin>
+                <plugin>resize</plugin>
+                <plugin>decor</plugin>
+                <plugin>compiztoolbox</plugin>
+                <plugin>place</plugin>
+                <plugin>session</plugin>
+                <plugin>animation</plugin>
+                <plugin>regex</plugin>
+                <plugin>cube</plugin>
+                <plugin>rotate</plugin>
+                <plugin>cubeaddon</plugin>
+                <plugin>gnomecompat</plugin>
+                <plugin>vpswitch</plugin>
+                <plugin>fade</plugin>
+                <plugin>staticswitcher</plugin>
+                <plugin>scale</plugin>
+                <plugin>expo</plugin>
+                <plugin>ezoom</plugin>
+                <plugin>wall</plugin>
+            </relation>
+            <requirement>
+                <plugin>opengl</plugin>
+                <plugin>wall</plugin>
+            </requirement>
+        </deps>
+        <options>
+	          <group>
+                <_short>Behaviour</_short>
+	              <option name="launcher_autohide" type="bool">
+                    <_short>Autohide Launcher</_short>
+                    <_long>Make the launcher hide automatically after some time inactive</_long>
+                    <default>true</default>
+	              </option>
+	          </group>
+	          <group>
+                <_short>Experimental</_short>
+                <option name="backlight_always_on" type="bool">
+                    <_short>Backlight Always On</_short>
+                    <_long>Make the launcher icons always have a backlight</_long>
+                    <default>true</default>
+                </option>
+                <option name="launch_animation" type="int">
+                    <_short>Launch Animation</_short>
+                    <_long>Animation played when a launcher icon is in the process of spawning a process</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>1</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>None</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Pulse Until Running</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Blink</_name>
+                    </desc>
+                </option>
+                <option name="urgent_animation" type="int">
+                    <_short>Uregnt Animation</_short>
+                    <_long>Animation played when a launcher icon is in the urgent state</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>2</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>None</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Pulse</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Wiggle</_name>
+                    </desc>
+                </option>
+            </group>
+        </options>
     </plugin>
 </compiz>

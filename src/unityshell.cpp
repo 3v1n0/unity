@@ -363,6 +363,9 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::LaunchAnimation:
       launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
       break;
+    case UnityshellOptions::UrgentAnimation:
+      launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
+      break;
     default:
       break;
   }
@@ -418,6 +421,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -506,6 +510,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->placesController = new PlacesController ();
 
   self->launcher->SetAutohide (true, (nux::View *) self->panelView->HomeButton ());
+  self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
+  self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();

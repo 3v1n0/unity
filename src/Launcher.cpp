@@ -43,6 +43,7 @@
 #define ANIM_DURATION_LONG  350
 
 #define URGENT_BLINKS       3
+#define WIGGLE_CYCLES       6
 
 #define MAX_STARTING_BLINKS 5
 #define STARTING_BLINK_LAMBDA 3
@@ -240,9 +241,9 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _launcher_top_y         = 0;
     _launcher_bottom_y      = 0;
     _folded_z_distance      = 10.0f;
-    _launcher_state         = LAUNCHER_FOLDED;
     _launcher_action_state  = ACTION_NONE;
-    _launch_animation       = LAUNCH_ANIMATION_PULSE;
+    _launch_animation       = LAUNCH_ANIMATION_NONE;
+    _urgent_animation       = URGENT_ANIMATION_NONE;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
@@ -554,7 +555,12 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &c
 {
     struct timespec urgent_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
     int urgent_ms = TimeDelta (&current, &urgent_time);
-    float result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
+    float result;
+    
+    if (_urgent_animation == URGENT_ANIMATION_WIGGLE)
+      result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_SHORT * WIGGLE_CYCLES), 0.0f, 1.0f);
+    else
+      result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
 
     if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
       return result;
@@ -583,6 +589,15 @@ float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const 
 
     double urgent_progress = (double) IconUrgentProgress (icon, current);
     return 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
+}
+
+float Launcher::IconUrgentWiggleValue (LauncherIcon *icon, struct timespec const &current)
+{
+    if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+        return 0.0f; // we are full on in a normal condition
+
+    double urgent_progress = (double) IconUrgentProgress (icon, current);
+    return 0.3f * (float) (std::sin (M_PI * (float) (WIGGLE_CYCLES * 2) * urgent_progress)) * 0.5f;
 }
 
 float Launcher::IconStartingBlinkValue (LauncherIcon *icon, struct timespec const &current)
@@ -653,7 +668,7 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
     }
     
       // urgent serves to bring the total down only
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_PULSE)
       result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
     
     return result;
@@ -703,6 +718,11 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     else
       urgent_progress = CLAMP (urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
     arg.glow_intensity = urgent_progress;
+    
+    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
+    {
+      arg.z_rotation = IconUrgentWiggleValue (icon, current);
+    }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -1094,6 +1114,21 @@ Launcher::GetLaunchAnimation ()
   return _launch_animation;
 }
 
+void 
+Launcher::SetUrgentAnimation (UrgentAnimation animation)
+{
+  if (_urgent_animation == animation)
+    return;
+    
+  _urgent_animation = animation;  
+}
+
+Launcher::UrgentAnimation 
+Launcher::GetUrgentAnimation ()
+{
+  return _urgent_animation;
+}
+
 void
 Launcher::EnsureHoverState ()
 {
@@ -1285,7 +1320,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
-  if(nux::Abs (arg.x_rotation) < 0.01f)
+  if(nux::Abs (arg.x_rotation) < 0.01f && nux::Abs (arg.y_rotation) < 0.01f && nux::Abs (arg.z_rotation) < 0.01f)
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
     icon->SetFiltering(GL_LINEAR, GL_LINEAR);
