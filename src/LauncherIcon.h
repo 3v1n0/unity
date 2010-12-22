@@ -36,6 +36,7 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
+#include "Launcher.h"
 
 class Launcher;
 class QuicklistView;

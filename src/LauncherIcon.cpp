@@ -522,7 +522,10 @@ LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
     return;
     
   _quirks[quirk] = value;
-  clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
+  if (quirk == QUIRK_VISIBLE)
+    Launcher::SetTimeStruct (&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
+  else
+    clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit (this);
   
   // Present on urgent as a general policy

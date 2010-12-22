@@ -38,10 +38,6 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 
-#define ANIM_DURATION_SHORT 125
-#define ANIM_DURATION       200
-#define ANIM_DURATION_LONG  350
-
 #define URGENT_BLINKS       3
 #define WIGGLE_CYCLES       6
 
@@ -653,7 +649,7 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
         if (_backlight_always_on)
           result = IconStartingBlinkValue (icon, current);
         else
-          result = backlight_strength;
+          result = backlight_strength; // The blink concept is a failure in this case (it just doesn't work right)
         break;
       case LAUNCH_ANIMATION_PULSE:
         if (running_progress == 1.0f && icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))

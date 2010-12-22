@@ -25,6 +25,7 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
@@ -32,8 +33,14 @@
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
 
+#define ANIM_DURATION_SHORT 125
+#define ANIM_DURATION       200
+#define ANIM_DURATION_LONG  350
+
 class LauncherModel;
 class QuicklistView;
+class LauncherIcon;
+class LauncherDragWindow;
 
 class Launcher : public Introspectable, public nux::View
 {
@@ -82,6 +89,8 @@ public:
   UrgentAnimation GetUrgentAnimation ();
   
   nux::BaseWindow* GetParent () { return _parent; };
+
+  static void SetTimeStruct (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -148,7 +157,6 @@ private:
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
-  void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
 
   void EnsureHoverState ();
   void EnsureHiddenState ();
