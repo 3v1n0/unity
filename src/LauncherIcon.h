@@ -103,8 +103,8 @@ public:
     
     IconType Type ();
     
-    nux::Color BackgroundColor ();
-    nux::Color GlowColor ();
+    virtual nux::Color BackgroundColor ();
+    virtual nux::Color GlowColor ();
     
     nux::BaseTexture * TextureForSize (int size);
     

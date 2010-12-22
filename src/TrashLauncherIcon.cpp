@@ -47,6 +47,18 @@ TrashLauncherIcon::~TrashLauncherIcon()
   g_object_unref (m_TrashMonitor);
 }
 
+nux::Color 
+TrashLauncherIcon::BackgroundColor ()
+{
+  return nux::Color (0xFF333333);
+}
+
+nux::Color 
+TrashLauncherIcon::GlowColor ()
+{
+  return nux::Color (0xFF333333);
+}
+
 void
 TrashLauncherIcon::OnMouseClick (int button)
 {
