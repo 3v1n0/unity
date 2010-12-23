@@ -156,3 +156,9 @@ IndicatorObjectEntryProxyRemote::ShowMenu (int x, int y, guint32 timestamp, guin
 {
   OnShowMenuRequest.emit (_id, x, y, timestamp, button);
 }
+
+void
+IndicatorObjectEntryProxyRemote::Scroll (int delta)
+{
+  OnScroll.emit(_id, delta);
+}

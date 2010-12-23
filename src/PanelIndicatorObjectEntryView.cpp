@@ -44,6 +44,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
   
   Refresh ();
 }
@@ -72,6 +73,12 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state)
+{
+  _proxy->Scroll (delta);
 }
 
 void

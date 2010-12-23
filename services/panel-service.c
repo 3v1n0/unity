@@ -996,6 +996,18 @@ panel_service_show_entry (PanelService *self,
 }
 
 void
+panel_service_scroll_entry (PanelService   *self,
+                            const gchar    *entry_id,
+                            gint32         delta)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  g_signal_emit_by_name(object, "scroll", 1, direction);
+}
+
+void
 panel_service_get_last_xy   (PanelService  *self,
                              gint          *x,
                              gint          *y)
