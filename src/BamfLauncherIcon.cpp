@@ -326,11 +326,10 @@ BamfLauncherIcon::Spread ()
     }
   }
 
-  _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
-
   if (windowList.size () > 1)
   {
     std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
     PluginAdapter::Default ()->InitiateScale (match);
     delete match;
     g_list_free (children);
@@ -343,13 +342,14 @@ BamfLauncherIcon::Spread ()
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  SimpleLauncherIcon::OnMouseClick (button);
-  bool scaleInActive = !PluginAdapter::Default ()->IsScaleActive() && !m_JustTerminatedScale;
-
-  m_JustTerminatedScale = false;
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
+  bool onlyOwnWasActive = PluginAdapter::Default ()->IsScaleActive (true);
 
   if (button != 1)
     return;
+
+  if (!scaleWasActive || scaleWasActive && !onlyOwnWasActive)
+    _launcher->SetLastSpreadIcon (NULL);
 
   bool active, running;
 
@@ -371,16 +371,25 @@ BamfLauncherIcon::OnMouseClick (int button)
     OpenInstance ();
     return;
   }
-  else if (!scaleInActive)
+  else if (scaleWasActive)
   {
     if (_launcher->GetLastSpreadIcon () != this)
-      if (!Spread () && !active)
+    {
+      if (!Spread ())
+      {
+	PluginAdapter::Default ()->TerminateScale ();
 	Focus ();
+        _launcher->SetLastSpreadIcon (NULL);
+      }
+    }
+    else
+      SimpleLauncherIcon::OnMouseClick (button);
   }
   else if (!active)
     Focus ();
-  else if (active && scaleInActive)  
+  else if (active && !scaleWasActive)
     Spread ();
+
 }
 
 void

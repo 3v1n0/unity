@@ -28,7 +28,6 @@ SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
 {
   m_Icon = 0;
   m_IconName = 0;
-  m_JustTerminatedScale = false;
   
   LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
   LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
@@ -56,11 +55,8 @@ SimpleLauncherIcon::OnMouseUp (int button)
 void
 SimpleLauncherIcon::OnMouseClick (int button)
 {
-  if (button == 1 && PluginAdapter::Default ()->IsScaleActive(true))
-  {
+  if (button == 1 && PluginAdapter::Default ()->IsScaleActive())
     PluginAdapter::Default ()->TerminateScale ();
-    m_JustTerminatedScale = true;
-  }
 }
 
 void

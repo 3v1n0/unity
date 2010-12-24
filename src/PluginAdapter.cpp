@@ -144,7 +144,7 @@ MultiActionList::IsAnyActive (bool onlyOwn)
       return true;
   }
 
-  return false;
+  return m_ToggledAction ? true : false;
 }
 
 void
@@ -179,6 +179,9 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
   argument[0].setName ("root", CompOption::TypeInt);
   argument[0].value ().set ((int) screen->root ());
 
+  foreach (CompOption &a, extraArgs)
+    argument.push_back (a);
+
   foreach (CompAction *action, m_ActionList)
   {
     if (action->state () & (CompAction::StateTermKey |
@@ -187,7 +190,7 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
 			    CompAction::StateTermEdgeDnd) ||
 			    m_ToggledAction == action)
     {
-      action->terminate () (action, CompAction::StateCancel, extraArgs);
+      action->terminate () (action, 0, argument);
       if (m_ToggledAction == action)
         m_ToggledAction = NULL;
     }
