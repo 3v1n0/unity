@@ -179,30 +179,50 @@ UnityScreen::initPluginActions (gpointer data)
 
   if (p)
   {
+	MultiActionList expoActions (0);
+
     foreach (CompOption &option, p->vTable->getOptions ())
     {
-      if (option.name () == "expo_key")
+      if (option.name () == "expo_key" ||
+		  option.name () == "expo_button" ||
+		  option.name () == "expo_edge")
       {
         CompAction *action = &option.value ().action ();
-        PluginAdapter::Default ()->SetExpoAction (action);
+		expoActions.AddNewAction (action);
         break;
       }
     }
+    
+    PluginAdapter::Default ()->SetExpoAction (expoActions);
   }
 
   p = CompPlugin::find ("scale");
 
   if (p)
   {
+	MultiActionList scaleActions (0);
+	  
     foreach (CompOption &option, p->vTable->getOptions ())
     {
-      if (option.name () == "initiate_all_key")
+      if (option.name () == "initiate_all_key" ||
+          option.name () == "initiate_all_button" ||
+          option.name () == "initiate_all_edge" ||
+          option.name () == "initiate_key" ||
+          option.name () == "initiate_button" ||
+          option.name () == "initiate_edge" ||
+          option.name () == "initiate_group_key" ||
+          option.name () == "initiate_group_button" ||
+          option.name () == "initiate_group_edge" ||
+          option.name () == "initiate_output_key" ||
+          option.name () == "initiate_output_button" ||
+          option.name () == "initiate_output_edge")
       {
         CompAction *action = &option.value ().action ();
-        PluginAdapter::Default ()->SetScaleAction (action);
-        break;
+        scaleActions.AddNewAction (action);
       }
     }
+    
+    PluginAdapter::Default ()->SetScaleAction (scaleActions);
   }
 
   return FALSE;

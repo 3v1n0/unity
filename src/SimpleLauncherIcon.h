@@ -40,6 +40,8 @@ protected:
     virtual void OnMouseClick (int button);
     virtual void OnMouseEnter ();
     virtual void OnMouseLeave ();
+    bool m_JustTerminatedScale;
+
 private:
     
     char *m_IconName;

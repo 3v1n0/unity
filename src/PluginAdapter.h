@@ -26,6 +26,27 @@
 
 #include "WindowManager.h"
 
+class MultiActionList
+{
+public:
+
+    MultiActionList (int n) :
+        m_ActionList (n),
+	m_ToggledAction (NULL) {};
+
+    void InitiateAll (CompOption::Vector &extraArgs);
+    void TerminateAll (CompOption::Vector &extraArgs);
+    bool IsAnyActive (bool onlyOwn = false);
+
+    void AddNewAction (CompAction *);
+    void RemoveAction (CompAction *);
+private:
+
+    std::list <CompAction *> m_ActionList;
+    CompAction *	     m_ToggledAction;
+};
+    
+
 class PluginAdapter : public sigc::trackable, public WindowManager
 {
 public:
@@ -37,15 +58,12 @@ public:
     
     std::string * MatchStringForXids (std::list<Window> *windows);
     
-    void SetScaleAction (CompAction *scale);
-    
-    void SetExpoAction (CompAction *expo);
+    void SetScaleAction (MultiActionList &scale);    
+    void SetExpoAction (MultiActionList &expo);
     
     void InitiateScale (std::string *match);
-
-    bool IsScaleActive ();
-
     void TerminateScale ();
+    bool IsScaleActive (bool onlyOwn = false);
     
     void InitiateExpo ();
     
@@ -79,8 +97,8 @@ protected:
 
 private:
     CompScreen *m_Screen;
-    CompAction *m_ExpoAction;
-    CompAction *m_ScaleAction;
+    MultiActionList m_ExpoActionList;
+    MultiActionList m_ScaleActionList;
     
     static PluginAdapter *_default;
 };

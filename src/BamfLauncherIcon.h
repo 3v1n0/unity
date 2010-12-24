@@ -64,7 +64,7 @@ private:
 
     void OpenInstance ();
     void Focus ();
-    void Spread ();
+    bool Spread ();
 
     void EnsureMenuItemsReady ();
     

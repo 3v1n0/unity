@@ -48,6 +48,8 @@ public:
 
   LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
   LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+  LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
+  void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
 
   void SetIconSize(int tile_size, int icon_size);
 
@@ -225,7 +227,7 @@ private:
 
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
-
+  LauncherIcon* m_LastSpreadIcon;
 
   QuicklistView* _active_quicklist;
 

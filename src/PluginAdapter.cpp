@@ -17,7 +17,6 @@
  */
  
 #include <glib.h>
-#include <scale/scale.h>
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
@@ -38,11 +37,11 @@ PluginAdapter::Initialize (CompScreen *screen)
   _default = new PluginAdapter (screen);
 }
 
-PluginAdapter::PluginAdapter(CompScreen *screen)
+PluginAdapter::PluginAdapter(CompScreen *screen) :
+    m_Screen (screen),
+    m_ExpoActionList (0),
+    m_ScaleActionList (0)
 {
-  m_Screen = screen;
-  m_ExpoAction = 0;
-  m_ScaleAction = 0;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -113,116 +112,152 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
 }
 
 void
-PluginAdapter::SetExpoAction (CompAction *expo)
+MultiActionList::AddNewAction (CompAction *a)
 {
-    m_ExpoAction = expo;
+  if (std::find (m_ActionList.begin (), m_ActionList.end (), a)  == m_ActionList.end ())
+    m_ActionList.push_back (a);
 }
 
 void
-PluginAdapter::SetScaleAction (CompAction *scale)
+MultiActionList::RemoveAction (CompAction *a)
 {
-    m_ScaleAction = scale;
+  m_ActionList.remove (a);
+}
+
+bool
+MultiActionList::IsAnyActive (bool onlyOwn)
+{
+  if (onlyOwn)
+  {
+    if (m_ToggledAction)
+      return true;
+    else
+      return false;
+  }
+
+  foreach (CompAction *action, m_ActionList)
+  {
+    if (action->state () & (CompAction::StateTermKey |
+			    CompAction::StateTermButton |
+			    CompAction::StateTermEdge |
+			    CompAction::StateTermEdgeDnd))
+      return true;
+  }
+
+  return false;
+}
+
+void
+MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
+{
+  CompOption::Vector argument;
+  if (!m_ActionList.size ())
+    return;
+
+  argument.resize (1);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  foreach (CompOption &arg, extraArgs)
+  {
+    argument.push_back (arg);
+  }
+
+  /* Initiate the first available action with the arguments */
+  m_ToggledAction = m_ActionList.front ();
+  m_ActionList.front ()->initiate () (m_ActionList.front (), 0, argument);
+}
+
+void
+MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
+{
+  CompOption::Vector argument;
+  CompOption::Value  value;
+  if (!m_ActionList.size ())
+    return;
+
+  argument.resize (1);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+
+  foreach (CompAction *action, m_ActionList)
+  {
+    if (action->state () & (CompAction::StateTermKey |
+			    CompAction::StateTermButton |
+			    CompAction::StateTermEdge |
+			    CompAction::StateTermEdgeDnd) ||
+			    m_ToggledAction == action)
+    {
+      action->terminate () (action, CompAction::StateCancel, extraArgs);
+      if (m_ToggledAction == action)
+        m_ToggledAction = NULL;
+    }
+  }
+}
+
+void
+PluginAdapter::SetExpoAction (MultiActionList &expo)
+{
+  m_ExpoActionList = expo;
+}
+
+void
+PluginAdapter::SetScaleAction (MultiActionList &scale)
+{
+  m_ScaleActionList = scale;
 }
     
 std::string *
 PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 {
-    char *string;
-    std::string *result = new std::string ("any & (");
+  char *string;
+  std::string *result = new std::string ("any & (");
     
-    std::list<Window>::iterator it;
+  std::list<Window>::iterator it;
     
-    for (it = windows->begin (); it != windows->end (); it++)
-    {
-        string = g_strdup_printf ("| xid=%i ", (int) *it);
-        result->append (string);
-        g_free (string);
-    }
+  for (it = windows->begin (); it != windows->end (); it++)
+  {
+    string = g_strdup_printf ("| xid=%i ", (int) *it);
+    result->append (string);
+    g_free (string);
+  }
     
-    result->append (")");
+  result->append (")");
     
-    return result;
+  return result;
 }
     
 void 
 PluginAdapter::InitiateScale (std::string *match)
 {
-    if (!m_ScaleAction)
-        return;
-        
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
+  CompOption::Vector argument;
 
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
+  argument.resize (1);
+  argument[0].setName ("match", CompOption::TypeMatch);
+  argument[0].value ().set (CompMatch (*match));
     
-    CompOption arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    name = (char *) "match";
-    type = CompOption::TypeMatch;
-    value.set (CompMatch (*match));
-    
-    arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ScaleAction->initiate () (m_ScaleAction, 0, argument);
-}
-    
-bool 
-PluginAdapter::IsScaleActive ()
-{
-    SCALE_SCREEN(m_Screen);
-    return (m_ScaleAction && ss && ss->hasGrab ());
+  m_ScaleActionList.InitiateAll (argument);
 }
 
 void 
 PluginAdapter::TerminateScale ()
 {
-    if (!IsScaleActive ())
-        return;
+  CompOption::Vector argument (0);
 
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
+  m_ScaleActionList.TerminateAll (argument);
+}
 
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
-    
-    CompOption arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ScaleAction->terminate () (m_ScaleAction, 0, argument);
+bool
+PluginAdapter::IsScaleActive (bool onlyOwn)
+{
+  return m_ScaleActionList.IsAnyActive (onlyOwn);
 }
 
 void 
 PluginAdapter::InitiateExpo ()
 {
-    if (!m_ExpoAction)
-        return;
-        
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
-
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
+    CompOption::Vector argument (0);
     
-    CompOption arg (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
+    m_ExpoActionList.InitiateAll (argument);
 }
 
 // WindowManager implementation

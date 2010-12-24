@@ -306,7 +306,7 @@ BamfLauncherIcon::Focus ()
   g_list_free (children);
 }
 
-void
+bool
 BamfLauncherIcon::Spread ()
 {
   BamfView *view;
@@ -326,22 +326,27 @@ BamfLauncherIcon::Spread ()
     }
   }
 
+  _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
+
   if (windowList.size () > 1)
   {
     std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
     PluginAdapter::Default ()->InitiateScale (match);
     delete match;
+    g_list_free (children);
+    return true;
   }
 
-  g_list_free (children);
+  return false;  
 }
 
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive();
-
   SimpleLauncherIcon::OnMouseClick (button);
+  bool scaleInActive = !PluginAdapter::Default ()->IsScaleActive() && !m_JustTerminatedScale;
+
+  m_JustTerminatedScale = false;
 
   if (button != 1)
     return;
@@ -351,6 +356,13 @@ BamfLauncherIcon::OnMouseClick (int button)
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
+  /* Behaviour:
+   * Nothing running -> launch application
+   * Running and active -> spread application
+   * Spread is active and different icon pressed -> change spread
+   * Spread is active -> Spread de-activated, and fall through
+   */
+
   if (!running)
   {
     if (GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
@@ -359,9 +371,15 @@ BamfLauncherIcon::OnMouseClick (int button)
     OpenInstance ();
     return;
   }
+  else if (!scaleInActive)
+  {
+    if (_launcher->GetLastSpreadIcon () != this)
+      if (!Spread () && !active)
+	Focus ();
+  }
   else if (!active)
     Focus ();
-  else if (!scaleWasActive)
+  else if (active && scaleInActive)  
     Spread ();
 }
 
