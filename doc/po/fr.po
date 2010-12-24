@@ -1,0 +1,189 @@
+#. type: TH
+#: unity.1:1
+#, no-wrap
+msgid "unity"
+msgstr "unity"
+
+#. type: TH
+#: unity.1:1
+#, no-wrap
+msgid "9 December 2010"
+msgstr ""
+
+#. type: TH
+#: unity.1:1 unity-panel-service.1:1
+#, no-wrap
+msgid "Linux User's Manual"
+msgstr "Manuel de l'utilisateur Linux"
+
+#. type: SH
+#: unity.1:3 unity-panel-service.1:3
+#, no-wrap
+msgid "NAME"
+msgstr "NOM"
+
+#. type: Plain text
+#: unity.1:5
+msgid "unity - wrapper for starting the unity shell and handling fallback"
+msgstr "unity - script pour démarrer et contrôler le shell Unity"
+
+#. type: SH
+#: unity.1:6 unity-panel-service.1:6
+#, no-wrap
+msgid "SYNOPSIS"
+msgstr "SYNOPSIS"
+
+#. type: Plain text
+#: unity.1:9
+msgid "B<unity> [I<options>]"
+msgstr "B<unity> [I<options>]"
+
+#. type: SH
+#: unity.1:11 unity-panel-service.1:10
+#, no-wrap
+msgid "DESCRIPTION"
+msgstr "DESCRIPTION"
+
+#. type: Plain text
+#: unity.1:13
+msgid ""
+"The B<unity> program can be used to start the Unity shell as a compiz "
+"module, and to specify how to handle logging, debugging, as well as how to "
+"deal with the user's profile."
+msgstr ""
+"Le programme B<unity> peut être utilisé afin de démarrer le shell Unity "
+"ainsi que pour configurer les paramètres de log, déboguage, et comment agir "
+"avec le profile utilisateur."
+
+#. type: SH
+#: unity.1:14 unity-panel-service.1:13
+#, no-wrap
+msgid "OPTIONS"
+msgstr "OPTIONS"
+
+#. type: IP
+#: unity.1:15
+#, no-wrap
+msgid "B<--advanced-debug>"
+msgstr "B<--advanced-debug>"
+
+#. type: Plain text
+#: unity.1:17
+msgid ""
+"Runs unity under debugging (using GDB or another debugger tool) to help "
+"tracking issues. Should only be used on request from a developper following "
+"a bug report."
+msgstr ""
+"Démarre unity avec les options de déboguage (en utilisant GDB ou un autre "
+"outil à cet effet) pour aider les développeurs à identifier des "
+"problèmes dans le but de compléter un rapport de bogue."
+
+#. type: IP
+#: unity.1:18
+#, no-wrap
+msgid "B<--log>\\ I<filename>"
+msgstr "B<--log>\\ I<ficher>"
+
+#. type: Plain text
+#: unity.1:20
+msgid ""
+"This parameter, followed by a path or filename, tells the Unity shell to "
+"store logs in the specified file."
+msgstr ""
+"Ce paramètre, suivi d'un chemin d'accès ou du nom d'un fichier, précise où "
+"le shell Unity doit écrire les logs."
+
+#. type: IP
+#: unity.1:21
+#, no-wrap
+msgid "B<--reset>"
+msgstr "B<--reset>"
+
+#. type: Plain text
+#: unity.1:23
+msgid ""
+"This option allows the user to reset profile parameters in compiz and "
+"restart the Unity shell with default settings."
+msgstr ""
+"Cette option permet à l'utilisateur de réinitialiser son profile et "
+"remettre à zéro les paramètres de compiz."
+
+#. type: IP
+#: unity.1:24
+#, no-wrap
+msgid "B<--verbose>"
+msgstr "B<--verbose>"
+
+#. type: Plain text
+#: unity.1:26
+msgid ""
+"This option turns on displaying additional debugging output for the Unity "
+"shell. It can be used by the user to debug configuration issues. This option "
+"is often used along with the B<--log> option to save output to a file."
+msgstr ""
+"Cette option active l'affichage d'informations supplémentaires pour le shell "
+"Unity. Elle peut être utilisée par l'utilisateur pour déceler des problèmes "
+"de configuration. Cette option est souvent utilisée avec B<--log> pour "
+"enregistrer la sortie dans un fichier."
+
+#. type: SH
+#: unity.1:27 unity-panel-service.1:18
+#, no-wrap
+msgid "SEE ALSO"
+msgstr "VOIR AUSSI"
+
+#. type: Plain text
+#: unity.1:29
+msgid "B<unity-panel-service> (1)"
+msgstr "B<unity-panel-service> (1)"
+
+#. type: TH
+#: unity-panel-service.1:1
+#, no-wrap
+msgid "unity-panel-service"
+msgstr "unity-panel-service"
+
+#. type: TH
+#: unity-panel-service.1:1
+#, no-wrap
+msgid "8 December 2010"
+msgstr "8 Décembre 2010"
+
+#. type: Plain text
+#: unity-panel-service.1:5
+msgid ""
+"unity-panel-service - program for drawing the panel with the unity shell."
+msgstr ""
+"unity-panel-service - programme pour l'affichage du panneau dans le shell "
+"Unity."
+
+#. type: Plain text
+#: unity-panel-service.1:8
+msgid "B<unity-panel-service>"
+msgstr "B<unity-panel-service>"
+
+#. type: Plain text
+#: unity-panel-service.1:12
+msgid ""
+"The B<unity-panel-service> program is normally started automatically by the "
+"Unity shell (which gets started as a compiz module) and is used to draw "
+"panels which can then be used for the global menu, or to hold indicators."
+msgstr ""
+"Le programme B<unity-panel-service> est automatiquement démarré par le "
+"shell Unity (qui est démarré en tant que module Compiz) et est utilisé "
+"pour peindre à l'écran les panneaux qui sont utilisés pour afficher le "
+"menu global, ou alors pour contenir les indicateurs."
+
+#. type: Plain text
+#: unity-panel-service.1:15
+msgid "B<unity-panel-service> takes no options."
+msgstr "B<unity-panel-service> n'attend pas d'options."
+
+#. type: SH
+#: unity-panel-service.1:16
+#, no-wrap
+msgid "NOTES"
+msgstr "NOTES"
+
+#~ msgid "B<--log>"
+#~ msgstr "B<--log>"
