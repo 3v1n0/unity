@@ -22,6 +22,7 @@
 
 #include "panel-service.h"
 
+#include <stdlib.h>
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-object.h>
 #include <gtk/gtk.h>
@@ -1004,7 +1005,7 @@ panel_service_scroll_entry (PanelService   *self,
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
   GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
-  g_signal_emit_by_name(object, "scroll", 1, direction);
+  g_signal_emit_by_name(object, "scroll", abs(delta/120), direction);
 }
 
 void
