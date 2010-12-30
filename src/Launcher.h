@@ -117,7 +117,7 @@ private:
     int           window_indicators;
   } RenderArg;
 
-  void OnWindowMaybeIntellihide (CompWindow *window);
+  void OnWindowMaybeIntellihide (guint32 xid);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);

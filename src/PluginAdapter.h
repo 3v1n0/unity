@@ -60,13 +60,16 @@ public:
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
-    
+
+    void OnScreenGrabbed ();
+    void OnScreenUngrabbed ();
+
     void InitiateScale (std::string *match);
     void TerminateScale ();
     bool IsScaleActive (bool onlyOwn = false);
     
     void InitiateExpo ();
-    
+
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
     void NotifyResized (CompWindow *window, int x, int y, int w, int h);
@@ -77,20 +80,7 @@ public:
     bool IsWindowDecorated (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
-    void Close (guint32 xid);
-    
-    sigc::signal<void, CompWindow *> window_maximized;
-    sigc::signal<void, CompWindow *> window_restored;
-    sigc::signal<void, CompWindow *> window_minimized;
-    sigc::signal<void, CompWindow *> window_unminimized;
-    sigc::signal<void, CompWindow *> window_shaded;
-    sigc::signal<void, CompWindow *> window_unshaded;
-    sigc::signal<void, CompWindow *> window_mapped;
-    sigc::signal<void, CompWindow *> window_unmapped;
-    sigc::signal<void, CompWindow *> window_shown;
-    sigc::signal<void, CompWindow *> window_hidden;
-    sigc::signal<void, CompWindow *> window_resized;
-    sigc::signal<void, CompWindow *> window_moved;
+    void Close (guint32 xid);    
     
 protected:
     PluginAdapter(CompScreen *screen);
@@ -99,6 +89,8 @@ private:
     CompScreen *m_Screen;
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
+    std::list <guint32> m_SpreadedWindows;
+    bool		m_AnimationPluginLoaded;
     
     static PluginAdapter *_default;
 };

@@ -42,22 +42,37 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ExpoActionList (0),
     m_ScaleActionList (0)
 {
+   m_AnimationPluginLoaded =
+	CompPlugin::find ("animation") ? true : false;
 }
 
 PluginAdapter::~PluginAdapter()
 {
 }
 
-void 
+/* A No-op for now, but could be useful later */
+void
+PluginAdapter::OnScreenGrabbed ()
+{
+}
+
+void
+PluginAdapter::OnScreenUngrabbed ()
+{
+  if (m_SpreadedWindows.size () && !screen->grabExist ("scale"))
+    terminate_spread.emit (m_SpreadedWindows);
+}
+
+void
 PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
 {
-  window_resized.emit (window);
+  window_resized.emit (window->id ());
 }
 
 void 
 PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 {
-  window_moved.emit (window);
+  window_moved.emit (window->id ());
 }
 
 void
@@ -65,12 +80,10 @@ PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsign
 {
   if (!(last_state & MAXIMIZE_STATE) && (state & MAXIMIZE_STATE))
   {
-    PluginAdapter::window_maximized.emit (window);
     WindowManager::window_maximized.emit (window->id ());
   }
   else if ((last_state & MAXIMIZE_STATE) && !(state & MAXIMIZE_STATE))
   {
-    PluginAdapter::window_restored.emit (window);
     WindowManager::window_restored.emit (window->id ());
   }
 }
@@ -81,29 +94,29 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
   switch (notify)
   {
     case CompWindowNotifyMinimize:
-      window_minimized.emit (window);
+      if (!m_AnimationPluginLoaded)
+        window_minimized.emit (window->id ());
       break;
     case CompWindowNotifyUnminimize:
-      window_unminimized.emit (window);
+      if (!m_AnimationPluginLoaded)
+        window_unminimized.emit (window->id ());
       break;
     case CompWindowNotifyShade:
-      window_shaded.emit (window);
+      window_shaded.emit (window->id ());
       break;
     case CompWindowNotifyUnshade:
-      window_unshaded.emit (window);
+      window_unshaded.emit (window->id ());
       break;
     case CompWindowNotifyHide:
-      window_hidden.emit (window);
+      window_hidden.emit (window->id ());
       break;
     case CompWindowNotifyShow:
-      window_shown.emit (window);
+      window_shown.emit (window->id ());
       break;
     case CompWindowNotifyMap:
-      PluginAdapter::window_mapped.emit (window);
       WindowManager::window_mapped.emit (window->id ());
       break;
     case CompWindowNotifyUnmap:
-      PluginAdapter::window_unmapped.emit (window);
       WindowManager::window_unmapped.emit (window->id ());
       break;
     default:
@@ -233,11 +246,26 @@ void
 PluginAdapter::InitiateScale (std::string *match)
 {
   CompOption::Vector argument;
+  CompMatch	     m (*match);
+  std::list <guint32> xids;
 
   argument.resize (1);
   argument[0].setName ("match", CompOption::TypeMatch);
-  argument[0].value ().set (CompMatch (*match));
-    
+  argument[0].value ().set (m);
+
+  /* FIXME: Lame */
+  foreach (CompWindow *w, screen->windows ())
+  {
+    if (m.evaluate (w))
+    {
+      if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) ==
+		     m_SpreadedWindows.end ())
+        m_SpreadedWindows.push_back (w->id ());
+      xids.push_back (w->id ());
+    }
+  }
+
+  initiate_spread.emit (xids);
   m_ScaleActionList.InitiateAll (argument);
 }
 
@@ -246,6 +274,8 @@ PluginAdapter::TerminateScale ()
 {
   CompOption::Vector argument (0);
 
+  terminate_spread.emit (m_SpreadedWindows);
+  m_SpreadedWindows.clear ();
   m_ScaleActionList.TerminateAll (argument);
 }
 

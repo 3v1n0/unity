@@ -68,7 +68,7 @@ private:
 
     void EnsureMenuItemsReady ();
     
-    void OnWindowMinimized (CompWindow *window);
+    void OnWindowMinimized (guint32 xid);
     bool OwnsWindow (Window w);
 
     static void OnClosed (BamfView *view, gpointer data);

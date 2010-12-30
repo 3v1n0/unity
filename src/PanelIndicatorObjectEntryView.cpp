@@ -253,9 +253,10 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
   delete texture_layer;
-  
+
   NeedRedraw ();
 
+  refreshed.emit (this);
   if (label)
     g_free (label);
 }

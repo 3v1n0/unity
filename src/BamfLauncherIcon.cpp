@@ -104,9 +104,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 }
 
 void
-BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
+BamfLauncherIcon::OnWindowMinimized (guint32 xid)
 {
-  if (!OwnsWindow (window->id ()))
+  if (!OwnsWindow (xid))
     return;
 
   Present (0.5f, 600);

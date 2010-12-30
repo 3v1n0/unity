@@ -216,7 +216,7 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
   _layout->SetContentDistribution (nux::eStackLeft);
   
   AddChild (view);
-  
+
   this->ComputeChildLayout (); 
   NeedRedraw ();
 }

@@ -964,7 +964,7 @@ Launcher::CheckWindowOverLauncher ()
 }
 
 void
-Launcher::OnWindowMaybeIntellihide (CompWindow *window)
+Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_autohide)
     CheckWindowOverLauncher ();

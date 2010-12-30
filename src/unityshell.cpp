@@ -161,6 +161,18 @@ UnityScreen::damageNuxRegions ()
 void
 UnityScreen::handleEvent (XEvent *event)
 {
+  switch (event->type)
+  {
+    case FocusIn:
+    case FocusOut:
+      if (event->xfocus.mode == NotifyGrab)
+	PluginAdapter::Default ()->OnScreenGrabbed ();
+      else if (event->xfocus.mode == NotifyUngrab)
+        PluginAdapter::Default ()->OnScreenUngrabbed ();
+
+      break;
+  }
+
   screen->handleEvent (event);
 
   if (screen->otherGrabExist ("deco", "move", NULL))
