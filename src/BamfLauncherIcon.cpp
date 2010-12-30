@@ -348,7 +348,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   if (button != 1)
     return;
 
-  if (!scaleWasActive || scaleWasActive && !onlyOwnWasActive)
+  if (!scaleWasActive || (scaleWasActive && !onlyOwnWasActive))
     _launcher->SetLastSpreadIcon (NULL);
 
   bool active, running;

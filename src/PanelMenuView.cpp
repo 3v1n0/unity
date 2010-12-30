@@ -162,26 +162,28 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
 {
   long res = View::PostLayoutManagement (LayoutResult);
-  int window_buttons_w;
-  int menu_area_w;
+  int old_window_buttons_w, new_window_buttons_w;
+  int old_menu_area_w, new_menu_area_w;
   
   nux::Geometry geo = GetGeometry ();
 
-  _window_buttons->SetGeometry (geo.x + PADDING, geo.y, window_buttons_w, geo.height);
+  old_window_buttons_w = _window_buttons->GetContentWidth ();
+  _window_buttons->SetGeometry (geo.x + PADDING, geo.y, old_window_buttons_w, geo.height);
   _window_buttons->ComputeLayout2 ();
-  window_buttons_w = _window_buttons->GetContentWidth ();
+  new_window_buttons_w = _window_buttons->GetContentWidth ();
 
   
   /* Explicitly set the size and position of the widgets */
-  geo.x += PADDING + window_buttons_w + PADDING;
-  geo.width -= PADDING + window_buttons_w + PADDING;
+  geo.x += PADDING + new_window_buttons_w + PADDING;
+  geo.width -= PADDING + new_window_buttons_w + PADDING;
 
-  _menu_layout->SetGeometry (geo.x, geo.y, menu_area_w, geo.height);
+  old_menu_area_w = _menu_layout->GetContentWidth ();
+  _menu_layout->SetGeometry (geo.x, geo.y, old_menu_area_w, geo.height);
   _menu_layout->ComputeLayout2();
-  menu_area_w = _menu_layout->GetContentWidth ();
+  new_menu_area_w = _menu_layout->GetContentWidth ();
 
-  geo.x += menu_area_w;
-  geo.width -= menu_area_w;
+  geo.x += new_menu_area_w;
+  geo.width -= new_menu_area_w;
 
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
