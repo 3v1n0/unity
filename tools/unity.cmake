@@ -124,5 +124,8 @@ if __name__ == '__main__':
     set_unity_env()
     if options.reset:
         reset_unity_compiz_profile ()
-		
+	
+	if options.replace:
+		print ("WARNING: This is for compatibility with other desktop interfaces please use Unity without --replace")
+			
     run_unity (options.verbose, options.advanced_debug, args, options.log)
