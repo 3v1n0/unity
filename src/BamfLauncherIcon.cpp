@@ -59,15 +59,15 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
   SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
   SetIconName (icon_name);
-  SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  SetIconType (TYPE_APPLICATION);
 
   if (bamf_view_is_sticky (BAMF_VIEW (m_App)))
-    SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
+    SetQuirk (QUIRK_VISIBLE, true);
   else
-    SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, bamf_view_user_visible (BAMF_VIEW (m_App)));
+    SetQuirk (QUIRK_VISIBLE, bamf_view_user_visible (BAMF_VIEW (m_App)));
 
-  SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, bamf_view_is_active (BAMF_VIEW (m_App)));
-  SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, bamf_view_is_running (BAMF_VIEW (m_App)));
+  SetQuirk (QUIRK_ACTIVE, bamf_view_is_active (BAMF_VIEW (m_App)));
+  SetQuirk (QUIRK_RUNNING, bamf_view_is_running (BAMF_VIEW (m_App)));
 
   g_free (icon_name);
 
@@ -110,7 +110,7 @@ BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
     return;
 
   Present (0.5f, 600);
-  UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
+  UpdateQuirkTimeDelayed (300, QUIRK_SHIMMER);
 }
 
 bool
@@ -197,7 +197,7 @@ BamfLauncherIcon::OpenInstance ()
     g_error_free (error);
   }
 
-  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+  UpdateQuirkTime (QUIRK_STARTING);
 }
 
 void
@@ -353,9 +353,9 @@ BamfLauncherIcon::OnMouseClick (int button)
 
   if (!running)
   {
-    if (GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
+    if (GetQuirk (QUIRK_STARTING))
       return;
-    SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, true);
+    SetQuirk (QUIRK_STARTING, true);
     OpenInstance ();
     return;
   }
@@ -380,14 +380,14 @@ BamfLauncherIcon::OnUserVisibleChanged (BamfView *view, gboolean visible, gpoint
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
 
   if (!bamf_view_is_sticky (BAMF_VIEW (self->m_App)))
-    self->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, visible);
+    self->SetQuirk (QUIRK_VISIBLE, visible);
 }
 
 void
 BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, running);
+  self->SetQuirk (QUIRK_RUNNING, running);
 
   if (running)
   {
@@ -400,14 +400,14 @@ void
 BamfLauncherIcon::OnActiveChanged (BamfView *view, gboolean active, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, active);
+  self->SetQuirk (QUIRK_ACTIVE, active);
 }
 
 void
 BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_URGENT, urgent);
+  self->SetQuirk (QUIRK_URGENT, urgent);
 }
 
 void

@@ -49,7 +49,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _launcher = launcher;
   m_TooltipText = "blank";
 
-  for (int i = 0; i < LAUNCHER_ICON_QUIRK_LAST; i++)
+  for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = 0;
     _quirk_times[i].tv_sec = 0;
@@ -63,7 +63,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   
   _mouse_inside = false;
   _tooltip = new nux::Tooltip ();
-  _icon_type = LAUNCHER_ICON_TYPE_NONE;
+  _icon_type = TYPE_NONE;
   _sort_priority = 0;
 
   _quicklist = new QuicklistView ();
@@ -114,11 +114,11 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
   
   g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
-  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_URGENT)));
-  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING)));
-  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED)));
+  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (QUIRK_ACTIVE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (QUIRK_VISIBLE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (QUIRK_URGENT)));
+  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (QUIRK_RUNNING)));
+  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -422,14 +422,14 @@ void
 LauncherIcon::SaveCenter ()
 {
   _saved_center = _center;
-  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+  UpdateQuirkTime (QUIRK_CENTER_SAVED);
 }
 
 gboolean
 LauncherIcon::OnPresentTimeout (gpointer data)
 {
   LauncherIcon *self = (LauncherIcon*) data;
-  if (!self->GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (!self->GetQuirk (QUIRK_PRESENTED))
     return false;
   
   self->_present_time_handle = 0;
@@ -446,26 +446,26 @@ float LauncherIcon::PresentUrgency ()
 void 
 LauncherIcon::Present (float present_urgency, int length)
 {
-  if (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (GetQuirk (QUIRK_PRESENTED))
     return;
   
   if (length >= 0)
     _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
   
   _present_urgency = CLAMP (present_urgency, 0.0f, 1.0f);
-  SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, true);
+  SetQuirk (QUIRK_PRESENTED, true);
 }
 
 void
 LauncherIcon::Unpresent ()
 {
-  if (!GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (!GetQuirk (QUIRK_PRESENTED))
     return;
   
   if (_present_time_handle > 0)
     g_source_remove (_present_time_handle);
   
-  SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, false);
+  SetQuirk (QUIRK_PRESENTED, false);
 }
 
 void 
@@ -481,12 +481,12 @@ LauncherIcon::SetRelatedWindows (int windows)
 void 
 LauncherIcon::Remove ()
 {
-  SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, false);
+  SetQuirk (QUIRK_VISIBLE, false);
   remove.emit (this);
 }
 
 void 
-LauncherIcon::SetIconType (LauncherIconType type)
+LauncherIcon::SetIconType (IconType type)
 {
   _icon_type = type;
 }
@@ -503,32 +503,35 @@ LauncherIcon::SortPriority ()
   return _sort_priority;
 }
     
-LauncherIconType 
+LauncherIcon::IconType 
 LauncherIcon::Type ()
 {
   return _icon_type;
 }
 
 bool
-LauncherIcon::GetQuirk (LauncherIconQuirk quirk)
+LauncherIcon::GetQuirk (LauncherIcon::Quirk quirk)
 {
   return _quirks[quirk];
 }
 
 void
-LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
+LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
     
   _quirks[quirk] = value;
-  clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
+  if (quirk == QUIRK_VISIBLE)
+    Launcher::SetTimeStruct (&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
+  else
+    clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit (this);
   
   // Present on urgent as a general policy
-  if (quirk == LAUNCHER_ICON_QUIRK_VISIBLE && value)
+  if (quirk == QUIRK_VISIBLE && value)
     Present (0.5f, 1500);
-  if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
+  if (quirk == QUIRK_URGENT && value)
     Present (0.5f, 1500);
 }
 
@@ -545,7 +548,7 @@ LauncherIcon::OnDelayedUpdateTimeout (gpointer data)
 }
 
 void
-LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk)
+LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIcon::Quirk quirk)
 {
   DelayedUpdateArg *arg = new DelayedUpdateArg ();
   arg->self = this;
@@ -555,21 +558,21 @@ LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk)
 }
 
 void
-LauncherIcon::UpdateQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::UpdateQuirkTime (LauncherIcon::Quirk quirk)
 {
   clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit (this);
 }
 
 void 
-LauncherIcon::ResetQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::ResetQuirkTime (LauncherIcon::Quirk quirk)
 {
   _quirk_times[quirk].tv_sec = 0;
   _quirk_times[quirk].tv_nsec = 0;
 }
 
 struct timespec
-LauncherIcon::GetQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::GetQuirkTime (LauncherIcon::Quirk quirk)
 {
   return _quirk_times[quirk];
 }

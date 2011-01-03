@@ -357,8 +357,14 @@ UnityScreen::optionChanged (CompOption            *opt,
       launcher->SetAutohide (optionGetLauncherAutohide (),
                              (nux::View *) panelView->HomeButton ());
       break;
-    case UnityshellOptions::LauncherFloat:
-      launcher->SetFloating (optionGetLauncherFloat ());
+    case UnityshellOptions::BacklightAlwaysOn:
+      launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
+      break;
+    case UnityshellOptions::LaunchAnimation:
+      launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
+      break;
+    case UnityshellOptions::UrgentAnimation:
+      launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
       break;
     default:
       break;
@@ -412,8 +418,10 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new IntrospectionDBusInterface (this);
 
-  optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -471,6 +479,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
 
   self->launcher->SetIconSize (54, 48);
+  self->launcher->SetBacklightAlwaysOn (true);
   LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
@@ -500,6 +509,9 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
+  self->launcher->SetAutohide (true, (nux::View *) self->panelView->HomeButton ());
+  self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
+  self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();
