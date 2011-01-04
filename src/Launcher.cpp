@@ -1270,7 +1270,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     for (it = markers.begin (); it != markers.end (); it++)
     {
       int center = *it;
-      GfxContext.QRP_GLSL_1Tex (geo.x,
+      GfxContext.QRP_1Tex (geo.x,
                                 center - (m_RunningIndicator->GetHeight () / 2),
                                 (float) m_RunningIndicator->GetWidth(),
                                 (float) m_RunningIndicator->GetHeight(),
@@ -1291,7 +1291,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
-    GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
+    GfxContext.QRP_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
                               markerCenter - (m_ActiveIndicator->GetHeight () / 2),
                               (float) m_ActiveIndicator->GetWidth(),
                               (float) m_ActiveIndicator->GetHeight(),
@@ -2286,10 +2286,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
   
-  GfxContext.QRP_GLSL_1Tex (left_edge, progress_y, progress_width, progress_height, 
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
                             _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
                             
-  GfxContext.QRP_GLSL_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
                             _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);  
 
   GfxContext.PopClippingRectangle (); 
@@ -2298,10 +2298,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // right door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
   
-  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
+  GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
                             _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
   
-  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
                             _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);
   
   GfxContext.PopClippingRectangle (); 

@@ -122,7 +122,7 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
-  gfxContext.QRP_GLSL_1Tex (base.x,
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,
