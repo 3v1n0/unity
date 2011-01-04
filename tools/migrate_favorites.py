@@ -252,7 +252,7 @@ if migration_level < '3.2.10':
             launcher_location = "%s/%s" % (cairodock_path, launcher)
             apps_list = register_new_app(launcher_location, apps_list, log_file)
     except OSError:
-        log(" + Can't migrate Cairo-Dock as %s doesn't exists" % cairodock_path, log_file)
+        log(" + Can't migrate Cairo-Dock as %s doesn't exist" % cairodock_path, log_file)
         
     # Now write to gsettings!
     save_gsettings_favorites(apps_list, log_file)
