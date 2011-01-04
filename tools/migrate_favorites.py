@@ -16,7 +16,7 @@ import sys
 import subprocess
 from xdg import BaseDirectory
 
-LAST_MIGRATION = '3.2.0'
+LAST_MIGRATION = '3.2.10'
 
 def get_log_file():
     ''' open the log file and return it '''
@@ -32,7 +32,7 @@ def get_log_file():
 def migrating_chapter_log(name, apps_list, migration_list, log_file):
     '''Log migration of new launchers'''
     
-    log(" Migration for %s.\n Current app list is: %s\n Candidates are: %s" % (name, apps_list, migration_list), log_file)
+    log(" + Migration for %s.\n   Current app list is: %s\n   Candidates are: %s" % (name, apps_list, migration_list), log_file)
 
 
 def log(message, log_file):
@@ -67,7 +67,7 @@ def register_new_app(launcher_location, apps_list, log_file):
     # default distribution launcher don't go into that function (as don't have an aboslute path)
     entry = ""
     if os.path.exists(launcher_location):
-        log("  == %s: exists" % launcher_location, log_file)
+        log("    == %s: exists" % launcher_location, log_file)
         # try to strip the full path we had in unity mutter if it's part of a xdg path:
         # or try to get that for other desktop file based on name.
         candidate_desktop_filename = launcher_location.split("/")[-1]
@@ -78,12 +78,12 @@ def register_new_app(launcher_location, apps_list, log_file):
                 # if really the xdg path is the path to the launcher
                 if not '/' in candidate_desktop_file:
                     entry = candidate_desktop_file
-                    log("  Direct match found for system desktop file", log_file)
+                    log("    Direct match found for system desktop file", log_file)
                     break
             # second chance: try to see if the desktop filename is in xdg path and so, assume it's a match
             if not entry and os.path.exists("%s/%s" % (xdg_app_dir, candidate_desktop_filename)):
                 entry = candidate_desktop_filename
-                log("  Similar desktop file name with system desktop file", log_file)
+                log("    Similar desktop file name with system desktop file", log_file)
                 break
         # third and last chance: try to find a corresponding Exec key.
         # Wait! scanning /usr/share/applications is heavy !!!
@@ -96,29 +96,42 @@ def register_new_app(launcher_location, apps_list, log_file):
                         exec_arg = line.split("Exec=")[1]
                         break
             except IOError:
-                log("  Can't open %s for reading Exec" % launcher_location, log_file)     
+                log("    Can't open %s for reading Exec" % launcher_location, log_file)     
             if exec_arg:
                 try:
                     for line in open("/usr/share/applications/bamf.index"):
                         if exec_arg in line:
                             entry = line.split()[0]
-                            log("  Coherent exec key found with system desktop file", log_file)
+                            log("    Coherent exec key found with system desktop file", log_file)
                             break
                 except IOError:
-                    log("  No bamf.index file found on the system!", log_file)
+                    log("    No bamf.index file found on the system!", log_file)
             
         if not entry:
             entry = launcher_location
-        log("  %s: real entry is %s" % (launcher_location, entry), log_file)
+        log("    %s: real entry is %s" % (launcher_location, entry), log_file)
         if entry not in apps_list:
-            log("  --- adding %s as not in app_list" % entry, log_file)
+            log("    --- adding %s as not in app_list" % entry, log_file)
             apps_list.append(entry)
         else:
-            log("  --- NOT adding %s as already in app_list" % entry, log_file)
+            log("    --- NOT adding %s as already in app_list" % entry, log_file)
     else:
-        log("  == %s: doesn't exist" % launcher_location, log_file)
+        log("    == %s: doesn't exist" % launcher_location, log_file)
 
     return apps_list
+
+def save_gsettings_favorites(apps_list, log_file):
+    ''' save the app list favorites to gsettings '''
+    
+    #print apps_list
+    return_code = subprocess.call(["gsettings", "set", "com.canonical.Unity.Launcher", "favorites", str(apps_list)])
+    
+    if return_code != 0:
+        print "Settings fail to transition to new unity compiz favorites"
+        log("Settings fail to transition to new unity compiz favorites\n\n", log_file)
+        if log_file:
+            log_file.close()
+        sys.exit(1)
 
 try:
     migration_level = subprocess.Popen(["gsettings", "get", "com.canonical.Unity.Launcher", "favorite-migration"], stdout=subprocess.PIPE).communicate()[0].strip()[1:-1]
@@ -192,20 +205,21 @@ if migration_level < '3.2.0':
             apps_list = register_new_app(launcher_location, apps_list, log_file)
 
     # Now write to gsettings!
-    #print apps_list
-    return_code = subprocess.call(["gsettings", "set", "com.canonical.Unity.Launcher", "favorites", str(apps_list)])
-    
-    if return_code != 0:
-        print "Settings fail to transition to new unity compiz"
-        log("Settings fail to transition to new unity compiz\n\n", log_file)
-        if log_file:
-            log_file.close()
-        sys.exit(1)
+    save_gsettings_favorites(apps_list, log_file)
         
     # some autumn cleanage (gconf binding for recursive_unset seems broken)
     subprocess.call(["gconftool-2", "--recursive-unset", "/apps/netbook-launcher"])
     subprocess.call(["gconftool-2", "--recursive-unset", "/desktop/unity"])
-    print "Settings successfully transitionned to new unity compiz"
+
+# second migration: transition popular docks entry as well
+if migration_level < '3.2.10':
+    log("======= Migration to 3.2.10 =======\n", log_file)
+    
+    migrating_chapter_log("awn", apps_list, unity_mutter_favorites_list, log_file)    
+    
+    # Now write to gsettings!
+    save_gsettings_favorites(apps_list, log_file)
+    
 
 log("Migration script ended successfully\n\n", log_file)
 if log_file:
