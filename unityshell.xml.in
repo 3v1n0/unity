@@ -44,6 +44,11 @@
                     <_long>Make the launcher hide automatically after some time inactive</_long>
                     <default>true</default>
 	              </option>
+	              <option name="show_launcher" type="key">
+                    <_short>Key to show the launcher</_short>
+                    <_long>Make the launcher appear with that key</_long>
+                    <default>&lt;Super&gt;</default>
+                  </option>
 	          </group>
 	          <group>
                 <_short>Experimental</_short>
@@ -51,11 +56,6 @@
                     <_short>Backlight Always On</_short>
                     <_long>Make the launcher icons always have a backlight</_long>
                     <default>true</default>
-                </option>
-	            <option name="show_launcher" type="key">
-                    <_short>Key to show the launcher</_short>
-                    <_long>Make the launcher appear with that key</_long>
-                    <default>&lt;Super&gt;</default>
                 </option>
                 <option name="launch_animation" type="int">
                     <_short>Launch Animation</_short>
