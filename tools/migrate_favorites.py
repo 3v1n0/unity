@@ -71,6 +71,11 @@ def register_new_app(launcher_location, apps_list, log_file):
         # try to strip the full path we had in unity mutter if it's part of a xdg path:
         # or try to get that for other desktop file based on name.
         candidate_desktop_filename = launcher_location.split("/")[-1]
+        # some desktop file with modified exec key (like in cairo-dock contains 01desktopfilename.desktop, strip that)
+        try:
+            candidate_cairodock_desktop_filename = candidate_desktop_filename.split("01")[1]
+        except IndexError:
+            candidate_cairodock_desktop_filename = ""
         for xdg_dir in BaseDirectory.xdg_data_dirs:
             xdg_app_dir = os.path.join(xdg_dir, "applications", "")
             if launcher_location.startswith(xdg_app_dir):
@@ -84,6 +89,11 @@ def register_new_app(launcher_location, apps_list, log_file):
             if not entry and os.path.exists("%s/%s" % (xdg_app_dir, candidate_desktop_filename)):
                 entry = candidate_desktop_filename
                 log("    Similar desktop file name with system desktop file", log_file)
+                break
+            # third chance: try to see if a tweaked cairo-dock like deskto file name is in xdg path
+            if not entry and os.path.exists("%s/%s" % (xdg_app_dir, candidate_cairodock_desktop_filename)):
+                entry = candidate_cairodock_desktop_filename
+                log("    Similar Cairo-Dock -like desktop file name with system desktop file", log_file)
                 break
         # third and last chance: try to find a corresponding Exec key.
         # Wait! scanning /usr/share/applications is heavy !!!
@@ -215,11 +225,37 @@ if migration_level < '3.2.0':
 if migration_level < '3.2.10':
     log("======= Migration to 3.2.10 =======\n", log_file)
     
-    migrating_chapter_log("awn", apps_list, unity_mutter_favorites_list, log_file)    
+    # import awn favorites
+    awn_favorites_list = client.get_list('/apps/awn-applet-taskmanager/launcher_paths', gconf.VALUE_STRING)
+    migrating_chapter_log("awn favorites", apps_list, awn_favorites_list, log_file)
+    for launcher_location in awn_favorites_list:
+        apps_list = register_new_app(launcher_location, apps_list, log_file)
     
+    # import Docky favorites
+    dock_list = client.get_list('/apps/docky-2/Docky/DockController/ActiveDocks', gconf.VALUE_STRING)
+    for dock in dock_list:
+        docky_favorites_list = client.get_list('/apps/docky-2/Docky/Interface/DockPreferences/%s/Launchers' % dock, gconf.VALUE_STRING)
+        migrating_chapter_log("Docky favorites for %s" % dock, apps_list, docky_favorites_list, log_file)
+        for launcher_location in docky_favorites_list:
+            try:
+                launcher_location = launcher_location.split("file://")[1]
+            except IndexError:
+                pass
+            apps_list = register_new_app(launcher_location, apps_list, log_file)
+
+    # import Cairo-Dock favorites
+    try:
+        cairodock_path = "%s/cairo-dock/current_theme/launchers" % BaseDirectory.xdg_config_home
+        cairodock_favorites_list = os.listdir(cairodock_path)
+        migrating_chapter_log("Cairo-Dock favorites (in %s)" % cairodock_path, apps_list, cairodock_favorites_list, log_file)
+        for launcher in cairodock_favorites_list:
+            launcher_location = "%s/%s" % (cairodock_path, launcher)
+            apps_list = register_new_app(launcher_location, apps_list, log_file)
+    except OSError:
+        log(" + Can't migrate Cairo-Dock as %s doesn't exists" % cairodock_path, log_file)
+        
     # Now write to gsettings!
     save_gsettings_favorites(apps_list, log_file)
-    
 
 log("Migration script ended successfully\n\n", log_file)
 if log_file:
