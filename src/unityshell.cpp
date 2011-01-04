@@ -169,6 +169,27 @@ UnityScreen::handleEvent (XEvent *event)
   }
 }
 
+bool
+UnityScreen::showLauncherKeyInitiate (CompAction         *action,
+                                      CompAction::State   state,
+                                      CompOption::Vector &options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);
+  
+  launcher->ForceShowLauncherStart ();
+  return false;
+}
+
+bool
+UnityScreen::showLauncherKeyTerminate (CompAction         *action,
+                                       CompAction::State   state,
+                                       CompOption::Vector &options)
+{
+  launcher->ForceShowLauncherEnd ();
+  return false;
+}
 
 gboolean
 UnityScreen::initPluginActions (gpointer data)
@@ -414,6 +435,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   optionSetLauncherAutohideNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLauncherFloatNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);

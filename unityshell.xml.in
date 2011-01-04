@@ -47,6 +47,11 @@
 	    <_long>Make the launcher appear above other windows</_long>
 	    <default>false</default>
 	    </option>
+	    <option name="show_launcher" type="key">
+	    <_short>Key to show the launcher</_short>
+	    <_long>Make the launcher appear with that key</_long>
+	    <default>&lt;Super&gt;</default>
+	    </option>
 	</options>
     </plugin>
 </compiz>

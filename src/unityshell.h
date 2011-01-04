@@ -90,6 +90,14 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+	
+	bool
+	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
+                             CompOption::Vector &options);
+
+	bool
+	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
+                              CompOption::Vector &options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */

@@ -57,6 +57,9 @@ public:
 
   void SetAutohide (bool autohide, nux::View *show_trigger);
   bool AutohideEnabled ();
+
+  void ForceShowLauncherStart ();
+  void ForceShowLauncherEnd ();
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -235,6 +238,7 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
+  bool  _force_show_launcher;
   bool  _window_over_launcher;
   bool  _render_drag_window;
 
