@@ -78,11 +78,34 @@ def register_new_app(launcher_location, apps_list, log_file):
                 # if really the xdg path is the path to the launcher
                 if not '/' in candidate_desktop_file:
                     entry = candidate_desktop_file
+                    log("  Direct match found for system desktop file", log_file)
                     break
             # second chance: try to see if the desktop filename is in xdg path and so, assume it's a match
-            if os.path.exists("%s/%s" % (xdg_app_dir, candidate_desktop_filename)):
+            if not entry and os.path.exists("%s/%s" % (xdg_app_dir, candidate_desktop_filename)):
                 entry = candidate_desktop_filename
+                log("  Similar desktop file name with system desktop file", log_file)
                 break
+        # third and last chance: try to find a corresponding Exec key.
+        # Wait! scanning /usr/share/applications is heavy !!!
+        # Don't panic, we have the bamf.index for that :)
+        if not entry:
+            exec_arg = ""
+            try:
+                for line in open(launcher_location):
+                    if "Exec=" in line:
+                        exec_arg = line.split("Exec=")[1]
+                        break
+            except IOError:
+                log("  Can't open %s for reading Exec" % launcher_location, log_file)     
+            if exec_arg:
+                try:
+                    for line in open("/usr/share/applications/bamf.index"):
+                        if exec_arg in line:
+                            entry = line.split()[0]
+                            log("  Coherent exec key found with system desktop file", log_file)
+                            break
+                except IOError:
+                    log("  No bamf.index file found on the system!", log_file)
             
         if not entry:
             entry = launcher_location
@@ -162,7 +185,7 @@ if migration_level < '3.2.0':
     # get GNOME desktop launchers
     desktop_dir = get_desktop_dir()
     desktop_items = glob.glob('%s/*.desktop' % desktop_dir)
-    migrating_chapter_log("deskop items in %s" % desktop_dir, apps_list, desktop_items, log_file)
+    migrating_chapter_log("desktop items in %s" % desktop_dir, apps_list, desktop_items, log_file)
     for launcher_location in glob.glob('%s/*.desktop' % desktop_dir):
         # blacklist ubiquity as will have two ubiquity in the netbook live session then
         if not "ubiquity" in launcher_location:
@@ -184,7 +207,7 @@ if migration_level < '3.2.0':
     subprocess.call(["gconftool-2", "--recursive-unset", "/desktop/unity"])
     print "Settings successfully transitionned to new unity compiz"
 
-log("Migration script ended sucessfully\n\n", log_file)
+log("Migration script ended successfully\n\n", log_file)
 if log_file:
     log_file.close()
 
