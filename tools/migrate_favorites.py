@@ -95,7 +95,7 @@ def register_new_app(launcher_location, apps_list, log_file):
                 entry = candidate_cairodock_desktop_filename
                 log("    Similar Cairo-Dock -like desktop file name with system desktop file", log_file)
                 break
-        # third and last chance: try to find a corresponding Exec key.
+        # fourth and last chance: try to find a corresponding Exec key.
         # Wait! scanning /usr/share/applications is heavy !!!
         # Don't panic, we have the bamf.index for that :)
         if not entry:
