@@ -336,6 +336,8 @@ BamfLauncherIcon::Spread ()
     return true;
   }
 
+  g_list_free (children);
+
   return false;  
 }
 
