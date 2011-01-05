@@ -143,7 +143,7 @@ namespace nux
     texxform_mask.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
 
-    gfxContext.QRP_GLSL_2TexMod (base.x,
+    gfxContext.QRP_2TexMod (base.x,
       base.y,
       base.width,
       base.height,
@@ -160,7 +160,7 @@ namespace nux
     texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
     GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    gfxContext.QRP_GLSL_1Tex (base.x,
+    gfxContext.QRP_1Tex (base.x,
       base.y,
       base.width,
       base.height,
