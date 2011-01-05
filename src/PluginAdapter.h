@@ -43,7 +43,7 @@ public:
 private:
 
     std::list <CompAction *> m_ActionList;
-    CompAction *	     m_ToggledAction;
+    CompAction *             m_ToggledAction;
 };
     
 
@@ -90,7 +90,7 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
-    bool		m_AnimationPluginLoaded;
+    bool                m_AnimationPluginLoaded;
     
     static PluginAdapter *_default;
 };

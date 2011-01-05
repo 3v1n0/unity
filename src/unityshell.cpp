@@ -100,10 +100,10 @@ UnityScreen::paintDisplay (const CompRegion &region)
 /* called whenever we need to repaint parts of the screen */
 bool
 UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
-			    const GLMatrix		&transform,
-			    const CompRegion		&region,
-			    CompOutput 			*output,
-			    unsigned int		mask)
+                            const GLMatrix              &transform,
+                            const CompRegion            &region,
+                            CompOutput                  *output,
+                            unsigned int                mask)
 {
   bool ret;
 
@@ -124,10 +124,10 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
 void
 UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib,
-			      	       const GLMatrix		 &transform,
-			      	       const CompRegion		 &region,
-			      	       CompOutput 		 *output,
-			      	       unsigned int		 mask)
+                                       const GLMatrix            &transform,
+                                       const CompRegion          &region,
+                                       CompOutput                *output,
+                                       unsigned int              mask)
 {
   allowWindowPaint = false;
   gScreen->glPaintOutput (attrib, transform, region, output, mask);
@@ -166,7 +166,7 @@ UnityScreen::handleEvent (XEvent *event)
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-	PluginAdapter::Default ()->OnScreenGrabbed ();
+        PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
 
@@ -191,16 +191,16 @@ UnityScreen::initPluginActions (gpointer data)
 
   if (p)
   {
-	MultiActionList expoActions (0);
+    MultiActionList expoActions (0);
 
     foreach (CompOption &option, p->vTable->getOptions ())
     {
       if (option.name () == "expo_key" ||
-		  option.name () == "expo_button" ||
-		  option.name () == "expo_edge")
+          option.name () == "expo_button" ||
+          option.name () == "expo_edge")
       {
         CompAction *action = &option.value ().action ();
-		expoActions.AddNewAction (action);
+        expoActions.AddNewAction (action);
         break;
       }
     }
@@ -212,8 +212,8 @@ UnityScreen::initPluginActions (gpointer data)
 
   if (p)
   {
-	MultiActionList scaleActions (0);
-	  
+    MultiActionList scaleActions (0);
+
     foreach (CompOption &option, p->vTable->getOptions ())
     {
       if (option.name () == "initiate_all_key" ||
@@ -293,10 +293,10 @@ UnityScreen::getWindowPaintList ()
  * and if so paint nux and stop us from painting
  * other windows or on top of the whole screen */
 bool
-UnityWindow::glDraw (const GLMatrix 	&matrix,
-		     GLFragment::Attrib &attrib,
-		     const CompRegion 	&region,
-		     unsigned int	mask)
+UnityWindow::glDraw (const GLMatrix     &matrix,
+                     GLFragment::Attrib &attrib,
+                     const CompRegion   &region,
+                     unsigned int       mask)
 {
   if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
   {
@@ -381,7 +381,7 @@ UnityScreen::onRedrawRequested ()
 /* Handle option changes and plug that into nux windows */
 void
 UnityScreen::optionChanged (CompOption            *opt,
-			    UnityshellOptions::Options num)
+                            UnityshellOptions::Options num)
 {
   switch (num)
   {

@@ -379,8 +379,8 @@ BamfLauncherIcon::OnMouseClick (int button)
     {
       if (!Spread ())
       {
-	PluginAdapter::Default ()->TerminateScale ();
-	Focus ();
+        PluginAdapter::Default ()->TerminateScale ();
+        Focus ();
         _launcher->SetLastSpreadIcon (NULL);
       }
     }

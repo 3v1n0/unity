@@ -133,7 +133,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     if (_is_inside != true)
     {
       if (_is_grabbed)
-	_is_grabbed = false;
+        _is_grabbed = false;
       else
         _is_inside = true;
       FullRedraw ();

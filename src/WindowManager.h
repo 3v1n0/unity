@@ -40,7 +40,7 @@ class WindowManager
 public:
   WindowManager () :
     m_MoveResizeAtom (XInternAtom (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
-		      "_NET_WM_MOVERESIZE", FALSE))
+                                   "_NET_WM_MOVERESIZE", FALSE))
   {
   }
 

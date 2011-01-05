@@ -138,12 +138,12 @@ WindowManager::StartMove (guint32 xid, int x, int y)
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;
 
-  ev.xclient.serial	  = 0;
+  ev.xclient.serial     = 0;
   ev.xclient.send_event = true;
 
-  ev.xclient.window	    = xid;
+  ev.xclient.window     = xid;
   ev.xclient.message_type = m_MoveResizeAtom;
-  ev.xclient.format	    = 32;
+  ev.xclient.format     = 32;
 
   ev.xclient.data.l[0] = x;
   ev.xclient.data.l[1] = y;
@@ -152,8 +152,8 @@ WindowManager::StartMove (guint32 xid, int x, int y)
   ev.xclient.data.l[4] = 1;
 
   XSendEvent (d, DefaultRootWindow (d), FALSE,
-	      SubstructureRedirectMask | SubstructureNotifyMask,
-	      &ev);
+                 SubstructureRedirectMask | SubstructureNotifyMask,
+                 &ev);
 
   XSync (d, FALSE);
 }

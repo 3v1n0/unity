@@ -43,7 +43,7 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ScaleActionList (0)
 {
    m_AnimationPluginLoaded =
-	CompPlugin::find ("animation") ? true : false;
+     CompPlugin::find ("animation") ? true : false;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -151,9 +151,9 @@ MultiActionList::IsAnyActive (bool onlyOwn)
   foreach (CompAction *action, m_ActionList)
   {
     if (action->state () & (CompAction::StateTermKey |
-			    CompAction::StateTermButton |
-			    CompAction::StateTermEdge |
-			    CompAction::StateTermEdgeDnd))
+                            CompAction::StateTermButton |
+                            CompAction::StateTermEdge |
+                            CompAction::StateTermEdgeDnd))
       return true;
   }
 
@@ -198,10 +198,10 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
   foreach (CompAction *action, m_ActionList)
   {
     if (action->state () & (CompAction::StateTermKey |
-			    CompAction::StateTermButton |
-			    CompAction::StateTermEdge |
-			    CompAction::StateTermEdgeDnd) ||
-			    m_ToggledAction == action)
+                            CompAction::StateTermButton |
+                            CompAction::StateTermEdge |
+                            CompAction::StateTermEdgeDnd) ||
+        m_ToggledAction == action)
     {
       action->terminate () (action, 0, argument);
       if (m_ToggledAction == action)
@@ -259,7 +259,7 @@ PluginAdapter::InitiateScale (std::string *match)
     if (m.evaluate (w))
     {
       if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) ==
-		     m_SpreadedWindows.end ())
+                     m_SpreadedWindows.end ())
         m_SpreadedWindows.push_back (w->id ());
       xids.push_back (w->id ());
     }
