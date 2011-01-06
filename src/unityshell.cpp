@@ -266,8 +266,7 @@ UnityScreen::getWindowPaintList ()
 
     if (std::find (xwns.begin (), xwns.end (), (*it)->id ()) != xwns.end ())
     {
-      CompWindowList::iterator pit = it;
-      pl.erase (pit);
+      it = pl.erase (it);
     }
   }
 
