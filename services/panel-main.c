@@ -284,6 +284,8 @@ main (gint argc, gchar **argv)
   PanelService *service;
   guint         owner_id;
 
+  g_unsetenv("UBUNTU_MENUPROXY");
+
   gtk_init (&argc, &argv);
 	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 	                                   INDICATORICONDIR);
