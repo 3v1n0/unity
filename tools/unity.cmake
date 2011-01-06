@@ -114,6 +114,8 @@ if __name__ == '__main__':
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
     parser.add_option("--log", action="store",
                       help="Store log under filename.")
+    parser.add_option("--replace", action="store_true",
+                      help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
                       help="Reset the unity profile in compiz and restart it.")    
     parser.add_option("-v", "--verbose", action="store_true",
@@ -123,5 +125,8 @@ if __name__ == '__main__':
     set_unity_env()
     if options.reset:
         reset_unity_compiz_profile ()
-
+	
+	if options.replace:
+		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
+			
     run_unity (options.verbose, options.advanced_debug, args, options.log)
