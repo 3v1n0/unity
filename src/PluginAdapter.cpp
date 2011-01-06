@@ -64,14 +64,14 @@ PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
-  if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE) && ((state &
-MAXIMIZE_STATE) == MAXIMIZE_STATE))
+  if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+      && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
     PluginAdapter::window_maximized.emit (window);
     WindowManager::window_maximized.emit (window->id ());
   }
-  else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE) && !((state &
-MAXIMIZE_STATE)== MAXIMIZE_STATE))
+  else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+           && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
     PluginAdapter::window_restored.emit (window);
     WindowManager::window_restored.emit (window->id ());
