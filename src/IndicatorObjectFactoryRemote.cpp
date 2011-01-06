@@ -496,8 +496,9 @@ on_proxy_name_owner_changed (GDBusProxy *proxy,
 
   if (name_owner == NULL)
   {
-    // The panel service has stopped for some reason.  Restart it.
-    remote->Reconnect ();
+    // The panel service has stopped for some reason.  Restart it if not in dev mode
+    if (! g_getenv ("UNITY_DEV_MODE"))
+      remote->Reconnect ();
   }
 
   g_free (name_owner);
