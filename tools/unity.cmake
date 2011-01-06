@@ -110,11 +110,12 @@ if __name__ == '__main__':
     usage = "usage: %prog [options]"
     parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
-    parser.add_option("--replace", action="store_true", help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
     parser.add_option("--log", action="store",
                       help="Store log under filename.")
+    parser.add_option("--replace", action="store_true",
+                      help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
                       help="Reset the unity profile in compiz and restart it.")    
     parser.add_option("-v", "--verbose", action="store_true",
@@ -126,6 +127,6 @@ if __name__ == '__main__':
         reset_unity_compiz_profile ()
 	
 	if options.replace:
-		print ("WARNING: This is for compatibility with other desktop interfaces please use Unity without --replace")
+		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")
 			
     run_unity (options.verbose, options.advanced_debug, args, options.log)
