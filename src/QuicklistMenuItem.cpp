@@ -203,6 +203,15 @@ QuicklistMenuItem::GetActive ()
                                               DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
 }
 
+bool
+QuicklistMenuItem::GetVisible ()
+{
+  if (_menuItem == 0)
+    return false;
+  return dbusmenu_menuitem_property_get_bool (_menuItem,
+                                              DBUSMENU_MENUITEM_PROP_VISIBLE);
+}
+
 void QuicklistMenuItem::ItemActivated ()
 {
   if (_debug)
@@ -466,5 +475,6 @@ void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
   g_variant_builder_add (builder, "{sv}", "enabled", g_variant_new_boolean (GetEnabled ()));
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (GetActive ()));
+  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (GetVisible ()));
   
 }
