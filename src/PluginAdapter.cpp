@@ -118,63 +118,63 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
 void
 PluginAdapter::SetExpoAction (CompAction *expo)
 {
-  m_ExpoAction = expo;
+    m_ExpoAction = expo;
 }
 
 void
 PluginAdapter::SetScaleAction (CompAction *scale)
 {
-  m_ScaleAction = scale;
+    m_ScaleAction = scale;
 }
     
 std::string *
 PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 {
-  char *string;
-  std::string *result = new std::string ("any & (");
+    char *string;
+    std::string *result = new std::string ("any & (");
     
-  std::list<Window>::iterator it;
+    std::list<Window>::iterator it;
     
-  for (it = windows->begin (); it != windows->end (); it++)
-  {
-    string = g_strdup_printf ("| xid=%i ", (int) *it);
-    result->append (string);
-    g_free (string);
-  }
+    for (it = windows->begin (); it != windows->end (); it++)
+    {
+        string = g_strdup_printf ("| xid=%i ", (int) *it);
+        result->append (string);
+        g_free (string);
+    }
     
-  result->append (")");
+    result->append (")");
     
-  return result;
+    return result;
 }
     
 void 
 PluginAdapter::InitiateScale (std::string *match)
 {
-  if (!m_ScaleAction)
-    return;
-      
-  CompOption::Value value;
-  CompOption::Type  type;
-  CompOption::Vector argument;
-  char             *name;
+    if (!m_ScaleAction)
+        return;
+        
+    CompOption::Value value;
+    CompOption::Type  type;
+    CompOption::Vector argument;
+    char             *name;
 
-  name = (char *) "root";
-  type = CompOption::TypeInt;
-  value.set ((int) m_Screen->root ());
-  
-  CompOption arg = CompOption (name, type);
-  arg.set (value);
-  argument.push_back (arg);
-  
-  name = (char *) "match";
-  type = CompOption::TypeMatch;
-  value.set (CompMatch (*match));
-  
-  arg = CompOption (name, type);
-  arg.set (value);
-  argument.push_back (arg);
-  
-  m_ScaleAction->initiate () (m_ScaleAction, 0, argument);
+    name = (char *) "root";
+    type = CompOption::TypeInt;
+    value.set ((int) m_Screen->root ());
+    
+    CompOption arg = CompOption (name, type);
+    arg.set (value);
+    argument.push_back (arg);
+    
+    name = (char *) "match";
+    type = CompOption::TypeMatch;
+    value.set (CompMatch (*match));
+    
+    arg = CompOption (name, type);
+    arg.set (value);
+    argument.push_back (arg);
+    
+    m_ScaleAction->initiate () (m_ScaleAction, 0, argument);
 }
     
 bool 
@@ -209,23 +209,23 @@ PluginAdapter::TerminateScale ()
 void 
 PluginAdapter::InitiateExpo ()
 {
-  if (!m_ExpoAction)
-    return;
-      
-  CompOption::Value value;
-  CompOption::Type  type;
-  CompOption::Vector argument;
-  char             *name;
+    if (!m_ExpoAction)
+        return;
+        
+    CompOption::Value value;
+    CompOption::Type  type;
+    CompOption::Vector argument;
+    char             *name;
 
-  name = (char *) "root";
-  type = CompOption::TypeInt;
-  value.set ((int) m_Screen->root ());
-  
-  CompOption arg (name, type);
-  arg.set (value);
-  argument.push_back (arg);
-  
-  m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
+    name = (char *) "root";
+    type = CompOption::TypeInt;
+    value.set ((int) m_Screen->root ());
+    
+    CompOption arg (name, type);
+    arg.set (value);
+    argument.push_back (arg);
+    
+    m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
 }
 
 // WindowManager implementation

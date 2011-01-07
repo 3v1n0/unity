@@ -27,24 +27,24 @@ class Launcher;
 class SimpleLauncherIcon : public LauncherIcon
 {
 public:
-  SimpleLauncherIcon(Launcher* IconManager);
-  virtual ~SimpleLauncherIcon();
-  
-  /* override */
-  nux::BaseTexture * GetTextureForSize (int size);
-  
-  void SetIconName (const char *name);
+    SimpleLauncherIcon(Launcher* IconManager);
+    virtual ~SimpleLauncherIcon();
+    
+    /* override */
+    nux::BaseTexture * GetTextureForSize (int size);
+    
+    void SetIconName (const char *name);
 
 protected:
-  virtual void OnMouseDown (int button);
-  virtual void OnMouseUp (int button);
-  virtual void OnMouseClick (int button);
-  virtual void OnMouseEnter ();
-  virtual void OnMouseLeave ();
+    virtual void OnMouseDown (int button);
+    virtual void OnMouseUp (int button);
+    virtual void OnMouseClick (int button);
+    virtual void OnMouseEnter ();
+    virtual void OnMouseLeave ();
 private:
-  
-  char *m_IconName;
-  nux::BaseTexture *m_Icon;
+    
+    char *m_IconName;
+    nux::BaseTexture *m_Icon;
 
 };
 

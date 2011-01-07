@@ -30,60 +30,60 @@
 class PluginAdapter : public sigc::trackable, public WindowManager
 {
 public:
-  static PluginAdapter * Default ();
+    static PluginAdapter * Default ();
 
-  static void Initialize (CompScreen *screen);
+    static void Initialize (CompScreen *screen);
 
-  ~PluginAdapter();
-  
-  std::string * MatchStringForXids (std::list<Window> *windows);
-  
-  void SetScaleAction (CompAction *scale);
-  
-  void SetExpoAction (CompAction *expo);
-  
-  void InitiateScale (std::string *match);
+    ~PluginAdapter();
+    
+    std::string * MatchStringForXids (std::list<Window> *windows);
+    
+    void SetScaleAction (CompAction *scale);
+    
+    void SetExpoAction (CompAction *expo);
+    
+    void InitiateScale (std::string *match);
 
-  bool IsScaleActive ();
+    bool IsScaleActive ();
 
-  void TerminateScale ();
-  
-  void InitiateExpo ();
-  
-  void Notify (CompWindow *window, CompWindowNotify notify);
-  void NotifyMoved (CompWindow *window, int x, int y);
-  void NotifyResized (CompWindow *window, int x, int y, int w, int h);
-  void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
-  
-  // WindowManager implementation
-  bool IsWindowMaximized (guint xid);
-  bool IsWindowDecorated (guint xid);
-  void Restore (guint32 xid);
-  void Minimize (guint32 xid);
-  void Close (guint32 xid);
-  
-  sigc::signal<void, CompWindow *> window_maximized;
-  sigc::signal<void, CompWindow *> window_restored;
-  sigc::signal<void, CompWindow *> window_minimized;
-  sigc::signal<void, CompWindow *> window_unminimized;
-  sigc::signal<void, CompWindow *> window_shaded;
-  sigc::signal<void, CompWindow *> window_unshaded;
-  sigc::signal<void, CompWindow *> window_mapped;
-  sigc::signal<void, CompWindow *> window_unmapped;
-  sigc::signal<void, CompWindow *> window_shown;
-  sigc::signal<void, CompWindow *> window_hidden;
-  sigc::signal<void, CompWindow *> window_resized;
-  sigc::signal<void, CompWindow *> window_moved;
-  
+    void TerminateScale ();
+    
+    void InitiateExpo ();
+    
+    void Notify (CompWindow *window, CompWindowNotify notify);
+    void NotifyMoved (CompWindow *window, int x, int y);
+    void NotifyResized (CompWindow *window, int x, int y, int w, int h);
+    void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
+    
+    // WindowManager implementation
+    bool IsWindowMaximized (guint xid);
+    bool IsWindowDecorated (guint xid);
+    void Restore (guint32 xid);
+    void Minimize (guint32 xid);
+    void Close (guint32 xid);
+    
+    sigc::signal<void, CompWindow *> window_maximized;
+    sigc::signal<void, CompWindow *> window_restored;
+    sigc::signal<void, CompWindow *> window_minimized;
+    sigc::signal<void, CompWindow *> window_unminimized;
+    sigc::signal<void, CompWindow *> window_shaded;
+    sigc::signal<void, CompWindow *> window_unshaded;
+    sigc::signal<void, CompWindow *> window_mapped;
+    sigc::signal<void, CompWindow *> window_unmapped;
+    sigc::signal<void, CompWindow *> window_shown;
+    sigc::signal<void, CompWindow *> window_hidden;
+    sigc::signal<void, CompWindow *> window_resized;
+    sigc::signal<void, CompWindow *> window_moved;
+    
 protected:
-  PluginAdapter(CompScreen *screen);
+    PluginAdapter(CompScreen *screen);
 
 private:
-  CompScreen *m_Screen;
-  CompAction *m_ExpoAction;
-  CompAction *m_ScaleAction;
-  
-  static PluginAdapter *_default;
+    CompScreen *m_Screen;
+    CompAction *m_ExpoAction;
+    CompAction *m_ScaleAction;
+    
+    static PluginAdapter *_default;
 };
 
 #endif
