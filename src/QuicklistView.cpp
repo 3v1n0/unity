@@ -258,7 +258,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
     nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer (base.x, base.y, base.width, base.height);
 
     nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = gfxContext.QRP_GetBlurTexture (0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f);
+    bkg_blur_texture = gfxContext.QRP_GetBlurTexture (0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 1);
 
     if (current_fbo.IsValid ())
     { 
