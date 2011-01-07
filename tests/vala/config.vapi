@@ -1,5 +1,4 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
-/*
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- *//*
  * Copyright (C) 2009 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,12 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Gordon Allott <gord.allott@canonical.com>
+ * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
-namespace Unity.Tests {
-  [CCode (cname = "TESTDIR")]
-  public static const string TESTDIR;
-
+[CCode (cprefix = "", lower_case_cprefix = "", cheader_filename = "config.h")]
+namespace Config
+{
+  public const string BUILDDIR;
+  public const string TESTVALADIR;
 }

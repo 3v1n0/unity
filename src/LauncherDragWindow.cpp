@@ -106,7 +106,7 @@ LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool force_dra
   nux::TexCoordXForm texxform;
   texxform.FlipVCoord (true);
   
-  GfxContext.QRP_GLSL_1Tex (0,
+  GfxContext.QRP_1Tex (0,
                             0,
                             _icon->GetWidth(),
                             _icon->GetHeight(),

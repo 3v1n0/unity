@@ -38,7 +38,7 @@ Icon=test_desktop_icon.png
   
     public IOSuite ()
     {
-      Test.add_data_func ("/Unit/IO/AsyncDektopFile",
+      Test.add_data_func ("/Unit/IO/AsyncDesktopFile",
                           IOSuite.test_async_find_and_load);
     }
 
@@ -52,7 +52,7 @@ Icon=test_desktop_icon.png
     internal static async void do_test_async_find_and_load (MainLoop mainloop)
     {
       string[] dirs = new string[1];
-      dirs[0] = Path.build_filename (Config.TESTUNITDIR, "data", null
+      dirs[0] = Path.build_filename (Config.TESTVALADIR, "data", null
       );
       try
         {
@@ -61,10 +61,10 @@ Icon=test_desktop_icon.png
           assert (input is FileInputStream);
           
           /* Read in small chunks to test reading across buffer pages */
-          uchar[] buf = new uchar[16];
-          void* data;
+          uint8[] data;
           size_t data_size;
-          yield IO.read_stream_async (input, buf, 16, Priority.DEFAULT,  null,
+          yield IO.read_stream_async (input,
+                                      Priority.LOW, null,
                                       out data, out data_size);
           
           /* The test file is 177 bytes long */
