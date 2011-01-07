@@ -35,8 +35,8 @@ static const GDBusInterfaceVTable si_vtable =
 static const GDBusArgInfo si_getstate_in_args =
 {
   -1,
-  "piece",
-  "s",
+  (gchar *) "piece",
+  (gchar *) "s",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
@@ -45,8 +45,8 @@ static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
-  "state",
-  "a{sv}",
+  (gchar *) "state",
+  (gchar *) "a{sv}",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -54,7 +54,7 @@ static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  "GetState",
+  (gchar *) "GetState",
   (GDBusArgInfo **) &si_getstate_in_arg_pointers,
   (GDBusArgInfo **) &si_getstate_out_arg_pointers,
   NULL
@@ -65,7 +65,7 @@ static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_inf
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  "com.canonical.Unity.Debug.Introspection",
+  (gchar *) "com.canonical.Unity.Debug.Introspection",
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
