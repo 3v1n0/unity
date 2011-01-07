@@ -53,6 +53,7 @@ void
 PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
 {
   window_resized.emit (window);
+  MaximizeIfBigEnough (window->id ());
 }
 
 void 
@@ -64,6 +65,7 @@ PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
+  g_warning ("Notify State change for window %i", window->id ());
   if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
@@ -268,6 +270,22 @@ PluginAdapter::Restore (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->maximize (0);
+}
+
+void
+PluginAdapter::Maximize (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+  g_warning ("maximize call for window %i", xid);
+
+  window = m_Screen->findWindow (win);
+  if (window) {
+    window->maximize (MAXIMIZE_STATE);
+    // as we can be called in a map() Notify event, the NotifyStateChange isn't
+    // called. Do it manually.
+    NotifyStateChange (window, 0, MAXIMIZE_STATE);
+  }
 }
 
 void

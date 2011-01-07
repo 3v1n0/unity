@@ -60,6 +60,11 @@ class WindowManagerDummy : public WindowManager
     g_debug ("%s", G_STRFUNC);
   }
 
+  void Maximize (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
  void Close (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
@@ -79,6 +84,7 @@ void
 WindowManager::SetDefault (WindowManager *manager)
 {
   window_manager = manager;
+  window_manager->window_mapped.connect (sigc::mem_fun (manager, &WindowManager::MaximizeIfBigEnough));
 }
 
 void
@@ -96,11 +102,45 @@ void
 WindowManager::Undecorate (guint32 xid)
 {
   MotifWmHints hints = { 0 };
+  g_warning ("undecorate called for %i", xid);
     
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = 0;
  
   gdk_window_set_mwm_hints (xid, &hints);
+}
+
+/*
+ * Maximize the window if near fullscreen coordonates
+*/
+void WindowManager::MaximizeIfBigEnough (guint32 xid)
+{
+  int x, y;
+  unsigned int width, height, bw, depth;
+  Window root_window;
+
+  /* FIXME: multimonitor */
+  /*GdkDisplay *display = gdk_display_get_default();
+  g_return_if_fail (GDK_IS_DISPLAY (display));
+
+  // Populate with the geometry in w and h (including the frames)
+  gdk_error_trap_push ();
+  XGetGeometry (GDK_DISPLAY_XDISPLAY (display),
+                //GDK_WINDOW_XWINDOW (gdk_window_lookup ((GdkNativeWindow) xid)),
+                (Window) xid,
+                &root_window,
+                &x, &y, &width, &height, &bw, &depth);
+  gdk_flush ();
+  if (gdk_error_trap_pop ())
+    {
+      g_debug ("ERROR: Cannot get XWindow property");
+      return;
+    }
+
+  // FIXME: integrate decorator size and MULTIMONITOR
+  if ((width + bw > (gdk_screen_get_width (gdk_display_get_screen (display, 0)) - 40)) &&
+           height +bw > (gdk_screen_get_height (gdk_display_get_screen (display, 0) - 80))) */
+    Maximize (xid);
 }
 
 /*

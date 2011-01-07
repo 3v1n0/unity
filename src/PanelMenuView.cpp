@@ -563,6 +563,7 @@ PanelMenuView::OnWindowMaximized (guint xid)
   BamfWindow *window;
 
   window = bamf_matcher_get_active_window (_matcher);
+  g_warning ("active xid from bamf: %i", bamf_window_get_xid(window));
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     // We could probably just check if a key is available, but who wants to do that
