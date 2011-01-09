@@ -27,6 +27,8 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include <dee.h>
+
 #include "PlaceRemote.h"
 #include "PlaceEntry.h"
 
@@ -57,6 +59,8 @@ public:
   void SetSearch        (const gchar *search, std::map<gchar*, gchar*>& hints);
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
+
+  DeeModel * GetSectionsModel ();
 
   /* Other methods */
   bool          IsValid ();
@@ -102,6 +106,8 @@ private:
   bool     _show_in_global;
 
   GDBusProxy *_proxy;
+
+  DeeModel *_sections_model;
 };
 
 #endif // PLACE_ENTRY_REMOTE_H

@@ -325,9 +325,8 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
   GVariantIter *global_hints;
   std::vector<PlaceEntry*>::iterator it;
   std::vector<PlaceEntry*> old;
-  
 
-  // Clear the main entries vector as we now need to figure out if there is a diff between
+   // Clear the main entries vector as we now need to figure out if there is a diff between
   // what was sent and what we loaded from the place file
   for (it = _entries.begin(); it != _entries.end(); it++)
   {

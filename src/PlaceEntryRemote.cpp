@@ -47,7 +47,8 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _valid (false),
   _show_in_launcher (true),
   _show_in_global (true),
-  _proxy (NULL)
+  _proxy (NULL),
+  _sections_model (NULL)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -59,6 +60,10 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_free (_icon);
   g_free (_description);
   g_strfreev (_mimetypes);
+  
+  g_object_unref (_proxy);
+
+  g_object_unref (_sections_model);
 }
 
 void
@@ -243,6 +248,12 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
                      NULL);
 }
 
+DeeModel *
+PlaceEntryRemote::GetSectionsModel ()
+{
+  return _sections_model;
+}
+
 
 /* Other methods */
 bool
@@ -290,8 +301,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _name = g_strdup (name);
     _state_changed = true;
   }
-  return;
-
+  
   if (g_strcmp0 (_icon, icon) != 0)
   {
     g_free (_icon);
@@ -316,7 +326,20 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     sensitive_changed.emit (_sensitive);
   }
 
-  // FIXME: Handle sections model name
+  if (!DEE_IS_SHARED_MODEL (_sections_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_sections_model)), sections_model_name) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_sections_model))
+      g_object_unref (_sections_model);
+
+    _sections_model = dee_shared_model_new (sections_model_name);
+    
+    sections_model_changed.emit ();
+
+    g_print ("NEW SECTIONS MODEL\n");
+  }
+
+
   // FIXME: Handle place entry hints
 
   // FIXME: Spec says if entry_renderer == "", then ShowInLauncher () == false, but currently

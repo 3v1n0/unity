@@ -23,6 +23,7 @@
 #include <vector>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
+#include <dee.h>
 
 class PlaceEntry : public sigc::trackable
 {
@@ -58,6 +59,8 @@ public:
   virtual void SetSearch        (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
   virtual void SetActiveSection (guint32 section_id) = 0;
   virtual void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
+
+  virtual DeeModel * GetSectionsModel () = 0;
 
   // Signals
 
