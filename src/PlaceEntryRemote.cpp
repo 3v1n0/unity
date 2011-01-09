@@ -48,7 +48,9 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _show_in_launcher (true),
   _show_in_global (true),
   _proxy (NULL),
-  _sections_model (NULL)
+  _sections_model (NULL),
+  _groups_model (NULL),
+  _results_model (NULL)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -64,6 +66,8 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_object_unref (_proxy);
 
   g_object_unref (_sections_model);
+  g_object_unref (_groups_model);
+  g_object_unref (_results_model);
 }
 
 void
@@ -254,6 +258,18 @@ PlaceEntryRemote::GetSectionsModel ()
   return _sections_model;
 }
 
+DeeModel *
+PlaceEntryRemote::GetGroupsModel ()
+{
+  return _groups_model;
+}
+
+DeeModel *
+PlaceEntryRemote::GetResultsModel ()
+{
+  return _results_model;
+}
+
 
 /* Other methods */
 bool
@@ -337,8 +353,6 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     dee_model_set_schema (_sections_model, "s", "s", NULL);
 
     sections_model_changed.emit ();
-
-    g_print ("NEW SECTIONS MODEL\n");
   }
 
 
@@ -347,8 +361,32 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
   // FIXME: Spec says if entry_renderer == "", then ShowInLauncher () == false, but currently
   //        both places return ""
   
-  // FIXME: Handle entry groups model name
-  // FIXME: Handle entry results model name
+  if (!DEE_IS_SHARED_MODEL (_groups_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_groups_model)), entry_groups_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_groups_model))
+      g_object_unref (_groups_model);
+
+    _groups_model = dee_shared_model_new (entry_groups_model);
+    dee_model_set_schema (_groups_model, "s", "s", "s", NULL);
+
+    _entry_renderer_changed = true;
+  }
+
+  if (!DEE_IS_SHARED_MODEL (_results_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_results_model)), entry_results_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_results_model))
+      g_object_unref (_results_model);
+
+    _results_model = dee_shared_model_new (entry_results_model);
+    dee_model_set_schema (_results_model, "s", "s", "u", "s", "s", "s", NULL);
+
+    _entry_renderer_changed = true;
+  }
+  
+  
+
   // FIXME: Handle entry renderer hints
 
   // FIXME: Spec says if global_renderer == "", then ShowInGlobal () == false, but currently

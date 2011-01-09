@@ -61,6 +61,8 @@ public:
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
   DeeModel * GetSectionsModel ();
+  DeeModel * GetGroupsModel ();
+  DeeModel * GetResultsModel ();
 
   /* Other methods */
   bool          IsValid ();
@@ -108,6 +110,8 @@ private:
   GDBusProxy *_proxy;
 
   DeeModel *_sections_model;
+  DeeModel *_groups_model;
+  DeeModel *_results_model;
 };
 
 #endif // PLACE_ENTRY_REMOTE_H

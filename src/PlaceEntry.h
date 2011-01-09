@@ -62,6 +62,9 @@ public:
 
   virtual DeeModel * GetSectionsModel () = 0;
 
+  virtual DeeModel * GetGroupsModel () = 0;
+  virtual DeeModel * GetResultsModel () = 0;
+
   // Signals
 
   // This covers: name, icon and description properties
