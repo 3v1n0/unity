@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -45,6 +46,7 @@ public:
   sigc::signal<void, IndicatorObjectProxy *> OnObjectRemoved;
   sigc::signal<void, int, int>               OnMenuPointerMoved;
   sigc::signal<void, const char *>           OnEntryActivateRequest;
+  sigc::signal<void, const char *>           OnEntryActivated;
 
 protected:
   std::vector<IndicatorObjectProxy *>_indicators;

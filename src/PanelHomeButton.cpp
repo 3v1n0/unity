@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -21,6 +22,9 @@
 #include "Nux/Nux.h"
 
 #include "NuxGraphics/GLThread.h"
+
+#include "../libunity/ubus-server.h"
+#include "UBusMessages.h"
 
 #include "PanelHomeButton.h"
 
@@ -74,17 +78,17 @@ PanelHomeButton::Refresh ()
   cairo_destroy (cr);
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  
+
   // The Texture is created with a reference count of 1.
   nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
-  
+
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  
-  nux::ROPConfig rop; 
+
+  nux::ROPConfig rop;
   rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
@@ -98,12 +102,12 @@ PanelHomeButton::Refresh ()
   SetPaintLayer(texture_layer);
 
   // We don't need the texture anymore. Since it hasn't been reference, it ref count should still be 1.
-  // UnReference it and it will be destroyed.  
+  // UnReference it and it will be destroyed.
   texture2D->UnReference ();
-  
+
   // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
   delete texture_layer;
-  
+
   NeedRedraw ();
 }
 
@@ -113,31 +117,10 @@ PanelHomeButton::RecvMouseClick (int x,
                                  unsigned long button_flags,
                                  unsigned long key_flags)
 {
-#define APPS_URI "file:///usr/share/applications"
-
-  /* FIXME: This is just for Alpha 1, so we have some feedback on clicking the
-   * PanelHomeButton, and especially because we don't have any other way of
-   * launching non-launcher apps right now
-   */
   if (nux::GetEventButton (button_flags) == 1)
     {
-      GdkAppLaunchContext *context;
-      GError *error = NULL;
-      
-      context = gdk_app_launch_context_new ();
-      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
-      gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
-      
-      if (!g_app_info_launch_default_for_uri (APPS_URI,
-                                              (GAppLaunchContext *)context,
-                                              &error))
-        {
-          g_warning ("Unable to launcher applications folder: %s",
-                     error->message);
-          g_error_free (error);
-        }
-
-      g_object_unref (context);
+      UBusServer *ubus = ubus_server_get_default ();
+      ubus_server_send_message (ubus, UBUS_HOME_BUTTON_ACTIVATED, NULL);
     }
 }
 

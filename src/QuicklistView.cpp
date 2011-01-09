@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2010 Canonical Ltd
 *
@@ -258,7 +259,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
 
-  gfxContext.QRP_GLSL_2TexMod (base.x,
+  gfxContext.QRP_2TexMod (base.x,
     base.y,
     base.width,
     base.height,
@@ -275,7 +276,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
   nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  gfxContext.QRP_GLSL_1Tex (base.x,
+  gfxContext.QRP_1Tex (base.x,
     base.y,
     base.width,
     base.height,

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -43,8 +44,6 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
-    void PresentIconOwningWindow (Window window);
-    
 private:
     BamfMatcher*     _matcher;
     CompAction*      _expo_action;
@@ -55,7 +54,10 @@ private:
     FavoriteStore*   _favorite_store;
     int              _sort_priority;
 
-    void OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other);
+    void SortAndSave ();
+
+    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
+    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
 
     void InsertExpoAction ();
     

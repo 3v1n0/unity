@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,7 +37,7 @@ LauncherModel::~LauncherModel()
 
 bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
 {
-  return icon->Type () == LAUNCHER_ICON_TYPE_TRASH; 
+  return icon->Type () == LauncherIcon::TYPE_TRASH; 
 }
 
 void

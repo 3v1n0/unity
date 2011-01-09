@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -27,6 +28,9 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 public:
   TrashLauncherIcon  (Launcher *launcher);
   ~TrashLauncherIcon ();
+  
+  virtual nux::Color BackgroundColor ();
+  virtual nux::Color GlowColor ();
 
 protected:
   void OnMouseClick (int button);

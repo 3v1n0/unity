@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -29,6 +30,13 @@
 #include "IndicatorObjectEntryProxy.h"
 
 #include <glib.h>
+
+PanelIndicatorObjectView::PanelIndicatorObjectView ()
+: View (NUX_TRACKER_LOCATION),
+  _proxy (NULL),
+  _entries ()
+{
+}
 
 PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
 : View (NUX_TRACKER_LOCATION),

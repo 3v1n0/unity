@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.h
  *
@@ -31,12 +32,13 @@
 #include "LauncherController.h"
 #include "PanelView.h"
 #include "PlaceFactoryFile.h"
+#include "PlacesController.h"
 #include "IntrospectionDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
 /* base screen class */
-class UnityScreen : 
+class UnityScreen :
     public Introspectable,
     public sigc::trackable,
     public ScreenInterface,
@@ -59,7 +61,7 @@ class UnityScreen :
 	CompositeScreen *cScreen;
         GLScreen        *gScreen;
 
-	/* prepares nux for drawing */	 
+	/* prepares nux for drawing */
 	void
 	nuxPrologue ();
 
@@ -90,6 +92,14 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+	
+	bool
+	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
+                             CompOption::Vector &options);
+
+	bool
+	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
+                              CompOption::Vector &options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
@@ -103,36 +113,37 @@ class UnityScreen :
 	const gchar* GetName ();
 
 	void AddProperties (GVariantBuilder *builder);
-	
+
     private:
 
 	static gboolean
 	initPluginActions (gpointer data);
-    
+
 	static void
 	initLauncher (nux::NThread* thread, void* InitData);
-  
+
 	void
 	damageNuxRegions();
-	
-	void 
+
+	void
 	onRedrawRequested ();
-	
-	static void 
+
+	static void
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
-	static void 
+	static void
 	panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
-	static void 
+	static void
 	initUnity(nux::NThread* thread, void* InitData);
 
-	static gboolean 
+	static gboolean
 	strutHackTimeout (gpointer data);
-	
+
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
+	PlacesController 			 *placesController;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
@@ -162,9 +173,9 @@ class UnityWindow :
 
 	CompWindow      *window;
 	GLWindow	*gWindow;
-	
+
 	/* basic window draw function */
-	bool 
+	bool
 	glDraw (const GLMatrix 	&matrix,
 	        GLFragment::Attrib &attrib,
 	        const CompRegion 	&region,
@@ -173,8 +184,10 @@ class UnityWindow :
 	void windowNotify (CompWindowNotify n);
 
   void moveNotify (int x, int y, bool immediate);
-  
+
   void resizeNotify (int x, int y, int w, int h);
+  
+  void stateChangeNotify (unsigned int lastState);
 };
 
 #define EX_SCREEN (screen) \

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,7 +37,8 @@ public:
   virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button) = 0;
 
   // Signals
-  sigc::signal<void> Updated;
+  sigc::signal<void> updated;
+  sigc::signal<void, bool> active_changed;
 
 public:
   bool label_visible;

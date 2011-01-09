@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -42,7 +43,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   InsertExpoAction ();
   InsertTrash ();
   
-  _launcher->request_reorder.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorder));
+  _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
+  _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 }
 
 LauncherController::~LauncherController()
@@ -51,54 +53,9 @@ LauncherController::~LauncherController()
 }
 
 void
-LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *other)
+LauncherController::SortAndSave ()
 {
-  if (icon == other)
-    return;
-
   LauncherModel::iterator it;
-  
-  int i = 0;
-  int j = 0;
-  bool skipped = false;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it) == icon)
-    {
-      skipped = true;
-      j++;
-      continue;
-    }
-    
-    if ((*it) == other)
-    {
-      if (!skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
-        i++;
-      }
-      
-      (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
-      i++;
-      
-      if (skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j) (*it)->SaveCenter ();
-        i++;
-      }
-    }
-    else
-    {
-      (*it)->SetSortPriority (i);
-      if (i != j) (*it)->SaveCenter ();
-      i++;
-    }
-    j++;
-  }
-  
   _model->Sort (&LauncherController::CompareIcons);
   
   std::list<const char*> desktop_paths;
@@ -122,26 +79,96 @@ LauncherController::OnLauncherRequestReorder (LauncherIcon *icon, LauncherIcon *
   _favorite_store->SetFavorites (desktop_paths);
 }
 
-void 
-LauncherController::PresentIconOwningWindow (Window window)
+void
+LauncherController::OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save)
 {
+  if (icon == other)
+    return;
+
   LauncherModel::iterator it;
-  LauncherIcon *owner = 0;
   
+  int i = 0;
+  int j = 0;
   for (it = _model->begin (); it != _model->end (); it++)
   {
-    if ((*it)->IconOwnsWindow (window))
+    if ((*it) == icon)
     {
-      owner = *it;
-      break;
+      j++;
+      continue;
     }
+    
+    if ((*it) == other)
+    {
+      icon->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
   }
   
-  if (owner)
+  SortAndSave ();
+}
+
+void
+LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
+{
+  if (icon == other)
+    return;
+
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  int j = 0;
+  bool skipped = false;
+  for (it = _model->begin (); it != _model->end (); it++)
   {
-    owner->Present (0.5f, 600);
-    owner->UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
+    if ((*it) == icon)
+    {
+      skipped = true;
+      j++;
+      continue;
+    }
+    
+    if ((*it) == other)
+    {
+      if (!skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      if (skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
   }
+  
+  SortAndSave ();
 }
 
 void
@@ -167,9 +194,9 @@ LauncherController::InsertExpoAction ()
   
   expoIcon->SetTooltipText ("Workspace Switcher");
   expoIcon->SetIconName ("workspace-switcher");
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
-  expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
+  expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
+  expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
+  expoIcon->SetIconType (LauncherIcon::TYPE_END);
   
   expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   
@@ -227,7 +254,7 @@ LauncherController::OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer
   app = BAMF_APPLICATION (view);
   
   BamfLauncherIcon *icon = new BamfLauncherIcon (self->_launcher, app, self->_screen);
-  icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  icon->SetIconType (LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority (self->_sort_priority++);
 
   self->RegisterIcon (icon);
@@ -253,7 +280,7 @@ LauncherController::CreateFavorite (const char *file_path)
   
   bamf_view_set_sticky (BAMF_VIEW (app), true);
   icon = new BamfLauncherIcon (_launcher, app, _screen);
-  icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  icon->SetIconType (LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority (_sort_priority++);
   
   return icon;

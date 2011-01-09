@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2010 Canonical Ltd
 *
@@ -104,7 +105,8 @@ IndicatorObjectEntryProxyRemote::SetActive (bool active)
 
   _active = active;
 
-  Updated.emit ();
+  active_changed.emit (active);
+  updated.emit ();
 }
 
 bool
@@ -141,7 +143,7 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
   icon_sensitive = __image_sensitive;
   icon_visible = __image_visible;
 
-  Updated.emit ();
+  updated.emit ();
 }
 
 const char *
