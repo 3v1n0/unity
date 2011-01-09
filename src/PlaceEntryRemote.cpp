@@ -295,7 +295,8 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     g_assert_cmpstr (_dbus_path, ==, dbus_path);
  
   // Hold on tight
-  if (g_strcmp0 (_name, name) != 0)
+
+  if (g_strcmp0 ("", name) != 0 && g_strcmp0 (_name, name) != 0)
   {
     g_free (_name);
     _name = g_strdup (name);
@@ -333,7 +334,8 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
       g_object_unref (_sections_model);
 
     _sections_model = dee_shared_model_new (sections_model_name);
-    
+    dee_model_set_schema (_sections_model, "s", "s", NULL);
+
     sections_model_changed.emit ();
 
     g_print ("NEW SECTIONS MODEL\n");
