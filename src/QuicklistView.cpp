@@ -151,7 +151,7 @@ void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
   
   SetBaseX (x);
   SetBaseY (y);
-  
+
   Show ();
 }
 
@@ -1271,13 +1271,21 @@ void QuicklistView::UpdateTexture ()
   if (_cairo_text_has_changed == false)
     return;
 
-  int size_above_anchor = -1; // equal to sise below
+  int size_above_anchor = -1; // equal to size below
 
   if (!_enable_quicklist_for_testing)
   {
     if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
     {
-      _top_size = 4;
+      int offscreen_size = GetBaseY () +
+                           GetBaseHeight () -
+                           nux::GetWindow().GetWindowHeight ();
+
+      if (offscreen_size > 0)
+        _top_size = offscreen_size;
+      else
+        _top_size = 4;
+
       size_above_anchor = _top_size;
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
