@@ -60,6 +60,11 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='button' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='ScrollEntry'>"
+  "      <arg type='s' name='entry_id' direction='in'/>"
+  "      <arg type='i' name='delta' direction='in'/>"
+  "    </method>"
+  ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='entry_id' />"
   "    </signal>"
@@ -145,6 +150,15 @@ handle_method_call (GDBusConnection       *connection,
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
+    }
+  else if (g_strcmp0 (method_name, "ScrollEntry") == 0)
+    {
+      gchar *entry_id;
+      gint32 delta;
+      g_variant_get (parameters, "(si)", &entry_id, &delta, NULL);
+      panel_service_scroll_entry (service, entry_id, delta);
+      g_dbus_method_invocation_return_value (invocation, NULL);
+      g_free(entry_id);
     }
 }
 

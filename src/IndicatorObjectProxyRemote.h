@@ -50,9 +50,11 @@ public:
   void EndSync   ();
 
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
+  void OnScrollReceived (const char *id, int delta);
 
   // Signals
   sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int> OnScroll;
 
 private:
   std::string _name;

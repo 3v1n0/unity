@@ -35,6 +35,7 @@ public:
   virtual void         SetActive (bool active) = 0;
   virtual bool         GetActive () = 0;
   virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button) = 0;
+  virtual void         Scroll (int delta) = 0; 
 
   // Signals
   sigc::signal<void> updated;
