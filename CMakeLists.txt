@@ -1,7 +1,7 @@
   project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (libunity services tests tools)
+subdirs (services tests tools)
 
 #
 # Base bits
@@ -85,7 +85,7 @@ endif (BOOT_LOGGER)
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
@@ -127,3 +127,4 @@ install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR}
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
+

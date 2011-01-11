@@ -40,7 +40,7 @@
 
 #include <core/atoms.h>
 
-#include "../libunity/perf-logger-utility.h"
+#include "perf-logger-utility.h"
 
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
