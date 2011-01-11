@@ -137,20 +137,38 @@ QuicklistView::EnableQuicklistForTesting (bool enable_testing)
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 {
-  int window_width;
-  int window_height;
-  
-  window_width = nux::GetWindow ().GetWindowWidth ();
-  window_height = nux::GetWindow ().GetWindowHeight ();
-  
   _anchorX = anchor_tip_x;
   _anchorY = anchor_tip_y;
   
-  int x = _anchorX - _padding;
-  int y = anchor_tip_y - _anchor_height/2 - _top_size - _corner_radius - _padding;
-  
-  SetBaseX (x);
-  SetBaseY (y);
+  if (!_enable_quicklist_for_testing)
+  {
+    if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
+    {
+      int offscreen_size = GetBaseY () +
+                           GetBaseHeight () -
+                           nux::GetWindow().GetWindowHeight ();
+
+      if (offscreen_size > 0)
+        _top_size = offscreen_size;
+      else
+        _top_size = 4;
+
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);
+    }
+    else
+    {
+      _top_size = 0;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);    
+    }
+  }
 
   Show ();
 }

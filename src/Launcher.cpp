@@ -1475,6 +1475,9 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
 void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo)
 {
+  if (arg.icon->TextureForSize (_icon_image_size) == 0)
+    return;
+
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
                                                 GL_ONE_MINUS_SRC_ALPHA,
