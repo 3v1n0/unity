@@ -74,29 +74,24 @@ nux::NString gPerspectiveCorrectShader = TEXT (
 #version 120                                                            \n\
 uniform mat4 ViewProjectionMatrix;                                      \n\
                                                                         \n\
-attribute vec4 iColor;                                                  \n\
 attribute vec4 iTexCoord0;                                              \n\
 attribute vec4 iVertex;                                                 \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 void main()                                                             \n\
 {                                                                       \n\
     varyTexCoord0 = iTexCoord0;                                         \n\
-    varyVertexColor = iColor;                                           \n\
     gl_Position =  ViewProjectionMatrix * iVertex;                      \n\
 }                                                                       \n\
                                                                         \n\
 [Fragment Shader]                                                       \n\
-#version 120                                                            \n\
-#extension GL_ARB_texture_rectangle : enable                            \n\
+#version 110                                                            \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 uniform sampler2D TextureObject0;                                       \n\
-uniform vec4 color0;                                                     \n\
+uniform vec4 color0;                                                    \n\
 vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
 {                                                                       \n\
   return texture2D(TexObject, TexCoord.st);                             \n\
@@ -107,9 +102,9 @@ void main()                                                             \n\
   vec4 tex = varyTexCoord0;                                             \n\
   tex.s = tex.s/varyTexCoord0.w;                                        \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
-	                                                                      \n\
+	                                                                \n\
   vec4 texel = SampleTexture(TextureObject0, tex);                      \n\
-  gl_FragColor = texel*varyVertexColor;                                 \n\
+  gl_FragColor = color0*texel;                                                 \n\
 }                                                                       \n\
 ");
 
@@ -207,7 +202,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     SetCompositionLayout(m_Layout);
 
-    if(!USE_ARB_SHADERS)
+    if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
     {
       _shader_program_uv_persp_correction = nux::GetThreadGLDeviceFactory()->CreateShaderProgram();
       _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
@@ -1359,7 +1354,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   v3.w = xform_coords[3].w ;
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
-  nux::Color color = nux::Color::White;
+  nux::Color color = bkg_color;
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
@@ -1378,10 +1373,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   float VtxBuffer[] =
   {// Perspective correct
-    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,     color.R(), color.G(), color.B(), color.A(),
-    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,     color.R(), color.G(), color.B(), color.A(),
-    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,     color.R(), color.G(), color.B(), color.A(),
-    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,     color.R(), color.G(), color.B(), color.A(),
+    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,
+    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,
+    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,
+    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,
   };
 
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
@@ -1393,7 +1388,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int VertexColorLocation;
   int FragmentColor;
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->Begin();
 
@@ -1401,7 +1396,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
-    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
+    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
@@ -1427,23 +1422,23 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
-  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer) );
+  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer) );
 
   if(TextureCoord0Location != -1)
   {
     CHECKGL( glEnableVertexAttribArrayARB(TextureCoord0Location) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4) );
+    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-  if(VertexColorLocation != -1)
-  {
-    CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
-  }
+//   if(VertexColorLocation != -1)
+//   {
+//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
+//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
+//   }
 
   bkg_color.SetAlpha (bkg_color.A () * alpha);
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -1460,10 +1455,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glDisableVertexAttribArrayARB(VertexLocation) );
   if(TextureCoord0Location != -1)
     CHECKGL( glDisableVertexAttribArrayARB(TextureCoord0Location) );
-  if(VertexColorLocation != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
+//   if(VertexColorLocation != -1)
+//     CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->End();
   }
@@ -1475,6 +1470,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
 void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo)
 {
+  // This check avoids a crash when the icon is not available on the system.
   if (arg.icon->TextureForSize (_icon_image_size) == 0)
     return;
 
