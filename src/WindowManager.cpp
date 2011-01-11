@@ -19,6 +19,11 @@
 #include "WindowManager.h"
 
 #include <gdk/gdkx.h>
+#include <X11/Xatom.h>
+
+#include <stdlib.h>
+
+#define BORDER_FOR_MAXIMIZE 100
 
 typedef struct {
     unsigned long flags;
@@ -102,7 +107,6 @@ void
 WindowManager::Undecorate (guint32 xid)
 {
   MotifWmHints hints = { 0 };
-  g_warning ("undecorate called for %i", xid);
     
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = 0;
@@ -115,21 +119,63 @@ WindowManager::Undecorate (guint32 xid)
 */
 void WindowManager::MaximizeIfBigEnough (guint32 xid)
 {
-  int x, y;
-  unsigned int width, height, bw, depth;
-  Window root_window;
+  int win_x, win_y, area_x, area_y;
+  unsigned int   win_width, win_height, area_width, area_height, bw, depth;
+  Atom           xa_ret_type;
+  Window         root_window;
+  int            ret_format;
+  unsigned long  ret_nitems;
+  unsigned long  ret_bytes_after;
+  unsigned int  *nb_desktop;
+  long          *workareas;
 
-  /* FIXME: multimonitor */
-  /*GdkDisplay *display = gdk_display_get_default();
-  g_return_if_fail (GDK_IS_DISPLAY (display));
+  Display *dpy = XOpenDisplay(NULL);
+  root_window = RootWindow(dpy, 0);
 
-  // Populate with the geometry in w and h (including the frames)
-  gdk_error_trap_push ();
-  XGetGeometry (GDK_DISPLAY_XDISPLAY (display),
-                //GDK_WINDOW_XWINDOW (gdk_window_lookup ((GdkNativeWindow) xid)),
+  if (XGetWindowProperty(dpy, root_window,
+                         XInternAtom(dpy, "_NET_NUMBER_OF_DESKTOPS", 0), 0,
+                         1, False, XA_CARDINAL, &xa_ret_type, &ret_format,
+                         &ret_nitems, &ret_bytes_after, (guchar **) &nb_desktop) != Success)
+  {
+    g_warning ("Cannot get _NET_NUMBER_OF_DESKTOPS property");
+    return;
+  }
+
+  if (xa_ret_type != XA_CARDINAL
+     || ret_nitems != 1
+     || ret_format != 32) {
+    g_warning ("Invalid type of _NET_NUMBER_OF_DESKTOPS property");
+    return;
+  }
+  
+
+  // get the NET_WORKAREA
+  if (XGetWindowProperty(dpy, root_window,
+                         XInternAtom(dpy, "_NET_WORKAREA", 0), 0,
+                         ((*nb_desktop) * 4 * 4), False, XA_CARDINAL,
+                         &xa_ret_type, &ret_format, &ret_nitems,
+                         &ret_bytes_after, (unsigned char **) &workareas) != Success)
+  {
+    g_warning ("Cannot get _NET_WORKAREA property");
+    return;
+  }
+
+  if (xa_ret_type != XA_CARDINAL
+      || (workareas == NULL)
+      || ret_format != 32) {
+    g_warning ("Invalid type of _NET_WORKAREA property");
+    return;
+  }
+
+  area_x = workareas[0];
+  area_y = workareas[1];
+  area_width = workareas[2];
+  area_height = workareas[3];
+
+  XGetGeometry (dpy,
                 (Window) xid,
                 &root_window,
-                &x, &y, &width, &height, &bw, &depth);
+                &win_x, &win_y, &win_width, &win_height, &bw, &depth);
   gdk_flush ();
   if (gdk_error_trap_pop ())
     {
@@ -138,9 +184,21 @@ void WindowManager::MaximizeIfBigEnough (guint32 xid)
     }
 
   // FIXME: integrate decorator size and MULTIMONITOR
-  if ((width + bw > (gdk_screen_get_width (gdk_display_get_screen (display, 0)) - 40)) &&
-           height +bw > (gdk_screen_get_height (gdk_display_get_screen (display, 0) - 80))) */
+  if ((abs(win_x - area_x) < BORDER_FOR_MAXIMIZE)
+      && (abs(win_width - area_width) < BORDER_FOR_MAXIMIZE)
+      && (abs(win_y - area_y) < BORDER_FOR_MAXIMIZE)
+      && (abs(win_height - area_height) < BORDER_FOR_MAXIMIZE))
+  {
+    g_debug ("Window maximized automatically");
+    Undecorate (xid);
     Maximize (xid);
+  }
+
+  if (nb_desktop != NULL)
+    XFree (nb_desktop);
+  if (workareas != NULL)
+    XFree (workareas);
+
 }
 
 /*

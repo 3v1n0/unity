@@ -53,7 +53,7 @@ void
 PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
 {
   window_resized.emit (window);
-  MaximizeIfBigEnough (window->id ());
+  //MaximizeIfBigEnough (window->id ());
 }
 
 void 
@@ -65,7 +65,6 @@ PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
-  g_warning ("Notify State change for window %i", window->id ());
   if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
