@@ -742,7 +742,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float size_modifier = IconVisibleProgress (icon, current);
     if (size_modifier < 1.0f)
     {
-        arg.alpha = size_modifier;
+        arg.alpha *= size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
     }
 
@@ -1253,7 +1253,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     if (!m_RunningIndicator)
     {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/running_indicator.png", NULL);
+      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/launcher_pip_ltr.png", NULL);
       m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
       g_object_unref (pbuf);
     }
@@ -1299,7 +1299,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     if (!m_ActiveIndicator)
     {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/focused_indicator.png", NULL);
+      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/launcher_pip_rtl.png", NULL);
       m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
       g_object_unref (pbuf);
     }
