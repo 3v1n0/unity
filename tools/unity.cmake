@@ -26,6 +26,7 @@ import subprocess
 import sys
 import time
 
+from autopilot import UnityTestRunner
 
 def set_unity_env ():
     '''set variable environnement for unity to run'''
@@ -96,7 +97,10 @@ def run_unity (verbose, debug, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
-        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)    
+        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
+        if options.autopilot:
+            runner = UnityTestRunner(unity_instance)
+            runner.start()
         unity_instance.wait()
     except KeyboardInterrupt, e:
         try:
@@ -117,10 +121,17 @@ if __name__ == '__main__':
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
-                      help="Reset the unity profile in compiz and restart it.")    
+                      help="Reset the unity profile in compiz and restart it.")  
+    parser.add_option("--autopilot", action="store_true",
+                     help="Run unity in an automated test mode. Implies --reset.")
     parser.add_option("-v", "--verbose", action="store_true",
                       help="Get additional debug output from unity.")
     (options, args) = parser.parse_args()
+    
+    # sets --reset to be True if it's not already,
+    #if --autopilot is set.
+    if options.autopilot and not options.reset:
+        options.reset = True
 
     set_unity_env()
     if options.reset:
