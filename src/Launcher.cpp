@@ -1000,8 +1000,10 @@ Launcher::CheckWindowOverLauncher ()
   for (it = window_list.begin (); it != window_list.end (); it++)
   {
     CompWindow *window = *it;
+    int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                          CompWindowTypeModalDialogMask;
 
-    if (window->type () != CompWindowTypeNormalMask || !window->isMapped () || !window->isViewable ())
+    if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
