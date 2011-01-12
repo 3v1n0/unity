@@ -23,6 +23,32 @@
 
 PluginAdapter * PluginAdapter::_default = 0;
 
+#define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
+
+#define nb_default_exclude_wmclasses 18
+static const char *default_exclude_wmclasses[nb_default_exclude_wmclasses] =
+    {
+      "Apport-gtk",
+      "Bluetooth-properties",
+      "Bluetooth-wizard",
+      "Download", /* Firefox Download Window */
+      "Ekiga",
+      "Extension", /* Firefox Add-Ons/Extension Window */
+      "Gimp",
+      "Global", /* Firefox Error Console Window */
+      "Gnome-nettool",
+      "Kiten",
+      "Kmplot",
+      "Nm-editor",
+      "Pidgin",
+      "Polkit-gnome-authorization",
+      "Update-manager",
+      "Skype",
+      "Toplevel", /* Firefox "Clear Private Data" Window */
+      "Transmission"
+    };
+
+
 /* static */
 PluginAdapter *
 PluginAdapter::Default ()
@@ -54,7 +80,6 @@ void
 PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
 {
   window_resized.emit (window);
-  //MaximizeIfBigEnough (window->id ());
 }
 
 void 
@@ -110,6 +135,9 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
     case CompWindowNotifyUnmap:
       PluginAdapter::window_unmapped.emit (window);
       WindowManager::window_unmapped.emit (window->id ());
+      break;
+    case CompWindowNotifyReparent:
+      MaximizeIfBigEnough (window);
       break;
     default:
       break;
@@ -273,22 +301,6 @@ PluginAdapter::Restore (guint32 xid)
 }
 
 void
-PluginAdapter::Maximize (guint32 xid)
-{
-  Window win = (Window)xid;
-  CompWindow *window;
-  g_warning ("maximize call for window %i", xid);
-
-  window = m_Screen->findWindow (win);
-  if (window) {
-    window->maximize (MAXIMIZE_STATE);
-    // as we can be called in a map() Notify event, the NotifyStateChange isn't
-    // called. Do it manually.
-    NotifyStateChange (window, 0, MAXIMIZE_STATE);
-  }
-}
-
-void
 PluginAdapter::Minimize (guint32 xid)
 {
   Window win = (Window)xid;
@@ -308,4 +320,69 @@ PluginAdapter::Close (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->close (CurrentTime);
+}
+
+void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
+{
+  XClassHint   classHint;
+  Status       status;
+  char*        win_wmclass = NULL;
+  int          num_monitor;
+  CompOutput   screen;
+  int          screen_width;
+  int          screen_height;
+
+  if (!window)
+    return;
+
+  if (window->type () != CompWindowTypeNormalMask
+      || (window->actions () & MAXIMIZABLE) != MAXIMIZABLE)
+    return;
+
+  status = XGetClassHint (m_Screen->dpy (), window->id (), &classHint);
+  if (status && classHint.res_class)
+  {
+    win_wmclass = strdup (classHint.res_class);
+    XFree (classHint.res_class);
+  }
+  else
+    return;
+
+  for(int i = 0; i < nb_default_exclude_wmclasses; i++)
+  {
+    if (!strcmp (win_wmclass, default_exclude_wmclasses[i]))
+    {
+      g_debug ("MaximizeIfBigEnough: Blacklisted app detected: %s", win_wmclass);
+      return;
+    }
+  }
+
+  num_monitor = window->outputDevice();
+  screen = m_Screen->outputDevs().at(num_monitor);
+
+  screen_height = screen.workArea().height ();
+  screen_width = screen.workArea().width ();
+
+  if ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE) {
+    g_debug ("MaximizeIfBigEnough: window mapped and already maximized, just undecorate");
+    Undecorate (window->id ());
+    return;
+  }
+
+  // use server<parameter> because the window won't show the real parameter as
+  // not mapped yet
+  if ((window->serverWidth () < (screen_width * 0.6)) || (window->serverWidth () > screen_width)
+       || (window->serverHeight () < (screen_height * 0.6)) || (window->serverHeight () > screen_height)
+       || (((float)window->serverWidth () / (float)window->serverHeight ()) < 0.6)
+       || (((float)window->serverWidth () / (float)window->serverHeight ()) > 2.0))
+  {
+    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
+    return;
+  }
+
+  Undecorate (window->id ());
+  window->maximize (MAXIMIZE_STATE);
+
+  if (win_wmclass)
+    free (win_wmclass);
 }
