@@ -25,7 +25,7 @@
 
 #define SETTINGS_NAME "com.canonical.Unity.Launcher"
 
-#define LATEST_SETTINGS_MIGRATION "3.2.0"
+#define LATEST_SETTINGS_MIGRATION "3.2.10"
 
 static void on_settings_updated (GSettings *settings, const gchar *key, FavoriteStoreGSettings *self);
 

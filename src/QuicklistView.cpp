@@ -94,6 +94,7 @@ QuicklistView::QuicklistView ()
   
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
+  _compute_blur_bkg = true;
 }
 
 QuicklistView::~QuicklistView ()
@@ -137,21 +138,39 @@ QuicklistView::EnableQuicklistForTesting (bool enable_testing)
 
 void QuicklistView::ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y)
 {
-  int window_width;
-  int window_height;
-  
-  window_width = nux::GetWindow ().GetWindowWidth ();
-  window_height = nux::GetWindow ().GetWindowHeight ();
-  
   _anchorX = anchor_tip_x;
   _anchorY = anchor_tip_y;
   
-  int x = _anchorX - _padding;
-  int y = anchor_tip_y - _anchor_height/2 - _top_size - _corner_radius - _padding;
-  
-  SetBaseX (x);
-  SetBaseY (y);
-  
+  if (!_enable_quicklist_for_testing)
+  {
+    if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
+    {
+      int offscreen_size = GetBaseY () +
+                           GetBaseHeight () -
+                           nux::GetWindow().GetWindowHeight ();
+
+      if (offscreen_size > 0)
+        _top_size = offscreen_size;
+      else
+        _top_size = 4;
+
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);
+    }
+    else
+    {
+      _top_size = 0;
+      int x = _anchorX - _padding;
+      int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;
+
+      SetBaseX (x);
+      SetBaseY (y);    
+    }
+  }
+
   Show ();
 }
 
@@ -169,6 +188,8 @@ void QuicklistView::Show ()
     EnableInputWindow (true, 1);
     GrabPointer ();
     NeedRedraw ();
+
+    _compute_blur_bkg = true;
   }
 }
 
@@ -240,7 +261,37 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
 
 void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
+  // Get the geometry of the QuicklistView on the display
   nux::Geometry base = GetGeometry();
+
+  // Get the background of the QuicklistView and apply some 
+  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && _compute_blur_bkg /* Refresh the blurred background*/)
+  {
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+  
+    gfxContext.SetViewport (0, 0, gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
+    gfxContext.SetScissor (0, 0, gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
+    gfxContext.GetRenderStates ().EnableScissor (false);
+
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer (base.x, base.y, base.width, base.height);
+
+    nux::TexCoordXForm texxform_bkg;
+    bkg_blur_texture = gfxContext.QRP_GetBlurTexture (0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 3);
+
+    if (current_fbo.IsValid ())
+    { 
+      current_fbo->Activate (true);
+      gfxContext.Push2DWindow (current_fbo->GetWidth (), current_fbo->GetHeight ());
+    }
+    else
+    {
+      gfxContext.SetViewport (0, 0, gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
+      gfxContext.Push2DWindow (gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
+      gfxContext.ApplyClippingRectangle ();
+    }
+    _compute_blur_bkg = false;
+  }
 
   // the elements position inside the window are referenced to top-left window
   // corner. So bring base to (0, 0).
@@ -248,7 +299,9 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   base.SetY (0);
   gfxContext.PushClippingRectangle (base);
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend (false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  nux::TexCoordXForm texxform_blur_bkg;
+  //texxform_blur_bkg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
+  //texxform_blur_bkg.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
   nux::TexCoordXForm texxform_bg;
   texxform_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
@@ -258,6 +311,22 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
+  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && bkg_blur_texture.IsValid ())
+  {
+    gfxContext.QRP_2TexMod (
+      base.x,
+      base.y,
+      base.width,
+      base.height,
+      bkg_blur_texture,
+      texxform_blur_bkg,
+      nux::Color::White,
+      _texture_mask->GetDeviceTexture(),
+      texxform_mask,
+      nux::Color::White);
+  }
+
+  nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   gfxContext.QRP_2TexMod (base.x,
     base.y,
@@ -289,12 +358,14 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
-    (*it)->ProcessDraw(gfxContext, forceDraw);
+    if ((*it)->GetVisible())
+      (*it)->ProcessDraw(gfxContext, forceDraw);
   }
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
-    (*it)->ProcessDraw(gfxContext, forceDraw);
+    if ((*it)->GetVisible())
+      (*it)->ProcessDraw(gfxContext, forceDraw);
   }
 
   gfxContext.PopClippingRectangle ();
@@ -313,6 +384,14 @@ void QuicklistView::PreLayoutManagement ()
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    // Make sure item is in layout if it should be
+    if (!(*it)->GetVisible()) {
+      _item_layout->RemoveChildObject(*it);
+      continue;
+    }
+    else if (!(*it)->GetParentObject())
+      _item_layout->AddView(*it, 1, nux::eCenter, nux::eFull);
+
     int  textWidth  = 0;
     int  textHeight = 0;
     (*it)->GetTextExtents(textWidth, textHeight);
@@ -323,6 +402,14 @@ void QuicklistView::PreLayoutManagement ()
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    // Make sure item is in layout if it should be
+    if (!(*it)->GetVisible()) {
+      _default_item_layout->RemoveChildObject(*it);
+      continue;
+    }
+    else if (!(*it)->GetParentObject())
+      _default_item_layout->AddView(*it, 1, nux::eCenter, nux::eFull);
+
     int  textWidth  = 0;
     int  textHeight = 0;
     (*it)->GetTextExtents(textWidth, textHeight);
@@ -360,6 +447,9 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     (*it)->SetBaseX (x);
     (*it)->SetBaseY (y);
 
@@ -368,6 +458,9 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     (*it)->SetBaseX (x);
     (*it)->SetBaseY (y);
 
@@ -384,7 +477,7 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
     QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
-    if (item->CairoSurfaceWidth () != separator_width)
+    if (item->GetVisible() && item->CairoSurfaceWidth () != separator_width)
     {
       // Compute textures of the item.
       item->UpdateTexture ();
@@ -394,7 +487,7 @@ long QuicklistView::PostLayoutManagement (long LayoutResult)
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
     QuicklistMenuItem* item = (QuicklistMenuItem*) (*it);
-    if (item->CairoSurfaceWidth () != separator_width)
+    if (item->GetVisible() && item->CairoSurfaceWidth () != separator_width)
     {
       // Compute textures of the item.
       item->UpdateTexture ();
@@ -432,6 +525,9 @@ void QuicklistView::CheckAndEmitItemSignal (int x, int y)
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     geo = (*it)->GetGeometry ();
     geo.width = _item_layout->GetBaseWidth ();
     
@@ -447,6 +543,9 @@ void QuicklistView::CheckAndEmitItemSignal (int x, int y)
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     geo = (*it)->GetGeometry ();
     geo.width = _default_item_layout->GetBaseWidth ();
     
@@ -495,6 +594,9 @@ void QuicklistView::RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y)
   std::list<QuicklistMenuItem*>::iterator it;
   for (it = _item_list.begin(); it != _item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     geo = (*it)->GetGeometry ();
     geo.width = _item_layout->GetBaseWidth ();
     
@@ -510,6 +612,9 @@ void QuicklistView::RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y)
 
   for (it = _default_item_list.begin(); it != _default_item_list.end(); it++)
   {
+    if (!(*it)->GetVisible())
+      continue;
+
     geo = (*it)->GetGeometry ();
     geo.width = _default_item_layout->GetBaseWidth ();
     
@@ -616,7 +721,6 @@ void QuicklistView::AddMenuItem (QuicklistMenuItem* item)
   item->sigMouseLeave.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseLeave));
   item->sigMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvItemMouseDrag));
    
-  _item_layout->AddView(item, 1, nux::eCenter, nux::eFull);
   _item_list.push_back (item);
   item->Reference();
   // Add to introspection
@@ -1271,13 +1375,21 @@ void QuicklistView::UpdateTexture ()
   if (_cairo_text_has_changed == false)
     return;
 
-  int size_above_anchor = -1; // equal to sise below
+  int size_above_anchor = -1; // equal to size below
 
   if (!_enable_quicklist_for_testing)
   {
     if ((_item_list.size () != 0) || (_default_item_list.size () != 0))
     {
-      _top_size = 4;
+      int offscreen_size = GetBaseY () +
+                           GetBaseHeight () -
+                           nux::GetWindow().GetWindowHeight ();
+
+      if (offscreen_size > 0)
+        _top_size = offscreen_size;
+      else
+        _top_size = 4;
+
       size_above_anchor = _top_size;
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height/2 - _top_size - _corner_radius - _padding;

@@ -36,8 +36,8 @@
  *
  */
 
+using GLib;
 using Dee;
-using DBus;
 
 namespace Unity.Place {
 
@@ -455,7 +455,7 @@ namespace Unity.Place {
   [DBus (name = "com.canonical.Unity.Place")]
   private interface Service : GLib.Object
   {
-    public abstract _EntryInfo[] get_entries () throws DBus.Error;
+    public abstract _EntryInfo[] get_entries () throws IOError;
 
     public signal void entry_added (_EntryInfo entry);
 
@@ -471,14 +471,14 @@ namespace Unity.Place {
   private interface EntryService : GLib.Object
   {
     public abstract void set_global_search (string search,
-                                            HashTable<string,string> hints) throws DBus.Error;
+                                            HashTable<string,string> hints) throws IOError;
 
     public abstract void set_search (string search,
-                                     HashTable<string,string> hints) throws DBus.Error;
+                                     HashTable<string,string> hints) throws IOError;
     
-    public abstract void set_active (bool is_active) throws DBus.Error;
+    public abstract void set_active (bool is_active) throws IOError;
 
-    public abstract void set_active_section (uint section_id) throws DBus.Error;
+    public abstract void set_active_section (uint section_id) throws IOError;
 
     public signal void entry_renderer_info_changed (_RendererInfo renderer_info);
     
@@ -497,7 +497,8 @@ namespace Unity.Place {
   {
     private string _dbus_path;
     private HashTable<string,EntryServiceImpl> entries;
-    private bool _exported;
+    private uint _service_dbus_id = 0;
+    private uint _activation_dbus_id = 0;
 
     /*
      * Properties
@@ -510,7 +511,7 @@ namespace Unity.Place {
     }
 
     public bool exported {
-      get { return _exported; }
+      get { return _service_dbus_id != 0; }
     }
     
     public Activation? activation { get; set; default = null; }
@@ -557,13 +558,15 @@ namespace Unity.Place {
 
       var entry = new EntryServiceImpl(entry_info);
       entries.insert (entry_info.dbus_path, entry);
-      if (_exported)
+      
+      /* If the place is exported then also export the new entry */
+      if (exported)
         {
           try {
             entry.export ();
-          } catch (DBus.Error e) {
-            critical ("Failed to export place entry '%s': %s",
-                      entry_info.dbus_path, e.message);
+          } catch (IOError e) {
+            critical ("Failed to export entry '%s': %s",
+                      entry.entry_info.dbus_path, e.message);
           }
         }
       entry_added (entry_info.get_raw ());
@@ -614,12 +617,12 @@ namespace Unity.Place {
         return;
 
       entry_removed (dbus_path);
-      if (_exported)
+      if (exported)
         {
           try {
             entry.unexport ();
-          } catch (DBus.Error e) {
-            critical ("Failed to unexport place entry '%s': %s",
+          } catch (IOError e) {
+            critical ("Failed to unexport '%s': %s",
                       entry.entry_info.dbus_path, e.message);
           }
         }
@@ -627,30 +630,32 @@ namespace Unity.Place {
       entries.remove (dbus_path);
     }
 
-    public void export () throws DBus.Error
+    public void export () throws IOError
     {
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.register_object (_dbus_path, this);
+      var conn = Bus.get_sync(BusType.SESSION);
+      _service_dbus_id = conn.register_object (_dbus_path, this as Service);
+      _activation_dbus_id = conn.register_object (_dbus_path, this as Activation);
 
       foreach (var entry in entries.get_values ())
       {
         entry.export ();
       }
 
-      _exported = true;
       notify_property("exported");
     }
 
-    public void unexport () throws DBus.Error
+    public void unexport () throws IOError
     {
       foreach (var entry in entries.get_values ())
       {
         entry.unexport ();
       }
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.unregister_object (this);
+      var conn = Bus.get_sync (BusType.SESSION);
+      conn.unregister_object (_service_dbus_id);
+      conn.unregister_object (_activation_dbus_id);
 
-      _exported = false;
+      _service_dbus_id = 0;
+      _activation_dbus_id = 0;
       notify_property("exported");
     }
     
@@ -664,7 +669,7 @@ namespace Unity.Place {
       try {
         uint32 activated = yield activation.activate (uri);
         return activated;
-      } catch (DBus.Error e) {
+      } catch (IOError e) {
         return ActivationStatus.NOT_ACTIVATED;
       }
     }
@@ -679,7 +684,7 @@ namespace Unity.Place {
    */
   private class EntryServiceImpl : GLib.Object, EntryService
   {
-    private bool _exported = false;
+    private uint _dbus_id = 0;
     private EntryInfo _entry_info;
     
     /* Queue up change signals in order not to flood the bus on rapid changes */
@@ -688,24 +693,25 @@ namespace Unity.Place {
     /* Keep a ref to the previous browser to properly handle it leaving and
      * entering the bus */
     private Browser? _browser = null;
+    
+    /* DBus registration id set if we've registered the browser on the bus */
+    private uint _browser_dbus_id = 0;
 
     /*
      * Properties
      */
-
     public EntryInfo entry_info {
       get { return _entry_info; }
       construct { _entry_info = value; }
     }
 
     public bool exported {
-      get { return _exported; }
+      get { return _dbus_id != 0; }
     }
 
     /*
      * Constructors
      */
-
     public EntryServiceImpl (EntryInfo entry_info)
     {
       GLib.Object(entry_info : entry_info);
@@ -750,46 +756,46 @@ namespace Unity.Place {
      * Internal API
      */
 
-    public void export () throws DBus.Error
+    public void export () throws IOError
     {
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.register_object (_entry_info.dbus_path, this);
+      var conn = Bus.get_sync (BusType.SESSION);
+      _dbus_id = conn.register_object (_entry_info.dbus_path, this as EntryService);
 
-      if (_entry_info.browser != null)
+      if (_entry_info.browser != null && _browser_dbus_id == 0)
         {
           debug ("Exporting browser at '%s'", _entry_info.browser.dbus_path);
-          conn.register_object (_entry_info.browser.dbus_path,
-                                _entry_info.browser.get_service ());
+          _browser_dbus_id = conn.register_object (_entry_info.browser.dbus_path,
+                                                   _entry_info.browser.get_service ());
 
         }
       else
         debug ("No browser to export");
       
-      _exported = true;
       notify_property("exported");
     }
 
-    public void unexport () throws DBus.Error
+    public void unexport () throws IOError
     {
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.unregister_object (this);
+      var conn = Bus.get_sync (BusType.SESSION);
+      conn.unregister_object (_dbus_id);
 
-      if (_entry_info.browser != null)
+      if (_entry_info.browser != null && _browser_dbus_id != 0)
         {
           debug ("Unexporting browser '%s'", _entry_info.browser.dbus_path);
-          conn.unregister_object (_entry_info.browser.get_service ());
+          conn.unregister_object (_browser_dbus_id);
+          _browser_dbus_id = 0;
         }
 
-      _exported = false;
+      _dbus_id = 0;
       notify_property("exported");
     }
     
     private void on_browser_changed (GLib.Object obj, ParamSpec pspec)
     {
-      DBus.Connection conn;
+      DBusConnection conn;
       try {
-        conn = DBus.Bus.get (DBus.BusType. SESSION);
-      } catch (DBus.Error e) {
+        conn = Bus.get_sync (BusType.SESSION);
+      } catch (IOError e) {
         warning ("Unable to connect to session bus: %s", e.message);
         return;
       }
@@ -798,20 +804,27 @@ namespace Unity.Place {
       if (_browser == entry_info.browser)
         return;
 
-      /* clear previous browser if any */
-      if (_browser != null && _exported)
+      /* Unexport previous browser if relevant */
+      if (_browser != null && _browser_dbus_id != 0)
         {
           debug ("Unexporting browser '%s'", _browser.dbus_path);
-          conn.unregister_object (_browser.get_service ());
+          conn.unregister_object (_browser_dbus_id);          
         }
 
       _browser = entry_info.browser;
+      _browser_dbus_id = 0;
 
       /* Export the new one if any */
-      if (_browser != null && _exported)
+      if (_browser != null)
         {
           debug ("Exporting browser '%s'", _browser.dbus_path);
-          conn.register_object (_browser.dbus_path, _browser.get_service ());
+          try {
+            _browser_dbus_id = conn.register_object (_browser.dbus_path,
+                                                     _browser.get_service ());
+          } catch (IOError e) {
+            critical ("failed to export browser '%s': %s",
+                      _browser.dbus_path, e.message);
+          }
         }
     }
     
@@ -1026,7 +1039,7 @@ namespace Unity.Place {
       return result;
     }
 
-    public void export () throws DBus.Error
+    public void export () throws IOError
     {
       /* Export the Place and Activation insterfaces */
       service.export ();
@@ -1035,7 +1048,7 @@ namespace Unity.Place {
       notify_property("exported");
     }
 
-    public void unexport () throws DBus.Error
+    public void unexport () throws IOError
     {
       service.unexport ();
       _exported = false;

@@ -88,6 +88,8 @@ class QuicklistMenuItem : public nux::View, public Introspectable
     virtual bool GetEnabled ();
 
     virtual bool GetActive ();
+
+    virtual bool GetVisible ();
     
     // Introspection
     const gchar* GetName ();

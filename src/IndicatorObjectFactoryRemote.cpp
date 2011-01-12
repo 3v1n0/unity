@@ -224,6 +224,22 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
   // --------------------------------------------------------------------------
 }
 
+void
+IndicatorObjectFactoryRemote::OnScrollReceived (const char *entry_id,
+                                                       int delta)
+{
+  g_dbus_proxy_call (_proxy,
+                     "ScrollEntry",
+                     g_variant_new ("(si)",
+                                    entry_id,
+                                    delta),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+}
+
 // We need to unset the last active entry and set the new one as active
 void
 IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
@@ -275,6 +291,8 @@ IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
       remote = new IndicatorObjectProxyRemote (id);
       remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
                                                         &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
+      remote->OnScroll.connect (sigc::mem_fun (this,
+                                                &IndicatorObjectFactoryRemote::OnScrollReceived));
 
       _indicators.push_back (remote);
 

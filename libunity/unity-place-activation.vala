@@ -25,6 +25,9 @@
  * both Vala and C.
  *
  */
+ 
+using GLib;
+ 
 namespace Unity.Place {
 
   /**
@@ -45,7 +48,7 @@ namespace Unity.Place {
      * You can use the ActivationStatus enumeration to have type safe
      * return values.
      */
-    public async abstract uint32 activate (string uri) throws DBus.Error;
+    public async abstract uint32 activate (string uri) throws IOError;
   }
   
   /**
