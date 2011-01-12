@@ -29,6 +29,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 :   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
 {
+  SetMinMaxSize (1024, 600);
   Hide ();
 }
 
@@ -73,7 +74,7 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 
 void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Color *color = new nux::Color (0.9, 0.3, 0.1, 1.0);
+  nux::Color *color = new nux::Color (0.0, 0.0, 0.0, 0.8);
   nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), *color);
 }
 
