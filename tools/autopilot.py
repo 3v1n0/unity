@@ -114,16 +114,16 @@ class UnityTests(object):
         _dest_x = 32
         _dest_y = 57
         
-        def __init__(self):
+        def __init__(self, unity):
                 self._mouse = Mouse()
                 self._unity = UnityUtil()
-        
+                assert unity.bus_owned()
+                
         def show_tooltip(self):
                 '''Move mouse to a launcher and hover to show the tooltip'''
                 print 'Showing tool tip...'
                 self._mouse.reset()
                 self._mouse.move(self._dest_x, self._dest_y)
-                return self._unity.bus_owned()
                 
         def show_quicklist(self):
                 '''Move mouse to a launcher and right click'''
@@ -135,7 +135,6 @@ class UnityTests(object):
                 sleep(2)
                 # hides quicklist
                 self._mouse.click(button=3)
-                return self._unity.bus_owned()
                 
         def drag_launcher(self):
                 '''Click a launcher icon and drag down to move the whole launcher'''
@@ -147,7 +146,6 @@ class UnityTests(object):
                 self._mouse.move(self._dest_x, self._dest_y + 300)
                 sleep(0.25)
                 self._mouse.release()
-                return self._unity.bus_owned()
                 
         def drag_launcher_icon_along_edge_drop(self):
                 '''Click a launcher icon and drag it along the edge of the launcher
@@ -159,7 +157,6 @@ class UnityTests(object):
                 self._mouse.move(self._dest_x + 25, self._dest_y)
                 self._mouse.move(self._dest_x + 25, self._dest_y + 500)
                 self._mouse.release()
-                return self._unity.bus_owned()
         
         def drag_launcher_icon_out_and_drop(self):
                 '''Click a launcher icon and drag it straight out so that when dropped
@@ -170,7 +167,6 @@ class UnityTests(object):
                 self._mouse.press()
                 self._mouse.move(self._dest_x + 300, self._dest_y)
                 self._mouse.release()
-                return self._unity.bus_owned()
         
         def drag_launcher_icon_out_and_move(self):
                 '''Click a launcher icon and drag it diagonally so that it changes position'''
@@ -181,14 +177,15 @@ class UnityTests(object):
                 self._mouse.move(self._dest_x + 300, self._dest_y)
                 self._mouse.move(self._dest_x + 300, self._dest_y + 300)
                 self._mouse.release()
-                return self._unity.bus_owned()
 
 class UnityTestRunner(Thread):
+    '''Runs Unity tests, reports tests' status.'''
     def __init__(self, unity_instance):
         Thread.__init__(self)
         self._unity = unity_instance
 
     def run(self):
+        # Wait 10 seconds and show a notificationt that we're going to run an automated Unity
         sleep(10)
         if pynotify.init('Unity Autopilot'):
             n = pynotify.Notification('Autopilot',
@@ -197,7 +194,12 @@ class UnityTestRunner(Thread):
 
         # Wait 20 more seconds for compiz and unity to start
         sleep(20)
-        self._tests = UnityTests()
+        try:
+            self._unity_util = UnityUtil ()
+            self._tests = UnityTests(self._unity_util)
+        except:
+            print 'FAIL: UNITY FAILED TO LAUNCH'
+            exit(1)
         
         tests = {'Show tooltip': self._tests.show_tooltip,
                  'Show quicklist': self._tests.show_quicklist,
@@ -208,13 +210,16 @@ class UnityTestRunner(Thread):
         }
                  
         for (name, test) in tests.items():
+            sleep(2)
             if self._test_passed(test):
                 continue
             else:
-                print 'FAIL: TESTNAME CRASHED UNITY'
+                print 'FAIL: %d CRASHED UNITY' % name
                 exit(1)
             
         print 'ALL TESTS PASSED'
 
     def _test_passed(self, test):
-        return test() and self._unity.poll() is None
+        '''Returns whether or not the test pass, and if Unity is still running'''
+        test()
+        return self._unity_util.bus_owned() and self._unity.poll() is None
