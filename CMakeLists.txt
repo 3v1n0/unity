@@ -1,7 +1,9 @@
   project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (libunity services tests tools)
+include (cmake/Documentation.cmake)
+
+subdirs (libunity services tests tools doc)
 
 #
 # Base bits
