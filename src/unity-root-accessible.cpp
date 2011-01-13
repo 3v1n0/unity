@@ -28,6 +28,7 @@
  */
 
 #include "unity-root-accessible.h"
+#include "unitya11y.h"
 
 /* GObject */
 static void unity_root_accessible_class_init (UnityRootAccessibleClass *klass);
@@ -43,14 +44,16 @@ static AtkObject *unity_root_accessible_ref_child      (AtkObject *obj,
 static AtkObject *unity_root_accessible_get_parent     (AtkObject *obj);
 
 
-#define UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(obj) \
+#define UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(obj)                          \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_ROOT_ACCESSIBLE, UnityRootAccessiblePrivate))
 
 G_DEFINE_TYPE (UnityRootAccessible, unity_root_accessible,  ATK_TYPE_OBJECT)
 
 struct _UnityRootAccessiblePrivate
 {
-  GList *window_list;
+  /* we save on window_list the accessible object for the windows
+     registered */
+  GSList *window_list;
 };
 
 static void
@@ -99,7 +102,7 @@ unity_root_accessible_finalize (GObject *object)
 
   if (root->priv->window_list)
     {
-      g_list_free (root->priv->window_list);
+      g_slist_free (root->priv->window_list);
       root->priv->window_list = NULL;
     }
 
@@ -125,19 +128,60 @@ unity_root_accessible_initialize (AtkObject *accessible,
 static gint
 unity_root_accessible_get_n_children (AtkObject *obj)
 {
-  return 0;
+  UnityRootAccessible *root = UNITY_ROOT_ACCESSIBLE (obj);
+
+  return g_slist_length (root->priv->window_list);
 }
 
 static AtkObject*
 unity_root_accessible_ref_child (AtkObject *obj,
                                  gint i)
 {
+  UnityRootAccessible *root = NULL;
+  gint num = 0;
+  AtkObject *item = NULL;
 
-  return NULL;
+  root = UNITY_ROOT_ACCESSIBLE (obj);
+  num = atk_object_get_n_accessible_children (obj);
+  g_return_val_if_fail ((i < num)&&(i >= 0), NULL);
+
+  item = ATK_OBJECT (g_slist_nth_data (root->priv->window_list, i));
+
+  if (!item)
+    return NULL;
+
+  g_object_ref (item);
+
+  return item;
 }
 
 static AtkObject*
 unity_root_accessible_get_parent (AtkObject *obj)
 {
   return NULL;
+}
+
+
+
+/*
+ * It adds a window to the internal window_list managed by the
+ *
+ *
+ * FIXME: third parties manually using this method should be
+ * temporal. This method should be a internal root method, as part of
+ * a basewindow::show callback, as in the case of gail
+ */
+void
+unity_root_accessible_add_window (UnityRootAccessible *self,
+                                  nux::BaseWindow *window)
+{
+  AtkObject *window_accessible = NULL;
+
+  g_return_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self));
+
+  window_accessible =
+    unity_a11y_get_accessible (window);
+
+  self->priv->window_list =
+    g_slist_append (self->priv->window_list, window_accessible);
 }

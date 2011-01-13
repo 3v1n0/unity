@@ -21,6 +21,9 @@
 
 #include <atk/atk.h>
 
+#include "Nux/Nux.h"
+#include "Nux/BaseWindow.h"
+
 G_BEGIN_DECLS
 
 #define UNITY_TYPE_UTIL_ACCESSIBLE            (unity_util_accessible_get_type ())
@@ -48,6 +51,8 @@ struct _UnityUtilAccessibleClass
 };
 
 GType unity_util_accessible_get_type (void);
+
+void  unity_util_accessible_add_window (nux::BaseWindow *window);
 
 G_END_DECLS
 
