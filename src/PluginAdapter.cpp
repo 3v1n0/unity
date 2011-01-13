@@ -24,30 +24,7 @@
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
-
-#define nb_default_exclude_wmclasses 18
-static const char *default_exclude_wmclasses[nb_default_exclude_wmclasses] =
-    {
-      "Apport-gtk",
-      "Bluetooth-properties",
-      "Bluetooth-wizard",
-      "Download", /* Firefox Download Window */
-      "Ekiga",
-      "Extension", /* Firefox Add-Ons/Extension Window */
-      "Gimp",
-      "Global", /* Firefox Error Console Window */
-      "Gnome-nettool",
-      "Kiten",
-      "Kmplot",
-      "Nm-editor",
-      "Pidgin",
-      "Polkit-gnome-authorization",
-      "Update-manager",
-      "Skype",
-      "Toplevel", /* Firefox "Clear Private Data" Window */
-      "Transmission"
-    };
-
+#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.6
 
 /* static */
 PluginAdapter *
@@ -331,6 +308,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   CompOutput   screen;
   int          screen_width;
   int          screen_height;
+  float        covering_part;
 
   if (!window)
     return;
@@ -348,15 +326,6 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   else
     return;
 
-  for(int i = 0; i < nb_default_exclude_wmclasses; i++)
-  {
-    if (!strcmp (win_wmclass, default_exclude_wmclasses[i]))
-    {
-      g_debug ("MaximizeIfBigEnough: Blacklisted app detected: %s", win_wmclass);
-      return;
-    }
-  }
-
   num_monitor = window->outputDevice();
   screen = m_Screen->outputDevs().at(num_monitor);
 
@@ -371,10 +340,8 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
-  if ((window->serverWidth () < (screen_width * 0.6)) || (window->serverWidth () > screen_width)
-       || (window->serverHeight () < (screen_height * 0.6)) || (window->serverHeight () > screen_height)
-       || (((float)window->serverWidth () / (float)window->serverHeight ()) < 0.6)
-       || (((float)window->serverWidth () / (float)window->serverHeight ()) > 2.0))
+  covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height)
+  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0))
   {
     g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
     return;
