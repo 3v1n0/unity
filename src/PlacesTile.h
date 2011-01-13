@@ -17,26 +17,29 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef PLACESTILE_H
-#define PLACESTILE_H
+#ifndef PLACES_TILE_H
+#define PLACES_TILE_H
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
-#include <NuxBasewindow.h>
+#include <Nux/VLayout.h>
+#include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
+
+#include "StaticCairoText.h"
+
+#include "Introspectable.h"
 
 #include <sigc++/trackable.h>
 #include <sigc++/signal.h>
 #include <sigc++/functors/ptr_fun.h>
 #include <sigc++/functors/mem_fun.h>
 
-
-class PlacesTile : public Introspectable, public nux::InitallyUnownedObject, public sigc::trackable, public Nux::View
+class PlacesTile : public nux::View
 {
 public:
-  typedef enum 
+  typedef enum
   {
     STATE_DEFAULT,
     STATE_HOVER,
@@ -44,37 +47,61 @@ public:
     STATE_ACTIVATED,
   } TileState;
 
-  PlacesTile ();
-  ~Placestile ();
- 
-  virtual void SetCaption (const gchar *caption);
-  virtual const gchar* GetCaption ();
- 
+  PlacesTile (NUX_FILE_LINE_PROTO);
+  ~PlacesTile ();
+
   // mainly for testing
   virtual void SetState (TileState state);
   virtual TileState GetState ();
-  
+
   sigc::signal<void> sigClick;
   sigc::signal<void> sigToggled;
   sigc::signal<void, bool> sigStateChanged;
-  
+
+  sigc::signal<void, int> MouseDown;
+  sigc::signal<void, int> MouseUp;
+  sigc::signal<void>      MouseEnter;
+  sigc::signal<void>      MouseLeave;
+  sigc::signal<void, int> MouseClick;
+
 protected:
-  virtual long ProcessEvent (Nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (Nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void DrawContent (Nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (Nux::GraphicsEngine &GfxContext, bool force_draw);
-  
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
+
+  virtual void PreLayoutManagement ();
+  virtual long PostLayoutManagement (long LayoutResult);
+
+
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  
-  
-private:
+  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  //void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  sigc::signal<void, PlacesTile*> sigMouseEnter;
+  sigc::signal<void, PlacesTile*> sigMouseLeave;
+  sigc::signal<void, PlacesTile*, int, int> sigMouseReleased;
+  sigc::signal<void, PlacesTile*, int, int> sigMouseClick;
+  sigc::signal<void, PlacesTile*, int, int> sigMouseDrag;
+
   TileState _state;
-  gchar *_caption;
+  nux::Layout *_layout;
+  nux::BaseTexture *_hilight_background;
+
+  void UpdateBackground ();
+  void DrawRoundedRectangle (cairo_t* cr,
+                             double   aspect,
+                             double   x,
+                             double   y,
+                             double   cornerRadius,
+                             double   width,
+                             double   height);
+
 };
 
-#endif // PLACETILE_H
+#endif // PLACE_TILE_H
