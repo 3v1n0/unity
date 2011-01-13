@@ -61,6 +61,8 @@ public:
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+
+    void MaximizeIfBigEnough (CompWindow *window);
     
     sigc::signal<void, CompWindow *> window_maximized;
     sigc::signal<void, CompWindow *> window_restored;
