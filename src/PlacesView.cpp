@@ -91,7 +91,7 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (base);
 
-  nux::Color color (1.0, 0.0, 0.0, 0.8);
+  nux::Color color (0.0, 0.0, 0.0, 0.8);
   // You can use this function to draw a colored Quad:
   //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
   // or this one:
