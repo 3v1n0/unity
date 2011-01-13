@@ -36,7 +36,7 @@ LauncherModel::~LauncherModel()
 
 bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
 {
-  return icon->Type () == LAUNCHER_ICON_TYPE_TRASH; 
+  return icon->Type () == LauncherIcon::TYPE_TRASH; 
 }
 
 void
