@@ -21,7 +21,22 @@
 #include <gmodule.h>
 #include <stdio.h>
 
+#include "unitya11y.h"
 #include "unity-util-accessible.h"
+
+/* nux accessible objects */
+#include "nux-view-accessible.h"
+#include "nux-base-window-accessible.h"
+#include "nux-layout-accessible.h"
+
+/* unity accessible objects */
+#include "Launcher.h"
+#include "LauncherIcon.h"
+#include "unity-launcher-accessible.h"
+#include "unity-launcher-icon-accessible.h"
+
+static GHashTable *accessible_table = NULL;
+/* FIXME: remove accessible objects when not required anymore */
 
 static void
 unity_a11y_restore_environment (void)
@@ -139,6 +154,8 @@ unity_a11y_preset_environment (void)
 }
 
 /*
+ * Initializes the accessibility (ATK) support on Unity
+ *
  * It loads the atk-bridge if required. It checks:
  *  * If the proper gsettings keys are set
  *  * Loads the proper AtkUtil implementation
@@ -167,3 +184,100 @@ unity_a11y_init (void)
 
   g_free (bridge_path);
 }
+
+/*
+ * Finalize the related issues related with the accessibility.
+ *
+ * It mainly clean the resources related with the accessibility
+ */
+void
+unity_a11y_finalize (void)
+{
+  if (accessible_table != NULL)
+    {
+      g_hash_table_unref (accessible_table);
+      accessible_table = NULL;
+    }
+}
+
+
+/*
+ * Creates the accessible object for a nux::Area object
+ *
+ * Method factory, equivalent to
+ * atk_object_factory_creeate_accessible, but required because
+ * AtkObjectFactory gives only support for GObject classes.
+ *
+ * FIXME: this should be a temporal method. The best way to implement
+ * that would be add a ->get_accessible method on the nux::View
+ * subclasses itself.
+ *
+ * WARNING: as a reason the previous comment it is true. Take into
+ * account that you should be careful with the order you add those
+ * defines. The order will be from more specific classes to more
+ * abstracted classes.
+ *
+ */
+
+static AtkObject *
+unity_a11y_create_accessible (nux::Object *object)
+{
+  /* UNITY classes*/
+  if (object->Type().IsDerivedFromType (Launcher::StaticObjectType))
+    return unity_launcher_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (LauncherIcon::StaticObjectType))
+    return unity_launcher_icon_accessible_new (object);
+
+  /* NUX classes  */
+  if (object->Type().IsDerivedFromType (nux::BaseWindow::StaticObjectType))
+    return nux_base_window_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (nux::View::StaticObjectType))
+    return nux_view_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (nux::Layout::StaticObjectType))
+    return nux_layout_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (nux::Area::StaticObjectType))
+    return nux_area_accessible_new (object);
+
+  return nux_object_accessible_new (object);
+}
+
+/*
+ * Returns the accessible object of a nux::View object
+ *
+ * This method tries to:
+ *   * Check if area has already a accessibility object
+ *   * If this is the case, returns that
+ *   * If not, creates it and return the object
+ *
+ * FIXME: this should be a temporal method. The best way to implement
+ * that would be add a ->get_accessible method on the nux::View
+ * subclasses itself.
+ *
+ */
+AtkObject *
+unity_a11y_get_accessible (nux::Object *object)
+{
+  AtkObject *accessible_object = NULL;
+
+  g_return_val_if_fail (object != NULL, NULL);
+
+  if (accessible_table == NULL)
+    {
+      accessible_table = g_hash_table_new (g_direct_hash, g_direct_equal);
+    }
+
+  accessible_object = ATK_OBJECT (g_hash_table_lookup (accessible_table, object));
+  if (accessible_object == NULL)
+    {
+      accessible_object = unity_a11y_create_accessible (object);
+
+      g_hash_table_insert (accessible_table, object, accessible_object);
+    }
+
+  return accessible_object;
+}
+

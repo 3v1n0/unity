@@ -120,3 +120,11 @@ unity_util_accessible_remove_key_event_listener (guint remove_listener)
 {
   /* FIXME: implement me!! */
 }
+
+
+void
+unity_util_accessible_add_window (nux::BaseWindow *window)
+{
+  unity_root_accessible_add_window (UNITY_ROOT_ACCESSIBLE (root),
+                                    window);
+}

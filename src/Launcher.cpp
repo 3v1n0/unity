@@ -47,8 +47,11 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
+
 int
 TimeDelta (struct timespec const *x, struct timespec const *y)
+
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
@@ -1226,6 +1229,11 @@ void Launcher::SetModel (LauncherModel *model)
     _model->icon_added.connect (sigc::mem_fun (this, &Launcher::OnIconAdded));
     _model->icon_removed.connect (sigc::mem_fun (this, &Launcher::OnIconRemoved));
     _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
+}
+
+LauncherModel* Launcher::GetModel ()
+{
+  return _model;
 }
 
 void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)

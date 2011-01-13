@@ -21,6 +21,9 @@
 
 #include <atk/atk.h>
 
+#include "Nux/Nux.h"
+#include "Nux/BaseWindow.h"
+
 G_BEGIN_DECLS
 
 #define UNITY_TYPE_ROOT_ACCESSIBLE            (unity_root_accessible_get_type ())
@@ -50,6 +53,7 @@ struct _UnityRootAccessibleClass
 GType      unity_root_accessible_get_type (void);
 AtkObject *unity_root_accessible_new      (void);
 
+void       unity_root_accessible_add_window (UnityRootAccessible *self, nux::BaseWindow *window);
 
 G_END_DECLS
 

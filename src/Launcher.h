@@ -45,6 +45,7 @@ class LauncherDragWindow;
 
 class Launcher : public Introspectable, public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE (Launcher, nux::View);
 public:
   typedef enum
   {
@@ -74,6 +75,7 @@ public:
   void SetIconSize(int tile_size, int icon_size);
 
   void SetModel (LauncherModel *model);
+  LauncherModel* GetModel ();
 
   void SetFloating (bool floating);
 
