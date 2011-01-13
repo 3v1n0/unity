@@ -138,6 +138,7 @@ private:
     float         progress_bias;
     bool          running_arrow;
     bool          running_colored;
+    bool          running_on_viewport;
     bool          active_arrow;
     bool          active_colored;
     bool          skip;
@@ -303,6 +304,13 @@ private:
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   
+  nux::BaseTexture* _pip_ltr;
+  nux::BaseTexture* _pip_rtl;
+  nux::BaseTexture* _arrow_ltr;
+  nux::BaseTexture* _arrow_rtl;
+  nux::BaseTexture* _arrow_empty_ltr;
+  nux::BaseTexture* _arrow_empty_rtl;
+
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
@@ -313,8 +321,6 @@ private:
   nux::Point2   _mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
-  nux::BaseTexture* m_RunningIndicator;
-  nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;
