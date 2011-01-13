@@ -82,9 +82,7 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  GdkScreen *screen = gdk_screen_get_default ();
-  int height = gdk_screen_get_height (screen) - 12;
-  geo = nux::Geometry(32, 12, 1024, height);
+  geo = nux::Geometry(60, 24, 1024, 600);
 }
 
 void

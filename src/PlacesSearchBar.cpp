@@ -39,7 +39,12 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-   SetCompositionLayout (_layout);
+  SetCompositionLayout (_layout);
+ 
+  _entry = new nux::EditTextBox("earch", NUX_TRACKER_LOCATION);
+  _entry->SetMinimumHeight (30);
+  _entry->SetMinMaxSize (200, 30);
+  _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -126,8 +131,6 @@ PlacesSearchBar::UpdateBackground ()
 
   _last_width = geo.width;
   _last_height = geo.height;
-
-  g_debug ("%d %d", _last_width, _last_height);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();

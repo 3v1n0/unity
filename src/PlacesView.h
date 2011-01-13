@@ -38,11 +38,13 @@ public:
   PlacesView (NUX_FILE_LINE_PROTO);
   ~PlacesView ();
 
-  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void ShowWindow (bool b, bool start_modal = false);
+  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long PostLayoutManagement (long layoutResult);
+ 
+  void ShowWindow (bool b, bool start_modal = false);
 
   void Show ();
   void Hide ();

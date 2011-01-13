@@ -26,6 +26,8 @@
 
 #include "Introspectable.h"
 
+#include "Nux/EditTextBox.h"
+
 class PlacesSearchBar : public Introspectable, public nux::View
 {
 public:
@@ -51,7 +53,7 @@ private:
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-
+  nux::EditTextBox        *_entry;
   int _last_width;
   int _last_height;
 };

@@ -37,7 +37,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
-  _layout->AddView (_search_bar, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_search_bar, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   AddChild (_search_bar);
 }
 
@@ -77,13 +77,18 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
     }
   }
 
+  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
 void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  GfxContext.PushClippingRectangle (GetGeometry() );
+
   nux::Color *color = new nux::Color (0.0, 0.0, 0.0, 0.8);
   nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), *color);
+
+  GfxContext.PopClippingRectangle ();
 }
 
 
@@ -94,8 +99,16 @@ void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
 void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-
 }
+
+long
+PlacesView::PostLayoutManagement (long LayoutResult)
+{
+  nux::View::PostLayoutManagement (LayoutResult);
+  return nux::BaseWindow::PostLayoutManagement (LayoutResult);
+}
+
+
 
 void PlacesView::ShowWindow (bool b, bool start_modal)
 {
