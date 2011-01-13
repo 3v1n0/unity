@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -122,7 +123,7 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
-  gfxContext.QRP_GLSL_1Tex (base.x,
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,

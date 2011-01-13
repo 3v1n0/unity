@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.cpp
  *
@@ -298,8 +299,7 @@ UnityScreen::getWindowPaintList ()
 
     if (std::find (xwns.begin (), xwns.end (), (*it)->id ()) != xwns.end ())
     {
-      CompWindowList::iterator pit = it;
-      pl.erase (pit);
+      it = pl.erase (it);
     }
   }
 

@@ -1,7 +1,9 @@
   project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (libunity services tests tools)
+include (cmake/Documentation.cmake)
+
+subdirs (libunity services tests tools doc)
 
 #
 # Base bits
@@ -85,7 +87,7 @@ endif (BOOT_LOGGER)
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)

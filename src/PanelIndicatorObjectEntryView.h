@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -40,6 +41,7 @@ public:
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
+  void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void Activate ();
   void OnActiveChanged (bool is_active);
 

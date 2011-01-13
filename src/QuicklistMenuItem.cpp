@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -198,8 +199,17 @@ QuicklistMenuItem::GetActive ()
 {
   if (_menuItem == 0)
     return false;
-  return dbusmenu_menuitem_property_get_bool (_menuItem,
+  return dbusmenu_menuitem_property_get_int (_menuItem,
                                               DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
+}
+
+bool
+QuicklistMenuItem::GetVisible ()
+{
+  if (_menuItem == 0)
+    return false;
+  return dbusmenu_menuitem_property_get_bool (_menuItem,
+                                              DBUSMENU_MENUITEM_PROP_VISIBLE);
 }
 
 void QuicklistMenuItem::ItemActivated ()
@@ -250,7 +260,7 @@ void QuicklistMenuItem::GetTextExtents (const gchar* font,
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text, -1);
+  pango_layout_set_markup_with_accel (layout, _text, -1, '_', NULL);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
                                         gdk_screen_get_font_options (screen));
@@ -420,7 +430,7 @@ QuicklistMenuItem::DrawText (cairo_t*   cr,
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-  pango_layout_set_markup (layout, _text, -1);
+  pango_layout_set_markup_with_accel (layout, _text, -1, '_', NULL);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
                                         gdk_screen_get_font_options (screen));
@@ -465,5 +475,6 @@ void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
   g_variant_builder_add (builder, "{sv}", "enabled", g_variant_new_boolean (GetEnabled ()));
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (GetActive ()));
+  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (GetVisible ()));
   
 }
