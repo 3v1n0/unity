@@ -59,7 +59,6 @@ public:
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
     void Restore (guint32 xid);
-    void Maximize (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
 
