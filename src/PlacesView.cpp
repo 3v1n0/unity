@@ -32,7 +32,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   SetMinMaxSize (1024, 600);
   Hide ();
 
-  _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
 
   _search_bar = new PlacesSearchBar ();
@@ -77,16 +77,25 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
     }
   }
 
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (_layout)
+    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+
   return ret;
 }
 
 void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry base = GetGeometry ();
+  // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
+  base.x = base.y = 0;
 
-  nux::Color *color = new nux::Color (0.0, 0.0, 0.0, 0.8);
-  nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), *color);
+  GfxContext.PushClippingRectangle (base);
+
+  nux::Color color (1.0, 0.0, 0.0, 0.8);
+  // You can use this function to draw a colored Quad:
+  //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
+  // or this one:
+  GfxContext.QRP_Color (0, 0, GetGeometry ().width, GetGeometry ().height, color);
 
   GfxContext.PopClippingRectangle ();
 }
@@ -94,7 +103,8 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  _layout->ProcessDraw (GfxContext, force_draw);
+  if (_layout)
+    _layout->ProcessDraw (GfxContext, force_draw);
 }
 
 void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
@@ -104,16 +114,15 @@ void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 long
 PlacesView::PostLayoutManagement (long LayoutResult)
 {
-  nux::View::PostLayoutManagement (LayoutResult);
   return nux::BaseWindow::PostLayoutManagement (LayoutResult);
 }
 
 
 
-void PlacesView::ShowWindow (bool b, bool start_modal)
+/*void PlacesView::ShowWindow (bool b, bool start_modal)
 {
   nux::BaseWindow::ShowWindow (b, start_modal);
-}
+}*/
 
 void PlacesView::Show ()
 {

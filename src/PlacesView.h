@@ -44,7 +44,7 @@ public:
   void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
   long PostLayoutManagement (long layoutResult);
  
-  void ShowWindow (bool b, bool start_modal = false);
+  //void ShowWindow (bool b, bool start_modal = false);
 
   void Show ();
   void Hide ();

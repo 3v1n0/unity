@@ -38,10 +38,10 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 {
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
-  _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
  
-  _entry = new nux::EditTextBox("earch", NUX_TRACKER_LOCATION);
+  _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
   _entry->SetMinimumHeight (30);
   _entry->SetMinMaxSize (200, 30);
   _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
