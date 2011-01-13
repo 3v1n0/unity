@@ -49,7 +49,6 @@ protected:
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
 
-
     void AddProperties (GVariantBuilder *builder);
 
 private:
