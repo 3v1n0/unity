@@ -1,3 +1,12 @@
+unity (3.2.8-0ubuntu2) UNRELEASED; urgency=low
+
+  * src/unityshell.cpp:
+    - backport a fix for WindowCompizid
+  * debian/control:
+    - ABI break in compiz, rebuild against latest version
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 00:02:49 +0100
+
 unity (3.2.8-0ubuntu1) natty; urgency=low
 
   * New upstream release:
