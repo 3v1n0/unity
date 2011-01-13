@@ -31,7 +31,6 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
-#include "PlaceFactoryFile.h"
 #include "PlacesController.h"
 #include "IntrospectionDBusInterface.h"
 #include <Nux/WindowThread.h>

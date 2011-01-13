@@ -31,6 +31,14 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 {
   SetMinMaxSize (1024, 600);
   Hide ();
+
+  _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  SetCompositionLayout (_layout);
+
+  _search_bar = new PlacesSearchBar ();
+  _search_bar->SetMinMaxSize (1024, 48);
+  _layout->AddView (_search_bar, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  AddChild (_search_bar);
 }
 
 PlacesView::~PlacesView ()
@@ -81,7 +89,7 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-
+  _layout->ProcessDraw (GfxContext, force_draw);
 }
 
 void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
@@ -129,4 +137,10 @@ PlacesView::GetName ()
 void
 PlacesView::AddProperties (GVariantBuilder *builder)
 {
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }

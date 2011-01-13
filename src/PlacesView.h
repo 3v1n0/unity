@@ -25,8 +25,11 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/AbstractPaintLayer.h"
 #include <Nux/BaseWindow.h>
+#include <Nux/VLayout.h>
 
 #include "Introspectable.h"
+
+#include "PlacesSearchBar.h"
 
 class PlacesView : public nux::BaseWindow, public Introspectable
 {
@@ -48,6 +51,10 @@ protected:
 
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
+
+private:
+  nux::VLayout    *_layout;
+  PlacesSearchBar *_search_bar;
 };
 
 #endif // PANEL_HOME_BUTTON_H

@@ -109,11 +109,22 @@ add_executable (test-places
                 TestPlaces.cpp
                 ../src/PlacesController.cpp
                 ../src/PlacesController.h
+                ../src/PlacesSearchBar.cpp
+                ../src/PlacesSearchBar.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
+                ../src/PlaceEntryRemote.cpp
+                ../src/PlaceEntryRemote.h
+                ../src/PlaceEntry.h
+                ../src/PlaceFactoryFile.cpp
+                ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.h
+                ../src/PlaceRemote.cpp
+                ../src/PlaceRemote.h
+                ../src/Place.h
                 ../libunity/ubus-server.c
                 ../libunity/ubus-server.h
                 )

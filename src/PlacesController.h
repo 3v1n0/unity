@@ -25,6 +25,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
+#include "PlaceFactoryFile.h"
 #include "PlacesView.h"
 #include "Introspectable.h"
 
@@ -38,7 +39,6 @@ public:
   void Hide ();
   void ToggleShowHide ();
 
-  PlacesView *_Window;
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
@@ -49,8 +49,9 @@ protected:
 
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-
-  nux::Layout *_Layout;
+private:
+  PlacesView       *_window;
+  PlaceFactoryFile *_factory;
 };
 
 #endif // PLACES_CONTROLLER_H

@@ -40,37 +40,39 @@ PlacesController::PlacesController ()
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
 
-  _Window = new PlacesView ();
-  _Window->Reference ();
-  _Window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  //_Window->SetBlurredBackground(true);
-  _Window->ShowWindow(false);
-  //_Window->EnableInputWindow(false);
-  //_Window->InputWindowEnableStruts(false);
+  _factory = new PlaceFactoryFile ();
 
-  _Window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+  _window = new PlacesView ();
+  _window->Reference ();
+  _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
+  //_window->SetBlurredBackground(true);
+  _window->ShowWindow(false);
+  //_window->EnableInputWindow(false);
+  //_window->InputWindowEnableStruts(false);
+
+  _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
 }
 
 PlacesController::~PlacesController ()
 {
-  _Window->UnReference ();
+  _window->UnReference ();
 }
 
 void PlacesController::Show ()
 {
   // show called
-  _Window->Show ();
+  _window->Show ();
 }
 
 void PlacesController::Hide ()
 {
-  _Window->Hide ();
+  _window->Hide ();
 }
 
 void PlacesController::ToggleShowHide ()
 {
-  if (_Window->IsVisible ())
+  if (_window->IsVisible ())
     Hide ();
   else
     Show ();
