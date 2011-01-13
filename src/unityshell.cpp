@@ -40,6 +40,8 @@
 
 #include <core/atoms.h>
 
+#include "unitya11y.h"
+
 #include "../libunity/perf-logger-utility.h"
 
 /* Set up vtable symbols */
@@ -412,6 +414,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_thread_init (NULL);
   dbus_g_thread_init ();
+
+  unity_a11y_preset_environment ();
+
   gtk_init (NULL, NULL);
 
   XSetErrorHandler (old_handler);
@@ -433,6 +438,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
                                      this);
 
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
+
+  unity_a11y_init ();
 
   wt->Run (NULL);
   uScreen = this;
