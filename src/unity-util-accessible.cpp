@@ -50,12 +50,10 @@ static void
 unity_util_accessible_class_init (UnityUtilAccessibleClass *klass)
 {
   AtkUtilClass *atk_class;
-  GObjectClass *object_class;
   gpointer data;
 
   data = g_type_class_peek (ATK_TYPE_UTIL);
   atk_class = ATK_UTIL_CLASS (data);
-  object_class = G_OBJECT_CLASS (klass);
 
   atk_class->add_global_event_listener    = unity_util_accessible_add_global_event_listener;
   atk_class->remove_global_event_listener = unity_util_accessible_remove_global_event_listener;
