@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -44,6 +45,7 @@ class QuicklistView;
 
 class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, public sigc::trackable
 {
+  NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
 public:
     typedef enum
     {
@@ -95,6 +97,8 @@ public:
     
     int RelatedWindows ();
     
+    bool HasVisibleWindow ();
+    
     float PresentUrgency ();
     
     float GetProgress ();
@@ -135,6 +139,8 @@ protected:
     void Remove ();
     
     void SetProgress (float progress);
+    
+    void SetHasVisibleWindow (bool val);
     
     void Present (float urgency, int length);
     void Unpresent ();
@@ -193,6 +199,7 @@ private:
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
+    bool             _has_visible_window;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;

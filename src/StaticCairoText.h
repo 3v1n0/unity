@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -70,6 +71,7 @@ namespace nux
 
       sigc::signal<void, StaticCairoText*> sigTextChanged;
       sigc::signal<void, StaticCairoText*> sigTextColorChanged;
+      sigc::signal<void, StaticCairoText*> sigFontChanged;
 
     private:
       NString        _text;
@@ -90,6 +92,9 @@ namespace nux
                      Color    color);
 
       void UpdateTexture ();
+
+      static void OnFontChanged (GObject *gobject, GParamSpec *pspec,
+                                 gpointer data);
   };
 }
 

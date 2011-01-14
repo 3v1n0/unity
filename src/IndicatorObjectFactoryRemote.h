@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -41,6 +42,7 @@ public:
   void OnRemoteProxyReady (GDBusProxy *proxy);
   void OnEntryActivated   (const char *entry_id);
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
+  void OnScrollReceived (const char *id, int delta);
   void Sync (GVariant *args);
   void OnEntryActivateRequestReceived (const char *entry_id);
   void Reconnect ();

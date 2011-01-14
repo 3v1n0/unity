@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -67,6 +68,7 @@ namespace nux
 
     _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
     _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _tooltip_text->sigFontChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
     _tooltip_text->Reference();
     
     _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);

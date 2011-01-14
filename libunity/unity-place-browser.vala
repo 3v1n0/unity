@@ -18,6 +18,7 @@
  *
  */
 
+using GLib;
 using Gee;
 
 /*
@@ -54,17 +55,17 @@ namespace Unity.Place {
     /**
      * Returns the new browsing state after the operation has been performed
      */
-    public abstract _BrowsingState[] go_back () throws DBus.Error;
+    public abstract _BrowsingState[] go_back () throws IOError;
     
     /**
      * Returns the new browsing state after the operation has been performed
      */
-    public abstract _BrowsingState[] go_forward () throws DBus.Error;
+    public abstract _BrowsingState[] go_forward () throws IOError;
     
     /**
      * Returns the current browsing state
      */
-    public abstract _BrowsingState[] get_state () throws DBus.Error;
+    public abstract _BrowsingState[] get_state () throws IOError;
   }
   
   /**

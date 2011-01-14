@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -47,7 +48,6 @@ protected:
 
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
-
 
     void AddProperties (GVariantBuilder *builder);
 

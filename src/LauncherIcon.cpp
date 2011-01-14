@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -40,6 +41,8 @@
 
 #define DEFAULT_ICON "application-default-icon"
 
+NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
+
 nux::Tooltip *LauncherIcon::_current_tooltip = 0;
 QuicklistView *LauncherIcon::_current_quicklist = 0;
 
@@ -62,6 +65,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _glow_color = nux::Color::White;
   
   _mouse_inside = false;
+  _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
@@ -95,6 +99,12 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+}
+
+bool
+LauncherIcon::HasVisibleWindow ()
+{
+  return _has_visible_window;
 }
 
 const gchar *
@@ -178,8 +188,8 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = 0.4f;
-  v = .85f;
+    s = 0.65f;
+  v = 0.90f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
   background = nux::Color (r, g, b);
@@ -423,6 +433,16 @@ LauncherIcon::SaveCenter ()
 {
   _saved_center = _center;
   UpdateQuirkTime (QUIRK_CENTER_SAVED);
+}
+
+void 
+LauncherIcon::SetHasVisibleWindow (bool val)
+{
+  if (_has_visible_window == val)
+    return;
+  
+  _has_visible_window = val;
+  needs_redraw.emit (this);
 }
 
 gboolean

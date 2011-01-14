@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -46,8 +47,11 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
+
 int
 TimeDelta (struct timespec const *x, struct timespec const *y)
+
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
@@ -73,29 +77,24 @@ nux::NString gPerspectiveCorrectShader = TEXT (
 #version 120                                                            \n\
 uniform mat4 ViewProjectionMatrix;                                      \n\
                                                                         \n\
-attribute vec4 iColor;                                                  \n\
 attribute vec4 iTexCoord0;                                              \n\
 attribute vec4 iVertex;                                                 \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 void main()                                                             \n\
 {                                                                       \n\
     varyTexCoord0 = iTexCoord0;                                         \n\
-    varyVertexColor = iColor;                                           \n\
     gl_Position =  ViewProjectionMatrix * iVertex;                      \n\
 }                                                                       \n\
                                                                         \n\
 [Fragment Shader]                                                       \n\
-#version 120                                                            \n\
-#extension GL_ARB_texture_rectangle : enable                            \n\
+#version 110                                                            \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 uniform sampler2D TextureObject0;                                       \n\
-uniform vec4 color0;                                                     \n\
+uniform vec4 color0;                                                    \n\
 vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
 {                                                                       \n\
   return texture2D(TexObject, TexCoord.st);                             \n\
@@ -106,9 +105,9 @@ void main()                                                             \n\
   vec4 tex = varyTexCoord0;                                             \n\
   tex.s = tex.s/varyTexCoord0.w;                                        \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
-	                                                                      \n\
+	                                                                \n\
   vec4 texel = SampleTexture(TextureObject0, tex);                      \n\
-  gl_FragColor = texel*varyVertexColor;                                 \n\
+  gl_FragColor = color0*texel;                                                 \n\
 }                                                                       \n\
 ");
 
@@ -169,8 +168,6 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
 Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
-,   m_RunningIndicator(0)
-,   m_ActiveIndicator(0)
 ,   m_BackgroundLayer(0)
 ,   _model (0)
 {
@@ -206,7 +203,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     SetCompositionLayout(m_Layout);
 
-    if(!USE_ARB_SHADERS)
+    if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
     {
       _shader_program_uv_persp_correction = nux::GetThreadGLDeviceFactory()->CreateShaderProgram();
       _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
@@ -254,6 +251,14 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
     _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
     _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
+    
+    _pip_ltr                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_ltr.png");
+    _arrow_ltr              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_ltr.png");
+    _arrow_empty_ltr        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_ltr.png");
+
+    _pip_rtl                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_rtl.png");
+    _arrow_rtl              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_rtl.png");
+    _arrow_empty_rtl        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png");
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -685,25 +690,26 @@ float Launcher::IconProgressBias (LauncherIcon *icon, struct timespec const &cur
 
 void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg)
 {
-    arg.icon            = icon;
-    arg.alpha           = 1.0f;
-    arg.running_arrow   = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
-    arg.active_arrow    = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
-    arg.running_colored = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
-    arg.active_colored  = false;
-    arg.x_rotation      = 0.0f;
-    arg.y_rotation      = 0.0f;
-    arg.z_rotation      = 0.0f;
-    arg.skip            = false;
-    arg.stick_thingy    = false;
-    arg.progress_bias   = IconProgressBias (icon, current);
-    arg.progress        = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
+    arg.icon                = icon;
+    arg.alpha               = 1.0f;
+    arg.running_arrow       = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
+    arg.active_arrow        = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
+    arg.running_colored     = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
+    arg.running_on_viewport = icon->HasVisibleWindow ();
+    arg.active_colored      = false;
+    arg.x_rotation          = 0.0f;
+    arg.y_rotation          = 0.0f;
+    arg.z_rotation          = 0.0f;
+    arg.skip                = false;
+    arg.stick_thingy        = false;
+    arg.progress_bias       = IconProgressBias (icon, current);
+    arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
     // we dont need to show strays
     if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
         arg.window_indicators = 0;
     else
-        arg.window_indicators = MIN (4, icon->RelatedWindows ());
+        arg.window_indicators = icon->RelatedWindows ();
 
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
@@ -741,7 +747,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float size_modifier = IconVisibleProgress (icon, current);
     if (size_modifier < 1.0f)
     {
-        arg.alpha = size_modifier;
+        arg.alpha *= size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
     }
 
@@ -1004,8 +1010,10 @@ Launcher::CheckWindowOverLauncher ()
   for (it = window_list.begin (); it != window_list.end (); it++)
   {
     CompWindow *window = *it;
+    int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                          CompWindowTypeModalDialogMask;
 
-    if (window->type () != CompWindowTypeNormalMask || !window->isMapped () || !window->isViewable ())
+    if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
@@ -1223,6 +1231,11 @@ void Launcher::SetModel (LauncherModel *model)
     _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
+LauncherModel* Launcher::GetModel ()
+{
+  return _model;
+}
+
 void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)
 {
     EnsureAnimation();
@@ -1250,12 +1263,6 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
   if (running > 0)
   {
-    if (!m_RunningIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/running_indicator.png", NULL);
-      m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
@@ -1263,21 +1270,32 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
 
+    nux::BaseTexture *texture;
+
     std::vector<int> markers;
-    if (running == 1)
+    
+    /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
+      texture = _arrow_empty_ltr;
+    }
+    else*/ if (running == 1)
+    {
+      markers.push_back (markerCenter);
+      texture = _arrow_ltr;
     }
     else if (running == 2)
     {
       markers.push_back (markerCenter - 2);
       markers.push_back (markerCenter + 2);
+      texture = _pip_ltr;
     }
     else
     {
       markers.push_back (markerCenter - 4);
       markers.push_back (markerCenter);
       markers.push_back (markerCenter + 4);
+      texture = _pip_ltr;
     }
 
     std::vector<int>::iterator it;
@@ -1285,31 +1303,25 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     {
       int center = *it;
       GfxContext.QRP_1Tex (geo.x,
-                                center - (m_RunningIndicator->GetHeight () / 2),
-                                (float) m_RunningIndicator->GetWidth(),
-                                (float) m_RunningIndicator->GetHeight(),
-                                m_RunningIndicator->GetDeviceTexture(),
-                                texxform,
-                                color);
+                           center - (texture->GetHeight () / 2),
+                           (float) texture->GetWidth(),
+                           (float) texture->GetHeight(),
+                           texture->GetDeviceTexture(),
+                           texxform,
+                           color);
     }
   }
 
   if (active > 0)
   {
-    if (!m_ActiveIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/focused_indicator.png", NULL);
-      m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
-    GfxContext.QRP_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
-                              markerCenter - (m_ActiveIndicator->GetHeight () / 2),
-                              (float) m_ActiveIndicator->GetWidth(),
-                              (float) m_ActiveIndicator->GetHeight(),
-                              m_ActiveIndicator->GetDeviceTexture(),
+    GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
+                              markerCenter - (_arrow_rtl->GetHeight () / 2),
+                              (float) _arrow_rtl->GetWidth(),
+                              (float) _arrow_rtl->GetHeight(),
+                              _arrow_rtl->GetDeviceTexture(),
                               texxform,
                               color);
   }
@@ -1358,7 +1370,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   v3.w = xform_coords[3].w ;
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
-  nux::Color color = nux::Color::White;
+  nux::Color color = bkg_color;
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
@@ -1377,10 +1389,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   float VtxBuffer[] =
   {// Perspective correct
-    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,     color.R(), color.G(), color.B(), color.A(),
-    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,     color.R(), color.G(), color.B(), color.A(),
-    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,     color.R(), color.G(), color.B(), color.A(),
-    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,     color.R(), color.G(), color.B(), color.A(),
+    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,
+    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,
+    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,
+    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,
   };
 
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
@@ -1392,7 +1404,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int VertexColorLocation;
   int FragmentColor;
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->Begin();
 
@@ -1400,7 +1412,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
-    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
+    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
@@ -1426,23 +1438,23 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
-  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer) );
+  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer) );
 
   if(TextureCoord0Location != -1)
   {
     CHECKGL( glEnableVertexAttribArrayARB(TextureCoord0Location) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4) );
+    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-  if(VertexColorLocation != -1)
-  {
-    CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
-  }
+//   if(VertexColorLocation != -1)
+//   {
+//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
+//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
+//   }
 
   bkg_color.SetAlpha (bkg_color.A () * alpha);
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -1459,10 +1471,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glDisableVertexAttribArrayARB(VertexLocation) );
   if(TextureCoord0Location != -1)
     CHECKGL( glDisableVertexAttribArrayARB(TextureCoord0Location) );
-  if(VertexColorLocation != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
+//   if(VertexColorLocation != -1)
+//     CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->End();
   }
@@ -1474,6 +1486,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
 void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo)
 {
+  // This check avoids a crash when the icon is not available on the system.
+  if (arg.icon->TextureForSize (_icon_image_size) == 0)
+    return;
+
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
                                                 GL_ONE_MINUS_SRC_ALPHA,

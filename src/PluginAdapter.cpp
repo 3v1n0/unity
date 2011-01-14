@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -21,6 +22,9 @@
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
+
+#define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
+#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.6
 
 /* static */
 PluginAdapter *
@@ -64,12 +68,14 @@ PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 void
 PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
 {
-  if (!(last_state & MAXIMIZE_STATE) && (state & MAXIMIZE_STATE))
+  if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+      && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
     PluginAdapter::window_maximized.emit (window);
     WindowManager::window_maximized.emit (window->id ());
   }
-  else if ((last_state & MAXIMIZE_STATE) && !(state & MAXIMIZE_STATE))
+  else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+           && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
     PluginAdapter::window_restored.emit (window);
     WindowManager::window_restored.emit (window->id ());
@@ -106,6 +112,9 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
     case CompWindowNotifyUnmap:
       PluginAdapter::window_unmapped.emit (window);
       WindowManager::window_unmapped.emit (window->id ());
+      break;
+    case CompWindowNotifyReparent:
+      MaximizeIfBigEnough (window);
       break;
     default:
       break;
@@ -235,7 +244,7 @@ PluginAdapter::IsWindowMaximized (guint xid)
   window = m_Screen->findWindow (win);
   if (window)
   {
-    return window->state () & MAXIMIZE_STATE;
+    return ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE);
   }
 
   return false;
@@ -288,4 +297,59 @@ PluginAdapter::Close (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->close (CurrentTime);
+}
+
+void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
+{
+  XClassHint   classHint;
+  Status       status;
+  char*        win_wmclass = NULL;
+  int          num_monitor;
+  CompOutput   screen;
+  int          screen_width;
+  int          screen_height;
+  float        covering_part;
+
+  if (!window)
+    return;
+
+  if (window->type () != CompWindowTypeNormalMask
+      || (window->actions () & MAXIMIZABLE) != MAXIMIZABLE)
+    return;
+
+  status = XGetClassHint (m_Screen->dpy (), window->id (), &classHint);
+  if (status && classHint.res_class)
+  {
+    win_wmclass = strdup (classHint.res_class);
+    XFree (classHint.res_class);
+  }
+  else
+    return;
+
+  num_monitor = window->outputDevice();
+  screen = m_Screen->outputDevs().at(num_monitor);
+
+  screen_height = screen.workArea().height ();
+  screen_width = screen.workArea().width ();
+
+  if ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE) {
+    g_debug ("MaximizeIfBigEnough: window mapped and already maximized, just undecorate");
+    Undecorate (window->id ());
+    return;
+  }
+
+  // use server<parameter> because the window won't show the real parameter as
+  // not mapped yet
+  covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
+  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0))
+  {
+    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
+    return;
+  }
+
+  Undecorate (window->id ());
+  window->maximize (MAXIMIZE_STATE);
+
+  if (win_wmclass)
+    free (win_wmclass);
 }

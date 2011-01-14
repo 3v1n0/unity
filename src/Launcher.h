@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -44,6 +45,7 @@ class LauncherDragWindow;
 
 class Launcher : public Introspectable, public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE (Launcher, nux::View);
 public:
   typedef enum
   {
@@ -73,6 +75,7 @@ public:
   void SetIconSize(int tile_size, int icon_size);
 
   void SetModel (LauncherModel *model);
+  LauncherModel* GetModel ();
 
   void SetFloating (bool floating);
 
@@ -137,6 +140,7 @@ private:
     float         progress_bias;
     bool          running_arrow;
     bool          running_colored;
+    bool          running_on_viewport;
     bool          active_arrow;
     bool          active_colored;
     bool          skip;
@@ -302,6 +306,13 @@ private:
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   
+  nux::BaseTexture* _pip_ltr;
+  nux::BaseTexture* _pip_rtl;
+  nux::BaseTexture* _arrow_ltr;
+  nux::BaseTexture* _arrow_rtl;
+  nux::BaseTexture* _arrow_empty_ltr;
+  nux::BaseTexture* _arrow_empty_rtl;
+
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
@@ -312,8 +323,6 @@ private:
   nux::Point2   _mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
-  nux::BaseTexture* m_RunningIndicator;
-  nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;

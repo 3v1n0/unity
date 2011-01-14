@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.cpp
  *
@@ -38,6 +39,12 @@
 #include <gtk/gtk.h>
 
 #include <core/atoms.h>
+
+#include "unitya11y.h"
+
+/* FIXME: once we get a better method to add the toplevel windows to
+   the accessible root object, this include would not be required */
+#include "unity-util-accessible.h"
 
 #include "../libunity/perf-logger-utility.h"
 
@@ -411,6 +418,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_thread_init (NULL);
   dbus_g_thread_init ();
+
+  unity_a11y_preset_environment ();
+
   gtk_init (NULL, NULL);
 
   XSetErrorHandler (old_handler);
@@ -433,6 +443,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
 
+  unity_a11y_init ();
+
   wt->Run (NULL);
   uScreen = this;
 
@@ -452,6 +464,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
+  unity_a11y_finalize ();
 }
 
 /* Can't create windows until after we have initialized everything */
@@ -499,6 +512,10 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true);
   self->launcherWindow->InputWindowEnableStruts(true);
+
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightAlwaysOn (true);
