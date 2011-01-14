@@ -32,6 +32,11 @@ unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
   * CMakeList:
     - distro-patch to avoid building tests right now as building them is failing
       with the current vala/gir stack. THIS NEED TO BE REMOVED.
+  * debian/rules:
+    - don't --fail-missing as we don't want to install the vapi yet. The gir
+      package will come next week.
+  * debian/unity-common.install:
+    - install the manpages
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
 
