@@ -4,6 +4,10 @@ unity (3.2.8-0ubuntu2) UNRELEASED; urgency=low
     - backport a fix for WindowCompizid
   * debian/control:
     - ABI break in compiz, rebuild against latest version
+  * CMakeLists.txt, libunity/CMakeLists.txt:
+    - don't build some vala stuff
+  * debian/libunity3.symbols:
+    - refresh the symbols regarding to previous changes
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 00:02:49 +0100
 
