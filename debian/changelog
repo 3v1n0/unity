@@ -1,4 +1,4 @@
-unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
+unity (3.2.12-0ubuntu1) natty; urgency=low
 
   * New upstream release.
    - Window border doesn't get restored (LP: #691812)
@@ -40,7 +40,7 @@ unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
   * debian/libunity3.symbols:
     - updated 
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:47:25 +0100
 
 unity (3.2.8-0ubuntu3) natty; urgency=low
 
