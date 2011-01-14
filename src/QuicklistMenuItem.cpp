@@ -198,7 +198,7 @@ QuicklistMenuItem::GetActive ()
 {
   if (_menuItem == 0)
     return false;
-  return dbusmenu_menuitem_property_get_bool (_menuItem,
+  return dbusmenu_menuitem_property_get_int (_menuItem,
                                               DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
 }
 

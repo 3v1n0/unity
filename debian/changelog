@@ -8,6 +8,9 @@ unity (3.2.8-0ubuntu2) UNRELEASED; urgency=low
     - don't build some vala stuff
   * debian/libunity3.symbols:
     - refresh the symbols regarding to previous changes
+  * backport dbusmenu transition:
+    - debian/control: build-dep on the new package
+    - backport the commits
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 00:02:49 +0100
 
