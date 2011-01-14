@@ -448,7 +448,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   wt->Run (NULL);
   uScreen = this;
 
-  debugger = new IntrospectionDBusInterface (this);
+  debugger = new DebugDBusInterface (this);
 
   optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));

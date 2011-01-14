@@ -17,23 +17,18 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#ifndef _STATE_INTROSPECTION_DBUS_INTERFACE_H
-#define _STATE_INTROSPECTION_DBUS_INTERFACE_H 1
+#ifndef _DEBUG_DBUS_INTERFACE_H
+#define _DEBUG_DBUS_INTERFACE_H 1
 
 #include <glib.h>
 #include <gio/gio.h>
 #include "Introspectable.h"
 
-class IntrospectionDBusInterface
+class DebugDBusInterface
 {
 public:
-  IntrospectionDBusInterface  (Introspectable *introspectable);
-  ~IntrospectionDBusInterface ();
-
-  /*static void DBusMethodCall (GDBusConnection *connection, const gchar *sender,
-                              const gchar *objectPath, const gchar *ifaceName,
-                              const gchar *methodName, GVariant *parameters,
-                              GDBusMethodInvocation *invocation, gpointer data);	*/
+  DebugDBusInterface  (Introspectable *introspectable);
+  ~DebugDBusInterface ();
 
 private:
   /* methods */
@@ -52,4 +47,4 @@ private:
   guint						_owner_id;
 };
 
-#endif
+#endif /* _DEBUG_DBUS_INTERFACE_H */
