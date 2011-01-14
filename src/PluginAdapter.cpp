@@ -340,7 +340,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
-  covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height)
+  covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
   if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0))
   {
     g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
