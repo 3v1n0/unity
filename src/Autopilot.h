@@ -45,7 +45,7 @@ namespace Autopilot
   {
   public:
     UnityTests ();
-    void Run ();
+    static void Run ();
 
   private:
     void DragLauncher ();
@@ -58,5 +58,7 @@ namespace Autopilot
     Mouse _mouse;
     nux::Point _initial;
     nux::Point _launcher;
+
+    static UnityTests *_tests;
   };
 };

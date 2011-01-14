@@ -26,21 +26,28 @@
 
 #include "Autopilot.h"
 
-Autopilot::UnityTests::UnityTests()
-{
-  _initial.Set (800, 500);
-  _launcher.Set (32, 57);
-}
+Autopilot::UnityTests *Autopilot::UnityTests::_tests = 0;
 
 void
 Autopilot::UnityTests::Run ()
 {
-  DragLauncher ();
-  DragLauncherIconAlongEdgeAndDrop ();
-  DragLauncherIconOutAndDrop ();
-  DragLauncherIconOutAndMove ();
-  ShowQuicklist ();
-  ShowTooltip ();
+  if (!_tests)
+  {
+    _tests = new UnityTests ();
+  }
+  
+  _tests->DragLauncher ();
+  _tests->DragLauncherIconAlongEdgeAndDrop ();
+  _tests->DragLauncherIconOutAndDrop ();
+  _tests->DragLauncherIconOutAndMove ();
+  _tests->ShowQuicklist ();
+  _tests->ShowTooltip ();
+}
+
+Autopilot::UnityTests::UnityTests ()
+{
+  _initial.Set (800, 500);
+  _launcher.Set (32, 57);
 }
 
 void

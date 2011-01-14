@@ -16,6 +16,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include "Autopilot.h"
 #include "IntrospectionDBusInterface.h"
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
@@ -39,6 +40,7 @@ static const GDBusArgInfo si_getstate_in_args =
   "s",
   NULL
 };
+
 static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
 
 // TODO: this is really a a{sv} or something like that.
@@ -60,7 +62,16 @@ static const GDBusMethodInfo si_method_info_getstate =
   NULL
 };
 
-static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_info_getstate, NULL };
+static GDBusMethodInfo si_method_info_runautopilot =
+{
+  -1,
+  "RunAutopilot",
+  NULL,
+  NULL,
+  NULL
+};
+
+static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_info_getstate, &si_method_info_runautopilot, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
@@ -139,6 +150,10 @@ DBusMethodCall (GDBusConnection *connection,
     ret = GetState (input);
     g_dbus_method_invocation_return_value (invocation, ret);
     g_variant_unref (ret);
+  }
+  else if (g_strcmp0 (methodName, "RunAutopilot") == 0)
+  {
+    g_thread_create ((GThreadFunc) Autopilot::UnityTests::Run, NULL, false, NULL);
   }
   else
   {
