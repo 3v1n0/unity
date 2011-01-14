@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -26,6 +27,27 @@
 
 #include "WindowManager.h"
 
+class MultiActionList
+{
+public:
+
+    MultiActionList (int n) :
+        m_ActionList (n),
+	m_ToggledAction (NULL) {};
+
+    void InitiateAll (CompOption::Vector &extraArgs);
+    void TerminateAll (CompOption::Vector &extraArgs);
+    bool IsAnyActive (bool onlyOwn = false);
+
+    void AddNewAction (CompAction *);
+    void RemoveAction (CompAction *);
+private:
+
+    std::list <CompAction *> m_ActionList;
+    CompAction *             m_ToggledAction;
+};
+    
+
 class PluginAdapter : public sigc::trackable, public WindowManager
 {
 public:
@@ -37,18 +59,18 @@ public:
     
     std::string * MatchStringForXids (std::list<Window> *windows);
     
-    void SetScaleAction (CompAction *scale);
-    
-    void SetExpoAction (CompAction *expo);
-    
+    void SetScaleAction (MultiActionList &scale);    
+    void SetExpoAction (MultiActionList &expo);
+
+    void OnScreenGrabbed ();
+    void OnScreenUngrabbed ();
+
     void InitiateScale (std::string *match);
-
-    bool IsScaleActive ();
-
     void TerminateScale ();
+    bool IsScaleActive (bool onlyOwn = false);
     
     void InitiateExpo ();
-    
+
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
     void NotifyResized (CompWindow *window, int x, int y, int w, int h);
@@ -60,27 +82,18 @@ public:
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
-    
-    sigc::signal<void, CompWindow *> window_maximized;
-    sigc::signal<void, CompWindow *> window_restored;
-    sigc::signal<void, CompWindow *> window_minimized;
-    sigc::signal<void, CompWindow *> window_unminimized;
-    sigc::signal<void, CompWindow *> window_shaded;
-    sigc::signal<void, CompWindow *> window_unshaded;
-    sigc::signal<void, CompWindow *> window_mapped;
-    sigc::signal<void, CompWindow *> window_unmapped;
-    sigc::signal<void, CompWindow *> window_shown;
-    sigc::signal<void, CompWindow *> window_hidden;
-    sigc::signal<void, CompWindow *> window_resized;
-    sigc::signal<void, CompWindow *> window_moved;
+
+    void MaximizeIfBigEnough (CompWindow *window);
     
 protected:
     PluginAdapter(CompScreen *screen);
 
 private:
     CompScreen *m_Screen;
-    CompAction *m_ExpoAction;
-    CompAction *m_ScaleAction;
+    MultiActionList m_ExpoActionList;
+    MultiActionList m_ScaleActionList;
+    std::list <guint32> m_SpreadedWindows;
+    bool                m_AnimationPluginLoaded;
     
     static PluginAdapter *_default;
 };

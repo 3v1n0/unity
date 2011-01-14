@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -59,15 +60,15 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
   SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
   SetIconName (icon_name);
-  SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  SetIconType (TYPE_APPLICATION);
 
   if (bamf_view_is_sticky (BAMF_VIEW (m_App)))
-    SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
+    SetQuirk (QUIRK_VISIBLE, true);
   else
-    SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, bamf_view_user_visible (BAMF_VIEW (m_App)));
+    SetQuirk (QUIRK_VISIBLE, bamf_view_user_visible (BAMF_VIEW (m_App)));
 
-  SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, bamf_view_is_active (BAMF_VIEW (m_App)));
-  SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, bamf_view_is_running (BAMF_VIEW (m_App)));
+  SetQuirk (QUIRK_ACTIVE, bamf_view_is_active (BAMF_VIEW (m_App)));
+  SetQuirk (QUIRK_RUNNING, bamf_view_is_running (BAMF_VIEW (m_App)));
 
   g_free (icon_name);
 
@@ -104,13 +105,13 @@ BamfLauncherIcon::~BamfLauncherIcon()
 }
 
 void
-BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
+BamfLauncherIcon::OnWindowMinimized (guint32 xid)
 {
-  if (!OwnsWindow (window->id ()))
+  if (!OwnsWindow (xid))
     return;
 
   Present (0.5f, 600);
-  UpdateQuirkTimeDelayed (300, LAUNCHER_ICON_QUIRK_SHIMMER);
+  UpdateQuirkTimeDelayed (300, QUIRK_SHIMMER);
 }
 
 bool
@@ -197,7 +198,7 @@ BamfLauncherIcon::OpenInstance ()
     g_error_free (error);
   }
 
-  UpdateQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+  UpdateQuirkTime (QUIRK_STARTING);
 }
 
 void
@@ -306,7 +307,7 @@ BamfLauncherIcon::Focus ()
   g_list_free (children);
 }
 
-void
+bool
 BamfLauncherIcon::Spread ()
 {
   BamfView *view;
@@ -329,40 +330,69 @@ BamfLauncherIcon::Spread ()
   if (windowList.size () > 1)
   {
     std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
     PluginAdapter::Default ()->InitiateScale (match);
     delete match;
+    g_list_free (children);
+    return true;
   }
 
   g_list_free (children);
+
+  return false;  
 }
 
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive();
-
-  SimpleLauncherIcon::OnMouseClick (button);
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
+  bool onlyOwnWasActive = PluginAdapter::Default ()->IsScaleActive (true);
 
   if (button != 1)
     return;
+
+  if (!scaleWasActive || (scaleWasActive && !onlyOwnWasActive))
+    _launcher->SetLastSpreadIcon (NULL);
 
   bool active, running;
 
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
+  /* Behaviour:
+   * Nothing running -> launch application
+   * Running and active -> spread application
+   * Spread is active and different icon pressed -> change spread
+   * Spread is active -> Spread de-activated, and fall through
+   */
+
   if (!running)
   {
-    if (GetQuirk (LAUNCHER_ICON_QUIRK_STARTING))
+    if (GetQuirk (QUIRK_STARTING))
       return;
-    SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, true);
+    SetQuirk (QUIRK_STARTING, true);
     OpenInstance ();
     return;
   }
+  else if (scaleWasActive)
+  {
+    if (_launcher->GetLastSpreadIcon () != this)
+    {
+      if (!Spread ())
+      {
+        PluginAdapter::Default ()->TerminateScale ();
+        Focus ();
+        _launcher->SetLastSpreadIcon (NULL);
+      }
+    }
+    else
+      SimpleLauncherIcon::OnMouseClick (button);
+  }
   else if (!active)
     Focus ();
-  else if (!scaleWasActive)
+  else if (active && !scaleWasActive)
     Spread ();
+
 }
 
 void
@@ -380,14 +410,14 @@ BamfLauncherIcon::OnUserVisibleChanged (BamfView *view, gboolean visible, gpoint
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
 
   if (!bamf_view_is_sticky (BAMF_VIEW (self->m_App)))
-    self->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, visible);
+    self->SetQuirk (QUIRK_VISIBLE, visible);
 }
 
 void
 BamfLauncherIcon::OnRunningChanged (BamfView *view, gboolean running, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, running);
+  self->SetQuirk (QUIRK_RUNNING, running);
 
   if (running)
   {
@@ -400,14 +430,14 @@ void
 BamfLauncherIcon::OnActiveChanged (BamfView *view, gboolean active, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE, active);
+  self->SetQuirk (QUIRK_ACTIVE, active);
 }
 
 void
 BamfLauncherIcon::OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
-  self->SetQuirk (LAUNCHER_ICON_QUIRK_URGENT, urgent);
+  self->SetQuirk (QUIRK_URGENT, urgent);
 }
 
 void
@@ -416,14 +446,25 @@ BamfLauncherIcon::EnsureWindowState ()
   GList *children, *l;
   int count = 0;
 
+  bool has_visible = false;
+  
   children = bamf_view_get_children (BAMF_VIEW (m_App));
   for (l = children; l; l = l->next)
   {
-    if (BAMF_IS_WINDOW (l->data))
-      count++;
+    if (!BAMF_IS_WINDOW (l->data))
+      continue;
+      
+    count++;
+    
+    guint32 xid = bamf_window_get_xid (BAMF_WINDOW (l->data));
+    CompWindow *window = m_Screen->findWindow ((Window) xid);
+    
+    if (window && window->defaultViewport () == m_Screen->vp ())
+      has_visible = true;
   }
 
   SetRelatedWindows (count);
+  SetHasVisibleWindow (has_visible);
 
   g_list_free (children);
 }
@@ -606,6 +647,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
 
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open New Window");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnLaunch, this);
 
@@ -621,6 +663,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Keep In Launcher");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
 
@@ -642,6 +685,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
 
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
 

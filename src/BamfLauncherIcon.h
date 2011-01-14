@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -48,7 +49,6 @@ protected:
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
 
-
     void AddProperties (GVariantBuilder *builder);
 
 private:
@@ -64,11 +64,11 @@ private:
 
     void OpenInstance ();
     void Focus ();
-    void Spread ();
+    bool Spread ();
 
     void EnsureMenuItemsReady ();
     
-    void OnWindowMinimized (CompWindow *window);
+    void OnWindowMinimized (guint32 xid);
     bool OwnsWindow (Window w);
 
     static void OnClosed (BamfView *view, gpointer data);

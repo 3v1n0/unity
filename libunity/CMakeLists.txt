@@ -7,12 +7,13 @@ set (PREFIX ${CMAKE_INSTALL_PREFIX})
 set (DOLLAR "$") # You hear that? It's kittens being killed by the gods of cmake
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/unity.pc.cmake ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc)
 install (FILES ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.pc DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig/)
+install (FILES ${CMAKE_BINARY_DIR}/libunity/${PKGNAME}.vapi DESTINATION ${CMAKE_INSTALL_PREFIX}/share/vala/vapi)
 
 #
 # libunity
 #
 find_package(PkgConfig)
-pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 dbus-glib-1 gconf-2.0)
+pkg_check_modules(DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 dee-1.0 gee-1.0 gconf-2.0)
 
 # Bump this one when a binary-incompatible change is introduced
 set (libunity_SOVERSION ${UNITY_MAJOR})
@@ -53,7 +54,7 @@ vala_precompile (VALA_C unity-place-activation.vala
                         unity-io.vala
                         unity-appinfo-manager.vala
                         perf-logger.vala
-                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 dbus-glib-1 gio-unix-2.0
+                 PACKAGES gtk+-2.0 gio-2.0 glib-2.0 gobject-2.0 gee-1.0 gio-unix-2.0
                  OPTIONS --thread
                  CUSTOM_VAPIS ../vapi/dee-1.0.vapi ../vapi/config.vapi
                  GENERATE_VAPI unity

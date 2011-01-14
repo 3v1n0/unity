@@ -1,7 +1,9 @@
   project (unity)
 cmake_minimum_required(VERSION 2.8)
 
-subdirs (libunity services tests tools)
+include (cmake/Documentation.cmake)
+
+subdirs (libunity services tests tools doc)
 
 #
 # Base bits
@@ -9,7 +11,7 @@ subdirs (libunity services tests tools)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 2)
-set (UNITY_MICRO 8)
+set (UNITY_MICRO 12)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -85,13 +87,13 @@ endif (BOOT_LOGGER)
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib;x11;libstartup-notification-1.0;gthread-2.0;indicator")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
-               PLUGINDEPS composite opengl scale
+               PLUGINDEPS composite opengl
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG}"
                LIBRARIES "unity"
                )

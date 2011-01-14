@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -40,6 +41,7 @@ protected:
     virtual void OnMouseClick (int button);
     virtual void OnMouseEnter ();
     virtual void OnMouseLeave ();
+
 private:
     
     char *m_IconName;

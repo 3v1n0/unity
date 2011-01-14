@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -25,6 +26,7 @@
 
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
+
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
@@ -32,12 +34,33 @@
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
 
+#define ANIM_DURATION_SHORT 125
+#define ANIM_DURATION       200
+#define ANIM_DURATION_LONG  350
+
 class LauncherModel;
 class QuicklistView;
+class LauncherIcon;
+class LauncherDragWindow;
 
 class Launcher : public Introspectable, public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE (Launcher, nux::View);
 public:
+  typedef enum
+  {
+    LAUNCH_ANIMATION_NONE,
+    LAUNCH_ANIMATION_PULSE,
+    LAUNCH_ANIMATION_BLINK,
+  } LaunchAnimation;
+
+  typedef enum
+  {
+    URGENT_ANIMATION_NONE,
+    URGENT_ANIMATION_PULSE,
+    URGENT_ANIMATION_WIGGLE,
+  } UrgentAnimation;
+
   Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
@@ -48,17 +71,34 @@ public:
 
   LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
   LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+  LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
+  void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
 
   void SetIconSize(int tile_size, int icon_size);
 
   void SetModel (LauncherModel *model);
+  LauncherModel* GetModel ();
 
   void SetFloating (bool floating);
 
   void SetAutohide (bool autohide, nux::View *show_trigger);
   bool AutohideEnabled ();
+
+  void ForceShowLauncherStart ();
+  void ForceShowLauncherEnd ();
+
+  void SetBacklightAlwaysOn (bool always_on);
+  bool GetBacklightAlwaysOn ();
+  
+  void SetLaunchAnimation (LaunchAnimation animation);
+  LaunchAnimation GetLaunchAnimation ();
+  
+  void SetUrgentAnimation (UrgentAnimation animation);
+  UrgentAnimation GetUrgentAnimation ();
   
   nux::BaseWindow* GetParent () { return _parent; };
+
+  static void SetTimeStruct (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -79,12 +119,6 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  typedef enum
-  {
-    LAUNCHER_FOLDED,
-    LAUNCHER_UNFOLDED
-  } LauncherState;
-
   typedef enum
   {
     ACTION_NONE,
@@ -108,6 +142,7 @@ private:
     float         progress_bias;
     bool          running_arrow;
     bool          running_colored;
+    bool          running_on_viewport;
     bool          active_arrow;
     bool          active_colored;
     bool          skip;
@@ -115,7 +150,7 @@ private:
     int           window_indicators;
   } RenderArg;
 
-  void OnWindowMaybeIntellihide (CompWindow *window);
+  void OnWindowMaybeIntellihide (guint32 xid);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
@@ -131,7 +166,6 @@ private:
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
-  void SetTimeStruct       (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
 
   void EnsureHoverState ();
   void EnsureHiddenState ();
@@ -149,6 +183,8 @@ private:
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentWiggleValue   (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingBlinkValue  (LauncherIcon *icon, struct timespec const &current);
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
   float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
@@ -225,7 +261,7 @@ private:
 
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
-
+  LauncherIcon* m_LastSpreadIcon;
 
   QuicklistView* _active_quicklist;
 
@@ -235,8 +271,10 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
+  bool  _force_show_launcher;
   bool  _window_over_launcher;
   bool  _render_drag_window;
+  bool  _backlight_always_on;
 
   float _folded_angle;
   float _neg_folded_angle;
@@ -244,8 +282,9 @@ private:
   float _launcher_top_y;
   float _launcher_bottom_y;
 
-  LauncherState _launcher_state;
   LauncherActionState _launcher_action_state;
+  LaunchAnimation _launch_animation;
+  UrgentAnimation _urgent_animation;
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
@@ -269,6 +308,13 @@ private:
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   
+  nux::BaseTexture* _pip_ltr;
+  nux::BaseTexture* _pip_rtl;
+  nux::BaseTexture* _arrow_ltr;
+  nux::BaseTexture* _arrow_rtl;
+  nux::BaseTexture* _arrow_empty_ltr;
+  nux::BaseTexture* _arrow_empty_rtl;
+
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
@@ -279,8 +325,6 @@ private:
   nux::Point2   _mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
-  nux::BaseTexture* m_RunningIndicator;
-  nux::BaseTexture* m_ActiveIndicator;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   nux::View* _autohide_trigger;

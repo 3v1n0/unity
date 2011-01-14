@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -67,6 +68,7 @@ namespace nux
 
     _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
     _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _tooltip_text->sigFontChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
     _tooltip_text->Reference();
     
     _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
@@ -143,7 +145,7 @@ namespace nux
     texxform_mask.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
 
-    gfxContext.QRP_GLSL_2TexMod (base.x,
+    gfxContext.QRP_2TexMod (base.x,
       base.y,
       base.width,
       base.height,
@@ -160,7 +162,7 @@ namespace nux
     texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
     GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    gfxContext.QRP_GLSL_1Tex (base.x,
+    gfxContext.QRP_1Tex (base.x,
       base.y,
       base.width,
       base.height,
@@ -423,15 +425,6 @@ void ctk_surface_blur (cairo_surface_t* surface,
     gfloat* rgba_hl,
     gfloat* rgba_dot)
   {
-    /*cairo_surface_t* dots_surf    = NULL;
-    cairo_t*         dots_cr      = NULL;
-    cairo_pattern_t* dots_pattern = NULL;
-    cairo_pattern_t* hl_pattern   = NULL;*/
-
-    // create context for dot-pattern
-    /*dots_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
-    dots_cr = cairo_create (dots_surf);*/
-
     // clear normal context
     cairo_scale (cr, 1.0f, 1.0f);
     cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -450,52 +443,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
       rgba_tint[1],
       rgba_tint[2],
       rgba_tint[3]);
-    //cairo_fill_preserve (cr);
     cairo_fill (cr);
-
-    // create pattern in dot-context
-    /*cairo_set_operator (dots_cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint (dots_cr);
-    cairo_scale (dots_cr, 1.0f, 1.0f);
-    cairo_set_operator (dots_cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba (dots_cr,
-      rgba_dot[0],
-      rgba_dot[1],
-      rgba_dot[2],
-      rgba_dot[3]);
-    cairo_rectangle (dots_cr, 0.0f, 0.0f, 1.0f, 1.0f);
-    cairo_fill (dots_cr);
-    cairo_rectangle (dots_cr, 2.0f, 2.0f, 1.0f, 1.0f);
-    cairo_fill (dots_cr);
-    dots_pattern = cairo_pattern_create_for_surface (dots_surf);*/
-
-    // fill path of normal context with dot-pattern
-    /*cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source (cr, dots_pattern);
-    cairo_pattern_set_extend (dots_pattern, CAIRO_EXTEND_REPEAT);
-    cairo_fill_preserve (cr);
-    cairo_pattern_destroy (dots_pattern);
-    cairo_surface_destroy (dots_surf);
-    cairo_destroy (dots_cr);*/
-
-    // draw highlight
-    /*cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-    hl_pattern = cairo_pattern_create_radial (hl_x,
-      hl_y,
-      0.0f,
-      hl_x,
-      hl_y,
-      hl_size);
-    cairo_pattern_add_color_stop_rgba (hl_pattern,
-      0.0f,
-      1.0f,
-      1.0f,
-      1.0f,
-      0.65f);
-    cairo_pattern_add_color_stop_rgba (hl_pattern, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
-    cairo_set_source (cr, hl_pattern);
-    cairo_fill (cr);
-    cairo_pattern_destroy (hl_pattern);*/
   }
 
   void _setup (cairo_surface_t** surf,
@@ -505,13 +453,6 @@ void ctk_surface_blur (cairo_surface_t* surface,
     gint              height,
     gboolean          negative)
   {
-//     // create context
-//     if (outline)
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-//     else
-//       *surf = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-//     *cr = cairo_create (*surf);
-
     // clear context
     cairo_scale (*cr, 1.0f, 1.0f);
     if (outline)
@@ -572,10 +513,6 @@ void ctk_surface_blur (cairo_surface_t* surface,
       g_warning ("Anchor-height and corner-radius a higher than whole texture!");
       return;
     }
-
-    //gint dynamic_size = height - 2*radius - 2*padding - anchor_height;
-    //gint upper_dynamic_size = upper_size;
-    //gint lower_dynamic_size = dynamic_size - upper_dynamic_size;
 
     if(upper_size >= 0)
     {
@@ -757,7 +694,6 @@ void ctk_surface_blur (cairo_surface_t* surface,
     _draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
     ctk_surface_blur (surf, blur_coeff);
     compute_mask (cr);
-    //compute_outline (cr, line_width, rgba_line);
   }
 
   void compute_full_mask (

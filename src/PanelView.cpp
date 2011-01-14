@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -216,7 +217,7 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
   _layout->SetContentDistribution (nux::eStackLeft);
   
   AddChild (view);
-  
+
   this->ComputeChildLayout (); 
   NeedRedraw ();
 }

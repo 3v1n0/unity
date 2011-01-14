@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,40 +37,43 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
+#include "Launcher.h"
 
 class Launcher;
 class QuicklistView;
 
-typedef enum
-{
-  LAUNCHER_ICON_TYPE_NONE,
-  LAUNCHER_ICON_TYPE_BEGIN,
-  LAUNCHER_ICON_TYPE_FAVORITE,
-  LAUNCHER_ICON_TYPE_APPLICATION,
-  LAUNCHER_ICON_TYPE_PLACE,
-  LAUNCHER_ICON_TYPE_DEVICE,
-  LAUNCHER_ICON_TYPE_TRASH,
-  LAUNCHER_ICON_TYPE_END,
-} LauncherIconType;
-
-typedef enum
-{
-  LAUNCHER_ICON_QUIRK_VISIBLE,
-  LAUNCHER_ICON_QUIRK_ACTIVE,
-  LAUNCHER_ICON_QUIRK_RUNNING,
-  LAUNCHER_ICON_QUIRK_URGENT,
-  LAUNCHER_ICON_QUIRK_PRESENTED,
-  LAUNCHER_ICON_QUIRK_STARTING,
-  LAUNCHER_ICON_QUIRK_SHIMMER,
-  LAUNCHER_ICON_QUIRK_CENTER_SAVED,
-  LAUNCHER_ICON_QUIRK_PROGRESS,
-  
-  LAUNCHER_ICON_QUIRK_LAST,
-} LauncherIconQuirk;
 
 class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, public sigc::trackable
 {
+  NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
 public:
+    typedef enum
+    {
+      TYPE_NONE,
+      TYPE_BEGIN,
+      TYPE_FAVORITE,
+      TYPE_APPLICATION,
+      TYPE_PLACE,
+      TYPE_DEVICE,
+      TYPE_TRASH,
+      TYPE_END,
+    } IconType;
+
+    typedef enum
+    {
+      QUIRK_VISIBLE,
+      QUIRK_ACTIVE,
+      QUIRK_RUNNING,
+      QUIRK_URGENT,
+      QUIRK_PRESENTED,
+      QUIRK_STARTING,
+      QUIRK_SHIMMER,
+      QUIRK_CENTER_SAVED,
+      QUIRK_PROGRESS,
+      
+      QUIRK_LAST,
+    } Quirk;
+
     LauncherIcon(Launcher* launcher);
     virtual ~LauncherIcon();
 
@@ -93,17 +97,19 @@ public:
     
     int RelatedWindows ();
     
+    bool HasVisibleWindow ();
+    
     float PresentUrgency ();
     
     float GetProgress ();
     
-    bool GetQuirk (LauncherIconQuirk quirk);
-    struct timespec GetQuirkTime (LauncherIconQuirk quirk);
+    bool GetQuirk (Quirk quirk);
+    struct timespec GetQuirkTime (Quirk quirk);
     
-    LauncherIconType Type ();
+    IconType Type ();
     
-    nux::Color BackgroundColor ();
-    nux::Color GlowColor ();
+    virtual nux::Color BackgroundColor ();
+    virtual nux::Color GlowColor ();
     
     nux::BaseTexture * TextureForSize (int size);
     
@@ -123,21 +129,23 @@ protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
 
-    void SetQuirk (LauncherIconQuirk quirk, bool value);
+    void SetQuirk (Quirk quirk, bool value);
 
-    void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
-    void UpdateQuirkTime (LauncherIconQuirk quirk);
-    void ResetQuirkTime (LauncherIconQuirk quirk);
+    void UpdateQuirkTimeDelayed (guint ms, Quirk quirk);
+    void UpdateQuirkTime (Quirk quirk);
+    void ResetQuirkTime (Quirk quirk);
 
     void SetRelatedWindows (int windows);
     void Remove ();
     
     void SetProgress (float progress);
     
+    void SetHasVisibleWindow (bool val);
+    
     void Present (float urgency, int length);
     void Unpresent ();
     
-    void SetIconType (LauncherIconType type);
+    void SetIconType (IconType type);
     void SetSortPriority (int priority);
 
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
@@ -171,7 +179,7 @@ private:
     typedef struct
     {
       LauncherIcon *self;
-      LauncherIconQuirk quirk;
+      Quirk quirk;
     } DelayedUpdateArg;
 
     static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
@@ -191,14 +199,15 @@ private:
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
+    bool             _has_visible_window;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;
     nux::Point3      _saved_center;
-    LauncherIconType _icon_type;
+    IconType _icon_type;
     
-    bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
-    struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
+    bool             _quirks[QUIRK_LAST];
+    struct timespec  _quirk_times[QUIRK_LAST];
     
 };
 

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -38,7 +39,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _launcher->SetModel (_model);
   _favorite_store = FavoriteStore::GetDefault ();
 
-  g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   InsertExpoAction ();
   InsertTrash ();
   
@@ -193,9 +194,9 @@ LauncherController::InsertExpoAction ()
   
   expoIcon->SetTooltipText ("Workspace Switcher");
   expoIcon->SetIconName ("workspace-switcher");
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
-  expoIcon->SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
-  expoIcon->SetIconType (LAUNCHER_ICON_TYPE_END);
+  expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
+  expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
+  expoIcon->SetIconType (LauncherIcon::TYPE_END);
   
   expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   
@@ -253,7 +254,7 @@ LauncherController::OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer
   app = BAMF_APPLICATION (view);
   
   BamfLauncherIcon *icon = new BamfLauncherIcon (self->_launcher, app, self->_screen);
-  icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  icon->SetIconType (LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority (self->_sort_priority++);
 
   self->RegisterIcon (icon);
@@ -279,7 +280,7 @@ LauncherController::CreateFavorite (const char *file_path)
   
   bamf_view_set_sticky (BAMF_VIEW (app), true);
   icon = new BamfLauncherIcon (_launcher, app, _screen);
-  icon->SetIconType (LAUNCHER_ICON_TYPE_APPLICATION);
+  icon->SetIconType (LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority (_sort_priority++);
   
   return icon;

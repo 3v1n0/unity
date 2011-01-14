@@ -93,7 +93,7 @@ public:
                                                     GL_ONE);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
-      GfxContext.QRP_GLSL_1Tex (geo.x,
+      GfxContext.QRP_1Tex (geo.x,
                                 geo.y,
                                 (float)geo.width,
                                 (float)geo.height,

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -38,19 +39,19 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 
-#define ANIM_DURATION_SHORT 125
-#define ANIM_DURATION       200
-#define ANIM_DURATION_LONG  350
-
 #define URGENT_BLINKS       3
+#define WIGGLE_CYCLES       6
 
 #define MAX_STARTING_BLINKS 5
 #define STARTING_BLINK_LAMBDA 3
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
+
 int
 TimeDelta (struct timespec const *x, struct timespec const *y)
+
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
@@ -76,29 +77,24 @@ nux::NString gPerspectiveCorrectShader = TEXT (
 #version 120                                                            \n\
 uniform mat4 ViewProjectionMatrix;                                      \n\
                                                                         \n\
-attribute vec4 iColor;                                                  \n\
 attribute vec4 iTexCoord0;                                              \n\
 attribute vec4 iVertex;                                                 \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 void main()                                                             \n\
 {                                                                       \n\
     varyTexCoord0 = iTexCoord0;                                         \n\
-    varyVertexColor = iColor;                                           \n\
     gl_Position =  ViewProjectionMatrix * iVertex;                      \n\
 }                                                                       \n\
                                                                         \n\
 [Fragment Shader]                                                       \n\
-#version 120                                                            \n\
-#extension GL_ARB_texture_rectangle : enable                            \n\
+#version 110                                                            \n\
                                                                         \n\
 varying vec4 varyTexCoord0;                                             \n\
-varying vec4 varyVertexColor;                                           \n\
                                                                         \n\
 uniform sampler2D TextureObject0;                                       \n\
-uniform vec4 color0;                                                     \n\
+uniform vec4 color0;                                                    \n\
 vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
 {                                                                       \n\
   return texture2D(TexObject, TexCoord.st);                             \n\
@@ -109,9 +105,9 @@ void main()                                                             \n\
   vec4 tex = varyTexCoord0;                                             \n\
   tex.s = tex.s/varyTexCoord0.w;                                        \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
-	                                                                      \n\
+	                                                                \n\
   vec4 texel = SampleTexture(TextureObject0, tex);                      \n\
-  gl_FragColor = texel*varyVertexColor;                                 \n\
+  gl_FragColor = color0*texel;                                                 \n\
 }                                                                       \n\
 ");
 
@@ -172,8 +168,6 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
 Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
-,   m_RunningIndicator(0)
-,   m_ActiveIndicator(0)
 ,   m_BackgroundLayer(0)
 ,   _model (0)
 {
@@ -206,10 +200,11 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
+    m_LastSpreadIcon = NULL;
 
     SetCompositionLayout(m_Layout);
 
-    if(!USE_ARB_SHADERS)
+    if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
     {
       _shader_program_uv_persp_correction = nux::GetThreadGLDeviceFactory()->CreateShaderProgram();
       _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
@@ -240,8 +235,9 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _launcher_top_y         = 0;
     _launcher_bottom_y      = 0;
     _folded_z_distance      = 10.0f;
-    _launcher_state         = LAUNCHER_FOLDED;
     _launcher_action_state  = ACTION_NONE;
+    _launch_animation       = LAUNCH_ANIMATION_NONE;
+    _urgent_animation       = URGENT_ANIMATION_NONE;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
@@ -256,6 +252,14 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
     _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
     _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
+    
+    _pip_ltr                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_ltr.png");
+    _arrow_ltr              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_ltr.png");
+    _arrow_empty_ltr        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_ltr.png");
+
+    _pip_rtl                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_rtl.png");
+    _arrow_rtl              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_rtl.png");
+    _arrow_empty_rtl        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png");
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -269,8 +273,11 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
+    _force_show_launcher      = false;
     _window_over_launcher   = false;
     _render_drag_window     = false;
+    _backlight_always_on    = false;
+    
 
     // 0 out timers to avoid wonky startups
     _enter_time.tv_sec = 0;
@@ -390,35 +397,35 @@ void Launcher::EnsureAnimation ()
 
 bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
+    struct timespec time = icon->GetQuirkTime (LauncherIcon::QUIRK_VISIBLE);
     if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_RUNNING);
     if (TimeDelta (&current, &time) < ANIM_DURATION_SHORT)
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_STARTING);
     if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2))
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_URGENT);
     if (TimeDelta (&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_PRESENTED);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_SHIMMER);
     if (TimeDelta (&current, &time) < ANIM_DURATION_LONG)
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_CENTER_SAVED);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
 
-    time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PROGRESS);
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_PROGRESS);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
 
@@ -495,15 +502,15 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 
 float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
 {
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE))
+    if (icon->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
     {
-        struct timespec icon_visible_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
+        struct timespec icon_visible_time = icon->GetQuirkTime (LauncherIcon::QUIRK_VISIBLE);
         int enter_ms = TimeDelta (&current, &icon_visible_time);
         return CLAMP ((float) enter_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     }
     else
     {
-        struct timespec icon_hide_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_VISIBLE);
+        struct timespec icon_hide_time = icon->GetQuirkTime (LauncherIcon::QUIRK_VISIBLE);
         int hide_ms = TimeDelta (&current, &icon_hide_time);
         return 1.0f - CLAMP ((float) hide_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     }
@@ -537,11 +544,11 @@ void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec
 
 float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec icon_present_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PRESENTED);
+    struct timespec icon_present_time = icon->GetQuirkTime (LauncherIcon::QUIRK_PRESENTED);
     int ms = TimeDelta (&current, &icon_present_time);
     float result = CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+    if (icon->GetQuirk (LauncherIcon::QUIRK_PRESENTED))
         return result;
     else
         return 1.0f - result;
@@ -549,11 +556,16 @@ float Launcher::IconPresentProgress (LauncherIcon *icon, struct timespec const &
 
 float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec urgent_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_URGENT);
+    struct timespec urgent_time = icon->GetQuirkTime (LauncherIcon::QUIRK_URGENT);
     int urgent_ms = TimeDelta (&current, &urgent_time);
-    float result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
+    float result;
+    
+    if (_urgent_animation == URGENT_ANIMATION_WIGGLE)
+      result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_SHORT * WIGGLE_CYCLES), 0.0f, 1.0f);
+    else
+      result = CLAMP ((float) urgent_ms / (float) (ANIM_DURATION_LONG * URGENT_BLINKS * 2), 0.0f, 1.0f);
 
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+    if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
       return result;
     else
       return 1.0f - result;
@@ -561,83 +573,117 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &c
 
 float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec shimmer_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_SHIMMER);
+    struct timespec shimmer_time = icon->GetQuirkTime (LauncherIcon::QUIRK_SHIMMER);
     int shimmer_ms = TimeDelta (&current, &shimmer_time);
     return CLAMP ((float) shimmer_ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
 }
 
 float Launcher::IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec save_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_CENTER_SAVED);
+    struct timespec save_time = icon->GetQuirkTime (LauncherIcon::QUIRK_CENTER_SAVED);
     int save_ms = TimeDelta (&current, &save_time);
     return CLAMP ((float) save_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::IconUrgentPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
-    if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+    if (!icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
         return 1.0f; // we are full on in a normal condition
 
     double urgent_progress = (double) IconUrgentProgress (icon, current);
     return 0.5f + (float) (std::cos (M_PI * (float) (URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
+float Launcher::IconUrgentWiggleValue (LauncherIcon *icon, struct timespec const &current)
+{
+    if (!icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
+        return 0.0f; // we are full on in a normal condition
+
+    double urgent_progress = (double) IconUrgentProgress (icon, current);
+    return 0.3f * (float) (std::sin (M_PI * (float) (WIGGLE_CYCLES * 2) * urgent_progress)) * 0.5f;
+}
+
+float Launcher::IconStartingBlinkValue (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec starting_time = icon->GetQuirkTime (LauncherIcon::QUIRK_STARTING);
+    int starting_ms = TimeDelta (&current, &starting_time);
+    double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
+    return 0.5f + (float) (std::cos (M_PI * (_backlight_always_on ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
+}
+
 float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec starting_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+    struct timespec starting_time = icon->GetQuirkTime (LauncherIcon::QUIRK_STARTING);
     int starting_ms = TimeDelta (&current, &starting_time);
     double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
 
-    if (starting_progress == 1.0f && !icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    if (starting_progress == 1.0f && !icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
     {
-        icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
-        icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
+        icon->SetQuirk (LauncherIcon::QUIRK_STARTING, false);
+        icon->ResetQuirkTime (LauncherIcon::QUIRK_STARTING);
     }
 
-    return 1.0f - (0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
+    return 0.5f + (float) (std::cos (M_PI * (float) (MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
 }
 
 float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current)
 {
     float result = 0.0f;
-    struct timespec running_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_RUNNING);
+
+    struct timespec running_time = icon->GetQuirkTime (LauncherIcon::QUIRK_RUNNING);
     int running_ms = TimeDelta (&current, &running_time);
     float running_progress = CLAMP ((float) running_ms / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    
+    if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
+      running_progress = 1.0f - running_progress;
 
     // After we finish a fade in from running, we can reset the quirk
-    if (running_progress == 1.0f && icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-    {
-         icon->SetQuirk (LAUNCHER_ICON_QUIRK_STARTING, false);
-         icon->ResetQuirkTime (LAUNCHER_ICON_QUIRK_STARTING);
-    }   
-
-    result = IconStartingPulseValue (icon, current) * BACKLIGHT_STRENGTH;
-
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
-    {
-        // running progress fades in whatever the pulsing did not fill in already
-        result += running_progress * (BACKLIGHT_STRENGTH - result);
-
-        // urgent serves to bring the total down only
-        if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
-            result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
-    }
+    if (running_progress == 1.0f && icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
+       icon->SetQuirk (LauncherIcon::QUIRK_STARTING, false);
+    
+    float backlight_strength;
+    if (_backlight_always_on)
+      backlight_strength = BACKLIGHT_STRENGTH;
     else
+      backlight_strength = BACKLIGHT_STRENGTH * running_progress;
+      
+    switch (_launch_animation)
     {
-        // modestly evil
-        result += BACKLIGHT_STRENGTH - running_progress * BACKLIGHT_STRENGTH;
+      case LAUNCH_ANIMATION_NONE:
+        result = backlight_strength;
+        break;
+      case LAUNCH_ANIMATION_BLINK:
+        if (_backlight_always_on)
+          result = IconStartingBlinkValue (icon, current);
+        else
+          result = backlight_strength; // The blink concept is a failure in this case (it just doesn't work right)
+        break;
+      case LAUNCH_ANIMATION_PULSE:
+        if (running_progress == 1.0f && icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
+          icon->ResetQuirkTime (LauncherIcon::QUIRK_STARTING);
+        
+        result = backlight_strength;
+        if (_backlight_always_on)
+          result *= CLAMP (running_progress + IconStartingPulseValue (icon, current), 0.0f, 1.0f);
+        else
+          result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue (icon, current));
+        break;
     }
-
+    
+      // urgent serves to bring the total down only
+    if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_PULSE)
+      result *= 0.2f + 0.8f * IconUrgentPulseValue (icon, current);
+    
     return result;
 }
 
 float Launcher::IconProgressBias (LauncherIcon *icon, struct timespec const &current)
 {
-    struct timespec icon_progress_time = icon->GetQuirkTime (LAUNCHER_ICON_QUIRK_PROGRESS);
+    struct timespec icon_progress_time = icon->GetQuirkTime (LauncherIcon::QUIRK_PROGRESS);
     int ms = TimeDelta (&current, &icon_progress_time);
     float result = CLAMP ((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_PROGRESS))
+    if (icon->GetQuirk (LauncherIcon::QUIRK_PROGRESS))
         return -1.0f + result;
     else
         return result;
@@ -645,36 +691,42 @@ float Launcher::IconProgressBias (LauncherIcon *icon, struct timespec const &cur
 
 void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg)
 {
-    arg.icon            = icon;
-    arg.alpha           = 1.0f;
-    arg.running_arrow   = icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING);
-    arg.active_arrow    = icon->GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE);
-    arg.running_colored = icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT);
-    arg.active_colored  = false;
-    arg.x_rotation      = 0.0f;
-    arg.y_rotation      = 0.0f;
-    arg.z_rotation      = 0.0f;
-    arg.skip            = false;
-    arg.stick_thingy    = false;
-    arg.progress_bias   = IconProgressBias (icon, current);
-    arg.progress        = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
+    arg.icon                = icon;
+    arg.alpha               = 1.0f;
+    arg.running_arrow       = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
+    arg.active_arrow        = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
+    arg.running_colored     = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
+    arg.running_on_viewport = icon->HasVisibleWindow ();
+    arg.active_colored      = false;
+    arg.x_rotation          = 0.0f;
+    arg.y_rotation          = 0.0f;
+    arg.z_rotation          = 0.0f;
+    arg.skip                = false;
+    arg.stick_thingy        = false;
+    arg.progress_bias       = IconProgressBias (icon, current);
+    arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
     // we dont need to show strays
-    if (!icon->GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING))
+    if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
         arg.window_indicators = 0;
     else
-        arg.window_indicators = MIN (4, icon->RelatedWindows ());
+        arg.window_indicators = icon->RelatedWindows ();
 
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
 
     float urgent_progress = IconUrgentProgress (icon, current);
     
-    if (icon->GetQuirk (LAUNCHER_ICON_QUIRK_URGENT))
+    if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
       urgent_progress = CLAMP (urgent_progress * 3.0f, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
     else
       urgent_progress = CLAMP (urgent_progress * 3.0f - 2.0f, 0.0f, 1.0f); // we want to go 3x faster than the urgent normal cycle
     arg.glow_intensity = urgent_progress;
+    
+    if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
+    {
+      arg.z_rotation = IconUrgentWiggleValue (icon, current);
+    }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -696,7 +748,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float size_modifier = IconVisibleProgress (icon, current);
     if (size_modifier < 1.0f)
     {
-        arg.alpha = size_modifier;
+        arg.alpha *= size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
     }
 
@@ -901,6 +953,18 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
+void Launcher::ForceShowLauncherStart ()
+{
+    _force_show_launcher = true;
+    EnsureHiddenState ();
+}
+
+void Launcher::ForceShowLauncherEnd ()
+{
+    _force_show_launcher = false;
+    SetupAutohideTimer ();
+}
+
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
@@ -928,6 +992,7 @@ Launcher::EnsureHiddenState ()
 {
   if (!_mouse_inside_trigger && 
       !_mouse_inside_launcher && 
+      !_force_show_launcher &&
        _launcher_action_state == ACTION_NONE &&
       !QuicklistManager::Default ()->Current() &&
       _window_over_launcher) 
@@ -946,8 +1011,10 @@ Launcher::CheckWindowOverLauncher ()
   for (it = window_list.begin (); it != window_list.end (); it++)
   {
     CompWindow *window = *it;
+    int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                          CompWindowTypeModalDialogMask;
 
-    if (window->type () != CompWindowTypeNormalMask || !window->isMapped () || !window->isViewable ())
+    if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
@@ -963,7 +1030,7 @@ Launcher::CheckWindowOverLauncher ()
 }
 
 void
-Launcher::OnWindowMaybeIntellihide (CompWindow *window)
+Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_autohide)
     CheckWindowOverLauncher ();
@@ -1035,6 +1102,50 @@ void Launcher::SetFloating (bool floating)
 
     _floating = floating;
     EnsureAnimation ();
+}
+
+void Launcher::SetBacklightAlwaysOn (bool always_on)
+{
+  if (_backlight_always_on == always_on)
+    return;
+  
+  _backlight_always_on = always_on;
+  EnsureAnimation ();
+}
+
+bool Launcher::GetBacklightAlwaysOn ()
+{
+  return _backlight_always_on;
+}
+
+void 
+Launcher::SetLaunchAnimation (LaunchAnimation animation)
+{
+  if (_launch_animation == animation)
+    return;
+    
+  _launch_animation = animation;  
+}
+
+Launcher::LaunchAnimation 
+Launcher::GetLaunchAnimation ()
+{
+  return _launch_animation;
+}
+
+void 
+Launcher::SetUrgentAnimation (UrgentAnimation animation)
+{
+  if (_urgent_animation == animation)
+    return;
+    
+  _urgent_animation = animation;  
+}
+
+Launcher::UrgentAnimation 
+Launcher::GetUrgentAnimation ()
+{
+  return _urgent_animation;
 }
 
 void
@@ -1121,6 +1232,11 @@ void Launcher::SetModel (LauncherModel *model)
     _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
+LauncherModel* Launcher::GetModel ()
+{
+  return _model;
+}
+
 void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)
 {
     EnsureAnimation();
@@ -1148,12 +1264,6 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
   if (running > 0)
   {
-    if (!m_RunningIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/running_indicator.png", NULL);
-      m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
@@ -1161,53 +1271,58 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
 
+    nux::BaseTexture *texture;
+
     std::vector<int> markers;
-    if (running == 1)
+    
+    /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
+      texture = _arrow_empty_ltr;
+    }
+    else*/ if (running == 1)
+    {
+      markers.push_back (markerCenter);
+      texture = _arrow_ltr;
     }
     else if (running == 2)
     {
       markers.push_back (markerCenter - 2);
       markers.push_back (markerCenter + 2);
+      texture = _pip_ltr;
     }
     else
     {
       markers.push_back (markerCenter - 4);
       markers.push_back (markerCenter);
       markers.push_back (markerCenter + 4);
+      texture = _pip_ltr;
     }
 
     std::vector<int>::iterator it;
     for (it = markers.begin (); it != markers.end (); it++)
     {
       int center = *it;
-      GfxContext.QRP_GLSL_1Tex (geo.x,
-                                center - (m_RunningIndicator->GetHeight () / 2),
-                                (float) m_RunningIndicator->GetWidth(),
-                                (float) m_RunningIndicator->GetHeight(),
-                                m_RunningIndicator->GetDeviceTexture(),
-                                texxform,
-                                color);
+      GfxContext.QRP_1Tex (geo.x,
+                           center - (texture->GetHeight () / 2),
+                           (float) texture->GetWidth(),
+                           (float) texture->GetHeight(),
+                           texture->GetDeviceTexture(),
+                           texxform,
+                           color);
     }
   }
 
   if (active > 0)
   {
-    if (!m_ActiveIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/focused_indicator.png", NULL);
-      m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
-    GfxContext.QRP_GLSL_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
-                              markerCenter - (m_ActiveIndicator->GetHeight () / 2),
-                              (float) m_ActiveIndicator->GetWidth(),
-                              (float) m_ActiveIndicator->GetHeight(),
-                              m_ActiveIndicator->GetDeviceTexture(),
+    GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
+                              markerCenter - (_arrow_rtl->GetHeight () / 2),
+                              (float) _arrow_rtl->GetWidth(),
+                              (float) _arrow_rtl->GetHeight(),
+                              _arrow_rtl->GetDeviceTexture(),
                               texxform,
                               color);
   }
@@ -1228,7 +1343,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
-  if(nux::Abs (arg.x_rotation) < 0.01f)
+  if(nux::Abs (arg.x_rotation) < 0.01f && nux::Abs (arg.y_rotation) < 0.01f && nux::Abs (arg.z_rotation) < 0.01f)
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
   else
     icon->SetFiltering(GL_LINEAR, GL_LINEAR);
@@ -1256,7 +1371,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   v3.w = xform_coords[3].w ;
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
-  nux::Color color = nux::Color::White;
+  nux::Color color = bkg_color;
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
@@ -1275,10 +1390,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   float VtxBuffer[] =
   {// Perspective correct
-    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,     color.R(), color.G(), color.B(), color.A(),
-    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,     color.R(), color.G(), color.B(), color.A(),
-    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,     color.R(), color.G(), color.B(), color.A(),
-    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,     color.R(), color.G(), color.B(), color.A(),
+    v0.x, v0.y, 0.0f, 1.0f,     s0/v0.w, t0/v0.w, 0.0f, 1.0f/v0.w,
+    v1.x, v1.y, 0.0f, 1.0f,     s1/v1.w, t1/v1.w, 0.0f, 1.0f/v1.w,
+    v2.x, v2.y, 0.0f, 1.0f,     s2/v2.w, t2/v2.w, 0.0f, 1.0f/v2.w,
+    v3.x, v3.y, 0.0f, 1.0f,     s3/v3.w, t3/v3.w, 0.0f, 1.0f/v3.w,
   };
 
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
@@ -1290,7 +1405,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int VertexColorLocation;
   int FragmentColor;
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->Begin();
 
@@ -1298,7 +1413,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
     VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
-    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color");
+    FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
@@ -1324,23 +1439,23 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
-  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer) );
+  CHECKGL( glVertexAttribPointerARB((GLuint)VertexLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer) );
 
   if(TextureCoord0Location != -1)
   {
     CHECKGL( glEnableVertexAttribArrayARB(TextureCoord0Location) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 4) );
+    CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-  if(VertexColorLocation != -1)
-  {
-    CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-    CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 48, VtxBuffer + 8) );
-  }
+//   if(VertexColorLocation != -1)
+//   {
+//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
+//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
+//   }
 
   bkg_color.SetAlpha (bkg_color.A () * alpha);
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -1357,10 +1472,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glDisableVertexAttribArrayARB(VertexLocation) );
   if(TextureCoord0Location != -1)
     CHECKGL( glDisableVertexAttribArrayARB(TextureCoord0Location) );
-  if(VertexColorLocation != -1)
-    CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
+//   if(VertexColorLocation != -1)
+//     CHECKGL( glDisableVertexAttribArrayARB(VertexColorLocation) );
 
-  if(!USE_ARB_SHADERS)
+  if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->End();
   }
@@ -1372,6 +1487,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
 void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo)
 {
+  // This check avoids a crash when the icon is not available on the system.
+  if (arg.icon->TextureForSize (_icon_image_size) == 0)
+    return;
+
   GfxContext.GetRenderStates ().SetSeparateBlend (true,
                                                 GL_SRC_ALPHA,
                                                 GL_ONE_MINUS_SRC_ALPHA,
@@ -1890,7 +2009,7 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
   // Because of the way icons fold and stack on one another, we must proceed in 2 steps.
   for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
   {
-    if ((*rev_it)->_folding_angle < 0.0f || !(*rev_it)->GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE))
+    if ((*rev_it)->_folding_angle < 0.0f || !(*rev_it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -1906,7 +2025,7 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
 
   for (it = _model->begin(); it != _model->end (); it++)
   {
-    if ((*it)->_folding_angle >= 0.0f || !(*it)->GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE))
+    if ((*it)->_folding_angle >= 0.0f || !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
       continue;
 
     nux::Point2 screen_coord [4];
@@ -2198,10 +2317,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
   
-  GfxContext.QRP_GLSL_1Tex (left_edge, progress_y, progress_width, progress_height, 
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
                             _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
                             
-  GfxContext.QRP_GLSL_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
                             _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);  
 
   GfxContext.PopClippingRectangle (); 
@@ -2210,10 +2329,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // right door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
   
-  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
+  GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
                             _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
   
-  GfxContext.QRP_GLSL_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
                             _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);
   
   GfxContext.PopClippingRectangle (); 

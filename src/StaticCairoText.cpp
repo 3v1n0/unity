@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -42,20 +43,19 @@ namespace nux
 
 StaticCairoText::~StaticCairoText ()
 {
+  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+  g_signal_handlers_disconnect_by_func (settings,
+                                        (void *) &StaticCairoText::OnFontChanged,
+                                        this);
   delete (_cairoGraphics);
   delete (_texture2D);
 }
 
 void StaticCairoText::PreLayoutManagement ()
 {
-  int          textWidth  = 0;
-  int          textHeight = 0;
-  GtkSettings* settings   = gtk_settings_get_default (); // not ref'ed
-  gchar*       fontName   = NULL;
-
-  g_object_get (settings, "gtk-font-name", &fontName, NULL);
-  GetTextExtents (fontName, textWidth, textHeight);
-  g_free (fontName);
+  int textWidth  = 0;
+  int textHeight = 0;
+  GetTextExtents (textWidth, textHeight);
 
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
@@ -64,6 +64,12 @@ void StaticCairoText::PreLayoutManagement ()
 
   if((_texture2D == 0) )
   {
+    GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+    g_signal_connect (settings, "notify::gtk-font-name",
+                      (GCallback) &StaticCairoText::OnFontChanged, this);
+    g_signal_connect (settings, "notify::gtk-xft-dpi",
+                      (GCallback) &StaticCairoText::OnFontChanged, this);
+
     UpdateTexture ();
   }
 
@@ -123,7 +129,7 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                                          GL_ONE,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
-  gfxContext.QRP_GLSL_1Tex (base.x,
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,
@@ -283,7 +289,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   pango_layout_context_changed (layout);
 
-  cairo_move_to (cr, 0.0f, 0.0f);
+  cairo_move_to (cr, -1.0f, 1.0f);
   pango_cairo_show_layout (cr, layout);
 
   // clean up
@@ -319,6 +325,14 @@ void StaticCairoText::UpdateTexture ()
   _texture2D->Update (bitmap);
 
   delete _cairoGraphics;
+}
+
+void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
+                                     gpointer data)
+{
+  StaticCairoText *self = (StaticCairoText*) data;
+  self->UpdateTexture ();
+  self->sigFontChanged.emit (self);
 }
 
 }
