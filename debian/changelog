@@ -1,3 +1,10 @@
+unity (3.2.8-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    libdbusmenu-glib-dev 0.4 is 0.3.91
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 17:04:09 +0100
+
 unity (3.2.8-0ubuntu2) natty; urgency=low
 
   * src/unityshell.cpp:
