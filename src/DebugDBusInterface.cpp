@@ -17,7 +17,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#include "IntrospectionDBusInterface.h"
+#include "DebugDBusInterface.h"
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
 
@@ -75,26 +75,26 @@ static const GDBusInterfaceInfo si_iface_info =
 
 static Introspectable      *_introspectable;
 
-IntrospectionDBusInterface::IntrospectionDBusInterface (Introspectable *introspectable)
+DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
 {
   _introspectable = introspectable;
   _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                               UNITY_STATE_DEBUG_BUS_NAME,
                               G_BUS_NAME_OWNER_FLAGS_NONE,
-                              &IntrospectionDBusInterface::OnBusAcquired,
-                              &IntrospectionDBusInterface::OnNameAcquired,
-                              &IntrospectionDBusInterface::OnNameLost,
+                              &DebugDBusInterface::OnBusAcquired,
+                              &DebugDBusInterface::OnNameAcquired,
+                              &DebugDBusInterface::OnNameLost,
                               this,
                               NULL);
 }
 
-IntrospectionDBusInterface::~IntrospectionDBusInterface ()
+DebugDBusInterface::~DebugDBusInterface ()
 {
   g_bus_unown_name (_owner_id);
 }
 
 void 
-IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
   GError *error = NULL;
   g_dbus_connection_register_object (connection,
@@ -112,12 +112,12 @@ IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gc
 }
 
 void
-IntrospectionDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-IntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
@@ -156,7 +156,7 @@ GetState (const gchar *piece)
 
 /* a very contrived example purely for giving QA something purposes */
 GVariant*
-IntrospectionDBusInterface::BuildFakeReturn ()
+DebugDBusInterface::BuildFakeReturn ()
 {
   GVariantBuilder *builder;
   GVariant *result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;
