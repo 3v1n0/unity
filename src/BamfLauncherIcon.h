@@ -64,11 +64,11 @@ private:
 
     void OpenInstance ();
     void Focus ();
-    void Spread ();
+    bool Spread ();
 
     void EnsureMenuItemsReady ();
     
-    void OnWindowMinimized (CompWindow *window);
+    void OnWindowMinimized (guint32 xid);
     bool OwnsWindow (Window w);
 
     static void OnClosed (BamfView *view, gpointer data);
