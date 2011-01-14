@@ -44,7 +44,6 @@ static const GDBusArgInfo si_getstate_in_args =
 
 static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
 
-// TODO: this is really a a{sv} or something like that.
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
@@ -63,16 +62,17 @@ static const GDBusMethodInfo si_method_info_getstate =
   NULL
 };
 
-static GDBusMethodInfo si_method_info_runautopilot =
+static GDBusMethodInfo ap_method_info_runautopilot =
 {
   -1,
-  "RunAutopilot",
+  (gchar *) "RunAutopilot",
   NULL,
   NULL,
   NULL
 };
 
-static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_info_getstate, &si_method_info_runautopilot, NULL };
+static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_runautopilot, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
@@ -81,7 +81,17 @@ static const GDBusInterfaceInfo si_iface_info =
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
+  NULL
+};
+
+static const GDBusInterfaceInfo ap_iface_info =
+{
+  -1,
+  (gchar *) "com.canonical.Unity.Debug.Autopilot",
+  (GDBusMethodInfo **) &ap_method_info_pointers,
   NULL,
+  NULL,
+  NULL
 };
 
 static Introspectable      *_introspectable;
@@ -104,21 +114,30 @@ DebugDBusInterface::~DebugDBusInterface ()
   g_bus_unown_name (_owner_id);
 }
 
+static const GDBusInterfaceInfo *const debug_object_interfaces [] = { &si_iface_info, &ap_iface_info, NULL };
+
 void 
 DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
-  GError *error = NULL;
-  g_dbus_connection_register_object (connection,
-                                     "/com/canonical/Unity/Debug",
-                                     (GDBusInterfaceInfo *) &si_iface_info,
-                                     &si_vtable,
-                                     NULL,
-                                     NULL,
-                                     &error);
-  if (error != NULL)
+  int i = 0;
+  GError *error;
+
+  while (debug_object_interfaces[i] != NULL)
   {
-    g_warning ("Could not register Introspection object onto d-bus");
-	g_error_free (error);
+    error = NULL;
+    g_dbus_connection_register_object (connection,
+                                       "/com/canonical/Unity/Debug",
+                                       (GDBusInterfaceInfo* ) debug_object_interfaces[i],
+                                       &si_vtable,
+                                       NULL,
+                                       NULL,
+                                       &error);
+    if (error != NULL)
+    {
+      g_warning ("Could not register debug interface onto d-bus");
+      g_error_free (error);
+    }
+    i++;
   }
 }
 
