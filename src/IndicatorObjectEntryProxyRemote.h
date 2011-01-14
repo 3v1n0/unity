@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2010 Canonical Ltd
 *
@@ -46,6 +47,7 @@ public:
   virtual bool         GetActive ();
 
   virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button);
+  virtual void         Scroll (int delta);
 
   void Refresh (const char *__id,
                 const char *__label,
@@ -58,6 +60,7 @@ public:
 
   // Signals
   sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
+  sigc::signal<void, const char *, int> OnScroll;
 
 public:
   bool     _dirty;

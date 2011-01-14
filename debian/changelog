@@ -1,9 +1,34 @@
-unity (3.2.8-0ubuntu4) UNRELEASED; urgency=low
+unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
+   - Window border doesn't get restored (LP: #691812)
+   - When a menu is triggered from Alt+key, app name stays visible on panel
+     (LP: #691765)
+   - show the launcher on <Super> KeyPress, this will be needed when the
+     shortcut will be implemented if we are in intellihide mode
+   - Make sure an underscore is correctly placed under the corresponding
+     accelerator-key. (LP: #683427)
+   - Adding a dummy --replace option for compatibility reason (LP: #692569)
+   - Compiz crashed with SIGSEGV in CompWindow::id() (LP: #694945)
+   - Tooltip text not vertically centered (LP: #697791)
+   - Maximizing a window horizontally or vertically removes the title bar
+     (LP: #696780)
+   - Mousewheel support for indicators (LP: #681428)
+   - Avoid Quicklists being positioned so that they are partially offscreen at
+     the bottom screen-edge. (LP: #691114)
+   - Migrate awn, docky and cairo-dock dock launchers (LP: #692967)
+   - Include manpages, and make them translatable. (LP: #684896)
+   - Automaximize windows in Unity with some rules like blacklisting some
+     applications, initial window size.
+     It fixes also some bugs, like maximized window on first map not
+     undecorated (LP: #667009, #669716, #693779, #691741)
+   - Update libunity to conform to latest GIO VAPI breakage (LP: #679964)
+   - Initial unity-atk module implementation (LP: #701680)
+   - Panel autohide when on Quicklist (LP: #683261)
   * debian/control:
     - unity breaks on older bamf version (dbus protocol changed)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 19:44:48 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
 
 unity (3.2.8-0ubuntu3) natty; urgency=low
 

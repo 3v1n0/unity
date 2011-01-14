@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -55,7 +56,7 @@ SimpleLauncherIcon::OnMouseUp (int button)
 void
 SimpleLauncherIcon::OnMouseClick (int button)
 {
-  if (button == 1)
+  if (button == 1 && PluginAdapter::Default ()->IsScaleActive())
     PluginAdapter::Default ()->TerminateScale ();
 }
 

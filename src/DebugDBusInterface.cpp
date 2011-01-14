@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -16,7 +17,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
-#include "IntrospectionDBusInterface.h"
+#include "DebugDBusInterface.h"
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
 
@@ -35,8 +36,8 @@ static const GDBusInterfaceVTable si_vtable =
 static const GDBusArgInfo si_getstate_in_args =
 {
   -1,
-  "piece",
-  "s",
+  (gchar *) "piece",
+  (gchar *) "s",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
@@ -45,8 +46,8 @@ static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
-  "state",
-  "a{sv}",
+  (gchar *) "state",
+  (gchar *) "a{sv}",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -54,7 +55,7 @@ static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  "GetState",
+  (gchar *) "GetState",
   (GDBusArgInfo **) &si_getstate_in_arg_pointers,
   (GDBusArgInfo **) &si_getstate_out_arg_pointers,
   NULL
@@ -65,7 +66,7 @@ static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_inf
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  "com.canonical.Unity.Debug.Introspection",
+  (gchar *) "com.canonical.Unity.Debug.Introspection",
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
@@ -74,30 +75,30 @@ static const GDBusInterfaceInfo si_iface_info =
 
 static Introspectable      *_introspectable;
 
-IntrospectionDBusInterface::IntrospectionDBusInterface (Introspectable *introspectable)
+DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
 {
   _introspectable = introspectable;
   _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                               UNITY_STATE_DEBUG_BUS_NAME,
                               G_BUS_NAME_OWNER_FLAGS_NONE,
-                              &IntrospectionDBusInterface::OnBusAcquired,
-                              &IntrospectionDBusInterface::OnNameAcquired,
-                              &IntrospectionDBusInterface::OnNameLost,
+                              &DebugDBusInterface::OnBusAcquired,
+                              &DebugDBusInterface::OnNameAcquired,
+                              &DebugDBusInterface::OnNameLost,
                               this,
                               NULL);
 }
 
-IntrospectionDBusInterface::~IntrospectionDBusInterface ()
+DebugDBusInterface::~DebugDBusInterface ()
 {
   g_bus_unown_name (_owner_id);
 }
 
 void 
-IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
   GError *error = NULL;
   g_dbus_connection_register_object (connection,
-                                     "/com/canonical/Unity/Debug/Introspection",
+                                     "/com/canonical/Unity/Debug",
                                      (GDBusInterfaceInfo *) &si_iface_info,
                                      &si_vtable,
                                      NULL,
@@ -111,12 +112,12 @@ IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gc
 }
 
 void
-IntrospectionDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
 void
-IntrospectionDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
+DebugDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data)
 {
 }
 
@@ -155,7 +156,7 @@ GetState (const gchar *piece)
 
 /* a very contrived example purely for giving QA something purposes */
 GVariant*
-IntrospectionDBusInterface::BuildFakeReturn ()
+DebugDBusInterface::BuildFakeReturn ()
 {
   GVariantBuilder *builder;
   GVariant *result, *panel_result, *indicators_result, *appmenu_result, *entries_result, *zero_result, *one_result;

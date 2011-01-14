@@ -18,8 +18,6 @@
 
 #include "WindowManager.h"
 
-#include <gdk/gdkx.h>
-
 typedef struct {
     unsigned long flags;
     unsigned long functions;
@@ -101,6 +99,63 @@ WindowManager::Undecorate (guint32 xid)
   hints.decorations = 0;
  
   gdk_window_set_mwm_hints (xid, &hints);
+}
+
+#define NET_WM_MOVERESIZE_MOVE 8
+
+
+void
+WindowManager::StartMove (guint32 xid, int x, int y)
+{
+  XEvent ev;
+  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+
+  /* We first need to ungrab the pointer. FIXME: Evil */
+
+    XUngrabPointer(d, CurrentTime);
+
+  // --------------------------------------------------------------------------
+  // FIXME: This is a workaround until the non-paired events issue is fixed in
+  // nux
+  XButtonEvent bev = {
+    ButtonRelease,
+    0,
+    False,
+    d,
+    0,
+    0,
+    0,
+    CurrentTime,
+    x, y,
+    x, y,
+    0,
+    Button1,
+    True
+  };
+  XEvent *e = (XEvent*)&bev;
+  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
+
+  ev.xclient.type    = ClientMessage;
+  ev.xclient.display = d;
+
+  ev.xclient.serial     = 0;
+  ev.xclient.send_event = true;
+
+  ev.xclient.window     = xid;
+  ev.xclient.message_type = m_MoveResizeAtom;
+  ev.xclient.format     = 32;
+
+  ev.xclient.data.l[0] = x;
+  ev.xclient.data.l[1] = y;
+  ev.xclient.data.l[2] = NET_WM_MOVERESIZE_MOVE;
+  ev.xclient.data.l[3] = 1;
+  ev.xclient.data.l[4] = 1;
+
+  XSendEvent (d, DefaultRootWindow (d), FALSE,
+                 SubstructureRedirectMask | SubstructureNotifyMask,
+                 &ev);
+
+  XSync (d, FALSE);
 }
 
 /*

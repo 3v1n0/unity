@@ -70,6 +70,8 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
+		../src/PanelTitlebarGrabAreaView.h
+		../src/PanelTitlebarGrabAreaView.cpp
                 ../src/IndicatorObjectFactory.h
                 ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectEntryProxy.h

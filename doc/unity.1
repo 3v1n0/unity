@@ -1,0 +1,29 @@
+.TH unity "1" "9 December 2010" "" "Linux User's Manual"
+
+.SH NAME
+unity \- wrapper for starting the unity shell and handling fallback
+
+.SH SYNOPSIS
+.B unity
+.RI [ options ]
+.br
+
+.SH DESCRIPTION
+The \fBunity\fP program can be used to start the Unity shell as a compiz module, and to specify how to handle logging, debugging, as well as how to deal with the user's profile.
+
+.SH OPTIONS
+.IP \fB\-\-advanced\-debug\fP
+Runs unity under debugging (using GDB or another debugger tool) to help tracking issues. Should only be used on request from a developper following a bug report.
+
+.IP \fB\-\-log\fP\ \fIfilename\fP
+This parameter, followed by a path or filename, tells the Unity shell to store logs in the specified file.
+
+.IP \fB\-\-reset\fP
+This option allows the user to reset profile parameters in compiz and restart the Unity shell with default settings.
+
+.IP \fB\-\-verbose\fP
+This option turns on displaying additional debugging output for the Unity shell. It can be used by the user to debug configuration issues. This option is often used along with the \fB\-\-log\fP option to save output to a file.
+
+.SH "SEE ALSO"
+.B unity-panel-service
+(1)

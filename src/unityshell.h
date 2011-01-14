@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.h
  *
@@ -31,7 +32,7 @@
 #include "LauncherController.h"
 #include "PanelView.h"
 #include "PlacesController.h"
-#include "IntrospectionDBusInterface.h"
+#include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
@@ -90,6 +91,14 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+	
+	bool
+	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
+                             CompOption::Vector &options);
+
+	bool
+	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
+                              CompOption::Vector &options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
@@ -138,7 +147,7 @@ class UnityScreen :
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
-	IntrospectionDBusInterface 		*debugger;
+	DebugDBusInterface 		 *debugger;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
