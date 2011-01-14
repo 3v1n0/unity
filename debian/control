@@ -30,6 +30,7 @@ Build-Depends: cmake,
                libboost1.42-dev,
                libboost-serialization1.42-dev,
                libstartup-notification0-dev,
+               libatk1.0-dev,
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu

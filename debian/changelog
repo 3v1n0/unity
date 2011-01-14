@@ -28,6 +28,7 @@ unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - unity breaks on older bamf version (dbus protocol changed)
     - needs latest and greatest from dee
+    - add libatk1.0-dev build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
 
