@@ -49,6 +49,7 @@ public:
   void          AddProperties (GVariantBuilder *builder);
 
   sigc::signal<void, PanelIndicatorObjectEntryView *, bool> active_changed;
+  sigc::signal<void, PanelIndicatorObjectEntryView *> refreshed;
 
 public:
   IndicatorObjectEntryProxy *_proxy;
