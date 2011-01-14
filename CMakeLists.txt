@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (libunity services tests tools doc)
+subdirs (libunity services tools doc)
 
 #
 # Base bits

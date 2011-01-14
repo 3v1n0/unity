@@ -29,6 +29,9 @@ unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
     - unity breaks on older bamf version (dbus protocol changed)
     - needs latest and greatest from dee
     - add libatk1.0-dev build-dep
+  * CMakeList:
+    - distro-patch to avoid building tests right now as building them is failing
+      with the current vala/gir stack. THIS NEED TO BE REMOVED.
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
 
