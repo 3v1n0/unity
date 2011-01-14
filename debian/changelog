@@ -37,6 +37,8 @@ unity (3.2.12-0ubuntu1) UNRELEASED; urgency=low
       package will come next week.
   * debian/unity-common.install:
     - install the manpages
+  * debian/libunity3.symbols:
+    - updated 
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 20:15:48 +0100
 
