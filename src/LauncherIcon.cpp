@@ -188,7 +188,7 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = 0.6f;
+    s = 0.65f;
   v = 0.90f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);

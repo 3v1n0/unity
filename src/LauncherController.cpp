@@ -39,7 +39,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _launcher->SetModel (_model);
   _favorite_store = FavoriteStore::GetDefault ();
 
-  g_timeout_add (5000, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   InsertExpoAction ();
   InsertTrash ();
   
