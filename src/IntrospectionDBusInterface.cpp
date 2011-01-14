@@ -98,7 +98,7 @@ IntrospectionDBusInterface::OnBusAcquired (GDBusConnection *connection, const gc
 {
   GError *error = NULL;
   g_dbus_connection_register_object (connection,
-                                     "/com/canonical/Unity/Debug/Introspection",
+                                     "/com/canonical/Unity/Debug",
                                      (GDBusInterfaceInfo *) &si_iface_info,
                                      &si_vtable,
                                      NULL,
