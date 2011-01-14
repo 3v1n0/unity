@@ -1,3 +1,10 @@
+unity (3.2.8-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/control:
+    - unity breaks on older bamf version (dbus protocol changed)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 14 Jan 2011 19:44:48 +0100
+
 unity (3.2.8-0ubuntu3) natty; urgency=low
 
   * debian/control:
