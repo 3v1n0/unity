@@ -1,4 +1,4 @@
-unity (3.2.12-0ubuntu3) UNRELEASED; urgency=low
+unity (3.2.12-0ubuntu3) natty; urgency=low
 
   * debian/control:
     - drop the recommends on unity-places* as they don't work today, and pull
@@ -6,7 +6,7 @@ unity (3.2.12-0ubuntu3) UNRELEASED; urgency=low
       libindicator2. The places can't be rebuilt right now (API breakage) and
       we need to wait for next release
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 17 Jan 2011 14:23:34 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 17 Jan 2011 14:27:11 +0100
 
 unity (3.2.12-0ubuntu2) natty; urgency=low
 
