@@ -49,9 +49,7 @@ Provides: indicator-renderer,
           netbook-launcher
 Conflicts: netbook-launcher (<< 1:2.1.18-0ubuntu2)
 Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2)
-Recommends: unity-place-applications,
-            unity-place-files,
-            indicator-appmenu,
+Recommends: indicator-appmenu,
             indicator-application,
             indicator-sound,
             indicator-datetime,
