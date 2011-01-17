@@ -71,6 +71,8 @@ public:
 
   LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
   LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
+  LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
+  void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
 
   void SetIconSize(int tile_size, int icon_size);
 
@@ -148,7 +150,7 @@ private:
     int           window_indicators;
   } RenderArg;
 
-  void OnWindowMaybeIntellihide (CompWindow *window);
+  void OnWindowMaybeIntellihide (guint32 xid);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
@@ -259,7 +261,7 @@ private:
 
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
-
+  LauncherIcon* m_LastSpreadIcon;
 
   QuicklistView* _active_quicklist;
 

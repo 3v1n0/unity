@@ -18,7 +18,6 @@
  */
  
 #include <glib.h>
-#include <scale/scale.h>
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
@@ -42,27 +41,42 @@ PluginAdapter::Initialize (CompScreen *screen)
   _default = new PluginAdapter (screen);
 }
 
-PluginAdapter::PluginAdapter(CompScreen *screen)
+PluginAdapter::PluginAdapter(CompScreen *screen) :
+    m_Screen (screen),
+    m_ExpoActionList (0),
+    m_ScaleActionList (0)
 {
-  m_Screen = screen;
-  m_ExpoAction = 0;
-  m_ScaleAction = 0;
+   m_AnimationPluginLoaded =
+     CompPlugin::find ("animation") ? true : false;
 }
 
 PluginAdapter::~PluginAdapter()
 {
 }
 
-void 
+/* A No-op for now, but could be useful later */
+void
+PluginAdapter::OnScreenGrabbed ()
+{
+}
+
+void
+PluginAdapter::OnScreenUngrabbed ()
+{
+  if (m_SpreadedWindows.size () && !screen->grabExist ("scale"))
+    terminate_spread.emit (m_SpreadedWindows);
+}
+
+void
 PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
 {
-  window_resized.emit (window);
+  window_resized.emit (window->id ());
 }
 
 void 
 PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
 {
-  window_moved.emit (window);
+  window_moved.emit (window->id ());
 }
 
 void
@@ -71,13 +85,11 @@ PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsign
   if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    PluginAdapter::window_maximized.emit (window);
     WindowManager::window_maximized.emit (window->id ());
   }
   else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
            && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    PluginAdapter::window_restored.emit (window);
     WindowManager::window_restored.emit (window->id ());
   }
 }
@@ -88,29 +100,29 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
   switch (notify)
   {
     case CompWindowNotifyMinimize:
-      window_minimized.emit (window);
+      if (!m_AnimationPluginLoaded)
+        window_minimized.emit (window->id ());
       break;
     case CompWindowNotifyUnminimize:
-      window_unminimized.emit (window);
+      if (!m_AnimationPluginLoaded)
+        window_unminimized.emit (window->id ());
       break;
     case CompWindowNotifyShade:
-      window_shaded.emit (window);
+      window_shaded.emit (window->id ());
       break;
     case CompWindowNotifyUnshade:
-      window_unshaded.emit (window);
+      window_unshaded.emit (window->id ());
       break;
     case CompWindowNotifyHide:
-      window_hidden.emit (window);
+      window_hidden.emit (window->id ());
       break;
     case CompWindowNotifyShow:
-      window_shown.emit (window);
+      window_shown.emit (window->id ());
       break;
     case CompWindowNotifyMap:
-      PluginAdapter::window_mapped.emit (window);
       WindowManager::window_mapped.emit (window->id ());
       break;
     case CompWindowNotifyUnmap:
-      PluginAdapter::window_unmapped.emit (window);
       WindowManager::window_unmapped.emit (window->id ());
       break;
     case CompWindowNotifyReparent:
@@ -122,116 +134,172 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
 }
 
 void
-PluginAdapter::SetExpoAction (CompAction *expo)
+MultiActionList::AddNewAction (CompAction *a)
 {
-    m_ExpoAction = expo;
+  if (std::find (m_ActionList.begin (), m_ActionList.end (), a)  == m_ActionList.end ())
+    m_ActionList.push_back (a);
 }
 
 void
-PluginAdapter::SetScaleAction (CompAction *scale)
+MultiActionList::RemoveAction (CompAction *a)
 {
-    m_ScaleAction = scale;
+  m_ActionList.remove (a);
+}
+
+bool
+MultiActionList::IsAnyActive (bool onlyOwn)
+{
+  if (onlyOwn)
+  {
+    if (m_ToggledAction)
+      return true;
+    else
+      return false;
+  }
+
+  foreach (CompAction *action, m_ActionList)
+  {
+    if (action->state () & (CompAction::StateTermKey |
+                            CompAction::StateTermButton |
+                            CompAction::StateTermEdge |
+                            CompAction::StateTermEdgeDnd))
+      return true;
+  }
+
+  return m_ToggledAction ? true : false;
+}
+
+void
+MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
+{
+  CompOption::Vector argument;
+  if (!m_ActionList.size ())
+    return;
+
+  argument.resize (1);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  foreach (CompOption &arg, extraArgs)
+  {
+    argument.push_back (arg);
+  }
+
+  /* Initiate the first available action with the arguments */
+  m_ToggledAction = m_ActionList.front ();
+  m_ActionList.front ()->initiate () (m_ActionList.front (), 0, argument);
+}
+
+void
+MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
+{
+  CompOption::Vector argument;
+  CompOption::Value  value;
+  if (!m_ActionList.size ())
+    return;
+
+  argument.resize (1);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+
+  foreach (CompOption &a, extraArgs)
+    argument.push_back (a);
+
+  foreach (CompAction *action, m_ActionList)
+  {
+    if (action->state () & (CompAction::StateTermKey |
+                            CompAction::StateTermButton |
+                            CompAction::StateTermEdge |
+                            CompAction::StateTermEdgeDnd) ||
+        m_ToggledAction == action)
+    {
+      action->terminate () (action, 0, argument);
+      if (m_ToggledAction == action)
+        m_ToggledAction = NULL;
+    }
+  }
+}
+
+void
+PluginAdapter::SetExpoAction (MultiActionList &expo)
+{
+  m_ExpoActionList = expo;
+}
+
+void
+PluginAdapter::SetScaleAction (MultiActionList &scale)
+{
+  m_ScaleActionList = scale;
 }
     
 std::string *
 PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 {
-    char *string;
-    std::string *result = new std::string ("any & (");
+  char *string;
+  std::string *result = new std::string ("any & (");
     
-    std::list<Window>::iterator it;
+  std::list<Window>::iterator it;
     
-    for (it = windows->begin (); it != windows->end (); it++)
-    {
-        string = g_strdup_printf ("| xid=%i ", (int) *it);
-        result->append (string);
-        g_free (string);
-    }
+  for (it = windows->begin (); it != windows->end (); it++)
+  {
+    string = g_strdup_printf ("| xid=%i ", (int) *it);
+    result->append (string);
+    g_free (string);
+  }
     
-    result->append (")");
+  result->append (")");
     
-    return result;
+  return result;
 }
     
 void 
 PluginAdapter::InitiateScale (std::string *match)
 {
-    if (!m_ScaleAction)
-        return;
-        
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
+  CompOption::Vector argument;
+  CompMatch	     m (*match);
+  std::list <guint32> xids;
 
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
-    
-    CompOption arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    name = (char *) "match";
-    type = CompOption::TypeMatch;
-    value.set (CompMatch (*match));
-    
-    arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ScaleAction->initiate () (m_ScaleAction, 0, argument);
-}
-    
-bool 
-PluginAdapter::IsScaleActive ()
-{
-    SCALE_SCREEN(m_Screen);
-    return (m_ScaleAction && ss && ss->hasGrab ());
+  argument.resize (1);
+  argument[0].setName ("match", CompOption::TypeMatch);
+  argument[0].value ().set (m);
+
+  /* FIXME: Lame */
+  foreach (CompWindow *w, screen->windows ())
+  {
+    if (m.evaluate (w))
+    {
+      if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) ==
+                     m_SpreadedWindows.end ())
+        m_SpreadedWindows.push_back (w->id ());
+      xids.push_back (w->id ());
+    }
+  }
+
+  initiate_spread.emit (xids);
+  m_ScaleActionList.InitiateAll (argument);
 }
 
 void 
 PluginAdapter::TerminateScale ()
 {
-    if (!IsScaleActive ())
-        return;
+  CompOption::Vector argument (0);
 
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
+  terminate_spread.emit (m_SpreadedWindows);
+  m_SpreadedWindows.clear ();
+  m_ScaleActionList.TerminateAll (argument);
+}
 
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
-    
-    CompOption arg = CompOption (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ScaleAction->terminate () (m_ScaleAction, 0, argument);
+bool
+PluginAdapter::IsScaleActive (bool onlyOwn)
+{
+  return m_ScaleActionList.IsAnyActive (onlyOwn);
 }
 
 void 
 PluginAdapter::InitiateExpo ()
 {
-    if (!m_ExpoAction)
-        return;
-        
-    CompOption::Value value;
-    CompOption::Type  type;
-    CompOption::Vector argument;
-    char             *name;
-
-    name = (char *) "root";
-    type = CompOption::TypeInt;
-    value.set ((int) m_Screen->root ());
+    CompOption::Vector argument (0);
     
-    CompOption arg (name, type);
-    arg.set (value);
-    argument.push_back (arg);
-    
-    m_ExpoAction->initiate () (m_ExpoAction, 0, argument);
+    m_ExpoActionList.InitiateAll (argument);
 }
 
 // WindowManager implementation

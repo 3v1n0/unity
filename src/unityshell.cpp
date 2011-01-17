@@ -107,10 +107,10 @@ UnityScreen::paintDisplay (const CompRegion &region)
 /* called whenever we need to repaint parts of the screen */
 bool
 UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
-			    const GLMatrix		&transform,
-			    const CompRegion		&region,
-			    CompOutput 			*output,
-			    unsigned int		mask)
+                            const GLMatrix              &transform,
+                            const CompRegion            &region,
+                            CompOutput                  *output,
+                            unsigned int                mask)
 {
   bool ret;
 
@@ -131,10 +131,10 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
 void
 UnityScreen::glPaintTransformedOutput (const GLScreenPaintAttrib &attrib,
-			      	       const GLMatrix		 &transform,
-			      	       const CompRegion		 &region,
-			      	       CompOutput 		 *output,
-			      	       unsigned int		 mask)
+                                       const GLMatrix            &transform,
+                                       const CompRegion          &region,
+                                       CompOutput                *output,
+                                       unsigned int              mask)
 {
   allowWindowPaint = false;
   gScreen->glPaintOutput (attrib, transform, region, output, mask);
@@ -168,6 +168,18 @@ UnityScreen::damageNuxRegions ()
 void
 UnityScreen::handleEvent (XEvent *event)
 {
+  switch (event->type)
+  {
+    case FocusIn:
+    case FocusOut:
+      if (event->xfocus.mode == NotifyGrab)
+        PluginAdapter::Default ()->OnScreenGrabbed ();
+      else if (event->xfocus.mode == NotifyUngrab)
+        PluginAdapter::Default ()->OnScreenUngrabbed ();
+
+      break;
+  }
+
   screen->handleEvent (event);
 
   if (screen->otherGrabExist ("deco", "move", NULL))
@@ -207,30 +219,50 @@ UnityScreen::initPluginActions (gpointer data)
 
   if (p)
   {
+    MultiActionList expoActions (0);
+
     foreach (CompOption &option, p->vTable->getOptions ())
     {
-      if (option.name () == "expo_key")
+      if (option.name () == "expo_key" ||
+          option.name () == "expo_button" ||
+          option.name () == "expo_edge")
       {
         CompAction *action = &option.value ().action ();
-        PluginAdapter::Default ()->SetExpoAction (action);
+        expoActions.AddNewAction (action);
         break;
       }
     }
+    
+    PluginAdapter::Default ()->SetExpoAction (expoActions);
   }
 
   p = CompPlugin::find ("scale");
 
   if (p)
   {
+    MultiActionList scaleActions (0);
+
     foreach (CompOption &option, p->vTable->getOptions ())
     {
-      if (option.name () == "initiate_all_key")
+      if (option.name () == "initiate_all_key" ||
+          option.name () == "initiate_all_button" ||
+          option.name () == "initiate_all_edge" ||
+          option.name () == "initiate_key" ||
+          option.name () == "initiate_button" ||
+          option.name () == "initiate_edge" ||
+          option.name () == "initiate_group_key" ||
+          option.name () == "initiate_group_button" ||
+          option.name () == "initiate_group_edge" ||
+          option.name () == "initiate_output_key" ||
+          option.name () == "initiate_output_button" ||
+          option.name () == "initiate_output_edge")
       {
         CompAction *action = &option.value ().action ();
-        PluginAdapter::Default ()->SetScaleAction (action);
-        break;
+        scaleActions.AddNewAction (action);
       }
     }
+    
+    PluginAdapter::Default ()->SetScaleAction (scaleActions);
   }
 
   return FALSE;
@@ -288,10 +320,10 @@ UnityScreen::getWindowPaintList ()
  * and if so paint nux and stop us from painting
  * other windows or on top of the whole screen */
 bool
-UnityWindow::glDraw (const GLMatrix 	&matrix,
-		     GLFragment::Attrib &attrib,
-		     const CompRegion 	&region,
-		     unsigned int	mask)
+UnityWindow::glDraw (const GLMatrix     &matrix,
+                     GLFragment::Attrib &attrib,
+                     const CompRegion   &region,
+                     unsigned int       mask)
 {
   if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
   {
@@ -376,7 +408,7 @@ UnityScreen::onRedrawRequested ()
 /* Handle option changes and plug that into nux windows */
 void
 UnityScreen::optionChanged (CompOption            *opt,
-			    UnityshellOptions::Options num)
+                            UnityshellOptions::Options num)
 {
   switch (num)
   {
@@ -448,7 +480,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   wt->Run (NULL);
   uScreen = this;
 
-  debugger = new IntrospectionDBusInterface (this);
+  debugger = new DebugDBusInterface (this);
 
   optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));

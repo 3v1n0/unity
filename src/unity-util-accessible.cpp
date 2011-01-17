@@ -65,8 +65,6 @@ unity_util_accessible_class_init (UnityUtilAccessibleClass *klass)
 static void
 unity_util_accessible_init (UnityUtilAccessible *unity_util_accessible)
 {
-  if (!listener_list)
-    listener_list =  g_hash_table_new_full (g_int_hash, g_int_equal, NULL, g_free);
 }
 
 static AtkObject*
@@ -106,6 +104,9 @@ add_listener (GSignalEmissionHook listener,
   guint rc = 0;
   static guint listener_idx = 1;
 
+  if (!listener_list)
+    listener_list =  g_hash_table_new_full (g_int_hash, g_int_equal, NULL, g_free);
+
   type = g_type_from_name (object_type);
   if (type)
   {
@@ -142,13 +143,19 @@ unity_util_accessible_add_global_event_listener (GSignalEmissionHook listener,
   gchar **split_string;
   guint rc = 0;
 
-  /* FIXME: need to specifically process window: events (create, destroy,
-     minimize, maximize, restore, activate, deactivate) */
-
   split_string = g_strsplit (event_type, ":", 3);
   if (split_string)
   {
-    rc = add_listener (listener, split_string[1], split_string[2], event_type);
+    if (g_str_equal ("window", split_string[0]))
+    {
+      /* FIXME: need to specifically process window: events (create, destroy,
+	 minimize, maximize, restore, activate, deactivate) */
+      rc = add_listener (listener, split_string[0], split_string[1], event_type);
+    }
+    else
+    {
+      rc = add_listener (listener, split_string[1], split_string[2], event_type);
+    }
 
     g_strfreev (split_string);
   }

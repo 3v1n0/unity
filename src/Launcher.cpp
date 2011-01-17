@@ -200,6 +200,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
+    m_LastSpreadIcon = NULL;
 
     SetCompositionLayout(m_Layout);
 
@@ -1029,7 +1030,7 @@ Launcher::CheckWindowOverLauncher ()
 }
 
 void
-Launcher::OnWindowMaybeIntellihide (CompWindow *window)
+Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_autohide)
     CheckWindowOverLauncher ();

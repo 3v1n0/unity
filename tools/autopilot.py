@@ -27,7 +27,7 @@ class UnityUtil(object):
     for now we can just fake it and guess.'''
     
     UNITY_BUS_NAME = 'com.canonical.Unity'
-    INTROSPECTION_PATH = '/com/canonical/Unity/Debug/Introspection'
+    INTROSPECTION_PATH = '/com/canonical/Unity/Debug'
     INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
     
     def __init__(self):
