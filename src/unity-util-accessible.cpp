@@ -150,7 +150,6 @@ unity_util_accessible_add_global_event_listener (GSignalEmissionHook listener,
     {
       /* FIXME: need to specifically process window: events (create, destroy,
 	 minimize, maximize, restore, activate, deactivate) */
-      rc = add_listener (listener, split_string[0], split_string[1], event_type);
     }
     else
     {
