@@ -82,7 +82,7 @@ namespace nux
       void SetTextColor (Color textColor);
       void SetTextEllipsize (EllipsizeState state);
       void SetTextAlignment (AlignState state);
-
+      void SetFont (const char *fontstring);
 
       void GetTextExtents (int &width, int &height);
 
@@ -95,6 +95,7 @@ namespace nux
       Color          _textColor;
       EllipsizeState _ellipsize;
       AlignState     _align;
+      char*           _fontstring;
 
       CairoGraphics* _cairoGraphics;
       BaseTexture*   _texture2D;

@@ -92,6 +92,7 @@ protected:
   TileState _state;
   nux::Layout *_layout;
   nux::BaseTexture *_hilight_background;
+  nux::View *_hilight_view;
 
   void UpdateBackground ();
   void DrawRoundedRectangle (cairo_t* cr,

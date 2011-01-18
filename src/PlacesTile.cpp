@@ -33,19 +33,19 @@ View (NUX_FILE_LINE_PARAM)
   //OnMouseDrag.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseDrag));
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
+  _hilight_view = this;
 }
 
 PlacesTile::~PlacesTile ()
 {
 }
 
-
 void
 PlacesTile::UpdateBackground ()
 {
   nux::Geometry base = GetGeometry ();
 
-  nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, 128, 190);
+  nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, base.width, base.height);
   cairo_t *cr = cairo_graphics->GetContext();
 
   cairo_scale (cr, 1.0f, 1.0f);
@@ -131,45 +131,42 @@ long PlacesTile::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
   return ret;
 }
 
+
 void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
   // Check if the texture have been computed. If they haven't, exit the function.
-  if (_state != STATE_HOVER)
-    {
-      nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
-      return;
-    }
+  nux::Geometry base = _hilight_view->GetGeometry ();
+  nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+  if (_state == STATE_HOVER)
+  {
+    nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
-  nux::Geometry base = GetGeometry ();
+    gfxContext.PushClippingRectangle (base);
 
-  gfxContext.PushClippingRectangle (base);
+    nux::TexCoordXForm texxform;
+    texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  nux::TexCoordXForm texxform;
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+    gfxContext.GetRenderStates().SetBlend (true,
+                                           GL_ONE,
+                                           GL_ONE_MINUS_SRC_ALPHA);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+    texture = _hilight_background->GetDeviceTexture ();
 
-  texture = _hilight_background->GetDeviceTexture ();
+    gfxContext.QRP_1Tex (base.x - 6,
+                         base.y - 6,
+                         base.width + 6,
+                         base.height + 6,
+                         texture,
+                         texxform,
+                         nux::Color::White);
 
-  gfxContext.QRP_1Tex (base.x,
-                       base.y,
-                       base.width,
-                       base.height,
-                       texture,
-                       texxform,
-                       nux::Color::DarkGray);
+    gfxContext.GetRenderStates().SetBlend (false);
 
-  gfxContext.GetRenderStates().SetBlend (false);
-
-  gfxContext.PopClippingRectangle ();
-
-
+    gfxContext.PopClippingRectangle ();
+  }
 }
 
 void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
@@ -178,7 +175,6 @@ void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   _layout->ProcessDraw (GfxContext, force_draw);
 
-  gPainter.PopBackground ();
   GfxContext.PopClippingRectangle();
 }
 
@@ -190,6 +186,7 @@ void PlacesTile::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesTile::PreLayoutManagement ()
 {
+  UpdateBackground ();
   nux::View::PreLayoutManagement ();
 }
 
@@ -214,6 +211,7 @@ PlacesTile::TileState PlacesTile::GetState ()
 void PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   sigClick.emit();
+
   NeedRedraw();
   _layout->NeedRedraw ();
 }
