@@ -1,3 +1,9 @@
+unity (3.2.12-0ubuntu4) UNRELEASED; urgency=low
+
+  * remove inline patch to build tests against
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 18 Jan 2011 18:16:17 +0100
+
 unity (3.2.12-0ubuntu3) natty; urgency=low
 
   * debian/control:
