@@ -170,6 +170,8 @@ private:
   std::list<QuicklistMenuItem*> _item_list;
   std::list<QuicklistMenuItem*> _default_item_list;
   
+  bool _compute_blur_bkg;          //!< If true, compute the blurred background
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;  // Texture holding a blurred copy of the background behind the QuicklistView
   // Introspection
   gchar *_name;
 

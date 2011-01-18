@@ -32,7 +32,7 @@
 #include "LauncherController.h"
 #include "PanelView.h"
 #include "PlacesController.h"
-#include "IntrospectionDBusInterface.h"
+#include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
@@ -147,7 +147,7 @@ class UnityScreen :
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
-	IntrospectionDBusInterface 		*debugger;
+	DebugDBusInterface 		 *debugger;
 
 	/* handle paint order */
 	bool	  doShellRepaint;

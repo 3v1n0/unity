@@ -41,6 +41,7 @@ protected:
     virtual void OnMouseClick (int button);
     virtual void OnMouseEnter ();
     virtual void OnMouseLeave ();
+
 private:
     
     char *m_IconName;
