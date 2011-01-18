@@ -17,12 +17,12 @@
  */
 
 /**
- * SECTION:nux-view-accessible
- * @Title: NuxViewAccessible
+ * SECTION:unity-launcher-accessible
+ * @Title: UnityLauncherAccessible
  * @short_description: Implementation of the ATK interfaces for #Launcher
  * @see_also: Launcher
  *
- * #NuxViewAccessible implements the required ATK interfaces for
+ * #UnityLauncherAccessible implements the required ATK interfaces for
  * #Launcher, ie: exposing the different LauncherIcon on the model as
  * #child of the object.
  *
