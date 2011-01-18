@@ -99,8 +99,8 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 {
   nux::Object *nux_object = NULL;
   PanelView *panel;
-  GVariant *introspection;
   gint rc = 0;
+  std::list<nux::Object *> *children;
 
   g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), 0);
 
@@ -110,12 +110,8 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 
   panel = dynamic_cast<PanelView *>(nux_object);
 
-  introspection = panel->Introspect ();
-  if (introspection != NULL)
-    {
-      rc = g_variant_n_children (introspection);
-      g_variant_unref (introspection);
-    }
+  if ((children = panel->GetChildren ()))
+    rc = children->size ();
 
   return rc;
 }
@@ -123,6 +119,33 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 static AtkObject *
 unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  /* FIXME: implement me! */
-  return NULL;
+  nux::Object *nux_object = NULL;
+  PanelView *panel;
+  AtkObject *child_accessible = NULL;
+  std::list<nux::Object *> *children;
+
+  g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), NULL);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  if (!nux_object) /* state is defunct */
+    return NULL;
+
+  panel = dynamic_cast<PanelView *>(nux_object);
+
+  if ((children = panel->GetChildren ()))
+    {
+      nux::Object *child;
+
+      std::list<nux::Object *>::iterator it;
+
+      it = children->begin ();
+      std::advance (it, i);
+
+      child = dynamic_cast<nux::Object *> (*it);
+      child_accessible = unity_a11y_get_accessible (child);
+
+      g_object_ref (child_accessible);
+    }
+
+  return child_accessible;
 }
