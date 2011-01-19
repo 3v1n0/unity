@@ -188,6 +188,9 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
   Refresh ();
+
+  if (_is_inside)
+    NeedRedraw ();
   
   return res;
 }
