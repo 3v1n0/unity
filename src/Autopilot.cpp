@@ -35,40 +35,31 @@ Autopilot::UnityTests *Autopilot::UnityTests::_tests = 0;
 void
 Autopilot::UnityTests::Run ()
 {
-  std::cout << "Running unity tests" << std::endl;
+  g_debug ("Running unity tests");
   if (!_tests)
   {
     _tests = new UnityTests ();
   }
-  std::cout << "Created unity tests object" << std::endl;
+  g_debug ("Created unity tests object");
 
-  std::cout << "Creating mouse" << std::endl;
-  if (!_mouse)
-  {
-    _mouse = new Autopilot::Mouse ();
-  }
-  std::cout << "Created mouse" << std::endl;
   
   sleep(1);
 
-  _tests->ShowTooltip ();
+  /*_tests->ShowTooltip ();
   _tests->ShowQuicklist ();
-  /*_tests->DragLauncher ();
+  _tests->DragLauncher ();
   _tests->DragLauncherIconAlongEdgeAndDrop ();
   _tests->DragLauncherIconOutAndDrop ();
   _tests->DragLauncherIconOutAndMove ();*/
 
-
-  delete _mouse;
-  delete _tests;
 }
 
 Autopilot::UnityTests::UnityTests ()
 {
-  std::cout << "Setting up initial nux::Points" << std::endl;
+  g_debug ("Setting up initial nux::Points");
   _initial.Set (800, 500);
   _launcher.Set (32, 57);
-  std::cout << "Created class nux::Points" << std::endl;
+  g_debug ("Created class nux::Points");
 }
 
 void
@@ -147,52 +138,32 @@ Autopilot::UnityTests::ShowTooltip ()
 {
   TestSetup ();
   _mouse->Move (&_launcher);
-  std::cout << "Showing tooltip" << std::endl;
+  g_debug ("Showing tooltip");
   _mouse->Move (&_launcher);
-  std::cout << "Test finished" << std::endl;
+  g_debug ("Test finished");
 }
 
 void
 Autopilot::UnityTests::TestSetup ()
 {
-  std::cout << "Setting up test" << std::endl;
+  g_debug ("Setting up test");
   _mouse->SetPosition (&_initial);
   usleep (125000);
-  std::cout << "Test initialized" << std::endl;
-}
-
-
-Autopilot::Mouse::Mouse ()
-{
-  int event_base, error_base, major_version, minor_version;
-  _display = XOpenDisplay (NULL);
-  if (_display == NULL || !XTestQueryExtension (_display, 
-						&event_base,
-						&error_base,
-						&major_version,
-						&minor_version))
-  {
-    throw 1;
-  }
-}
-
-Autopilot::Mouse::~Mouse ()
-{
-  XCloseDisplay (_display);
+  g_debug ("Test initialized");
 }
 
 void
 Autopilot::Mouse::Press (Button button)
 {
-  XTestFakeButtonEvent (_display, (int) button, true, time (NULL));
+  XTestFakeButtonEvent (screen->dpy (), (int) button, true, time (NULL));
   //  XSync (_display, false);
 }
 
 void
 Autopilot::Mouse::Release (Button button)
 {
-  XTestFakeButtonEvent (_display, (int) button, false, time (NULL));
-  //  XSync (_display, false);
+  XTestFakeButtonEvent (screen->dpy (), (int) button, false, time (NULL));
+  //  XSync (screen->dpy (), false);
 }
 
 void
@@ -215,10 +186,10 @@ Autopilot::Mouse::Move (nux::Point *destination)
 void
 Autopilot::Mouse::SetPosition (nux::Point *point)
 {
-  /*  Window root = DefaultRootWindow (_display);
+  /*  Window root = DefaultRootWindow (screen->dpy ());
       g_debug ("XWarping to (%d, %d)\n", point->x, point->y);
-      XWarpPointer (_display, 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
-      XFlush (_display);*/
+      XWarpPointer (screen->dpy (), 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
+      XFlush (screen->dpy ());*/
   nux::Point* curr = GetPosition ();
   g_debug ("comp->warp (%d, %d)", point->x - curr->x, point->y - curr->y);
   screen->warpPointer (point->x - curr->x, point->y - curr->y);
@@ -231,8 +202,8 @@ Autopilot::Mouse::GetPosition ()
   int x, y, winx, winy;
   Window w, root_return, child_return;
   
-  w = DefaultRootWindow (_display);
-  XQueryPointer (_display, 
+  w = DefaultRootWindow (screen->dpy ());
+  XQueryPointer (screen->dpy (), 
 		 w,
 		 &root_return,
 		 &child_return,

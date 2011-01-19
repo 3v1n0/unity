@@ -29,8 +29,6 @@ namespace Autopilot
       Middle = 3
     };
 
-    Mouse ();
-    ~Mouse ();
     void Press(Button button);
     void Release (Button button);
     void Click (Button button);
@@ -38,7 +36,6 @@ namespace Autopilot
     void SetPosition (nux::Point *point);
     nux::Point *GetPosition ();    
   private:
-    Display *_display;
   };
   
   class UnityTests
