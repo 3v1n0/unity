@@ -85,35 +85,6 @@ ControlThread (nux::NThread* thread,
 
   nux::WindowThread* mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*,
                                                          data);
-
-  mainWindowThread->SetFakeEventMode (true);
-  Display* display = mainWindowThread->GetWindow ().GetX11Display ();
-
-  // assemble first button-click event
-  XEvent buttonPressEvent;
-  buttonPressEvent.xbutton.type        = ButtonPress;
-  buttonPressEvent.xbutton.serial      = 0;
-  buttonPressEvent.xbutton.send_event  = False;
-  buttonPressEvent.xbutton.display     = display;
-  buttonPressEvent.xbutton.window      = 0;
-  buttonPressEvent.xbutton.root        = 0;
-  buttonPressEvent.xbutton.subwindow   = 0;
-  buttonPressEvent.xbutton.time        = CurrentTime;
-  buttonPressEvent.xbutton.x           = 1000;
-  buttonPressEvent.xbutton.y           = 300;
-  buttonPressEvent.xbutton.x_root      = 0;
-  buttonPressEvent.xbutton.y_root      = 0;
-  buttonPressEvent.xbutton.state       = 0;
-  buttonPressEvent.xbutton.button      = Button1;
-  buttonPressEvent.xbutton.same_screen = True;
-
-  mainWindowThread->PumpFakeEventIntoPipe (mainWindowThread,
-                                           (XEvent*) &buttonPressEvent);
-
-  while (!mainWindowThread->ReadyForNextFakeEvent ())
-    nux::SleepForMilliseconds (10);
-
-  mainWindowThread->SetFakeEventMode (false);
 }
 
 
@@ -121,6 +92,10 @@ int main(int argc, char **argv)
 {
   nux::SystemThread* st = NULL;
   nux::WindowThread* wt = NULL;
+
+  // no real tests right now, just make sure we don't get any criticals and such
+  // waiting on nice perceptual diff support before we can build real tests
+  // for views
 
   g_type_init ();
   g_thread_init (NULL);

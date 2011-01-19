@@ -102,8 +102,6 @@ long StaticCairoText::PostLayoutManagement (long layoutResult)
   int w = GetBaseWidth();
   int h = GetBaseHeight();
 
-  g_debug ("width and height %i %i", w, h);
-
   if (_pre_layout_width < w)
     result |= eLargerWidth;
   else if (_pre_layout_width > w)
@@ -328,7 +326,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (fontName);
-  g_debug ("font size: %i", pango_font_description_get_size (desc) / PANGO_SCALE);
+
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
 

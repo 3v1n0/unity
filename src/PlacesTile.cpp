@@ -59,7 +59,7 @@ PlacesTile::UpdateBackground ()
   cairo_set_source_rgba (cr, 0.25, 0.25, 0.25, 0.25);
   cairo_fill_preserve (cr);
   cairo_set_source_rgba (cr, 1, 1, 1, 1.0);
-  cairo_set_line_width (cr, 3.0);
+  cairo_set_line_width (cr, 1.0);
   cairo_stroke (cr);
 
   _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
@@ -155,10 +155,10 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
     texture = _hilight_background->GetDeviceTexture ();
 
-    gfxContext.QRP_1Tex (base.x - 6,
-                         base.y - 6,
-                         base.width + 6,
-                         base.height + 6,
+    gfxContext.QRP_1Tex (base.x,
+                         base.y ,
+                         base.width,
+                         base.height,
                          texture,
                          texxform,
                          nux::Color::White);

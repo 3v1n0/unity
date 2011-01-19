@@ -34,12 +34,17 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _icon = g_strdup (icon_name);
 
   _icontex = new IconTexture (_icon, 64);
+  _icontex->Reference ();
+
   _cairotext = new nux::StaticCairoText (_label);
-  _cairotext->SetFont ("Ubuntu normal 8");
+  _cairotext->Reference ();
+  _cairotext->SetFont ("Ubuntu normal 9");
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);
+
   _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  _layout->Reference ();
   _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   _layout->AddSpace (6, 0);
   _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
@@ -57,6 +62,21 @@ PlacesTile (NUX_TRACKER_LOCATION)
 
 PlacesSimpleTile::~PlacesSimpleTile ()
 {
+  _icontex->UnReference ();
+  _cairotext->UnReference ();
+  _layout->UnReference ();
+}
+
+char *
+PlacesSimpleTile::GetLabel ()
+{
+  return g_strdup (_label);
+}
+
+char *
+PlacesSimpleTile::GetIcon ()
+{
+  return g_strdup (_icon);
 }
 
 const gchar*
