@@ -173,7 +173,11 @@ DBusMethodCall (GDBusConnection *connection,
   }
   else if (g_strcmp0 (methodName, "RunAutopilot") == 0)
   {
-    g_thread_create ((GThreadFunc) Autopilot::UnityTests::Run, NULL, false, NULL);
+    g_debug ("RUNNING AUTOPILOT");
+    //g_thread_create ((GThreadFunc) Autopilot::UnityTests::Run, NULL, false, NULL);
+    g_dbus_method_invocation_return_value (invocation, NULL);
+    Autopilot::UnityTests::Run ();
+    g_debug ("AUTOPILOT HAS BEEN DISPATCHED");
   }
   else
   {

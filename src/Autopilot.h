@@ -55,10 +55,10 @@ namespace Autopilot
     void ShowQuicklist ();
     void ShowTooltip ();
     void TestSetup ();
-    Mouse _mouse;
     nux::Point _initial;
     nux::Point _launcher;
 
+    static Mouse *_mouse;
     static UnityTests *_tests;
   };
 };

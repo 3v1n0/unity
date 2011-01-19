@@ -24,30 +24,51 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
 
+#include <core/screen.h>
+
 #include "Autopilot.h"
 
+Autopilot::Mouse *Autopilot::UnityTests::_mouse = 0;
 Autopilot::UnityTests *Autopilot::UnityTests::_tests = 0;
 
+/* static */
 void
 Autopilot::UnityTests::Run ()
 {
+  std::cout << "Running unity tests" << std::endl;
   if (!_tests)
   {
     _tests = new UnityTests ();
   }
+  std::cout << "Created unity tests object" << std::endl;
+
+  std::cout << "Creating mouse" << std::endl;
+  if (!_mouse)
+  {
+    _mouse = new Autopilot::Mouse ();
+  }
+  std::cout << "Created mouse" << std::endl;
   
-  _tests->DragLauncher ();
+  sleep(1);
+
+  _tests->ShowTooltip ();
+  _tests->ShowQuicklist ();
+  /*_tests->DragLauncher ();
   _tests->DragLauncherIconAlongEdgeAndDrop ();
   _tests->DragLauncherIconOutAndDrop ();
-  _tests->DragLauncherIconOutAndMove ();
-  _tests->ShowQuicklist ();
-  _tests->ShowTooltip ();
+  _tests->DragLauncherIconOutAndMove ();*/
+
+
+  delete _mouse;
+  delete _tests;
 }
 
 Autopilot::UnityTests::UnityTests ()
 {
+  std::cout << "Setting up initial nux::Points" << std::endl;
   _initial.Set (800, 500);
   _launcher.Set (32, 57);
+  std::cout << "Created class nux::Points" << std::endl;
 }
 
 void
@@ -57,10 +78,12 @@ Autopilot::UnityTests::DragLauncher ()
   nux::Point newp (new_x, new_y);
 
   TestSetup ();
-  _mouse.Press (Mouse::Left);
-  _mouse.Move (&newp);
+  _mouse->Move (&_launcher);
+  usleep (125000);
+  _mouse->Press (Mouse::Left);
+  _mouse->Move (&newp);
   usleep (250000);
-  _mouse.Release (Mouse::Left);
+  _mouse->Release (Mouse::Left);
 }
 
 void
@@ -70,11 +93,13 @@ Autopilot::UnityTests::DragLauncherIconAlongEdgeAndDrop ()
   nux::Point b (_launcher.x + 25, _launcher.y + 500);
 
   TestSetup ();
-  _mouse.Press (Mouse::Left);
-  _mouse.Move (&a);
-  _mouse.Move (&b);
+  _mouse->Move (&_launcher);
+  usleep (125000);
+  _mouse->Press (Mouse::Left);
+  _mouse->Move (&a);
+  _mouse->Move (&b);
   usleep (250000);
-  _mouse.Release (Mouse::Left);
+  _mouse->Release (Mouse::Left);
 }
 
 void
@@ -83,10 +108,12 @@ Autopilot::UnityTests::DragLauncherIconOutAndDrop ()
   nux::Point a (_launcher.x + 300, _launcher.y);
 
   TestSetup ();
-  _mouse.Press (Mouse::Left);
-  _mouse.Move (&a);
+  _mouse->SetPosition (&_launcher);
+  usleep (125000);
+  _mouse->Press (Mouse::Left);
+  _mouse->Move (&a);
   usleep (250000);
-  _mouse.Release (Mouse::Left);
+  _mouse->Release (Mouse::Left);
 }
  
 void
@@ -96,36 +123,42 @@ Autopilot::UnityTests::DragLauncherIconOutAndMove ()
   nux::Point b (_launcher.x + 300, _launcher.y + 300);
 
   TestSetup ();
-  _mouse.Press (Mouse::Left);
-  _mouse.Move (&a);
-  _mouse.Move (&b);
-  _mouse.Release (Mouse::Left);
+  _mouse->Move (&_launcher);
+  usleep (125000);
+  _mouse->Press (Mouse::Left);
+  _mouse->Move (&a);
+  _mouse->Move (&b);
+  _mouse->Release (Mouse::Left);
 }
 
 void
 Autopilot::UnityTests::ShowQuicklist ()
 {
   TestSetup ();
-  _mouse.Click (Mouse::Right);
+  _mouse->Move (&_launcher);
+  usleep (125000);
+  _mouse->Click (Mouse::Right);
   sleep (2);
-  _mouse.Click (Mouse::Right);
+  _mouse->Click (Mouse::Right);
 }
 
 void
 Autopilot::UnityTests::ShowTooltip ()
 {
-  
   TestSetup ();
-  _mouse.Move (&_launcher);
+  _mouse->Move (&_launcher);
+  std::cout << "Showing tooltip" << std::endl;
+  _mouse->Move (&_launcher);
+  std::cout << "Test finished" << std::endl;
 }
 
 void
 Autopilot::UnityTests::TestSetup ()
 {
-  _mouse.SetPosition (&_initial);
+  std::cout << "Setting up test" << std::endl;
+  _mouse->SetPosition (&_initial);
   usleep (125000);
-  _mouse.Move (&_launcher);
-  usleep (250000);
+  std::cout << "Test initialized" << std::endl;
 }
 
 
@@ -152,14 +185,14 @@ void
 Autopilot::Mouse::Press (Button button)
 {
   XTestFakeButtonEvent (_display, (int) button, true, time (NULL));
-  XSync (_display, false);
+  //  XSync (_display, false);
 }
 
 void
 Autopilot::Mouse::Release (Button button)
 {
   XTestFakeButtonEvent (_display, (int) button, false, time (NULL));
-  XSync (_display, false);
+  //  XSync (_display, false);
 }
 
 void
@@ -174,44 +207,21 @@ Autopilot::Mouse::Click (Button button)
 void
 Autopilot::Mouse::Move (nux::Point *destination)
 {
-  int xscale, yscale;
-  nux::Point *yint;
-  float dx, dy, slope;
-  nux::Point *curr = GetPosition ();
+  // FIXME: animate!
 
-  dy = (float) (destination->y - curr->y);
-  dx = (float) (destination->x - curr->x);
-  slope = dy/dx;
-  yint = new nux::Point (0, (int) (curr->y - (slope * curr->x)));
-
-  xscale = curr->x < destination->x ? 1 : -1;
-  yscale = curr->y < destination->y ? 1 : -1;
-
-  while (curr->x != destination->x)
-  {
-    curr->x += xscale;
-    curr->y = (int) (slope * curr->x + yint->y);
-
-    XTestFakeMotionEvent (_display, -1, curr->x, curr->y, time (NULL));
-    XSync (_display, false);
-    /* sleep for 1/100th of a second */
-    usleep (10000);
-  }
-
-  while (curr->y != destination->y)
-  {
-    curr->y += yscale;
-    XTestFakeMotionEvent (_display, -1, curr->x, curr->y, time (NULL));
-    XSync (_display, false);
-    usleep (10000);
-  }
+  SetPosition (destination);
 }
 
 void
 Autopilot::Mouse::SetPosition (nux::Point *point)
 {
-  XTestFakeMotionEvent (_display, -1, point->x, point->y, time (NULL));
-  XSync (_display, false);
+  /*  Window root = DefaultRootWindow (_display);
+      g_debug ("XWarping to (%d, %d)\n", point->x, point->y);
+      XWarpPointer (_display, 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
+      XFlush (_display);*/
+  nux::Point* curr = GetPosition ();
+  g_debug ("comp->warp (%d, %d)", point->x - curr->x, point->y - curr->y);
+  screen->warpPointer (point->x - curr->x, point->y - curr->y);
 }
 
 nux::Point*
