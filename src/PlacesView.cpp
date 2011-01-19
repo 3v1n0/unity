@@ -33,11 +33,12 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   Hide ();
 
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
 
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
   _layout->AddView (_search_bar, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+
+  SetLayout (_layout);
   AddChild (_search_bar);
 }
 
@@ -63,7 +64,7 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   {
     if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
     {
-      ProcEvInfo = nux::eDoNotProcess;
+      //ProcEvInfo = nux::eDoNotProcess;
     }
   }
 
@@ -78,7 +79,9 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   }
 
   if (_layout)
-    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  {
+    ret = _layout->ProcessEvent (window_event, ret, ProcessEventInfo);
+  }
 
   return ret;
 }
@@ -133,6 +136,7 @@ void PlacesView::Show ()
   ShowWindow (true, false);
   EnableInputWindow (true, 1);
   GrabPointer ();
+  GrabKeyboard ();
   NeedRedraw ();
 }
 
@@ -144,6 +148,7 @@ void PlacesView::Hide ()
   CaptureMouseDownAnyWhereElse (false);
   ForceStopFocus (1, 1);
   UnGrabPointer ();
+  UnGrabKeyboard ();
   EnableInputWindow (false);
   ShowWindow (false, false);
 }

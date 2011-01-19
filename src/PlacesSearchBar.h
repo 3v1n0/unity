@@ -30,6 +30,7 @@
 
 class PlacesSearchBar : public Introspectable, public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
 public:
   PlacesSearchBar (NUX_FILE_LINE_PROTO);
   ~PlacesSearchBar ();
@@ -58,5 +59,5 @@ private:
   int _last_height;
 };
 
-
 #endif
+
