@@ -109,27 +109,27 @@ add_listener (GSignalEmissionHook listener,
 
   type = g_type_from_name (object_type);
   if (type)
-  {
-    signal_id = g_signal_lookup (signal_name, type);
-    if (signal_id > 0)
     {
-      UnityUtilListenerInfo *listener_info;
+      signal_id = g_signal_lookup (signal_name, type);
+      if (signal_id > 0)
+        {
+          UnityUtilListenerInfo *listener_info;
 
-      rc = listener_idx;
-      listener_info = g_new0 (UnityUtilListenerInfo, 1);
-      listener_info->idx = listener_idx;
-      listener_info->hook_id = g_signal_add_emission_hook (signal_id, 0, listener,
-							   g_strdup (hook_data),
-							   (GDestroyNotify) g_free);
-      listener_info->signal_id = signal_id;
+	  rc = listener_idx;
+	  listener_info = g_new0 (UnityUtilListenerInfo, 1);
+	  listener_info->idx = listener_idx;
+	  listener_info->hook_id = g_signal_add_emission_hook (signal_id, 0, listener,
+							       g_strdup (hook_data),
+							       (GDestroyNotify) g_free);
+	  listener_info->signal_id = signal_id;
 
-      g_hash_table_insert (listener_list, &(listener_info->idx), listener_info);
+	  g_hash_table_insert (listener_list, &(listener_info->idx), listener_info);
 
-      listener_idx++;
+	  listener_idx++;
+	}
+      else
+        g_debug ("Signal type %s not supported\n", signal_name);
     }
-    else
-      g_debug ("Signal type %s not supported\n", signal_name);
-  }
   else
     g_warning ("Invalid object type %s\n", object_type);
 
@@ -145,19 +145,19 @@ unity_util_accessible_add_global_event_listener (GSignalEmissionHook listener,
 
   split_string = g_strsplit (event_type, ":", 3);
   if (split_string)
-  {
-    if (g_str_equal ("window", split_string[0]))
     {
-      /* FIXME: need to specifically process window: events (create, destroy,
-	 minimize, maximize, restore, activate, deactivate) */
-    }
-    else
-    {
-      rc = add_listener (listener, split_string[1], split_string[2], event_type);
-    }
+      if (g_str_equal ("window", split_string[0]))
+        {
+	  /* FIXME: need to specifically process window: events (create, destroy,
+	     minimize, maximize, restore, activate, deactivate) */
+	}
+      else
+        {
+          rc = add_listener (listener, split_string[1], split_string[2], event_type);
+	}
 
-    g_strfreev (split_string);
-  }
+      g_strfreev (split_string);
+    }
 
   return rc;
 }
@@ -166,27 +166,27 @@ static void
 unity_util_accessible_remove_global_event_listener (guint remove_listener)
 {
   if (remove_listener > 0)
-  {
-    UnityUtilListenerInfo *listener_info;
-
-    listener_info = (UnityUtilListenerInfo *) g_hash_table_lookup (listener_list, &remove_listener);
-    if (listener_info != NULL)
     {
-      if (listener_info->hook_id != 0 && listener_info->signal_id != 0)
-      {
-        g_signal_remove_emission_hook (listener_info->signal_id,
-				       listener_info->hook_id);
-	g_hash_table_remove (listener_list, &remove_listener);
-      }
+      UnityUtilListenerInfo *listener_info;
+
+      listener_info = (UnityUtilListenerInfo *) g_hash_table_lookup (listener_list, &remove_listener);
+      if (listener_info != NULL)
+        {
+	  if (listener_info->hook_id != 0 && listener_info->signal_id != 0)
+            {
+	      g_signal_remove_emission_hook (listener_info->signal_id,
+					     listener_info->hook_id);
+	      g_hash_table_remove (listener_list, &remove_listener);
+	    }
+	  else
+	    {
+              g_warning ("Invalid listener hook_id %ld or signal_id %d",
+			 listener_info->hook_id, listener_info->signal_id);
+	    }
+	}
       else
-      {
-        g_warning ("Invalid listener hook_id %ld or signal_id %d",
-		   listener_info->hook_id, listener_info->signal_id);
-      }
+        g_warning ("No listener with the specified ID: %d", remove_listener);
     }
-    else
-      g_warning ("No listener with the specified ID: %d", remove_listener);
-  }
   else
     g_warning ("Invalid listener_id: %d", remove_listener);
 }
