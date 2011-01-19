@@ -47,8 +47,11 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
+
 int
 TimeDelta (struct timespec const *x, struct timespec const *y)
+
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
@@ -165,8 +168,6 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
 Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
-,   m_RunningIndicator(0)
-,   m_ActiveIndicator(0)
 ,   m_BackgroundLayer(0)
 ,   _model (0)
 {
@@ -199,6 +200,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
+    m_LastSpreadIcon = NULL;
 
     SetCompositionLayout(m_Layout);
 
@@ -250,6 +252,14 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
     _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
     _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
+    
+    _pip_ltr                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_ltr.png");
+    _arrow_ltr              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_ltr.png");
+    _arrow_empty_ltr        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_ltr.png");
+
+    _pip_rtl                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_rtl.png");
+    _arrow_rtl              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_rtl.png");
+    _arrow_empty_rtl        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png");
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -681,25 +691,26 @@ float Launcher::IconProgressBias (LauncherIcon *icon, struct timespec const &cur
 
 void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg)
 {
-    arg.icon            = icon;
-    arg.alpha           = 1.0f;
-    arg.running_arrow   = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
-    arg.active_arrow    = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
-    arg.running_colored = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
-    arg.active_colored  = false;
-    arg.x_rotation      = 0.0f;
-    arg.y_rotation      = 0.0f;
-    arg.z_rotation      = 0.0f;
-    arg.skip            = false;
-    arg.stick_thingy    = false;
-    arg.progress_bias   = IconProgressBias (icon, current);
-    arg.progress        = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
+    arg.icon                = icon;
+    arg.alpha               = 1.0f;
+    arg.running_arrow       = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
+    arg.active_arrow        = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
+    arg.running_colored     = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
+    arg.running_on_viewport = icon->HasVisibleWindow ();
+    arg.active_colored      = false;
+    arg.x_rotation          = 0.0f;
+    arg.y_rotation          = 0.0f;
+    arg.z_rotation          = 0.0f;
+    arg.skip                = false;
+    arg.stick_thingy        = false;
+    arg.progress_bias       = IconProgressBias (icon, current);
+    arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
     // we dont need to show strays
     if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
         arg.window_indicators = 0;
     else
-        arg.window_indicators = MIN (4, icon->RelatedWindows ());
+        arg.window_indicators = icon->RelatedWindows ();
 
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
@@ -1019,7 +1030,7 @@ Launcher::CheckWindowOverLauncher ()
 }
 
 void
-Launcher::OnWindowMaybeIntellihide (CompWindow *window)
+Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_autohide)
     CheckWindowOverLauncher ();
@@ -1221,6 +1232,11 @@ void Launcher::SetModel (LauncherModel *model)
     _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
+LauncherModel* Launcher::GetModel ()
+{
+  return _model;
+}
+
 void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)
 {
     EnsureAnimation();
@@ -1248,12 +1264,6 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
   if (running > 0)
   {
-    if (!m_RunningIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/launcher_pip_ltr.png", NULL);
-      m_RunningIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
@@ -1261,21 +1271,32 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
 
+    nux::BaseTexture *texture;
+
     std::vector<int> markers;
-    if (running == 1)
+    
+    /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
+      texture = _arrow_empty_ltr;
+    }
+    else*/ if (running == 1)
+    {
+      markers.push_back (markerCenter);
+      texture = _arrow_ltr;
     }
     else if (running == 2)
     {
       markers.push_back (markerCenter - 2);
       markers.push_back (markerCenter + 2);
+      texture = _pip_ltr;
     }
     else
     {
       markers.push_back (markerCenter - 4);
       markers.push_back (markerCenter);
       markers.push_back (markerCenter + 4);
+      texture = _pip_ltr;
     }
 
     std::vector<int>::iterator it;
@@ -1283,31 +1304,25 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     {
       int center = *it;
       GfxContext.QRP_1Tex (geo.x,
-                                center - (m_RunningIndicator->GetHeight () / 2),
-                                (float) m_RunningIndicator->GetWidth(),
-                                (float) m_RunningIndicator->GetHeight(),
-                                m_RunningIndicator->GetDeviceTexture(),
-                                texxform,
-                                color);
+                           center - (texture->GetHeight () / 2),
+                           (float) texture->GetWidth(),
+                           (float) texture->GetHeight(),
+                           texture->GetDeviceTexture(),
+                           texxform,
+                           color);
     }
   }
 
   if (active > 0)
   {
-    if (!m_ActiveIndicator)
-    {
-      GdkPixbuf *pbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/launcher_pip_rtl.png", NULL);
-      m_ActiveIndicator = nux::CreateTextureFromPixbuf (pbuf);
-      g_object_unref (pbuf);
-    }
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
-    GfxContext.QRP_1Tex ((geo.x + geo.width) - m_ActiveIndicator->GetWidth (),
-                              markerCenter - (m_ActiveIndicator->GetHeight () / 2),
-                              (float) m_ActiveIndicator->GetWidth(),
-                              (float) m_ActiveIndicator->GetHeight(),
-                              m_ActiveIndicator->GetDeviceTexture(),
+    GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
+                              markerCenter - (_arrow_rtl->GetHeight () / 2),
+                              (float) _arrow_rtl->GetWidth(),
+                              (float) _arrow_rtl->GetHeight(),
+                              _arrow_rtl->GetDeviceTexture(),
                               texxform,
                               color);
   }

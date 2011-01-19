@@ -27,6 +27,8 @@
 #include "PanelIndicatorObjectView.h"
 #include "StaticCairoText.h"
 #include "WindowButtons.h"
+#include "PanelTitlebarGrabAreaView.h"
+#include "PluginAdapter.h"
 
 #include <libbamf/libbamf.h>
 
@@ -60,12 +62,19 @@ public:
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
+  void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
-  
-  void OnWindowUnmapped (guint xid);
+
+  void OnSpreadInitiate (std::list <guint32> &);
+  void OnSpreadTerminate (std::list <guint32> &);
+  void OnWindowMinimized (guint32 xid);
+  void OnWindowUnminimized (guint32 xid);
+  void OnWindowUnmapped (guint32 xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
+
+  void OnMaximizedGrab (int x, int y);
 
   void Refresh ();
   void AllMenusClosed ();
@@ -93,10 +102,12 @@ private:
   nux::BaseTexture        *_title_tex;
 
   bool _is_inside;
+  bool _is_grabbed;
   bool _is_maximized; 
   PanelIndicatorObjectEntryView *_last_active_view;
 
-  WindowButtons *_window_buttons;
+  WindowButtons * _window_buttons;
+  PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
 };
