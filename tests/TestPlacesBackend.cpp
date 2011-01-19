@@ -89,10 +89,10 @@ public:
 
   static void OnComboChanged (GtkWidget *combo, TestApp *self)
   {
-    self->OnComboChangedFoReal ();
+    self->OnComboChangedFoRealz ();
   }
 
-  void OnComboChangedFoReal ()
+  void OnComboChangedFoRealz ()
   {
     std::vector<Place *> places = _factory->GetPlaces ();
     std::vector<Place *>::iterator it;

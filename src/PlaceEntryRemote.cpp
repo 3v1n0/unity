@@ -209,6 +209,7 @@ PlaceEntryRemote::SetActive (bool is_active)
                      NULL,
                      NULL,
                      NULL);
+  _active = is_active;
 }
 
 void
@@ -289,7 +290,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
                           const gchar  *name,
                           const gchar  *icon,
                           guint32       position,
-                          const gchar **mimetypes,
+                          GVariantIter *mimetypes,
                           gboolean      sensitive,
                           const gchar  *sections_model_name,
                           GVariantIter *hints,

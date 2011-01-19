@@ -123,6 +123,8 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
       }
       else
         delete place;
+
+      g_free (path);
     }
 
     g_object_unref (info);

@@ -75,7 +75,7 @@ public:
                const gchar  *name,
                const gchar  *icon,
                guint32       position,
-               const gchar **mimetypes,
+               GVariantIter *mimetypes,
                gboolean      sensitive,
                const gchar  *sections_model_name,
                GVariantIter *hints,
