@@ -37,7 +37,7 @@ add_executable (test-unit
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
-                ../src/ubus-server.c
+                ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 ../services/panel-service.c
                 ../services/panel-service.h
@@ -92,7 +92,7 @@ add_executable (test-panel
                 ../src/WindowButtons.h
                 ../src/WindowManager.cpp
                 ../src/WindowManager.h
-                ../src/ubus-server.c
+                ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )
 
@@ -105,7 +105,7 @@ add_executable (test-places
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
-                ../src/ubus-server.c
+                ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )
 
