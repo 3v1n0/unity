@@ -19,7 +19,7 @@
 #ifndef _PERF_LOGGER_H_
 #define _PERF_LOGGER_H_
 
-#include <libunity/unity.h>
+//#include "perf-logger.h"
 
 #ifdef ENABLE_LOGGER
   #define START_FUNCTION() G_STMT_START { \

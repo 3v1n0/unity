@@ -26,7 +26,7 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
-#include "../libunity/ubus-server.h"
+#include "../src/ubus-server.h"
 
 #include "PlacesView.h"
 #include "PlacesController.h"
