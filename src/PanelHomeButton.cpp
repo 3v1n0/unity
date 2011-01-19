@@ -23,7 +23,7 @@
 
 #include "NuxGraphics/GLThread.h"
 
-#include "../libunity/ubus-server.h"
+#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PanelHomeButton.h"

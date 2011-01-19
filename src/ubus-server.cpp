@@ -48,7 +48,7 @@ struct _UBusDispatchInfo
   guint         id;
   UBusCallback  callback;
   gchar        *message;
-  gpointer     *user_data;
+  gpointer      user_data;
 };
 typedef struct _UBusDispatchInfo UBusDispatchInfo;
 
@@ -166,8 +166,8 @@ ubus_server_finalize (GObject *object)
   g_hash_table_destroy (priv->message_interest_table);
   g_hash_table_destroy (priv->dispatch_table);
 
-  UBusMessageInfo *info = g_queue_pop_tail (priv->message_queue);
-  for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
+  UBusMessageInfo *info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue);
+  for (; info != NULL; info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue))
   {
     ubus_message_info_free (info);
   }
@@ -194,7 +194,7 @@ ubus_server_get_default ()
 
   if (g_once_init_enter (&singleton))
     {
-      server = g_object_new (UBUS_TYPE_SERVER, NULL);
+      server = (UBusServer *)g_object_new (UBUS_TYPE_SERVER, NULL);
       g_object_ref_sink (server);
       g_once_init_leave (&singleton, (gsize) server);
     }
@@ -221,8 +221,8 @@ ubus_server_register_interest (UBusServer   *server,
 
   priv = server->priv;
   interned_message = g_string_chunk_insert_const (priv->message_names, message);
-  dispatch_list = g_hash_table_lookup (priv->message_interest_table,
-                                       interned_message);
+  dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
+                                                    interned_message);
 
   if (dispatch_list == NULL)
     {
@@ -257,12 +257,12 @@ ubus_server_pump_message_queue (UBusServer *server)
   // situations to sort the queue first so that duplicate messages can re-use
   // the same dispatch_list lookups.. but thats a specific case.
 
-  info = g_queue_pop_tail (priv->message_queue);
-  for (; info != NULL; info = g_queue_pop_tail (priv->message_queue))
+  info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue);
+  for (; info != NULL; info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue))
     {
       GSequence *dispatch_list;
-      dispatch_list = g_hash_table_lookup (priv->message_interest_table,
-                                           info->message);
+      dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
+                                                        info->message);
 
       if (dispatch_list == NULL)
         {
@@ -275,7 +275,7 @@ ubus_server_pump_message_queue (UBusServer *server)
       while (iter != end)
         {
           GSequenceIter *next = g_sequence_iter_next (iter);
-          UBusDispatchInfo *dispatch_info = g_sequence_get (iter);
+          UBusDispatchInfo *dispatch_info = (UBusDispatchInfo *)g_sequence_get (iter);
           UBusCallback callback = dispatch_info->callback;
 
           (*callback) (info->data, dispatch_info->user_data);
@@ -335,7 +335,7 @@ ubus_server_unregister_interest (UBusServer* server, guint handle)
   g_return_if_fail (handle > 0);
 
   priv = server->priv;
-  info = g_hash_table_lookup (priv->dispatch_table, GUINT_TO_POINTER (handle));
+  info = (UBusDispatchInfo *)g_hash_table_lookup (priv->dispatch_table, GUINT_TO_POINTER (handle));
 
   if (info == NULL)
     {
@@ -347,8 +347,8 @@ ubus_server_unregister_interest (UBusServer* server, guint handle)
   // table, but we can only find it by itterating through a sequence
   // but this is not so bad because we know *which* sequence its in
 
-  dispatch_list = g_hash_table_lookup (priv->message_interest_table,
-                                       info->message);
+  dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
+                                                    info->message);
 
   if (dispatch_list == NULL)
   {
@@ -362,7 +362,7 @@ ubus_server_unregister_interest (UBusServer* server, guint handle)
   while (iter != end)
     {
       GSequenceIter *next = g_sequence_iter_next (iter);
-      UBusDispatchInfo *info_test = g_sequence_get (iter);
+      UBusDispatchInfo *info_test = (UBusDispatchInfo *)g_sequence_get (iter);
 
       if (info_test->id == handle)
       {

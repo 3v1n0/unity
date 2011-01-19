@@ -1,9 +1,10 @@
   project (unity)
 cmake_minimum_required(VERSION 2.8)
 
+
 include (cmake/Documentation.cmake)
 
-subdirs (libunity services tests tools doc)
+subdirs (services tests tools doc)
 
 #
 # Base bits
@@ -87,15 +88,14 @@ endif (BOOT_LOGGER)
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dbus-glib-1;dee-1.0;gee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG}"
-               LIBRARIES "unity"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"'"
                )
                
 #
@@ -129,3 +129,4 @@ install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR}
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
+
