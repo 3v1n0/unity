@@ -96,7 +96,6 @@ compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG}"
-               LIBRARIES "unity"
                )
                
 #
