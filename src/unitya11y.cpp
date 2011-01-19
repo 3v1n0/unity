@@ -60,7 +60,7 @@ load_unity_atk_util ()
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
 static gboolean
-has_gsettings_schema (gchar *schema)
+has_gsettings_schema (const gchar *schema)
 {
   const char * const *list_schemas = NULL;
   gboolean found = FALSE;
@@ -87,7 +87,7 @@ should_enable_a11y (void)
   GSettings *desktop_settings = NULL;
   gboolean value = FALSE;
 
-  if (!has_gsettings_schema ((gchar*) DESKTOP_SCHEMA))
+  if (!has_gsettings_schema (DESKTOP_SCHEMA))
     return FALSE;
    
   desktop_settings = g_settings_new (DESKTOP_SCHEMA);
@@ -104,7 +104,7 @@ get_atk_bridge_path (void)
   GSettings *atspi_settings = NULL;
   char *value = NULL;
 
-  if (!has_gsettings_schema ((gchar *) AT_SPI_SCHEMA))
+  if (!has_gsettings_schema (AT_SPI_SCHEMA))
     return NULL;
 
   atspi_settings = g_settings_new (AT_SPI_SCHEMA);

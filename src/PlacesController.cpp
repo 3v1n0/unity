@@ -26,7 +26,7 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
-#include "../libunity/ubus-server.h"
+#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesController.h"
