@@ -67,57 +67,67 @@ PlacesTile::UpdateBackground ()
   delete cairo_graphics;
 }
 
+static double
+_align (double val)
+{
+  double fract = val - (int) val;
+  if (fract != 0.5f)
+    return (double) ((int) val + 0.5f);
+  else
+    return val;
+}
+
 void
 PlacesTile::DrawRoundedRectangle (cairo_t* cr,
-                                        double   aspect,
-                                        double   x,
-                                        double   y,
-                                        double   cornerRadius,
-                                        double   width,
-                                        double   height)
+                                  double   aspect,
+                                  double   x,
+                                  double   y,
+                                  double   cornerRadius,
+                                  double   width,
+                                  double   height)
 {
   double radius = cornerRadius / aspect;
 
   // top-left, right of the corner
-  cairo_move_to (cr, x + radius, y);
+  cairo_move_to (cr, _align (x + radius), _align (y));
 
   // top-right, left of the corner
-  cairo_line_to (cr, x + width - radius, y);
+  cairo_line_to (cr, _align (x + width - radius), _align (y));
 
   // top-right, below the corner
   cairo_arc (cr,
-             x + width - radius,
-             y + radius,
+             _align (x + width - radius),
+             _align (y + radius),
              radius,
              -90.0f * G_PI / 180.0f,
              0.0f * G_PI / 180.0f);
 
   // bottom-right, above the corner
-  cairo_line_to (cr, x + width, y + height - radius);
+  cairo_line_to (cr, _align (x + width), _align (y + height - radius));
 
   // bottom-right, left of the corner
   cairo_arc (cr,
-             x + width - radius,
-             y + height - radius,
+             _align (x + width - radius),
+             _align (y + height - radius),
              radius,
              0.0f * G_PI / 180.0f,
              90.0f * G_PI / 180.0f);
 
   // bottom-left, right of the corner
-  cairo_line_to (cr, x + radius, y + height);
+  cairo_line_to (cr, _align (x + radius), _align (y + height));
 
   // bottom-left, above the corner
   cairo_arc (cr,
-             x + radius,
-             y + height - radius,
+             _align (x + radius),
+             _align (y + height - radius),
              radius,
              90.0f * G_PI / 180.0f,
              180.0f * G_PI / 180.0f);
 
   // top-left, right of the corner
   cairo_arc (cr,
-             x + radius,
-             y + radius,
+             _align (x + radius),
+             _align (y + radius),
              radius,
              180.0f * G_PI / 180.0f,
              270.0f * G_PI / 180.0f);
@@ -130,7 +140,6 @@ long PlacesTile::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
   ret = PostProcessEvent2 (ievent, ret, ProcessEventInfo);
   return ret;
 }
-
 
 void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
