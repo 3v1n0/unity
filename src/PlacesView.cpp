@@ -111,8 +111,15 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  nux::Geometry base = GetGeometry ();
+  // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
+  base.x = base.y = 0;
+
+  nux::GetPainter ().PushColorLayer (GfxContext, base, nux::Color (0.0, 0.0, 0.0, 0.9), true);
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
+
+  nux::GetPainter ().PopBackground ();
 }
 
 void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)

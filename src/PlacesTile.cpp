@@ -64,6 +64,23 @@ PlacesTile::UpdateBackground ()
 
   _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _hilight_background->Update (cairo_graphics->GetBitmap ());
+
+
+  nux::ROPConfig rop; 
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  
+  nux::TexCoordXForm texxform;
+  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+  _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
+                                     texxform,
+                                     nux::Color::White,
+                                     true,
+                                     rop);
+
   delete cairo_graphics;
 }
 
@@ -145,14 +162,15 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
   // Check if the texture have been computed. If they haven't, exit the function.
-  nux::Geometry base = _hilight_view->GetGeometry ();
+  nux::Geometry base = GetGeometry ();
+  gfxContext.PushClippingRectangle (base);
+
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
   if (_state == STATE_HOVER)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
-    gfxContext.PushClippingRectangle (base);
 
     nux::TexCoordXForm texxform;
     texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -173,16 +191,22 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                          nux::Color::White);
 
     gfxContext.GetRenderStates().SetBlend (false);
-
-    gfxContext.PopClippingRectangle ();
   }
+
+  gfxContext.PopClippingRectangle ();
 }
 
 void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
 
+  if (_state == STATE_HOVER)
+    nux::GetPainter ().PushLayer (GfxContext, GetGeometry (), _hilight_layer);
+
   _layout->ProcessDraw (GfxContext, force_draw);
+  
+  if (_state == STATE_HOVER)
+    nux::GetPainter ().PopBackground ();
 
   GfxContext.PopClippingRectangle();
 }

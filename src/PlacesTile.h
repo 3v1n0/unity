@@ -93,6 +93,7 @@ protected:
   nux::Layout *_layout;
   nux::BaseTexture *_hilight_background;
   nux::View *_hilight_view;
+  nux::TextureLayer *_hilight_layer;
 
   void UpdateBackground ();
   void DrawRoundedRectangle (cairo_t* cr,

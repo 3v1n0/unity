@@ -189,7 +189,9 @@ PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
   _layout->ProcessDraw (GfxContext, force_draw);
+  nux::GetPainter().PopBackground ();
 }
 
 void
