@@ -66,7 +66,7 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
     {
       ProcEvInfo = nux::eDoNotProcess;
     }
@@ -75,7 +75,10 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   // hide if outside our window
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)))
+    nux::Geometry home_geo (0, 0, 66, 24);
+
+    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+        && !home_geo.IsPointInside (ievent.e_x, ievent.e_y))
     {
       Hide ();
       return nux::eMouseEventSolved;
