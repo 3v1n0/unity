@@ -104,6 +104,8 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
                                                    96);
     _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
 
+    tile->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnTileClicked));
+
     g_free (markup);
   }
 
@@ -120,6 +122,12 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
 PlacesHomeView::~PlacesHomeView ()
 {
   delete _bg_layer;
+}
+
+void
+PlacesHomeView::OnTileClicked ()
+{
+  g_debug ("clicked");
 }
 
 const gchar* PlacesHomeView::GetName ()
