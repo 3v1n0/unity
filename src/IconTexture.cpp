@@ -79,7 +79,6 @@ IconTexture::Refresh ()
 
       if (!_icon_name)
         _icon_name = g_strdup (DEFAULT_ICON);
-
       info = gtk_icon_theme_lookup_icon (theme,
                                          _icon_name,
                                          _size,
