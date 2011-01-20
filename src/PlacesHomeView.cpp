@@ -45,7 +45,9 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
  
   for (int i = 0; i < 8; i++)
   {
-     PlacesSimpleTile *tile = new PlacesSimpleTile ("firefox", "FooBar Fox");
+     PlacesSimpleTile *tile = new PlacesSimpleTile ("firefox",
+                                                    "<big><b>Internet</b></big>",
+                                                    96);
     _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
   }
 
