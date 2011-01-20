@@ -100,14 +100,14 @@ IconTexture::Refresh ()
     
     if (error == NULL)
     {
-      nux::BaseTexture *texture2D = nux::CreateTextureFromPixbuf (_pixbuf);
+      nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf, true);
       nux::TexCoordXForm texxform;
       texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
       texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
       nux::ROPConfig rop;
       rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
-      rop.SrcBlend = GL_SRC_ALPHA;                  // Set the source blend factor.
+      rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
       nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                                 texxform,           // The Oject that defines the texture wraping and coordinate transformation.
@@ -118,7 +118,7 @@ IconTexture::Refresh ()
 
       SetPaintLayer(texture_layer);
 
-      //SetTexture (nux::CreateTextureFromPixbuf (_pixbuf));
+      //SetTexture (nux::CreateTexture2DFromPixbuf (_pixbuf, true));
       texture2D->UnReference ();
       g_object_unref (_pixbuf);
     }

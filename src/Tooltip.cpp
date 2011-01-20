@@ -134,7 +134,7 @@ namespace nux
     base.SetY (0);
     gfxContext.PushClippingRectangle (base);
 
-    GetGraphicsEngine().GetRenderStates().SetBlend (false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GetGraphicsEngine().GetRenderStates().SetBlend (false, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     TexCoordXForm texxform_bg;
     texxform_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
