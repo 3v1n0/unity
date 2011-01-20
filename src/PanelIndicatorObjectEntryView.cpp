@@ -36,13 +36,14 @@
 static void draw_menu_bg (cairo_t *cr, int width, int height);
 
 
-PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy)
+PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding)
 : TextureArea (NUX_TRACKER_LOCATION),
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
   _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
   _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _padding = padding;
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
@@ -185,7 +186,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   }
 
   if (width)
-    width += PADDING *2;
+    width += _padding *2;
 
   SetMinimumWidth (width);
 
@@ -196,7 +197,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   if (_proxy->GetActive ())
     draw_menu_bg (cr, width, height);
 
-  x = PADDING;
+  x = _padding;
   y = 0;
 
   if (_proxy->GetPixbuf () && _proxy->icon_visible)
