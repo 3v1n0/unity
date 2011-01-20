@@ -3,12 +3,14 @@ unity (3.2.12-0ubuntu4) UNRELEASED; urgency=low
   * remove inline patch to build tests against
   * debian/control:
     - recommends ubuntuone-control-panel-gtk
+    - removed libunity*: seperate source now
+  * removed debian/libunity*
   * debian/source_unity.py:
     - enhance apport hook to report compiz (and xorg) information only on
       graphical bugs (the report can take time and would upload too many data for
       just a weird quick behavior bug for instance)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 13:30:44 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 17:49:13 +0100
 
 unity (3.2.12-0ubuntu3) natty; urgency=low
 
