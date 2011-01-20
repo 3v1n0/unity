@@ -520,7 +520,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
 void
 PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
   view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
