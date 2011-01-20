@@ -26,7 +26,7 @@
 
 #include "Introspectable.h"
 
-#include "Nux/EditTextBox.h"
+#include "Nux/GridHLayout.h"
 
 class PlacesHomeView : public Introspectable, public nux::View
 {
@@ -52,7 +52,7 @@ private:
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
-  nux::HLayout            *_layout;
+  nux::GridHLayout        *_layout;
   int _last_width;
   int _last_height;
 };

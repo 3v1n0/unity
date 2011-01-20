@@ -38,8 +38,26 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
 {
   _bg_layer = new nux::ColorLayer (nux::Color (0xff999893), true);
 
-  _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
+  _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
+ 
+  for (int i = 0; i < 8; i++)
+  {
+    nux::ColorLayer color (nux::Color::RandomColor ());
+    nux::TextureArea* texture_area = new nux::TextureArea ();
+    texture_area->SetPaintLayer (&color);
+
+    _layout->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  }
+
+  _layout->ForceChildrenSize (true);
+  _layout->SetChildrenSize (186, 186);
+  _layout->EnablePartialVisibility (false);
+
+  _layout->SetVerticalExternalMargin (48);
+  _layout->SetHorizontalExternalMargin (48);
+  _layout->SetVerticalInternalMargin (32);
+  _layout->SetHorizontalInternalMargin (32);
 }
 
 PlacesHomeView::~PlacesHomeView ()
@@ -82,13 +100,10 @@ PlacesHomeView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proce
 void
 PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::GetPainter().PaintBackground (GfxContext, GetGeometry() );
 
-  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
-
-  gPainter.PopBackground ();
-
-  GfxContext.PopClippingRectangle ();
+  _bg_layer->SetGeometry (GetGeometry ());
+  nux::GetPainter().RenderSinglePaintLayer (GfxContext, GetGeometry(), _bg_layer);
 }
 
 void
@@ -122,6 +137,8 @@ PlacesHomeView::PostLayoutManagement (long LayoutResult)
 void
 PlacesHomeView::UpdateBackground ()
 {
+#define PADDING 24
+
   nux::Geometry geo = GetGeometry ();
 
   if (geo.width == _last_width && geo.height == _last_height)
@@ -132,17 +149,15 @@ PlacesHomeView::UpdateBackground ()
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
-  cairo_set_line_width (cr, 1);
 
-  cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0f, 1.0f, 1.0f, 1.0f, 0.5f);
-  cairo_set_source (cr, pat);
-  cairo_rectangle (cr, 0, 0, _last_width, _last_height);
+  cairo_translate (cr, 0.5, 0.5);
+  cairo_set_line_width (cr, 1.0);
+
+  cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.3f);
+  cairo_rectangle (cr, PADDING, PADDING, _last_width-(PADDING*2), _last_height-(PADDING*2));
   cairo_fill_preserve (cr);
-  cairo_pattern_destroy (pat);
 
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.7f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
 
   cairo_destroy (cr);
@@ -159,17 +174,16 @@ PlacesHomeView::UpdateBackground ()
   if (_bg_layer)
     delete _bg_layer;
 
-  nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
+  nux::ROPConfig rop; 
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                     texxform,          // The Oject that defines the texture wraping and coordinate transformation.
-                                     nux::Color::White, // The color used to modulate the texture.
-                                     true,              // Write the alpha value of the texture to the destination buffer.
-                                     rop                // Use the given raster operation to set the blending when the layer is being rendered.
-  );
+                                     texxform,
+                                     nux::Color::White,
+                                     false,
+                                     rop);
 
   texture2D->UnReference ();
 

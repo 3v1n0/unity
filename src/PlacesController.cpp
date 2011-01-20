@@ -81,7 +81,8 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  geo = nux::Geometry (66, 24, 1024, 600);
+  // FIXME: This will be a ratio
+  geo = nux::Geometry (66, 24, 938, 500);
 }
 
 void

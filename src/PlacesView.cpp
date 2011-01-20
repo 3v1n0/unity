@@ -29,16 +29,17 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 :   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
 {
-  SetMinMaxSize (1024, 600);
   Hide ();
 
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 
+  /* FIXME: Not needed this week 
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
+  */
 
   _home_view = new PlacesHomeView ();
   _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
@@ -95,7 +96,7 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (base);
 
-  nux::Color color (0.0, 0.0, 0.0, 0.8);
+  nux::Color color (0.0, 0.0, 0.0, 0.9);
   // You can use this function to draw a colored Quad:
   //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
   // or this one:
