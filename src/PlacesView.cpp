@@ -86,7 +86,7 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   }
 
   if (_layout)
-    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+    ret = _layout->ProcessEvent (window_event, ret, ProcessEventInfo);
 
   return ret;
 }

@@ -129,7 +129,20 @@ PlacesHomeView::OnTileClicked (PlacesTile *_tile)
 {
   PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
 
-  g_debug ("clicked: %s", tile->GetLabel ());
+  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
+  {
+    if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
+    {
+      GError *error = NULL;
+
+      g_spawn_command_line_async (tile_infos[i].exec, &error);
+      if (error)
+      {
+        g_warning ("Unable to launch tile: %s", error->message);
+        g_error_free (error);
+      }
+    }
+  }
 }
 
 const gchar* PlacesHomeView::GetName ()
