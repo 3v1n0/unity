@@ -138,7 +138,8 @@ void
 PlacesHomeView::UpdateBackground ()
 {
 #define PADDING 24
-
+#define RADIUS  12
+  int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
 
   if (geo.width == _last_width && geo.height == _last_height)
@@ -147,17 +148,31 @@ PlacesHomeView::UpdateBackground ()
   _last_width = geo.width;
   _last_height = geo.height;
 
+  x = y = PADDING;
+  width = _last_width - (PADDING);
+  height = _last_height - (PADDING);
+
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
 
   cairo_translate (cr, 0.5, 0.5);
   cairo_set_line_width (cr, 1.0);
 
-  cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.3f);
-  cairo_rectangle (cr, PADDING, PADDING, _last_width-(PADDING*2), _last_height-(PADDING*2));
+  cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.2f);
+
+  cairo_move_to  (cr, x, y + RADIUS);
+  cairo_curve_to (cr, x, y, x, y, x + RADIUS, y);
+  cairo_line_to  (cr, width - RADIUS, y);
+  cairo_curve_to (cr, width, y, width, y, width, y + RADIUS);
+  cairo_line_to  (cr, width, height - RADIUS);
+  cairo_curve_to (cr, width, height, width, height, width - RADIUS, height);
+  cairo_line_to  (cr, x + RADIUS, height);
+  cairo_curve_to (cr, x, height, x, height, x, height - RADIUS);
+  cairo_close_path (cr);
+
   cairo_fill_preserve (cr);
 
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.2f);
   cairo_stroke (cr);
 
   cairo_destroy (cr);
