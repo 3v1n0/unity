@@ -24,4 +24,7 @@
 
 #define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
 
+// When other parts of Unity want to close the place view
+#define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
+
 #endif // UBUS_MESSAGES_H

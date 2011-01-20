@@ -25,8 +25,12 @@
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/AbstractPaintLayer.h"
 #include <Nux/BaseWindow.h>
+#include <Nux/VLayout.h>
 
 #include "Introspectable.h"
+
+#include "PlacesSearchBar.h"
+#include "PlacesHomeView.h"
 
 class PlacesView : public nux::BaseWindow, public Introspectable
 {
@@ -39,7 +43,9 @@ public:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void ShowWindow (bool b, bool start_modal = false);
+  virtual long PostLayoutManagement (long layoutResult);
+ 
+  //void ShowWindow (bool b, bool start_modal = false);
 
   void Show ();
   void Hide ();
@@ -48,6 +54,11 @@ protected:
 
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
+
+private:
+  nux::VLayout    *_layout;
+  PlacesSearchBar *_search_bar;
+  PlacesHomeView  *_home_view;
 };
 
 #endif // PANEL_HOME_BUTTON_H

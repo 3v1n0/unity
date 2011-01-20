@@ -26,7 +26,7 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
-#include "../libunity/ubus-server.h"
+#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesController.h"
@@ -39,38 +39,42 @@ PlacesController::PlacesController ()
   ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                 (UBusCallback)&PlacesController::CloseRequest,
+                                 this);
 
-  _Window = new PlacesView ();
-  _Window->Reference ();
-  _Window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  //_Window->SetBlurredBackground(true);
-  _Window->ShowWindow(false);
-  //_Window->EnableInputWindow(false);
-  //_Window->InputWindowEnableStruts(false);
+  _factory = new PlaceFactoryFile ();
 
-  _Window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+  _window = new PlacesView ();
+  _window->Reference ();
+  _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
+  _window->ShowWindow(false);
+  _window->EnableInputWindow(true);
+  _window->InputWindowEnableStruts(false);
+
+  _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
 }
 
 PlacesController::~PlacesController ()
 {
-  _Window->UnReference ();
+  _window->UnReference ();
 }
 
 void PlacesController::Show ()
 {
   // show called
-  _Window->Show ();
+  _window->Show ();
 }
 
 void PlacesController::Hide ()
 {
-  _Window->Hide ();
+  _window->Hide ();
 }
 
 void PlacesController::ToggleShowHide ()
 {
-  if (_Window->IsVisible ())
+  if (_window->IsVisible ())
     Hide ();
   else
     Show ();
@@ -80,46 +84,22 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  GdkScreen *screen = gdk_screen_get_default ();
-  int height = gdk_screen_get_height (screen) - 12;
-  geo = nux::Geometry(32, 12, 1024, height);
+  // FIXME: This will be a ratio
+  geo = nux::Geometry (66, 24, 938, 500);
 }
 
 void
 PlacesController::ExternalActivation (GVariant *data, void *val)
 {
-  if (g_getenv ("UNITY_ENABLE_PLACES"))
-    {
-      PlacesController *self = (PlacesController*)val;
-      self->ToggleShowHide ();
-    }
-  else
-    {
-    // not removing the nautilus behaviour until we can launch applications in places :)
-    #define APPS_URI "file:///usr/share/applications"
+  PlacesController *self = (PlacesController*)val;
+  self->ToggleShowHide ();
+}
 
-    /* FIXME: This is just for Alpha 1, so we have some feedback on clicking the
-     * PanelHomeButton, and especially because we don't have any other way of
-     * launching non-launcher apps right now
-     */
-      GdkAppLaunchContext *context;
-      GError *error = NULL;
-
-      context = gdk_app_launch_context_new ();
-      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
-      gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
-
-      if (!g_app_info_launch_default_for_uri (APPS_URI,
-                                              (GAppLaunchContext *)context,
-                                              &error))
-        {
-          g_warning ("Unable to launcher applications folder: %s",
-                     error->message);
-          g_error_free (error);
-        }
-
-      g_object_unref (context);
-    }
+void
+PlacesController::CloseRequest (GVariant *data, void *val)
+{
+  PlacesController *self = (PlacesController*)val;
+  self->Hide ();
 }
 
 void

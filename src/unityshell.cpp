@@ -40,13 +40,12 @@
 
 #include <core/atoms.h>
 
+#include "perf-logger-utility.h"
 #include "unitya11y.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
    the accessible root object, this include would not be required */
 #include "unity-util-accessible.h"
-
-#include "../libunity/perf-logger-utility.h"
 
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);

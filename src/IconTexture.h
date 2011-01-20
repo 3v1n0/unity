@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -13,46 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
+ * Authored by: Gord Allott <gord.allott@canonical.com>
  */
 
-#ifndef PLACES_CONTROLLER_H
-#define PLACES_CONTROLLER_H
+#ifndef ICON_TEXTURE_H
+#define ICON_TEXTURE_H
 
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
-#include "Nux/Layout.h"
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include "PlaceFactoryFile.h"
-#include "PlacesView.h"
 #include "Introspectable.h"
 
-class PlacesController : public Introspectable
+class IconTexture : public nux::TextureArea, public Introspectable
 {
 public:
-  PlacesController ();
-  ~PlacesController ();
+  IconTexture (const char *icon_name, unsigned int size);
+  ~IconTexture ();
 
-  void Show ();
-  void Hide ();
-  void ToggleShowHide ();
+  void SetByIconName (const char *icon_name, unsigned int size);
+  void SetByFilePath (const char *file_path, unsigned int size);
 
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
-  static void ExternalActivation (GVariant *data, void *val);
-  static void CloseRequest (GVariant *data, void *val);
-  static void WindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                      nux::Geometry& geo, void *user_data);
-
-  void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
 private:
-  PlacesView       *_window;
-  PlaceFactoryFile *_factory;
+  void Refresh ();
+
+  char *_icon_name;
+  unsigned int _size;
+  GdkPixbuf *_pixbuf;
 };
 
-#endif // PLACES_CONTROLLER_H
+#endif // ICON_TEXTURE_H
