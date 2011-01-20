@@ -3,7 +3,7 @@
 #
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-
+set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 #
 # Unit tests
 #
@@ -14,6 +14,7 @@ pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
+     "-DTESTDATADIR=${TESTDATADIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -131,6 +132,21 @@ add_executable (test-places
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )
+
+add_executable (test-places-tiles
+                TestPlacesTiles.cpp
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                )
+
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
