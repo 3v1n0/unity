@@ -43,7 +43,6 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
  
   _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
   _entry->SetMinimumHeight (30);
-  _entry->SetMinMaxSize (200, 30);
   _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 }
 
