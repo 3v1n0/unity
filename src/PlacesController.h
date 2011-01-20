@@ -44,6 +44,7 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
   static void ExternalActivation (GVariant *data, void *val);
+  static void CloseRequest (GVariant *data, void *val);
   static void WindowConfigureCallback(int WindowWidth, int WindowHeight,
                                       nux::Geometry& geo, void *user_data);
 

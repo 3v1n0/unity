@@ -32,6 +32,9 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlacesHomeView.h"
 
 #include "PlacesSimpleTile.h"
@@ -128,7 +131,7 @@ void
 PlacesHomeView::OnTileClicked (PlacesTile *_tile)
 {
   PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
-
+  
   for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
   {
     if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
@@ -143,6 +146,10 @@ PlacesHomeView::OnTileClicked (PlacesTile *_tile)
       }
     }
   }
+
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                            NULL);
 }
 
 const gchar* PlacesHomeView::GetName ()
