@@ -148,7 +148,8 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
   nux::Geometry base = _hilight_view->GetGeometry ();
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
-  if (_state == STATE_HOVER)
+  // FIXME: Disabled due to nux issue
+  if (_state == STATE_HOVER && false)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
