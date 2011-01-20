@@ -82,7 +82,7 @@ static TileInfo tile_infos[] = {
   },
   {
     (gchar*)_("Listen to Music"),
-    (gchar*)"banshee",
+    (gchar*)"media-player-banshee",
     (gchar*)"banshee"
   }
 };

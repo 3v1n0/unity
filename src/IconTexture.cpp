@@ -95,7 +95,8 @@ IconTexture::Refresh ()
       file_path = g_strdup (gtk_icon_info_get_filename (info));
     }
 
-    _pixbuf = gdk_pixbuf_new_from_file (file_path, &error);
+    g_debug ("%s", file_path);
+    _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
 
     if (error == NULL)
     {
