@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <gdk/gdkx.h>
 #include <glib.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/XTest.h>
@@ -42,8 +43,23 @@ Autopilot::UnityTests::Run ()
   }
   g_debug ("Created unity tests object");
 
-  
+  _mouse = new Mouse ();
+
   sleep(1);
+  _mouse->Move (new nux::Point (0, 0));
+  g_debug ("moved 1");
+  sleep (1);
+  _mouse->Move (new nux::Point (24, 300));
+  g_debug ("moved 2");
+  sleep (1);
+  _mouse->Move (new nux::Point (250, 45));
+  g_debug ("moved 3");
+  _mouse->Click(Mouse::Left);
+  g_debug ("clicked 1");
+  sleep (1);
+  _mouse->Click (Mouse::Right);
+  g_debug ("clicked 2");
+  sleep (1);
 
   /*_tests->ShowTooltip ();
   _tests->ShowQuicklist ();
@@ -152,18 +168,25 @@ Autopilot::UnityTests::TestSetup ()
   g_debug ("Test initialized");
 }
 
+Autopilot::Mouse::Mouse ()
+{
+  _display = gdk_x11_get_default_xdisplay ();
+}
+
 void
 Autopilot::Mouse::Press (Button button)
 {
-  XTestFakeButtonEvent (screen->dpy (), (int) button, true, time (NULL));
-  //  XSync (_display, false);
+  
+  XTestFakeButtonEvent (_display, (int) button, true, time (NULL));
+  //XSync (_display, false);
 }
 
 void
 Autopilot::Mouse::Release (Button button)
 {
-  XTestFakeButtonEvent (screen->dpy (), (int) button, false, time (NULL));
-  //  XSync (screen->dpy (), false);
+  
+  XTestFakeButtonEvent (_display, (int) button, false, time (NULL));
+  //XSync (_display, false);
 }
 
 void
@@ -179,17 +202,16 @@ void
 Autopilot::Mouse::Move (nux::Point *destination)
 {
   // FIXME: animate!
-
   SetPosition (destination);
 }
 
 void
 Autopilot::Mouse::SetPosition (nux::Point *point)
 {
-  /*  Window root = DefaultRootWindow (screen->dpy ());
+  /*  Window root = DefaultRootWindow (_display);
       g_debug ("XWarping to (%d, %d)\n", point->x, point->y);
-      XWarpPointer (screen->dpy (), 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
-      XFlush (screen->dpy ());*/
+      XWarpPointer (_display, 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
+      XFlush (_display);*/
   nux::Point* curr = GetPosition ();
   g_debug ("comp->warp (%d, %d)", point->x - curr->x, point->y - curr->y);
   screen->warpPointer (point->x - curr->x, point->y - curr->y);
@@ -202,8 +224,8 @@ Autopilot::Mouse::GetPosition ()
   int x, y, winx, winy;
   Window w, root_return, child_return;
   
-  w = DefaultRootWindow (screen->dpy ());
-  XQueryPointer (screen->dpy (), 
+  w = gdk_x11_get_default_root_xwindow ();
+  XQueryPointer (_display, 
 		 w,
 		 &root_return,
 		 &child_return,
