@@ -37,8 +37,8 @@ static const GDBusInterfaceVTable si_vtable =
 static const GDBusArgInfo si_getstate_in_args =
 {
   -1,
-  (gchar *) "piece",
-  (gchar *) "s",
+  "piece",
+  "s",
   NULL
 };
 
@@ -47,8 +47,8 @@ static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
-  (gchar *) "state",
-  (gchar *) "a{sv}",
+  "state",
+  "a{sv}",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -56,28 +56,55 @@ static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  (gchar *) "GetState",
+  "GetState",
   (GDBusArgInfo **) &si_getstate_in_arg_pointers,
   (GDBusArgInfo **) &si_getstate_out_arg_pointers,
   NULL
 };
 
-static GDBusMethodInfo ap_method_info_runautopilot =
+static const GDBusArgInfo ap_in_args =
 {
   -1,
-  (gchar *) "RunAutopilot",
+  "name",
+  "s",
+  NULL
+};
+static const GDBusArgInfo *const ap_in_arg_pointers[] = { &ap_in_args, NULL };
+
+static GDBusMethodInfo ap_method_info_run =
+{
+  -1,
+  "Run",
   NULL,
   NULL,
   NULL
 };
 
+static GDBusMethodInfo ap_method_info_addtest =
+{
+  -1,
+  "AddTest",
+  (GDBusArgInfo **) &ap_in_arg_pointers,
+  NULL,
+  NULL
+};
+
+static GDBusMethodInfo ap_method_info_starttest =
+{
+  -1,
+  "StartTest",
+  (GDBusArgInfo **) &ap_in_arg_pointers,
+  NULL,
+  NULL
+};
+
 static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_runautopilot, NULL };
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_run, &ap_method_info_addtest, &ap_method_info_starttest, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  (gchar *) "com.canonical.Unity.Debug.Introspection",
+  "com.canonical.Unity.Debug.Introspection",
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
@@ -153,13 +180,13 @@ DebugDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, 
 
 void
 DBusMethodCall (GDBusConnection *connection,
-                                                 const gchar *sender,
-                                                 const gchar *objectPath,
-                                                 const gchar *ifaceName,
-                                                 const gchar *methodName,
-                                                 GVariant *parameters,
-                                                 GDBusMethodInvocation *invocation,
-                                                 gpointer data)
+                const gchar *sender,
+                const gchar *objectPath,
+                const gchar *ifaceName,
+                const gchar *methodName,
+                GVariant *parameters,
+                GDBusMethodInvocation *invocation,
+                gpointer data)
 {
   if (g_strcmp0 (methodName, "GetState") == 0)
   {
@@ -171,13 +198,26 @@ DBusMethodCall (GDBusConnection *connection,
     g_dbus_method_invocation_return_value (invocation, ret);
     g_variant_unref (ret);
   }
-  else if (g_strcmp0 (methodName, "RunAutopilot") == 0)
+  else if (g_strcmp0 (methodName, "Show") == 0)
   {
-    g_debug ("RUNNING AUTOPILOT");
-    //g_thread_create ((GThreadFunc) Autopilot::UnityTests::Run, NULL, false, NULL);
+    AutopilotDisplay::GetDefault ()->Show ();
     g_dbus_method_invocation_return_value (invocation, NULL);
-    Autopilot::UnityTests::Run ();
-    g_debug ("AUTOPILOT HAS BEEN DISPATCHED");
+  }
+  else if (g_strcmp0 (methodName, "AddTest") == 0)
+  {
+    const gchar *name;
+    g_variant_get (parameters, "(&s)", &name);
+
+    AutopilotDisplay::GetDefault ()->AddTest (name);
+    g_dbus_method_invocation_return_value (invocation, NULL);
+  }
+  else if (g_strcmp0 (methodName, "StartTest") == 0)
+  {
+    const gchar *name;
+    g_variant_get (parameters, "(&s)", &name);
+
+    AutopilotDisplay::GetDefault ()->StartTest (name);
+    g_dbus_method_invocation_return_value (invocation, NULL);
   }
   else
   {

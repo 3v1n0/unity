@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -13,226 +14,92 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alex Launi <alex.launi@canonical.com>
+ * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
-
-#include <time.h>
-#include <unistd.h>
-
-#include <gdk/gdkx.h>
-#include <glib.h>
-#include <X11/Xlib.h>
-#include <X11/extensions/XTest.h>
-
-#include <core/screen.h>
+#include "Nux/Nux.h"
+#include "Nux/VLayout.h"
+#include "Nux/WindowThread.h"
+#include "Nux/TimeGraph.h"
+#include "Nux/TimerProc.h"
 
 #include "Autopilot.h"
 
-Autopilot::Mouse *Autopilot::UnityTests::_mouse = 0;
-Autopilot::UnityTests *Autopilot::UnityTests::_tests = 0;
+nux::TimerFunctor *timer_functor;
+nux::TimerHandle timer_handler;
+float time_value = 0;
 
-/* static */
-void
-Autopilot::UnityTests::Run ()
+AutopilotDisplay *AutopilotDisplay::_default = 0;
+
+/* Static */
+AutopilotDisplay*
+AutopilotDisplay::GetDefault ()
 {
-  g_debug ("Running unity tests");
-  if (!_tests)
+  if (!_default)
   {
-    _tests = new UnityTests ();
+    _default = new AutopilotDisplay ();
   }
-  g_debug ("Created unity tests object");
 
-  _mouse = new Mouse ();
-
-  sleep(1);
-  _mouse->Move (new nux::Point (0, 0));
-  g_debug ("moved 1");
-  sleep (1);
-  _mouse->Move (new nux::Point (24, 300));
-  g_debug ("moved 2");
-  sleep (1);
-  _mouse->Move (new nux::Point (250, 45));
-  g_debug ("moved 3");
-  _mouse->Click(Mouse::Left);
-  g_debug ("clicked 1");
-  sleep (1);
-  _mouse->Click (Mouse::Right);
-  g_debug ("clicked 2");
-  sleep (1);
-
-  /*_tests->ShowTooltip ();
-  _tests->ShowQuicklist ();
-  _tests->DragLauncher ();
-  _tests->DragLauncherIconAlongEdgeAndDrop ();
-  _tests->DragLauncherIconOutAndDrop ();
-  _tests->DragLauncherIconOutAndMove ();*/
-
-}
-
-Autopilot::UnityTests::UnityTests ()
-{
-  g_debug ("Setting up initial nux::Points");
-  _initial.Set (800, 500);
-  _launcher.Set (32, 57);
-  g_debug ("Created class nux::Points");
+  return _default;
 }
 
 void
-Autopilot::UnityTests::DragLauncher ()
+UpdateGraph (void *data)
 {
-  int new_x = _launcher.x, new_y = _launcher.y + 300;
-  nux::Point newp (new_x, new_y);
+  time_value += 0.001f;
+  nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
+  timegraph->UpdateGraph (0, nux::GetWindowThread ()->GetFrameRate ());
 
-  TestSetup ();
-  _mouse->Move (&_launcher);
-  usleep (125000);
-  _mouse->Press (Mouse::Left);
-  _mouse->Move (&newp);
-  usleep (250000);
-  _mouse->Release (Mouse::Left);
+  timer_handler = nux::GetTimer ().AddTimerHandler (100, timer_functor, timegraph);
 }
 
 void
-Autopilot::UnityTests::DragLauncherIconAlongEdgeAndDrop ()
+InitUI (nux::NThread *thread, void *init_data)
 {
-  nux::Point a (_launcher.x + 25, _launcher.y);
-  nux::Point b (_launcher.x + 25, _launcher.y + 500);
+  nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  nux::TimeGraph *timegraph = new nux::TimeGraph (TEXT ("Graph"));
+  timegraph->ShowColumnStyle ();
+  timegraph->SetYAxisBounds (0.0, 200.0f);
 
-  TestSetup ();
-  _mouse->Move (&_launcher);
-  usleep (125000);
-  _mouse->Press (Mouse::Left);
-  _mouse->Move (&a);
-  _mouse->Move (&b);
-  usleep (250000);
-  _mouse->Release (Mouse::Left);
+  timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
+  timer_functor = new nux::TimerFunctor ();
+  timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&UpdateGraph));
+  timer_handler = nux::GetTimer ().AddTimerHandler (1000, timer_functor, timegraph);
+
+  layout->AddView (timegraph,
+		   1,
+		   nux::MINOR_POSITION_CENTER,
+		   nux::MINOR_SIZE_FULL);
+  layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
+  layout->SetHorizontalExternalMargin (4);
+  layout->SetVerticalExternalMargin (4);
+
+  nux::GetWindowThread ()->SetLayout (layout);
+  nux::ColorLayer background (nux::Color (0xFF2D2D2D));
+  static_cast<nux::WindowThread*> (thread)->SetWindowBackgroundPaintLayer (&background);	   
 }
 
 void
-Autopilot::UnityTests::DragLauncherIconOutAndDrop ()
+AutopilotDisplay::Show ()
 {
-  nux::Point a (_launcher.x + 300, _launcher.y);
-
-  TestSetup ();
-  _mouse->SetPosition (&_launcher);
-  usleep (125000);
-  _mouse->Press (Mouse::Left);
-  _mouse->Move (&a);
-  usleep (250000);
-  _mouse->Release (Mouse::Left);
-}
- 
-void
-Autopilot::UnityTests::DragLauncherIconOutAndMove ()
-{
-  nux::Point a (_launcher.x + 300, _launcher.y);
-  nux::Point b (_launcher.x + 300, _launcher.y + 300);
-
-  TestSetup ();
-  _mouse->Move (&_launcher);
-  usleep (125000);
-  _mouse->Press (Mouse::Left);
-  _mouse->Move (&a);
-  _mouse->Move (&b);
-  _mouse->Release (Mouse::Left);
-}
-
-void
-Autopilot::UnityTests::ShowQuicklist ()
-{
-  TestSetup ();
-  _mouse->Move (&_launcher);
-  usleep (125000);
-  _mouse->Click (Mouse::Right);
-  sleep (2);
-  _mouse->Click (Mouse::Right);
-}
-
-void
-Autopilot::UnityTests::ShowTooltip ()
-{
-  TestSetup ();
-  _mouse->Move (&_launcher);
-  g_debug ("Showing tooltip");
-  _mouse->Move (&_launcher);
-  g_debug ("Test finished");
-}
-
-void
-Autopilot::UnityTests::TestSetup ()
-{
-  g_debug ("Setting up test");
-  _mouse->SetPosition (&_initial);
-  usleep (125000);
-  g_debug ("Test initialized");
-}
-
-Autopilot::Mouse::Mouse ()
-{
-  _display = gdk_x11_get_default_xdisplay ();
-}
-
-void
-Autopilot::Mouse::Press (Button button)
-{
+  nux::WindowThread *win = new nux::CreateGUIThread (TEXT (""),
+						     800,
+						     600,
+						     0,
+						     &InitUI,
+						     true);
+  win->Run (0);
   
-  XTestFakeButtonEvent (_display, (int) button, true, time (NULL));
-  //XSync (_display, false);
+  delete timer_functor;
+  delete win;
 }
 
 void
-Autopilot::Mouse::Release (Button button)
+AutopilotDisplay::AddTest (const gchar *name)
 {
-  
-  XTestFakeButtonEvent (_display, (int) button, false, time (NULL));
-  //XSync (_display, false);
 }
 
-void
-Autopilot::Mouse::Click (Button button)
+void 
+AutopilotDisplay::StartTest (const gchar *name)
 {
-  Press (button);
-  /* sleep for 1/4 of a second */
-  usleep (250000);
-  Release (button);
-}
-
-void
-Autopilot::Mouse::Move (nux::Point *destination)
-{
-  // FIXME: animate!
-  SetPosition (destination);
-}
-
-void
-Autopilot::Mouse::SetPosition (nux::Point *point)
-{
-  /*  Window root = DefaultRootWindow (_display);
-      g_debug ("XWarping to (%d, %d)\n", point->x, point->y);
-      XWarpPointer (_display, 0, root, 0, 0, 0, 0, (int) point->x, (int) point->y);
-      XFlush (_display);*/
-  nux::Point* curr = GetPosition ();
-  g_debug ("comp->warp (%d, %d)", point->x - curr->x, point->y - curr->y);
-  screen->warpPointer (point->x - curr->x, point->y - curr->y);
-}
-
-nux::Point*
-Autopilot::Mouse::GetPosition ()
-{
-  uint mask;
-  int x, y, winx, winy;
-  Window w, root_return, child_return;
-  
-  w = gdk_x11_get_default_root_xwindow ();
-  XQueryPointer (_display, 
-		 w,
-		 &root_return,
-		 &child_return,
-		 &x,
-		 &y,
-		 &winx,
-		 &winy,
-		 &mask);
-  return new nux::Point (x, y);
 }

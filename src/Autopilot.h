@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -13,51 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alex Launi <alex.launi@canonical.com>
+ * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
-#include "Nux/Nux.h"
-#include "NuxCore/Point.h"
-namespace Autopilot
+#include <glib.h>
+
+class AutopilotDisplay
 {
-  class Mouse
-  {
-  public:
-    enum Button {
-      Left = 1,
-      Right = 2,
-      Middle = 3
-    };
+ public:
+  static AutopilotDisplay * GetDefault ();
 
-    Mouse ();
-    void Press(Button button);
-    void Release (Button button);
-    void Click (Button button);
-    void Move (nux::Point *point);
-    void SetPosition (nux::Point *point);
-    nux::Point *GetPosition ();    
-  private:
-    Display *_display;
-  };
-  
-  class UnityTests
-  {
-  public:
-    UnityTests ();
-    static void Run ();
-
-  private:
-    void DragLauncher ();
-    void DragLauncherIconAlongEdgeAndDrop ();
-    void DragLauncherIconOutAndDrop ();
-    void DragLauncherIconOutAndMove ();
-    void ShowQuicklist ();
-    void ShowTooltip ();
-    void TestSetup ();
-    nux::Point _initial;
-    nux::Point _launcher;
-
-    static Mouse *_mouse;
-    static UnityTests *_tests;
-  };
+  void Show ();
+  void AddTest (const gchar *name);
+  void StartTest (const gchar *name);
+  /* and a signal for "test finished" */
+ private:
+  static AutopilotDisplay *_default;
 };
