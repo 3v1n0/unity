@@ -39,6 +39,7 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 
 IconTexture::~IconTexture ()
 {
+  g_free (_icon_name);
 }
 
 void

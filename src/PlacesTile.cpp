@@ -67,7 +67,7 @@ PlacesTile::UpdateBackground ()
   delete cairo_graphics;
 }
 
-static double
+static inline double
 _align (double val)
 {
   double fract = val - (int) val;
