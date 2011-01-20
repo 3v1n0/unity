@@ -311,7 +311,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
   gchar        *name;
   gchar        *icon;
   guint32       position;
-  gchar       **mimetypes;
+  GVariantIter *mimetypes;
   gboolean      sensitive;
   gchar        *sections_model;
   GVariantIter *hints;
@@ -379,7 +379,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
                       name,
                       icon,
                       position,
-                      (const gchar**)mimetypes,
+                      mimetypes,
                       sensitive,
                       sections_model,
                       hints,
@@ -424,7 +424,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
   gchar        *name = NULL;
   gchar        *icon = NULL;
   guint32       position = 0;
-  gchar       **mimetypes = NULL;
+  GVariantIter *mimetypes = NULL;
   gboolean      sensitive = true;
   gchar        *sections_model = NULL;
   GVariantIter *hints = NULL;
@@ -461,7 +461,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
                  name,
                  icon,
                  position,
-                 (const gchar **)mimetypes,
+                 mimetypes,
                  sensitive,
                  sections_model,
                  hints,
@@ -480,7 +480,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
   g_free (dbus_path);
   g_free (name);
   g_free (icon);
-  g_strfreev (mimetypes);
+  g_variant_iter_free (mimetypes);
   g_free (sections_model);
   g_variant_iter_free (hints);
   g_free (entry_renderer);

@@ -37,8 +37,12 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
-  _layout->AddView (_search_bar, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
+
+  _home_view = new PlacesHomeView ();
+  _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  AddChild (_home_view);
 }
 
 PlacesView::~PlacesView ()

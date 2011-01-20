@@ -43,7 +43,8 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
  
   _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
   _entry->SetMinimumHeight (30);
-  _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _entry->SetMinimumWidth (100);
+  _layout->AddView (_entry, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -75,8 +76,11 @@ void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
 long
 PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
+  nux::Geometry geo = GetGeometry ();
+
   long ret = TraverseInfo;
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+
   return ret;
 }
 

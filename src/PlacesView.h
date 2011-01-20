@@ -30,6 +30,7 @@
 #include "Introspectable.h"
 
 #include "PlacesSearchBar.h"
+#include "PlacesHomeView.h"
 
 class PlacesView : public nux::BaseWindow, public Introspectable
 {
@@ -57,6 +58,7 @@ protected:
 private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
+  PlacesHomeView  *_home_view;
 };
 
 #endif // PANEL_HOME_BUTTON_H

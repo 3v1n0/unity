@@ -26,7 +26,7 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
-#include "../libunity/ubus-server.h"
+#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesController.h"
@@ -45,8 +45,7 @@ PlacesController::PlacesController ()
   _window = new PlacesView ();
   _window->Reference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  //_window->SetBlurredBackground(true);
-  //_window->ShowWindow(false);
+  _window->ShowWindow(false);
   _window->EnableInputWindow(true);
   _window->InputWindowEnableStruts(false);
 

@@ -105,9 +105,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 }
 
 void
-BamfLauncherIcon::OnWindowMinimized (CompWindow *window)
+BamfLauncherIcon::OnWindowMinimized (guint32 xid)
 {
-  if (!OwnsWindow (window->id ()))
+  if (!OwnsWindow (xid))
     return;
 
   Present (0.5f, 600);
@@ -307,7 +307,7 @@ BamfLauncherIcon::Focus ()
   g_list_free (children);
 }
 
-void
+bool
 BamfLauncherIcon::Spread ()
 {
   BamfView *view;
@@ -330,27 +330,41 @@ BamfLauncherIcon::Spread ()
   if (windowList.size () > 1)
   {
     std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
     PluginAdapter::Default ()->InitiateScale (match);
     delete match;
+    g_list_free (children);
+    return true;
   }
 
   g_list_free (children);
+
+  return false;  
 }
 
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive();
-
-  SimpleLauncherIcon::OnMouseClick (button);
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
+  bool onlyOwnWasActive = PluginAdapter::Default ()->IsScaleActive (true);
 
   if (button != 1)
     return;
+
+  if (!scaleWasActive || (scaleWasActive && !onlyOwnWasActive))
+    _launcher->SetLastSpreadIcon (NULL);
 
   bool active, running;
 
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
+
+  /* Behaviour:
+   * Nothing running -> launch application
+   * Running and active -> spread application
+   * Spread is active and different icon pressed -> change spread
+   * Spread is active -> Spread de-activated, and fall through
+   */
 
   if (!running)
   {
@@ -360,10 +374,25 @@ BamfLauncherIcon::OnMouseClick (int button)
     OpenInstance ();
     return;
   }
+  else if (scaleWasActive)
+  {
+    if (_launcher->GetLastSpreadIcon () != this)
+    {
+      if (!Spread ())
+      {
+        PluginAdapter::Default ()->TerminateScale ();
+        Focus ();
+        _launcher->SetLastSpreadIcon (NULL);
+      }
+    }
+    else
+      SimpleLauncherIcon::OnMouseClick (button);
+  }
   else if (!active)
     Focus ();
-  else if (!scaleWasActive)
+  else if (active && !scaleWasActive)
     Spread ();
+
 }
 
 void
@@ -417,14 +446,25 @@ BamfLauncherIcon::EnsureWindowState ()
   GList *children, *l;
   int count = 0;
 
+  bool has_visible = false;
+  
   children = bamf_view_get_children (BAMF_VIEW (m_App));
   for (l = children; l; l = l->next)
   {
-    if (BAMF_IS_WINDOW (l->data))
-      count++;
+    if (!BAMF_IS_WINDOW (l->data))
+      continue;
+      
+    count++;
+    
+    guint32 xid = bamf_window_get_xid (BAMF_WINDOW (l->data));
+    CompWindow *window = m_Screen->findWindow ((Window) xid);
+    
+    if (window && window->defaultViewport () == m_Screen->vp ())
+      has_visible = true;
   }
 
   SetRelatedWindows (count);
+  SetHasVisibleWindow (has_visible);
 
   g_list_free (children);
 }
