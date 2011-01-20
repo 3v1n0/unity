@@ -52,6 +52,7 @@ StaticCairoText::~StaticCairoText ()
                                         this);
   delete (_cairoGraphics);
   delete (_texture2D);
+  g_free (_fontstring);
 }
 
 void

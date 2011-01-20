@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Gord Allott <gord.allott@canonical.com>
  */
 
 #ifndef ICON_TEXTURE_H

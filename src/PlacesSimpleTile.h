@@ -51,8 +51,8 @@ public:
   PlacesSimpleTile (const char *icon, const char *label);
   ~PlacesSimpleTile ();
 
-  char *      GetLabel ();
-  char *      GetIcon ();
+  const char *      GetLabel ();
+  const char *      GetIcon ();
 
 protected:
   const gchar* GetName ();
