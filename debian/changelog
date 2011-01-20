@@ -1,4 +1,4 @@
-unity (3.2.12-0ubuntu4) UNRELEASED; urgency=low
+unity (3.2.14-0ubuntu1) UNRELEASED; urgency=low
 
   * remove inline patch to build tests against
   * debian/control:
@@ -9,8 +9,9 @@ unity (3.2.12-0ubuntu4) UNRELEASED; urgency=low
     - enhance apport hook to report compiz (and xorg) information only on
       graphical bugs (the report can take time and would upload too many data for
       just a weird quick behavior bug for instance)
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 17:49:13 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 18:23:53 +0100
 
 unity (3.2.12-0ubuntu3) natty; urgency=low
 

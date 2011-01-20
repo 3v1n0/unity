@@ -47,7 +47,7 @@ public:
   // It also deals with undecorating maximized windows (and redecorating them
   // on unmaximize)
 
-  PanelMenuView ();
+  PanelMenuView (int padding = 6);
   ~PanelMenuView ();
 
   void FullRedraw ();
@@ -110,5 +110,6 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  int _padding;
 };
 #endif

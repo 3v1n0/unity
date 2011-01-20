@@ -30,6 +30,21 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 :   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
 {
   Hide ();
+
+  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  
+  /* FIXME: Not needed this week 
+  _search_bar = new PlacesSearchBar ();
+  _search_bar->SetMinMaxSize (1024, 48);
+  _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
+  AddChild (_search_bar);
+  */
+  
+  _home_view = new PlacesHomeView ();
+  _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  AddChild (_home_view);
+
+  SetLayout (_layout);
 }
 
 PlacesView::~PlacesView ()
@@ -40,7 +55,6 @@ PlacesView::~PlacesView ()
 long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  long ProcEvInfo = 0;
 
   nux::IEvent window_event = ievent;
   nux::Geometry base = GetGeometry();
@@ -52,20 +66,28 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
     {
-      ProcEvInfo = nux::eDoNotProcess;
+      //ProcEvInfo = nux::eDoNotProcess;
     }
   }
 
   // hide if outside our window
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)))
+    nux::Geometry home_geo (0, 0, 66, 24);
+
+    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+        && !home_geo.IsPointInside (ievent.e_x, ievent.e_y))
     {
       Hide ();
       return nux::eMouseEventSolved;
     }
+  }
+
+  if (_layout)
+  {
+    ret = _layout->ProcessEvent (window_event, ret, ProcessEventInfo);
   }
 
   return ret;
@@ -73,25 +95,44 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 
 void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Color *color = new nux::Color (0.9, 0.3, 0.1, 1.0);
-  nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), *color);
+  nux::Geometry base = GetGeometry ();
+  // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
+  base.x = base.y = 0;
+
+  GfxContext.PushClippingRectangle (base);
+
+  nux::Color color (0.0, 0.0, 0.0, 0.9);
+  // You can use this function to draw a colored Quad:
+  //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
+  // or this one:
+  GfxContext.QRP_Color (0, 0, GetGeometry ().width, GetGeometry ().height, color);
+
+  GfxContext.PopClippingRectangle ();
 }
 
 
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-
+  if (_layout)
+    _layout->ProcessDraw (GfxContext, force_draw);
 }
 
 void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-
 }
 
-void PlacesView::ShowWindow (bool b, bool start_modal)
+long
+PlacesView::PostLayoutManagement (long LayoutResult)
+{
+  return nux::BaseWindow::PostLayoutManagement (LayoutResult);
+}
+
+
+
+/*void PlacesView::ShowWindow (bool b, bool start_modal)
 {
   nux::BaseWindow::ShowWindow (b, start_modal);
-}
+}*/
 
 void PlacesView::Show ()
 {
@@ -102,6 +143,7 @@ void PlacesView::Show ()
   ShowWindow (true, false);
   EnableInputWindow (true, 1);
   GrabPointer ();
+  GrabKeyboard ();
   NeedRedraw ();
 }
 
@@ -113,6 +155,7 @@ void PlacesView::Hide ()
   CaptureMouseDownAnyWhereElse (false);
   ForceStopFocus (1, 1);
   UnGrabPointer ();
+  UnGrabKeyboard ();
   EnableInputWindow (false);
   ShowWindow (false, false);
 }
@@ -128,4 +171,10 @@ PlacesView::GetName ()
 void
 PlacesView::AddProperties (GVariantBuilder *builder)
 {
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }

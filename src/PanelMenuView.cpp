@@ -44,7 +44,7 @@ static void on_active_window_changed (BamfMatcher   *matcher,
                                       PanelMenuView *self);
 
 
-PanelMenuView::PanelMenuView ()
+PanelMenuView::PanelMenuView (int padding)
 : _matcher (NULL),
   _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
@@ -66,6 +66,8 @@ PanelMenuView::PanelMenuView ()
    * shouldn't touch this again
    */
   _layout = _menu_layout;
+
+  _padding = padding;
 
   _window_buttons = new WindowButtons ();
   _window_buttons->NeedRedraw ();
@@ -168,14 +170,14 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   nux::Geometry geo = GetGeometry ();
 
   old_window_buttons_w = _window_buttons->GetContentWidth ();
-  _window_buttons->SetGeometry (geo.x + PADDING, geo.y, old_window_buttons_w, geo.height);
+  _window_buttons->SetGeometry (geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
   _window_buttons->ComputeLayout2 ();
   new_window_buttons_w = _window_buttons->GetContentWidth ();
 
   
   /* Explicitly set the size and position of the widgets */
-  geo.x += PADDING + new_window_buttons_w + PADDING;
-  geo.width -= PADDING + new_window_buttons_w + PADDING;
+  geo.x += _padding + new_window_buttons_w + _padding;
+  geo.width -= _padding + new_window_buttons_w + _padding;
 
   old_menu_area_w = _menu_layout->GetContentWidth ();
   _menu_layout->SetGeometry (geo.x, geo.y, old_menu_area_w, geo.height);
@@ -188,6 +190,9 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
   Refresh ();
+
+  if (_is_inside)
+    NeedRedraw ();
   
   return res;
 }
@@ -196,7 +201,7 @@ void
 PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
-  int button_width = PADDING + _window_buttons->GetContentWidth () + PADDING;
+  int button_width = _padding + _window_buttons->GetContentWidth () + _padding;
   float factor = 4;
   button_width /= factor;
     
@@ -430,11 +435,11 @@ PanelMenuView::Refresh ()
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
-  x = PADDING;
+  x = _padding;
   y = 0;
 
   if (_is_maximized)
-    x += _window_buttons->GetContentWidth () + PADDING + PADDING;
+    x += _window_buttons->GetContentWidth () + _padding + _padding;
 
   if (label)
   {
@@ -518,7 +523,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
 void
 PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
   view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
