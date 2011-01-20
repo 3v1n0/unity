@@ -28,6 +28,8 @@
 
 #include "Nux/GridHLayout.h"
 
+#include "PlacesTile.h"
+
 class PlacesHomeView : public Introspectable, public nux::View
 {
 public:
@@ -40,7 +42,7 @@ public:
 
   void PreLayoutManagement ();
   long PostLayoutManagement (long LayoutResult);
-  void OnTileClicked ();
+  void OnTileClicked (PlacesTile *tile);
   
 protected:
   // Introspectable methods

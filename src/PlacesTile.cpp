@@ -219,7 +219,7 @@ PlacesTile::TileState PlacesTile::GetState ()
 
 void PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  sigClick.emit();
+  sigClick.emit(this);
 
   NeedRedraw();
   _layout->NeedRedraw ();

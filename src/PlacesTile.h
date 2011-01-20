@@ -54,7 +54,7 @@ public:
   virtual void SetState (TileState state);
   virtual TileState GetState ();
 
-  sigc::signal<void> sigClick;
+  sigc::signal<void, PlacesTile *> sigClick;
   sigc::signal<void> sigToggled;
   sigc::signal<void, bool> sigStateChanged;
 

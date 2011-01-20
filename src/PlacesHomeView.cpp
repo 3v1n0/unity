@@ -125,9 +125,11 @@ PlacesHomeView::~PlacesHomeView ()
 }
 
 void
-PlacesHomeView::OnTileClicked ()
+PlacesHomeView::OnTileClicked (PlacesTile *_tile)
 {
-  g_debug ("clicked");
+  PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
+
+  g_debug ("clicked: %s", tile->GetLabel ());
 }
 
 const gchar* PlacesHomeView::GetName ()
