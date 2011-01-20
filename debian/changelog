@@ -1,4 +1,4 @@
-unity (3.2.14-0ubuntu1) UNRELEASED; urgency=low
+unity (3.2.14-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - Use a padding of 6px for the appmenu and 3px for the other indicators.
@@ -16,7 +16,7 @@ unity (3.2.14-0ubuntu1) UNRELEASED; urgency=low
       graphical bugs (the report can take time and would upload too many data for
       just a weird quick behavior bug for instance)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 18:23:53 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 19:24:47 +0100
 
 unity (3.2.12-0ubuntu3) natty; urgency=low
 
