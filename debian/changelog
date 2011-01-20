@@ -1,8 +1,10 @@
-unity (3.2.12-0ubuntu4) UNRELEASED; urgency=low
+unity (3.2.12-0ubuntu5) UNRELEASED; urgency=low
 
   * remove inline patch to build tests against
+  * debian/control:
+    - recommends ubuntuone-control-panel-gtk
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 18 Jan 2011 18:16:17 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 13:13:40 +0100
 
 unity (3.2.12-0ubuntu3) natty; urgency=low
 
