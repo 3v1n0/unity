@@ -1,15 +1,20 @@
 unity (3.2.14-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release:
+    - Use a padding of 6px for the appmenu and 3px for the other indicators.
+      (LP: #684114)
+    - appmenu doesn't correspond to currently focused application (LP: #69806)
+    - Places tile view (LP: #697687)
   * remove inline patch to build tests against
   * debian/control:
     - recommends ubuntuone-control-panel-gtk
     - removed libunity*: seperate source now
+    - bump libnux requirement
   * removed debian/libunity*
   * debian/source_unity.py:
     - enhance apport hook to report compiz (and xorg) information only on
       graphical bugs (the report can take time and would upload too many data for
       just a weird quick behavior bug for instance)
-  * New upstream release.
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 20 Jan 2011 18:23:53 +0100
 
