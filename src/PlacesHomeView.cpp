@@ -33,6 +33,8 @@
 
 #include "PlacesHomeView.h"
 
+#include "PlacesSimpleTile.h"
+
 PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM)
 {
@@ -43,11 +45,8 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
  
   for (int i = 0; i < 8; i++)
   {
-    nux::ColorLayer color (nux::Color::RandomColor ());
-    nux::TextureArea* texture_area = new nux::TextureArea ();
-    texture_area->SetPaintLayer (&color);
-
-    _layout->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+     PlacesSimpleTile *tile = new PlacesSimpleTile ("firefox", "FooBar Fox");
+    _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
   }
 
   _layout->ForceChildrenSize (true);
