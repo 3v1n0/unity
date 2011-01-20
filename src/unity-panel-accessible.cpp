@@ -91,7 +91,7 @@ unity_panel_accessible_initialize (AtkObject *accessible, gpointer data)
 {
   ATK_OBJECT_CLASS (unity_panel_accessible_parent_class)->initialize (accessible, data);
 
-  accessible->role = ATK_ROLE_TOOL_BAR;
+  accessible->role = ATK_ROLE_PANEL;
 }
 
 static gint
