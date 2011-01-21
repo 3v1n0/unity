@@ -11,7 +11,7 @@ def add_info(report, ui):
     # only reports all compiz infos if a graphical bug
     report_compiz = True
     if ui:
-        if not ui.yesno("Thanks for reporting this bug on unity.  Is the issue you are reporting is graphical (will report more information about your graphic configuration)?"):
+        if not ui.yesno("Thanks for reporting this bug on unity.  Is the issue you are reporting graphical (will report more information about your graphic configuration)?"):
             report_compiz = False
     if report_compiz:
         report.add_hooks_info(ui, srcpackage='compiz')
