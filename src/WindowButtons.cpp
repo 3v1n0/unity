@@ -86,9 +86,7 @@ public:
       tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates ().SetBlend (true,
-                                            GL_ONE,
-                                            GL_ONE_MINUS_SRC_ALPHA);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex (geo.x,
@@ -98,9 +96,7 @@ public:
                                 tex->GetDeviceTexture (),
                                 texxform,
                                 nux::Color::White);
-    GfxContext.GetRenderStates ().SetBlend (false,
-                                            GL_ONE,
-                                            GL_ONE_MINUS_SRC_ALPHA);
+    GfxContext.GetRenderStates ().SetBlend (false);
     GfxContext.PopClippingRectangle();
   }
 

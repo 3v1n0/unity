@@ -1492,10 +1492,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.icon->TextureForSize (_icon_image_size) == 0)
     return;
 
-  GfxContext.GetRenderStates ().SetBlend (true,
-                                          GL_ONE,
-                                          GL_ONE_MINUS_SRC_ALPHA);
-
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw tile */
@@ -1520,9 +1517,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   }
   /* end tile draw */
 
-  GfxContext.GetRenderStates ().SetBlend (true,
-                                          GL_ONE,
-                                          GL_ONE_MINUS_SRC_ALPHA);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw icon */
@@ -1636,9 +1631,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // clip vertically but not horizontally
     GfxContext.PushClippingRectangle(nux::Geometry (base.x, bkg_box.y, base.width, bkg_box.height));
-    GfxContext.GetRenderStates ().SetBlend (true,
-                                            GL_ONE,
-                                            GL_ONE_MINUS_SRC_ALPHA);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
 
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
 
@@ -1676,9 +1669,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
 
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false,
-                                            GL_ONE,
-                                            GL_ONE_MINUS_SRC_ALPHA);
+    GfxContext.GetRenderStates ().SetBlend (false);
 
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();

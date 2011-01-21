@@ -121,9 +121,7 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates().SetPremultipliedBlend (true, nux::SRC_OVER);
 
   gfxContext.QRP_1Tex (base.x,
                             base.y,

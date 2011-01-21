@@ -266,7 +266,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         _gradient_texture->UnlockRect (0);
       }
-      GfxContext.GetRenderStates ().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+      GfxContext.GetRenderStates ().SetPremultipliedBlend(true, nux::SRC_OVER);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
