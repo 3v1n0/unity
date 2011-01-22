@@ -39,6 +39,9 @@ PlacesController::PlacesController ()
   ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                 (UBusCallback)&PlacesController::CloseRequest,
+                                 this);
 
   _factory = new PlaceFactoryFile ();
 
@@ -103,6 +106,13 @@ PlacesController::ExternalActivation (GVariant *data, void *val)
 {
   PlacesController *self = (PlacesController*)val;
   self->ToggleShowHide ();
+}
+
+void
+PlacesController::CloseRequest (GVariant *data, void *val)
+{
+  PlacesController *self = (PlacesController*)val;
+  self->Hide ();
 }
 
 void

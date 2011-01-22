@@ -32,9 +32,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   Hide ();
 
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  SetLayout (_layout);
 
-  /* FIXME: Not needed this week */
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
@@ -43,6 +41,8 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   _home_view = new PlacesHomeView ();
   _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
   AddChild (_home_view);
+
+  SetLayout (_layout);
 }
 
 PlacesView::~PlacesView ()
@@ -53,7 +53,6 @@ PlacesView::~PlacesView ()
 long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  long ProcEvInfo = 0;
 
   nux::IEvent window_event = ievent;
   nux::Geometry base = GetGeometry();
@@ -67,7 +66,7 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   {
     if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
     {
-      ProcEvInfo = nux::eDoNotProcess;
+      //ProcEvInfo = nux::eDoNotProcess;
     }
   }
 
@@ -85,7 +84,9 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   }
 
   if (_layout)
+  {
     ret = _layout->ProcessEvent (window_event, ret, ProcessEventInfo);
+  }
 
   return ret;
 }
@@ -130,6 +131,7 @@ PlacesView::PostLayoutManagement (long LayoutResult)
 {
   return nux::BaseWindow::PostLayoutManagement (LayoutResult);
 }
+
 
 /* Introspection */
 const gchar *

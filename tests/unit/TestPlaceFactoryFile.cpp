@@ -30,7 +30,8 @@ TestPlaceFactoryFileCreateSuite ()
 {
 #define _DOMAIN "/Unit/PlaceFactoryFile"
 
-  g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
+  if (0)
+    g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
 }
 
 static void

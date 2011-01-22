@@ -84,7 +84,7 @@ PlacesTile::UpdateBackground ()
   delete cairo_graphics;
 }
 
-static double
+static inline double
 _align (double val)
 {
   double fract = val - (int) val;
@@ -167,7 +167,8 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
-  if (_state == STATE_HOVER)
+  // FIXME: Disabled due to nux issue
+  if (_state == STATE_HOVER && false)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 

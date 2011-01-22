@@ -39,6 +39,7 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 
 IconTexture::~IconTexture ()
 {
+  g_free (_icon_name);
 }
 
 void
@@ -95,9 +96,8 @@ IconTexture::Refresh ()
       file_path = g_strdup (gtk_icon_info_get_filename (info));
     }
 
-    g_debug ("%s", file_path);
     _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
-
+    
     if (error == NULL)
     {
       nux::BaseTexture *texture2D = nux::CreateTextureFromPixbuf (_pixbuf);

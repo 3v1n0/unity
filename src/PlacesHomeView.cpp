@@ -32,6 +32,9 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlacesHomeView.h"
 
 #include "PlacesSimpleTile.h"
@@ -128,7 +131,7 @@ void
 PlacesHomeView::OnTileClicked (PlacesTile *_tile)
 {
   PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
-
+  
   for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
   {
     if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
@@ -143,6 +146,10 @@ PlacesHomeView::OnTileClicked (PlacesTile *_tile)
       }
     }
   }
+
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                            NULL);
 }
 
 const gchar* PlacesHomeView::GetName ()
@@ -210,10 +217,66 @@ PlacesHomeView::PostLayoutManagement (long LayoutResult)
 }
 
 void
+PlacesHomeView::DrawRoundedRectangle (cairo_t* cr,
+                                      double   aspect,
+                                      double   x,
+                                      double   y,
+                                      double   cornerRadius,
+                                      double   width,
+                                      double   height)
+{
+    double radius = cornerRadius / aspect;
+
+    // top-left, right of the corner
+    cairo_move_to (cr, x + radius, y);
+
+    // top-right, left of the corner
+    cairo_line_to (cr, x + width - radius, y);
+
+    // top-right, below the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + radius,
+               radius,
+               -90.0f * G_PI / 180.0f,
+               0.0f * G_PI / 180.0f);
+
+    // bottom-right, above the corner
+    cairo_line_to (cr, x + width, y + height - radius);
+
+    // bottom-right, left of the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + height - radius,
+               radius,
+               0.0f * G_PI / 180.0f,
+               90.0f * G_PI / 180.0f);
+
+    // bottom-left, right of the corner
+    cairo_line_to (cr, x + radius, y + height);
+
+    // bottom-left, above the corner
+    cairo_arc (cr,
+               x + radius,
+               y + height - radius,
+               radius,
+               90.0f * G_PI / 180.0f,
+               180.0f * G_PI / 180.0f);
+
+    // top-left, right of the corner
+    cairo_arc (cr,
+               x + radius,
+               y + radius,
+               radius,
+               180.0f * G_PI / 180.0f,
+               270.0f * G_PI / 180.0f);
+}
+
+void
 PlacesHomeView::UpdateBackground ()
 {
 #define PADDING 24
-#define RADIUS  12
+#define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
 
@@ -224,8 +287,8 @@ PlacesHomeView::UpdateBackground ()
   _last_height = geo.height;
 
   x = y = PADDING;
-  width = _last_width - (PADDING);
-  height = _last_height - (PADDING);
+  width = _last_width - (2*PADDING);
+  height = _last_height - (2*PADDING);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
@@ -235,14 +298,8 @@ PlacesHomeView::UpdateBackground ()
 
   cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.2f);
 
-  cairo_move_to  (cr, x, y + RADIUS);
-  cairo_curve_to (cr, x, y, x, y, x + RADIUS, y);
-  cairo_line_to  (cr, width - RADIUS, y);
-  cairo_curve_to (cr, width, y, width, y, width, y + RADIUS);
-  cairo_line_to  (cr, width, height - RADIUS);
-  cairo_curve_to (cr, width, height, width, height, width - RADIUS, height);
-  cairo_line_to  (cr, x + RADIUS, height);
-  cairo_curve_to (cr, x, height, x, height, x, height - RADIUS);
+  DrawRoundedRectangle (cr, 1.0f, x, y, RADIUS, width, height);
+
   cairo_close_path (cr);
 
   cairo_fill_preserve (cr);
