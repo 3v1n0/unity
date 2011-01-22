@@ -53,9 +53,11 @@ protected:
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
 private:
-  BaseWindow       *_window;
+  nux::BaseWindow  *_window;
+  nux::HLayout     *_window_layout;
   PlacesView       *_view;
   PlaceFactoryFile *_factory;
+  bool              _visible;
 };
 
 #endif // PLACES_CONTROLLER_H

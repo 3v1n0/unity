@@ -32,8 +32,8 @@
 #include "PlacesController.h"
 
 PlacesController::PlacesController ()
+: _visible (false)
 {
-
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
@@ -48,15 +48,15 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->Reference ();
+  _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
   _window->EnableInputWindow(true);
   _window->InputWindowEnableStruts(false);
   _window->SetLayout (_window_layout);
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
- 
-   _view = new PlacesView ();
+
+  _view = new PlacesView ();
   _window_layout->AddView(_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
@@ -70,27 +70,36 @@ PlacesController::~PlacesController ()
 
 void PlacesController::Show ()
 {
-  ShowWindow (true, false);
-  EnableInputWindow (true, 1);
-  GrabPointer ();
-  NeedRedraw ();
+  if (_visible)
+    return;
+
+  _window->ShowWindow (true, false);
+  _window->EnableInputWindow (true, 1);
+  _window->GrabPointer ();
+  _window->GrabKeyboard ();
+  _window->NeedRedraw ();
+
+  _visible = true;
 }
 
 void PlacesController::Hide ()
 {
-  CaptureMouseDownAnyWhereElse (false);
-  ForceStopFocus (1, 1);
-  UnGrabPointer ();
-  EnableInputWindow (false);
-  ShowWindow (false, false);
+  if (!_visible)
+    return;
+
+  _window->CaptureMouseDownAnyWhereElse (false);
+  _window->ForceStopFocus (1, 1);
+  _window->UnGrabPointer ();
+  _window->UnGrabKeyboard ();
+  _window->EnableInputWindow (false);
+  _window->ShowWindow (false, false);
+  
+  _visible = false;
 }
 
 void PlacesController::ToggleShowHide ()
 {
-  if (_window->IsVisible ())
-    Hide ();
-  else
-    Show ();
+  _visible ? Hide () : Show ();
 }
 
 /* Configure callback for the window */

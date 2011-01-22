@@ -27,10 +27,8 @@
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
-:   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
+: nux::View (NUX_TRACKER_LOCATION)
 {
-  Hide ();
-
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
   _search_bar = new PlacesSearchBar ();
@@ -42,7 +40,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
   AddChild (_home_view);
 
-  SetLayout (_layout);
+  SetCompositionLayout (_layout);
 }
 
 PlacesView::~PlacesView ()
@@ -54,55 +52,16 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 {
   long ret = TraverseInfo;
 
-  nux::IEvent window_event = ievent;
-  nux::Geometry base = GetGeometry();
-  //window_event.e_x_root = base.x;
-  //window_event.e_y_root = base.y;
-
-  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
-  nux::Geometry viewGeometry = GetGeometry();
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root))
-    {
-      //ProcEvInfo = nux::eDoNotProcess;
-    }
-  }
-
-  // hide if outside our window
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    nux::Geometry home_geo (0, 0, 66, 24);
-
-    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
-        && !home_geo.IsPointInside (ievent.e_x, ievent.e_y))
-    {
-      Hide ();
-      return nux::eMouseEventSolved;
-    }
-  }
-
-  if (_layout)
-  {
-    ret = _layout->ProcessEvent (window_event, ret, ProcessEventInfo);
-  }
-
+  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
 void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
-  // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
-  //base.x = base.y = 0;
-
   GfxContext.PushClippingRectangle (base);
 
   nux::Color color (0.0, 0.0, 0.0, 0.9);
-  // You can use this function to draw a colored Quad:
-  //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
-  // or this one:
   GfxContext.QRP_Color (0, 0, GetGeometry ().width, GetGeometry ().height, color);
 
   GfxContext.PopClippingRectangle ();
@@ -112,26 +71,12 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
-  // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
-  //base.x = base.y = 0;
-
   nux::GetPainter ().PushColorLayer (GfxContext, base, nux::Color (0.0, 0.0, 0.0, 0.9), true);
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
 
   nux::GetPainter ().PopBackground ();
 }
-
-void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-}
-
-long
-PlacesView::PostLayoutManagement (long LayoutResult)
-{
-  return nux::BaseWindow::PostLayoutManagement (LayoutResult);
-}
-
 
 /* Introspection */
 const gchar *
