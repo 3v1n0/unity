@@ -42,15 +42,22 @@ PlacesController::PlacesController ()
 
   _factory = new PlaceFactoryFile ();
 
-  _window = new PlacesView ();
+  _window_layout = new nux::HLayout();
+  
+  _window = new nux::BaseWindow ("Dash");
   _window->Reference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
   _window->EnableInputWindow(true);
   _window->InputWindowEnableStruts(false);
-
+  _window->SetLayout (_window_layout);
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
-
+ 
+   _view = new PlacesView ();
+  _window_layout->AddView(_view, 1);
+  _window_layout->SetContentDistribution(nux::eStackLeft);
+  _window_layout->SetVerticalExternalMargin(0);
+  _window_layout->SetHorizontalExternalMargin(0); 
 }
 
 PlacesController::~PlacesController ()
@@ -60,13 +67,19 @@ PlacesController::~PlacesController ()
 
 void PlacesController::Show ()
 {
-  // show called
-  _window->Show ();
+  ShowWindow (true, false);
+  EnableInputWindow (true, 1);
+  GrabPointer ();
+  NeedRedraw ();
 }
 
 void PlacesController::Hide ()
 {
-  _window->Hide ();
+  CaptureMouseDownAnyWhereElse (false);
+  ForceStopFocus (1, 1);
+  UnGrabPointer ();
+  EnableInputWindow (false);
+  ShowWindow (false, false);
 }
 
 void PlacesController::ToggleShowHide ()

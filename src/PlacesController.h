@@ -29,6 +29,8 @@
 #include "PlacesView.h"
 #include "Introspectable.h"
 
+#include <Nux/BaseWindow.h>
+
 class PlacesController : public Introspectable
 {
 public:
@@ -50,7 +52,8 @@ protected:
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
 private:
-  PlacesView       *_window;
+  BaseWindow       *_window;
+  PlacesView       *_view;
   PlaceFactoryFile *_factory;
 };
 

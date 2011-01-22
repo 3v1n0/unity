@@ -34,13 +34,12 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
   SetLayout (_layout);
 
-  /* FIXME: Not needed this week 
+  /* FIXME: Not needed this week */
   _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
-  */
-
+  
   _home_view = new PlacesHomeView ();
   _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
   AddChild (_home_view);
@@ -58,8 +57,8 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
 
   nux::IEvent window_event = ievent;
   nux::Geometry base = GetGeometry();
-  window_event.e_x_root = base.x;
-  window_event.e_y_root = base.y;
+  //window_event.e_x_root = base.x;
+  //window_event.e_y_root = base.y;
 
   // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
   nux::Geometry viewGeometry = GetGeometry();
@@ -95,7 +94,7 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
   // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
-  base.x = base.y = 0;
+  //base.x = base.y = 0;
 
   GfxContext.PushClippingRectangle (base);
 
@@ -113,7 +112,7 @@ void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
   // Coordinates inside the BaseWindow are relative to the top-left corner (0, 0). 
-  base.x = base.y = 0;
+  //base.x = base.y = 0;
 
   nux::GetPainter ().PushColorLayer (GfxContext, base, nux::Color (0.0, 0.0, 0.0, 0.9), true);
   if (_layout)
@@ -131,38 +130,6 @@ PlacesView::PostLayoutManagement (long LayoutResult)
 {
   return nux::BaseWindow::PostLayoutManagement (LayoutResult);
 }
-
-
-
-/*void PlacesView::ShowWindow (bool b, bool start_modal)
-{
-  nux::BaseWindow::ShowWindow (b, start_modal);
-}*/
-
-void PlacesView::Show ()
-{
-  if (IsVisible ())
-    return;
-
-  // FIXME: ShowWindow shouldn't need to be called first
-  ShowWindow (true, false);
-  EnableInputWindow (true, 1);
-  GrabPointer ();
-  NeedRedraw ();
-}
-
-void PlacesView::Hide ()
-{
-  if (!IsVisible ())
-    return;
-
-  CaptureMouseDownAnyWhereElse (false);
-  ForceStopFocus (1, 1);
-  UnGrabPointer ();
-  EnableInputWindow (false);
-  ShowWindow (false, false);
-}
-
 
 /* Introspection */
 const gchar *

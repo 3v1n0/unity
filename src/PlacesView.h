@@ -24,7 +24,6 @@
 #include <NuxImage/CairoGraphics.h>
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/AbstractPaintLayer.h"
-#include <Nux/BaseWindow.h>
 #include <Nux/VLayout.h>
 
 #include "Introspectable.h"
@@ -32,7 +31,7 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
-class PlacesView : public nux::BaseWindow, public Introspectable
+class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::BaseWindow);
 public:
