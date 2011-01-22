@@ -22,6 +22,9 @@
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlacesView.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
@@ -51,6 +54,23 @@ PlacesView::~PlacesView ()
 long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
+  nux::Geometry gep = GetGeometry ();
+  
+  // hide if outside our view
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    nux::Geometry home_geo (0, 0, 66, 24);
+
+    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+        && !home_geo.IsPointInside (ievent.e_x, ievent.e_y))
+    {
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                NULL);
+
+      return nux::eMouseEventSolved;
+    }
+  }
 
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
@@ -71,6 +91,7 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
+
   nux::GetPainter ().PushColorLayer (GfxContext, base, nux::Color (0.0, 0.0, 0.0, 0.9), true);
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);

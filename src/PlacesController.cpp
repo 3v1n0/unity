@@ -50,17 +50,18 @@ PlacesController::PlacesController ()
   _window = new nux::BaseWindow ("Dash");
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  _window->ShowWindow(false);
+  _window->ShowWindow(true);
   _window->EnableInputWindow(true);
   _window->InputWindowEnableStruts(false);
-  _window->SetLayout (_window_layout);
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
   _view = new PlacesView ();
   _window_layout->AddView(_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
-  _window_layout->SetHorizontalExternalMargin(0); 
+  _window_layout->SetHorizontalExternalMargin(0);
+
+  _window->SetLayout (_window_layout);
 }
 
 PlacesController::~PlacesController ()
@@ -78,6 +79,7 @@ void PlacesController::Show ()
   _window->GrabPointer ();
   _window->GrabKeyboard ();
   _window->NeedRedraw ();
+  _window->CaptureMouseDownAnyWhereElse (true);
 
   _visible = true;
 }
