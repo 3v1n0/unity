@@ -44,9 +44,8 @@ public:
     nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
     _combo = new nux::ComboBoxComplex (NUX_TRACKER_LOCATION);
-    _combo->AddItem (new nux::TableItem("A"));
-    _combo->SetPopupWindowSize (120, 150);
-    _combo->SetMaximumWidth (150);
+    _combo->SetPopupWindowSize (300, 150);
+    _combo->SetMinimumWidth (300);
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
     PlacesView *view = new PlacesView ();
@@ -74,7 +73,7 @@ public:
     for (i = entries.begin (); i != entries.end (); ++i)
     {
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-      gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+      _combo->AddItem (new nux::TableItem(entry->GetName ()));
     }
   }
 
@@ -92,7 +91,7 @@ public:
       for (i = entries.begin (); i != entries.end (); ++i)
       {
         PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-        gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+       _combo->AddItem (new nux::TableItem(entry->GetName ()));
       }
     }
   }
