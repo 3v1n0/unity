@@ -44,8 +44,7 @@ public:
     nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
     _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
-    //_combo->SetPopupWindowSize (300, 150);
-    //_combo->SetMinimumWidth (300);
+    _combo->SetMinimumWidth (150);
     _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
@@ -116,7 +115,13 @@ public:
 
         if (g_strcmp0 (txt, entry->GetName ()) == 0)
         {
-
+          g_debug ("Activated: %s", entry->GetName ());
+          ubus_server_send_message (ubus_server_get_default (),
+                                    UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                    g_variant_new ("(sus)",
+                                                   entry->GetId (),
+                                                   0,
+                                                   ""));
         }
       }
     }

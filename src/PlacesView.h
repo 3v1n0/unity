@@ -41,6 +41,9 @@ public:
   virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+
+  // UBus handlers
+  void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
  
 protected:
 

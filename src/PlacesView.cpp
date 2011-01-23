@@ -27,6 +27,8 @@
 
 #include "PlacesView.h"
 
+static void place_entry_activate_request (GVariant *payload, PlacesView *self);
+
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
@@ -34,7 +36,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 {
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
-  _search_bar = new PlacesSearchBar ();
+ _search_bar = new PlacesSearchBar ();
   _search_bar->SetMinMaxSize (1024, 48);
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
@@ -44,6 +46,12 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   AddChild (_home_view);
 
   SetCompositionLayout (_layout);
+
+  // Register for all the events
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                 (UBusCallback)place_entry_activate_request,
+                                 this);
 }
 
 PlacesView::~PlacesView ()
@@ -51,7 +59,8 @@ PlacesView::~PlacesView ()
 
 }
 
-long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long
+PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
   nux::Geometry gep = GetGeometry ();
@@ -76,7 +85,8 @@ long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long Proce
   return ret;
 }
 
-void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void
+PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
@@ -88,7 +98,8 @@ void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 
-void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+void
+PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry ();
 
@@ -97,6 +108,14 @@ void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     _layout->ProcessDraw (GfxContext, force_draw);
 
   nux::GetPainter ().PopBackground ();
+}
+
+void
+PlacesView::PlaceEntryActivateRequest (const char *entry_id,
+                                       guint       section_id,
+                                       const char *search_string)
+{
+  g_debug ("%s: %s %d %s", G_STRFUNC, entry_id, section_id, search_string);
 }
 
 /* Introspection */
@@ -114,5 +133,25 @@ PlacesView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height)); 
+}
+
+//
+// C glue code
+//
+static void
+place_entry_activate_request (GVariant *payload, PlacesView *self)
+{
+  gchar *id = NULL;
+  guint  section = 0;
+  gchar *search_string = NULL;
+
+  g_return_if_fail (self);
+
+  g_variant_get (payload, "(sus)", &id, &section, &search_string);
+
+  self->PlaceEntryActivateRequest (id, section, search_string);
+
+  g_free (id);
+  g_free (search_string);
 }
