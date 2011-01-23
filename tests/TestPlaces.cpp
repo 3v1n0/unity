@@ -45,7 +45,7 @@ public:
 
     _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
     //_combo->SetPopupWindowSize (300, 150);
-    _combo->SetMinimumWidth (300);
+    //_combo->SetMinimumWidth (300);
     _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
