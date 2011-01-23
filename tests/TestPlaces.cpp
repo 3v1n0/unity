@@ -26,7 +26,7 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
-#include "Nux/ComboBoxComplex.h"
+#include "Nux/ComboBoxSimple.h"
 #include "../src/ubus-server.h"
 #include "Nux/TableCtrl.h"
 #include "PlacesView.h"
@@ -43,9 +43,10 @@ public:
   {   
     nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-    _combo = new nux::ComboBoxComplex (NUX_TRACKER_LOCATION);
-    _combo->SetPopupWindowSize (300, 150);
+    _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
+    //_combo->SetPopupWindowSize (300, 150);
     _combo->SetMinimumWidth (300);
+    _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
     PlacesView *view = new PlacesView ();
@@ -73,7 +74,7 @@ public:
     for (i = entries.begin (); i != entries.end (); ++i)
     {
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-      _combo->AddItem (new nux::TableItem(entry->GetName ()));
+      _combo->AddItem (entry->GetName ());
     }
   }
 
@@ -91,16 +92,16 @@ public:
       for (i = entries.begin (); i != entries.end (); ++i)
       {
         PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-       _combo->AddItem (new nux::TableItem(entry->GetName ()));
+       _combo->AddItem (entry->GetName ());
       }
     }
   }
 
-  void OnComboChangedFoRealz ()
+  void OnComboChangedFoRealz (nux::ComboBoxSimple *simple)
   {
     std::vector<Place *> places = _factory->GetPlaces ();
     std::vector<Place *>::iterator it;
-    gchar *txt = NULL;
+    const char *txt = _combo->GetSelectionLabel ();
 
     // Find entry
     for (it = places.begin (); it != places.end (); ++it)
@@ -119,12 +120,10 @@ public:
         }
       }
     }
-
-    g_free (txt);
   }
 
-  nux::ComboBoxComplex *_combo;
-  PlaceFactoryFile     *_factory;
+  nux::ComboBoxSimple *_combo;
+  PlaceFactoryFile    *_factory;
 };
 
 
