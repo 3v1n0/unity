@@ -43,8 +43,14 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
  
   _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
-  _entry->SetMinMaxSize (200, 30);
+  _entry->SetMinimumWidth (200);
+//  _entry->SetMinimumHeight (30);
+  _entry->SetTextBackgroundColor (nux::Color (0x00000000));
+
   _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layout->SetVerticalExternalMargin (14);
+  _layout->SetHorizontalExternalMargin (18);
+  
   SetCompositionLayout (_layout);
 }
 
@@ -125,9 +131,68 @@ PlacesSearchBar::PostLayoutManagement (long LayoutResult)
   return nux::View::PostLayoutManagement (LayoutResult);
 }
 
+static void
+draw_rounded_rect (cairo_t* cr,
+                   double   aspect,
+                   double   x,
+                   double   y,
+                   double   cornerRadius,
+                   double   width,
+                   double   height)
+{
+    double radius = cornerRadius / aspect;
+
+    // top-left, right of the corner
+    cairo_move_to (cr, x + radius, y);
+
+    // top-right, left of the corner
+    cairo_line_to (cr, x + width - radius, y);
+
+    // top-right, below the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + radius,
+               radius,
+               -90.0f * G_PI / 180.0f,
+               0.0f * G_PI / 180.0f);
+
+    // bottom-right, above the corner
+    cairo_line_to (cr, x + width, y + height - radius);
+
+    // bottom-right, left of the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + height - radius,
+               radius,
+               0.0f * G_PI / 180.0f,
+               90.0f * G_PI / 180.0f);
+
+    // bottom-left, right of the corner
+    cairo_line_to (cr, x + radius, y + height);
+
+    // bottom-left, above the corner
+    cairo_arc (cr,
+               x + radius,
+               y + height - radius,
+               radius,
+               90.0f * G_PI / 180.0f,
+               180.0f * G_PI / 180.0f);
+
+    // top-left, right of the corner
+    cairo_arc (cr,
+               x + radius,
+               y + radius,
+               radius,
+               180.0f * G_PI / 180.0f,
+               270.0f * G_PI / 180.0f);
+}
+
 void
 PlacesSearchBar::UpdateBackground ()
 {
+#define PADDING 8
+#define RADIUS  6
+  int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
 
   if (geo.width == _last_width && geo.height == _last_height)
@@ -136,17 +201,25 @@ PlacesSearchBar::UpdateBackground ()
   _last_width = geo.width;
   _last_height = geo.height;
 
+  x = y = PADDING;
+  width = _last_width - (2*PADDING);
+  height = _last_height - (2*PADDING);
+
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
-  cairo_set_line_width (cr, 1);
+  cairo_translate (cr, 0.5, 0.5);
+  cairo_set_line_width (cr, 1.0);
 
-  cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
-  cairo_pattern_add_color_stop_rgb (pat, 0.0f, 89/255.0f, 88/255.0f, 83/255.0f);
-  cairo_pattern_add_color_stop_rgb (pat, 1.0f, 50/255.0f, 50/255.0f, 45/255.0f);
-  cairo_set_source (cr, pat);
-  cairo_rectangle (cr, 0, 0, _last_width, _last_height);
-  cairo_fill (cr);
-  cairo_pattern_destroy (pat);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 1.0f);
+
+  draw_rounded_rect (cr, 1.0f, x, y, RADIUS, width, height);
+
+  cairo_close_path (cr);
+
+  cairo_fill_preserve (cr);
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_stroke (cr);
 
   cairo_destroy (cr);
 
