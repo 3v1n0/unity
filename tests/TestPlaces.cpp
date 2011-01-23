@@ -15,6 +15,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
@@ -25,26 +26,118 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
-
+#include "Nux/ComboBoxComplex.h"
 #include "../src/ubus-server.h"
-
+#include "Nux/TableCtrl.h"
 #include "PlacesView.h"
 #include "UBusMessages.h"
 
+#include "PlaceFactoryFile.h"
+#include "Place.h"
+#include "PlaceEntry.h"
+
+class TestApp 
+{
+public:
+  TestApp ()
+  {   
+    nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
+
+    _combo = new nux::ComboBoxComplex (NUX_TRACKER_LOCATION);
+    _combo->AddItem (new nux::TableItem("A"));
+    _combo->SetPopupWindowSize (120, 150);
+    _combo->SetMaximumWidth (150);
+    layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
+
+    PlacesView *view = new PlacesView ();
+    view->SetMinMaxSize(1024, 600);
+    layout->AddView(view, 1, nux::eCenter, nux::eFix);
+
+    _factory = new PlaceFactoryFile ();
+    PopulateEntries ();
+    _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
+
+    layout->SetContentDistribution(nux::eStackCenter);
+    nux::GetGraphicsThread()->SetLayout (layout);
+  }
+
+  ~TestApp ()
+  {
+
+  }
+
+  void OnPlaceAdded (Place *place)
+  {
+    std::vector<PlaceEntry *> entries = place->GetEntries ();
+    std::vector<PlaceEntry *>::iterator i;
+
+    for (i = entries.begin (); i != entries.end (); ++i)
+    {
+      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+      gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+    }
+  }
+
+  void PopulateEntries ()
+  {
+    std::vector<Place *> places = _factory->GetPlaces ();
+    std::vector<Place *>::iterator it;
+
+    for (it = places.begin (); it != places.end (); ++it)
+    {
+      Place *place = static_cast<Place *> (*it);
+      std::vector<PlaceEntry *> entries = place->GetEntries ();
+      std::vector<PlaceEntry *>::iterator i;
+
+      for (i = entries.begin (); i != entries.end (); ++i)
+      {
+        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+        gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+      }
+    }
+  }
+
+  void OnComboChangedFoRealz ()
+  {
+    std::vector<Place *> places = _factory->GetPlaces ();
+    std::vector<Place *>::iterator it;
+    gchar *txt = NULL;
+
+    // Find entry
+    for (it = places.begin (); it != places.end (); ++it)
+    {
+      Place *place = static_cast<Place *> (*it);
+      std::vector<PlaceEntry *> entries = place->GetEntries ();
+      std::vector<PlaceEntry *>::iterator i;
+
+      for (i = entries.begin (); i != entries.end (); ++i)
+      {
+        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+
+        if (g_strcmp0 (txt, entry->GetName ()) == 0)
+        {
+
+        }
+      }
+    }
+
+    g_free (txt);
+  }
+
+  nux::ComboBoxComplex *_combo;
+  PlaceFactoryFile     *_factory;
+};
+
+
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
-  nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  PlacesView *view = new PlacesView ();
 
-  view->SetMinMaxSize(1024, 600);
-  layout->AddView(view, 1, nux::eCenter, nux::eFix);
-  layout->SetContentDistribution(nux::eStackCenter);
-
-  nux::GetGraphicsThread()->SetLayout (layout);
 }
 
 int main(int argc, char **argv)
 {
+  TestApp *app;
+
   g_type_init ();
   g_thread_init (NULL);
   gtk_init (&argc, &argv);
@@ -53,8 +146,10 @@ int main(int argc, char **argv)
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
                                                1024, 600, 0, &ThreadWidgetInit, 0);
+  app = new TestApp ();
   
   wt->Run(NULL);
   delete wt;
   return 0;
 }
+
