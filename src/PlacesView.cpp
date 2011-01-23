@@ -25,6 +25,8 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include "PlaceFactory.h"
+
 #include "PlacesView.h"
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
@@ -110,15 +112,54 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::GetPainter ().PopBackground ();
 }
 
+//
+// PlacesView Methods
+//
+void
+PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+{
+
+}
+
+//
+// UBus handlers
+//
 void
 PlacesView::PlaceEntryActivateRequest (const char *entry_id,
                                        guint       section_id,
                                        const char *search_string)
 {
-  g_debug ("%s: %s %d %s", G_STRFUNC, entry_id, section_id, search_string);
+  std::vector<Place *> places = PlaceFactory::GetDefault ()->GetPlaces ();
+  std::vector<Place *>::iterator it;
+  
+  for (it = places.begin (); it != places.end (); ++it)
+  {
+    Place *place = static_cast<Place *> (*it);
+    std::vector<PlaceEntry *> entries = place->GetEntries ();
+    std::vector<PlaceEntry *>::iterator i;
+
+    for (i = entries.begin (); i != entries.end (); ++i)
+    {
+      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+
+      if (g_strcmp0 (entry_id, entry->GetId ()) == 0)
+      {
+        SetActiveEntry (entry, section_id, search_string);
+        return;
+      }
+    }
+  }
+
+  g_warning ("%s: Unable to find entry: %s for request: %d %s",
+             G_STRFUNC,
+             entry_id,
+             section_id,
+             search_string);
 }
 
-/* Introspection */
+//
+// Introspection
+//
 const gchar *
 PlacesView::GetName ()
 {

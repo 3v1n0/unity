@@ -52,7 +52,7 @@ public:
     view->SetMinMaxSize(1024, 600);
     layout->AddView(view, 1, nux::eCenter, nux::eFix);
 
-    _factory = new PlaceFactoryFile ();
+    _factory = PlaceFactory::GetDefault ();
     PopulateEntries ();
     _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
 
@@ -128,7 +128,7 @@ public:
   }
 
   nux::ComboBoxSimple *_combo;
-  PlaceFactoryFile    *_factory;
+  PlaceFactory *_factory;
 };
 
 

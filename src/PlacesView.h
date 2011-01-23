@@ -28,6 +28,9 @@
 
 #include "Introspectable.h"
 
+#include "Place.h"
+#include "PlaceEntry.h"
+
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
@@ -38,9 +41,13 @@ public:
   PlacesView (NUX_FILE_LINE_PROTO);
   ~PlacesView ();
 
-  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  // nux::View overrides
+  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+
+  // Methods
+  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
