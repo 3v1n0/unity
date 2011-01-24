@@ -37,7 +37,7 @@ public:
   sigc::signal<void, LauncherIcon *> IconAdded;
 
 private:
-
+  void PopulateEntries ();
   void OnPlaceAdded (Place *place);
 
   Launcher     *_launcher;

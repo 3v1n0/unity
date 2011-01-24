@@ -38,13 +38,15 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   
   _launcher->SetModel (_model);
   _favorite_store = FavoriteStore::GetDefault ();
-  
+
+  InsertExpoAction ();
+ 
   _place_section = new PlaceLauncherSection (_launcher);
   _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
-  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
-  InsertExpoAction ();
   InsertTrash ();
+
+  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   
   _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
   _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));

@@ -25,6 +25,8 @@ PlaceLauncherSection::PlaceLauncherSection (Launcher *launcher)
 {
   _factory = PlaceFactory::GetDefault ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlaceLauncherSection::OnPlaceAdded));
+
+  PopulateEntries ();
 }
 
 PlaceLauncherSection::~PlaceLauncherSection ()
@@ -46,3 +48,26 @@ PlaceLauncherSection::OnPlaceAdded (Place *place)
     IconAdded.emit (icon);
   }
 }
+
+void
+PlaceLauncherSection::PopulateEntries ()
+{
+  std::vector<Place *> places = _factory->GetPlaces ();
+  std::vector<Place *>::iterator it;
+
+  for (it = places.begin (); it != places.end (); ++it)
+  {
+    Place *place = static_cast<Place *> (*it);
+    std::vector<PlaceEntry *> entries = place->GetEntries ();
+    std::vector<PlaceEntry *>::iterator i;
+
+    for (i = entries.begin (); i != entries.end (); ++i)
+    {
+      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+      PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
+
+      IconAdded.emit (icon);
+    }
+  }
+}
+

@@ -25,11 +25,17 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
   _entry (entry)
 {
-  SetTooltipText (entry->GetName ());
-  SetIconName ("user-trash");
+  gchar *escape;
+
+  escape = g_markup_escape_text (entry->GetName (), -1);
+
+  SetTooltipText (escape);
+  SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_PLACE); 
+
+  g_free (escape);
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()
