@@ -39,6 +39,9 @@
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define URGENT_BLINKS       3
 #define WIGGLE_CYCLES       6
 
@@ -274,6 +277,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _key_show_launcher      = false;
+    _placeview_show_launcher = false;
     _window_over_launcher   = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
@@ -296,6 +300,14 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+                                   (UBusCallback)&Launcher::OnPlaceViewShown,
+                                   this);
+    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                   this);
 }
 
 Launcher::~Launcher()
@@ -953,6 +965,8 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
+/* Launcher Show/Hide logic */
+
 void Launcher::StartKeyShowLauncher ()
 {
     _key_show_launcher = true;
@@ -963,6 +977,20 @@ void Launcher::EndKeyShowLauncher ()
 {
     _key_show_launcher = false;
     SetupAutohideTimer ();
+}
+
+void Launcher::OnPlaceViewShown (GVariant *data, void *val)
+{
+    Launcher *self = (Launcher*)val;
+    self->_placeview_show_launcher = true;
+    self->EnsureHiddenState ();
+}
+
+void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
+{
+    Launcher *self = (Launcher*)val;
+    self->_placeview_show_launcher = false;
+    self->SetupAutohideTimer ();
 }
 
 void Launcher::SetHidden (bool hidden)
@@ -993,6 +1021,7 @@ Launcher::EnsureHiddenState ()
   if (!_mouse_inside_trigger && 
       !_mouse_inside_launcher && 
       !_key_show_launcher &&
+      !_placeview_show_launcher &&
        _launcher_action_state == ACTION_NONE &&
       !QuicklistManager::Default ()->Current() &&
       _window_over_launcher) 
@@ -1062,6 +1091,8 @@ bool Launcher::AutohideEnabled ()
 {
     return _autohide;
 }
+
+/* End Launcher Show/Hide logic */
 
 gboolean Launcher::StrutHack (gpointer data)
 {

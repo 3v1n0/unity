@@ -26,7 +26,6 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
-#include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesController.h"
@@ -35,11 +34,11 @@ PlacesController::PlacesController ()
 {
 
   // register interest with ubus so that we get activation messages
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
+  _ubus = ubus_server_get_default ();
+  ubus_server_register_interest (_ubus, UBUS_HOME_BUTTON_ACTIVATED,
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+  ubus_server_register_interest (_ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  (UBusCallback)&PlacesController::CloseRequest,
                                  this);
 
@@ -65,11 +64,13 @@ void PlacesController::Show ()
 {
   // show called
   _window->Show ();
+  ubus_server_send_message (_ubus, UBUS_PLACE_VIEW_SHOWN, NULL);
 }
 
 void PlacesController::Hide ()
 {
   _window->Hide ();
+  ubus_server_send_message (_ubus, UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
 void PlacesController::ToggleShowHide ()

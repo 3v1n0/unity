@@ -29,6 +29,8 @@
 #include "PlacesView.h"
 #include "Introspectable.h"
 
+#include "ubus-server.h"
+
 class PlacesController : public Introspectable
 {
 public:
@@ -53,6 +55,7 @@ protected:
 private:
   PlacesView       *_window;
   PlaceFactoryFile *_factory;
+  UBusServer       *_ubus;
 };
 
 #endif // PLACES_CONTROLLER_H
