@@ -29,6 +29,7 @@
 
 class PanelHomeButton : public nux::TextureArea, public Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE (Launcher, nux::TextureArea);
 public:
   PanelHomeButton ();
   ~PanelHomeButton ();
