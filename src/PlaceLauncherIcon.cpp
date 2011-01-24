@@ -63,12 +63,7 @@ PlaceLauncherIcon::OnMouseClick (int button)
 
   if (button == 1)
   {
-    ubus_server_send_message (ubus_server_get_default (),
-                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                              g_variant_new ("(sus)",
-                                             _entry->GetId (),
-                                             0,
-                                             ""));
+    Activate (0, "");
   }
 }
 
@@ -76,4 +71,41 @@ void
 PlaceLauncherIcon::UpdatePlaceIcon ()
 {
 
+}
+
+std::list<DbusmenuMenuitem *>
+PlaceLauncherIcon::GetMenus ()
+{
+  std::list<DbusmenuMenuitem *>  result;
+  DbusmenuMenuitem              *menu_item;
+
+  menu_item = dbusmenu_menuitem_new ();
+
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open");
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+  g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (&PlaceLauncherIcon::OnOpen), this);
+
+  result.push_back (menu_item);
+
+  return result;
+}
+
+void
+PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new ("(sus)",
+                                           _entry->GetId (),
+                                           section_id,
+                                           search_string));
+}
+
+void
+PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
+{
+  self->Activate (0, "");
 }

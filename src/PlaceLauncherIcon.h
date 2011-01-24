@@ -38,6 +38,11 @@ public:
 protected:
   void OnMouseClick (int button);
   void UpdatePlaceIcon ();
+  std::list<DbusmenuMenuitem *> GetMenus ();
+
+private:
+  void Activate (guint section_id, const char *search_string);
+  static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
 
 private:
   PlaceEntry *_entry;
