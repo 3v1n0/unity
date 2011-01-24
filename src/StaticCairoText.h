@@ -41,6 +41,21 @@ namespace nux
   class StaticCairoText : public View
   {
     public:
+      typedef enum
+      {
+        NUX_ELLIPSIZE_END,
+        NUX_ELLIPSIZE_START,
+        NUX_ELLIPSIZE_MIDDLE,
+        NUX_ELLIPSIZE_NONE,
+      } EllipsizeState;
+
+      typedef enum
+      {
+        NUX_ALIGN_LEFT,
+        NUX_ALIGN_CENTRE,
+        NUX_ALIGN_RIGHT,
+      } AlignState;
+
       StaticCairoText (const TCHAR* text, NUX_FILE_LINE_PROTO);
 
       ~StaticCairoText ();
@@ -64,8 +79,10 @@ namespace nux
 
       // public API
       void SetText (NString text);
-
       void SetTextColor (Color textColor);
+      void SetTextEllipsize (EllipsizeState state);
+      void SetTextAlignment (AlignState state);
+      void SetFont (const char *fontstring);
 
       void GetTextExtents (int &width, int &height);
 
@@ -76,6 +93,9 @@ namespace nux
     private:
       NString        _text;
       Color          _textColor;
+      EllipsizeState _ellipsize;
+      AlignState     _align;
+      char*           _fontstring;
 
       CairoGraphics* _cairoGraphics;
       BaseTexture*   _texture2D;

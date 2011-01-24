@@ -7,5 +7,6 @@
 #cmakedefine VERSION "@VERSION@"
 #cmakedefine BUILDDIR "@BUILDDIR@"
 #cmakedefine TESTVALADIR "@TESTVALADIR@"
+#cmakedefine TESTDATADIR "@TESTDIRDIR@"
 
 #endif // CONFIG_H

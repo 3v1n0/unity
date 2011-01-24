@@ -3,7 +3,7 @@
 #
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-
+set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 #
 # Unit tests
 #
@@ -14,6 +14,7 @@ pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
+     "-DTESTDATADIR=${TESTDATADIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -79,8 +80,8 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
-		../src/PanelTitlebarGrabAreaView.h
-		../src/PanelTitlebarGrabAreaView.cpp
+            		../src/PanelTitlebarGrabAreaView.h
+            		../src/PanelTitlebarGrabAreaView.cpp
                 ../src/IndicatorObjectFactory.h
                 ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectEntryProxy.h
@@ -108,16 +109,52 @@ add_executable (test-panel
 
 add_executable (test-places
                 TestPlaces.cpp
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
                 ../src/PlacesController.cpp
                 ../src/PlacesController.h
+                ../src/PlacesHomeView.cpp
+                ../src/PlacesHomeView.h
+                ../src/PlacesSearchBar.cpp
+                ../src/PlacesSearchBar.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
+                ../src/PlaceEntryRemote.cpp
+                ../src/PlaceEntryRemote.h
+                ../src/PlaceEntry.h
+                ../src/PlaceFactoryFile.cpp
+                ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.h
+                ../src/PlaceRemote.cpp
+                ../src/PlaceRemote.h
+                ../src/Place.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )
+
+add_executable (test-places-tiles
+                TestPlacesTiles.cpp
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                )
+
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
