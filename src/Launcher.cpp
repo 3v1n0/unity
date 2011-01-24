@@ -1012,7 +1012,7 @@ Launcher::CheckWindowOverLauncher ()
   {
     CompWindow *window = *it;
     int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                          CompWindowTypeModalDialogMask;
+                          CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
     if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
