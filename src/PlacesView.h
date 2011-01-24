@@ -36,7 +36,7 @@
 
 class PlacesView : public nux::View, public Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::BaseWindow);
+  NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
   PlacesView (NUX_FILE_LINE_PROTO);
   ~PlacesView ();

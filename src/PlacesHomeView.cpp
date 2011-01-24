@@ -187,6 +187,7 @@ PlacesHomeView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proce
 void
 PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  UpdateBackground ();
   nux::GetPainter().PaintBackground (GfxContext, GetGeometry() );
 
   _bg_layer->SetGeometry (GetGeometry ());
@@ -211,7 +212,6 @@ long
 PlacesHomeView::PostLayoutManagement (long LayoutResult)
 {
   // I'm imagining this is a good as time as any to update the background
-  UpdateBackground ();
 
   return nux::View::PostLayoutManagement (LayoutResult);
 }

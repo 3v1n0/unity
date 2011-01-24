@@ -44,7 +44,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
  
   _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
   _entry->SetMinimumWidth (200);
-//  _entry->SetMinimumHeight (30);
+ //  _entry->SetMinimumHeight (30);
   _entry->SetTextBackgroundColor (nux::Color (0x00000000));
 
   _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -83,8 +83,6 @@ void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
 long
 PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  nux::Geometry geo = GetGeometry ();
-
   long ret = TraverseInfo;
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
@@ -94,6 +92,8 @@ PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void
 PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  UpdateBackground ();
+
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
@@ -126,7 +126,6 @@ long
 PlacesSearchBar::PostLayoutManagement (long LayoutResult)
 {
   // I'm imagining this is a good as time as any to update the background
-  UpdateBackground ();
 
   return nux::View::PostLayoutManagement (LayoutResult);
 }
@@ -197,7 +196,7 @@ PlacesSearchBar::UpdateBackground ()
 
   if (geo.width == _last_width && geo.height == _last_height)
     return;
-
+   
   _last_width = geo.width;
   _last_height = geo.height;
 
