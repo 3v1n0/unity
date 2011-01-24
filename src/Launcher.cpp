@@ -273,7 +273,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
-    _force_show_launcher      = false;
+    _key_show_launcher      = false;
     _window_over_launcher   = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
@@ -953,15 +953,15 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
-void Launcher::ForceShowLauncherStart ()
+void Launcher::StartKeyShowLauncher ()
 {
-    _force_show_launcher = true;
+    _key_show_launcher = true;
     EnsureHiddenState ();
 }
 
-void Launcher::ForceShowLauncherEnd ()
+void Launcher::EndKeyShowLauncher ()
 {
-    _force_show_launcher = false;
+    _key_show_launcher = false;
     SetupAutohideTimer ();
 }
 
@@ -992,7 +992,7 @@ Launcher::EnsureHiddenState ()
 {
   if (!_mouse_inside_trigger && 
       !_mouse_inside_launcher && 
-      !_force_show_launcher &&
+      !_key_show_launcher &&
        _launcher_action_state == ACTION_NONE &&
       !QuicklistManager::Default ()->Current() &&
       _window_over_launcher) 
