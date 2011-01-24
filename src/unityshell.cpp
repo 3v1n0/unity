@@ -575,6 +575,12 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->ShowWindow(true);
   self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
+
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized () == TRUE)
+    unity_util_accessible_add_window (self->panelWindow);
+
   LOGGER_END_PROCESS ("initLauncher-Panel");
 
   /* Setup Places */

@@ -36,6 +36,7 @@
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-accessible.h"
+#include "unity-panel-home-button-accessible.h"
 
 static GHashTable *accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
@@ -247,6 +248,9 @@ unity_a11y_create_accessible (nux::Object *object)
 
   if (object->Type().IsDerivedFromType (PanelView::StaticObjectType))
     return unity_panel_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (PanelHomeButton::StaticObjectType))
+    return unity_panel_home_button_accessible_new (object);
 
   /* NUX classes  */
   if (object->Type().IsDerivedFromType (nux::BaseWindow::StaticObjectType))
