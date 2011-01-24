@@ -19,7 +19,8 @@
 
 #include "PlaceLauncherIcon.h"
 
-#include <gio/gio.h>
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
@@ -62,12 +63,12 @@ PlaceLauncherIcon::OnMouseClick (int button)
 
   if (button == 1)
   {
-    GError *error = NULL;
-
-    g_spawn_command_line_async ("xdg-open trash://", &error);
-
-    if (error)
-      g_error_free (error);
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new ("(sus)",
+                                             _entry->GetId (),
+                                             0,
+                                             ""));
   }
 }
 
