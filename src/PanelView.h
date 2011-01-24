@@ -49,12 +49,10 @@ public:
   void OnEntryActivated (const char *entry_id);
   
   PanelHomeButton * HomeButton ();
-  std::list<nux::Object *> *GetChildren ();
+  PanelMenuView * MenuView ();
 
 protected:
   // Introspectable methods
-  void AddChild (Introspectable *child);
-  void RemoveChild (Introspectable *child);
   const gchar * GetName ();
   const gchar * GetChildsName (); 
   void AddProperties (GVariantBuilder *builder);
@@ -65,11 +63,10 @@ private:
 private:
   IndicatorObjectFactoryRemote *_remote;
 
-  PanelHomeButton          *_home_button;
-  PanelMenuView            *_menu_view;
-  nux::AbstractPaintLayer  *_bg_layer;
-  nux::HLayout             *_layout;
-  std::list<nux::Object *> *_children;
+  PanelHomeButton         *_home_button;
+  PanelMenuView           *_menu_view;
+  nux::AbstractPaintLayer *_bg_layer;
+  nux::HLayout            *_layout;
 
   int _last_width;
   int _last_height;

@@ -46,8 +46,6 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
    SetCompositionLayout (_layout);
 
-   _children = new std::list<nux::Object *> ();
-
    // Home button
    _home_button = new PanelHomeButton ();
    _layout->AddView (_home_button, 0, nux::eCenter, nux::eFull);
@@ -68,7 +66,6 @@ PanelView::~PanelView ()
 {
   delete _remote;
   delete _bg_layer;
-  delete _children;
 }
 
 PanelHomeButton * 
@@ -77,24 +74,10 @@ PanelView::HomeButton ()
   return _home_button;
 }
 
-std::list<nux::Object *> *
-PanelView::GetChildren ()
+PanelMenuView *
+PanelView::MenuView ()
 {
-  return _children;
-}
-
-void
-PanelView::AddChild (Introspectable *child)
-{
-  Introspectable::AddChild (child);
-
-  _children->push_back ((nux::Object *) child);
-}
-
-void
-PanelView::RemoveChild (Introspectable *child)
-{
-  Introspectable::RemoveChild (child);
+  return _menu_view;
 }
 
 const gchar* PanelView::GetName ()
