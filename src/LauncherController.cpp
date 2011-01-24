@@ -38,6 +38,9 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   
   _launcher->SetModel (_model);
   _favorite_store = FavoriteStore::GetDefault ();
+  
+  _place_section = new PlaceLauncherSection (_launcher);
+  _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
   g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
   InsertExpoAction ();
@@ -50,6 +53,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
 LauncherController::~LauncherController()
 {
   _favorite_store->UnReference ();
+  delete _place_section;
 }
 
 void
@@ -169,6 +173,12 @@ LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherI
   }
   
   SortAndSave ();
+}
+
+void
+LauncherController::OnIconAdded (LauncherIcon *icon)
+{
+  this->RegisterIcon (icon);
 }
 
 void
