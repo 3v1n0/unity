@@ -49,7 +49,6 @@ PlacesController::PlacesController ()
   _window->Reference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
-  _window->EnableInputWindow(true);
   _window->InputWindowEnableStruts(false);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
