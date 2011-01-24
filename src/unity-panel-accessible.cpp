@@ -39,9 +39,10 @@ static void unity_panel_accessible_class_init (UnityPanelAccessibleClass *klass)
 static void unity_panel_accessible_init       (UnityPanelAccessible *self);
 
 /* AtkObject */
-static void       unity_panel_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint       unity_panel_accessible_get_n_children (AtkObject *accessible);
-static AtkObject *unity_panel_accessible_ref_child      (AtkObject *accessible, gint i);
+static const gchar *unity_panel_accessible_get_name       (AtkObject *accessible);
+static void         unity_panel_accessible_initialize     (AtkObject *accessible, gpointer data);
+static gint         unity_panel_accessible_get_n_children (AtkObject *accessible);
+static AtkObject   *unity_panel_accessible_ref_child      (AtkObject *accessible, gint i);
 
 #define UNITY_PANEL_ACCESSIBLE_GET_PRIVATE(obj)                      \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_ACCESSIBLE, UnityPanelAccessiblePrivate))
@@ -59,6 +60,7 @@ unity_panel_accessible_class_init (UnityPanelAccessibleClass *klass)
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
+  atk_class->get_name = unity_panel_accessible_get_name;
   atk_class->initialize = unity_panel_accessible_initialize;
   atk_class->get_n_children = unity_panel_accessible_get_n_children;
   atk_class->ref_child = unity_panel_accessible_ref_child;
@@ -84,6 +86,12 @@ unity_panel_accessible_new (nux::Object *object)
   atk_object_initialize (accessible, object);
 
   return accessible;
+}
+
+static const gchar *
+unity_panel_accessible_get_name (AtkObject *accessible)
+{
+  return "UnityPanelAccessible";
 }
 
 static void
@@ -143,8 +151,8 @@ unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
 
       child = dynamic_cast<nux::Object *> (*it);
       child_accessible = unity_a11y_get_accessible (child);
-
-      g_object_ref (child_accessible);
+      if (child_accessible != NULL)
+        g_object_ref (child_accessible);
     }
 
   return child_accessible;
