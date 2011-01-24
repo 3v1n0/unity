@@ -107,6 +107,8 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 {
   nux::Object *nux_object = NULL;
   PanelView *panel;
+  nux::HLayout *layout;
+  gint rc = 0;
 
   g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), 0);
 
@@ -115,10 +117,15 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
     return 0;
 
   panel = dynamic_cast<PanelView *>(nux_object);
-  if (panel->HomeButton () != NULL)
-    return 1; /* FIXME: only PanelHomeButton */
+  if ((layout = panel->Layout ()) != NULL)
+    {
+      std::list<nux::Area *> element_list;
 
-  return 0;
+      element_list = layout->GetChildren ();
+      rc = element_list.size ();
+    }
+
+  return rc;
 }
 
 static AtkObject *
@@ -126,6 +133,7 @@ unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
 {
   nux::Object *nux_object = NULL;
   PanelView *panel;
+  nux::HLayout *layout;
   AtkObject *child_accessible = NULL;
 
   g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), NULL);
@@ -135,10 +143,20 @@ unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
     return NULL;
 
   panel = dynamic_cast<PanelView *>(nux_object);
+  if ((layout = panel->Layout ()) != NULL)
+    {
+      std::list<nux::Area *>::iterator it;
+      nux::Object *child = NULL;
+      std::list<nux::Area *> element_list = layout->GetChildren ();
 
-  child_accessible = unity_a11y_get_accessible (panel->HomeButton ());
-  if (child_accessible != NULL)
-    g_object_ref (child_accessible);
+      it = element_list.begin ();
+      std::advance (it, i);
+
+      child = dynamic_cast<nux::Object *>(*it);
+      child_accessible = unity_a11y_get_accessible (child);
+      if (child_accessible != NULL)
+        g_object_ref (child_accessible);
+    }
 
   return child_accessible;
 }

@@ -74,10 +74,10 @@ PanelView::HomeButton ()
   return _home_button;
 }
 
-PanelMenuView *
-PanelView::MenuView ()
+nux::HLayout *
+PanelView::Layout ()
 {
-  return _menu_view;
+  return _layout;
 }
 
 const gchar* PanelView::GetName ()
