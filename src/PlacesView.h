@@ -32,6 +32,8 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
+#include "ubus-server.h"
+
 class PlacesView : public nux::BaseWindow, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::BaseWindow);
@@ -59,6 +61,7 @@ private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
   PlacesHomeView  *_home_view;
+  UBusServer      *_ubus;
 };
 
 #endif // PANEL_HOME_BUTTON_H

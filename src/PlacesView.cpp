@@ -29,6 +29,9 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 :   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
 {
+    
+  _ubus = ubus_server_get_default ();
+
   Hide ();
 
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
@@ -138,6 +141,8 @@ void PlacesView::Show ()
 {
   if (IsVisible ())
     return;
+    
+  ubus_server_send_message (_ubus, UBUS_PLACE_VIEW_SHOWN, NULL);
 
   // FIXME: ShowWindow shouldn't need to be called first
   ShowWindow (true, false);
@@ -151,6 +156,8 @@ void PlacesView::Hide ()
 {
   if (!IsVisible ())
     return;
+    
+  ubus_server_send_message (_ubus, UBUS_PLACE_VIEW_HIDDEN, NULL);
 
   CaptureMouseDownAnyWhereElse (false);
   ForceStopFocus (1, 1);
