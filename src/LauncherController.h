@@ -29,6 +29,7 @@
 #include "BamfLauncherIcon.h"
 #include "LauncherModel.h"
 
+#include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
 #include "PlaceLauncherSection.h"
 
@@ -46,15 +47,16 @@ public:
     ~LauncherController();
 
 private:
-    BamfMatcher*          _matcher;
-    CompAction*           _expo_action;
-    CompScreen*           _screen;
-    Launcher*             _launcher;
-    LauncherModel*        _model;
-    nux::BaseWindow*      _window;
-    FavoriteStore*        _favorite_store;
-    int                   _sort_priority;
-    PlaceLauncherSection* _place_section;
+    BamfMatcher*           _matcher;
+    CompAction*            _expo_action;
+    CompScreen*            _screen;
+    Launcher*              _launcher;
+    LauncherModel*         _model;
+    nux::BaseWindow*       _window;
+    FavoriteStore*         _favorite_store;
+    int                    _sort_priority;
+    PlaceLauncherSection*  _place_section;
+    DeviceLauncherSection* _device_section;
 
     void SortAndSave ();
 
