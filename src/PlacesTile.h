@@ -104,6 +104,9 @@ protected:
                              double   width,
                              double   height);
 
+private:
+  int _last_width;
+  int _last_height;
 };
 
 #endif // PLACE_TILE_H

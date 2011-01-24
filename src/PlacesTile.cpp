@@ -22,7 +22,11 @@
 #include "Nux/Nux.h"
 #include "PlacesTile.h"
 PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM)
+View (NUX_FILE_LINE_PARAM),
+_hilight_background (NULL),
+_hilight_layer (NULL),
+_last_width (0),
+_last_height (0)
 {
   _state = STATE_DEFAULT;
 
@@ -45,6 +49,12 @@ PlacesTile::UpdateBackground ()
 {
   nux::Geometry base = GetGeometry ();
 
+  if (base.width == _last_width && base.height == _last_height)
+    return;
+
+  _last_width = base.width;
+  _last_height = base.height;
+
   nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, base.width, base.height);
   cairo_t *cr = cairo_graphics->GetContext();
 
@@ -62,9 +72,16 @@ PlacesTile::UpdateBackground ()
   cairo_set_line_width (cr, 1.0);
   cairo_stroke (cr);
 
-  _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _hilight_background->Update (cairo_graphics->GetBitmap ());
+  cairo_destroy (cr);
 
+  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  
+  if (_hilight_background)
+    _hilight_background->UnReference ();
+
+  _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _hilight_background->Update (bitmap);
+  delete bitmap;
 
   nux::ROPConfig rop; 
   rop.Blend = true;
@@ -75,12 +92,14 @@ PlacesTile::UpdateBackground ()
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
+  if (_hilight_layer)
+    delete _hilight_layer;
+
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
                                      texxform,
                                      nux::Color::White,
                                      true,
                                      rop);
-
   delete cairo_graphics;
 }
 
@@ -161,6 +180,8 @@ long PlacesTile::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
+  UpdateBackground ();
+
   // Check if the texture have been computed. If they haven't, exit the function.
   nux::Geometry base = GetGeometry ();
   gfxContext.PushClippingRectangle (base);
@@ -199,6 +220,7 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
 void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  UpdateBackground ();
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   if (_state == STATE_HOVER)
@@ -220,14 +242,12 @@ void PlacesTile::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesTile::PreLayoutManagement ()
 {
-  UpdateBackground ();
   nux::View::PreLayoutManagement ();
 }
 
 long
 PlacesTile::PostLayoutManagement (long LayoutResult)
 {
-  UpdateBackground ();
   return nux::View::PostLayoutManagement (LayoutResult);
 }
 
