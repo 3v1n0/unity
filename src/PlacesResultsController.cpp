@@ -56,3 +56,18 @@ PlacesResultsController::GetView ()
 {
   return _results_view;
 }
+
+void
+PlacesResultsController::AddResultToGroup (const char *group_name,
+                                           PlacesTile *tile,
+                                           const char *id)
+{
+  if (_groups.find (group_name) == _groups::end)
+  {
+    CreateGroup (group_name);
+  }
+
+  _groups[group_name]-> (tile);
+  _tiles[g_strdup (id)] = tile;
+
+}
