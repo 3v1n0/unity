@@ -48,7 +48,7 @@ class PlacesSimpleTile : public Introspectable, public PlacesTile
 {
 public:
 
-  PlacesSimpleTile (const char *icon, const char *label);
+  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64);
   ~PlacesSimpleTile ();
 
   const char *      GetLabel ();

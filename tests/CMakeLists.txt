@@ -80,8 +80,8 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
-		../src/PanelTitlebarGrabAreaView.h
-		../src/PanelTitlebarGrabAreaView.cpp
+            		../src/PanelTitlebarGrabAreaView.h
+            		../src/PanelTitlebarGrabAreaView.cpp
                 ../src/IndicatorObjectFactory.h
                 ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectEntryProxy.h
@@ -109,13 +109,34 @@ add_executable (test-panel
 
 add_executable (test-places
                 TestPlaces.cpp
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
                 ../src/PlacesController.cpp
                 ../src/PlacesController.h
+                ../src/PlacesHomeView.cpp
+                ../src/PlacesHomeView.h
+                ../src/PlacesSearchBar.cpp
+                ../src/PlacesSearchBar.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
+                ../src/PlaceEntryRemote.cpp
+                ../src/PlaceEntryRemote.h
+                ../src/PlaceEntry.h
+                ../src/PlaceFactoryFile.cpp
+                ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.h
+                ../src/PlaceRemote.cpp
+                ../src/PlaceRemote.h
+                ../src/Place.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )
@@ -134,6 +155,18 @@ add_executable (test-places-tiles
                 ../src/Introspectable.h
                 )
 
+
+add_executable (test-places-group
+                TestPlacesGroup.cpp
+                ../src/PlacesGroup.cpp
+                ../src/PlacesGroup.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                )
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp

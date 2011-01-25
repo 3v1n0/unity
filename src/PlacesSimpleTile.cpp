@@ -24,7 +24,7 @@
 
 #include "IconTexture.h"
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label) :
+PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size) :
 PlacesTile (NUX_TRACKER_LOCATION)
 {
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
@@ -33,7 +33,7 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
 
-  _icontex = new IconTexture (_icon, 64);
+  _icontex = new IconTexture (_icon, icon_size);
   _icontex->SinkReference ();
 
   _cairotext = new nux::StaticCairoText (_label);

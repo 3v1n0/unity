@@ -28,6 +28,8 @@ void unity_a11y_preset_environment (void);
 void unity_a11y_init (void);
 void unity_a11y_finalize (void);
 
+gboolean unity_a11y_initialized (void);
+
 AtkObject *unity_a11y_get_accessible (nux::Object *object);
 
 

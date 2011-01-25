@@ -17,8 +17,8 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#ifndef PLACES_TILE_H
-#define PLACES_TILE_H
+#ifndef PLACES_GROUP_H
+#define PLACES_GROUP_H
 
 #include <sigc++/sigc++.h>
 
@@ -36,35 +36,37 @@
 #include <sigc++/functors/ptr_fun.h>
 #include <sigc++/functors/mem_fun.h>
 
-class PlacesTile : public nux::View
+class PlacesGroup : public nux::View
 {
 public:
-  typedef enum
-  {
-    STATE_DEFAULT,
-    STATE_HOVER,
-    STATE_PRESSED,
-    STATE_ACTIVATED,
-  } TileState;
 
-  PlacesTile (NUX_FILE_LINE_PROTO);
-  ~PlacesTile ();
+  PlacesGroup (NUX_FILE_LINE_PROTO);
+  ~PlacesGroup ();
 
-  // mainly for testing
-  virtual void SetState (TileState state);
-  virtual TileState GetState ();
+  void SetTitle (const char *title);
+  void SetEmblem (const char *path_to_emblem);
 
-  sigc::signal<void, PlacesTile *> sigClick;
-  sigc::signal<void> sigToggled;
-  sigc::signal<void, bool> sigStateChanged;
-
-  sigc::signal<void, int> MouseDown;
-  sigc::signal<void, int> MouseUp;
-  sigc::signal<void>      MouseEnter;
-  sigc::signal<void>      MouseLeave;
-  sigc::signal<void, int> MouseClick;
+  void SetLayout (nux::Layout *layout);
+  void SetRowHeight (unsigned int row_height);
+  void SetItemDetail (unsigned int total_items, unsigned int visible_items);
+  void SetExpanded (bool expanded);
 
 protected:
+  nux::StaticCairoText *_label;
+  nux::StaticCairoText *_title;
+
+  char *_title_string;
+  unsigned int _row_height;
+  unsigned int _total_items;
+  unsigned int _visible_items;
+
+  nux::Layout *_content;
+  nux::VLayout *_group_layout;
+  nux::HLayout *_header_layout;
+
+  bool _expanded;
+  void UpdateTitle ();
+  void UpdateLabel ();
 
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -74,35 +76,18 @@ protected:
   virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
 
-
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  //void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
-  sigc::signal<void, PlacesTile*> sigMouseEnter;
-  sigc::signal<void, PlacesTile*> sigMouseLeave;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseReleased;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseClick;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseDrag;
-
-  TileState _state;
-  nux::Layout *_layout;
-  nux::BaseTexture *_hilight_background;
-  nux::View *_hilight_view;
-
-  void UpdateBackground ();
-  void DrawRoundedRectangle (cairo_t* cr,
-                             double   aspect,
-                             double   x,
-                             double   y,
-                             double   cornerRadius,
-                             double   width,
-                             double   height);
-
+  sigc::signal<void, PlacesGroup*> sigMouseEnter;
+  sigc::signal<void, PlacesGroup*> sigMouseLeave;
+  sigc::signal<void, PlacesGroup*, int, int> sigMouseReleased;
+  sigc::signal<void, PlacesGroup*, int, int> sigMouseClick;
+  sigc::signal<void, PlacesGroup*, int, int> sigMouseDrag;
 };
 
-#endif // PLACE_TILE_H
+#endif

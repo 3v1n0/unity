@@ -80,7 +80,6 @@ IconTexture::Refresh ()
 
       if (!_icon_name)
         _icon_name = g_strdup (DEFAULT_ICON);
-
       info = gtk_icon_theme_lookup_icon (theme,
                                          _icon_name,
                                          _size,
@@ -97,8 +96,8 @@ IconTexture::Refresh ()
       file_path = g_strdup (gtk_icon_info_get_filename (info));
     }
 
-    _pixbuf = gdk_pixbuf_new_from_file (file_path, &error);
-
+    _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
+    
     if (error == NULL)
     {
       nux::BaseTexture *texture2D = nux::CreateTextureFromPixbuf (_pixbuf);
