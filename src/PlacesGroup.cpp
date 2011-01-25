@@ -120,6 +120,12 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   NeedRedraw ();
 }
 
+nux::Layout *layout
+PlacesGroup::GetLayout ()
+{
+  return _layout;
+}
+
 void PlacesGroup::SetRowHeight (unsigned int row_height)
 {
   _row_height = row_height;
