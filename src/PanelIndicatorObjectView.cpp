@@ -47,6 +47,10 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   SetCompositionLayout (_layout);
+  
+  // default in Nux is 32, we have some PanelIndicatorObjectEntryView which are smaller than that.
+  // so redefining the minimum value for them.
+  SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
  
   _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
   _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
