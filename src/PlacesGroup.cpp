@@ -120,7 +120,7 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   NeedRedraw ();
 }
 
-nux::Layout *layout
+nux::Layout
 PlacesGroup::GetLayout ()
 {
   return _layout;
