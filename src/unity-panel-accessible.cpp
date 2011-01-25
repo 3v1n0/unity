@@ -110,12 +110,7 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 
   panel = dynamic_cast<PanelView *>(nux_object);
   if ((layout = panel->Layout ()) != NULL)
-    {
-      std::list<nux::Area *> element_list;
-
-      element_list = layout->GetChildren ();
-      rc = element_list.size ();
-    }
+    rc = 1;
 
   return rc;
 }
@@ -137,14 +132,9 @@ unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
   panel = dynamic_cast<PanelView *>(nux_object);
   if ((layout = panel->Layout ()) != NULL)
     {
-      std::list<nux::Area *>::iterator it;
       nux::Object *child = NULL;
-      std::list<nux::Area *> element_list = layout->GetChildren ();
 
-      it = element_list.begin ();
-      std::advance (it, i);
-
-      child = dynamic_cast<nux::Object *>(*it);
+      child = dynamic_cast<nux::Object *>(layout);
       child_accessible = unity_a11y_get_accessible (child);
       if (child_accessible != NULL)
         g_object_ref (child_accessible);
