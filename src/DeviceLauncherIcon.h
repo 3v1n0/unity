@@ -42,9 +42,12 @@ protected:
 private:
   void Activate ();
   void ShowMount (GMount *mount);
+  void Eject ();
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnRemoved (GVolume *volume, DeviceLauncherIcon *self);
   static void OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  static void OnEjectReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
 
 private:
   GVolume *_volume;

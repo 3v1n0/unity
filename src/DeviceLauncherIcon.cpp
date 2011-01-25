@@ -22,6 +22,8 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include <glib/gi18n-lib.h>
+
 #define DEFAULT_ICON "drive-removable-media"
 
 DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
@@ -92,13 +94,13 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
     {
       SetIconName (DEFAULT_ICON);
     }
+
+    g_object_unref (icon);
   }
-  
   
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_DEVICE);
-
 }
 
 nux::Color 
@@ -131,15 +133,23 @@ DeviceLauncherIcon::GetMenus ()
   DbusmenuMenuitem              *menu_item;
 
   menu_item = dbusmenu_menuitem_new ();
-
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open");
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-
   g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK (&DeviceLauncherIcon::OnOpen), this);
-
   result.push_back (menu_item);
+
+  if (g_volume_can_eject (_volume))
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                      G_CALLBACK (&DeviceLauncherIcon::OnEject), this);
+    result.push_back (menu_item);
+  }
 
   return result;
 }
@@ -179,10 +189,11 @@ DeviceLauncherIcon::ShowMount (GMount *mount)
   }
   else
   {
-    g_warning ("Cannot open volume '%s': Mountpoint is invalid", name);
+    g_warning ("Cannot open volume '%s': Mount-point is invalid", name);
   }
 
-  g_free (name);}
+  g_free (name);
+}
 
 void
 DeviceLauncherIcon::Activate ()
@@ -239,9 +250,38 @@ DeviceLauncherIcon::OnMountReady (GObject *object, GAsyncResult *result, DeviceL
 }
 
 void
+DeviceLauncherIcon::OnEjectReady (GObject            *object,
+                                  GAsyncResult       *result,
+                                  DeviceLauncherIcon *self)
+{
+  g_volume_eject_with_operation_finish (self->_volume, result, NULL);
+}
+
+void
+DeviceLauncherIcon::Eject ()
+{
+  g_debug ("%s", G_STRLOC);
+  g_volume_eject_with_operation (_volume,
+                                 (GMountUnmountFlags)0,
+                                 NULL,
+                                 NULL,
+                                 (GAsyncReadyCallback)OnEjectReady,
+                                 this);
+  g_debug ("%s", G_STRLOC);
+}
+
+void
 DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
   self->Activate ();
+}
+
+void
+DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+{
+  g_debug ("%s", G_STRLOC);
+  self->Eject ();
+  g_debug ("%s", G_STRLOC);
 }
 
 void
