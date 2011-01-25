@@ -70,8 +70,6 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
         SetIconName (names[0]);
       else
         SetIconName (DEFAULT_ICON);
-
-      g_debug ("ICON: %s", names[0]);
     }
     else if (G_IS_FILE_ICON (icon))
     {
@@ -84,8 +82,6 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
 
         path = g_file_get_path (file);
         SetIconName (path);
-
-        g_debug ("ICON: %s", path);
 
         g_free (path);
       }
@@ -151,6 +147,48 @@ DeviceLauncherIcon::GetMenus ()
 void
 DeviceLauncherIcon::Activate ()
 {
+  GMount *mount;
+  gchar  *name;
+
+  SetQuirk (QUIRK_STARTING, true);
+  
+  name = g_volume_get_name (_volume);
+  mount = g_volume_get_mount (_volume);
+  if (G_IS_MOUNT (mount))
+  {
+    GFile *root;
+
+    root = g_mount_get_root (mount);
+    if (G_IS_FILE (root))
+    {
+      gchar  *uri;
+      GError *error = NULL;
+
+      uri = g_file_get_uri (root);
+
+      g_app_info_launch_default_for_uri (uri, NULL, &error);
+      if (error)
+      {
+        g_warning ("Cannot open volume '%s': Unable to show %s: %s", name, uri, error->message);
+        g_error_free (error);
+      }
+
+      g_free (uri);
+      g_object_unref (root);
+    }
+    else
+    {
+      g_warning ("Cannot open volume '%s': Mount has no root", name);
+    }
+
+    g_object_unref (mount);
+  }
+  else
+  {
+
+  }
+
+  g_free (name);
 }
 
 void
