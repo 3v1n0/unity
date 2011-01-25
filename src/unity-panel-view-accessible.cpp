@@ -17,69 +17,69 @@
  */
 
 /**
- * SECTION:unity-panel-accessible
- * @Title: UnityPanelAccessible
- * @short_description: Implementation of the ATK interfaces for #Panel
- * @see_also: Panel
+ * SECTION:unity-panel-view-accessible
+ * @Title: UnityPanelViewAccessible
+ * @short_description: Implementation of the ATK interfaces for #PanelView
+ * @see_also: PanelView
  *
- * #UnityPanelAccessible implements the required ATK interfaces for
- * #Panel, ie: exposing the different items contained in the panel
+ * #UnityPanelViewAccessible implements the required ATK interfaces for
+ * #PanelView, ie: exposing the different items contained in the panel
  * as children.
  *
  */
 
 #include <Nux/Nux.h>
 #include "PanelView.h"
-#include "unity-panel-accessible.h"
+#include "unity-panel-view-accessible.h"
 
 #include "unitya11y.h"
 
 /* GObject */
-static void unity_panel_accessible_class_init (UnityPanelAccessibleClass *klass);
-static void unity_panel_accessible_init       (UnityPanelAccessible *self);
+static void unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass);
+static void unity_panel_view_accessible_init       (UnityPanelViewAccessible *self);
 
 /* AtkObject */
-static void         unity_panel_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint         unity_panel_accessible_get_n_children (AtkObject *accessible);
-static AtkObject   *unity_panel_accessible_ref_child      (AtkObject *accessible, gint i);
+static void         unity_panel_view_accessible_initialize     (AtkObject *accessible, gpointer data);
+static gint         unity_panel_view_accessible_get_n_children (AtkObject *accessible);
+static AtkObject   *unity_panel_view_accessible_ref_child      (AtkObject *accessible, gint i);
 
-#define UNITY_PANEL_ACCESSIBLE_GET_PRIVATE(obj)                      \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_ACCESSIBLE, UnityPanelAccessiblePrivate))
+#define UNITY_PANEL_VIEW_ACCESSIBLE_GET_PRIVATE(obj)                      \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_VIEW_ACCESSIBLE, UnityPanelViewAccessiblePrivate))
 
-G_DEFINE_TYPE (UnityPanelAccessible, unity_panel_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+G_DEFINE_TYPE (UnityPanelViewAccessible, unity_panel_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
-struct _UnityPanelAccessiblePrivate
+struct _UnityPanelViewAccessiblePrivate
 {
 };
 
 static void
-unity_panel_accessible_class_init (UnityPanelAccessibleClass *klass)
+unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
-  atk_class->initialize = unity_panel_accessible_initialize;
-  atk_class->get_n_children = unity_panel_accessible_get_n_children;
-  atk_class->ref_child = unity_panel_accessible_ref_child;
+  atk_class->initialize = unity_panel_view_accessible_initialize;
+  atk_class->get_n_children = unity_panel_view_accessible_get_n_children;
+  atk_class->ref_child = unity_panel_view_accessible_ref_child;
 
-  g_type_class_add_private (gobject_class, sizeof (UnityPanelAccessiblePrivate));
+  g_type_class_add_private (gobject_class, sizeof (UnityPanelViewAccessiblePrivate));
 }
 
 static void
-unity_panel_accessible_init (UnityPanelAccessible *self)
+unity_panel_view_accessible_init (UnityPanelViewAccessible *self)
 {
-  self->priv = UNITY_PANEL_ACCESSIBLE_GET_PRIVATE (self);
+  self->priv = UNITY_PANEL_VIEW_ACCESSIBLE_GET_PRIVATE (self);
 }
 
 AtkObject *
-unity_panel_accessible_new (nux::Object *object)
+unity_panel_view_accessible_new (nux::Object *object)
 {
   AtkObject *accessible;
 
   g_return_val_if_fail (dynamic_cast<PanelView *>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_PANEL_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_PANEL_VIEW_ACCESSIBLE, NULL));
 
   atk_object_initialize (accessible, object);
 
@@ -87,22 +87,22 @@ unity_panel_accessible_new (nux::Object *object)
 }
 
 static void
-unity_panel_accessible_initialize (AtkObject *accessible, gpointer data)
+unity_panel_view_accessible_initialize (AtkObject *accessible, gpointer data)
 {
-  ATK_OBJECT_CLASS (unity_panel_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS (unity_panel_view_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
 }
 
 static gint
-unity_panel_accessible_get_n_children (AtkObject *accessible)
+unity_panel_view_accessible_get_n_children (AtkObject *accessible)
 {
   nux::Object *nux_object = NULL;
   PanelView *panel;
   nux::HLayout *layout;
   gint rc = 0;
 
-  g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), 0);
+  g_return_val_if_fail (UNITY_IS_PANEL_VIEW_ACCESSIBLE (accessible), 0);
 
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
   if (!nux_object) /* state is defunct */
@@ -116,14 +116,14 @@ unity_panel_accessible_get_n_children (AtkObject *accessible)
 }
 
 static AtkObject *
-unity_panel_accessible_ref_child (AtkObject *accessible, gint i)
+unity_panel_view_accessible_ref_child (AtkObject *accessible, gint i)
 {
   nux::Object *nux_object = NULL;
   PanelView *panel;
   nux::HLayout *layout;
   AtkObject *child_accessible = NULL;
 
-  g_return_val_if_fail (UNITY_IS_PANEL_ACCESSIBLE (accessible), NULL);
+  g_return_val_if_fail (UNITY_IS_PANEL_VIEW_ACCESSIBLE (accessible), NULL);
 
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
   if (!nux_object) /* state is defunct */

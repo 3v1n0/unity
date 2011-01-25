@@ -35,7 +35,7 @@
 #include "PanelView.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
-#include "unity-panel-accessible.h"
+#include "unity-panel-view-accessible.h"
 #include "unity-panel-home-button-accessible.h"
 
 static GHashTable *accessible_table = NULL;
@@ -247,7 +247,7 @@ unity_a11y_create_accessible (nux::Object *object)
     return unity_launcher_icon_accessible_new (object);
 
   if (object->Type().IsDerivedFromType (PanelView::StaticObjectType))
-    return unity_panel_accessible_new (object);
+    return unity_panel_view_accessible_new (object);
 
   if (object->Type().IsDerivedFromType (PanelHomeButton::StaticObjectType))
     return unity_panel_home_button_accessible_new (object);
