@@ -43,7 +43,7 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   _proxy (proxy),
   _entries ()
 {
-  printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
+  g_debug ("IndicatorAdded: %s", _proxy->GetName ().c_str ());
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   SetCompositionLayout (_layout);
