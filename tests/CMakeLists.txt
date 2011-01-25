@@ -156,6 +156,18 @@ add_executable (test-places-tiles
                 )
 
 
+add_executable (test-places-group
+                TestPlacesGroup.cpp
+                ../src/PlacesGroup.cpp
+                ../src/PlacesGroup.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                )
+
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
                 ui/EventFaker.cpp
