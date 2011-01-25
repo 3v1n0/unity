@@ -267,13 +267,14 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
     _autohide_handle        = 0;
+    _autoscroll_handle      = 0;
     _floating               = false;
     _hovered                = false;
     _autohide               = false;
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
-    _force_show_launcher      = false;
+    _force_show_launcher    = false;
     _window_over_launcher   = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
@@ -336,6 +337,8 @@ void Launcher::SetMousePosition (int x, int y)
     
     if (beyond_drag_threshold != MouseBeyondDragThreshold ())
       SetTimeStruct (&_drag_threshold_time, &_drag_threshold_time, ANIM_DURATION_SHORT);
+    
+    EnsureScrollTimer ();
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
@@ -1039,7 +1042,11 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
 void Launcher::OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _mouse_inside_trigger = true;
+  _trigger_mouse_position = nux::Point2 (x, y);
+  
   EnsureHiddenState ();
+  EnsureHoverState ();
+  EnsureScrollTimer ();
 }
 
 void Launcher::SetupAutohideTimer ()
@@ -1056,52 +1063,64 @@ void Launcher::OnTriggerMouseLeave (int x, int y, unsigned long button_flags, un
 {
   _mouse_inside_trigger = false;
   SetupAutohideTimer ();
+  EnsureHoverState ();
+  EnsureScrollTimer ();
+}
+
+void Launcher::OnTriggerMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+{
+  _trigger_mouse_position = nux::Point2 (x, y);
 }
 
 bool Launcher::AutohideEnabled ()
 {
-    return _autohide;
+  return _autohide;
 }
 
 gboolean Launcher::StrutHack (gpointer data)
 {
-    Launcher *self = (Launcher *) data;
-    self->_parent->InputWindowEnableStruts(false);
-    self->_parent->InputWindowEnableStruts(true);
+  Launcher *self = (Launcher *) data;
+  self->_parent->InputWindowEnableStruts(false);
+  self->_parent->InputWindowEnableStruts(true);
 
-    return false;
+  return false;
 }
 
-void Launcher::SetAutohide (bool autohide, nux::View *trigger)
+void Launcher::SetAutohideTrigger (nux::View *trigger)
 {
-    if (_autohide == autohide)
-        return;
+  _autohide_trigger = trigger;
+  _autohide_trigger->OnMouseEnter.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseEnter));
+  _autohide_trigger->OnMouseLeave.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseLeave));
+  _autohide_trigger->OnMouseMove.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseMove));
+}
 
-    if (autohide)
-    {
-        _parent->InputWindowEnableStruts(false);
-        _autohide_trigger = trigger;
-        _autohide_trigger->OnMouseEnter.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseEnter));
-        _autohide_trigger->OnMouseLeave.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseLeave));
-    }
-    else
-    {
-        _parent->EnableInputWindow(true);
-        g_timeout_add (1000, &Launcher::StrutHack, this);
-        _parent->InputWindowEnableStruts(true);
-    }
+void Launcher::SetAutohide (bool autohide)
+{
+  if (_autohide == autohide)
+    return;
 
-    _autohide = autohide;
-    EnsureAnimation ();
+  if (autohide)
+  {
+    _parent->InputWindowEnableStruts(false);
+  }
+  else
+  {
+    _parent->EnableInputWindow(true);
+    g_timeout_add (1000, &Launcher::StrutHack, this);
+    _parent->InputWindowEnableStruts(true);
+  }
+
+  _autohide = autohide;
+  EnsureAnimation ();
 }
 
 void Launcher::SetFloating (bool floating)
 {
-    if (_floating == floating)
-        return;
+  if (_floating == floating)
+    return;
 
-    _floating = floating;
-    EnsureAnimation ();
+  _floating = floating;
+  EnsureAnimation ();
 }
 
 void Launcher::SetBacklightAlwaysOn (bool always_on)
@@ -1151,7 +1170,8 @@ Launcher::GetUrgentAnimation ()
 void
 Launcher::EnsureHoverState ()
 {
-  if (_mouse_inside_launcher || QuicklistManager::Default ()->Current() || _launcher_action_state != ACTION_NONE)
+  if (_mouse_inside_launcher || _mouse_inside_trigger || 
+      QuicklistManager::Default ()->Current() || _launcher_action_state != ACTION_NONE)
   {
     SetHover ();
   }
@@ -1163,23 +1183,95 @@ Launcher::EnsureHoverState ()
 
 void Launcher::SetHover ()
 {
-    if (_hovered)
-        return;
+  if (_hovered)
+    return;
 
-    _enter_y = (int) _mouse_position.y;
+  _enter_y = (int) _mouse_position.y;
 
-    _hovered = true;
-    SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
+  _hovered = true;
+  SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
+  EnsureAnimation ();
 }
 
 void Launcher::UnsetHover ()
 {
-    if (!_hovered)
-        return;
+  if (!_hovered)
+    return;
 
-    _hovered = false;
-    SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
-    SetupAutohideTimer ();
+  _hovered = false;
+  SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
+  SetupAutohideTimer ();
+  EnsureAnimation ();
+}
+
+bool Launcher::MouseOverTopScrollArea ()
+{
+  if (_launcher_action_state == ACTION_NONE)
+    return _mouse_inside_trigger;
+  
+  return _mouse_position.y < 0;
+}
+
+bool Launcher::MouseOverTopScrollExtrema ()
+{
+  // since we are not dragging the trigger will pick up events
+  if (_launcher_action_state == ACTION_NONE)
+    return _trigger_mouse_position.y == 0;
+    
+  return _mouse_position.y == 0 - _parent->GetGeometry ().y;
+}
+
+bool Launcher::MouseOverBottomScrollArea ()
+{
+  return _mouse_position.y > GetGeometry ().height - 24;
+}
+
+bool Launcher::MouseOverBottomScrollExtrema ()
+{
+  return _mouse_position.y == GetGeometry ().height - 1;
+}
+
+gboolean Launcher::OnScrollTimeout (gpointer data)
+{
+  Launcher *self = (Launcher*) data;
+  nux::Geometry geo = self->GetGeometry ();
+
+  if (!self->_hovered || self->_launcher_action_state != ACTION_DRAG_ICON)
+    return TRUE;
+  
+  if (self->MouseOverTopScrollArea ())
+  {
+    if (self->MouseOverTopScrollExtrema ())
+      self->_launcher_drag_delta += 6;
+    else
+      self->_launcher_drag_delta += 3;
+  }
+  else if (self->MouseOverBottomScrollArea ())
+  {
+    if (self->MouseOverBottomScrollExtrema ())
+      self->_launcher_drag_delta -= 6;
+    else
+      self->_launcher_drag_delta -= 3;
+  }
+  
+  self->EnsureAnimation ();
+  
+  return TRUE;
+}
+
+void Launcher::EnsureScrollTimer ()
+{
+  bool needed = MouseOverTopScrollArea () || MouseOverBottomScrollArea ();
+  
+  if (needed && !_autoscroll_handle)
+  {
+    _autoscroll_handle = g_timeout_add (15, &Launcher::OnScrollTimeout, this);
+  }
+  else if (!needed && _autoscroll_handle)
+  {
+    g_source_remove (_autoscroll_handle);
+    _autoscroll_handle = 0;
+  }
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)
