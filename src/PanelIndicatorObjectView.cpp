@@ -84,7 +84,7 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
   _layout->AddView (view, 0, nux::eCenter, nux::eFull);
-  _layout->SetContentDistribution (nux::eStackLeft);
+  _layout->SetContentDistribution (nux::eStackRight);
 
   _entries.push_back (view);
 
