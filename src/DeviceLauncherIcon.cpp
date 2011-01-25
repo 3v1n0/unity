@@ -145,15 +145,11 @@ DeviceLauncherIcon::GetMenus ()
 }
 
 void
-DeviceLauncherIcon::Activate ()
+DeviceLauncherIcon::ShowMount (GMount *mount)
 {
-  GMount *mount;
   gchar  *name;
 
-  SetQuirk (QUIRK_STARTING, true);
-  
   name = g_volume_get_name (_volume);
-  mount = g_volume_get_mount (_volume);
   if (G_IS_MOUNT (mount))
   {
     GFile *root;
@@ -180,15 +176,66 @@ DeviceLauncherIcon::Activate ()
     {
       g_warning ("Cannot open volume '%s': Mount has no root", name);
     }
+  }
+  else
+  {
+    g_warning ("Cannot open volume '%s': Mountpoint is invalid", name);
+  }
+
+  g_free (name);}
+
+void
+DeviceLauncherIcon::Activate ()
+{
+  GMount *mount;
+  gchar  *name;
+
+  SetQuirk (QUIRK_STARTING, true);
+  
+  name = g_volume_get_name (_volume);
+  mount = g_volume_get_mount (_volume);
+  if (G_IS_MOUNT (mount))
+  {
+    ShowMount (mount);
+    g_object_unref (mount);
+  }
+  else
+  {
+    g_volume_mount (_volume,
+                    (GMountMountFlags)0,
+                    NULL,
+                    NULL,
+                    (GAsyncReadyCallback)&DeviceLauncherIcon::OnMountReady,
+                    this);
+  }
+
+  g_free (name);
+}
+
+void
+DeviceLauncherIcon::OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self)
+{
+  GError *error = NULL;
+
+  if (g_volume_mount_finish (self->_volume, result, &error))
+  {
+    GMount *mount;
+
+    mount = g_volume_get_mount (self->_volume);
+    self->ShowMount (mount);
 
     g_object_unref (mount);
   }
   else
   {
+    gchar *name;
 
+    name = g_volume_get_name (self->_volume);
+    g_warning ("Cannot open volume '%s': %s",
+               name,
+               error ? error->message : "Mount operation failed");
+    g_error_free (error);
   }
-
-  g_free (name);
 }
 
 void
