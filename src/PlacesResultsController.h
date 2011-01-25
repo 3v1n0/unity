@@ -26,6 +26,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "PlacesResultsView.h"
+#include "PlacesTile.h"
 #include "Introspectable.h"
 
 class PlacesResultsController : public nux::Object, public Introspectable
@@ -38,14 +39,15 @@ public:
   PlacesResultsView *GetView ();
 
 
-  void AddResultToGroup      (const char *group_name,
+  void AddResultToGroup      (const char *groupname,
                               PlacesTile *tile,
                               const char *id);
   void RemoveResult          (const char *id);
-  void RemoveResultFromGroup (const char *group_name,  const char *id);
+  void RemoveResultFromGroup (const char *groupname,
+                              const char *_id);
 
 protected:
-  void CreateGroup           (const char *group_name);
+  void CreateGroup           (const char *groupname);
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 

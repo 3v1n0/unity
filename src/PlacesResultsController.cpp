@@ -19,6 +19,7 @@
 #include "config.h"
 
 #include "Nux/Nux.h"
+#include "Nux/GridHLayout.h"
 
 #include "NuxGraphics/GLThread.h"
 #include <glib.h>
@@ -58,11 +59,13 @@ PlacesResultsController::GetView ()
 }
 
 void
-PlacesResultsController::AddResultToGroup (const char *group_name,
+PlacesResultsController::AddResultToGroup (const char *groupname,
                                            PlacesTile *tile,
-                                           const char *id)
+                                           const char *_id)
 {
-  if (_groups.find (group_name) == _groups::end)
+  char *group_name = g_strdup (groupname);
+  char *id = g_strdup (_id);
+  if (_groups.find (group_name) == _groups.end ())
   {
     CreateGroup (group_name);
   }
@@ -73,39 +76,53 @@ PlacesResultsController::AddResultToGroup (const char *group_name,
 
   // Should also catch the onclick signal here on each tile,
   // so we can activate or do whatever it is we need to do
+
+  g_free (group_name);
+  g_free (id);
 }
 
 void
-PlacesResultsController::RemoveResult (const char *id)
+PlacesResultsController::RemoveResultFromGroup (const char *groupname,
+                                                const char *_id)
 {
-  RemoveResultFromGroup (_tile_group_relations [id], id);
-}
+  char *group_name = g_strdup (groupname);
+  char *id = g_strdup (_id);
 
-void
-PlacesResultsController::RemoveResultFromGroup (const char *group_name,
-                                                const char *id);
-{
   PlacesTile *tile = _tiles[id];
   PlacesGroup *group = _groups[group_name];
 
   group->GetLayout ()->RemoveChildObject (tile);
 
-  if (group->GetLayout ()->GetChildren ()->empty ())
+  if (group->GetLayout ()->GetChildren ().empty ())
   {
-    _results-view->RemoveGroup (group);
-    _groups->erase (group_name);
-    group.UnReference ();
+    _results_view->RemoveGroup (group);
+    _groups.erase (group_name);
+    group->UnReference ();
   }
 
-  _tiles->erase (id);
+  _tiles.erase (id);
 
   g_free (_tile_group_relations[id]);
   _tile_group_relations.erase (id);
+
+  g_free (group_name);
+  g_free (id);
 }
 
 void
-PlacesResultsController::CreateGroup (const char *group_name)
+PlacesResultsController::RemoveResult (const char *_id)
 {
+  char *id = g_strdup (_id);
+  RemoveResultFromGroup (_tile_group_relations [id], id);
+  g_free (id);
+}
+
+
+
+void
+PlacesResultsController::CreateGroup (const char *groupname)
+{
+  char *group_name = g_strdup (groupname);
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (group_name);
@@ -113,11 +130,13 @@ PlacesResultsController::CreateGroup (const char *group_name)
   newgroup->SetItemDetail (1, 100);
   newgroup->SetExpanded (true);
 
-  nux::GridHLayout *layout new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   newgroup->SetLayout (layout);
 
   _groups[group_name] = newgroup;
-  _results_view->AddView (group);
+  _results_view->AddGroup (newgroup);
+
+  g_free (group_name);
 }
 
 
