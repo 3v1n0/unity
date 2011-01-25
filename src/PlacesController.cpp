@@ -45,14 +45,12 @@ PlacesController::PlacesController ()
 
   _factory = new PlaceFactoryFile ();
 
-  _window_layout = new nux::HLayout();
+  _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.9));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
-  _window->ShowWindow(true);
-  _window->EnableInputWindow(true);
-  _window->InputWindowEnableStruts(false);
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
   _view = new PlacesView ();

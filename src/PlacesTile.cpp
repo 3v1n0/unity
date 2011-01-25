@@ -49,7 +49,7 @@ PlacesTile::UpdateBackground ()
 {
   nux::Geometry base = GetGeometry ();
 
-  if (base.width == _last_width && base.height == _last_height)
+  if ((base.width == _last_width) && (base.height == _last_height))
     return;
 
   _last_width = base.width;
@@ -189,7 +189,7 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
   // FIXME: Disabled due to nux issue
-  if (_state == STATE_HOVER && false)
+  if (_state == STATE_HOVER)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 

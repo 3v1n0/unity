@@ -45,7 +45,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _entry = new nux::EditTextBox("Search", NUX_TRACKER_LOCATION);
   _entry->SetMinimumWidth (200);
  //  _entry->SetMinimumHeight (30);
-  _entry->SetTextBackgroundColor (nux::Color (0x00000000));
+  _entry->SetTextBackgroundColor (nux::Color (0xFF000000));
 
   _layout->AddView (_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _layout->SetVerticalExternalMargin (14);
@@ -56,7 +56,8 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
 PlacesSearchBar::~PlacesSearchBar ()
 {
-  delete _bg_layer;
+  if (_bg_layer)
+    delete _bg_layer;
 }
 
 const gchar* PlacesSearchBar::GetName ()
@@ -242,7 +243,7 @@ PlacesSearchBar::UpdateBackground ()
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
-                                     true,              // Write the alpha value of the texture to the destination buffer.
+                                     false,              // Write the alpha value of the texture to the destination buffer.
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 

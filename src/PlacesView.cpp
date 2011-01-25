@@ -38,8 +38,7 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
 {
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
- _search_bar = new PlacesSearchBar ();
-  _search_bar->SetMinMaxSize (1024, 48);
+  _search_bar = new PlacesSearchBar ();
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
   
@@ -73,26 +72,15 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 void
 PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry base = GetGeometry ();
-  GfxContext.PushClippingRectangle (base);
 
-  nux::Color color (0.0, 0.0, 0.0, 0.9);
-  GfxContext.QRP_Color (0, 0, GetGeometry ().width, GetGeometry ().height, color);
-
-  GfxContext.PopClippingRectangle ();
 }
 
 
 void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  nux::Geometry base = GetGeometry ();
-
-  nux::GetPainter ().PushColorLayer (GfxContext, base, nux::Color (0.0, 0.0, 0.0, 0.9), true);
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
-
-  nux::GetPainter ().PopBackground ();
 }
 
 //
