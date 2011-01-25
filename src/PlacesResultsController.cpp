@@ -67,7 +67,65 @@ PlacesResultsController::AddResultToGroup (const char *group_name,
     CreateGroup (group_name);
   }
 
-  _groups[group_name]-> (tile);
-  _tiles[g_strdup (id)] = tile;
+  _groups[group_name]->GetLayout ()->AddView (tile);
+  _tiles[id] = tile;
+  _tile_group_relations[id] = g_strdup (group_name);
 
+  // Should also catch the onclick signal here on each tile,
+  // so we can activate or do whatever it is we need to do
 }
+
+void
+PlacesResultsController::RemoveResult (const char *id)
+{
+  RemoveResultFromGroup (_tile_group_relations [id], id);
+}
+
+void
+PlacesResultsController::RemoveResultFromGroup (const char *group_name,
+                                                const char *id);
+{
+  PlacesTile *tile = _tiles[id];
+  PlacesGroup *group = _groups[group_name];
+
+  group->GetLayout ()->RemoveChildObject (tile);
+
+  if (group->GetLayout ()->GetChildren ()->empty ())
+  {
+    _results-view->RemoveGroup (group);
+    _groups->erase (group_name);
+    group.UnReference ();
+  }
+
+  _tiles->erase (id);
+
+  g_free (_tile_group_relations[id]);
+  _tile_group_relations.erase (id);
+}
+
+void
+PlacesResultsController::CreateGroup (const char *group_name)
+{
+  PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
+  newgroup->SinkReference ();
+  newgroup->SetTitle (group_name);
+  newgroup->SetRowHeight (92);
+  newgroup->SetItemDetail (1, 100);
+  newgroup->SetExpanded (true);
+
+  nux::GridHLayout *layout new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  newgroup->SetLayout (layout);
+
+  _groups[group_name] = newgroup;
+  _results_view->AddView (group);
+}
+
+
+
+
+
+
+
+
+
+
