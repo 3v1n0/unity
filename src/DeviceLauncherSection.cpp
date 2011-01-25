@@ -44,16 +44,10 @@ DeviceLauncherSection::PopulateEntries (DeviceLauncherSection *self)
   for (v = volumes; v; v = v->next)
   {
     GVolume *volume = (GVolume *)v->data;
-    GDrive  *drive = NULL;
+    DeviceLauncherIcon *icon = new DeviceLauncherIcon (self->_launcher, volume);
 
-    if ((drive = g_volume_get_drive (volume)))
-    {
-      DeviceLauncherIcon *icon = new DeviceLauncherIcon (self->_launcher, volume);
+    self->IconAdded.emit (icon);
 
-      self->IconAdded.emit (icon);
-
-      g_object_unref (drive);
-    }
     g_object_unref (volume);
   }
 

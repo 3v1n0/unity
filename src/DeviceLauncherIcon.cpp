@@ -22,31 +22,86 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#define DEFAULT_ICON "drive-removable-media"
+
 DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 : SimpleLauncherIcon(launcher),
   _volume (volume)
 {
-  gchar *name;
-  gchar *escape;
-
-  name = g_volume_get_name (volume);
-  escape = g_markup_escape_text (name, -1);
-
-  SetTooltipText (escape);
-  SetIconName ("volume");
-  SetQuirk (QUIRK_VISIBLE, true);
-  SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_DEVICE);
-
   g_signal_connect (_volume, "removed",
                     G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
 
-  g_free (escape);
-  g_free (name);
+  UpdateDeviceIcon ();
+
 }
 
 DeviceLauncherIcon::~DeviceLauncherIcon()
 {
+
+}
+
+void
+DeviceLauncherIcon::UpdateDeviceIcon ()
+{
+  {
+    gchar *name;
+    gchar *escape;
+
+    name = g_volume_get_name (_volume);
+    escape = g_markup_escape_text (name, -1);
+
+    SetTooltipText (escape);
+
+    g_free (escape);
+    g_free (name);
+  }
+  
+  {
+    GIcon *icon;
+
+    icon = g_volume_get_icon (_volume);
+    if (G_IS_THEMED_ICON (icon))
+    {
+      const gchar * const *names;
+
+      names = g_themed_icon_get_names (G_THEMED_ICON (icon));
+
+      if (names)
+        SetIconName (names[0]);
+      else
+        SetIconName (DEFAULT_ICON);
+
+      g_debug ("ICON: %s", names[0]);
+    }
+    else if (G_IS_FILE_ICON (icon))
+    {
+      GFile *file;
+
+      file = g_file_icon_get_file (G_FILE_ICON (icon));
+      if (file)
+      {
+        gchar *path;
+
+        path = g_file_get_path (file);
+        SetIconName (path);
+
+        g_debug ("ICON: %s", path);
+
+        g_free (path);
+      }
+      else
+        SetIconName (DEFAULT_ICON);
+    }
+    else
+    {
+      SetIconName (DEFAULT_ICON);
+    }
+  }
+  
+  
+  SetQuirk (QUIRK_VISIBLE, true);
+  SetQuirk (QUIRK_RUNNING, false);
+  SetIconType (TYPE_DEVICE);
 
 }
 
@@ -71,12 +126,6 @@ DeviceLauncherIcon::OnMouseClick (int button)
   {
     Activate ();
   }
-}
-
-void
-DeviceLauncherIcon::UpdateDeviceIcon ()
-{
-
 }
 
 std::list<DbusmenuMenuitem *>
