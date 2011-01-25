@@ -17,64 +17,70 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "PlaceLauncherIcon.h"
+#include "DeviceLauncherIcon.h"
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
+DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 : SimpleLauncherIcon(launcher),
-  _entry (entry)
+  _volume (volume)
 {
+  gchar *name;
   gchar *escape;
 
-  escape = g_markup_escape_text (entry->GetName (), -1);
+  name = g_volume_get_name (volume);
+  escape = g_markup_escape_text (name, -1);
 
   SetTooltipText (escape);
-  SetIconName (entry->GetIcon ());
+  SetIconName ("volume");
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_PLACE); 
+  SetIconType (TYPE_DEVICE);
+
+  g_signal_connect (_volume, "removed",
+                    G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
 
   g_free (escape);
+  g_free (name);
 }
 
-PlaceLauncherIcon::~PlaceLauncherIcon()
+DeviceLauncherIcon::~DeviceLauncherIcon()
 {
 
 }
 
 nux::Color 
-PlaceLauncherIcon::BackgroundColor ()
+DeviceLauncherIcon::BackgroundColor ()
 {
   return nux::Color (0xFF333333);
 }
 
 nux::Color 
-PlaceLauncherIcon::GlowColor ()
+DeviceLauncherIcon::GlowColor ()
 {
   return nux::Color (0xFF333333);
 }
 
 void
-PlaceLauncherIcon::OnMouseClick (int button)
+DeviceLauncherIcon::OnMouseClick (int button)
 {
   SimpleLauncherIcon::OnMouseClick (button);
 
   if (button == 1)
   {
-    Activate (0, "");
+    Activate ();
   }
 }
 
 void
-PlaceLauncherIcon::UpdatePlaceIcon ()
+DeviceLauncherIcon::UpdateDeviceIcon ()
 {
 
 }
 
 std::list<DbusmenuMenuitem *>
-PlaceLauncherIcon::GetMenus ()
+DeviceLauncherIcon::GetMenus ()
 {
   std::list<DbusmenuMenuitem *>  result;
   DbusmenuMenuitem              *menu_item;
@@ -86,7 +92,7 @@ PlaceLauncherIcon::GetMenus ()
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
   g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (&PlaceLauncherIcon::OnOpen), this);
+                    G_CALLBACK (&DeviceLauncherIcon::OnOpen), this);
 
   result.push_back (menu_item);
 
@@ -94,18 +100,18 @@ PlaceLauncherIcon::GetMenus ()
 }
 
 void
-PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
+DeviceLauncherIcon::Activate ()
 {
-  ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new ("(sus)",
-                                           _entry->GetId (),
-                                           section_id,
-                                           search_string));
 }
 
 void
-PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
+DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
-  self->Activate (0, "");
+  self->Activate ();
+}
+
+void
+DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
+{
+  self->Remove ();
 }

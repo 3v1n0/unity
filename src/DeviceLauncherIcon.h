@@ -17,35 +17,35 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef _PLACE_LAUNCHER_ICON_H__H
-#define _PLACE_LAUNCHER_ICON_H__H
-
-#include "PlaceEntry.h"
+#ifndef _DEVICE_LAUNCHER_ICON_H__H
+#define _DEVICE_LAUNCHER_ICON_H__H
 
 #include "SimpleLauncherIcon.h"
 
+#include <gio/gio.h>
 
-class PlaceLauncherIcon : public SimpleLauncherIcon
+class DeviceLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  PlaceLauncherIcon  (Launcher *launcher, PlaceEntry *entry);
-  ~PlaceLauncherIcon ();
+  DeviceLauncherIcon  (Launcher *launcher, GVolume *volume);
+  ~DeviceLauncherIcon ();
   
   virtual nux::Color BackgroundColor ();
   virtual nux::Color GlowColor ();
 
 protected:
   void OnMouseClick (int button);
-  void UpdatePlaceIcon ();
+  void UpdateDeviceIcon ();
   std::list<DbusmenuMenuitem *> GetMenus ();
 
 private:
-  void Activate (guint section_id, const char *search_string);
-  static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
+  void Activate ();
+  static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnRemoved (GVolume *volume, DeviceLauncherIcon *self);
 
 private:
-  PlaceEntry *_entry;
+  GVolume *_volume;
 };
 
-#endif // _PLACE_LAUNCHER_ICON_H__H
+#endif // _DEVICE_LAUNCHER_ICON_H__H
