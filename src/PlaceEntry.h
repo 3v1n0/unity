@@ -68,6 +68,8 @@ public:
 
   // Signals
 
+  sigc::signal<void, bool>                    active_changed;
+
   // This covers: name, icon and description properties
   sigc::signal<void>                          state_changed;
 

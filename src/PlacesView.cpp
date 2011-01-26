@@ -34,7 +34,8 @@ static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
-: nux::View (NUX_TRACKER_LOCATION)
+: nux::View (NUX_TRACKER_LOCATION),
+  _entry (NULL)
 {
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
@@ -91,7 +92,22 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 {
   g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
 
-  _search_bar->SetActiveEntry (entry, section_id, search_string);
+  if (_entry)
+    _entry->SetActive (false);
+
+  _entry = entry;
+  _entry->SetActive (true);
+
+  if (entry)
+  {
+    _search_bar->SetActiveEntry (entry, section_id, search_string);
+  }
+}
+
+PlaceEntry *
+PlacesView::GetActiveEntry ()
+{
+  return _entry;
 }
 
 //

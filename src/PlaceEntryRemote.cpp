@@ -216,6 +216,8 @@ PlaceEntryRemote::SetActive (bool is_active)
                      NULL,
                      NULL);
   _active = is_active;
+
+  active_changed.emit (is_active);
 }
 
 void

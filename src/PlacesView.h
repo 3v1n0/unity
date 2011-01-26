@@ -47,7 +47,8 @@ public:
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   // Methods
-  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+  void         SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+  PlaceEntry * GetActiveEntry ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
@@ -61,6 +62,7 @@ private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
   PlacesHomeView  *_home_view;
+  PlaceEntry      *_entry;
 };
 
 #endif // PANEL_HOME_BUTTON_H
