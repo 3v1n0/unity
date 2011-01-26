@@ -27,6 +27,7 @@
 #include "Nux/TextureArea.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include "Nux/GridHLayout.h"
 #include <gtk/gtk.h>
 
 #include "PlacesGroup.h"
@@ -59,6 +60,29 @@ void TestRunner::Init ()
   PlacesGroup *group1 = new PlacesGroup ();
   group1->SetTitle ("Hello World!");
   group1->SetItemDetail (100, 5);
+
+  nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  for (int i = 0; i < 60; i++)
+  {
+    nux::ColorLayer color (nux::Color::RandomColor ());
+    nux::TextureArea* texture_area = new nux::TextureArea ();
+    texture_area->SetPaintLayer (&color);
+
+    group_content->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  }
+
+  group_content->ForceChildrenSize (true);
+  group_content->SetChildrenSize (64, 42);
+  group_content->EnablePartialVisibility (false);
+
+  group_content->SetVerticalExternalMargin (4);
+  group_content->SetHorizontalExternalMargin (4);
+  group_content->SetVerticalInternalMargin (4);
+  group_content->SetHorizontalInternalMargin (4);
+
+  group1->SetLayout (group_content);
+
+
   layout->AddView (group1, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   nux::GetGraphicsThread()->SetLayout (layout);

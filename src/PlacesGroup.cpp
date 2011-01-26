@@ -122,6 +122,8 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   _content->Reference ();
 
   _group_layout->AddLayout (_content);
+
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -155,15 +157,14 @@ void PlacesGroup::SetExpanded (bool expanded)
 void
 PlacesGroup::UpdateTitle ()
 {
-  g_debug ("Update Title Called; setting to %s", _title_string);
   _title->SetText (_title_string);
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
 void
 PlacesGroup::UpdateLabel ()
 {
-  g_debug ("Update Label Called!");
   if (_expanded)
   {
     _label->SetText (_("See less results"));
@@ -179,6 +180,7 @@ PlacesGroup::UpdateLabel ()
     g_free ((result_string));
   }
 
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -193,22 +195,13 @@ long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Pro
 void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  g_debug ("got a draw!");
   // Check if the texture have been computed. If they haven't, exit the function.
-  //~ nux::Geometry base = GetGeometry ();
-  //~ nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
-
   nux::Geometry base = GetGeometry ();
+  nux::GetPainter ().PaintBackground (GfxContext, GetGeometry ());
+
 
   GfxContext.PushClippingRectangle (base);
 
-  //nux::Color color (0.6, 0.5, 0.2, 0.9);
-  // You can use this function to draw a colored Quad:
-  //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
-  // or this one:
-  //GfxContext.QRP_Color (0, 0, GetGeometry ().width/2, GetGeometry ().height/2, color);
-
-  //_label->NeedRedraw ();
   _group_layout->NeedRedraw ();
 
   GfxContext.PopClippingRectangle ();
@@ -217,14 +210,8 @@ void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
 void
 PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  g_debug ("got a draw content!");
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
-
-  g_debug ("geometry size is %i,%i - %i -> %i", base.x,
-                         base.y ,
-                         base.width,
-                         base.height);
 
   _group_layout->ProcessDraw (GfxContext, force_draw);
 
