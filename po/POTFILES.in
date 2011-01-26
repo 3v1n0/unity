@@ -1,4 +1,6 @@
 src/BamfLauncherIcon.cpp
+src/DeviceLauncherIcon.cpp
 src/LauncherController.cpp
+src/PlaceLauncherIcon.cpp
 src/PlacesHomeView.cpp
 src/TrashLauncherIcon.cpp
