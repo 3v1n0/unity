@@ -50,7 +50,7 @@ View (NUX_FILE_LINE_PARAM)
   //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
-  _label = new nux::StaticCairoText ("Hello World", NUX_TRACKER_LOCATION);
+  _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _label->SinkReference ();
   _label->SetFont ("Ubuntu normal 9");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -58,7 +58,7 @@ View (NUX_FILE_LINE_PARAM)
   _label->SetMaximumWidth (320);
   _label->SetMinimumWidth (320);
 
-  _title = new nux::StaticCairoText ("Harrow World", NUX_TRACKER_LOCATION);
+  _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _title->SinkReference ();
   _title->SetFont ("Ubuntu normal 9");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -69,20 +69,23 @@ View (NUX_FILE_LINE_PARAM)
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _header_layout->SinkReference ();
 
-  _header_layout->AddView (_label, nux::MINOR_POSITION_TOP, nux::MINOR_POSITION_TOP);
-  _header_layout->AddView (_title);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+  _header_layout->AddSpace (100, 1);
+  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
 
-  _group_layout->AddLayout (_header_layout);
-  //_group_layout->AddView (_label);
+  _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 0.0f);
+
   _content = NULL;
   _expanded = false;
   _title_string = NULL;
   _row_height = 0;
   _total_items = 0;
   _visible_items = 0;
+
+  SetCompositionLayout (_group_layout);
 
 }
 
