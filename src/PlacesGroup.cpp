@@ -52,7 +52,7 @@ View (NUX_FILE_LINE_PARAM)
 
   _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _label->SinkReference ();
-  _label->SetFont ("Ubuntu normal 9");
+  _label->SetFont ("Ubuntu normal 11");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _label->SetMaximumWidth (320);
@@ -60,7 +60,7 @@ View (NUX_FILE_LINE_PARAM)
 
   _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _title->SinkReference ();
-  _title->SetFont ("Ubuntu normal 9");
+  _title->SetFont ("Ubuntu normal 11");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
   _title->SetMaximumWidth (320);
@@ -69,9 +69,9 @@ View (NUX_FILE_LINE_PARAM)
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _header_layout->SinkReference ();
 
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
-  _header_layout->AddSpace (100, 1);
-  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddSpace (0, 0);
+  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
@@ -133,7 +133,7 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
 nux::Layout *
 PlacesGroup::GetLayout ()
 {
-  return _group_layout;
+  return _content;
 }
 
 void PlacesGroup::SetRowHeight (unsigned int row_height)
