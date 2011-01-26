@@ -63,67 +63,66 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
                                            PlacesTile *tile,
                                            const char *_id)
 {
-  char *group_name = g_strdup (groupname);
-  char *id = g_strdup (_id);
-  g_debug ("looking for group %s", group_name);
+  std::string *group_name = new std::string (groupname);
+  std::string *id = new std::string (_id);
 
   PlacesGroup *group = NULL;
 
-  if (_groups.find (group_name) == _groups.end ())
+  if (_groups.find (*group_name) == _groups.end ())
     {
       g_debug ("should get this once");
-      group = CreateGroup (group_name);
+      group = CreateGroup (groupname);
     }
   else
     {
-      group = _groups[group_name];
+      group = _groups[*group_name];
     }
 
   group->GetLayout ()->AddView (tile);
-  _tiles[id] = tile;
-  _tile_group_relations[id] = g_strdup (group_name);
+  _tiles[*id] = tile;
+  _tile_group_relations[*id] = *(new std::string (groupname));
 
   // Should also catch the onclick signal here on each tile,
   // so we can activate or do whatever it is we need to do
 
-  g_free (group_name);
-  g_free (id);
+  delete group_name;
+  delete id;
 }
 
 void
 PlacesResultsController::RemoveResultFromGroup (const char *groupname,
                                                 const char *_id)
 {
-  char *group_name = g_strdup (groupname);
-  char *id = g_strdup (_id);
+  std::string *group_name = new std::string (groupname);
+  std::string *id = new std::string (_id);
 
-  PlacesTile *tile = _tiles[id];
-  PlacesGroup *group = _groups[group_name];
+  PlacesTile *tile = _tiles[*id];
+  PlacesGroup *group = _groups[*group_name];
 
   group->GetLayout ()->RemoveChildObject (tile);
 
   if (group->GetLayout ()->GetChildren ().empty ())
   {
     _results_view->RemoveGroup (group);
-    _groups.erase (group_name);
+    _groups.erase (*group_name);
     group->UnReference ();
   }
 
-  _tiles.erase (id);
+  _tiles.erase (*id);
 
-  g_free (_tile_group_relations[id]);
-  _tile_group_relations.erase (id);
+  delete &(_tile_group_relations[*id]);
+  _tile_group_relations.erase (*id);
 
-  g_free (group_name);
-  g_free (id);
+  delete group_name;
+  delete id;
 }
 
 void
 PlacesResultsController::RemoveResult (const char *_id)
 {
-  char *id = g_strdup (_id);
-  RemoveResultFromGroup (_tile_group_relations [id], id);
-  g_free (id);
+  std::string *id = new std::string (_id);
+  RemoveResultFromGroup (_tile_group_relations [*id].c_str (), _id);
+  delete id;
 }
 
 
@@ -132,21 +131,31 @@ PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
   g_debug ("making a group for %s", groupname);
-  char *group_name = g_strdup (groupname);
+  std::string *group_name = new std::string (groupname);
+
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
-  newgroup->SetTitle (group_name);
+  newgroup->SetTitle (groupname);
   newgroup->SetRowHeight (92);
   newgroup->SetItemDetail (1, 100);
   newgroup->SetExpanded (true);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  layout->ForceChildrenSize (true);
+  layout->SetChildrenSize (64, 42);
+  layout->EnablePartialVisibility (false);
+
+  layout->SetVerticalExternalMargin (4);
+  layout->SetHorizontalExternalMargin (4);
+  layout->SetVerticalInternalMargin (4);
+  layout->SetHorizontalInternalMargin (4);
+
   newgroup->SetLayout (layout);
 
-  _groups[group_name] = newgroup;
+  _groups[*group_name] = newgroup;
   _results_view->AddGroup (newgroup);
 
-  g_free (group_name);
+  delete group_name;
 
   return newgroup;
 }

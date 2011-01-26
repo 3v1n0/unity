@@ -53,9 +53,9 @@ protected:
 
 private:
   PlacesResultsView *_results_view;
-  std::map<char *, PlacesGroup *>   _groups;
-  std::map<char *, PlacesTile *>    _tiles;
-  std::map<char *, char *>          _tile_group_relations;
+  std::map<std::string, PlacesGroup *>   _groups;
+  std::map<std::string, PlacesTile *>    _tiles;
+  std::map<std::string, std::string>     _tile_group_relations;
 
 };
 

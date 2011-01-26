@@ -66,12 +66,21 @@ void TestRunner::Init ()
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   PlacesSimpleTile *tile1 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile12 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
   PlacesSimpleTile *tile2 = new PlacesSimpleTile ("firefox", "FooBar Fox");
   PlacesSimpleTile *tile3 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
 
   controller->SetView (view);
 
   controller->AddResultToGroup ("Group1", tile1, "tile1");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-2");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-3");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-4");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-5");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-6");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-7");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-8");
+  controller->AddResultToGroup ("Group1", tile12, "tile1-9");
   controller->AddResultToGroup ("Group1", tile2, "tile1");
   controller->AddResultToGroup ("Group1", tile3, "tile1");
 

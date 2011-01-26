@@ -50,7 +50,7 @@ View (NUX_FILE_LINE_PARAM)
   //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
-  _label = new nux::StaticCairoText ("Hello World", NUX_TRACKER_LOCATION);
+  _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _label->SinkReference ();
   _label->SetFont ("Ubuntu normal 9");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -58,7 +58,7 @@ View (NUX_FILE_LINE_PARAM)
   _label->SetMaximumWidth (320);
   _label->SetMinimumWidth (320);
 
-  _title = new nux::StaticCairoText ("Harrow World", NUX_TRACKER_LOCATION);
+  _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _title->SinkReference ();
   _title->SetFont ("Ubuntu normal 9");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
@@ -69,20 +69,23 @@ View (NUX_FILE_LINE_PARAM)
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _header_layout->SinkReference ();
 
-  _header_layout->AddView (_label, nux::MINOR_POSITION_TOP, nux::MINOR_POSITION_TOP);
-  _header_layout->AddView (_title);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+  _header_layout->AddSpace (100, 1);
+  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
 
-  _group_layout->AddLayout (_header_layout);
-  //_group_layout->AddView (_label);
+  _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 0.0f);
+
   _content = NULL;
   _expanded = false;
   _title_string = NULL;
   _row_height = 0;
   _total_items = 0;
   _visible_items = 0;
+
+  SetCompositionLayout (_group_layout);
 
 }
 
@@ -121,7 +124,11 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   _content = layout;
   _content->Reference ();
 
-  _group_layout->AddLayout (_content);
+  _group_layout->AddLayout (_content, 0,
+                            nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT,
+                            0.0f);
+
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -155,15 +162,14 @@ void PlacesGroup::SetExpanded (bool expanded)
 void
 PlacesGroup::UpdateTitle ()
 {
-  g_debug ("Update Title Called; setting to %s", _title_string);
   _title->SetText (_title_string);
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
 void
 PlacesGroup::UpdateLabel ()
 {
-  g_debug ("Update Label Called!");
   if (_expanded)
   {
     _label->SetText (_("See less results"));
@@ -172,13 +178,14 @@ PlacesGroup::UpdateLabel ()
   {
     char *result_string = NULL;
     result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                                 "See one less result",
-                                                 _total_items - _visible_items));
+                                                       "See one less result",
+                                                       _total_items - _visible_items));
 
     _label->SetText (result_string);
     g_free ((result_string));
   }
 
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -193,22 +200,13 @@ long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Pro
 void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  g_debug ("got a draw!");
   // Check if the texture have been computed. If they haven't, exit the function.
-  //~ nux::Geometry base = GetGeometry ();
-  //~ nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
-
   nux::Geometry base = GetGeometry ();
+  nux::GetPainter ().PaintBackground (GfxContext, GetGeometry ());
+
 
   GfxContext.PushClippingRectangle (base);
 
-  //nux::Color color (0.6, 0.5, 0.2, 0.9);
-  // You can use this function to draw a colored Quad:
-  //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
-  // or this one:
-  //GfxContext.QRP_Color (0, 0, GetGeometry ().width/2, GetGeometry ().height/2, color);
-
-  //_label->NeedRedraw ();
   _group_layout->NeedRedraw ();
 
   GfxContext.PopClippingRectangle ();
@@ -217,14 +215,8 @@ void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
 void
 PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  g_debug ("got a draw content!");
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
-
-  g_debug ("geometry size is %i,%i - %i -> %i", base.x,
-                         base.y ,
-                         base.width,
-                         base.height);
 
   _group_layout->ProcessDraw (GfxContext, force_draw);
 

@@ -36,6 +36,7 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   setBorder (12);
   EnableVerticalScrollBar (true);
 
+  SetCompositionLayout (_layout);
 }
 
 PlacesResultsView::~PlacesResultsView ()
