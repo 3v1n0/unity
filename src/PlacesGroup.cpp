@@ -56,7 +56,7 @@ View (NUX_FILE_LINE_PARAM)
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _label->SetMaximumWidth (320);
-  _label->SetMinimumWidth (320);
+  _label->SetMinimumWidth (1);
 
   _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _title->SinkReference ();
@@ -64,19 +64,19 @@ View (NUX_FILE_LINE_PARAM)
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
   _title->SetMaximumWidth (320);
-  _title->SetMinimumWidth (320);
+  _title->SetMinimumWidth (1);
 
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _header_layout->SinkReference ();
 
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
-  _header_layout->AddSpace (100, 1);
-  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddSpace (1, 1);
+  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
 
-  _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT, 0.0f);
+  _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _content = NULL;
   _expanded = false;
