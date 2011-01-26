@@ -27,4 +27,8 @@
 // When other parts of Unity want to close the place view
 #define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
 
+// Signal send when places are shown or hidden
+#define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
+#define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
+
 #endif // UBUS_MESSAGES_H
