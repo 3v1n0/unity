@@ -55,6 +55,10 @@ protected:
 
 private:
   void UpdateBackground ();
+  void OnSearchChanged (nux::TextEntry *text_entry);
+  void EmitLiveSearch ();
+
+  static bool OnLiveSearchTimeout (PlacesSearchBar *self);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
@@ -63,6 +67,7 @@ private:
   int _last_width;
   int _last_height;
   PlaceEntry              *_entry;
+  guint                    _live_search_timeout;
 };
 
 #endif

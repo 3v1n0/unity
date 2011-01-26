@@ -36,11 +36,14 @@
 
 #include "PlacesSearchBar.h"
 
+#define LIVE_SEARCH_TIMEOUT 250
+
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
 
 PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
-    _entry (NULL)
+    _entry (NULL),
+    _live_search_timeout (0)
 {
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -48,8 +51,8 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
  
   _pango_entry = new nux::TextEntry (_("Search"), NUX_TRACKER_LOCATION);
   _pango_entry->SetMinimumWidth (200);
- //  _entry->SetMinimumHeight (30);
-  //_entry->SetTextBackgroundColor (nux::Color (0xFF000000));
+  _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+
 
   _layout->AddView (_pango_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _layout->SetVerticalExternalMargin (14);
@@ -160,6 +163,37 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
   {
     _pango_entry->SetText (_("Search"));
   }
+}
+
+void
+PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
+{
+  if (_live_search_timeout)
+    g_source_remove (_live_search_timeout);
+  
+  _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
+                                        (GSourceFunc)&OnLiveSearchTimeout,
+                                        this);
+}
+
+bool
+PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
+{
+  self->EmitLiveSearch ();
+
+  return FALSE;
+}
+
+void
+PlacesSearchBar::EmitLiveSearch ()
+{
+  if (_entry)
+  {
+    std::map<gchar *, gchar *> hints;
+
+    _entry->SetSearch (_pango_entry->GetText ().c_str (), hints);
+  }
+  _live_search_timeout = 0;
 }
 
 static void
