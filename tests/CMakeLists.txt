@@ -166,6 +166,10 @@ add_executable (test-places-group
                 ../src/Introspectable.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
                 )
 
 add_executable (test-places-results

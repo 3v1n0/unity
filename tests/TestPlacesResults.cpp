@@ -23,9 +23,11 @@
 #include "Nux/HLayout.h"
 #include "Nux/Button.h"
 #include "IconTexture.h"
+#include "StaticCairoText.h"
 #include "Nux/TextureArea.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include "Nux/GridHLayout.h"
 #include <gtk/gtk.h>
 
 #include "PlacesSimpleTile.h"
@@ -65,23 +67,85 @@ void TestRunner::Init ()
   layout = new nux::VLayout ();
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  PlacesSimpleTile *tile11 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
-  PlacesSimpleTile *tile12 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
-  PlacesSimpleTile *tile13 = new PlacesSimpleTile ("firefox", "FooBar Fox");
-  PlacesSimpleTile *tile14 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
+  //~ PlacesGroup *group1 = new PlacesGroup ();
+  //~ group1->SetTitle ("Hello World!");
+  //~ group1->SetItemDetail (100, 5);
+//~
+  //~ nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  //~ for (int i = 0; i < 60; i++)
+  //~ {
+    //~ nux::ColorLayer color (nux::Color::RandomColor ());
+    //~ nux::TextureArea* texture_area = new nux::TextureArea ();
+    //~ texture_area->SetPaintLayer (&color);
+//~
+    //~ group_content->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  //~ }
+//~
+  //~ group_content->ForceChildrenSize (true);
+  //~ group_content->SetChildrenSize (64, 42);
+  //~ group_content->EnablePartialVisibility (false);
+//~
+  //~ group_content->SetVerticalExternalMargin (4);
+  //~ group_content->SetHorizontalExternalMargin (4);
+  //~ group_content->SetVerticalInternalMargin (4);
+  //~ group_content->SetHorizontalInternalMargin (4);
+//~
+  //~ group1->SetLayout (group_content);
+//~
+  //~ view->AddGroup (group1);
+//~
+//~
+  //~ PlacesGroup *group2 = new PlacesGroup ();
+  //~ group2->SetTitle ("Group2!");
+  //~ group2->SetItemDetail (100, 5);
+//~
+  //~ nux::GridHLayout *group_content2 = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  //~ for (int i = 0; i < 60; i++)
+  //~ {
+    //~ nux::ColorLayer color (nux::Color::RandomColor ());
+    //~ nux::TextureArea* texture_area = new nux::TextureArea ();
+    //~ texture_area->SetPaintLayer (&color);
+//~
+    //~ group_content2->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  //~ }
+//~
+  //~ group_content2->ForceChildrenSize (true);
+  //~ group_content2->SetChildrenSize (64, 42);
+  //~ group_content2->EnablePartialVisibility (false);
+//~
+  //~ group_content2->SetVerticalExternalMargin (4);
+  //~ group_content2->SetHorizontalExternalMargin (4);
+  //~ group_content2->SetVerticalInternalMargin (4);
+  //~ group_content2->SetHorizontalInternalMargin (4);
+//~
+  //~ group2->SetLayout (group_content2);
+//~
+  //~ view->AddGroup (group2);
 
-  PlacesSimpleTile *tile21 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
-  PlacesSimpleTile *tile22 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
-  PlacesSimpleTile *tile23 = new PlacesSimpleTile ("firefox", "FooBar Fox");
-  PlacesSimpleTile *tile24 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
 
+  //~ PlacesGroup *group2 = new PlacesGroup ();
+  //~ group1->SetTitle ("Second Group");
+  //~ group1->SetItemDetail (100, 5);
+//~
+//~
+//~
+  PlacesSimpleTile *tile11 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.", 50);
+  PlacesSimpleTile *tile12 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.", 50);
+  PlacesSimpleTile *tile13 = new PlacesSimpleTile ("firefox", "FooBar Fox", 50);
+  PlacesSimpleTile *tile14 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid", 50);
+//~ //~
+  PlacesSimpleTile *tile21 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.", 50);
+  PlacesSimpleTile *tile22 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.", 50);
+  PlacesSimpleTile *tile23 = new PlacesSimpleTile ("firefox", "FooBar Fox", 50);
+  PlacesSimpleTile *tile24 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid", 50);
+//~
   controller->SetView (view);
-
+//~ //~
   controller->AddResultToGroup ("Group1", tile11, "tile1-1");
   controller->AddResultToGroup ("Group1", tile12, "tile1-2");
   controller->AddResultToGroup ("Group1", tile13, "tile1-3");
   controller->AddResultToGroup ("Group1", tile14, "tile1-4");
-
+//~ //~
   controller->AddResultToGroup ("Group2", tile21, "tile2-1");
   controller->AddResultToGroup ("Group2", tile22, "tile2-2");
   controller->AddResultToGroup ("Group2", tile23, "tile2-3");

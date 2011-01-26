@@ -70,7 +70,6 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
 
   if (_groups.find (*group_name) == _groups.end ())
     {
-      g_debug ("should get this once");
       group = CreateGroup (groupname);
     }
   else
@@ -78,7 +77,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
       group = _groups[*group_name];
     }
 
-  group->GetLayout ()->AddView (tile);
+  group->GetLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
   _tiles[*id] = tile;
   _tile_group_relations[*id] = *(new std::string (groupname));
 
@@ -142,7 +141,7 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (64, 42);
+  layout->SetChildrenSize (140, 90);
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (4);

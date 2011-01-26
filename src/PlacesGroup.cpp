@@ -124,9 +124,7 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   _content = layout;
   _content->Reference ();
 
-  _group_layout->AddLayout (_content);//, 0,
-                            //nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT,
-                            //0.0f);
+  _group_layout->AddLayout (_content);
 
   ComputeChildLayout ();
   NeedRedraw ();
@@ -135,7 +133,7 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
 nux::Layout *
 PlacesGroup::GetLayout ()
 {
-  return _group_layout;
+  return _content;
 }
 
 void PlacesGroup::SetRowHeight (unsigned int row_height)

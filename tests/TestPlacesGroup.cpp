@@ -31,6 +31,7 @@
 #include <gtk/gtk.h>
 
 #include "PlacesGroup.h"
+#include "PlacesSimpleTile.h"
 
 class TestRunner
 {
@@ -62,6 +63,35 @@ void TestRunner::Init ()
   group1->SetItemDetail (100, 5);
 
   nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  for (int i = 0; i < 60; i++)
+  {
+    nux::ColorLayer color (nux::Color::RandomColor ());
+    nux::TextureArea* texture_area = new nux::TextureArea ();
+    texture_area->SetPaintLayer (&color);
+
+    group_content->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  }
+
+  PlacesSimpleTile *tile11 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile12 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile13 = new PlacesSimpleTile ("firefox", "FooBar Fox");
+  PlacesSimpleTile *tile14 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
+
+  PlacesSimpleTile *tile21 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile22 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile23 = new PlacesSimpleTile ("firefox", "FooBar Fox");
+  PlacesSimpleTile *tile24 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
+
+
+  group_content->AddView (tile11, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile12, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile13, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile14, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile21, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile22, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile23, 1, nux::eLeft, nux::eFull);
+  group_content->AddView (tile24, 1, nux::eLeft, nux::eFull);
+
   for (int i = 0; i < 60; i++)
   {
     nux::ColorLayer color (nux::Color::RandomColor ());
