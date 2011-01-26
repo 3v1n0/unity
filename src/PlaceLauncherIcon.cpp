@@ -103,22 +103,18 @@ PlaceLauncherIcon::GetMenus ()
 void
 PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
 {
-  STRLOC
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new ("(sus)",
                                            _entry->GetId (),
                                            section_id,
                                            search_string));
-  STRLOC
 }
 
 void
 PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
 {
-  STRLOC
   self->Activate (0, "");
-  STRLOC
 }
 
 void

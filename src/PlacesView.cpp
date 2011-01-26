@@ -93,22 +93,18 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
 {
-  STRLOC
-
   if (_entry)
     _entry->SetActive (false);
-STRLOC
+
   _entry = entry;
-STRLOC
+  
   if (_entry)
   {
-    g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
+    std::map <gchar*, gchar*> hints;
+
     _entry->SetActive (true);
-    STRLOC
   }
-  STRLOC
-  //_search_bar->SetActiveEntry (entry, section_id, search_string);
-  STRLOC
+  _search_bar->SetActiveEntry (_entry, section_id, search_string);
 }
 
 PlaceEntry *
@@ -156,9 +152,7 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
 void
 PlacesView::CloseRequest (GVariant *data, PlacesView *self)
 {
-  STRLOC
   self->SetActiveEntry (NULL, 0, "");
-  STRLOC
 }
 
 //

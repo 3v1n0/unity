@@ -140,9 +140,7 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
 {
    std::map<gchar *, gchar *> hints;
 
-   STRLOC
    _entry = entry;
-   STRLOC
 
   if (_entry)
   {
@@ -151,22 +149,16 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
     gchar       *res;
 
     res = g_strdup_printf (search_template, _entry->GetName ());
-    STRLOC
     _pango_entry->SetText (res);
-    STRLOC
-     _entry->SetActiveSection (section_id);
-    STRLOC
+
+    // FIXME: Why in gods name does this hang Unity?
+    _entry->SetActiveSection (section_id);
     _entry->SetSearch (search_string ? search_string : "", hints);
-    STRLOC
     g_free (res);
   }
   else
   {
-    STRLOC
     _pango_entry->SetText (_("Search"));
-    STRLOC
-    _entry->SetSearch ("", hints);
-    STRLOC
   }
 }
 
