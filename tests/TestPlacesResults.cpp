@@ -65,24 +65,27 @@ void TestRunner::Init ()
   layout = new nux::VLayout ();
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  PlacesSimpleTile *tile1 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile11 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
   PlacesSimpleTile *tile12 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
-  PlacesSimpleTile *tile2 = new PlacesSimpleTile ("firefox", "FooBar Fox");
-  PlacesSimpleTile *tile3 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
+  PlacesSimpleTile *tile13 = new PlacesSimpleTile ("firefox", "FooBar Fox");
+  PlacesSimpleTile *tile14 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
+
+  PlacesSimpleTile *tile21 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile22 = new PlacesSimpleTile ("/usr/share/icons/scalable/apps/deluge.svg", "Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund. Der schnelle braune Fuchs sprang über den faulen Hund.");
+  PlacesSimpleTile *tile23 = new PlacesSimpleTile ("firefox", "FooBar Fox");
+  PlacesSimpleTile *tile24 = new PlacesSimpleTile ("THISISNOTAVALIDTEXTURE.NOTREAL", "this icon is not valid");
 
   controller->SetView (view);
 
-  controller->AddResultToGroup ("Group1", tile1, "tile1");
+  controller->AddResultToGroup ("Group1", tile11, "tile1-1");
   controller->AddResultToGroup ("Group1", tile12, "tile1-2");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-3");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-4");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-5");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-6");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-7");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-8");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-9");
-  controller->AddResultToGroup ("Group1", tile2, "tile1");
-  controller->AddResultToGroup ("Group1", tile3, "tile1");
+  controller->AddResultToGroup ("Group1", tile13, "tile1-3");
+  controller->AddResultToGroup ("Group1", tile14, "tile1-4");
+
+  controller->AddResultToGroup ("Group2", tile21, "tile2-1");
+  controller->AddResultToGroup ("Group2", tile22, "tile2-2");
+  controller->AddResultToGroup ("Group2", tile23, "tile2-3");
+  controller->AddResultToGroup ("Group2", tile24, "tile2-4");
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }

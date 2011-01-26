@@ -57,6 +57,8 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _cairotext->GetTextExtents (textwidth, textheight);
 
   AddChild (_icontex);
+
+  SetCompositionLayout (_layout);
 }
 
 
