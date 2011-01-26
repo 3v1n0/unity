@@ -59,6 +59,9 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
+  static void CloseRequest (GVariant *data, PlacesView *self);
+
+private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
   PlacesHomeView  *_home_view;

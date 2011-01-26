@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include "PlaceLauncherIcon.h"
 
 #include "ubus-server.h"
@@ -35,8 +37,11 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   SetTooltipText (escape);
   SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);
-  SetQuirk (QUIRK_RUNNING, false);
+  SetQuirk (QUIRK_RUNNING, true);
+  SetQuirk (QUIRK_ACTIVE, entry->IsActive ());
   SetIconType (TYPE_PLACE); 
+
+  entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
 
   g_free (escape);
 }
@@ -98,16 +103,26 @@ PlaceLauncherIcon::GetMenus ()
 void
 PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
 {
+  STRLOC
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new ("(sus)",
                                            _entry->GetId (),
                                            section_id,
                                            search_string));
+  STRLOC
 }
 
 void
 PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
 {
+  STRLOC
   self->Activate (0, "");
+  STRLOC
+}
+
+void
+PlaceLauncherIcon::OnActiveChanged (bool is_active)
+{
+  SetQuirk (QUIRK_ACTIVE, is_active);
 }

@@ -54,6 +54,9 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                                  (UBusCallback)place_entry_activate_request,
                                  this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                 (UBusCallback)&PlacesView::CloseRequest,
+                                 this);
 }
 
 PlacesView::~PlacesView ()
@@ -90,18 +93,22 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
 {
-  g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
+  STRLOC
 
   if (_entry)
     _entry->SetActive (false);
-
+STRLOC
   _entry = entry;
-  _entry->SetActive (true);
-
-  if (entry)
+STRLOC
+  if (_entry)
   {
-    _search_bar->SetActiveEntry (entry, section_id, search_string);
+    g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
+    _entry->SetActive (true);
+    STRLOC
   }
+  STRLOC
+  //_search_bar->SetActiveEntry (entry, section_id, search_string);
+  STRLOC
 }
 
 PlaceEntry *
@@ -144,6 +151,14 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
              entry_id,
              section_id,
              search_string);
+}
+
+void
+PlacesView::CloseRequest (GVariant *data, PlacesView *self)
+{
+  STRLOC
+  self->SetActiveEntry (NULL, 0, "");
+  STRLOC
 }
 
 //

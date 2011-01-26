@@ -10,4 +10,6 @@
 #cmakedefine TESTVALADIR "@TESTVALADIR@"
 #cmakedefine TESTDATADIR "@TESTDIRDIR@"
 
+#define STRLOC g_print ("%s\n", G_STRLOC);
+
 #endif // CONFIG_H
