@@ -135,6 +135,12 @@ PlacesView::GetActiveEntry ()
   return _entry;
 }
 
+PlacesResultsController *
+PlacesView::GetResultsController ()
+{
+  return _results_controller;
+}
+
 
 //
 // Model handlers
@@ -156,12 +162,25 @@ void
 PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
   g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
+  PlacesSimpleTile *tile = new PlacesSimpleTile (dee_model_get_string (model, iter, 1),
+                                                 dee_model_get_string (model, iter, 4));
+
+  PlaceEntry *active = self->GetActiveEntry ();
+  DeeModelIter *it = dee_model_get_iter_at_row (active->GetGroupsModel (),
+                                                dee_model_get_uint32 (model, iter, 2));
+  self->GetResultsController ()->AddResultToGroup (dee_model_get_string (active->GetGroupsModel (),
+                                                                         it,
+                                                                         1),
+                                                   tile,
+                                                   dee_model_get_string (model, iter, 0));
 }
 
 void
 PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
   g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
+
+//  self->GetResultsController ()->RemoveResult (dee_model_get_string (model, iter, 0));
 }
 
 //
