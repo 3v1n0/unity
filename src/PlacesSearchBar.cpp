@@ -30,13 +30,15 @@
 #include <NuxGraphics/RenderingPipe.h>
 
 #include <glib.h>
+#include <glib/gi18n-lib.h>
 
 #include "PlacesSearchBar.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
 
 PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+:   View (NUX_FILE_LINE_PARAM),
+    _entry (NULL)
 {
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -129,6 +131,34 @@ PlacesSearchBar::PostLayoutManagement (long LayoutResult)
   // I'm imagining this is a good as time as any to update the background
 
   return nux::View::PostLayoutManagement (LayoutResult);
+}
+
+void
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+{
+   std::map<gchar *, gchar *> hints;
+
+  _entry = entry;
+  _entry->SetActiveSection (section_id);
+
+  if (_entry)
+  {
+    // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
+    const gchar *search_template = _("Search %s");
+    gchar       *res;
+
+    res = g_strdup_printf (search_template, _entry->GetName ());
+    _pango_entry->SetText (res);
+
+    _entry->SetSearch (search_string ? search_string : "", hints);
+
+    g_free (res);
+  }
+  else
+  {
+    _pango_entry->SetText (_("Search"));
+    _entry->SetSearch ("", hints);
+  }
 }
 
 static void

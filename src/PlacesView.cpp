@@ -90,6 +90,8 @@ void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
 {
   g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
+
+  _search_bar->SetActiveEntry (entry, section_id, search_string);
 }
 
 //

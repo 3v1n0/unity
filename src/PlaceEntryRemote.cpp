@@ -221,15 +221,21 @@ PlaceEntryRemote::SetActive (bool is_active)
 void
 PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
+  GVariantBuilder *builder;
+  
+  builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
+ // g_variant_builder_add (builder, "{ss}", "foo", "bar");
+
   /* FIXME: I'm ignoring hints because we don't use them currently */
   g_dbus_proxy_call (_proxy,
                      "SetSearch",
-                     g_variant_new ("(sa{ss})", search, NULL),
+                     g_variant_new ("(sa{ss})", search, builder),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      NULL,
                      NULL);
+  g_variant_builder_unref (builder);
 }
 
 void
