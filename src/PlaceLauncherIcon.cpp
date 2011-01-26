@@ -22,6 +22,8 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include <glib/gi18n-lib.h>
+
 PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
   _entry (entry)
@@ -81,7 +83,7 @@ PlaceLauncherIcon::GetMenus ()
 
   menu_item = dbusmenu_menuitem_new ();
 
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open");
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 

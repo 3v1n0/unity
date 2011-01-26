@@ -44,7 +44,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
  
-  _pango_entry = new nux::TextEntry("Search", NUX_TRACKER_LOCATION);
+  _pango_entry = new nux::TextEntry (_("Search"), NUX_TRACKER_LOCATION);
   _pango_entry->SetMinimumWidth (200);
  //  _entry->SetMinimumHeight (30);
   //_entry->SetTextBackgroundColor (nux::Color (0xFF000000));

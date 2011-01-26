@@ -30,7 +30,7 @@
 // Request a PlaceEntry to be shown.
 // Payload should be: (sus) = (id, section, search_string).
 // id = entry->GetId(), search_string can be ""
-#define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACEE_ENTRY_ACTIVATE_REQUEST"
+#define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACE_ENTRY_ACTIVATE_REQUEST"
 
 // Signal send when places are shown or hidden
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
