@@ -65,6 +65,7 @@ public:
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
+  void OnNameChanged (gchar* new_name, gchar* old_name);
 
   void OnSpreadInitiate (std::list <guint32> &);
   void OnSpreadTerminate (std::list <guint32> &);

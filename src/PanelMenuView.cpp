@@ -43,6 +43,10 @@ static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *new_view,
                                       PanelMenuView *self);
 
+static void on_name_changed (BamfView*      bamf_view,
+                             gchar*         old_name,
+                             gchar*         new_name,
+                             PanelMenuView* self);
 
 PanelMenuView::PanelMenuView (int padding)
 : _matcher (NULL),
@@ -572,10 +576,18 @@ PanelMenuView::AllMenusClosed ()
 }
 
 void
+PanelMenuView::OnNameChanged (gchar* new_name, gchar* old_name)
+{
+  Refresh ();
+  FullRedraw ();
+}
+
+void
 PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
   _is_maximized = false;
+
 
   if (BAMF_IS_WINDOW (new_view))
   {
@@ -585,6 +597,11 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 
     if (_decor_map.find (xid) == _decor_map.end ())
       _decor_map[xid] = true;
+
+    g_signal_connect (G_OBJECT (new_view),
+                      "name-changed",
+                      (GCallback) on_name_changed,
+                      this);
   }
 
   Refresh ();
@@ -768,4 +785,13 @@ on_active_window_changed (BamfMatcher   *matcher,
                           PanelMenuView *self)
 {
   self->OnActiveWindowChanged (old_view, new_view);
+}
+
+static void
+on_name_changed (BamfView*      bamf_view,
+                 gchar*         old_name,
+                 gchar*         new_name,
+                 PanelMenuView* self)
+{
+  self->OnNameChanged (new_name, old_name);
 }
