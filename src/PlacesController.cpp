@@ -83,6 +83,8 @@ void PlacesController::Show ()
   _window->CaptureMouseDownAnyWhereElse (true);
 
   _visible = true;
+
+  ubus_server_send_message (ubus_server_get_default (), UBUS_PLACE_VIEW_SHOWN, NULL);
 }
 
 void PlacesController::Hide ()
@@ -98,6 +100,8 @@ void PlacesController::Hide ()
   _window->ShowWindow (false, false);
   
   _visible = false;
+
+  ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
 void PlacesController::ToggleShowHide ()
