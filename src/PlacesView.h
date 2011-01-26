@@ -34,6 +34,11 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
+#include "PlacesSimpleTile.h"
+#include "PlacesGroup.h"
+#include "PlacesResultsController.h"
+#include "PlacesResultsView.h"
+
 class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
@@ -75,6 +80,9 @@ private:
   gulong           _group_removed_id;
   gulong           _result_added_id;
   gulong           _result_removed_id;
+
+  PlacesResultsController *_results_controller;
+  PlacesResultsView       *_results_view;
 };
 
 #endif // PANEL_HOME_BUTTON_H

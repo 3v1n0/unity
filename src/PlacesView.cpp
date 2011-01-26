@@ -44,8 +44,13 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   AddChild (_search_bar);
   
   _home_view = new PlacesHomeView ();
-  _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  //_layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
   AddChild (_home_view);
+
+  _results_controller = new PlacesResultsController ();
+  _results_view = new PlacesResultsView ();
+  _results_controller->SetView (_results_view);
+  _layout->AddView (_results_view, 1, nux::eCenter, nux::eFull);
 
   SetCompositionLayout (_layout);
 
