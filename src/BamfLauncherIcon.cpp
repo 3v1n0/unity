@@ -348,16 +348,11 @@ BamfLauncherIcon::OnMouseClick (int button)
   SimpleLauncherIcon::OnMouseClick (button);
 
   bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
-  bool onlyOwnWasActive = PluginAdapter::Default ()->IsScaleActive (true);
 
   if (button != 1)
     return;
 
-  if (!scaleWasActive || (scaleWasActive && !onlyOwnWasActive))
-    _launcher->SetLastSpreadIcon (NULL);
-
   bool active, running;
-
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
