@@ -112,5 +112,7 @@ private:
 
   std::map<guint32, bool> _decor_map;
   int _padding;
+  gpointer _name_changed_callback_instance;
+  gulong _name_changed_callback_id;
 };
 #endif

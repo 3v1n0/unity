@@ -72,6 +72,8 @@ PanelMenuView::PanelMenuView (int padding)
   _layout = _menu_layout;
 
   _padding = padding;
+  _name_changed_callback_instance = NULL;
+  _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons ();
   _window_buttons->NeedRedraw ();
@@ -598,10 +600,17 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
     if (_decor_map.find (xid) == _decor_map.end ())
       _decor_map[xid] = true;
 
-    g_signal_connect (G_OBJECT (new_view),
-                      "name-changed",
-                      (GCallback) on_name_changed,
-                      this);
+    // first see if we need to remove and old callback
+    if (_name_changed_callback_id != 0)
+      g_signal_handler_disconnect (_name_changed_callback_instance,
+                                   _name_changed_callback_id);
+
+    // register callback for new view and store handler-id
+    _name_changed_callback_instance = G_OBJECT (new_view);
+    _name_changed_callback_id = g_signal_connect (_name_changed_callback_instance,
+                                                  "name-changed",
+                                                  (GCallback) on_name_changed,
+                                                  this);
   }
 
   Refresh ();
