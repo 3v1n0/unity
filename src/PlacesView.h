@@ -61,11 +61,20 @@ protected:
 private:
   static void CloseRequest (GVariant *data, PlacesView *self);
 
+  static void OnGroupAdded    (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  static void OnGroupRemoved  (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  static void OnResultAdded   (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+
 private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
   PlacesHomeView  *_home_view;
   PlaceEntry      *_entry;
+  gulong           _group_added_id;
+  gulong           _group_removed_id;
+  gulong           _result_added_id;
+  gulong           _result_removed_id;
 };
 
 #endif // PANEL_HOME_BUTTON_H

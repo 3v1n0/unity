@@ -94,7 +94,15 @@ void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
 {
   if (_entry)
+  {
     _entry->SetActive (false);
+    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_added_id);
+    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_removed_id);
+    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_added_id);
+    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
+
+    _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
+  }
 
   _entry = entry;
   
@@ -103,6 +111,15 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     std::map <gchar*, gchar*> hints;
 
     _entry->SetActive (true);
+
+    _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
+                                        (GCallback)&PlacesView::OnGroupAdded, this);
+    _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
+                                          (GCallback)&PlacesView::OnGroupRemoved, this);
+    _result_added_id = g_signal_connect (_entry->GetResultsModel (), "row-added",
+                                         (GCallback)&PlacesView::OnResultAdded, this);
+    _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
+                                           (GCallback)&PlacesView::OnResultRemoved, this);
   }
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
 }
@@ -111,6 +128,35 @@ PlaceEntry *
 PlacesView::GetActiveEntry ()
 {
   return _entry;
+}
+
+
+//
+// Model handlers
+//
+void
+PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+{
+  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+}
+
+
+void
+PlacesView::OnGroupRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+{
+  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+}
+
+void
+PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+{
+  g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
+}
+
+void
+PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+{
+  g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
 }
 
 //
