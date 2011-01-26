@@ -28,14 +28,20 @@
 
 PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   :   ScrollView (NUX_FILE_LINE_PARAM)
-  ,   _layout (0)
 {
   m_horizontal_scrollbar_enable   = false;
   m_vertical_scrollbar_enable      = true;
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  _layout->SinkReference ();
   setBorder (12);
   EnableVerticalScrollBar (true);
 
+}
+
+PlacesResultsView::~PlacesResultsView ()
+{
+  _layout->Clear ();
+  _layout->UnReference ();
 }
 
 void
@@ -85,7 +91,14 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)
 {
-  _layout->AddView (group, 0);
+  _layout->AddView (group);
+  ComputeChildLayout ();
+}
+
+void
+PlacesResultsView::RemoveGroup (PlacesGroup *group)
+{
+  _layout->RemoveChildObject (group);
   ComputeChildLayout ();
 }
 
@@ -94,6 +107,62 @@ PlacesResultsView::PositionChildLayout (float offsetX, float offsetY)
 {
   ScrollView::PositionChildLayout (offsetX, offsetY);
 }
+
+
+void PlacesResultsView::PreLayoutManagement()
+{
+  ScrollView::PreLayoutManagement();
+}
+
+long PlacesResultsView::PostLayoutManagement (long LayoutResult)
+{
+  long result = ScrollView::PostLayoutManagement (LayoutResult);
+  return result;
+}
+
+long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+{
+  long ret = TraverseInfo;
+  long ProcEvInfo = 0;
+
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (!m_Geometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    {
+      ProcEvInfo = nux::eDoNotProcess;
+      //return TraverseInfo;
+    }
+  }
+
+  if (m_vertical_scrollbar_enable)
+    ret = vscrollbar->ProcessEvent (ievent, ret, ProcEvInfo);
+
+  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
+  nux::Geometry viewGeometry = nux::Geometry (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight);
+  bool traverse = true;
+
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    {
+      ProcEvInfo = nux::eDoNotProcess;
+      traverse = false;
+    }
+  }
+
+  if (_layout)
+    ret = _layout->ProcessEvent (ievent, ret, ProcEvInfo);
+
+  ret = PostProcessEvent2 (ievent, ret, 0);
+  return ret;
+}
+
+void PlacesResultsView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
+{
+
+}
+
+
 
 void
 PlacesResultsView::ScrollLeft (float stepx, int mousedx)

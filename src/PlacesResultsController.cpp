@@ -45,7 +45,7 @@ PlacesResultsController::~PlacesResultsController ()
 void
 PlacesResultsController::SetView (PlacesResultsView *view)
 {
-  if (_results_view)
+  if (_results_view != NULL)
     _results_view->UnReference ();
 
   view->Reference ();
@@ -65,12 +65,21 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
 {
   char *group_name = g_strdup (groupname);
   char *id = g_strdup (_id);
-  if (_groups.find (group_name) == _groups.end ())
-  {
-    CreateGroup (group_name);
-  }
+  g_debug ("looking for group %s", group_name);
 
-  _groups[group_name]->GetLayout ()->AddView (tile);
+  PlacesGroup *group = NULL;
+
+  if (_groups.find (group_name) == _groups.end ())
+    {
+      g_debug ("should get this once");
+      group = CreateGroup (group_name);
+    }
+  else
+    {
+      group = _groups[group_name];
+    }
+
+  group->GetLayout ()->AddView (tile);
   _tiles[id] = tile;
   _tile_group_relations[id] = g_strdup (group_name);
 
@@ -119,9 +128,10 @@ PlacesResultsController::RemoveResult (const char *_id)
 
 
 
-void
+PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
+  g_debug ("making a group for %s", groupname);
   char *group_name = g_strdup (groupname);
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
@@ -137,9 +147,22 @@ PlacesResultsController::CreateGroup (const char *groupname)
   _results_view->AddGroup (newgroup);
 
   g_free (group_name);
+
+  return newgroup;
 }
 
 
+/* Introspection */
+const gchar *
+PlacesResultsController::GetName ()
+{
+  return "PlacesResultsController";
+}
+
+void
+PlacesResultsController::AddProperties (GVariantBuilder *builder)
+{
+}
 
 
 

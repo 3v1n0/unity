@@ -50,28 +50,33 @@ View (NUX_FILE_LINE_PARAM)
   //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
-  _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+  _label = new nux::StaticCairoText ("Hello World", NUX_TRACKER_LOCATION);
   _label->SinkReference ();
   _label->SetFont ("Ubuntu normal 9");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _label->SetMaximumWidth (320);
+  _label->SetMinimumWidth (320);
 
-  _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+  _title = new nux::StaticCairoText ("Harrow World", NUX_TRACKER_LOCATION);
   _title->SinkReference ();
   _title->SetFont ("Ubuntu normal 9");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
   _title->SetMaximumWidth (320);
+  _title->SetMinimumWidth (320);
 
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _header_layout->SinkReference ();
 
+  _header_layout->AddView (_label, nux::MINOR_POSITION_TOP, nux::MINOR_POSITION_TOP);
+  _header_layout->AddView (_title);
+
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
 
-  //_group_layout->AddLayout (_header_layout);
-  _group_layout->AddView (_label);
+  _group_layout->AddLayout (_header_layout);
+  //_group_layout->AddView (_label);
   _content = NULL;
   _expanded = false;
   _title_string = NULL;
@@ -150,7 +155,7 @@ void PlacesGroup::SetExpanded (bool expanded)
 void
 PlacesGroup::UpdateTitle ()
 {
-  g_debug ("Update Title Called");
+  g_debug ("Update Title Called; setting to %s", _title_string);
   _title->SetText (_title_string);
   NeedRedraw ();
 }
@@ -166,9 +171,9 @@ PlacesGroup::UpdateLabel ()
   else
   {
     char *result_string = NULL;
-    g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                 "See one less result",
-                                 _total_items - _visible_items));
+    result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
+                                                 "See one less result",
+                                                 _total_items - _visible_items));
 
     _label->SetText (result_string);
     g_free ((result_string));
@@ -197,13 +202,14 @@ void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
 
   GfxContext.PushClippingRectangle (base);
 
-  nux::Color color (0.6, 0.5, 0.2, 0.9);
+  //nux::Color color (0.6, 0.5, 0.2, 0.9);
   // You can use this function to draw a colored Quad:
   //nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), color);
   // or this one:
-  GfxContext.QRP_Color (0, 0, GetGeometry ().width, GetGeometry ().height, color);
+  //GfxContext.QRP_Color (0, 0, GetGeometry ().width/2, GetGeometry ().height/2, color);
 
-  _label->Draw (GfxContext, forceDraw);
+  //_label->NeedRedraw ();
+  _group_layout->NeedRedraw ();
 
   GfxContext.PopClippingRectangle ();
 }

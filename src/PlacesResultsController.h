@@ -47,7 +47,7 @@ public:
                               const char *_id);
 
 protected:
-  void CreateGroup           (const char *groupname);
+  PlacesGroup  *CreateGroup  (const char *groupname);
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
