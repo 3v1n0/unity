@@ -27,6 +27,11 @@
 // When other parts of Unity want to close the place view
 #define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
 
+// Request a PlaceEntry to be shown.
+// Payload should be: (sus) = (id, section, search_string).
+// id = entry->GetId(), search_string can be ""
+#define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACEE_ENTRY_ACTIVATE_REQUEST"
+
 // Signal send when places are shown or hidden
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
 #define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"

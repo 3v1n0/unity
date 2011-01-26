@@ -32,8 +32,8 @@
 #include "PlacesController.h"
 
 PlacesController::PlacesController ()
+: _visible (false)
 {
-
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
@@ -45,14 +45,24 @@ PlacesController::PlacesController ()
 
   _factory = new PlaceFactoryFile ();
 
-  _window = new PlacesView ();
-  _window->Reference ();
+  _window_layout = new nux::HLayout ();
+  
+  _window = new nux::BaseWindow ("Dash");
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.9));
+  _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
   _window->InputWindowEnableStruts(false);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
+  _view = new PlacesView ();
+  _window_layout->AddView(_view, 1);
+  _window_layout->SetContentDistribution(nux::eStackLeft);
+  _window_layout->SetVerticalExternalMargin(0);
+  _window_layout->SetHorizontalExternalMargin(0);
+
+  _window->SetLayout (_window_layout);
 }
 
 PlacesController::~PlacesController ()
@@ -62,21 +72,41 @@ PlacesController::~PlacesController ()
 
 void PlacesController::Show ()
 {
-  // show called
-  _window->Show ();
+  if (_visible)
+    return;
+
+  _window->ShowWindow (true, false);
+  _window->EnableInputWindow (true, 1);
+  _window->GrabPointer ();
+  _window->GrabKeyboard ();
+  _window->NeedRedraw ();
+  _window->CaptureMouseDownAnyWhereElse (true);
+
+  _visible = true;
+
+  ubus_server_send_message (ubus_server_get_default (), UBUS_PLACE_VIEW_SHOWN, NULL);
 }
 
 void PlacesController::Hide ()
 {
-  _window->Hide ();
+  if (!_visible)
+    return;
+
+  _window->CaptureMouseDownAnyWhereElse (false);
+  _window->ForceStopFocus (1, 1);
+  _window->UnGrabPointer ();
+  _window->UnGrabKeyboard ();
+  _window->EnableInputWindow (false);
+  _window->ShowWindow (false, false);
+  
+  _visible = false;
+
+  ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
 void PlacesController::ToggleShowHide ()
 {
-  if (_window->IsVisible ())
-    Hide ();
-  else
-    Show ();
+  _visible ? Hide () : Show ();
 }
 
 /* Configure callback for the window */

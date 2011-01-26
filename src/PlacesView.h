@@ -24,34 +24,34 @@
 #include <NuxImage/CairoGraphics.h>
 #include "NuxGraphics/GraphicsEngine.h"
 #include "Nux/AbstractPaintLayer.h"
-#include <Nux/BaseWindow.h>
 #include <Nux/VLayout.h>
 
 #include "Introspectable.h"
 
+#include "Place.h"
+#include "PlaceEntry.h"
+
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
-#include "ubus-server.h"
-
-class PlacesView : public nux::BaseWindow, public Introspectable
+class PlacesView : public nux::View, public Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::BaseWindow);
+  NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
   PlacesView (NUX_FILE_LINE_PROTO);
   ~PlacesView ();
 
-  virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual long PostLayoutManagement (long layoutResult);
+  // nux::View overrides
+  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+
+  // Methods
+  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+
+  // UBus handlers
+  void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
  
-  //void ShowWindow (bool b, bool start_modal = false);
-
-  void Show ();
-  void Hide ();
-
 protected:
 
   const gchar* GetName ();
@@ -61,7 +61,6 @@ private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
   PlacesHomeView  *_home_view;
-  UBusServer      *_ubus;
 };
 
 #endif // PANEL_HOME_BUTTON_H

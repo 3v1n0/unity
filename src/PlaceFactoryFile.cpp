@@ -29,7 +29,7 @@ PlaceFactoryFile::PlaceFactoryFile (const char *directory)
 {
   /* Use the default lookup location */
   if (directory == NULL)
-    _directory = g_build_filename (PKGDATADIR, "places", NULL);
+    _directory = g_build_filename (DATADIR, "unity", "places", NULL);
   else
     _directory = g_strdup (directory);
 

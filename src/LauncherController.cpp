@@ -39,10 +39,17 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _launcher->SetModel (_model);
   _favorite_store = FavoriteStore::GetDefault ();
 
-  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+  _place_section = new PlaceLauncherSection (_launcher);
+  _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
+ 
+  _device_section = new DeviceLauncherSection (_launcher);
+  _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
+
   InsertExpoAction ();
   InsertTrash ();
-  
+
+  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+
   _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
   _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 }
@@ -50,6 +57,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
 LauncherController::~LauncherController()
 {
   _favorite_store->UnReference ();
+  delete _place_section;
+  delete _device_section;
 }
 
 void
@@ -172,6 +181,12 @@ LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherI
 }
 
 void
+LauncherController::OnIconAdded (LauncherIcon *icon)
+{
+  this->RegisterIcon (icon);
+}
+
+void
 LauncherController::OnExpoClicked (int button)
 {
   if (button == 1)
@@ -196,7 +211,7 @@ LauncherController::InsertExpoAction ()
   expoIcon->SetIconName ("workspace-switcher");
   expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
-  expoIcon->SetIconType (LauncherIcon::TYPE_END);
+  expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
   
   expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   

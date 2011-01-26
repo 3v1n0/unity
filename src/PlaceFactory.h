@@ -30,6 +30,11 @@ class PlaceFactory : public sigc::trackable
 {
 public:
 
+  static PlaceFactory * GetDefault ();
+
+  // For testing
+  static void           SetDefault (PlaceFactory *factory);
+
   // This could be empty, if the loading of places is async, so you
   // should be listening to the signals too
   virtual std::vector<Place *>& GetPlaces () = 0;
