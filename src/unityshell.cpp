@@ -546,8 +546,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    unity_util_accessible_add_window (self->launcherWindow);
+  unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightAlwaysOn (true);
