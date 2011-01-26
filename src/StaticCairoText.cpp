@@ -135,6 +135,7 @@ void
 StaticCairoText::Draw (GraphicsEngine& gfxContext,
                             bool             forceDraw)
 {
+  g_debug ("Pikachu! do a draw!");
   Geometry base = GetGeometry ();
 
   if (_texture2D == 0)
@@ -273,6 +274,7 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
 
 
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  // pango_layout_set_markup (layout, "Foobar", -1);
   pango_layout_set_height (layout, -2);
   pango_layout_set_width (layout, maxwidth * PANGO_SCALE);
 
@@ -352,6 +354,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
     pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
 
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  //pango_layout_set_markup (layout, "Foobar", -1);
   pango_layout_set_width (layout, textWidth * PANGO_SCALE);
   pango_layout_set_height (layout, -2);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
@@ -373,6 +376,10 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
   cairo_paint (cr);
   cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+
+  g_debug ("drawing text %s with font: %s -", _text.GetTCharPtr(), fontName);
 
   pango_layout_context_changed (layout);
 
@@ -399,6 +406,8 @@ void StaticCairoText::UpdateTexture ()
   cairo_t *cr = _cairoGraphics->GetContext ();
 
   DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
+  g_debug ("the text is %s", _text.GetTCharPtr());
+  cairo_surface_write_to_png(_cairoGraphics->GetSurface (), "/tmp/foobar.png");
 
   NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
