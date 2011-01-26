@@ -27,6 +27,8 @@
 
 #include "Introspectable.h"
 
+#define MINIMUM_INDICATOR_WIDTH 12
+
 class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:

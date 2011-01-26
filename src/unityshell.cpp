@@ -199,7 +199,7 @@ UnityScreen::showLauncherKeyInitiate (CompAction         *action,
   if (state & CompAction::StateInitKey)
     action->setState (action->state () | CompAction::StateTermKey);
   
-  launcher->ForceShowLauncherStart ();
+  launcher->StartKeyShowLauncher ();
   return false;
 }
 
@@ -208,7 +208,7 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
                                        CompAction::State   state,
                                        CompOption::Vector &options)
 {
-  launcher->ForceShowLauncherEnd ();
+  launcher->EndKeyShowLauncher ();
   return false;
 }
 

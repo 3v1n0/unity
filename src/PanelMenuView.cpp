@@ -117,7 +117,6 @@ void
 PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
 {
   _proxy = proxy;
-  printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
 
   _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
   _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
