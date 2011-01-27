@@ -50,9 +50,12 @@ StaticCairoText::~StaticCairoText ()
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
                                         this);
-  delete (_cairoGraphics);
-  delete (_texture2D);
-  g_free (_fontstring);
+
+  if (_texture2D)
+    delete (_texture2D);
+
+  if (_fontstring)
+    g_free (_fontstring);
 }
 
 void
@@ -326,7 +329,6 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   GetTextExtents (fontName, textWidth, textHeight);
 
-
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (fontName);
@@ -396,7 +398,7 @@ void StaticCairoText::UpdateTexture ()
   _cairoGraphics = new CairoGraphics (CAIRO_FORMAT_ARGB32,
                                       GetBaseWidth (),
                                       GetBaseHeight ());
-  cairo_t *cr = _cairoGraphics->GetContext ();
+  cairo_t *cr = cairo_reference (_cairoGraphics->GetContext ());
 
   DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
 
@@ -410,6 +412,8 @@ void StaticCairoText::UpdateTexture ()
 
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
+
+  cairo_destroy (cr);
 
   delete _cairoGraphics;
 }

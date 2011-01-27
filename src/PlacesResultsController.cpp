@@ -109,7 +109,6 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
 
   _tiles.erase (*id);
 
-  delete &(_tile_group_relations[*id]);
   _tile_group_relations.erase (*id);
 
   delete group_name;
