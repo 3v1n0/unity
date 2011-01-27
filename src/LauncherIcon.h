@@ -53,6 +53,7 @@ public:
       TYPE_BEGIN,
       TYPE_FAVORITE,
       TYPE_APPLICATION,
+      TYPE_EXPO,
       TYPE_PLACE,
       TYPE_DEVICE,
       TYPE_TRASH,

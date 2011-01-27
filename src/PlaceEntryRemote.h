@@ -41,7 +41,8 @@ public:
   void InitFromKeyFile (GKeyFile *key_file, const gchar *group);
   
   /* Overrides */
-  const gchar * GetName ();
+  const gchar * GetId          ();
+  const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
 

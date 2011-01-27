@@ -43,10 +43,14 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   _proxy (proxy),
   _entries ()
 {
-  printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
+  g_debug ("IndicatorAdded: %s", _proxy->GetName ().c_str ());
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   SetCompositionLayout (_layout);
+  
+  // default in Nux is 32, we have some PanelIndicatorObjectEntryView which are smaller than that.
+  // so redefining the minimum value for them.
+  SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
  
   _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
   _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
@@ -84,7 +88,7 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
   _layout->AddView (view, 0, nux::eCenter, nux::eFull);
-  _layout->SetContentDistribution (nux::eStackLeft);
+  _layout->SetContentDistribution (nux::eStackRight);
 
   _entries.push_back (view);
 

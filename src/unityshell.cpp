@@ -36,12 +36,15 @@
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
+#include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
 #include <core/atoms.h>
 
 #include "perf-logger-utility.h"
 #include "unitya11y.h"
+
+#include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
    the accessible root object, this include would not be required */
@@ -196,7 +199,7 @@ UnityScreen::showLauncherKeyInitiate (CompAction         *action,
   if (state & CompAction::StateInitKey)
     action->setState (action->state () | CompAction::StateTermKey);
   
-  launcher->ForceShowLauncherStart ();
+  launcher->StartKeyShowLauncher ();
   return false;
 }
 
@@ -205,7 +208,7 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
                                        CompAction::State   state,
                                        CompOption::Vector &options)
 {
-  launcher->ForceShowLauncherEnd ();
+  launcher->EndKeyShowLauncher ();
   return false;
 }
 
@@ -476,6 +479,10 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   unity_a11y_init ();
 
+  /* i18n init */
+  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
   wt->Run (NULL);
   uScreen = this;
 
@@ -546,8 +553,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    unity_util_accessible_add_window (self->launcherWindow);
+  unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightAlwaysOn (true);
