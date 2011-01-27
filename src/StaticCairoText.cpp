@@ -137,6 +137,9 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
 {
   Geometry base = GetGeometry ();
 
+  if (_texture2D == 0)
+    UpdateTexture ();
+
   gfxContext.PushClippingRectangle (base);
 
   TexCoordXForm texxform;
@@ -148,12 +151,12 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                                          GL_ONE_MINUS_SRC_ALPHA);
 
   gfxContext.QRP_1Tex (base.x,
-                            base.y,
-                            base.width,
-                            base.height,
-                            _texture2D->GetDeviceTexture(),
-                            texxform,
-                            _textColor);
+                        base.y,
+                        base.width,
+                        base.height,
+                        _texture2D->GetDeviceTexture(),
+                        texxform,
+                        _textColor);
 
   gfxContext.GetRenderStates().SetBlend (false);
 
