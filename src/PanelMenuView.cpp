@@ -78,6 +78,7 @@ PanelMenuView::PanelMenuView (int padding)
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
 
   win_manager = WindowManager::Default ();
 
