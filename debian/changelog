@@ -1,6 +1,8 @@
 unity (3.2.16-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/control:
+    - ensure we have latest bamf and nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 27 Jan 2011 14:02:33 +0100
 
