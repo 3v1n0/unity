@@ -20,6 +20,7 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
+#include "panel-a11y.h"
 #include "panel-service.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
@@ -299,10 +300,13 @@ main (gint argc, gchar **argv)
   guint         owner_id;
 
   g_unsetenv("UBUNTU_MENUPROXY");
+  g_setenv ("NO_AT_BRIDGE", "1", TRUE); /* Needed for A11Y */
 
   gtk_init (&argc, &argv);
 	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 	                                   INDICATORICONDIR);
+
+  panel_a11y_init ();
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);
