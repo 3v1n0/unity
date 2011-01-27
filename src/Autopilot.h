@@ -39,6 +39,7 @@
 #define UPDATE_TIME 5000
 
 class AutopilotDisplay :
+  public PluginClassHandler<AutopilotDisplay, CompScreen>,
   public CompositeScreenInterface
 {
  public:

@@ -60,6 +60,7 @@ on_tooltip_shown (GVariant *payload, AutopilotDisplay *self)
 }
 
 AutopilotDisplay::AutopilotDisplay (CompScreen *screen, GDBusConnection *connection) :
+  PluginClassHandler <AutopilotDisplay, CompScreen> (screen),
   _cscreen (CompositeScreen::get (screen)),
   _fps (0),
   _ctime (0),
@@ -78,6 +79,8 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
   int timediff;
   float ratio = 0.05;
   struct timeval now;
+  
+  g_debug ("doing fps count");
 
   gettimeofday (&now, 0);
   timediff = TIMEVALDIFF (&now, &_last_redraw);
@@ -88,7 +91,7 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
   _frames++;
   _ctime += timediff;
 
-  if (_ctime > UPDATE_TIME)
+  if (1)
   {
     g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
              _frames, _ctime / 1000.0,
@@ -189,6 +192,7 @@ AutopilotDisplay::TestDragLauncherIconOutAndMove ()
 void
 AutopilotDisplay::Show ()
 {
+  g_debug ("Beginning to count fps");
   /* enable fps counting now that we're being shown */
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
