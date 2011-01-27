@@ -30,13 +30,12 @@
 #include "Introspectable.h"
 
 #define PANEL_HEIGHT 24
-#define PADDING 6
 #define SPACING 3
 
 class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
 {
 public:
-  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy);
+  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding = 3);
   ~PanelIndicatorObjectEntryView ();
 
   void Refresh ();
@@ -55,6 +54,7 @@ public:
   IndicatorObjectEntryProxy *_proxy;
 private:
   nux::CairoGraphics _util_cg;
+  int _padding;
 };
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

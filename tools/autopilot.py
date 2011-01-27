@@ -114,6 +114,7 @@ class Mouse(object):
                 self._display.sync()
                 
 class UnityTests(object):
+<<<<<<< TREE
         '''Runs a series of unity actions, triggering GL calls'''
         
         # this is totally lame. This should not be hard coded, but until I can get

@@ -84,8 +84,8 @@ public:
   void SetAutohide (bool autohide, nux::View *show_trigger);
   bool AutohideEnabled ();
 
-  void ForceShowLauncherStart ();
-  void ForceShowLauncherEnd ();
+  void StartKeyShowLauncher ();
+  void EndKeyShowLauncher ();
 
   void SetBacklightAlwaysOn (bool always_on);
   bool GetBacklightAlwaysOn ();
@@ -219,6 +219,9 @@ private:
   void OnOrderChanged ();
 
   void OnIconNeedsRedraw (LauncherIcon *icon);
+  
+  static void OnPlaceViewHidden (GVariant *data, void *val);
+  static void OnPlaceViewShown (GVariant *data, void *val);
 
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
@@ -271,7 +274,8 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
-  bool  _force_show_launcher;
+  bool  _key_show_launcher;
+  bool  _placeview_show_launcher;
   bool  _window_over_launcher;
   bool  _render_drag_window;
   bool  _backlight_always_on;

@@ -22,14 +22,37 @@
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
+#include "PlaceFactory.h"
+
 #include "PlacesView.h"
+
+static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (NUX_FILE_LINE_DECL)
-:   nux::BaseWindow("", NUX_FILE_LINE_PARAM)
+: nux::View (NUX_TRACKER_LOCATION)
 {
-  Hide ();
+  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+
+  _search_bar = new PlacesSearchBar ();
+  _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
+  AddChild (_search_bar);
+  
+  _home_view = new PlacesHomeView ();
+  _layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  AddChild (_home_view);
+
+  SetCompositionLayout (_layout);
+
+  // Register for all the events
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                 (UBusCallback)place_entry_activate_request,
+                                 this);
 }
 
 PlacesView::~PlacesView ()
@@ -37,88 +60,77 @@ PlacesView::~PlacesView ()
 
 }
 
-long PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long
+PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  long ProcEvInfo = 0;
-
-  nux::IEvent window_event = ievent;
-  nux::Geometry base = GetGeometry();
-  window_event.e_x_root = base.x;
-  window_event.e_y_root = base.y;
-
-  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
-  nux::Geometry viewGeometry = GetGeometry();
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
-    {
-      ProcEvInfo = nux::eDoNotProcess;
-    }
-  }
-
-  // hide if outside our window
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!(GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)))
-    {
-      Hide ();
-      return nux::eMouseEventSolved;
-    }
-  }
-
+    
+  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
-void PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  nux::Color *color = new nux::Color (0.9, 0.3, 0.1, 1.0);
-  nux::GetPainter ().Paint2DQuadColor (GfxContext, GetGeometry (), *color);
-}
-
-
-void PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+void
+PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 
 }
 
-void PlacesView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
 
+void
+PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+{
+  if (_layout)
+    _layout->ProcessDraw (GfxContext, force_draw);
 }
 
-void PlacesView::ShowWindow (bool b, bool start_modal)
+//
+// PlacesView Methods
+//
+void
+PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
 {
-  nux::BaseWindow::ShowWindow (b, start_modal);
+  g_debug ("%s: %s %d %s", G_STRFUNC, entry->GetName (), section_id, search_string);
 }
 
-void PlacesView::Show ()
+//
+// UBus handlers
+//
+void
+PlacesView::PlaceEntryActivateRequest (const char *entry_id,
+                                       guint       section_id,
+                                       const char *search_string)
 {
-  if (IsVisible ())
-    return;
+  std::vector<Place *> places = PlaceFactory::GetDefault ()->GetPlaces ();
+  std::vector<Place *>::iterator it;
+  
+  for (it = places.begin (); it != places.end (); ++it)
+  {
+    Place *place = static_cast<Place *> (*it);
+    std::vector<PlaceEntry *> entries = place->GetEntries ();
+    std::vector<PlaceEntry *>::iterator i;
 
-  // FIXME: ShowWindow shouldn't need to be called first
-  ShowWindow (true, false);
-  EnableInputWindow (true, 1);
-  GrabPointer ();
-  NeedRedraw ();
+    for (i = entries.begin (); i != entries.end (); ++i)
+    {
+      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+
+      if (g_strcmp0 (entry_id, entry->GetId ()) == 0)
+      {
+        SetActiveEntry (entry, section_id, search_string);
+        return;
+      }
+    }
+  }
+
+  g_warning ("%s: Unable to find entry: %s for request: %d %s",
+             G_STRFUNC,
+             entry_id,
+             section_id,
+             search_string);
 }
 
-void PlacesView::Hide ()
-{
-  if (!IsVisible ())
-    return;
-
-  CaptureMouseDownAnyWhereElse (false);
-  ForceStopFocus (1, 1);
-  UnGrabPointer ();
-  EnableInputWindow (false);
-  ShowWindow (false, false);
-}
-
-
-/* Introspection */
+//
+// Introspection
+//
 const gchar *
 PlacesView::GetName ()
 {
@@ -128,4 +140,30 @@ PlacesView::GetName ()
 void
 PlacesView::AddProperties (GVariantBuilder *builder)
 {
+  nux::Geometry geo = GetGeometry ();
+
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
+  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height)); 
+}
+
+//
+// C glue code
+//
+static void
+place_entry_activate_request (GVariant *payload, PlacesView *self)
+{
+  gchar *id = NULL;
+  guint  section = 0;
+  gchar *search_string = NULL;
+
+  g_return_if_fail (self);
+
+  g_variant_get (payload, "(sus)", &id, &section, &search_string);
+
+  self->PlaceEntryActivateRequest (id, section, search_string);
+
+  g_free (id);
+  g_free (search_string);
 }

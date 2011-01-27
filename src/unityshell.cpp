@@ -36,17 +36,19 @@
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
+#include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
 #include <core/atoms.h>
 
+#include "perf-logger-utility.h"
 #include "unitya11y.h"
+
+#include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
    the accessible root object, this include would not be required */
 #include "unity-util-accessible.h"
-
-#include "../libunity/perf-logger-utility.h"
 
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
@@ -197,7 +199,7 @@ UnityScreen::showLauncherKeyInitiate (CompAction         *action,
   if (state & CompAction::StateInitKey)
     action->setState (action->state () | CompAction::StateTermKey);
   
-  launcher->ForceShowLauncherStart ();
+  launcher->StartKeyShowLauncher ();
   return false;
 }
 
@@ -206,7 +208,7 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
                                        CompAction::State   state,
                                        CompOption::Vector &options)
 {
-  launcher->ForceShowLauncherEnd ();
+  launcher->EndKeyShowLauncher ();
   return false;
 }
 
@@ -476,6 +478,10 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
 
   unity_a11y_init ();
+
+  /* i18n init */
+  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
   wt->Run (NULL);
   uScreen = this;

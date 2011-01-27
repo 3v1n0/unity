@@ -43,8 +43,12 @@ static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *new_view,
                                       PanelMenuView *self);
 
+static void on_name_changed (BamfView*      bamf_view,
+                             gchar*         old_name,
+                             gchar*         new_name,
+                             PanelMenuView* self);
 
-PanelMenuView::PanelMenuView ()
+PanelMenuView::PanelMenuView (int padding)
 : _matcher (NULL),
   _title_layer (NULL),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
@@ -67,6 +71,10 @@ PanelMenuView::PanelMenuView ()
    */
   _layout = _menu_layout;
 
+  _padding = padding;
+  _name_changed_callback_instance = NULL;
+  _name_changed_callback_id = 0;
+
   _window_buttons = new WindowButtons ();
   _window_buttons->NeedRedraw ();
   _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
@@ -76,6 +84,7 @@ PanelMenuView::PanelMenuView ()
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
 
   win_manager = WindowManager::Default ();
 
@@ -115,7 +124,6 @@ void
 PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
 {
   _proxy = proxy;
-  printf ("IndicatorAdded: %s\n", _proxy->GetName ().c_str ());
 
   _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
   _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
@@ -168,14 +176,14 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   nux::Geometry geo = GetGeometry ();
 
   old_window_buttons_w = _window_buttons->GetContentWidth ();
-  _window_buttons->SetGeometry (geo.x + PADDING, geo.y, old_window_buttons_w, geo.height);
+  _window_buttons->SetGeometry (geo.x + _padding, geo.y, old_window_buttons_w, geo.height);
   _window_buttons->ComputeLayout2 ();
   new_window_buttons_w = _window_buttons->GetContentWidth ();
 
   
   /* Explicitly set the size and position of the widgets */
-  geo.x += PADDING + new_window_buttons_w + PADDING;
-  geo.width -= PADDING + new_window_buttons_w + PADDING;
+  geo.x += _padding + new_window_buttons_w + _padding;
+  geo.width -= _padding + new_window_buttons_w + _padding;
 
   old_menu_area_w = _menu_layout->GetContentWidth ();
   _menu_layout->SetGeometry (geo.x, geo.y, old_menu_area_w, geo.height);
@@ -188,6 +196,9 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
   Refresh ();
+
+  if (_is_inside)
+    NeedRedraw ();
   
   return res;
 }
@@ -196,7 +207,7 @@ void
 PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
-  int button_width = PADDING + _window_buttons->GetContentWidth () + PADDING;
+  int button_width = _padding + _window_buttons->GetContentWidth () + _padding;
   float factor = 4;
   button_width /= factor;
     
@@ -430,11 +441,11 @@ PanelMenuView::Refresh ()
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
-  x = PADDING;
+  x = _padding;
   y = 0;
 
   if (_is_maximized)
-    x += _window_buttons->GetContentWidth () + PADDING + PADDING;
+    x += _window_buttons->GetContentWidth () + _padding + _padding;
 
   if (label)
   {
@@ -518,7 +529,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
 void
 PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
   view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
@@ -570,10 +581,18 @@ PanelMenuView::AllMenusClosed ()
 }
 
 void
+PanelMenuView::OnNameChanged (gchar* new_name, gchar* old_name)
+{
+  Refresh ();
+  FullRedraw ();
+}
+
+void
 PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
   _is_maximized = false;
+
 
   if (BAMF_IS_WINDOW (new_view))
   {
@@ -583,6 +602,18 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 
     if (_decor_map.find (xid) == _decor_map.end ())
       _decor_map[xid] = true;
+
+    // first see if we need to remove and old callback
+    if (_name_changed_callback_id != 0)
+      g_signal_handler_disconnect (_name_changed_callback_instance,
+                                   _name_changed_callback_id);
+
+    // register callback for new view and store handler-id
+    _name_changed_callback_instance = G_OBJECT (new_view);
+    _name_changed_callback_id = g_signal_connect (_name_changed_callback_instance,
+                                                  "name-changed",
+                                                  (GCallback) on_name_changed,
+                                                  this);
   }
 
   Refresh ();
@@ -766,4 +797,13 @@ on_active_window_changed (BamfMatcher   *matcher,
                           PanelMenuView *self)
 {
   self->OnActiveWindowChanged (old_view, new_view);
+}
+
+static void
+on_name_changed (BamfView*      bamf_view,
+                 gchar*         old_name,
+                 gchar*         new_name,
+                 PanelMenuView* self)
+{
+  self->OnNameChanged (new_name, old_name);
 }

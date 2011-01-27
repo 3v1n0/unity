@@ -47,7 +47,7 @@ public:
   // It also deals with undecorating maximized windows (and redecorating them
   // on unmaximize)
 
-  PanelMenuView ();
+  PanelMenuView (int padding = 6);
   ~PanelMenuView ();
 
   void FullRedraw ();
@@ -65,6 +65,7 @@ public:
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
+  void OnNameChanged (gchar* new_name, gchar* old_name);
 
   void OnSpreadInitiate (std::list <guint32> &);
   void OnSpreadTerminate (std::list <guint32> &);
@@ -110,5 +111,8 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  int _padding;
+  gpointer _name_changed_callback_instance;
+  gulong _name_changed_callback_id;
 };
 #endif

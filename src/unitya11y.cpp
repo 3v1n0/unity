@@ -58,7 +58,7 @@ load_unity_atk_util ()
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
 static gboolean
-has_gsettings_schema (gchar *schema)
+has_gsettings_schema (const gchar *schema)
 {
   const char * const *list_schemas = NULL;
   gboolean found = FALSE;
@@ -290,4 +290,3 @@ unity_a11y_get_accessible (nux::Object *object)
 
   return accessible_object;
 }
-
