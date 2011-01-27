@@ -1,6 +1,24 @@
 unity (3.2.16-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Add the Launcher BaseWindow to the a11y component only if a11y was
+      initialized (LP: #705442)
+    - Enable _NET_WM_WINDOW_TYPE_UTILITY windows (like gimp toolbox) to hide
+      the Launcher (LP: #706109)
+    - Fix the defaul indicators size, making them inconsistent (LP: #705803)
+    - Always have the indicator session to the top right (LP: #705697)
+    - Show launcher when places are activated (LP: #705948)
+    - Fix memory leaks in dash (LP: #705705)
+    - Support i18n (LP: #697166)
+    - Enabling double click on the launcher to restore a maximized window
+      (LP: #661049)
+    - Update the title bar on tab change (LP: #691651)
+    - Hide the launcher instantanly on key press or dash if we have already
+      waited the launcher trigger time (LP: #705805)
+    - Make sure keypad keys also work in the search entry (LP: #599902)
+    - Dash elipsizes file and application names too soon, making them unreadable
+      (LP: #632526)
+    - Implement Places Group View (LP: #704493)
   * debian/control:
     - ensure we have latest bamf and nux
 
