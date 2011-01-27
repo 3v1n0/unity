@@ -1,4 +1,4 @@
-unity (3.2.16-0ubuntu1) UNRELEASED; urgency=low
+unity (3.2.16-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - Add the Launcher BaseWindow to the a11y component only if a11y was
@@ -22,7 +22,7 @@ unity (3.2.16-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - ensure we have latest bamf and nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 27 Jan 2011 14:02:33 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 27 Jan 2011 14:43:29 +0100
 
 unity (3.2.14-0ubuntu3) natty; urgency=low
 
