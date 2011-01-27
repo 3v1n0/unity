@@ -187,16 +187,19 @@ PlacesHomeView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proce
 void
 PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::GetPainter().PaintBackground (GfxContext, GetGeometry() );
+  UpdateBackground ();
 
   _bg_layer->SetGeometry (GetGeometry ());
-  nux::GetPainter().RenderSinglePaintLayer (GfxContext, GetGeometry(), _bg_layer);
+  nux::GetPainter().PushDrawLayer (GfxContext, GetGeometry(), _bg_layer);
+  nux::GetPainter().PopBackground ();
 }
 
 void
 PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
   _layout->ProcessDraw (GfxContext, force_draw);
+  nux::GetPainter().PopBackground ();
 }
 
 void
@@ -209,16 +212,71 @@ long
 PlacesHomeView::PostLayoutManagement (long LayoutResult)
 {
   // I'm imagining this is a good as time as any to update the background
-  UpdateBackground ();
 
   return nux::View::PostLayoutManagement (LayoutResult);
+}
+
+void
+PlacesHomeView::DrawRoundedRectangle (cairo_t* cr,
+                                      double   aspect,
+                                      double   x,
+                                      double   y,
+                                      double   cornerRadius,
+                                      double   width,
+                                      double   height)
+{
+    double radius = cornerRadius / aspect;
+
+    // top-left, right of the corner
+    cairo_move_to (cr, x + radius, y);
+
+    // top-right, left of the corner
+    cairo_line_to (cr, x + width - radius, y);
+
+    // top-right, below the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + radius,
+               radius,
+               -90.0f * G_PI / 180.0f,
+               0.0f * G_PI / 180.0f);
+
+    // bottom-right, above the corner
+    cairo_line_to (cr, x + width, y + height - radius);
+
+    // bottom-right, left of the corner
+    cairo_arc (cr,
+               x + width - radius,
+               y + height - radius,
+               radius,
+               0.0f * G_PI / 180.0f,
+               90.0f * G_PI / 180.0f);
+
+    // bottom-left, right of the corner
+    cairo_line_to (cr, x + radius, y + height);
+
+    // bottom-left, above the corner
+    cairo_arc (cr,
+               x + radius,
+               y + height - radius,
+               radius,
+               90.0f * G_PI / 180.0f,
+               180.0f * G_PI / 180.0f);
+
+    // top-left, right of the corner
+    cairo_arc (cr,
+               x + radius,
+               y + radius,
+               radius,
+               180.0f * G_PI / 180.0f,
+               270.0f * G_PI / 180.0f);
 }
 
 void
 PlacesHomeView::UpdateBackground ()
 {
 #define PADDING 24
-#define RADIUS  12
+#define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
 
@@ -229,8 +287,8 @@ PlacesHomeView::UpdateBackground ()
   _last_height = geo.height;
 
   x = y = PADDING;
-  width = _last_width - (PADDING);
-  height = _last_height - (PADDING);
+  width = _last_width - (2*PADDING);
+  height = _last_height - (2*PADDING);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
@@ -240,14 +298,8 @@ PlacesHomeView::UpdateBackground ()
 
   cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.2f);
 
-  cairo_move_to  (cr, x, y + RADIUS);
-  cairo_curve_to (cr, x, y, x, y, x + RADIUS, y);
-  cairo_line_to  (cr, width - RADIUS, y);
-  cairo_curve_to (cr, width, y, width, y, width, y + RADIUS);
-  cairo_line_to  (cr, width, height - RADIUS);
-  cairo_curve_to (cr, width, height, width, height, width - RADIUS, height);
-  cairo_line_to  (cr, x + RADIUS, height);
-  cairo_curve_to (cr, x, height, x, height, x, height - RADIUS);
+  DrawRoundedRectangle (cr, 1.0f, x, y, RADIUS, width, height);
+
   cairo_close_path (cr);
 
   cairo_fill_preserve (cr);

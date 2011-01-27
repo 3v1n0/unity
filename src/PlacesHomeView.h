@@ -52,6 +52,13 @@ protected:
 
 private:
   void UpdateBackground ();
+  void DrawRoundedRectangle (cairo_t* cr,
+                             double   aspect,
+                             double   x,
+                             double   y,
+                             double   cornerRadius,
+                             double   width,
+                             double   height);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;

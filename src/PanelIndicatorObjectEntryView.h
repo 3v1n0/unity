@@ -30,7 +30,6 @@
 #include "Introspectable.h"
 
 #define PANEL_HEIGHT 24
-//#define PADDING 6
 #define SPACING 3
 
 class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
