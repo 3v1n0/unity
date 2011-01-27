@@ -2,8 +2,10 @@ unity (3.2.14-0ubuntu3) UNRELEASED; urgency=low
 
   * debian/rules:
     - build .pot file now (LP: #697168)
+  * debian/control:
+    - rebuild for ABI break in compiz
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 25 Jan 2011 15:14:38 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 27 Jan 2011 11:25:48 +0100
 
 unity (3.2.14-0ubuntu2) natty; urgency=low
 
