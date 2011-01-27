@@ -28,6 +28,7 @@
 class PlaceEntry : public sigc::trackable
 {
 public:
+  virtual const gchar * GetId          () = 0;
   virtual const gchar * GetName        () = 0;
   virtual const gchar * GetIcon        () = 0;
   virtual const gchar * GetDescription () = 0;

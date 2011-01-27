@@ -29,7 +29,9 @@
 #include "BamfLauncherIcon.h"
 #include "LauncherModel.h"
 
+#include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "PlaceLauncherSection.h"
 
 #include <libbamf/libbamf.h>
 #include <sigc++/sigc++.h>
@@ -45,19 +47,22 @@ public:
     ~LauncherController();
 
 private:
-    BamfMatcher*     _matcher;
-    CompAction*      _expo_action;
-    CompScreen*      _screen;
-    Launcher*        _launcher;
-    LauncherModel*   _model;
-    nux::BaseWindow* _window;
-    FavoriteStore*   _favorite_store;
-    int              _sort_priority;
+    BamfMatcher*           _matcher;
+    CompAction*            _expo_action;
+    CompScreen*            _screen;
+    Launcher*              _launcher;
+    LauncherModel*         _model;
+    nux::BaseWindow*       _window;
+    FavoriteStore*         _favorite_store;
+    int                    _sort_priority;
+    PlaceLauncherSection*  _place_section;
+    DeviceLauncherSection* _device_section;
 
     void SortAndSave ();
 
     void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
     void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
+    void OnIconAdded (LauncherIcon *icon);
 
     void InsertExpoAction ();
     

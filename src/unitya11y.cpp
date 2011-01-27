@@ -290,4 +290,3 @@ unity_a11y_get_accessible (nux::Object *object)
 
   return accessible_object;
 }
-

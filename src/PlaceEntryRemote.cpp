@@ -139,6 +139,12 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 
 /* Overrides */
 const gchar *
+PlaceEntryRemote::GetId ()
+{
+  return _dbus_path;
+}
+
+const gchar *
 PlaceEntryRemote::GetName ()
 {
   return _name;
