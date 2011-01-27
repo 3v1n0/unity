@@ -15,6 +15,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
+ * Authored by: Didier Roche <didier.roche@canonical.com>
  */
 
 #include "Nux/Nux.h"
@@ -30,6 +31,8 @@
 
 #include <glib.h>
 
+#define DELTA_MOUSE_DOUBLE_CLICK 500000000
+
 enum
 {
   BUTTON_CLOSE=0,
@@ -40,13 +43,59 @@ enum
 
 PanelTitlebarGrabArea::PanelTitlebarGrabArea ()
 : InputArea (NUX_TRACKER_LOCATION)
-{
+{  
+  // FIXME: the two following functions should be used instead of the insane trick with fixed value. But nux is broken
+  // right now and we need jay to focus on other things
+  /*InputArea::EnableDoubleClick (true);
+  InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
+  InputArea::OnMouseClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseClick));
+  _last_click_time.tv_sec = 0;
+  _last_click_time.tv_nsec = 0;
+  
+  // connect the *Click events before the *Down ones otherwise, weird race happens
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDown));
 }
 
 
 PanelTitlebarGrabArea::~PanelTitlebarGrabArea ()
 {
+}
+
+void PanelTitlebarGrabArea::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  mouse_down.emit (x, y);
+}
+
+void PanelTitlebarGrabArea::RecvMouseDoubleClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  mouse_doubleclick.emit ();
+}
+
+// TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
+void PanelTitlebarGrabArea::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  struct timespec event_time, delta;
+  clock_gettime(CLOCK_MONOTONIC, &event_time);
+  delta = time_diff (_last_click_time, event_time);
+
+  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
+    RecvMouseDoubleClick (x, y, button_flags, key_flags);
+  
+  _last_click_time.tv_sec = event_time.tv_sec;
+  _last_click_time.tv_nsec = event_time.tv_nsec;
+}
+
+struct timespec PanelTitlebarGrabArea::time_diff (struct timespec start, struct timespec end)
+{
+  struct timespec temp;
+  if ((end.tv_nsec - start.tv_nsec) < 0) {
+    temp.tv_sec = end.tv_sec - start.tv_sec-1;
+    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec - start.tv_sec;
+    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+  }
+  return temp;
 }
 
 const gchar *
@@ -72,10 +121,3 @@ PanelTitlebarGrabArea::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
-
-void PanelTitlebarGrabArea::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  mouse_down.emit (x, y);
-}
-
-

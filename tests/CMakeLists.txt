@@ -53,6 +53,7 @@ add_executable (test-unit
                 ../src/PlaceEntry.h
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceFactory.h
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
@@ -131,6 +132,7 @@ add_executable (test-places
                 ../src/PlaceEntry.h
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceFactory.h
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
@@ -184,6 +186,7 @@ add_executable (test-places-backend
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
                 ../src/PlaceFactory.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
                 ../src/Place.h

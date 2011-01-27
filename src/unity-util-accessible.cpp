@@ -194,6 +194,6 @@ unity_util_accessible_remove_global_event_listener (guint remove_listener)
 void
 unity_util_accessible_add_window (nux::BaseWindow *window)
 {
-  unity_root_accessible_add_window (UNITY_ROOT_ACCESSIBLE (root),
-                                    window);
+  unity_root_accessible_add_window
+    (UNITY_ROOT_ACCESSIBLE (unity_util_accessible_get_root ()), window);
 }
