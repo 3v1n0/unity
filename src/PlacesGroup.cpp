@@ -124,7 +124,9 @@ void PlacesGroup::SetLayout (nux::Layout *layout)
   _content = layout;
   _content->Reference ();
 
-  _group_layout->AddLayout (_content);
+  // By setting the stretch factor of the GridHLayout to 0, the height of the grid
+  // will be forced to the height that is necessary to include all its elements.
+  _group_layout->AddLayout (_content, 0);
 
   ComputeChildLayout ();
   NeedRedraw ();
@@ -176,8 +178,8 @@ PlacesGroup::UpdateLabel ()
   {
     char *result_string = NULL;
     result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                                 "See one less result",
-                                                 _total_items - _visible_items));
+                                                       "See one less result",
+                                                       _total_items - _visible_items));
 
     _label->SetText (result_string);
     g_free ((result_string));
