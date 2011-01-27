@@ -971,26 +971,32 @@ void Launcher::StartKeyShowLauncher ()
 {
     _key_show_launcher = true;
     EnsureHiddenState ();
+    // trigger the timer now as we want to hide the launcher immediately
+    // if we release the key after 1s happened.
+    SetupAutohideTimer ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
     _key_show_launcher = false;
-    SetupAutohideTimer ();
+    EnsureHiddenState ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
     self->_placeview_show_launcher = true;
+    // trigger the timer now as we want to hide the launcher immediately
+    // if we close the dash after 1s happened.
     self->EnsureHiddenState ();
+    self->SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
     self->_placeview_show_launcher = false;
-    self->SetupAutohideTimer ();
+    self->EnsureHiddenState ();
 }
 
 void Launcher::SetHidden (bool hidden)
@@ -1010,8 +1016,8 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
 
-    self->EnsureHiddenState ();
     self->_autohide_handle = 0;
+    self->EnsureHiddenState ();
     return false;
 }
 
@@ -1024,6 +1030,7 @@ Launcher::EnsureHiddenState ()
       !_placeview_show_launcher &&
        _launcher_action_state == ACTION_NONE &&
       !QuicklistManager::Default ()->Current() &&
+      !_autohide_handle &&
       _window_over_launcher) 
     SetHidden (true);
   else

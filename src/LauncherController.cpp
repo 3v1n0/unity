@@ -24,6 +24,7 @@
 #include "PluginAdapter.h"
 #include "TrashLauncherIcon.h"
 
+#include <glib/gi18n-lib.h>
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -207,7 +208,7 @@ LauncherController::InsertExpoAction ()
   SimpleLauncherIcon *expoIcon;
   expoIcon = new SimpleLauncherIcon (_launcher);
   
-  expoIcon->SetTooltipText ("Workspace Switcher");
+  expoIcon->SetTooltipText (_("Workspace Switcher"));
   expoIcon->SetIconName ("workspace-switcher");
   expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);

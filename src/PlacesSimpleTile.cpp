@@ -44,7 +44,6 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _cairotext->SetMaximumWidth (140);
 
   _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->SinkReference ();
   _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   _layout->AddSpace (6, 0);
   _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
@@ -66,7 +65,7 @@ PlacesSimpleTile::~PlacesSimpleTile ()
 {
   _icontex->UnReference ();
   _cairotext->UnReference ();
-  _layout->UnReference ();
+
   g_free ((void *)_label);
   g_free ((void *)_icon);
 }

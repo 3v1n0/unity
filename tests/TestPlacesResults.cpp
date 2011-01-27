@@ -51,6 +51,14 @@ private:
 
 };
 
+static gboolean
+remove_timeout (PlacesResultsController *controller)
+{
+  controller->RemoveResult ("tile1-1");
+
+  return FALSE;
+}
+
 TestRunner::TestRunner ()
 {
 }
@@ -152,6 +160,8 @@ void TestRunner::Init ()
   controller->AddResultToGroup ("Group2", tile24, "tile2-4");
 
   nux::GetGraphicsThread()->SetLayout (layout);
+
+  g_timeout_add_seconds (2, (GSourceFunc)remove_timeout, controller);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

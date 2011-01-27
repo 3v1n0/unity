@@ -43,6 +43,10 @@ static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *new_view,
                                       PanelMenuView *self);
 
+static void on_name_changed (BamfView*      bamf_view,
+                             gchar*         old_name,
+                             gchar*         new_name,
+                             PanelMenuView* self);
 
 PanelMenuView::PanelMenuView (int padding)
 : _matcher (NULL),
@@ -68,6 +72,8 @@ PanelMenuView::PanelMenuView (int padding)
   _layout = _menu_layout;
 
   _padding = padding;
+  _name_changed_callback_instance = NULL;
+  _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons ();
   _window_buttons->NeedRedraw ();
@@ -78,6 +84,7 @@ PanelMenuView::PanelMenuView (int padding)
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
 
   win_manager = WindowManager::Default ();
 
@@ -574,10 +581,18 @@ PanelMenuView::AllMenusClosed ()
 }
 
 void
+PanelMenuView::OnNameChanged (gchar* new_name, gchar* old_name)
+{
+  Refresh ();
+  FullRedraw ();
+}
+
+void
 PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
   _is_maximized = false;
+
 
   if (BAMF_IS_WINDOW (new_view))
   {
@@ -587,6 +602,18 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 
     if (_decor_map.find (xid) == _decor_map.end ())
       _decor_map[xid] = true;
+
+    // first see if we need to remove and old callback
+    if (_name_changed_callback_id != 0)
+      g_signal_handler_disconnect (_name_changed_callback_instance,
+                                   _name_changed_callback_id);
+
+    // register callback for new view and store handler-id
+    _name_changed_callback_instance = G_OBJECT (new_view);
+    _name_changed_callback_id = g_signal_connect (_name_changed_callback_instance,
+                                                  "name-changed",
+                                                  (GCallback) on_name_changed,
+                                                  this);
   }
 
   Refresh ();
@@ -770,4 +797,13 @@ on_active_window_changed (BamfMatcher   *matcher,
                           PanelMenuView *self)
 {
   self->OnActiveWindowChanged (old_view, new_view);
+}
+
+static void
+on_name_changed (BamfView*      bamf_view,
+                 gchar*         old_name,
+                 gchar*         new_name,
+                 PanelMenuView* self)
+{
+  self->OnNameChanged (new_name, old_name);
 }
