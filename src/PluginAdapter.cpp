@@ -185,7 +185,13 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
 
   foreach (CompOption &a, extraArgs)
     argument.push_back (a);
-
+    
+  if (_primary_action)
+  {
+    _primary_action->terminate () (_primary_action, 0, argument);
+    return;
+  }
+  
   foreach (CompAction *action, m_ActionList)
   {
     if (action->state () & (CompAction::StateTermKey |
