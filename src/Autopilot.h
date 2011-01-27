@@ -18,6 +18,7 @@
  */
 
 #include <glib.h>
+#include <gio/gio.h>
 
 class AutopilotDisplay
 {
@@ -29,5 +30,6 @@ class AutopilotDisplay
   void StartTest (const gchar *name);
   /* and a signal for "test finished" */
  private:
+  GDBusConnection *_connection;
   static AutopilotDisplay *_default;
 };

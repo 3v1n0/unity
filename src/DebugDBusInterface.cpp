@@ -99,7 +99,19 @@ static GDBusMethodInfo ap_method_info_starttest =
 };
 
 static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_run, &ap_method_info_addtest, &ap_method_info_starttest, NULL };
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_run, &ap_method_info_addtest, 
+                                                                   &ap_method_info_starttest, 
+                                                                   NULL };
+
+static GDBusSignalInfo ap_signal_info_testfinished = 
+{
+  -1,
+  "TestFinished",
+  NULL,
+  NULL
+};
+
+static const GDBusSignalIngfo *const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
@@ -116,7 +128,7 @@ static const GDBusInterfaceInfo ap_iface_info =
   -1,
   (gchar *) "com.canonical.Unity.Debug.Autopilot",
   (GDBusMethodInfo **) &ap_method_info_pointers,
-  NULL,
+  (GDBusSignalInfo **) &ap_signal_info_pointers,
   NULL,
   NULL
 };
@@ -148,6 +160,8 @@ DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *nam
 {
   int i = 0;
   GError *error;
+
+  Autopilot::GetDefault ()->SetDBusConnection (connection);
 
   while (debug_object_interfaces[i] != NULL)
   {

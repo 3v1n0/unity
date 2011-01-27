@@ -29,14 +29,22 @@ class UnityUtil(object):
     for now we can just fake it and guess.'''
     
     UNITY_BUS_NAME = 'com.canonical.Unity'
-    INTROSPECTION_PATH = '/com/canonical/Unity/Debug'
+    DEBUG_PATH = '/com/canonical/Unity/Debug'
     INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
+    AUTOPILOT_IFACE = 'com.canonical.Unity.Autopilot'
     
+unity
     def __init__(self):
         self._bus = dbus.SessionBus()
-        self._introspection_proxy_obj = self._bus.get_object(self.UNITY_BUS_NAME, self.INTROSPECTION_PATH)
-        self._introspection_iface = dbus.Interface(self._introspection_proxy_obj,
+        self._debug_proxy_obj = self._bus.get_object(self.UNITY_BUS_NAME,
+                                                     self.DEBUG_PATH)
+        self._introspection_iface = dbus.Interface(self._debug_proxy_obj,
                                                    self.INTROSPECTION_IFACE)
+        self._autopilot_iface = dbus.Interface(self._debug_proxy_obj,
+                                               self.AUTOPILOT_IFACE)
+
+    def run_autopilot(self):
+        self._autopilot_iface.Run()
     
     def bus_owned(self):
         '''Checks if Unity is running by examing the session bus, and checking if
