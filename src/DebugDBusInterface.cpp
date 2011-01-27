@@ -34,7 +34,7 @@ void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
                      const gchar*, const gchar*, GVariant*,
                      GDBusMethodInvocation*, gpointer);
 GVariant* GetState (const gchar*);
-void ShowAutopilotDisplay (void);
+void ShowAutopilotDisplay ();
 void StartTest (const gchar*);
 
 static const GDBusInterfaceVTable si_vtable =
@@ -81,20 +81,11 @@ static const GDBusArgInfo ap_in_args =
 };
 static const GDBusArgInfo *const ap_in_arg_pointers[] = { &ap_in_args, NULL };
 
-static GDBusMethodInfo ap_method_info_run =
+static GDBusMethodInfo ap_method_info_show =
 {
   -1,
-  "Run",
+  "Show",
   NULL,
-  NULL,
-  NULL
-};
-
-static GDBusMethodInfo ap_method_info_addtest =
-{
-  -1,
-  "AddTest",
-  (GDBusArgInfo **) &ap_in_arg_pointers,
   NULL,
   NULL
 };
@@ -109,15 +100,34 @@ static GDBusMethodInfo ap_method_info_starttest =
 };
 
 static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_run, &ap_method_info_addtest, 
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_show, 
                                                                    &ap_method_info_starttest, 
                                                                    NULL };
 
+static GDBusArgInfo ap_testfinished_arg_name = 
+{
+  -1,
+  "name",
+  "s",
+  NULL
+};
+
+static GDBusArgInfo ap_testfinished_arg_passed = 
+{
+  -1,
+  "passed",
+  "b",
+  NULL
+};
+
+static const GDBusArgInfo *const ap_signal_testfinished_arg_pointers [] = { &ap_testfinished_arg_name,
+                                                                            &ap_testfinished_arg_passed,
+                                                                            NULL };
 static GDBusSignalInfo ap_signal_info_testfinished = 
 {
   -1,
   "TestFinished",
-  NULL,
+  (GDBusArgInfo **) &ap_signal_testfinished_arg_pointers,
   NULL
 };
 
