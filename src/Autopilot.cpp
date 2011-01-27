@@ -17,83 +17,33 @@
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
+/*
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "Nux/TimeGraph.h"
 #include "Nux/TimerProc.h"
+*/
 
 #include "Autopilot.h"
+#include "UBusMessages.h"
 
-nux::TimerFunctor *timer_functor;
-nux::TimerHandle timer_handler;
-float time_value = 0;
-guint _ubus_handle;
-
-AutopilotDisplay *AutopilotDisplay::_default = 0;
-
-/* Static */
-AutopilotDisplay*
-AutopilotDisplay::GetDefault ()
-{
-  if (!_default)
-  {
-    _default = new AutopilotDisplay ();
-  }
-
-  return _default;
-}
+static guint tooltip_handle;
 
 void
-UpdateGraph (void *data)
-{
-  time_value += 0.001f;
-  nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
-  timegraph->UpdateGraph (0, nux::GetWindowThread ()->GetFrameRate ());
-
-  timer_handler = nux::GetTimer ().AddTimerHandler (100, timer_functor, timegraph);
-}
-
-void
-InitUI (nux::NThread *thread, void *init_data)
-{
-  nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  nux::TimeGraph *timegraph = new nux::TimeGraph (TEXT ("Graph"));
-  timegraph->ShowColumnStyle ();
-  timegraph->SetYAxisBounds (0.0, 200.0f);
-
-  timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
-  timer_functor = new nux::TimerFunctor ();
-  timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&UpdateGraph));
-  timer_handler = nux::GetTimer ().AddTimerHandler (1000, timer_functor, timegraph);
-
-  layout->AddView (timegraph,
-		   1,
-		   nux::MINOR_POSITION_CENTER,
-		   nux::MINOR_SIZE_FULL);
-  layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
-  layout->SetHorizontalExternalMargin (4);
-  layout->SetVerticalExternalMargin (4);
-
-  nux::GetWindowThread ()->SetLayout (layout);
-  nux::ColorLayer background (nux::Color (0xFF2D2D2D));
-  static_cast<nux::WindowThread*> (thread)->SetWindowBackgroundPaintLayer (&background);	   
-}
-
-void
-TestFinished (AutopilotDisplay *self, gchar *name, gboolean passed)
+TestFinished (AutopilotDisplay *self, const gchar *name, gboolean passed)
 {
   GError *error = NULL;
   GVariant *result = g_variant_new ("(sb)", name, passed);
 
-  g_dbus_connection_emit_signal (self->GetConnection (),
+  g_dbus_connection_emit_signal (self->GetDBusConnection (),
                                  "com.canonical.Unity.Autopilot",
                                  "/com/canonical/Unity/Debug",
                                  "com.canonical.Unity.Autopilot",
                                  "TestFinished",
                                  result,
                                  &error);
-  g_variant_unref (test_name);
+  g_variant_unref (result);
 
   if (error != NULL)
   {
@@ -103,19 +53,111 @@ TestFinished (AutopilotDisplay *self, gchar *name, gboolean passed)
 }
 
 void
-on_tooltip_shown (GVariant payload, AutopilotDisplay *self)
+on_tooltip_shown (GVariant *payload, AutopilotDisplay *self)
 {
-  ubus_server_unregister_interest (_ubus, ubus_handle);
-  TestFinished (self, TRUE);
+  ubus_server_unregister_interest (self->GetUBusConnection (), tooltip_handle);
+  TestFinished (self, "show_tooltip", TRUE);
+}
+
+AutopilotDisplay::AutopilotDisplay (CompScreen *screen, GDBusConnection *connection) :
+  _cscreen (CompositeScreen::get (screen)),
+  _fps (0),
+  _ctime (0),
+  _frames (0)
+{
+  _dbus = connection;
+  _ubus = ubus_server_get_default ();
+  _cscreen->preparePaintSetEnabled (this, false);
+  _cscreen->donePaintSetEnabled (this, false);
+
 }
 
 void
-AutopilotDisplay::TestToolTip ()
+AutopilotDisplay::preparePaint (int msSinceLastPaint)
 {
-  _ubus_handle = ubus_server_register_interest (_ubus,
-                                                UBUS_LAUNCHER_TOOLTIP_SHOWN,
-                                                (UBusCallback) on_tooltip_shown,
-                                                this);
+  int timediff;
+  float ratio = 0.05;
+  struct timeval now;
+
+  gettimeofday (&now, 0);
+  timediff = TIMEVALDIFF (&now, &_last_redraw);
+
+  _fps = (_fps * (1.0 - ratio)) + (1000000.0 / TIMEVALDIFFU (&now, &_last_redraw) * ratio);
+  _last_redraw = now;
+
+  _frames++;
+  _ctime += timediff;
+
+  if (_ctime > UPDATE_TIME)
+  {
+    g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
+             _frames, _ctime / 1000.0,
+             _frames / (_ctime / 1000.0));
+
+    /* reset frames and time after display */
+    _frames = 0;
+    _ctime = 0;
+  }
+  
+  _cscreen->preparePaint (_alpha > 0.0 ? timediff : msSinceLastPaint);
+  _alpha += timediff / 1000;
+  _alpha = MIN (1.0, MAX (0.0, _alpha));
+}
+
+void
+AutopilotDisplay::donePaint ()
+{
+  _cscreen->donePaint ();
+}
+
+GDBusConnection*
+AutopilotDisplay::GetDBusConnection ()
+{
+  return _dbus;
+}
+
+UBusServer*
+AutopilotDisplay::GetUBusConnection ()
+{
+  return _ubus;
+}
+
+void 
+AutopilotDisplay::StartTest (const gchar *name)
+{
+  if (g_strcmp0 (name, "show_tooltip") == 0) 
+  {
+    TestTooltip ();
+  }
+  else if (g_strcmp0 (name, "show_quicklist") == 0)
+  {
+    TestQuicklist ();
+  }
+  else if (g_strcmp0 (name, "drag_launcher") == 0)
+  {
+    TestDragLauncher ();
+  }
+  else if (g_strcmp0 (name, "drag_launcher_icon_along_edge_drop") == 0)
+  {
+    TestDragLauncherIconAlongEdgeDrop ();
+  }
+  else if (g_strcmp0 (name, "drag_launcher_icon_out_and_drop") == 0)
+  {
+    TestDragLauncherIconOutAndDrop ();
+  }
+  else if (g_strcmp0 (name, "drag_launcher_icon_out_and_move") == 0)
+  {
+    TestDragLauncherIconOutAndMove ();
+  }
+}
+
+void
+AutopilotDisplay::TestTooltip ()
+{
+  tooltip_handle = ubus_server_register_interest (_ubus,
+                                                  UBUS_LAUNCHER_TOOLTIP_SHOWN,
+                                                  (UBusCallback) on_tooltip_shown,
+                                                  this);
   // add a timeout to show test failure
 }
 
@@ -144,57 +186,10 @@ AutopilotDisplay::TestDragLauncherIconOutAndMove ()
 {
 }
 
-
-AutopilotDisplay::AutopilotDisplay ()
-{
-  *_ubus = ubus_server_get_default ();
-}
-
 void
 AutopilotDisplay::Show ()
 {
-  nux::WindowThread *win = nux::CreateGUIThread (TEXT (""),
-                                                 800,
-                                                 600,
-                                                 0,
-                                                 &InitUI,
-                                                 0);
-  win->Run (0);
-  
-  delete timer_functor;
-  delete win;
-}
-
-void 
-AutopilotDisplay::StartTest (const gchar *name)
-{
-  if (g_strcmp0 (name, "show_tooltip") == 0) 
-  {
-    TestToolTip ();
-  }
-  else if (g_strcmp0 (name, "show_quicklist") == 0)
-  {
-    TestQuicklist ();
-  }
-  else if (g_strcmp0 (name, "drag_launcher") == 0)
-  {
-    TestDragLauncher ();
-  }
-  else if (g_strcmp0 (name, "drag_launcher_icon_along_edge_drop") == 0)
-  {
-    TestDragLauncherIconAlongEdgeDrop ();
-  }
-  else if (g_strcmp0 (name, "drag_launcher_icon_out_and_drop") == 0)
-  {
-    TestDragLauncherIconOutAndDrop ();
-  }
-  else if (g_strcmp0 (name, "drag_launcher_icon_out_and_move") == 0)
-  {
-    TestDragLauncherIconOutAndMove ();
-  }
-}
-
-void AutopilotDisplay::SetDBusConnection (GDBusConnection *connection)
-{
-  _connection = connection;
+  /* enable fps counting now that we're being shown */
+  _cscreen->preparePaintSetEnabled (this, true);
+  _cscreen->donePaintSetEnabled (this, true);
 }

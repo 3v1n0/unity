@@ -23,6 +23,8 @@
 // keep ordered
 
 #define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
+
+#define UBUS_LAUNCHER_TOOLTIP_SHOWN "LAUNCHER_TOOLTIP_SHOWN"
 #define UBUS_LAUNCHER_QUICKLIST_SHOWN "LAUNCHER_QUICKLIST_SHOWN"
 
 // When other parts of Unity want to close the place view

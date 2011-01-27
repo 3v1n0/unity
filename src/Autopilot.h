@@ -16,20 +16,62 @@
  *
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
+#ifndef _AUTOPILOT_H
+#define _AUTOPILOT_H 1
+
+#include <sys/time.h>
 
 #include <glib.h>
 #include <gio/gio.h>
 
-class AutopilotDisplay
+#include <core/core.h>
+#include <composite/composite.h>
+
+#include "ubus-server.h"
+
+#define TIMEVALDIFFU(tv1, tv2)                                              \
+  (((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ?   \
+  ((((tv1)->tv_sec - (tv2)->tv_sec) * 1000000) +                            \
+   ((tv1)->tv_usec - (tv2)->tv_usec)):                                      \
+  ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +                        \
+   (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)))
+
+#define UPDATE_TIME 5000
+
+class AutopilotDisplay :
+  public CompositeScreenInterface
 {
  public:
-  static AutopilotDisplay * GetDefault ();
+  AutopilotDisplay (CompScreen *screen, GDBusConnection *connection);
 
   void Show ();
-  void AddTest (const gchar *name);
   void StartTest (const gchar *name);
-  /* and a signal for "test finished" */
+
+  void preparePaint (int msSinceLastPaint);
+  void donePaint ();
+
+  UBusServer *GetUBusConnection ();
+  GDBusConnection *GetDBusConnection ();
  private:
-  GDBusConnection *_connection;
-  static AutopilotDisplay *_default;
+  void TestTooltip ();
+  void TestQuicklist ();
+  void TestDragLauncher ();
+  void TestDragLauncherIconAlongEdgeDrop ();
+  void TestDragLauncherIconOutAndDrop ();
+  void TestDragLauncherIconOutAndMove ();
+
+  float _fps;
+  float _alpha;
+  float _ctime;
+  float _frames;
+
+  UBusServer *_ubus;
+  GDBusConnection *_dbus; 
+
+  CompScreen *_screen;
+  CompositeScreen *_cscreen;
+ 
+  struct timeval _last_redraw;
 };
+
+#endif /* _AUTOPILOT_H */

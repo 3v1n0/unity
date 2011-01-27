@@ -17,15 +17,25 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/WindowThread.h>
+#include <sigc++/sigc++.h>
+
 #include "Autopilot.h"
 #include "DebugDBusInterface.h"
+#include "unityshell.h"
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
 
 void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
-					 const gchar*, const gchar*, GVariant*,
-					 GDBusMethodInvocation*, gpointer);
+                     const gchar*, const gchar*, GVariant*,
+                     GDBusMethodInvocation*, gpointer);
 GVariant* GetState (const gchar*);
+void ShowAutopilotDisplay (void);
+void StartTest (const gchar*);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -111,7 +121,7 @@ static GDBusSignalInfo ap_signal_info_testfinished =
   NULL
 };
 
-static const GDBusSignalIngfo *const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
+static const GDBusSignalInfo *const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
@@ -133,7 +143,8 @@ static const GDBusInterfaceInfo ap_iface_info =
   NULL
 };
 
-static Introspectable      *_introspectable;
+static Introspectable *_introspectable;
+static AutopilotDisplay *_autopilot;
 
 DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
 {
@@ -161,7 +172,11 @@ DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *nam
   int i = 0;
   GError *error;
 
-  Autopilot::GetDefault ()->SetDBusConnection (connection);
+  UnityScreen *uscreen = dynamic_cast<UnityScreen*> (_introspectable);
+  if (uscreen != NULL) 
+  {
+    _autopilot = new AutopilotDisplay (uscreen->screen, connection);
+  }
 
   while (debug_object_interfaces[i] != NULL)
   {
@@ -214,15 +229,7 @@ DBusMethodCall (GDBusConnection *connection,
   }
   else if (g_strcmp0 (methodName, "Show") == 0)
   {
-    AutopilotDisplay::GetDefault ()->Show ();
-    g_dbus_method_invocation_return_value (invocation, NULL);
-  }
-  else if (g_strcmp0 (methodName, "AddTest") == 0)
-  {
-    const gchar *name;
-    g_variant_get (parameters, "(&s)", &name);
-
-    AutopilotDisplay::GetDefault ()->AddTest (name);
+    ShowAutopilotDisplay ();
     g_dbus_method_invocation_return_value (invocation, NULL);
   }
   else if (g_strcmp0 (methodName, "StartTest") == 0)
@@ -230,7 +237,7 @@ DBusMethodCall (GDBusConnection *connection,
     const gchar *name;
     g_variant_get (parameters, "(&s)", &name);
 
-    AutopilotDisplay::GetDefault ()->StartTest (name);
+    StartTest (name);
     g_dbus_method_invocation_return_value (invocation, NULL);
   }
   else
@@ -244,6 +251,18 @@ GVariant*
 GetState (const gchar *piece)
 {
   return _introspectable->Introspect ();
+}
+
+void
+ShowAutopilotDisplay ()
+{
+  _autopilot->Show ();
+}
+
+void
+StartTest (const gchar *name)
+{
+  _autopilot->StartTest (name);
 }
 
 /* a very contrived example purely for giving QA something purposes */
