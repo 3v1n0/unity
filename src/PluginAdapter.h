@@ -33,19 +33,16 @@ public:
 
     MultiActionList (int n) :
         m_ActionList (n),
-        m_ToggledAction (NULL), 
         _primary_action (NULL) {};
 
     void InitiateAll (CompOption::Vector &extraArgs);
     void TerminateAll (CompOption::Vector &extraArgs);
-    bool IsAnyActive (bool onlyOwn = false);
 
     void AddNewAction (CompAction *, bool primary);
     void RemoveAction (CompAction *);
 private:
 
     std::list <CompAction *> m_ActionList;
-    CompAction *             m_ToggledAction;
     CompAction *             _primary_action;
 };
     
@@ -69,7 +66,7 @@ public:
 
     void InitiateScale (std::string *match);
     void TerminateScale ();
-    bool IsScaleActive (bool onlyOwn = false);
+    bool IsScaleActive ();
     
     void InitiateExpo ();
 

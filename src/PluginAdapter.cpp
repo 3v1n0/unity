@@ -145,29 +145,6 @@ MultiActionList::RemoveAction (CompAction *a)
   m_ActionList.remove (a);
 }
 
-bool
-MultiActionList::IsAnyActive (bool onlyOwn)
-{
-  if (onlyOwn)
-  {
-    if (m_ToggledAction)
-      return true;
-    else
-      return false;
-  }
-
-  foreach (CompAction *action, m_ActionList)
-  {
-    if (action->state () & (CompAction::StateTermKey |
-                            CompAction::StateTermButton |
-                            CompAction::StateTermEdge |
-                            CompAction::StateTermEdgeDnd))
-      return true;
-  }
-
-  return m_ToggledAction ? true : false;
-}
-
 void
 MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
 {
@@ -191,7 +168,6 @@ MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
     a = m_ActionList.front ();
   
   /* Initiate the first available action with the arguments */
-  m_ToggledAction = a;
   a->initiate () (a, 0, argument);
 }
 
@@ -215,12 +191,9 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
     if (action->state () & (CompAction::StateTermKey |
                             CompAction::StateTermButton |
                             CompAction::StateTermEdge |
-                            CompAction::StateTermEdgeDnd) ||
-        m_ToggledAction == action)
+                            CompAction::StateTermEdgeDnd))
     {
       action->terminate () (action, 0, argument);
-      if (m_ToggledAction == action)
-        m_ToggledAction = NULL;
     }
   }
 }
@@ -295,9 +268,9 @@ PluginAdapter::TerminateScale ()
 }
 
 bool
-PluginAdapter::IsScaleActive (bool onlyOwn)
+PluginAdapter::IsScaleActive ()
 {
-  return m_ScaleActionList.IsAnyActive (onlyOwn);
+  return m_Screen->grabExist ("scale");
 }
 
 void 
