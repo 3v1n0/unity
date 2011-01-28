@@ -310,9 +310,6 @@ main (gint argc, gchar **argv)
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
 
-  /* Install our own log handler to write to a log file */
-  //g_log_set_default_handler (log_message, NULL);
-
   panel_a11y_init ();
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
