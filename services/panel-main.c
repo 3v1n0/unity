@@ -301,7 +301,6 @@ main (gint argc, gchar **argv)
 
   g_unsetenv("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
-  g_setenv ("NO_GAIL", "1", TRUE);
 
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
