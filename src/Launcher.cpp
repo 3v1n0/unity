@@ -1886,7 +1886,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     {
       LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
       
-      if (drag_icon)
+      if (drag_icon
+          && (drag_icon->Type () == LauncherIcon::TYPE_FAVORITE
+          || drag_icon->Type () == LauncherIcon::TYPE_APPLICATION))
       {
         StartIconDrag (drag_icon);
         _launcher_action_state = ACTION_DRAG_ICON;
