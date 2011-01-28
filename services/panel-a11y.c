@@ -36,7 +36,7 @@ has_gsettings_schema (const gchar *schema)
   gboolean found = FALSE;
   int i = 0;
 
-  /* we need to check if AT_SPI_SCHEMA is present as g_setting_new
+  /* we need to check if AT_SPI_SCHEMA is present as g_settings_new
      could abort if the schema is not here*/
   list_schemas = g_settings_list_schemas ();
   for (i = 0; list_schemas [i]; i++)
@@ -127,6 +127,10 @@ panel_a11y_init (void)
 	if (!a11y_initialized)
 	  {
 			gchar *bridge_path = NULL;
+
+			/* Restore environment */
+			g_unsetenv ("NO_AT_BRIDGE");
+			g_unsetenv ("NO_GAIL");
 
 			if (!should_enable_a11y ())
 				return;
