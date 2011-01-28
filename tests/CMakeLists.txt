@@ -53,6 +53,7 @@ add_executable (test-unit
                 ../src/PlaceEntry.h
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceFactory.h
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
@@ -131,6 +132,7 @@ add_executable (test-places
                 ../src/PlaceEntry.h
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceFactory.h
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
@@ -155,6 +157,42 @@ add_executable (test-places-tiles
                 ../src/Introspectable.h
                 )
 
+
+add_executable (test-places-group
+                TestPlacesGroup.cpp
+                ../src/PlacesGroup.cpp
+                ../src/PlacesGroup.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                )
+
+add_executable (test-places-results
+                TestPlacesResults.cpp
+                ../src/PlacesResultsController.cpp
+                ../src/PlacesResultsController.h
+                ../src/PlacesResultsView.h
+                ../src/PlacesResultsView.cpp
+                ../src/PlacesGroup.cpp
+                ../src/PlacesGroup.h
+                ../src/PlacesTile.cpp
+                ../src/PlacesTile.h
+                ../src/PlacesSimpleTile.cpp
+                ../src/PlacesSimpleTile.h
+                ../src/IconTexture.cpp
+                ../src/IconTexture.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/StaticCairoText.cpp
+                ../src/StaticCairoText.h
+                )
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
@@ -184,6 +222,7 @@ add_executable (test-places-backend
                 ../src/PlaceFactoryFile.cpp
                 ../src/PlaceFactoryFile.h
                 ../src/PlaceFactory.h
+                ../src/PlaceFactory.cpp
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
                 ../src/Place.h

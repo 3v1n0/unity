@@ -113,6 +113,9 @@ class Mouse(object):
 		
 class UnityTests(object):
 	'''Runs a series of unity actions, triggering GL calls'''
+
+        _bfb_x = 24
+        _bfb_y = 10
 	
 	# this is totally lame. This should not be hard coded, but until I can get
 	# unity to run in gdb and debug why introspection is crashing and hardlocking
@@ -128,6 +131,8 @@ class UnityTests(object):
 		'''Move mouse to a launcher and hover to show the tooltip'''
 		print 'Showing tool tip...'
 		self._mouse.reset()
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		return self._unity.is_running()
 		
@@ -135,6 +140,8 @@ class UnityTests(object):
 		'''Move mouse to a launcher and right click'''
 		print 'Showing quicklist...'
 		self._mouse.reset()
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		sleep(0.25)
 		self._mouse.click(button=3)
@@ -147,6 +154,8 @@ class UnityTests(object):
 		'''Click a launcher icon and drag down to move the whole launcher'''
 		print 'Dragging entire launcher...'
 		self._mouse.reset()
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		sleep(0.25)
 		print self._mouse.position()
@@ -162,7 +171,9 @@ class UnityTests(object):
 		'''Click a launcher icon and drag it along the edge of the launcher
 		to test moving icons around on the launcher'''
 		print 'Moving launcher icon along edge...'
-		self._mouse.reset()
+		self._mouse.reset()                
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		self._mouse.press()
 		self._mouse.move(self._dest_x + 25, self._dest_y)
@@ -175,6 +186,8 @@ class UnityTests(object):
 		it returns to its original position'''
 		print 'Dragging launcher straight out and dropping...'
 		self._mouse.reset()
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		self._mouse.press()
 		self._mouse.move(self._dest_x + 300, self._dest_y)
@@ -185,6 +198,8 @@ class UnityTests(object):
 		'''Click a launcher icon and drag it diagonally so that it changes position'''
 		print 'Dragging a launcher icon out, and moving it...'''
 		self._mouse.reset()
+                self._mouse.move (self._bfb_x, self._bfb_y)
+                sleep (0.25)
 		self._mouse.move(self._dest_x, self._dest_y)
 		self._mouse.press()
 		self._mouse.move(self._dest_x + 300, self._dest_y)
