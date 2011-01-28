@@ -296,34 +296,6 @@ on_name_lost (GDBusConnection *connection,
   gtk_main_quit ();
 }
 
-static void
-log_message (const gchar *log_domain,
-						 GLogLevelFlags log_level,
-						 const gchar *message,
-						 gpointer user_data)
-{
-	GFile *log_file;
-	gchar *log_file_path;
-	GFileOutputStream *stream;
-
-	/* Open the file */
-	log_file_path = g_build_path (g_get_home_dir (), ".local/share/unity/panel-service.log", NULL);
-	log_file = g_file_new_for_path (log_file_path);
-	g_free (log_file_path);
-
-	stream = g_file_append_to (log_file, G_FILE_CREATE_NONE, NULL, NULL);
-	if (stream != NULL)
-	  {
-			gssize len = strlen (message);
-
-			g_output_stream_write (G_OUTPUT_STREAM (stream), (const void *) message, len, NULL, NULL);
-			g_output_stream_close (G_OUTPUT_STREAM (stream), NULL, NULL);
-			g_object_unref (stream);
-		}
-
-	g_object_unref (log_file);
-}
-
 gint
 main (gint argc, gchar **argv)
 {
@@ -339,7 +311,7 @@ main (gint argc, gchar **argv)
 				     INDICATORICONDIR);
 
   /* Install our own log handler to write to a log file */
-  g_log_set_default_handler (log_message, NULL);
+  //g_log_set_default_handler (log_message, NULL);
 
   panel_a11y_init ();
 
