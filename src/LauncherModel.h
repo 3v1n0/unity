@@ -43,6 +43,8 @@ public:
 
     void OnIconRemove (LauncherIcon *icon);
     
+    bool IconHasSister (LauncherIcon *icon);
+    
     iterator begin ();
     iterator end ();
     reverse_iterator rbegin ();
