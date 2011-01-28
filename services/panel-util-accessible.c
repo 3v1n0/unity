@@ -34,6 +34,8 @@ panel_util_accessible_class_init (PanelUtilAccessibleClass *klass)
 {
 	AtkUtilClass *atk_class, *base_atk_class;
 
+	g_debug ("Initializing PanelUtilAccessible class");
+
 	/* AtkUtil */
 	base_atk_class = g_type_class_peek (ATK_TYPE_UTIL);
 
@@ -59,6 +61,8 @@ panel_util_accessible_get_root (void)
 {
 	if (!root)
 		root = panel_root_accessible_new ();
+
+	g_debug ("Returning root object at %p", root);
 
 	return root;
 }
