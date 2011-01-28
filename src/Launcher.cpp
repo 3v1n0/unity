@@ -1886,9 +1886,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     {
       LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
       
-      if (drag_icon
-          && (drag_icon->Type () == LauncherIcon::TYPE_FAVORITE
-          || drag_icon->Type () == LauncherIcon::TYPE_APPLICATION))
+      // nux doesn't give nux::GetEventButton (button_flags) there, relying
+      // on an internal LauncherIcon property then
+      if (drag_icon && drag_icon->Draggable () && drag_icon->ReadyToDrag ())
       {
         StartIconDrag (drag_icon);
         _launcher_action_state = ACTION_DRAG_ICON;
@@ -2033,6 +2033,11 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
   {
     SetTimeStruct (&_drag_end_time);
+  }
+  
+  if (_icon_mouse_down && _launcher_action_state == ACTION_DRAG_ICON)
+  {
+      _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
   }
 
   _icon_mouse_down = 0;

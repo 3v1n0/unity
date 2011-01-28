@@ -69,6 +69,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  _ready_to_drag = false;
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
@@ -327,7 +328,11 @@ void LauncherIcon::RecvMouseLeave ()
 
 void LauncherIcon::RecvMouseDown (int button)
 {
-  if (button == 3)
+  if (button == 1)
+  {
+    _ready_to_drag = true;
+  }
+  else if (button == 3)
   {
     _tooltip->ShowWindow (false);
     
@@ -381,6 +386,7 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
+  _ready_to_drag = false;
 }
 
 void LauncherIcon::HideTooltip ()
@@ -617,6 +623,19 @@ float
 LauncherIcon::GetProgress ()
 {
   return _progress;
+}
+
+bool
+LauncherIcon::ReadyToDrag ()
+{
+  return _ready_to_drag;
+}
+
+bool
+LauncherIcon::Draggable ()
+{
+  return _icon_type == LauncherIcon::TYPE_FAVORITE
+          || _icon_type == LauncherIcon::TYPE_APPLICATION;
 }
 
 std::list<DbusmenuMenuitem *> LauncherIcon::Menus ()
