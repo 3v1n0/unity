@@ -281,6 +281,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _window_over_launcher   = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
+    _last_button_press      = 0;
     
 
     // 0 out timers to avoid wonky startups
@@ -1825,6 +1826,7 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
 
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  _last_button_press = nux::GetEventButton (button_flags);
   SetMousePosition (x, y);
 
   MouseDownLogic (x, y, button_flags, key_flags);
@@ -1850,6 +1852,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   _launcher_action_state = ACTION_NONE;
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
+  _last_button_press = 0;
   EnsureHoverState ();
   EnsureAnimation ();
 }
@@ -1886,9 +1889,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     {
       LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
       
-      // nux doesn't give nux::GetEventButton (button_flags) there, relying
-      // on an internal LauncherIcon property then
-      if (drag_icon && drag_icon->Draggable () && drag_icon->ReadyToDrag ())
+      // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+      // on an internal Launcher property then
+      if (drag_icon && (_last_button_press == 1))
       {
         StartIconDrag (drag_icon);
         _launcher_action_state = ACTION_DRAG_ICON;
@@ -2033,11 +2036,6 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
   {
     SetTimeStruct (&_drag_end_time);
-  }
-  
-  if (_icon_mouse_down && _launcher_action_state == ACTION_DRAG_ICON)
-  {
-      _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
   }
 
   _icon_mouse_down = 0;

@@ -104,9 +104,6 @@ public:
     
     float GetProgress ();
     
-    bool ReadyToDrag ();
-    bool Draggable ();
-    
     bool GetQuirk (Quirk quirk);
     struct timespec GetQuirkTime (Quirk quirk);
     
@@ -204,7 +201,6 @@ private:
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
-    bool             _ready_to_drag;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;
