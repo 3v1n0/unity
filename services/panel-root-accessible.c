@@ -18,6 +18,7 @@
  */
 
 #include <glib/gi18n.h>
+#include "panel-indicator-accessible.h"
 #include "panel-root-accessible.h"
 #include "panel-service.h"
 
@@ -26,8 +27,7 @@ G_DEFINE_TYPE(PanelRootAccessible, panel_root_accessible, ATK_TYPE_OBJECT)
 #define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_ROOT_ACCESSIBLE, PanelRootAccessiblePrivate))
 
 /* AtkObject methods */
-static void       panel_root_accessible_initialize     (AtkObject *accessible,
-                                                        gpointer   data);
+static void       panel_root_accessible_initialize     (AtkObject *accessible, gpointer data);
 static gint       panel_root_accessible_get_n_children (AtkObject *accessible);
 static AtkObject *panel_root_accessible_ref_child      (AtkObject *accessible, gint i);
 static AtkObject *panel_root_accessible_get_parent     (AtkObject *accessible);
@@ -47,10 +47,10 @@ panel_root_accessible_class_init (PanelRootAccessibleClass *klass)
 
 	/* AtkObject */
 	atk_class = ATK_OBJECT_CLASS (klass);
+	atk_class->initialize = panel_root_accessible_initialize;
 	atk_class->get_n_children = panel_root_accessible_get_n_children;
   atk_class->ref_child = panel_root_accessible_ref_child;
   atk_class->get_parent = panel_root_accessible_get_parent;
-  atk_class->initialize = panel_root_accessible_initialize;
 
   g_type_class_add_private (object_class, sizeof (PanelRootAccessiblePrivate));
 }
@@ -100,7 +100,7 @@ panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 {
 	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-	return NULL; /* FIXME */
+	return panel_indicator_accessible_new (); /* FIXME */
 }
 
 static AtkObject *

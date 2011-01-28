@@ -17,7 +17,6 @@
  * Authored by: Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
-#include <gio/gio.h>
 #include "panel-a11y.h"
 #include "panel-util-accessible.h"
 
@@ -29,7 +28,7 @@ panel_a11y_init (void)
 	if (!a11y_initialized)
 	  {
 			/* Load PanelUtilAccessible class */
-			g_type_class_unref (g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE));
+			g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE);
 			
 			a11y_initialized = TRUE;
 		}

@@ -26,6 +26,8 @@ link_directories(${LIB_PATHS})
 add_executable(unity-panel-service
                panel-a11y.c
                panel-a11y.h
+               panel-indicator-accessible.c
+               panel-indicator-accessible.h
                panel-main.c
                panel-root-accessible.c
                panel-root-accessible.h
