@@ -30,7 +30,8 @@
 #define DEFAULT_ICON "application-default-icon"
 
 IconTexture::IconTexture (const char *icon_name, unsigned int size)
-: TextureArea (NUX_TRACKER_LOCATION)
+: TextureArea (NUX_TRACKER_LOCATION),
+  _icon_name (NULL)
 {
   _icon_name = g_strdup (icon_name);
   _size = size;
@@ -39,6 +40,7 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 
 IconTexture::~IconTexture ()
 {
+  g_debug ("%s", _icon_name);
   g_free (_icon_name);
 }
 

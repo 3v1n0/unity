@@ -161,7 +161,7 @@ PlacesView::OnGroupRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *sel
 void
 PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
+//  g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
   PlacesSimpleTile *tile = new PlacesSimpleTile (dee_model_get_string (model, iter, 1),
                                                  dee_model_get_string (model, iter, 4));
 
@@ -178,9 +178,9 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
 void
 PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
+ // g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
 
-//  self->GetResultsController ()->RemoveResult (dee_model_get_string (model, iter, 0));
+  self->GetResultsController ()->RemoveResult (dee_model_get_string (model, iter, 0));
 }
 
 //
