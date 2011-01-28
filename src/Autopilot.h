@@ -36,7 +36,7 @@
   ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +                        \
    (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)))
 
-#define UPDATE_TIME 5000
+#define UPDATE_TIME 100
 
 class AutopilotDisplay :
   public PluginClassHandler<AutopilotDisplay, CompScreen>,
@@ -60,7 +60,7 @@ class AutopilotDisplay :
   void TestDragLauncherIconAlongEdgeDrop ();
   void TestDragLauncherIconOutAndDrop ();
   void TestDragLauncherIconOutAndMove ();
-
+ 
   float _fps;
   float _alpha;
   float _ctime;

@@ -17,18 +17,20 @@
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
-/*
 #include "Nux/Nux.h"
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "Nux/TimeGraph.h"
 #include "Nux/TimerProc.h"
-*/
 
 #include "Autopilot.h"
 #include "UBusMessages.h"
 
+static float _disp_fps;
 static guint tooltip_handle;
+
+nux::TimerHandle timer_handler;
+nux::TimerFunctor *timer_functor;
 
 void
 TestFinished (AutopilotDisplay *self, const gchar *name, gboolean passed)
@@ -91,11 +93,12 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
   _frames++;
   _ctime += timediff;
 
-  if (1)
+  if (_ctime >= UPDATE_TIME)
   {
-    g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
+    _disp_fps = _frames / (_ctime / 1000.0);
+    /*g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
              _frames, _ctime / 1000.0,
-             _frames / (_ctime / 1000.0));
+             _frames / (_ctime / 1000.0));*/
 
     /* reset frames and time after display */
     _frames = 0;
@@ -189,6 +192,41 @@ AutopilotDisplay::TestDragLauncherIconOutAndMove ()
 {
 }
 
+void 
+GraphTimerInterrupt (void *data)
+{
+  nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
+  timegraph->UpdateGraph (0, _disp_fps);
+  timer_handler = nux::GetTimer ().AddTimerHandler (UPDATE_TIME, timer_functor, timegraph);
+}
+
+void
+ShowStatisticsDisplay (nux::NThread *thread, void *init_data)
+{
+  nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  nux::TimeGraph *timegraph = new nux::TimeGraph (TEXT ("Frames per second"));
+  timegraph->ShowColumnStyle ();
+  timegraph->SetYAxisBounds (0.0, 200.0f);
+
+  timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
+  timer_functor = new nux::TimerFunctor ();
+  timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&GraphTimerInterrupt));
+  timer_handler = nux::GetTimer ().AddTimerHandler (1000, timer_functor, timegraph);
+
+  layout->AddView (timegraph,
+                   1,
+                   nux::MINOR_POSITION_CENTER,
+                   nux::MINOR_SIZE_FULL);
+  layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
+  layout->SetHorizontalExternalMargin (4);
+  layout->SetVerticalExternalMargin (4);
+  nux::GetWindowThread ()->SetLayout (layout);
+
+  nux::ColorLayer background (nux::Color (0xFF2D2D2D));
+  static_cast<nux::WindowThread*> (thread)->SetWindowBackgroundPaintLayer (&background);
+}
+
+
 void
 AutopilotDisplay::Show ()
 {
@@ -196,4 +234,15 @@ AutopilotDisplay::Show ()
   /* enable fps counting now that we're being shown */
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
+  CompositeScreenInterface::setHandler (_cscreen, true);
+ 
+  nux::WindowThread *wt = nux::CreateGUIThread (TEXT ("Autopilot"),
+                                                800,
+                                                600,
+                                                0,
+                                                &ShowStatisticsDisplay,
+                                                0);
+  wt->Run (0);
+  delete timer_functor;
+  delete wt;
 }
