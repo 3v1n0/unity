@@ -119,6 +119,21 @@ LauncherModel::Sort (SortFunc func)
   order_changed.emit ();
 }
 
+bool
+LauncherModel::IconHasSister (LauncherIcon *icon)
+{
+  iterator it;
+  
+  for (it = begin (); it != end (); it++)
+  {
+    if ((*it  != icon)
+        && (*it)->Type () == icon->Type ())
+      return true;
+  }
+  
+  return false;
+}
+
 int
 LauncherModel::Size ()
 {

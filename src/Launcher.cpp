@@ -1891,7 +1891,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       
       // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
       // on an internal Launcher property then
-      if (drag_icon && (_last_button_press == 1))
+      if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
       {
         StartIconDrag (drag_icon);
         _launcher_action_state = ACTION_DRAG_ICON;
