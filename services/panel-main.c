@@ -1,3 +1,4 @@
+// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,8 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
+#include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -293,6 +296,34 @@ on_name_lost (GDBusConnection *connection,
   gtk_main_quit ();
 }
 
+static void
+log_message (const gchar *log_domain,
+						 GLogLevelFlags log_level,
+						 const gchar *message,
+						 gpointer user_data)
+{
+	GFile *log_file;
+	gchar *log_file_path;
+	GFileOutputStream *stream;
+
+	/* Open the file */
+	log_file_path = g_build_path (g_get_home_dir (), ".local/share/unity/panel-service.log", NULL);
+	log_file = g_file_new_for_path (log_file_path);
+	g_free (log_file_path);
+
+	stream = g_file_append_to (log_file, G_FILE_CREATE_NONE, NULL, NULL);
+	if (stream != NULL)
+	  {
+			gssize len = strlen (message);
+
+			g_output_stream_write (G_OUTPUT_STREAM (stream), (const void *) message, len, NULL, NULL);
+			g_output_stream_close (G_OUTPUT_STREAM (stream), NULL, NULL);
+			g_object_unref (stream);
+		}
+
+	g_object_unref (log_file);
+}
+
 gint
 main (gint argc, gchar **argv)
 {
@@ -306,6 +337,9 @@ main (gint argc, gchar **argv)
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
+
+  /* Install our own log handler to write to a log file */
+  g_log_set_default_handler (log_message, NULL);
 
   panel_a11y_init ();
 

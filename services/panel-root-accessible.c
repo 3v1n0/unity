@@ -80,9 +80,9 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
 {
 	g_return_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible));
 
-	atk_object_set_name (accessible, _("Toplevel Panel"));
+	accessible->role = ATK_ROLE_APPLICATION;
+	atk_object_set_name (accessible, _("Unity Panel Service"));
 	atk_object_set_parent (accessible, NULL);
-	atk_object_set_role (accessible, ATK_ROLE_PANEL);
 
 	ATK_OBJECT_CLASS (panel_root_accessible_parent_class)->initialize (accessible, data);
 }
@@ -90,17 +90,30 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
 static gint
 panel_root_accessible_get_n_children (AtkObject *accessible)
 {
+	guint n_children;
+
 	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), 0);
 
-	return panel_service_get_n_indicators (panel_service_get_default ());
+	n_children = panel_service_get_n_indicators (panel_service_get_default ());
+
+	g_debug ("PanelRootAccessible has %d children", n_children);
+
+	return n_children;
 }
 
 static AtkObject *
 panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 {
+	AtkObject *child;
+
 	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-	return panel_indicator_accessible_new (); /* FIXME */
+	child = panel_indicator_accessible_new (); /* FIXME */
+	atk_object_set_parent (child, accessible);
+
+	g_debug ("Returning ATK child %p", child);
+
+	return child;
 }
 
 static AtkObject *

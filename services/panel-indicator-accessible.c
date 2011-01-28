@@ -17,6 +17,7 @@
  * Authored by: Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
+#include <glib/gi18n.h>
 #include "panel-indicator-accessible.h"
 
 G_DEFINE_TYPE(PanelIndicatorAccessible, panel_indicator_accessible, ATK_TYPE_OBJECT)
@@ -75,6 +76,7 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 {
 	g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible));
 
+	atk_object_set_name (accessible, _("An indicator")); /* FIXME */
 	atk_object_set_role (accessible, ATK_ROLE_LABEL);
 
 	ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);

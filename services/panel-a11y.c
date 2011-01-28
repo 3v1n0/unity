@@ -128,15 +128,15 @@ panel_a11y_init (void)
 	  {
 			gchar *bridge_path = NULL;
 
-			/* Restore environment */
-			g_unsetenv ("NO_AT_BRIDGE");
-			g_unsetenv ("NO_GAIL");
-
 			if (!should_enable_a11y ())
 				return;
 
 			/* Load PanelUtilAccessible class */
-			g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE);
+			g_type_class_unref (g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE));
+
+			/* Restore environment to load AT bridge */
+			g_unsetenv ("NO_AT_BRIDGE");
+			g_unsetenv ("NO_GAIL");
 
 			bridge_path = get_atk_bridge_path ();
 			if (a11y_invoke_module (bridge_path))

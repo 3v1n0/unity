@@ -32,21 +32,13 @@ static AtkObject *root = NULL;
 static void
 panel_util_accessible_class_init (PanelUtilAccessibleClass *klass)
 {
-	AtkUtilClass *atk_class, *base_atk_class;
+	AtkUtilClass *atk_class;
 
 	g_debug ("Initializing PanelUtilAccessible class");
 
 	/* AtkUtil */
-	base_atk_class = g_type_class_peek (ATK_TYPE_UTIL);
-
-	atk_class = ATK_UTIL_CLASS (klass);
-	atk_class->add_global_event_listener = base_atk_class->add_global_event_listener;
-	atk_class->remove_global_event_listener = base_atk_class->remove_global_event_listener;
-	atk_class->add_key_event_listener = base_atk_class->add_key_event_listener;
-	atk_class->remove_key_event_listener = base_atk_class->remove_key_event_listener;
+	atk_class = g_type_class_peek (ATK_TYPE_UTIL);
 	atk_class->get_root = panel_util_accessible_get_root;
-	atk_class->get_toolkit_name = base_atk_class->get_toolkit_name;
-	atk_class->get_toolkit_version = base_atk_class->get_toolkit_version;
 }
 
 static void
@@ -62,7 +54,7 @@ panel_util_accessible_get_root (void)
 	if (!root)
 		root = panel_root_accessible_new ();
 
-	g_debug ("Returning root object at %p", root);
+	g_debug ("Returning root A11Y object at %p", root);
 
 	return root;
 }
