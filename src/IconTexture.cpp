@@ -91,7 +91,7 @@ IconTexture::Refresh ()
                                          (GtkIconLookupFlags) 0);
       if (!info || gtk_icon_info_get_filename (info) == NULL)
       {
-        g_warning ("Could not find icon %s: using default icon", _icon_name);
+        //g_warning ("Could not find icon %s: using default icon", _icon_name);
         info = gtk_icon_theme_lookup_icon (theme,
                                            DEFAULT_ICON,
                                            _size,
@@ -129,9 +129,9 @@ IconTexture::Refresh ()
     }
     else
     {
-      g_warning ("Unable to load '%s' from icon theme: %s",
-                 _icon_name,
-                 error ? error->message : "unknown");
+      //g_warning ("Unable to load '%s' from icon theme: %s",
+       //          _icon_name,
+         //        error ? error->message : "unknown");
       g_error_free (error);
     }
 

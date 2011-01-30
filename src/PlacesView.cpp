@@ -116,8 +116,21 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   if (_entry)
   {
     std::map <gchar*, gchar*> hints;
+    DeeModel     *groups;
+    DeeModelIter *iter, *last;
 
     _entry->SetActive (true);
+
+    groups = _entry->GetGroupsModel ();
+    iter = dee_model_get_first_iter (groups);
+    last = dee_model_get_last_iter (groups);
+    while (iter != last)
+    {
+      _results_controller->CreateGroup (dee_model_get_string (groups,
+                                                              iter,
+                                                              PlaceEntry::GROUP_NAME));
+      iter = dee_model_next (groups, iter);
+    }
 
     _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
                                         (GCallback)&PlacesView::OnGroupAdded, this);
@@ -167,8 +180,8 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   DeeModel         *groups;
   DeeModelIter     *git;
   const gchar      *group_id;
-  const gchar      *result_id;
-  const gchar      *result_name;
+  gchar      *result_id;
+  gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
 
@@ -180,12 +193,17 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
                                                                  iter,
                                                                  PlaceEntry::RESULT_GROUP_ID));
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_id = dee_model_get_string (model, iter, PlaceEntry::RESULT_URI);
-  result_name = dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME);
+  //result_id = dee_model_get_string (model, iter, PlaceEntry::RESULT_URI);
+  result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
+                                      -1);
+  result_id = g_strdup_printf ("%s:%s", group_id, result_name);
   result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
 
-  tile = new PlacesSimpleTile (result_icon, result_name);
+  tile = new PlacesSimpleTile (result_icon, result_name, 48);
   self->GetResultsController ()->AddResultToGroup (group_id, tile, result_id);
+
+  g_free (result_name);
+  g_free (result_id);
 }
 
 void
@@ -195,7 +213,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
   DeeModel     *groups;
   DeeModelIter *git;
   const gchar  *group_id;
-  const gchar  *result_id;
+  gchar  *result_id;
 
   //g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
 
@@ -205,9 +223,13 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
                                                                  iter,
                                                                  PlaceEntry::RESULT_GROUP_ID));
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_id = dee_model_get_string (model, iter, PlaceEntry::RESULT_URI);
+  result_id = g_strdup_printf ("%s:%s",
+                               group_id, 
+                               dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME));
 
   self->GetResultsController ()->RemoveResultFromGroup (group_id, result_id);
+
+  g_free (result_id);
 }
 
 //
