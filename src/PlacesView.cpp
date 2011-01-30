@@ -148,14 +148,14 @@ PlacesView::GetResultsController ()
 void
 PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+  //g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
 }
 
 
 void
 PlacesView::OnGroupRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+  //g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
 }
 
 void

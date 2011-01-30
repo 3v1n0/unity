@@ -33,14 +33,18 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL)
 {
-  _icon_name = g_strdup (icon_name);
+  if (_icon_name && strlen (_icon_name) > 3)
+    _icon_name = "folder";
+  else
+    _icon_name = g_strdup (icon_name);
+
   _size = size;
   Refresh ();
 }
 
 IconTexture::~IconTexture ()
 {
-  g_debug ("%s", _icon_name);
+  g_print ("\n'%s' %p\n", _icon_name, _icon_name);
   g_free (_icon_name);
 }
 
@@ -71,7 +75,7 @@ IconTexture::Refresh ()
   if (g_file_test (_icon_name, G_FILE_TEST_EXISTS))
     {
       // we have a file path
-      file_path = _icon_name;
+      file_path = g_strdup (_icon_name);
     }
   else
     {
