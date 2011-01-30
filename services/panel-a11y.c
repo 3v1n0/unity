@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -124,29 +123,28 @@ a11y_invoke_module (const char *module_path)
 void
 panel_a11y_init (void)
 {
-	if (!a11y_initialized)
-	  {
-			gchar *bridge_path = NULL;
+  gchar *bridge_path = NULL;
 
-			if (!should_enable_a11y ())
-				return;
+  if (a11y_initialized)
+    return;
 
-			/* Load PanelUtilAccessible class */
-			g_type_class_unref (g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE));
+  /* Restore environment to load AT bridge */
+  g_unsetenv ("NO_AT_BRIDGE");
+  g_unsetenv ("NO_GAIL");
 
-			/* Restore environment to load AT bridge */
-			g_unsetenv ("NO_AT_BRIDGE");
-			g_unsetenv ("NO_GAIL");
+  if (!should_enable_a11y ())
+    return;
 
-			bridge_path = get_atk_bridge_path ();
-			if (a11y_invoke_module (bridge_path))
-			  {
-					g_debug ("Unity accessibility started, using bridge on %s",
-									 bridge_path);
-				}
+  /* Load PanelUtilAccessible class */
+  g_type_class_unref (g_type_class_ref (PANEL_TYPE_UTIL_ACCESSIBLE));
 
-			g_free (bridge_path);
+  bridge_path = get_atk_bridge_path ();
+  if (a11y_invoke_module (bridge_path))
+    {
+      g_debug ("Unity accessibility started, using bridge on %s", bridge_path);
+    }
 
-			a11y_initialized = TRUE;
-		}
+  g_free (bridge_path);
+
+  a11y_initialized = TRUE;
 }

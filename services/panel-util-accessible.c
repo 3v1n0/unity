@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -32,13 +31,13 @@ static AtkObject *root = NULL;
 static void
 panel_util_accessible_class_init (PanelUtilAccessibleClass *klass)
 {
-	AtkUtilClass *atk_class;
+  AtkUtilClass *atk_class;
 
-	g_debug ("Initializing PanelUtilAccessible class");
+  g_debug ("Initializing PanelUtilAccessible class");
 
-	/* AtkUtil */
-	atk_class = g_type_class_peek (ATK_TYPE_UTIL);
-	atk_class->get_root = panel_util_accessible_get_root;
+  /* AtkUtil */
+  atk_class = g_type_class_peek (ATK_TYPE_UTIL);
+  atk_class->get_root = panel_util_accessible_get_root;
 }
 
 static void
@@ -51,10 +50,10 @@ panel_util_accessible_init (PanelUtilAccessible *panel_util)
 static AtkObject *
 panel_util_accessible_get_root (void)
 {
-	if (!root)
-		root = panel_root_accessible_new ();
+  if (!root)
+    root = panel_root_accessible_new ();
 
-	g_debug ("Returning root A11Y object at %p", root);
+  g_debug ("Returning root A11Y object at %p", root);
 
-	return root;
+  return root;
 }

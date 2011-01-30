@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -36,37 +35,37 @@ struct _PanelIndicatorAccessiblePrivate
 static void
 panel_indicator_accessible_class_init (PanelIndicatorAccessibleClass *klass)
 {
-	GObjectClass *object_class;
-	AtkObjectClass *atk_class;
+  GObjectClass *object_class;
+  AtkObjectClass *atk_class;
 
-	/* GObject */
-	object_class = G_OBJECT_CLASS (klass);
+  /* GObject */
+  object_class = G_OBJECT_CLASS (klass);
 
-	/* AtkObject */
-	atk_class = ATK_OBJECT_CLASS (klass);
-	atk_class->initialize = panel_indicator_accessible_initialize;
-	atk_class->get_n_children = panel_indicator_accessible_get_n_children;
-	atk_class->ref_child = panel_indicator_accessible_ref_child;
+  /* AtkObject */
+  atk_class = ATK_OBJECT_CLASS (klass);
+  atk_class->initialize = panel_indicator_accessible_initialize;
+  atk_class->get_n_children = panel_indicator_accessible_get_n_children;
+  atk_class->ref_child = panel_indicator_accessible_ref_child;
 
-	g_type_class_add_private (object_class, sizeof (PanelIndicatorAccessiblePrivate));
+  g_type_class_add_private (object_class, sizeof (PanelIndicatorAccessiblePrivate));
 }
 
 static void
 panel_indicator_accessible_init (PanelIndicatorAccessible *pia)
 {
-	pia->priv = GET_PRIVATE (pia);
+  pia->priv = GET_PRIVATE (pia);
 }
 
 AtkObject *
 panel_indicator_accessible_new (void)
 {
-	AtkObject *accessible;
+  AtkObject *accessible;
 
-	accessible = ATK_OBJECT (g_object_new (PANEL_TYPE_INDICATOR_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT (g_object_new (PANEL_TYPE_INDICATOR_ACCESSIBLE, NULL));
 
-	atk_object_initialize (accessible, NULL);
+  atk_object_initialize (accessible, NULL);
 
-	return accessible;
+  return accessible;
 }
 
 /* Implementation of AtkObject methods */
@@ -74,26 +73,26 @@ panel_indicator_accessible_new (void)
 static void
 panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 {
-	g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible));
+  g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible));
 
-	atk_object_set_name (accessible, _("An indicator")); /* FIXME */
-	atk_object_set_role (accessible, ATK_ROLE_LABEL);
+  ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);
 
-	ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);
+  atk_object_set_name (accessible, _("An indicator")); /* FIXME */
+  atk_object_set_role (accessible, ATK_ROLE_LABEL);
 }
 
 static gint
 panel_indicator_accessible_get_n_children (AtkObject *accessible)
 {
-	g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible), 0);
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible), 0);
 
-	return 0;
+  return 0;
 }
 
 static AtkObject *
 panel_indicator_accessible_ref_child (AtkObject *accessible, gint i)
 {
-	g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible), NULL);
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible), NULL);
 
-	return NULL;
+  return NULL;
 }

@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -37,13 +36,13 @@ typedef struct _PanelIndicatorAccessiblePrivate PanelIndicatorAccessiblePrivate;
 
 struct _PanelIndicatorAccessible
 {
-	AtkObject                        parent;
-	PanelIndicatorAccessiblePrivate *priv;
+  AtkObject                        parent;
+  PanelIndicatorAccessiblePrivate *priv;
 };
 
 struct _PanelIndicatorAccessibleClass
 {
-	AtkObjectClass parent_class;
+  AtkObjectClass parent_class;
 };
 
 GType      panel_indicator_accessible_get_type (void);

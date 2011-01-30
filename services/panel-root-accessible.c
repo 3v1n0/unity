@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -39,16 +38,16 @@ struct _PanelRootAccessiblePrivate
 static void
 panel_root_accessible_class_init (PanelRootAccessibleClass *klass)
 {
-	GObjectClass *object_class;
-	AtkObjectClass *atk_class;
+  GObjectClass *object_class;
+  AtkObjectClass *atk_class;
 
-	/* GObject */
-	object_class = G_OBJECT_CLASS (klass);
+  /* GObject */
+  object_class = G_OBJECT_CLASS (klass);
 
-	/* AtkObject */
-	atk_class = ATK_OBJECT_CLASS (klass);
-	atk_class->initialize = panel_root_accessible_initialize;
-	atk_class->get_n_children = panel_root_accessible_get_n_children;
+  /* AtkObject */
+  atk_class = ATK_OBJECT_CLASS (klass);
+  atk_class->initialize = panel_root_accessible_initialize;
+  atk_class->get_n_children = panel_root_accessible_get_n_children;
   atk_class->ref_child = panel_root_accessible_ref_child;
   atk_class->get_parent = panel_root_accessible_get_parent;
 
@@ -58,19 +57,18 @@ panel_root_accessible_class_init (PanelRootAccessibleClass *klass)
 static void
 panel_root_accessible_init (PanelRootAccessible *root)
 {
-	root->priv = GET_PRIVATE (root);
+  root->priv = GET_PRIVATE (root);
 }
 
 AtkObject *
 panel_root_accessible_new (void)
 {
-	AtkObject *accessible;
+  AtkObject *accessible;
 
-	accessible = ATK_OBJECT (g_object_new (PANEL_TYPE_ROOT_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT (g_object_new (PANEL_TYPE_ROOT_ACCESSIBLE, NULL));
+  atk_object_initialize (accessible, NULL);
 
-	atk_object_initialize (accessible, NULL);
-
-	return accessible;
+  return accessible;
 }
 
 /* Implementation of AtkObject methods */
@@ -78,42 +76,42 @@ panel_root_accessible_new (void)
 static void
 panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
 {
-	g_return_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible));
+  g_return_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible));
 
-	accessible->role = ATK_ROLE_APPLICATION;
-	atk_object_set_name (accessible, _("Unity Panel Service"));
-	atk_object_set_parent (accessible, NULL);
+  ATK_OBJECT_CLASS (panel_root_accessible_parent_class)->initialize (accessible, data);
 
-	ATK_OBJECT_CLASS (panel_root_accessible_parent_class)->initialize (accessible, data);
+  accessible->role = ATK_ROLE_APPLICATION;
+  atk_object_set_name (accessible, g_get_prgname ());
+  atk_object_set_parent (accessible, NULL);
 }
 
 static gint
 panel_root_accessible_get_n_children (AtkObject *accessible)
 {
-	guint n_children;
+  guint n_children;
 
-	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), 0);
+  g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), 0);
 
-	n_children = panel_service_get_n_indicators (panel_service_get_default ());
+  n_children = panel_service_get_n_indicators (panel_service_get_default ());
 
-	g_debug ("PanelRootAccessible has %d children", n_children);
+  g_debug ("PanelRootAccessible has %d children", n_children);
 
-	return n_children;
+  return n_children;
 }
 
 static AtkObject *
 panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 {
-	AtkObject *child;
+  AtkObject *child;
 
-	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
+  g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-	child = panel_indicator_accessible_new (); /* FIXME */
-	atk_object_set_parent (child, accessible);
+  child = panel_indicator_accessible_new (); /* FIXME */
+  atk_object_set_parent (child, accessible);
 
-	g_debug ("Returning ATK child %p", child);
+  g_debug ("Returning ATK child %p", child);
 
-	return child;
+  return child;
 }
 
 static AtkObject *

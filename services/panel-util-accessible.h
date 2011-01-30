@@ -1,4 +1,3 @@
-// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -37,12 +36,12 @@ typedef struct _PanelUtilAccessibleClass PanelUtilAccessibleClass;
 
 struct _PanelUtilAccessible
 {
-	AtkUtil parent;
+  AtkUtil parent;
 };
 
 struct _PanelUtilAccessibleClass
 {
-	AtkUtilClass parent_class;
+  AtkUtilClass parent_class;
 };
 
 GType panel_util_accessible_get_type (void);
