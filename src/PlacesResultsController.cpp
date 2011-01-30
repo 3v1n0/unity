@@ -66,15 +66,11 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   std::string *group_name = new std::string (groupname);
   std::string *id = new std::string (_id);
 
-  PlacesGroup *group = NULL;
+  PlacesGroup *group = _groups[*group_name];
 
-  if (_groups.find (*group_name) == _groups.end ())
+  if (!group)
     {
       group = CreateGroup (groupname);
-    }
-  else
-    {
-      group = _groups[*group_name];
     }
 
   group->GetLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
@@ -126,7 +122,23 @@ PlacesResultsController::RemoveResult (const char *_id)
   delete id;
 }
 
+void
+PlacesResultsController::Clear ()
+{
+  std::map<std::string, PlacesGroup *>::iterator it;
 
+  for (it = _groups.begin (); it != _groups.end (); ++it)
+  {
+    PlacesGroup *group = static_cast <PlacesGroup *> (it->second);
+
+    _results_view->RemoveGroup (group);
+    group->UnReference ();
+  }
+
+  _groups.erase (_groups.begin (), _groups.end ());
+  _tiles.erase (_tiles.begin (), _tiles.end ());
+  _tile_group_relations.erase (_tile_group_relations.begin (), _tile_group_relations.end ());
+}
 
 PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)

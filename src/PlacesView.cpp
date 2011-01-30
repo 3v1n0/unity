@@ -107,6 +107,8 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
 
     _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
+
+    _results_controller->Clear ();
   }
 
   _entry = entry;
