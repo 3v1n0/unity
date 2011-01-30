@@ -44,7 +44,6 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 
 IconTexture::~IconTexture ()
 {
-  g_print ("\n'%s' %p\n", _icon_name, _icon_name);
   g_free (_icon_name);
 }
 

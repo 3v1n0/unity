@@ -98,13 +98,16 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
   PlacesTile *tile = _tiles[*id];
   PlacesGroup *group = _groups[*group_name];
 
-  group->GetLayout ()->RemoveChildObject (tile);
-
-  if (group->GetLayout ()->GetChildren ().empty ())
+  if (group)
   {
-    _results_view->RemoveGroup (group);
-    _groups.erase (*group_name);
-    group->UnReference ();
+    group->GetLayout ()->RemoveChildObject (tile);
+
+    if (group->GetLayout ()->GetChildren ().empty ())
+    {
+      _results_view->RemoveGroup (group);
+      _groups.erase (*group_name);
+      group->UnReference ();
+    }
   }
 
   _tiles.erase (*id);
