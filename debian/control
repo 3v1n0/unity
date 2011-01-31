@@ -49,7 +49,9 @@ Provides: indicator-renderer,
           netbook-launcher
 Conflicts: netbook-launcher (<< 1:2.1.18-0ubuntu2)
 Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2)
-Recommends: indicator-appmenu,
+Recommends: unity-place-applications,
+            unity-place-files,
+            indicator-appmenu,
             indicator-application,
             indicator-sound,
             indicator-datetime,
@@ -72,19 +74,6 @@ Description: Common files for the interface for Ubuntu Desktop Edition
  Unity is a graphical interface designed for Ubuntu Desktop Edition
  .
  This package contains commons file that are architecture independent.
-
-#Package: unity-dbg
-#Section: debug
-#Architecture: any
-#Priority: extra
-#Depends: ${shlibs:Depends},
-#         ${misc:Depends},
-#         unity (= ${binary:Version})
-#Replaces: libunity0-dbg (<< 0.2.6-0ubuntu1)
-#Description: Unity Interface for Ubuntu Netbook Edition - debugging symbols
-# Unity is a graphical interface designed for Ubuntu Netbook Edition
-# .
-# This package contains debugging symbols.
 
 Package: netbook-launcher
 Section: oldlibs
