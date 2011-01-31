@@ -24,8 +24,11 @@
 
 #include "IconTexture.h"
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size) :
-PlacesTile (NUX_TRACKER_LOCATION)
+PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
+: PlacesTile (NUX_TRACKER_LOCATION),
+  _label (NULL),
+  _icon (NULL),
+  _uri (NULL)
 {
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
@@ -66,8 +69,9 @@ PlacesSimpleTile::~PlacesSimpleTile ()
   _icontex->UnReference ();
   _cairotext->UnReference ();
 
-  g_free ((void *)_label);
-  g_free ((void *)_icon);
+  g_free (_label);
+  g_free (_icon);
+  g_free (_uri);
 }
 
 const char *
@@ -80,6 +84,24 @@ const char *
 PlacesSimpleTile::GetIcon ()
 {
   return _icon;
+}
+
+const char *
+PlacesSimpleTile::GetURI ()
+{
+  return _uri;
+}
+
+void
+PlacesSimpleTile::SetURI (const char *uri)
+{
+  if (_uri)
+    g_free (_uri);
+  
+  _uri = NULL;
+
+  if (uri)
+    _uri = g_strdup (uri);
 }
 
 const gchar*

@@ -111,6 +111,7 @@ void TestRunner::Init ()
   group_content->SetHorizontalInternalMargin (4);
 
   group1->SetLayout (group_content);
+  group1->SetVisible (false);
 
 
   layout->AddView (group1, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);

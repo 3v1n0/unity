@@ -51,6 +51,7 @@ protected:
                                       nux::Geometry& geo, void *user_data);
 
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnActivePlaceEntryChanged (PlaceEntry *entry);
 
 private:
   nux::BaseWindow  *_window;
