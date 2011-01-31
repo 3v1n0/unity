@@ -99,7 +99,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 // PlacesView Methods
 //
 void
-PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
   if (_entry)
   {
@@ -145,6 +145,9 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
                                            (GCallback)&PlacesView::OnResultRemoved, this);
   }
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
+
+  if (signal)
+    entry_changed.emit (_entry);
 }
 
 PlaceEntry *
@@ -280,6 +283,10 @@ PlacesView::OnResultClicked (PlacesTile *tile)
       g_error_free (error);
     }
   }
+
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                            NULL);
 }
 
 //

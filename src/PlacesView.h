@@ -52,13 +52,16 @@ public:
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   // Methods
-  void         SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+  void         SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal=true);
   PlaceEntry * GetActiveEntry ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
 
   PlacesResultsController * GetResultsController ();
+
+  // Signals
+  sigc::signal<void, PlaceEntry *> entry_changed;
  
 protected:
 
