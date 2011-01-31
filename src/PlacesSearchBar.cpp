@@ -152,9 +152,7 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
     gchar       *res;
 
     res = g_strdup_printf (search_template, _entry->GetName ());
-    _pango_entry->SetText (res);
-
-    // FIXME: Why in gods name does this hang Unity?
+    
     _entry->SetActiveSection (section_id);
     _entry->SetSearch (search_string ? search_string : "", hints);
     g_free (res);
