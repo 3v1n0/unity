@@ -18,7 +18,6 @@
  *              Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
-#include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
