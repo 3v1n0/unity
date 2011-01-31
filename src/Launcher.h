@@ -81,7 +81,8 @@ public:
 
   void SetFloating (bool floating);
 
-  void SetAutohide (bool autohide, nux::View *show_trigger);
+  void SetAutohideTrigger (nux::View *trigger);
+  void SetAutohide (bool autohide);
   bool AutohideEnabled ();
 
   void StartKeyShowLauncher ();
@@ -163,6 +164,7 @@ private:
   void OnDragWindowAnimCompleted ();
   void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnTriggerMouseMove  (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
@@ -170,7 +172,16 @@ private:
   void EnsureHoverState ();
   void EnsureHiddenState ();
   void EnsureAnimation    ();
+  void EnsureScrollTimer ();
   void SetupAutohideTimer ();
+  
+  bool MouseOverTopScrollArea ();
+  bool MouseOverTopScrollExtrema ();
+  
+  bool MouseOverBottomScrollArea ();
+  bool MouseOverBottomScrollExtrema ();
+  
+  static gboolean OnScrollTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
 
@@ -304,6 +315,7 @@ private:
   int _launcher_drag_delta;
   int _dnd_security;
   int _enter_y;
+  int _last_button_press;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -323,10 +335,12 @@ private:
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
   guint _autohide_handle;
+  guint _autoscroll_handle;
 
   nux::Matrix4  _view_matrix;
   nux::Matrix4  _projection_matrix;
   nux::Point2   _mouse_position;
+  nux::Point2   _trigger_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
