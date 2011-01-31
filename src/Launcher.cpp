@@ -1117,6 +1117,7 @@ bool Launcher::AutohideEnabled ()
 
 /* End Launcher Show/Hide logic */
 
+// Hacks around compiz failing to see the struts because the window was just mapped.
 gboolean Launcher::StrutHack (gpointer data)
 {
   Launcher *self = (Launcher *) data;
