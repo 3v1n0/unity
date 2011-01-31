@@ -132,7 +132,7 @@ TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem *item, int time, TrashLauncherI
 		"text", _("Empty all items from Trash?"),
 		"secondary-text", _("All items in the Trash will be permanently deleted."),
 		NULL);
-  gtk_dialog_add_button (GTK_DIALOG (dialog), "Empty Trash", GTK_RESPONSE_OK );
+  gtk_dialog_add_button (GTK_DIALOG (dialog), _("Empty Trash"), GTK_RESPONSE_OK );
 
   QuicklistManager::Default ()->HideQuicklist (self->_quicklist);
 
