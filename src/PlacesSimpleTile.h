@@ -51,8 +51,11 @@ public:
   PlacesSimpleTile (const char *icon, const char *label, int icon_size=64);
   ~PlacesSimpleTile ();
 
-  const char *      GetLabel ();
-  const char *      GetIcon ();
+  const char * GetLabel ();
+  const char * GetIcon ();
+  const char * GetURI ();
+
+  void SetURI (const char *uri);
 
 protected:
   const gchar* GetName ();
@@ -60,8 +63,9 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  const char* _label;
-  const char* _icon;
+  char* _label;
+  char* _icon;
+  char* _uri;
   IconTexture *_icontex;
   nux::StaticCairoText *_cairotext;
 

@@ -28,6 +28,24 @@
 class PlaceEntry : public sigc::trackable
 {
 public:
+
+  enum
+  {
+    GROUP_RENDERER,
+    GROUP_NAME,
+    GROUP_ICON
+  };
+
+  enum
+  {
+    RESULT_URI,
+    RESULT_ICON,
+    RESULT_GROUP_ID,
+    RESULT_MIMETYPE,
+    RESULT_NAME,
+    RESULT_COMMENT
+  };
+
   virtual const gchar * GetId          () = 0;
   virtual const gchar * GetName        () = 0;
   virtual const gchar * GetIcon        () = 0;
@@ -67,6 +85,8 @@ public:
   virtual DeeModel * GetResultsModel () = 0;
 
   // Signals
+
+  sigc::signal<void, bool>                    active_changed;
 
   // This covers: name, icon and description properties
   sigc::signal<void>                          state_changed;
