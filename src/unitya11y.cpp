@@ -38,6 +38,8 @@
 static GHashTable *accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
 
+static gboolean a11y_initialized = FALSE;
+
 static void
 unity_a11y_restore_environment (void)
 {
@@ -190,6 +192,7 @@ unity_a11y_init (void)
     {
       g_debug ("Unity accessibility started, using bridge on %s",
                bridge_path);
+      a11y_initialized = TRUE;
     }
 
   g_free (bridge_path);
@@ -208,6 +211,7 @@ unity_a11y_finalize (void)
       g_hash_table_unref (accessible_table);
       accessible_table = NULL;
     }
+  a11y_initialized = FALSE;
 }
 
 
@@ -289,4 +293,12 @@ unity_a11y_get_accessible (nux::Object *object)
     }
 
   return accessible_object;
+}
+
+/*
+ * Returns if the accessibility support is properly initialized
+ */
+gboolean unity_a11y_initialized (void)
+{
+  return a11y_initialized;
 }
