@@ -346,17 +346,12 @@ BamfLauncherIcon::Spread ()
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
-  bool onlyOwnWasActive = PluginAdapter::Default ()->IsScaleActive (true);
-
   if (button != 1)
     return;
 
-  if (!scaleWasActive || (scaleWasActive && !onlyOwnWasActive))
-    _launcher->SetLastSpreadIcon (NULL);
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
 
   bool active, running;
-
   active = bamf_view_is_active (BAMF_VIEW (m_App));
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
@@ -377,23 +372,21 @@ BamfLauncherIcon::OnMouseClick (int button)
   }
   else if (scaleWasActive)
   {
-    if (_launcher->GetLastSpreadIcon () != this)
+    if (!Spread ())
     {
-      if (!Spread ())
-      {
-        PluginAdapter::Default ()->TerminateScale ();
-        Focus ();
-        _launcher->SetLastSpreadIcon (NULL);
-      }
+      PluginAdapter::Default ()->TerminateScale ();
+      Focus ();
+      _launcher->SetLastSpreadIcon (NULL);
     }
-    else
-      SimpleLauncherIcon::OnMouseClick (button);
   }
   else if (!active)
+  {
     Focus ();
+  }
   else if (active && !scaleWasActive)
+  {
     Spread ();
-
+  }
 }
 
 void

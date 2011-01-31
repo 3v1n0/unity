@@ -33,9 +33,9 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   m_vertical_scrollbar_enable      = true;
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _layout->SinkReference ();
-  
+
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
-    
+
   setBorder (12);
   EnableVerticalScrollBar (true);
 
@@ -44,8 +44,29 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
 PlacesResultsView::~PlacesResultsView ()
 {
+  std::list<PlacesGroup *>::iterator it;
+  for (it = _groups.begin(); it != _groups.end(); it++)
+  {
+    (*it)->UnReference ();
+  }
+
   _layout->Clear ();
   _layout->UnReference ();
+}
+
+void
+PlacesResultsView::ReJiggyGroups ()
+{
+  _layout->Clear ();
+ std::list<PlacesGroup *>::iterator it;
+
+  for (it = _groups.begin(); it != _groups.end(); it++)
+  {
+    if ((*it)->IsVisible ())
+    {
+      _layout->AddView ((*it), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    }
+  }
 }
 
 void
@@ -95,6 +116,8 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)
 {
+  group->Reference ();
+  _groups.push_back (group);
   _layout->AddView (group, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   ComputeChildLayout ();
 }
@@ -102,6 +125,8 @@ PlacesResultsView::AddGroup (PlacesGroup *group)
 void
 PlacesResultsView::RemoveGroup (PlacesGroup *group)
 {
+  group->UnReference ();
+  _groups.remove (group);
   _layout->RemoveChildObject (group);
   ComputeChildLayout ();
 }

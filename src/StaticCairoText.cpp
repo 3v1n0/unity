@@ -32,7 +32,10 @@ namespace nux
 {
   StaticCairoText::StaticCairoText (const TCHAR* text,
                                     NUX_FILE_LINE_DECL) :
-  View (NUX_FILE_LINE_PARAM)
+  View (NUX_FILE_LINE_PARAM),
+  _fontstring (NULL),
+  _cairoGraphics (NULL),
+  _texture2D (NULL)
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = TEXT (text);
@@ -50,7 +53,6 @@ StaticCairoText::~StaticCairoText ()
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
                                         this);
-
   if (_texture2D)
     delete (_texture2D);
 
@@ -401,6 +403,8 @@ void StaticCairoText::UpdateTexture ()
   cairo_t *cr = cairo_reference (_cairoGraphics->GetContext ());
 
   DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
+
+  cairo_destroy (cr);
 
   NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 

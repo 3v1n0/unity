@@ -49,7 +49,7 @@ public:
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
     PlacesView *view = new PlacesView ();
-    view->SetMinMaxSize(1024, 600);
+    view->SetMinMaxSize(938, 500);
     layout->AddView(view, 1, nux::eCenter, nux::eFix);
 
     _factory = PlaceFactory::GetDefault ();
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
-                                               1024, 600, 0, &ThreadWidgetInit, 0);
+                                                938, 500, 0, &ThreadWidgetInit, 0);
   app = new TestApp ();
   
   wt->Run(NULL);

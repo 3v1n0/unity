@@ -63,6 +63,8 @@ PlacesController::PlacesController ()
   _window_layout->SetHorizontalExternalMargin(0);
 
   _window->SetLayout (_window_layout);
+
+  _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
 }
 
 PlacesController::~PlacesController ()
@@ -101,6 +103,8 @@ void PlacesController::Hide ()
   
   _visible = false;
 
+  _view->SetActiveEntry (NULL, 0, "", false);
+
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
@@ -136,6 +140,13 @@ PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long butto
 {
   Hide ();
 }
+
+void
+PlacesController::OnActivePlaceEntryChanged (PlaceEntry *entry)
+{
+  entry ? Show () : Hide ();
+}
+
 
 /* Introspection */
 const gchar *

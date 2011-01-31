@@ -71,7 +71,9 @@ View (NUX_FILE_LINE_PARAM)
 
   _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   _header_layout->AddSpace (1, 1);
-  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+
+  // FIXME: We don't want to show this as it does nothing right now
+  // _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->SinkReference ();
@@ -189,11 +191,28 @@ PlacesGroup::UpdateLabel ()
   NeedRedraw ();
 }
 
+void
+PlacesGroup::SetVisible (bool visible)
+{
+  _is_visible = visible;
+  ComputeChildLayout ();
+  NeedRedraw ();
+}
+
+bool
+PlacesGroup::IsVisible ()
+{
+  return _is_visible;
+}
+
 
 long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  ret = PostProcessEvent2 (ievent, ret, ProcessEventInfo);
+
+  if (_group_layout)
+    ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+
   return ret;
 }
 
