@@ -315,6 +315,7 @@ private:
   int _launcher_drag_delta;
   int _dnd_security;
   int _enter_y;
+  int _last_button_press;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;

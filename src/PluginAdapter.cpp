@@ -23,7 +23,7 @@
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
-#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.6
+#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.75
 
 /* static */
 PluginAdapter *
