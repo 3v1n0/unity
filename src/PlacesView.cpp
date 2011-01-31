@@ -22,6 +22,9 @@
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
+#include <gtk/gtk.h>
+#include <gio/gdesktopappinfo.h>
+
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -197,10 +200,12 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
                                       -1);
   result_id = g_strdup_printf ("%s:%s",
                                group_id,
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME));
+                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
   result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
 
   tile = new PlacesSimpleTile (result_icon, result_name, 48);
+  tile->SetURI (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
+  tile->sigClick.connect (sigc::mem_fun (self, &PlacesView::OnResultClicked));
   self->GetResultsController ()->AddResultToGroup (group_id, tile, result_id);
 
   g_free (result_name);
@@ -226,11 +231,55 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
   result_id = g_strdup_printf ("%s:%s",
                                group_id, 
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME));
+                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
 
   self->GetResultsController ()->RemoveResultFromGroup (group_id, result_id);
 
   g_free (result_id);
+}
+
+void
+PlacesView::OnResultClicked (PlacesTile *tile)
+{
+  PlacesSimpleTile *simple_tile = static_cast<PlacesSimpleTile *> (tile);
+  const char *uri;
+
+  if (!(uri = simple_tile->GetURI ()))
+  {
+    g_warning ("Unable to launch %s: does not have a URI", simple_tile->GetLabel ());
+    return;
+  }
+
+  if (g_str_has_prefix (uri, "application://"))
+  {
+    const char      *id = &uri[14];
+    GDesktopAppInfo *info;
+
+    info = g_desktop_app_info_new (id);
+    if (G_IS_DESKTOP_APP_INFO (info))
+    {
+      GError *error = NULL;
+
+      g_app_info_launch (G_APP_INFO (info), NULL, NULL, &error);
+      if (error)
+      {
+        g_warning ("Unable to launch %s: %s", id,  error->message);
+        g_error_free (error);
+      }
+      g_object_unref (info);
+   }
+  }
+  else
+  {
+    GError *error = NULL;
+    gtk_show_uri (NULL, uri, time (NULL), &error);
+
+    if (error)
+    {
+      g_warning ("Unable to show %s: %s", uri, error->message);
+      g_error_free (error);
+    }
+  }
 }
 
 //

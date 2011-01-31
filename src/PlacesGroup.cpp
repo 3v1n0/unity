@@ -193,7 +193,10 @@ PlacesGroup::UpdateLabel ()
 long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  ret = PostProcessEvent2 (ievent, ret, ProcessEventInfo);
+
+  if (_group_layout)
+    ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+
   return ret;
 }
 

@@ -93,18 +93,6 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
     }
     else
     {
-      g_print ("\n****%s****\n\n", groupname);
-
-      std::list<nux::Area *>::iterator it;
-      std::list<nux::Area *> children = group->GetLayout ()->GetChildren ();
-
-      for (it = children.begin (); it != children.end (); ++it)
-      {
-        PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (*it);
-
-        g_print ("\t %s\n", tile->GetLabel ());
-      }
-
       g_warning ("Unable to remove '%s' from group '%s': Unable to find tile",
                  _id, groupname);
     }

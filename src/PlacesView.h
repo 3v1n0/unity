@@ -73,6 +73,8 @@ private:
   static void OnResultAdded   (DeeModel *model, DeeModelIter *iter, PlacesView *self);
   static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
 
+  void OnResultClicked (PlacesTile *tile);
+
 private:
   nux::VLayout    *_layout;
   PlacesSearchBar *_search_bar;
