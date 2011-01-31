@@ -1,7 +1,5 @@
 unity (3.4.0-0ubuntu1) UNRELEASED; urgency=low
 
-  * debian/control:
-    - recommends again places now that unity can support them
   * New upstream release:
     - Add places back to unity
     - Add autoscroll to launcher (LP: #690096)
@@ -9,6 +7,9 @@ unity (3.4.0-0ubuntu1) UNRELEASED; urgency=low
     - Change automaximize value to 75% of the workarea (LP: #708809)
     - The launcher should not let you dnd special icons (LP: #709119)
     - The launcher shouldn't move icon on right click dragging (LP: #709179)
+  * Cherry-pick a small fix for not having places empty at start
+  * debian/control:
+    - recommends again places now that unity can support them
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 31 Jan 2011 17:34:09 +0100
 
