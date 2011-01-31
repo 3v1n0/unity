@@ -17,7 +17,7 @@
  * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
  */
 
-#include "LauncherEntryRemoteController.h"
+#include "LauncherEntryRemoteModel.h"
 
 static void on_launcher_entry_signal_received (GDBusConnection *connection,
                                                const gchar *sender_name,
@@ -38,14 +38,9 @@ static void on_launcher_entry_signal_received (GDBusConnection *connection,
  * in order to help third party developers as much as possible when integrating
  * with Unity.
  */
-LauncherEntryRemoteController::LauncherEntryRemoteController()
+LauncherEntryRemoteModel::LauncherEntryRemoteModel()
 {
   GError          *error;
-
-  if (controller == NULL)
-    {
-      controller = new auncherEntryRemoteController();
-    }
 
   launcher_entry_dbus_signal_id = 0;
 
@@ -73,7 +68,7 @@ LauncherEntryRemoteController::LauncherEntryRemoteController()
                                           NULL);
 }
 
-LauncherEntryRemoteController::~LauncherEntryRemoteController()
+LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
 {
   if (launcher_entry_dbus_signal_id && conn)
     g_dbus_connection_signal_unsubscribe (conn, launcher_entry_dbus_signal_id);
@@ -82,20 +77,46 @@ LauncherEntryRemoteController::~LauncherEntryRemoteController()
     g_object_unref (conn);
 }
 
-/* Called with raw DBus params when the signal
- * "com.canonical.Unity.LauncherEntry.Update" is received.
- * The GVariant params should not be unreffed */
-LauncherEntryRemoteController::OnUpdateReceived (GVariant *params)
+int
+LauncherEntryRemoteModel::Size ()
 {
-  g_return_if_fail (params != NULL);
+  return _entries.size ();
+}
 
-  if (!g_variant_is_of_type (params, G_VARIANT_TYPE ("(sa{sv})")))
-    {
-      g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
-                 " illegal payload signature '%s'. Expected '(sa{sv})'.",
-                 g_variant_get_type_string (params));
-      return;
-    }
+std::list<LauncherEntryRemote*>::iterator
+LauncherEntryRemoteModel::begin ()
+{
+  return _entries.begin ();
+}
+
+std::list<LauncherEntryRemote*>::iterator
+LauncherEntryRemoteModel::end ()
+{
+  return _entries.end ();
+}
+
+std::list<LauncherEntryRemote*>::reverse_iterator
+LauncherEntryRemoteModel::rbegin ()
+{
+  return _entries.rbegin ();
+}
+
+std::list<LauncherEntryRemote*>::reverse_iterator
+LauncherEntryRemoteModel::rend ()
+{
+  return _entries.rend ();
+}
+
+/* Called when the signal com.canonical.Unity.LauncherEntry.Update is received.
+ * The app_uri looks like "application://firefox.desktop". The properties
+ * hashtable is a map from strings to GVariants with the property value.
+ */
+void
+LauncherEntryRemoteModel::OnUpdateReceived (const gchar *app_uri,
+                                            GHashTable  *props)
+{
+  g_return_if_fail (app_uri != NULL);
+  g_return_if_fail (props != NULL);
 
 
 }
@@ -109,24 +130,34 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                                    GVariant        *parameters,
                                    gpointer         user_data)
 {
-  LauncherEntryRemote *self;
+  LauncherEntryRemoteModel *self;
 
-  self = static_cast<LauncherEntryRemoteController *> (user_data);
+  self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
-  if (params == NULL)
+  if (parameters == NULL)
     {
-      g_warning ("Received DBus signal '%.%s' with empty payload from %s",
+      g_warning ("Received DBus signal '%s.%s' with empty payload from %s",
                  interface_name, signal_name, sender_name);
       return;
     }
 
   if (g_strcmp0 (signal_name, "Update") == 0)
     {
-      self->OnUpdateReceived (paramters);
+      if (!g_variant_is_of_type (parameters, G_VARIANT_TYPE ("(sa{sv})")))
+        {
+          g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
+                     " illegal payload signature '%s'. Expected '(sa{sv})'.",
+                     g_variant_get_type_string (parameters));
+          return;
+        }
+      // FIXME parse props
+      self->OnUpdateReceived (NULL, NULL);
+    }
+  else
+    {
+      g_warning ("Unknown signal '%s.%s' from %s",
+                 interface_name, signal_name, sender_name);
     }
 
-  /* It's an undocumented fact that GDBus passes a full ref on the
-   * paramters back to the signal handler. So free the params */
-  if (parameters != NULL)
-    g_variant_unref (parameters);
+
 }

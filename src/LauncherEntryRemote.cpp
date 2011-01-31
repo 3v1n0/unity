@@ -21,10 +21,97 @@
 
 LauncherEntryRemote::LauncherEntryRemote()
 {
+  _emblem = NULL;
+  _count = G_GINT64_CONSTANT (0);
+  _progress = 0.0;
   
+  _emblem_visible = FALSE;
+  _count_visible = FALSE;
+  _progress_visible = FALSE;
 }
 
 LauncherEntryRemote::~LauncherEntryRemote()
 {
   
+}
+
+const gchar*
+LauncherEntryRemote::Emblem()
+{
+  return _emblem;
+}
+
+gint64
+LauncherEntryRemote::Count()
+{
+  return _count;
+}
+
+gdouble
+LauncherEntryRemote::Progress()
+{
+  return _progress;
+}
+
+gboolean
+LauncherEntryRemote::EmblemVisible()
+{
+  return _emblem_visible;
+}
+
+gboolean
+LauncherEntryRemote::CountVisible()
+{
+  return _count_visible;
+}
+
+gboolean
+LauncherEntryRemote::ProgressVisible()
+{
+  return _progress_visible;
+}
+
+void
+LauncherEntryRemote::SetEmblem(const gchar* emblem)
+{
+  if (_emblem)
+    g_free (_emblem);
+
+  _emblem = g_strdup (emblem);
+  emblem_changed.emit ();
+}
+
+void
+LauncherEntryRemote::SetCount(gint64 count)
+{
+  _count = count;
+  count_changed.emit ();
+}
+
+void
+LauncherEntryRemote::SetProgress(gdouble progress)
+{
+  _progress = progress;
+  progress_changed.emit ();
+}
+
+void
+LauncherEntryRemote::SetEmblemVisible(gboolean visible)
+{
+  _emblem_visible = visible;
+  emblem_visible_changed.emit ();
+}
+
+void
+LauncherEntryRemote::SetCountVisible(gboolean visible)
+{
+  _count_visible = visible;
+  count_visible_changed.emit ();
+}
+
+void
+LauncherEntryRemote::SetProgressVisible(gboolean visible)
+{
+  _progress_visible = visible;
+  progress_visible_changed.emit ();
 }

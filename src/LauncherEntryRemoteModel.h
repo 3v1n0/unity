@@ -17,24 +17,40 @@
  * Authored by: Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
  */
 
-#ifndef LAUNCHER_ENTRY_REMOTE_CONTROLLER_H
-#define LAUNCHER_ENTRY_REMOTE_CONTROLLER_H
+#ifndef LAUNCHER_ENTRY_REMOTE_MODEL_H
+#define LAUNCHER_ENTRY_REMOTE_MODEL_H
 
 #include <glib.h>
 #include <sigc++/sigc++.h>
 
-class LauncherEntryRemote : public sigc::trackable
+#include "LauncherEntryRemote.h"
+
+class LauncherEntryRemoteModel : public sigc::trackable
 {
 
 public:
-    LauncherEntryRemoteController();
-    ~LauncherEntryRemoteController();
+    LauncherEntryRemoteModel();
+    ~LauncherEntryRemoteModel();
+
+    void OnUpdateReceived (const gchar *app_uri, GHashTable *props);
+
+    int Size ();
+    std::list<LauncherEntryRemote*>::iterator begin ();
+    std::list<LauncherEntryRemote*>::iterator end ();
+    std::list<LauncherEntryRemote*>::reverse_iterator rbegin ();
+    std::list<LauncherEntryRemote*>::reverse_iterator rend ();
+
+    sigc::signal<void, LauncherEntryRemote *> entry_added;
+    sigc::signal<void, LauncherEntryRemote *> entry_removed;
 
 private:
     GDBusConnection *conn;
     guint            launcher_entry_dbus_signal_id;
 
-    void OnUpdateReceived (GVariant *params);
+    std::list<LauncherEntryRemote*> _entries;
+
+    void AddEntry (LauncherEntryRemote *entry);
+    void RemoveEntry (LauncherEntryRemote *entry);
 };
 
-#endif // LAUNCHER_ENTRY_REMOTE_CONTROLLER_H
+#endif // LAUNCHER_ENTRY_REMOTE_MODEL_H
