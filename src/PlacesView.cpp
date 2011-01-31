@@ -193,10 +193,11 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
                                                                  iter,
                                                                  PlaceEntry::RESULT_GROUP_ID));
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  //result_id = dee_model_get_string (model, iter, PlaceEntry::RESULT_URI);
   result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
                                       -1);
-  result_id = g_strdup_printf ("%s:%s", group_id, result_name);
+  result_id = g_strdup_printf ("%s:%s",
+                               group_id,
+                               dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME));
   result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
 
   tile = new PlacesSimpleTile (result_icon, result_name, 48);

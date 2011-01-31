@@ -63,10 +63,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
                                            PlacesTile *tile,
                                            const char *_id)
 {
-  std::string *group_name = new std::string (groupname);
-  std::string *id = new std::string (_id);
-
-  PlacesGroup *group = _groups[*group_name];
+  PlacesGroup *group = _groups[groupname];
 
   if (!group)
     {
@@ -74,52 +71,58 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
     }
 
   group->GetLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
-  _tiles[*id] = tile;
-  _tile_group_relations[*id] = *(new std::string (groupname));
+  _tiles[_id] = tile;
+  _tile_group_relations[_id] = groupname;
 
   // Should also catch the onclick signal here on each tile,
   // so we can activate or do whatever it is we need to do
-
-  delete group_name;
-  delete id;
 }
 
 void
 PlacesResultsController::RemoveResultFromGroup (const char *groupname,
                                                 const char *_id)
 {
-  std::string *group_name = new std::string (groupname);
-  std::string *id = new std::string (_id);
-
-  PlacesTile *tile = _tiles[*id];
-  PlacesGroup *group = _groups[*group_name];
+  PlacesTile *tile = _tiles[_id];
+  PlacesGroup *group = _groups[groupname];
 
   if (group)
   {
-    group->GetLayout ()->RemoveChildObject (tile);
-
-    if (group->GetLayout ()->GetChildren ().empty ())
+    if (tile)
     {
-      _results_view->RemoveGroup (group);
-      _groups.erase (*group_name);
-      group->UnReference ();
+      group->GetLayout ()->RemoveChildObject (tile);
+    }
+    else
+    {
+      g_print ("\n****%s****\n\n", groupname);
+
+      std::list<nux::Area *>::iterator it;
+      std::list<nux::Area *> children = group->GetLayout ()->GetChildren ();
+
+      for (it = children.begin (); it != children.end (); ++it)
+      {
+        PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (*it);
+
+        g_print ("\t %s\n", tile->GetLabel ());
+      }
+
+      g_warning ("Unable to remove '%s' from group '%s': Unable to find tile",
+                 _id, groupname);
     }
   }
+  else
+  {
+    g_warning ("Unable to remove '%s' from group '%s': Unable to find group",
+               _id, groupname);
+  }
 
-  _tiles.erase (*id);
-
-  _tile_group_relations.erase (*id);
-
-  delete group_name;
-  delete id;
+  _tiles.erase (_id);
+  _tile_group_relations.erase (_id);
 }
 
 void
 PlacesResultsController::RemoveResult (const char *_id)
 {
-  std::string *id = new std::string (_id);
-  RemoveResultFromGroup (_tile_group_relations [*id].c_str (), _id);
-  delete id;
+  RemoveResultFromGroup (_tile_group_relations [_id].c_str (), _id);
 }
 
 void
@@ -143,8 +146,7 @@ PlacesResultsController::Clear ()
 PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
-  g_debug ("making a group for %s", groupname);
-  std::string *group_name = new std::string (groupname);
+  g_debug ("CreateGroup: %s", groupname);
 
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
@@ -165,10 +167,8 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   newgroup->SetLayout (layout);
 
-  _groups[*group_name] = newgroup;
+  _groups[groupname] = newgroup;
   _results_view->AddGroup (newgroup);
-
-  delete group_name;
 
   return newgroup;
 }
