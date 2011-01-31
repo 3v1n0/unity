@@ -1,4 +1,4 @@
-unity (3.4.0-0ubuntu1) UNRELEASED; urgency=low
+unity (3.4.0-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - Add places back to unity
@@ -11,7 +11,7 @@ unity (3.4.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - recommends again places now that unity can support them
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 31 Jan 2011 17:34:09 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 31 Jan 2011 18:40:50 +0100
 
 unity (3.2.16-0ubuntu1) natty; urgency=low
 
