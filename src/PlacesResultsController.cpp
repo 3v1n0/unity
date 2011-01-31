@@ -80,6 +80,12 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   // Should also catch the onclick signal here on each tile,
   // so we can activate or do whatever it is we need to do
 
+  if (group->IsVisible () == false)
+  {
+    group->SetVisible (true);
+    _results_view->ReJiggyGroups ();
+  }
+
   delete group_name;
   delete id;
 }
@@ -100,9 +106,12 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
 
     if (group->GetLayout ()->GetChildren ().empty ())
     {
-      _results_view->RemoveGroup (group);
-      _groups.erase (*group_name);
-      group->UnReference ();
+      //~ _results_view->RemoveGroup (group);
+      //~ _groups.erase (*group_name);
+      //~ group->UnReference ();
+
+    group->SetVisible (false);
+      _results_view->ReJiggyGroups ();
     }
   }
 
@@ -164,9 +173,11 @@ PlacesResultsController::CreateGroup (const char *groupname)
   layout->SetHorizontalInternalMargin (4);
 
   newgroup->SetLayout (layout);
+  newgroup->SetVisible (false);
 
   _groups[*group_name] = newgroup;
   _results_view->AddGroup (newgroup);
+  _results_view->ReJiggyGroups ();
 
   delete group_name;
 
