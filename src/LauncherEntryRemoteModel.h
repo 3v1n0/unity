@@ -32,11 +32,12 @@ public:
     LauncherEntryRemoteModel();
     ~LauncherEntryRemoteModel();
 
-    void                 OnUpdateReceived (const gchar *app_uri,
-                                           GHashTable  *props);
     guint                Size ();
     LauncherEntryRemote* LookupByUri (const gchar *app_uri);
     GList*               GetUris ();
+
+    void AddEntry (LauncherEntryRemote *entry);
+    void RemoveEntry (LauncherEntryRemote *entry);
 
     sigc::signal<void, LauncherEntryRemote *> entry_added;
     sigc::signal<void, LauncherEntryRemote *> entry_removed;
@@ -45,9 +46,6 @@ private:
     GDBusConnection *_conn;
     guint            _launcher_entry_dbus_signal_id;
     GHashTable      *_entries_by_uri;
-
-    void AddEntry (LauncherEntryRemote *entry);
-    void RemoveEntry (LauncherEntryRemote *entry);
 };
 
 #endif // LAUNCHER_ENTRY_REMOTE_MODEL_H

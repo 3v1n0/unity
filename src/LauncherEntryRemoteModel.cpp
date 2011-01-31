@@ -124,18 +124,53 @@ LauncherEntryRemoteModel::GetUris ()
   return (GList*) g_hash_table_get_keys (_entries_by_uri);
 }
 
-/* Called when the signal com.canonical.Unity.LauncherEntry.Update is received.
- * The app_uri looks like "application://firefox.desktop". The properties
- * hashtable is a map from strings to GVariants with the property value.
+/**
+ * Add or update a remote launcher entry.
+ *
+ * If 'entry' has a floating reference it will be consumed.
  */
 void
-LauncherEntryRemoteModel::OnUpdateReceived (const gchar *app_uri,
-                                            GHashTable  *props)
+LauncherEntryRemoteModel::AddEntry (LauncherEntryRemote *entry)
 {
-  g_return_if_fail (app_uri != NULL);
-  g_return_if_fail (props != NULL);
+  LauncherEntryRemote *existing_entry;
 
+  g_return_if_fail (entry != NULL);
 
+  entry->SinkReference ();
+
+  existing_entry = LookupByUri (entry->AppUri ());
+  if (existing_entry != NULL)
+    {
+      existing_entry->Update (entry);
+      entry->UnReference ();
+    }
+  else
+    {
+      /* The ref on entry will be removed by the hash table itself */
+      g_hash_table_insert (_entries_by_uri, g_strdup (entry->AppUri ()), entry);
+      entry_added.emit (entry);
+    }
+}
+
+/**
+ * Add or update a remote launcher entry.
+ *
+ * If 'entry' has a floating reference it will be consumed.
+ */
+void
+LauncherEntryRemoteModel::RemoveEntry (LauncherEntryRemote *entry)
+{
+  g_return_if_fail (entry != NULL);
+
+  /* We need a temp ref on entry to keep it alive during signal emission */
+  entry->SinkReference ();
+
+  if (g_hash_table_remove (_entries_by_uri, entry->AppUri ()))
+    {
+      entry_removed.emit (entry);
+    }
+
+  entry->UnReference ();
 }
 
 static void
@@ -148,8 +183,8 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                                    gpointer         user_data)
 {
   LauncherEntryRemoteModel *self;
-  gchar                    *app_uri;
-  GVariantIter             *prop_iter;
+  LauncherEntryRemote      *entry;
+
 
   self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
@@ -170,13 +205,8 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
           return;
         }
 
-      g_variant_get (parameters, "(sa{sv})", &app_uri, &prop_iter);
-
-      // FIXME parse props
-
-      self->OnUpdateReceived (app_uri, NULL);
-      g_free (app_uri);
-      g_variant_iter_free (prop_iter);
+      entry = new LauncherEntryRemote (parameters);
+      self->AddEntry (entry); // consumes floating ref on entry
     }
   else
     {

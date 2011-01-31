@@ -37,44 +37,49 @@ class LauncherEntryRemote : public nux::InitiallyUnownedObject, public sigc::tra
   NUX_DECLARE_OBJECT_TYPE (LauncherEntryRemote, nux::InitiallyUnownedObject);
 
 public:
-    const gchar* Emblem();
-    gint64 Count();
-    gdouble Progress();
 
-    gboolean EmblemVisible();
-    gboolean CountVisible();
-    gboolean ProgressVisible();
+  LauncherEntryRemote(GVariant *val);
+  ~LauncherEntryRemote();
 
-    sigc::signal<void> emblem_changed;
-    sigc::signal<void> count_changed;
-    sigc::signal<void> progress_changed;
+  const gchar* AppUri();
+  const gchar* Emblem();
+  gint64       Count();
+  gdouble      Progress();
 
-    sigc::signal<void> emblem_visible_changed;
-    sigc::signal<void> count_visible_changed;
-    sigc::signal<void> progress_visible_changed;
+  gboolean EmblemVisible();
+  gboolean CountVisible();
+  gboolean ProgressVisible();
+
+  sigc::signal<void> emblem_changed;
+  sigc::signal<void> count_changed;
+  sigc::signal<void> progress_changed;
+
+  sigc::signal<void> emblem_visible_changed;
+  sigc::signal<void> count_visible_changed;
+  sigc::signal<void> progress_visible_changed;
 
 private:
 
-    LauncherEntryRemote();
-    ~LauncherEntryRemote();
+  gchar  *_app_uri;
+  gchar  *_emblem;
+  gint64  _count;
+  gdouble _progress;
 
-    gchar  *_emblem;
-    gint64  _count;
-    gdouble _progress;
+  gboolean _emblem_visible;
+  gboolean _count_visible;
+  gboolean _progress_visible;
 
-    gboolean _emblem_visible;
-    gboolean _count_visible;
-    gboolean _progress_visible;
+  void SetEmblem (const gchar *emblem);
+  void SetCount (gint64 count);
+  void SetProgress (gdouble progress);
 
-    void SetEmblem (const gchar *emblem);
-    void SetCount (gint64 count);
-    void SetProgress (gdouble progress);
+  void SetEmblemVisible (gboolean visible);
+  void SetCountVisible (gboolean visible);
+  void SetProgressVisible (gboolean visible);
 
-    void SetEmblemVisible (gboolean visible);
-    void SetCountVisible (gboolean visible);
-    void SetProgressVisible (gboolean visible);
+  void Update (LauncherEntryRemote *other);
 
-    friend class LauncherEntryRemoteModel;
+  friend class LauncherEntryRemoteModel;
 };
 
 #endif // LAUNCHER_ENTRY_REMOTE_H
