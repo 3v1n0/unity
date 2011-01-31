@@ -20,11 +20,12 @@
 #include "TrashLauncherIcon.h"
 
 #include <gio/gio.h>
+#include <glib/gi18n-lib.h>
 
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
-  SetTooltipText ("Trash");
+  SetTooltipText (_("Trash"));
   SetIconName ("user-trash");
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);

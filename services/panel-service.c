@@ -977,10 +977,25 @@ panel_service_show_entry (PanelService *self,
       priv->last_menu_button = 0;
     }
 
-  if (entry != NULL && GTK_IS_MENU (entry->menu))
+  if (entry != NULL)
     {
+      if (GTK_IS_MENU (entry->menu))
+        {
+          priv->last_menu = entry->menu;
+        }
+      else
+        {
+          /* For some reason, this entry doesn't have a menu.  To simplify the
+             rest of the code and to keep scrubbing fluidly, we'll create a
+             stub menu for the duration of this scrub. */
+          priv->last_menu = GTK_MENU (gtk_menu_new ());
+          g_signal_connect (priv->last_menu, "deactivate",
+                            G_CALLBACK (gtk_widget_destroy), NULL);
+          g_signal_connect (priv->last_menu, "destroy",
+                            G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
+        }
+
       priv->last_entry = entry;
-      priv->last_menu = entry->menu;
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;

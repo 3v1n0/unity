@@ -25,6 +25,7 @@
 #include "PluginAdapter.h"
 #include "FavoriteStore.h"
 
+#include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
 #include <core/core.h>
@@ -638,7 +639,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     menu_item = dbusmenu_menuitem_new ();
     g_object_ref (menu_item);
 
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Open New Window");
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open New Window"));
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -654,7 +655,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     g_object_ref (menu_item);
 
     dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Keep In Launcher");
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep In Launcher"));
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -676,7 +677,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     menu_item = dbusmenu_menuitem_new ();
     g_object_ref (menu_item);
 
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
