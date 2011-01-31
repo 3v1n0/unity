@@ -189,6 +189,20 @@ PlacesGroup::UpdateLabel ()
   NeedRedraw ();
 }
 
+void
+PlacesGroup::SetVisible (bool visible)
+{
+  _is_visible = visible;
+  ComputeChildLayout ();
+  NeedRedraw ();
+}
+
+bool
+PlacesGroup::IsVisible ()
+{
+  return _is_visible;
+}
+
 
 long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
