@@ -192,6 +192,10 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   PlacesSimpleTile *tile;
 
   //g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
+
+  //FIXME: We can't do anything with these do just ignore
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+    return;
   
   active = self->GetActiveEntry ();
   groups = active->GetGroupsModel ();
@@ -226,6 +230,9 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
 
   //g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
 
+  //FIXME: We can't do anything with these do just ignore
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+    return;
   active = self->GetActiveEntry ();
   groups = active->GetGroupsModel ();
   git = dee_model_get_iter_at_row (groups, dee_model_get_uint32 (model,
