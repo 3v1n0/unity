@@ -133,8 +133,6 @@ PlacesSearchBar::PreLayoutManagement ()
 long
 PlacesSearchBar::PostLayoutManagement (long LayoutResult)
 {
-  // I'm imagining this is a good as time as any to update the background
-
   return nux::View::PostLayoutManagement (LayoutResult);
 }
 
