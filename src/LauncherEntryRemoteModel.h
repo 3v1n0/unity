@@ -32,22 +32,19 @@ public:
     LauncherEntryRemoteModel();
     ~LauncherEntryRemoteModel();
 
-    void OnUpdateReceived (const gchar *app_uri, GHashTable *props);
-
-    int Size ();
-    std::list<LauncherEntryRemote*>::iterator begin ();
-    std::list<LauncherEntryRemote*>::iterator end ();
-    std::list<LauncherEntryRemote*>::reverse_iterator rbegin ();
-    std::list<LauncherEntryRemote*>::reverse_iterator rend ();
+    void                 OnUpdateReceived (const gchar *app_uri,
+                                           GHashTable  *props);
+    guint                Size ();
+    LauncherEntryRemote* LookupByUri (const gchar *app_uri);
+    GList*               GetUris ();
 
     sigc::signal<void, LauncherEntryRemote *> entry_added;
     sigc::signal<void, LauncherEntryRemote *> entry_removed;
 
 private:
-    GDBusConnection *conn;
-    guint            launcher_entry_dbus_signal_id;
-
-    std::list<LauncherEntryRemote*> _entries;
+    GDBusConnection *_conn;
+    guint            _launcher_entry_dbus_signal_id;
+    GHashTable      *_entries_by_uri;
 
     void AddEntry (LauncherEntryRemote *entry);
     void RemoveEntry (LauncherEntryRemote *entry);

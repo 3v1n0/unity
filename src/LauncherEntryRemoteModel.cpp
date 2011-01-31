@@ -27,6 +27,8 @@ static void on_launcher_entry_signal_received (GDBusConnection *connection,
                                                GVariant *parameters,
                                                gpointer user_data);
 
+static void nux_object_destroy_notify (nux::Object *obj);
+
 /**
  * Helper class implementing the remote API to control the icons in the
  * launcher. Also known as the com.canonical.Unity.LauncherEntry DBus API.
@@ -42,10 +44,10 @@ LauncherEntryRemoteModel::LauncherEntryRemoteModel()
 {
   GError          *error;
 
-  launcher_entry_dbus_signal_id = 0;
+  _launcher_entry_dbus_signal_id = 0;
 
   error = NULL;
-  conn = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &error);
+  _conn = g_bus_get_sync (G_BUS_TYPE_SESSION, NULL, &error);
   if (error)
     {
       g_warning ("Unable to connect to session bus: %s", error->message);
@@ -53,10 +55,13 @@ LauncherEntryRemoteModel::LauncherEntryRemoteModel()
       return;
     }
   
+  _entries_by_uri = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+                                           (GDestroyNotify) nux_object_destroy_notify);
+
   /* Listen for *all* signals on the "com.canonical.Unity.LauncherEntry"
    * interface, no matter who the sender is */
-  launcher_entry_dbus_signal_id =
-      g_dbus_connection_signal_subscribe (conn,
+  _launcher_entry_dbus_signal_id =
+      g_dbus_connection_signal_subscribe (_conn,
                                           NULL,                       // sender
                                           "com.canonical.Unity.LauncherEntry",
                                           NULL,                       // member
@@ -70,41 +75,53 @@ LauncherEntryRemoteModel::LauncherEntryRemoteModel()
 
 LauncherEntryRemoteModel::~LauncherEntryRemoteModel()
 {
-  if (launcher_entry_dbus_signal_id && conn)
-    g_dbus_connection_signal_unsubscribe (conn, launcher_entry_dbus_signal_id);
+  g_hash_table_destroy (_entries_by_uri);
+  _entries_by_uri = NULL;
+
+  if (_launcher_entry_dbus_signal_id && _conn)
+    {
+      g_dbus_connection_signal_unsubscribe (_conn,
+                                            _launcher_entry_dbus_signal_id);
+      _launcher_entry_dbus_signal_id = 0;
+    }
   
-  if (conn)
-    g_object_unref (conn);
+  if (_conn)
+    {
+      g_object_unref (_conn);
+      _conn = NULL;
+    }
 }
 
-int
+guint
 LauncherEntryRemoteModel::Size ()
 {
-  return _entries.size ();
+  return g_hash_table_size (_entries_by_uri);
 }
 
-std::list<LauncherEntryRemote*>::iterator
-LauncherEntryRemoteModel::begin ()
+/**
+ * Return a pointer to a LauncherEntryRemote if there is one for app_uri,
+ * otherwise NULL. The returned object should not be freed.
+ */
+LauncherEntryRemote*
+LauncherEntryRemoteModel::LookupByUri (const gchar *app_uri)
 {
-  return _entries.begin ();
+  gpointer entry;
+
+  g_return_val_if_fail (app_uri != NULL, NULL);
+
+  entry = g_hash_table_lookup (_entries_by_uri,  app_uri);
+  return static_cast<LauncherEntryRemote *> (entry);
 }
 
-std::list<LauncherEntryRemote*>::iterator
-LauncherEntryRemoteModel::end ()
+/**
+ * Get a list of all application URIs which have registered with the launcher
+ * API. The returned GList should be freed with g_list_free(), but the URIs
+ * should not be changed or freed.
+ */
+GList*
+LauncherEntryRemoteModel::GetUris ()
 {
-  return _entries.end ();
-}
-
-std::list<LauncherEntryRemote*>::reverse_iterator
-LauncherEntryRemoteModel::rbegin ()
-{
-  return _entries.rbegin ();
-}
-
-std::list<LauncherEntryRemote*>::reverse_iterator
-LauncherEntryRemoteModel::rend ()
-{
-  return _entries.rend ();
+  return (GList*) g_hash_table_get_keys (_entries_by_uri);
 }
 
 /* Called when the signal com.canonical.Unity.LauncherEntry.Update is received.
@@ -131,6 +148,8 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                                    gpointer         user_data)
 {
   LauncherEntryRemoteModel *self;
+  gchar                    *app_uri;
+  GVariantIter             *prop_iter;
 
   self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
@@ -150,8 +169,14 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                      g_variant_get_type_string (parameters));
           return;
         }
+
+      g_variant_get (parameters, "(sa{sv})", &app_uri, &prop_iter);
+
       // FIXME parse props
-      self->OnUpdateReceived (NULL, NULL);
+
+      self->OnUpdateReceived (app_uri, NULL);
+      g_free (app_uri);
+      g_variant_iter_free (prop_iter);
     }
   else
     {
@@ -160,4 +185,11 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
     }
 
 
+}
+
+static void
+nux_object_destroy_notify (nux::Object *obj)
+{
+  if (G_LIKELY (obj != NULL))
+    obj->UnReference();
 }
