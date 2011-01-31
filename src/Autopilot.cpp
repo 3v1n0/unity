@@ -196,18 +196,18 @@ void
 GraphTimerInterrupt (void *data)
 {
   nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
+
   timegraph->UpdateGraph (0, _disp_fps);
   timer_handler = nux::GetTimer ().AddTimerHandler (UPDATE_TIME, timer_functor, timegraph);
 }
 
 void
-ShowStatisticsDisplay (nux::NThread *thread, void *init_data)
+ShowStatisticsDisplay () //nux::NThread *thread, void *init_data)
 {
   nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
   nux::TimeGraph *timegraph = new nux::TimeGraph (TEXT ("Frames per second"));
   timegraph->ShowColumnStyle ();
   timegraph->SetYAxisBounds (0.0, 200.0f);
-
   timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
   timer_functor = new nux::TimerFunctor ();
   timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&GraphTimerInterrupt));
@@ -220,10 +220,10 @@ ShowStatisticsDisplay (nux::NThread *thread, void *init_data)
   layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (4);
   layout->SetVerticalExternalMargin (4);
-  nux::GetWindowThread ()->SetLayout (layout);
 
-  nux::ColorLayer background (nux::Color (0xFF2D2D2D));
-  static_cast<nux::WindowThread*> (thread)->SetWindowBackgroundPaintLayer (&background);
+  moveable_view = new nux::FloatingWindow (TEXT ("Autopilot"), NUX_TRACKER_LOCATION);
+  moveable_view->SetLayout (layout);
+  moveable_view->ShowWindow (true);
 }
 
 
@@ -235,14 +235,6 @@ AutopilotDisplay::Show ()
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
   CompositeScreenInterface::setHandler (_cscreen, true);
- 
-  nux::WindowThread *wt = nux::CreateGUIThread (TEXT ("Autopilot"),
-                                                800,
-                                                600,
-                                                0,
-                                                &ShowStatisticsDisplay,
-                                                0);
-  wt->Run (0);
-  delete timer_functor;
-  delete wt;
+
+  ShowStatisticsDisplay ();
 }
