@@ -52,6 +52,7 @@ public:
   gboolean CountVisible();
   gboolean ProgressVisible();
 
+  sigc::signal<void, const gchar * > dbus_name_changed; // gives the old name as arg
   sigc::signal<void> emblem_changed;
   sigc::signal<void> count_changed;
   sigc::signal<void> progress_changed;
@@ -76,6 +77,7 @@ private:
   gboolean _count_visible;
   gboolean _progress_visible;
 
+  void SetDBusName (const gchar *dbus_name);
   void SetEmblem (const gchar *emblem);
   void SetCount (gint64 count);
   void SetProgress (gdouble progress);

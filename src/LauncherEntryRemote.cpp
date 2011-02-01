@@ -180,6 +180,31 @@ LauncherEntryRemote::ProgressVisible()
   return _progress_visible;
 }
 
+/**
+ * Set the unique DBus name for the process owning the launcher entry.
+ *
+ * If the entry has any exported quicklist it will be removed.
+ */
+void
+LauncherEntryRemote::SetDBusName(const gchar* dbus_name)
+{
+  gchar *old_name;
+
+  if (g_strcmp0 (_dbus_name, dbus_name) == 0)
+    return;
+
+  old_name = _dbus_name;
+  _dbus_name = g_strdup (dbus_name);
+
+  /* Remove the quicklist since we can't know if it it'll be valid on the
+   * new name, and we certainly don't want the quicklist to operate on a
+   * different name than the rest of the launcher API */
+  SetQuicklist (NULL);
+
+  dbus_name_changed.emit (old_name);
+  g_free (old_name);
+}
+
 void
 LauncherEntryRemote::SetEmblem(const gchar* emblem)
 {
@@ -259,27 +284,46 @@ void
 LauncherEntryRemote::SetQuicklist(DbusmenuClient *quicklist)
 {
   /* Check if existing quicklist have exact same path as the new one
-   * and ignore the change in that case */
+   * and ignore the change in that case. We also assert that the quicklist
+   * uses the same name as the connection owning this launcher entry */
   if (_quicklist)
     {
-      gchar *ql_path, *new_ql_path;
+      gchar *ql_path, *new_ql_path, *new_ql_name;
       g_object_get (_quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &ql_path, NULL);
 
       if (quicklist == NULL)
-        new_ql_path = NULL;
+        {
+          new_ql_path = NULL;
+          new_ql_name = NULL;
+        }
       else
-        g_object_get (quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &new_ql_path, NULL);
+        {
+          g_object_get (quicklist, DBUSMENU_CLIENT_PROP_DBUS_OBJECT, &new_ql_path, NULL);
+          g_object_get (quicklist, DBUSMENU_CLIENT_PROP_DBUS_NAME, &new_ql_name, NULL);
+        }
+
+      if (g_strcmp0 (new_ql_name, _dbus_name) != 0)
+        {
+          g_critical ("Mismatch between quicklist- and launcher entry owner:"
+                      "%s and %s respectively", new_ql_name, _dbus_name);
+          g_free (ql_path);
+          g_free (new_ql_path);
+          g_free (new_ql_name);
+          return;
+        }
 
       if (g_strcmp0 (new_ql_path, ql_path) == 0)
         {
           g_free (ql_path);
           g_free (new_ql_path);
+          g_free (new_ql_name);
           return;
         }
 
       /* Prepare for a new quicklist */
       g_free (ql_path);
       g_free (new_ql_path);
+      g_free (new_ql_name);
       g_object_unref (_quicklist);
     }
   else if (_quicklist == NULL && quicklist == NULL)
@@ -329,13 +373,9 @@ LauncherEntryRemote::SetProgressVisible(gboolean visible)
 void
 LauncherEntryRemote::Update(LauncherEntryRemote *other)
 {
-  if (g_strcmp0 (DBusName(), other->DBusName()) != 0)
-    {
-      g_critical ("You can only call LauncherEntryRemote::Update() on entries"
-                  " with the same unique DBus name. Saw %s and %s.",
-                  DBusName(), other->DBusName());
-      return;
-    }
+  /* It's important that we update the DBus name first since it might
+   * unset the quicklist if it changes */
+  SetDBusName (other->DBusName ());
 
   SetEmblem (other->Emblem ());
   SetCount (other->Count ());
