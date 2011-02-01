@@ -53,6 +53,9 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
 
   _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
   _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
+
+  _remote_model = LauncherEntryRemoteModel::GetDefault();
+  _remote_model->entry_added.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
 }
 
 LauncherController::~LauncherController()
@@ -185,6 +188,13 @@ void
 LauncherController::OnIconAdded (LauncherIcon *icon)
 {
   this->RegisterIcon (icon);
+}
+
+void
+LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
+{
+  g_debug ("LAUNCHER ENTRY ADDED: %s %s", entry->DBusName (), entry->AppUri ());
+  // FIXME: Wire the signals on entry up to matching LauncherIcon from the LauncherModel
 }
 
 void
