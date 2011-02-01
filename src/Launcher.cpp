@@ -1625,6 +1625,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.icon->TextureForSize (_icon_image_size) == 0)
     return;
 
+  GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
@@ -1649,9 +1650,6 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg.icon->_xform_coords["Tile"]);
   }
   /* end tile draw */
-
-  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
-  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw icon */
   RenderIcon (GfxContext,

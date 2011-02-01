@@ -155,7 +155,8 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetPremultipliedBlend (nux::SRC_OVER);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   
   if (GetEnabled ())
   {

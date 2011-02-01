@@ -86,6 +86,7 @@ public:
       tex = _normal_tex;
     }
 
+    GfxContext.GetRenderStates ().SetBlend (true);
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
