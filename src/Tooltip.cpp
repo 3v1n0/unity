@@ -161,7 +161,7 @@ namespace nux
     texxform.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
     texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
-    GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend (true, nux::SRC_OVER);
+    GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend (nux::SRC_OVER);
     gfxContext.QRP_1Tex (base.x,
       base.y,
       base.width,

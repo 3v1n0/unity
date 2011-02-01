@@ -86,7 +86,7 @@ public:
       tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex (geo.x,

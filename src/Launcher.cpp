@@ -1530,7 +1530,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.icon->TextureForSize (_icon_image_size) == 0)
     return;
 
-  GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw tile */
@@ -1555,7 +1555,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   }
   /* end tile draw */
 
-  GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw icon */
@@ -1669,7 +1669,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // clip vertically but not horizontally
     GfxContext.PushClippingRectangle(nux::Geometry (base.x, bkg_box.y, base.width, bkg_box.height));
-    GfxContext.GetRenderStates ().SetPremultipliedBlend (true, nux::SRC_OVER);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
 
