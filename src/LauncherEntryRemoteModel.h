@@ -29,23 +29,26 @@ class LauncherEntryRemoteModel : public sigc::trackable
 {
 
 public:
-    LauncherEntryRemoteModel();
-    ~LauncherEntryRemoteModel();
 
-    guint                Size ();
-    LauncherEntryRemote* LookupByUri (const gchar *app_uri);
-    GList*               GetUris ();
+  static LauncherEntryRemoteModel* GetDefault ();
 
-    void AddEntry (LauncherEntryRemote *entry);
-    void RemoveEntry (LauncherEntryRemote *entry);
+  guint                Size ();
+  LauncherEntryRemote* LookupByUri (const gchar *app_uri);
+  GList*               GetUris ();
 
-    sigc::signal<void, LauncherEntryRemote *> entry_added;
-    sigc::signal<void, LauncherEntryRemote *> entry_removed;
+  void AddEntry (LauncherEntryRemote *entry);
+  void RemoveEntry (LauncherEntryRemote *entry);
+
+  sigc::signal<void, LauncherEntryRemote *> entry_added;
+  sigc::signal<void, LauncherEntryRemote *> entry_removed;
 
 private:
-    GDBusConnection *_conn;
-    guint            _launcher_entry_dbus_signal_id;
-    GHashTable      *_entries_by_uri;
+  LauncherEntryRemoteModel();
+  ~LauncherEntryRemoteModel();
+
+  GDBusConnection *_conn;
+  guint            _launcher_entry_dbus_signal_id;
+  GHashTable      *_entries_by_uri;
 };
 
 #endif // LAUNCHER_ENTRY_REMOTE_MODEL_H
