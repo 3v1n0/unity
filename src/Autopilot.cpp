@@ -22,6 +22,7 @@
 #include "Nux/WindowThread.h"
 #include "Nux/TimeGraph.h"
 #include "Nux/TimerProc.h"
+#include "Nux/FloatingWindow.h"
 
 #include "Autopilot.h"
 #include "UBusMessages.h"
@@ -31,6 +32,7 @@ static guint tooltip_handle;
 
 nux::TimerHandle timer_handler;
 nux::TimerFunctor *timer_functor;
+nux::FloatingWindow *moveable_view;
 
 void
 TestFinished (AutopilotDisplay *self, const gchar *name, gboolean passed)
@@ -82,8 +84,6 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
   float ratio = 0.05;
   struct timeval now;
   
-  g_debug ("doing fps count");
-
   gettimeofday (&now, 0);
   timediff = TIMEVALDIFF (&now, &_last_redraw);
 
@@ -93,8 +93,9 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
   _frames++;
   _ctime += timediff;
 
-  if (_ctime >= UPDATE_TIME)
+  if (1)
   {
+    g_debug ("updating fps: %.3f", _frames / (_ctime / 1000.0));
     _disp_fps = _frames / (_ctime / 1000.0);
     /*g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
              _frames, _ctime / 1000.0,
@@ -197,6 +198,8 @@ GraphTimerInterrupt (void *data)
 {
   nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
 
+  //  g_debug ("updating timegraph with %.3f fps", _disp_fps);
+
   timegraph->UpdateGraph (0, _disp_fps);
   timer_handler = nux::GetTimer ().AddTimerHandler (UPDATE_TIME, timer_functor, timegraph);
 }
@@ -220,7 +223,7 @@ ShowStatisticsDisplay () //nux::NThread *thread, void *init_data)
   layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (4);
   layout->SetVerticalExternalMargin (4);
-
+  
   moveable_view = new nux::FloatingWindow (TEXT ("Autopilot"), NUX_TRACKER_LOCATION);
   moveable_view->SetLayout (layout);
   moveable_view->ShowWindow (true);
