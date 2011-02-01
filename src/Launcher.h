@@ -109,11 +109,13 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
   virtual void RecvKeyReleased (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
+
+  void startKeyNavMode ();
+  void endKeyNavMode ();
 
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
@@ -276,8 +278,6 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
-
-  void UpdateKeyNavIndicator ();
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;

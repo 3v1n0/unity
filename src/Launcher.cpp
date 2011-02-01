@@ -187,7 +187,6 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
-    OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
     OnKeyReleased.connect (sigc::mem_fun (this, &Launcher::RecvKeyReleased));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -330,6 +329,24 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::startKeyNavMode ()
+{
+  if (_last_icon_index == -1)
+    _current_icon_index = 0;
+  else
+    _current_icon_index = _last_icon_index;
+  NeedRedraw ();
+}
+
+void
+Launcher::endKeyNavMode ()
+{
+  _last_icon_index = _current_icon_index;
+  _current_icon_index = -1;
+  NeedRedraw ();
 }
 
 void
@@ -753,16 +770,13 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
       arg.z_rotation = IconUrgentWiggleValue (icon, current);
     }
 
+    // we've to walk the list since it is a STL-list and not a STL-vector, thus
+    // we can't use the random-access operator [] :(
     LauncherModel::iterator it;
     int i;
     for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-    {
       if (i == _current_icon_index && *it == icon)
-      {
-        std::cout << "index: " << i << " set to true" << std::endl;
         arg.keyboard_nav_hl = true;
-      }
-    }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -2085,32 +2099,16 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
-void Launcher::RecvKeyPressed (unsigned int  key_sym, unsigned long key_code,
-                               unsigned long key_state)
+void
+Launcher::RecvKeyReleased (unsigned int  key_sym,
+                           unsigned long key_code,
+                           unsigned long key_state)
 {
-  /*fprintf (stdout,
-           "Launcher::RecvKeyPressed (%d, %ld, %ld)\n",
-           key_sym,
-           key_code,
-           key_state);*/
-}
-
-void Launcher::UpdateKeyNavIndicator ()
-{
-  std::cout << "UpdateKeyNavIndicator() called" << std::endl;
-  NeedRedraw ();
-}
-
-void Launcher::RecvKeyReleased (unsigned int  key_sym, unsigned long key_code,
-                                unsigned long key_state)
-{
-  std::cout << "Launcher::RecvKeyReleased() called" << std::endl;
 
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
     case XK_Up:
-      std::cout << "Up" << std::endl;
       if (_current_icon_index > 0)
         _current_icon_index--;
       else
@@ -2118,58 +2116,49 @@ void Launcher::RecvKeyReleased (unsigned int  key_sym, unsigned long key_code,
         _current_icon_index = -1;
         // switch to global-menu
       }
-      UpdateKeyNavIndicator ();
+      NeedRedraw ();
     break;
 
     // down (move selection down and unfold launcher if needed)      
     case XK_Down:
-      std::cout << "Down" << std::endl;
       if (_current_icon_index < _model->Size ())
       {
         _current_icon_index++;
-        UpdateKeyNavIndicator ();
+        NeedRedraw ();
       }
     break;
 
     // esc/left (close quicklist or exit laucher key-focus)
     case XK_Left:
     case XK_Escape:
-      std::cout << "ESC/Left" << std::endl;
       // hide again
-      _last_icon_index = _current_icon_index;
+      endKeyNavMode ();
     break;
 
     // right/shift-f10 (open quicklist of currently selected icon)      
     case XK_Right:
     case XK_F10:
-      std::cout << "Shift-F10/Right" << std::endl;
       // un-hide
       if (_last_icon_index >= 0)
         _current_icon_index = _last_icon_index;
       else
         _current_icon_index = 0;
-      UpdateKeyNavIndicator ();
+      endKeyNavMode ();
     break;
 
     // <RETURN>/<SPACE> (start/activate currently selected icon)      
     case XK_space:
     case XK_Return:
-      std::cout << "RETURN/SPACE" << std::endl;
-      // start current selected icon
-      if (_current_icon_index < _model->Size ())
       {
-        std::cout << "icon-index:" << _current_icon_index << std::endl;
         LauncherModel::iterator it;
         int i;
-        for (it = _model->begin (), i = 0; it != _model->end (), i <= _current_icon_index; it++, i++);
-        std::cout << "name: " << (*it)->GetName () << std::endl;
-        (*it)->Activate ();
+
+        // start current selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->Activate ();
       }
-      else
-      {
-        _current_icon_index = _model->Size () - 1;
-        UpdateKeyNavIndicator ();
-      }
+      endKeyNavMode ();
     break;
 
     default:

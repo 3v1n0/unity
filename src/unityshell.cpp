@@ -225,6 +225,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
 
   if (w != NULL)
     w->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
 
   return false;
 }
