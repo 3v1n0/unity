@@ -1338,6 +1338,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     icon->_xform_coords["Image"]        = new nux::Vector4[4];
     icon->_xform_coords["Tile"]         = new nux::Vector4[4];
     icon->_xform_coords["Glow"]         = new nux::Vector4[4];
+    icon->_xform_coords["Emblem"]       = new nux::Vector4[4];
 
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
@@ -1727,6 +1728,16 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                nux::Color::White,
                1.0f,
                arg.icon->_xform_coords["Tile"]);
+  }
+  
+  if (arg.icon->Emblem ())
+  {
+    RenderIcon(GfxContext,
+               arg,
+               arg.icon->Emblem ()->GetDeviceTexture (),
+               nux::Color::White,
+               1.0f,
+               arg.icon->_xform_coords["Emblem"]);
   }
 
   /* draw indicators */
@@ -2295,6 +2306,29 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     z = (*it).logical_center.z;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
+    
+    if (launcher_icon->Emblem ())
+    {
+      nux::BaseTexture *emblem = launcher_icon->Emblem ();
+      
+      float inset = 0.1f;
+      
+      w = emblem->GetWidth ();
+      h = emblem->GetHeight ();
+      x = ((*it).render_center.x + _icon_size/2.0f) - w;
+      y = ((*it).render_center.y - _icon_size/2.0f);
+      z = (*it).render_center.z;
+      
+      ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
+      nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
+      nux::Matrix4::ROTATEY((*it).y_rotation) *
+      nux::Matrix4::ROTATEZ((*it).z_rotation) *
+      nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
+
+      ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
+
+      SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Emblem");
+    }
   }
 }
 

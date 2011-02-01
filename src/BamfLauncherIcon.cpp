@@ -90,6 +90,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
   /* hack */
   SetProgress (0.5f);
+  SetEmblemIconName ("gtk-add");
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()

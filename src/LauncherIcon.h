@@ -114,6 +114,8 @@ public:
     
     nux::BaseTexture * TextureForSize (int size);
     
+    nux::BaseTexture * Emblem ();
+    
     std::list<DbusmenuMenuitem *> Menus ();
     
     sigc::signal<void, int> MouseDown;
@@ -148,6 +150,8 @@ protected:
     
     void SetIconType (IconType type);
     void SetSortPriority (int priority);
+
+    void SetEmblem (nux::BaseTexture *emblem);
 
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
@@ -205,7 +209,9 @@ private:
     nux::Point3      _center;
     nux::Point3      _last_stable;
     nux::Point3      _saved_center;
-    IconType _icon_type;
+    IconType         _icon_type;
+    
+    nux::BaseTexture* _emblem;
     
     bool             _quirks[QUIRK_LAST];
     struct timespec  _quirk_times[QUIRK_LAST];

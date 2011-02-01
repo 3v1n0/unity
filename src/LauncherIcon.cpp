@@ -69,6 +69,8 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  
+  _emblem = 0;
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
@@ -628,4 +630,23 @@ std::list<DbusmenuMenuitem *> LauncherIcon::GetMenus ()
 {
   std::list<DbusmenuMenuitem *> result;
   return result;
+}
+
+nux::BaseTexture *
+LauncherIcon::Emblem ()
+{
+  return _emblem;
+}
+
+void 
+LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
+{
+  if (_emblem == emblem)
+    return;
+  
+  if (_emblem)
+    _emblem->UnReference ();
+  
+  _emblem = emblem;
+  needs_redraw.emit (this);
 }
