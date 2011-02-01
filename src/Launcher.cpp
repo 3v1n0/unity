@@ -2239,6 +2239,56 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
   vectors[3].w = v3.w;
 }
 
+void Launcher::SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+                             float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name)
+{
+  nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
+  nux::Vector4 v1 = nux::Vector4(x,   y+h,  z, 1.0f);
+  nux::Vector4 v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
+  nux::Vector4 v3 = nux::Vector4(x+w, y,    z, 1.0f);
+
+  v0 = ViewProjectionMatrix * v0;
+  v1 = ViewProjectionMatrix * v1;
+  v2 = ViewProjectionMatrix * v2;
+  v3 = ViewProjectionMatrix * v3;
+
+  v0.divide_xyz_by_w();
+  v1.divide_xyz_by_w();
+  v2.divide_xyz_by_w();
+  v3.divide_xyz_by_w();
+
+  // normalize to the viewport coordinates and translate to the correct location
+  v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;;
+  v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+
+
+  nux::Vector4* vectors = icon->_xform_coords[name];
+
+  vectors[0].x = v0.x;
+  vectors[0].y = v0.y;
+  vectors[0].z = v0.z;
+  vectors[0].w = v0.w;
+  vectors[1].x = v1.x;
+  vectors[1].y = v1.y;
+  vectors[1].z = v1.z;
+  vectors[1].w = v1.w;
+  vectors[2].x = v2.x;
+  vectors[2].y = v2.y;
+  vectors[2].z = v2.z;
+  vectors[2].w = v2.w;
+  vectors[3].x = v3.x;
+  vectors[3].y = v3.y;
+  vectors[3].z = v3.z;
+  vectors[3].w = v3.w;
+}
+
+
 void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 {
   nux::Geometry geo = GetGeometry ();
@@ -2313,21 +2363,25 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
       
       float inset = 0.1f;
       
-      w = emblem->GetWidth ();
-      h = emblem->GetHeight ();
-      x = ((*it).render_center.x + _icon_size/2.0f) - w;
-      y = ((*it).render_center.y - _icon_size/2.0f);
+      float w = _icon_size;
+      float h = _icon_size;
+    
+      float emb_w = emblem->GetWidth ();
+      float emb_h = emblem->GetHeight ();
+      x = ((*it).render_center.x + _icon_size/2.0f) - emb_w; // x = top left corner position of emblem
+      y = ((*it).render_center.y - _icon_size/2.0f);     // y = top left corner position of emblem
       z = (*it).render_center.z;
       
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
       nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
       nux::Matrix4::ROTATEY((*it).y_rotation) *
       nux::Matrix4::ROTATEZ((*it).z_rotation) *
-      nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
+      nux::Matrix4::TRANSLATE(-((*it).render_center.x - w/2.0f) - w/2.0f, -((*it).render_center.y - h/2.0f) - h/2.0f, -z);    // Put the center the icon to (0, 0)
 
       ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
 
-      SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Emblem");
+      SetIconSectionXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
+                           (*it).render_center.x - w/2.0f, (*it).render_center.y - h/2.0f, w, h, "Emblem");
     }
   }
 }
