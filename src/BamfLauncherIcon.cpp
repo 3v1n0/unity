@@ -51,6 +51,13 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
   indicator_desktop_shortcuts_nick_exec (data->shortcuts, data->nick);
 }
 
+void
+BamfLauncherIcon::Activate ()
+{
+  std::cout << "BamfLauncherIcon::Activate()" << std::endl;
+  OpenInstance ();
+}
+
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {

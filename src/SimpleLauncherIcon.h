@@ -34,6 +34,7 @@ public:
     nux::BaseTexture * GetTextureForSize (int size);
     
     void SetIconName (const char *name);
+    virtual void Activate ();
 
 protected:
     virtual void OnMouseDown (int button);

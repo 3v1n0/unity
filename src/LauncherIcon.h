@@ -91,7 +91,9 @@ public:
     
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
-    
+
+    virtual void Activate ();
+
     void SaveCenter ();
     
     int SortPriority ();

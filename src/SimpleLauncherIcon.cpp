@@ -44,6 +44,12 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
 }
 
 void
+SimpleLauncherIcon::Activate ()
+{
+  std::cout << "SimpleLauncherIcon::Activate() called" << std::endl;
+}
+
+void
 SimpleLauncherIcon::OnMouseDown (int button)
 {
 }

@@ -212,6 +212,31 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
   return false;
 }
 
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  CompWindow* w = screen->findWindow (launcherWindow->GetInputWindowId ());
+    
+  // to receive the Terminate event
+  /*if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);*/
+
+  if (w != NULL)
+    w->moveInputFocusTo ();
+
+  return false;
+}
+
+/*bool
+UnityScreen::setKeyboardFocusKeyTerminate (CompAction         *action,
+                                           CompAction::State   state,
+                                           CompOption::Vector &options)
+{
+  return false;
+}*/
+
 gboolean
 UnityScreen::initPluginActions (gpointer data)
 {
@@ -497,7 +522,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-
+  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+    
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
   END_FUNCTION ();

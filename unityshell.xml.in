@@ -49,6 +49,11 @@
                     <_long>Make the launcher appear with that key</_long>
                     <default>&lt;Super&gt;</default>
                   </option>
+                  <option name="keyboard_focus" type="key">
+		    <_short>Key to put keyboard-focus on launcher</_short>
+		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
+		    <default>&lt;Alt&gt;F1</default>
+                  </option>
 	          </group>
 	          <group>
                 <_short>Experimental</_short>

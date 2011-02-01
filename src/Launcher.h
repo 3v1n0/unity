@@ -109,6 +109,9 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
+  virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  virtual void RecvKeyReleased (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
@@ -270,12 +273,20 @@ private:
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
 
+  void UpdateKeyNavIndicator ();
+
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
+
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
+  LauncherIcon* _last_selected_icon;
+  int _current_icon_index;
+  int _last_icon_index;
 
   QuicklistView* _active_quicklist;
 

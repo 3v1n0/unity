@@ -131,6 +131,12 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
 }
 
+void
+LauncherIcon::Activate ()
+{
+  std::cout << "LauncherIcon::Activate() called" << std::endl;
+}
+
 nux::Color LauncherIcon::BackgroundColor ()
 {
   return _background_color;
