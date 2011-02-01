@@ -74,6 +74,9 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
+  
+  _present_time_handle = 0;
+  _center_stabilize_handle = 0;
 
   QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
   
