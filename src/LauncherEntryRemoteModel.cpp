@@ -204,7 +204,6 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
   LauncherEntryRemoteModel *self;
   LauncherEntryRemote      *entry;
 
-
   self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
   if (parameters == NULL)
@@ -224,7 +223,15 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
           return;
         }
 
-      entry = new LauncherEntryRemote (parameters);
+      if (sender_name == NULL)
+        {
+          g_critical ("Received 'com.canonical.Unity.LauncherEntry.Update' from"
+                      " an undefined sender. This may happen if you are trying "
+                      "to run Unity on a p2p DBus connection.");
+          return;
+        }
+
+      entry = new LauncherEntryRemote (sender_name, parameters);
       self->AddEntry (entry); // consumes floating ref on entry
     }
   else

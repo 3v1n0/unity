@@ -23,6 +23,8 @@
 #include <Nux/Nux.h>
 #include <glib.h>
 #include <sigc++/sigc++.h>
+#include <libdbusmenu-glib/client.h>
+#include <libdbusmenu-glib/menuitem.h>
 
 /**
  * Instances of this class mirrors the remote metadata for a laucnher entry
@@ -38,13 +40,15 @@ class LauncherEntryRemote : public nux::InitiallyUnownedObject, public sigc::tra
 
 public:
 
-  LauncherEntryRemote(GVariant *val);
+  LauncherEntryRemote(const gchar *dbus_name, GVariant *val);
   ~LauncherEntryRemote();
 
-  const gchar* AppUri();
-  const gchar* Emblem();
-  gint64       Count();
-  gdouble      Progress();
+  const gchar*    AppUri();
+  const gchar*    DBusName();
+  const gchar*    Emblem();
+  gint64          Count();
+  gdouble         Progress();
+  DbusmenuClient* Quicklist ();
 
   gboolean EmblemVisible();
   gboolean CountVisible();
@@ -53,6 +57,7 @@ public:
   sigc::signal<void> emblem_changed;
   sigc::signal<void> count_changed;
   sigc::signal<void> progress_changed;
+  sigc::signal<void> quicklist_changed;
 
   sigc::signal<void> emblem_visible_changed;
   sigc::signal<void> count_visible_changed;
@@ -65,6 +70,10 @@ private:
   gint64  _count;
   gdouble _progress;
 
+  gchar *_dbus_name;
+  gchar *_quicklist_dbus_path;
+  DbusmenuClient *_quicklist;
+
   gboolean _emblem_visible;
   gboolean _count_visible;
   gboolean _progress_visible;
@@ -72,6 +81,8 @@ private:
   void SetEmblem (const gchar *emblem);
   void SetCount (gint64 count);
   void SetProgress (gdouble progress);
+  void SetQuicklistPath (const gchar *dbus_path);
+  void SetQuicklist (DbusmenuClient *quicklist);
 
   void SetEmblemVisible (gboolean visible);
   void SetCountVisible (gboolean visible);
