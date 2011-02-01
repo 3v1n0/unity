@@ -16,6 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include "PlaceEntryRemote.h"
 
 #include <glib/gi18n-lib.h>
@@ -216,20 +218,27 @@ PlaceEntryRemote::SetActive (bool is_active)
                      NULL,
                      NULL);
   _active = is_active;
+
+  active_changed.emit (is_active);
 }
 
 void
 PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
+  GVariantBuilder *builder;
+  
+  builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
+
   /* FIXME: I'm ignoring hints because we don't use them currently */
   g_dbus_proxy_call (_proxy,
                      "SetSearch",
-                     g_variant_new ("(sa{ss})", search, NULL),
+                     g_variant_new ("(sa{ss})", search, builder),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      NULL,
                      NULL);
+  g_variant_builder_unref (builder);
 }
 
 void
@@ -237,7 +246,7 @@ PlaceEntryRemote::SetActiveSection (guint32 section_id)
 {
   g_dbus_proxy_call (_proxy,
                      "SetActiveSection",
-                     g_variant_new ("(u)", section_id),
+                     g_variant_new ("(u)", (guint32)section_id),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
@@ -335,7 +344,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 
   if (_state_changed)
     state_changed.emit ();
-
+ 
   if (_position != position)
   {
     _position = position;
@@ -361,7 +370,6 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 
     sections_model_changed.emit ();
   }
-
 
   // FIXME: Handle place entry hints
 
@@ -391,8 +399,6 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 
     _entry_renderer_changed = true;
   }
-  
-  
 
   // FIXME: Handle entry renderer hints
 

@@ -23,7 +23,7 @@
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
-#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.6
+#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.75
 
 /* static */
 PluginAdapter *
@@ -46,8 +46,6 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ExpoActionList (0),
     m_ScaleActionList (0)
 {
-   m_AnimationPluginLoaded =
-     CompPlugin::find ("animation") ? true : false;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -100,12 +98,10 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
   switch (notify)
   {
     case CompWindowNotifyMinimize:
-      if (!m_AnimationPluginLoaded)
-        window_minimized.emit (window->id ());
+      window_minimized.emit (window->id ());
       break;
     case CompWindowNotifyUnminimize:
-      if (!m_AnimationPluginLoaded)
-        window_unminimized.emit (window->id ());
+      window_unminimized.emit (window->id ());
       break;
     case CompWindowNotifyShade:
       window_shaded.emit (window->id ());
@@ -134,39 +130,19 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
 }
 
 void
-MultiActionList::AddNewAction (CompAction *a)
+MultiActionList::AddNewAction (CompAction *a, bool primary)
 {
   if (std::find (m_ActionList.begin (), m_ActionList.end (), a)  == m_ActionList.end ())
     m_ActionList.push_back (a);
+
+  if (primary)
+    _primary_action = a;
 }
 
 void
 MultiActionList::RemoveAction (CompAction *a)
 {
   m_ActionList.remove (a);
-}
-
-bool
-MultiActionList::IsAnyActive (bool onlyOwn)
-{
-  if (onlyOwn)
-  {
-    if (m_ToggledAction)
-      return true;
-    else
-      return false;
-  }
-
-  foreach (CompAction *action, m_ActionList)
-  {
-    if (action->state () & (CompAction::StateTermKey |
-                            CompAction::StateTermButton |
-                            CompAction::StateTermEdge |
-                            CompAction::StateTermEdgeDnd))
-      return true;
-  }
-
-  return m_ToggledAction ? true : false;
 }
 
 void
@@ -184,9 +160,15 @@ MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
     argument.push_back (arg);
   }
 
+  CompAction *a;
+  
+  if (_primary_action)
+    a = _primary_action;
+  else
+    a = m_ActionList.front ();
+  
   /* Initiate the first available action with the arguments */
-  m_ToggledAction = m_ActionList.front ();
-  m_ActionList.front ()->initiate () (m_ActionList.front (), 0, argument);
+  a->initiate () (a, 0, argument);
 }
 
 void
@@ -203,18 +185,21 @@ MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
 
   foreach (CompOption &a, extraArgs)
     argument.push_back (a);
-
+    
+  if (_primary_action)
+  {
+    _primary_action->terminate () (_primary_action, 0, argument);
+    return;
+  }
+  
   foreach (CompAction *action, m_ActionList)
   {
     if (action->state () & (CompAction::StateTermKey |
                             CompAction::StateTermButton |
                             CompAction::StateTermEdge |
-                            CompAction::StateTermEdgeDnd) ||
-        m_ToggledAction == action)
+                            CompAction::StateTermEdgeDnd))
     {
       action->terminate () (action, 0, argument);
-      if (m_ToggledAction == action)
-        m_ToggledAction = NULL;
     }
   }
 }
@@ -289,9 +274,9 @@ PluginAdapter::TerminateScale ()
 }
 
 bool
-PluginAdapter::IsScaleActive (bool onlyOwn)
+PluginAdapter::IsScaleActive ()
 {
-  return m_ScaleActionList.IsAnyActive (onlyOwn);
+  return m_Screen->grabExist ("scale");
 }
 
 void 

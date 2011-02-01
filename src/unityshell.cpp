@@ -58,6 +58,13 @@ static UnityScreen *uScreen = 0;
 void
 UnityScreen::nuxPrologue ()
 {
+  /* Vertex lighting isn't used in Unity, we disable that state as it could have
+   * been leaked by another plugin. That should theoretically be switched off
+   * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
+   * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
+   * drivers (lp:703140). */
+  glDisable (GL_LIGHTING);
+
   /* reset matrices */
   glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -230,7 +237,7 @@ UnityScreen::initPluginActions (gpointer data)
           option.name () == "expo_edge")
       {
         CompAction *action = &option.value ().action ();
-        expoActions.AddNewAction (action);
+        expoActions.AddNewAction (action, false);
         break;
       }
     }
@@ -247,7 +254,6 @@ UnityScreen::initPluginActions (gpointer data)
     foreach (CompOption &option, p->vTable->getOptions ())
     {
       if (option.name () == "initiate_all_key" ||
-          option.name () == "initiate_all_button" ||
           option.name () == "initiate_all_edge" ||
           option.name () == "initiate_key" ||
           option.name () == "initiate_button" ||
@@ -260,7 +266,12 @@ UnityScreen::initPluginActions (gpointer data)
           option.name () == "initiate_output_edge")
       {
         CompAction *action = &option.value ().action ();
-        scaleActions.AddNewAction (action);
+        scaleActions.AddNewAction (action, false);
+      }
+      else if (option.name () == "initiate_all_button")
+      {
+        CompAction *action = &option.value ().action ();
+        scaleActions.AddNewAction (action, true);
       }
     }
     
@@ -415,8 +426,7 @@ UnityScreen::optionChanged (CompOption            *opt,
   switch (num)
   {
     case UnityshellOptions::LauncherAutohide:
-      launcher->SetAutohide (optionGetLauncherAutohide (),
-                             (nux::View *) panelView->HomeButton ());
+      launcher->SetAutohide (optionGetLauncherAutohide ());
       break;
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
@@ -553,7 +563,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
-  unity_util_accessible_add_window (self->launcherWindow);
+  if (unity_a11y_initialized () == TRUE)
+    unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightAlwaysOn (true);
@@ -586,7 +597,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohide (true, (nux::View *) self->panelView->HomeButton ());
+  self->launcher->SetAutohideTrigger ((nux::View *) self->panelView->HomeButton ());
+  self->launcher->SetAutohide (true);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);

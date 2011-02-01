@@ -30,9 +30,14 @@
 #define DEFAULT_ICON "application-default-icon"
 
 IconTexture::IconTexture (const char *icon_name, unsigned int size)
-: TextureArea (NUX_TRACKER_LOCATION)
+: TextureArea (NUX_TRACKER_LOCATION),
+  _icon_name (NULL)
 {
-  _icon_name = g_strdup (icon_name);
+  if (_icon_name && strlen (_icon_name) > 3)
+    _icon_name = g_strdup ("folder");
+  else
+    _icon_name = g_strdup (icon_name);
+
   _size = size;
   Refresh ();
 }
@@ -63,72 +68,109 @@ IconTexture::SetByFilePath (const char *file_path, unsigned int size)
 void
 IconTexture::Refresh ()
 {
-  char *file_path = NULL;
+  char   *file_path = NULL;
   GError *error = NULL;
+  GIcon  *icon;
 
-  if (g_file_test (_icon_name, G_FILE_TEST_EXISTS))
+  icon = g_icon_new_for_string (_icon_name, &error);
+
+  if (G_IS_ICON (icon))
+  {
+    if (G_IS_THEMED_ICON (icon))
     {
-      // we have a file path
-      file_path = _icon_name;
-    }
-  else
-    {
-      GtkIconTheme *theme;
       GtkIconInfo *info;
 
-      theme = gtk_icon_theme_get_default ();
-
-      if (!_icon_name)
-        _icon_name = g_strdup (DEFAULT_ICON);
-      info = gtk_icon_theme_lookup_icon (theme,
-                                         _icon_name,
-                                         _size,
-                                         (GtkIconLookupFlags) 0);
-      if (!info || gtk_icon_info_get_filename (info) == NULL)
+      info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
+                                             icon,
+                                             _size,
+                                             (GtkIconLookupFlags)0);
+      if (info)
       {
-        g_warning ("Could not find icon %s: using default icon", _icon_name);
-        info = gtk_icon_theme_lookup_icon (theme,
-                                           DEFAULT_ICON,
-                                           _size,
-                                           (GtkIconLookupFlags) 0);
+        file_path = g_strdup (gtk_icon_info_get_filename (info));
+
+        gtk_icon_info_free (info);
       }
-
-      file_path = g_strdup (gtk_icon_info_get_filename (info));
+      else
+      {
+        g_warning ("Cannot find themed icon %s", _icon_name);
+        return;
+      }
     }
-
-    _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
-    
-    if (error == NULL)
+    else if (G_IS_FILE_ICON (icon))
     {
-      nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf, true);
-      nux::TexCoordXForm texxform;
-      texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
-      texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-
-      nux::ROPConfig rop;
-      rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
-      rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
-      nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                                                texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                                nux::Color::White,  // The color used to modulate the texture.
-                                                                true,  // Write the alpha value of the texture to the destination buffer.
-                                                                rop     // Use the given raster operation to set the blending when the layer is being rendered.
-                                                                );
-
-      SetPaintLayer(texture_layer);
-
-      //SetTexture (nux::CreateTexture2DFromPixbuf (_pixbuf, true));
-      texture2D->UnReference ();
-      g_object_unref (_pixbuf);
+      file_path = g_file_get_path (g_file_icon_get_file (G_FILE_ICON (icon)));
     }
     else
     {
-      g_warning ("Unable to load '%s' from icon theme: %s",
-                 _icon_name,
-                 error ? error->message : "unknown");
-      g_error_free (error);
+      g_warning ("Unsupported GIcon: %s", _icon_name);
+      return;
     }
+
+    g_object_unref (icon);
+  }
+  else if (g_file_test (_icon_name, G_FILE_TEST_EXISTS))
+  {
+    file_path = g_strdup (_icon_name);
+  }
+  else
+  {
+    if (error)
+      g_error_free (error);
+    error = NULL;
+
+    GtkIconTheme *theme;
+    GtkIconInfo *info;
+
+    theme = gtk_icon_theme_get_default ();
+
+    if (!_icon_name)
+      _icon_name = g_strdup (DEFAULT_ICON);
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       _icon_name,
+                                       _size,
+                                       (GtkIconLookupFlags) 0);
+    if (!info || gtk_icon_info_get_filename (info) == NULL)
+    {
+      g_message ("Could not find icon %s: using default icon", _icon_name);
+      info = gtk_icon_theme_lookup_icon (theme,
+                                         DEFAULT_ICON,
+                                         _size,
+                                         (GtkIconLookupFlags) 0);
+    }
+
+    file_path = g_strdup (gtk_icon_info_get_filename (info));
+  }
+
+  _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
+  
+  if (error == NULL)
+  {
+    nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf, true);
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
+    texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
+                                                              texxform,
+                                                              nux::Color::White,
+                                                              true,
+                                                              rop);
+
+    SetPaintLayer(texture_layer);
+    texture2D->UnReference ();
+    g_object_unref (_pixbuf);
+  }
+  else
+  {
+    g_warning ("Unable to load '%s' from icon theme: %s",
+               _icon_name,
+               error ? error->message : "unknown");
+    g_error_free (error);
+  }
 
   SetMinMaxSize (_size, _size);
   NeedRedraw ();

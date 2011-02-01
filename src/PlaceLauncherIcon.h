@@ -42,6 +42,7 @@ protected:
 
 private:
   void Activate (guint section_id, const char *search_string);
+  void OnActiveChanged (bool is_active);
   static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
 
 private:

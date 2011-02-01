@@ -625,21 +625,21 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 void
 PanelMenuView::OnSpreadInitiate (std::list <guint32> &windows)
 {
-  foreach (guint32 &xid, windows)
+  /*foreach (guint32 &xid, windows)
   {
     if (WindowManager::Default ()->IsWindowMaximized (xid))
       WindowManager::Default ()->Decorate (xid);
-  }
+  }*/
 }
 
 void
 PanelMenuView::OnSpreadTerminate (std::list <guint32> &windows)
 {
-  foreach (guint32 &xid, windows)
+  /*foreach (guint32 &xid, windows)
   {
     if (WindowManager::Default ()->IsWindowMaximized (xid))
       WindowManager::Default ()->Undecorate (xid);
-  }
+  }*/
 }
 
 void

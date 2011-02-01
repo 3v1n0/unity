@@ -107,7 +107,7 @@ ubus_message_info_new (GVariant *data)
 {
   UBusMessageInfo *info;
 
-  info = g_slice_new (UBusMessageInfo);
+  info = g_slice_new0 (UBusMessageInfo);
   info->data = data;
 
   if (data != NULL)
@@ -120,7 +120,10 @@ static void
 ubus_message_info_free (UBusMessageInfo *info)
 {
   if (info->data != NULL)
+  {
     g_variant_unref (info->data);
+    info->data = NULL;
+  }
 
   g_slice_free (UBusMessageInfo, info);
 }
