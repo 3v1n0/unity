@@ -120,6 +120,10 @@ LauncherEntryRemoteModel::Size ()
 /**
  * Return a pointer to a LauncherEntryRemote if there is one for app_uri,
  * otherwise NULL. The returned object should not be freed.
+ *
+ * App Uris look like application://$desktop_file_id, where desktop_file_id
+ * is the base name of the .desktop file for the application including the
+ * .desktop extension. Eg. application://firefox.desktop.
  */
 LauncherEntryRemote*
 LauncherEntryRemoteModel::LookupByUri (const gchar *app_uri)
@@ -130,6 +134,49 @@ LauncherEntryRemoteModel::LookupByUri (const gchar *app_uri)
 
   entry = g_hash_table_lookup (_entries_by_uri,  app_uri);
   return static_cast<LauncherEntryRemote *> (entry);
+}
+
+/**
+ * Return a pointer to a LauncherEntryRemote if there is one for desktop_id,
+ * otherwise NULL. The returned object should not be freed.
+ *
+ * The desktop id is the base name of the .desktop file for the application
+ * including the .desktop extension. Eg. firefox.desktop.
+ */
+LauncherEntryRemote*
+LauncherEntryRemoteModel::LookupByDesktopId (const gchar *desktop_id)
+{
+  LauncherEntryRemote *entry;
+  gchar               *app_uri;
+
+  g_return_val_if_fail (desktop_id != NULL, NULL);
+
+  app_uri = g_strconcat ("application://", desktop_id, NULL);
+  entry = LookupByUri (app_uri);
+  g_free (app_uri);
+
+  return entry;
+}
+
+/**
+ * Return a pointer to a LauncherEntryRemote if there is one for
+ * desktop_file_path, otherwise NULL. The returned object should not be freed.
+ */
+LauncherEntryRemote*
+LauncherEntryRemoteModel::LookupByDesktopFile (const gchar *desktop_file_path)
+{
+  LauncherEntryRemote *entry;
+  gchar               *desktop_id, *app_uri;
+
+  g_return_val_if_fail (desktop_file_path != NULL, NULL);
+
+  desktop_id = g_path_get_basename (desktop_file_path);
+  app_uri = g_strconcat ("application://", desktop_id, NULL);
+  entry = LookupByUri (app_uri);
+  g_free (app_uri);
+  g_free (desktop_id);
+
+  return entry;
 }
 
 /**

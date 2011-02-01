@@ -34,6 +34,8 @@ public:
 
   guint                Size ();
   LauncherEntryRemote* LookupByUri (const gchar *app_uri);
+  LauncherEntryRemote* LookupByDesktopId (const gchar *desktop_id);
+  LauncherEntryRemote* LookupByDesktopFile (const gchar *desktop_file_path);
   GList*               GetUris ();
 
   void AddEntry (LauncherEntryRemote *entry);
