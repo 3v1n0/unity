@@ -302,7 +302,7 @@ LauncherEntryRemote::SetQuicklist(DbusmenuClient *quicklist)
           g_object_get (quicklist, DBUSMENU_CLIENT_PROP_DBUS_NAME, &new_ql_name, NULL);
         }
 
-      if (g_strcmp0 (new_ql_name, _dbus_name) != 0)
+      if (quicklist != NULL && g_strcmp0 (new_ql_name, _dbus_name) != 0)
         {
           g_critical ("Mismatch between quicklist- and launcher entry owner:"
                       "%s and %s respectively", new_ql_name, _dbus_name);
