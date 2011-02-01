@@ -35,9 +35,7 @@
  */
 class LauncherEntryRemote : public nux::InitiallyUnownedObject, public sigc::trackable
 {
-
   NUX_DECLARE_OBJECT_TYPE (LauncherEntryRemote, nux::InitiallyUnownedObject);
-
 public:
 
   LauncherEntryRemote(const gchar *dbus_name, GVariant *val);

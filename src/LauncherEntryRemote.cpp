@@ -19,6 +19,8 @@
 
 #include "LauncherEntryRemote.h"
 
+NUX_IMPLEMENT_OBJECT_TYPE (LauncherEntryRemote);
+
 /**
  * Create a new LauncherEntryRemote parsed from the raw DBus wire format
  * of the com.canonical.Unity.LauncherEntry.Update signal '(sa{sv})'. The
