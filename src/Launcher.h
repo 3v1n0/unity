@@ -151,6 +151,7 @@ private:
     bool          active_colored;
     bool          skip;
     bool          stick_thingy;
+    bool          keyboard_nav_hl;
     int           window_indicators;
   } RenderArg;
 
@@ -243,6 +244,9 @@ private:
                          int active,
                          nux::Geometry geo);
 
+  void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
+                              nux::Geometry        geo);
+
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,
                    nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
@@ -332,6 +336,7 @@ private:
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_glow_texture;
+  nux::BaseTexture* _icon_glow_hl_texture;
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   

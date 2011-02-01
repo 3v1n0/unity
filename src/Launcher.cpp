@@ -260,6 +260,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
     _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
     _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
+    _icon_glow_hl_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_hl_62x62.png");
     _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
     _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
     
@@ -726,6 +727,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.z_rotation          = 0.0f;
     arg.skip                = false;
     arg.stick_thingy        = false;
+    arg.keyboard_nav_hl     = false;
     arg.progress_bias       = IconProgressBias (icon, current);
     arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
@@ -749,6 +751,17 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT) && _urgent_animation == URGENT_ANIMATION_WIGGLE)
     {
       arg.z_rotation = IconUrgentWiggleValue (icon, current);
+    }
+
+    LauncherModel::iterator it;
+    int i;
+    for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+    {
+      if (i == _current_icon_index && *it == icon)
+      {
+        std::cout << "index: " << i << " set to true" << std::endl;
+        arg.keyboard_nav_hl = true;
+      }
     }
 }
 
@@ -1742,6 +1755,15 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg.running_arrow ? arg.window_indicators : 0,
                     arg.active_arrow ? 1 : 0,
                     geo);
+
+  /* draw keyboard-navigation "highlight" if any */
+  if (arg.keyboard_nav_hl)
+    RenderIcon (GfxContext,
+                arg,
+                _icon_glow_hl_texture->GetDeviceTexture (),
+                nux::Color(0xFFFFFFFF),
+                1.0f,
+                arg.icon->_xform_coords["Glow"]);
 }
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2076,6 +2098,7 @@ void Launcher::RecvKeyPressed (unsigned int  key_sym, unsigned long key_code,
 void Launcher::UpdateKeyNavIndicator ()
 {
   std::cout << "UpdateKeyNavIndicator() called" << std::endl;
+  NeedRedraw ();
 }
 
 void Launcher::RecvKeyReleased (unsigned int  key_sym, unsigned long key_code,
