@@ -17,28 +17,14 @@
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
-#include "Nux/Nux.h"
-#include "Nux/VLayout.h"
-#include "Nux/WindowThread.h"
-#include "Nux/TimeGraph.h"
-#include "Nux/TimerProc.h"
-#include "Nux/FloatingWindow.h"
-
-#include "Autopilot.h"
-#include "UBusMessages.h"
-
-static float _disp_fps;
-static guint tooltip_handle;
-
-nux::TimerHandle timer_handler;
-nux::TimerFunctor *timer_functor;
-nux::FloatingWindow *moveable_view;
+TestArgs  *running_test_args [32];
+nux::TimerFunctor *test_expiration_functor;
 
 void
-TestFinished (AutopilotDisplay *self, const gchar *name, gboolean passed)
+TestFinished (TestArgs *args)
 {
   GError *error = NULL;
-  GVariant *result = g_variant_new ("(sb)", name, passed);
+  GVariant *result = g_variant_new ("(sb)", args->name, args->passed);
 
   g_dbus_connection_emit_signal (self->GetDBusConnection (),
                                  "com.canonical.Unity.Autopilot",
@@ -54,17 +40,33 @@ TestFinished (AutopilotDisplay *self, const gchar *name, gboolean passed)
     g_warning ("An error was encountered emitting TestFinished signal");
     g_error_free (error);
   }
+
+  self->running_tests--;
+
+  if (self->running_tests == 0)
+  {
+    delete test_expiration_functor;
+
+    self->GetCompisiteScreen ()->preparePaintSetEnabled (args->autopilot, false);
+    self->GetCompositeScreen ()->donePaintSetEnabled (args->autopilot, false);
+    CompositeScreenInterface::setHandler (args->autopilot->GetCompositeScreen (), false);
+  }
+
+  g_free (args->name);
+  g_free (args);
 }
 
 void
-on_tooltip_shown (GVariant *payload, AutopilotDisplay *self)
+on_tooltip_shown (GVariant *payload, TestArgs *arg)
 {
-  ubus_server_unregister_interest (self->GetUBusConnection (), tooltip_handle);
-  TestFinished (self, "show_tooltip", TRUE);
+  nux::GetTimer ().RemoveTimerHandler (arg->expiration_handler);
+  ubus_server_unregister_interest (self->GetUBusConnection (), arg->ubus_handle);
+  arg->passed = TRUE;
+  TestFinished (arg);
 }
 
-AutopilotDisplay::AutopilotDisplay (CompScreen *screen, GDBusConnection *connection) :
-  PluginClassHandler <AutopilotDisplay, CompScreen> (screen),
+Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
+  PluginClassHandler <Autopilot, CompScreen> (screen),
   _cscreen (CompositeScreen::get (screen)),
   _fps (0),
   _ctime (0),
@@ -78,7 +80,7 @@ AutopilotDisplay::AutopilotDisplay (CompScreen *screen, GDBusConnection *connect
 }
 
 void
-AutopilotDisplay::preparePaint (int msSinceLastPaint)
+Autopilot::preparePaint (int msSinceLastPaint)
 {
   int timediff;
   float ratio = 0.05;
@@ -112,29 +114,53 @@ AutopilotDisplay::preparePaint (int msSinceLastPaint)
 }
 
 void
-AutopilotDisplay::donePaint ()
+Autopilot::donePaint ()
 {
   _cscreen->donePaint ();
 }
 
 GDBusConnection*
-AutopilotDisplay::GetDBusConnection ()
+Autopilot::GetDBusConnection ()
 {
   return _dbus;
 }
 
 UBusServer*
-AutopilotDisplay::GetUBusConnection ()
+Autopilot::GetUBusConnection ()
 {
   return _ubus;
 }
 
-void 
-AutopilotDisplay::StartTest (const gchar *name)
+CompositeScreen*
+Autopilot::GetCompositeScreen ()
 {
+  return _cscreen;
+}
+
+void 
+Autopilot::StartTest (const gchar *name)
+{
+  running_test_args[running_tests] = (TestArgs*) g_malloc (sizeof (TestArgs));
+  TestArgs *arg = running_test_args[running_tests];
+  if (arg == NULL) {
+    g_error ("Failed to allocate memory for TestArgs");
+    return;
+  }
+
+  if (running_tests == 0)
+  {
+    test_expiration_functor = new nux::TimerFunctor ();
+    test_expiration_functor->OnTimerExpired.connect (sigc::ptr_fun (&TestFinished));
+  }
+
+  arg->name = g_strdup0 (name);
+  arg->passed = FALSE;
+  arg->autopilot = this;
+  arg->expiration_handler = nux::GetTimer ().AddTimerHandler (TEST_TIMEOUT, test_expiration_functor, arg);  
+
   if (g_strcmp0 (name, "show_tooltip") == 0) 
   {
-    TestTooltip ();
+    TestTooltip (arg);
   }
   else if (g_strcmp0 (name, "show_quicklist") == 0)
   {
@@ -156,88 +182,54 @@ AutopilotDisplay::StartTest (const gchar *name)
   {
     TestDragLauncherIconOutAndMove ();
   }
-}
+  else
+  {
+    /* Clean up the arg we set up. Test does not exist */
+    nux::GetTimer ().RemoveTimerHandler (arg->expiration_handler);
+    g_free (arg->name);
+    g_free (arg);
 
-void
-AutopilotDisplay::TestTooltip ()
-{
-  tooltip_handle = ubus_server_register_interest (_ubus,
-                                                  UBUS_LAUNCHER_TOOLTIP_SHOWN,
-                                                  (UBusCallback) on_tooltip_shown,
-                                                  this);
-  // add a timeout to show test failure
-}
+    return;
+  }
 
-void
-AutopilotDisplay::TestQuicklist ()
-{
-}
+  running_tests++;
 
-void
-AutopilotDisplay::TestDragLauncher ()
-{
-}
-
-void
-AutopilotDisplay::TestDragLauncherIconAlongEdgeDrop ()
-{
-}
-
-void
-AutopilotDisplay::TestDragLauncherIconOutAndDrop ()
-{
-}
-
-void
-AutopilotDisplay::TestDragLauncherIconOutAndMove ()
-{
-}
-
-void 
-GraphTimerInterrupt (void *data)
-{
-  nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
-
-  //  g_debug ("updating timegraph with %.3f fps", _disp_fps);
-
-  timegraph->UpdateGraph (0, _disp_fps);
-  timer_handler = nux::GetTimer ().AddTimerHandler (UPDATE_TIME, timer_functor, timegraph);
-}
-
-void
-ShowStatisticsDisplay () //nux::NThread *thread, void *init_data)
-{
-  nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  nux::TimeGraph *timegraph = new nux::TimeGraph (TEXT ("Frames per second"));
-  timegraph->ShowColumnStyle ();
-  timegraph->SetYAxisBounds (0.0, 200.0f);
-  timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
-  timer_functor = new nux::TimerFunctor ();
-  timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&GraphTimerInterrupt));
-  timer_handler = nux::GetTimer ().AddTimerHandler (1000, timer_functor, timegraph);
-
-  layout->AddView (timegraph,
-                   1,
-                   nux::MINOR_POSITION_CENTER,
-                   nux::MINOR_SIZE_FULL);
-  layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
-  layout->SetHorizontalExternalMargin (4);
-  layout->SetVerticalExternalMargin (4);
-  
-  moveable_view = new nux::FloatingWindow (TEXT ("Autopilot"), NUX_TRACKER_LOCATION);
-  moveable_view->SetLayout (layout);
-  moveable_view->ShowWindow (true);
-}
-
-
-void
-AutopilotDisplay::Show ()
-{
-  g_debug ("Beginning to count fps");
-  /* enable fps counting now that we're being shown */
+  /* enable fps counting hooks */
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
   CompositeScreenInterface::setHandler (_cscreen, true);
+}
 
-  ShowStatisticsDisplay ();
+void
+Autopilot::TestTooltip (TestArgs *arg)
+{
+  arg->ubus_handle = ubus_server_register_interest (_ubus,
+                                                    UBUS_LAUNCHER_TOOLTIP_SHOWN,
+                                                    (UBusCallback) on_tooltip_shown,
+                                                    arg);
+}
+
+void
+Autopilot::TestQuicklist ()
+{
+}
+
+void
+Autopilot::TestDragLauncher ()
+{
+}
+
+void
+Autopilot::TestDragLauncherIconAlongEdgeDrop ()
+{
+}
+
+void
+Autopilot::TestDragLauncherIconOutAndDrop ()
+{
+}
+
+void
+Autopilot::TestDragLauncherIconOutAndMove ()
+{
 }

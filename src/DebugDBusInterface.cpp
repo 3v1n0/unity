@@ -34,7 +34,6 @@ void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
                      const gchar*, const gchar*, GVariant*,
                      GDBusMethodInvocation*, gpointer);
 GVariant* GetState (const gchar*);
-void ShowAutopilotDisplay ();
 void StartTest (const gchar*);
 
 static const GDBusInterfaceVTable si_vtable =
@@ -81,15 +80,6 @@ static const GDBusArgInfo ap_in_args =
 };
 static const GDBusArgInfo *const ap_in_arg_pointers[] = { &ap_in_args, NULL };
 
-static GDBusMethodInfo ap_method_info_show =
-{
-  -1,
-  "Show",
-  NULL,
-  NULL,
-  NULL
-};
-
 static GDBusMethodInfo ap_method_info_starttest =
 {
   -1,
@@ -100,9 +90,7 @@ static GDBusMethodInfo ap_method_info_starttest =
 };
 
 static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
-static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_show, 
-                                                                   &ap_method_info_starttest, 
-                                                                   NULL };
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_starttest, NULL };
 
 static GDBusArgInfo ap_testfinished_arg_name = 
 {
@@ -154,7 +142,7 @@ static const GDBusInterfaceInfo ap_iface_info =
 };
 
 static Introspectable *_introspectable;
-static AutopilotDisplay *_autopilot;
+static Autopilot *_autopilot;
 
 DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
 {
@@ -185,7 +173,7 @@ DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *nam
   UnityScreen *uscreen = dynamic_cast<UnityScreen*> (_introspectable);
   if (uscreen != NULL) 
   {
-    _autopilot = new AutopilotDisplay (uscreen->screen, connection);
+    _autopilot = new Autopilot (uscreen->screen, connection);
   }
 
   while (debug_object_interfaces[i] != NULL)
@@ -237,11 +225,6 @@ DBusMethodCall (GDBusConnection *connection,
     g_dbus_method_invocation_return_value (invocation, ret);
     g_variant_unref (ret);
   }
-  else if (g_strcmp0 (methodName, "Show") == 0)
-  {
-    ShowAutopilotDisplay ();
-    g_dbus_method_invocation_return_value (invocation, NULL);
-  }
   else if (g_strcmp0 (methodName, "StartTest") == 0)
   {
     const gchar *name;
@@ -261,12 +244,6 @@ GVariant*
 GetState (const gchar *piece)
 {
   return _introspectable->Introspect ();
-}
-
-void
-ShowAutopilotDisplay ()
-{
-  _autopilot->Show ();
 }
 
 void

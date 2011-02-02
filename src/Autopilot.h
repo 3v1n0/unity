@@ -16,6 +16,7 @@
  *
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
+
 #ifndef _AUTOPILOT_H
 #define _AUTOPILOT_H 1
 
@@ -26,6 +27,8 @@
 
 #include <core/core.h>
 #include <composite/composite.h>
+
+#include "Nux/TimerProc.h"
 
 #include "ubus-server.h"
 
@@ -38,14 +41,15 @@
 
 #define UPDATE_TIME 100
 
-class AutopilotDisplay :
-  public PluginClassHandler<AutopilotDisplay, CompScreen>,
+typedef struct TestArgs;
+
+class Autopilot :
+  public PluginClassHandler<Autopilot, CompScreen>,
   public CompositeScreenInterface
 {
  public:
-  AutopilotDisplay (CompScreen *screen, GDBusConnection *connection);
+  Autopilot (CompScreen *screen, GDBusConnection *connection);
 
-  void Show ();
   void StartTest (const gchar *name);
 
   void preparePaint (int msSinceLastPaint);
@@ -53,8 +57,10 @@ class AutopilotDisplay :
 
   UBusServer *GetUBusConnection ();
   GDBusConnection *GetDBusConnection ();
+  CompScreen *GetCompositeScreen ();
+
  private:
-  void TestTooltip ();
+  void TestTooltip (TestArgs *arg);
   void TestQuicklist ();
   void TestDragLauncher ();
   void TestDragLauncherIconAlongEdgeDrop ();
@@ -74,5 +80,13 @@ class AutopilotDisplay :
  
   struct timeval _last_redraw;
 };
+
+struct {
+  gchar *name;
+  gboolean passed;
+  guint ubus_handle;
+  nux::TimerHandle *expiration_handle;
+  Autopilot *autopilot;
+} TestArgs;
 
 #endif /* _AUTOPILOT_H */
