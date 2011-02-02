@@ -23,7 +23,7 @@ def get_log_file():
 
     data_path = "%s/unity" % BaseDirectory.xdg_data_home
     if not os.path.isdir(data_path):
-        os.mkdir(data_path)
+        os.makedirs(data_path)
     try:
         return open("%s/migration_script.log" % data_path, "a")
     except IOError:
