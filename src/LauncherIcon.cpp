@@ -331,6 +331,11 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
+void LauncherIcon::DoQuicklist ()
+{
+  RecvMouseDown (3);
+}
+
 void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)

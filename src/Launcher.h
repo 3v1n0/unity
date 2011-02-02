@@ -298,6 +298,7 @@ private:
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
+  bool  _was_hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
   bool  _key_show_launcher;

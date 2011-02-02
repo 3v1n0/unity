@@ -282,6 +282,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _hovered                = false;
     _autohide               = false;
     _hidden                 = false;
+    _was_hidden             = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _key_show_launcher      = false;
@@ -333,7 +334,14 @@ Launcher::GetName ()
 
 void
 Launcher::startKeyNavMode ()
-{
+{  
+  if (_hidden)
+  {
+    _was_hidden = true;
+    _hidden = false;
+    EnsureHiddenState ();
+  }
+
   if (_last_icon_index == -1)
     _current_icon_index = 0;
   else
@@ -344,6 +352,13 @@ Launcher::startKeyNavMode ()
 void
 Launcher::endKeyNavMode ()
 {
+  if (_was_hidden)
+  {
+    _hidden = true;
+    _was_hidden = false;
+    EnsureHiddenState ();
+  }
+
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
   NeedRedraw ();
@@ -2138,11 +2153,15 @@ Launcher::RecvKeyReleased (unsigned int  key_sym,
     // right/shift-f10 (open quicklist of currently selected icon)      
     case XK_Right:
     case XK_F10:
-      // un-hide
-      if (_last_icon_index >= 0)
-        _current_icon_index = _last_icon_index;
-      else
-        _current_icon_index = 0;
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // open quicklist of currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->DoQuicklist ();
+      }
       endKeyNavMode ();
     break;
 
@@ -2153,7 +2172,7 @@ Launcher::RecvKeyReleased (unsigned int  key_sym,
         LauncherModel::iterator it;
         int i;
 
-        // start current selected icon
+        // start currently selected icon
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
           if (i == _current_icon_index)
             (*it)->Activate ();

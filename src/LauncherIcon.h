@@ -88,7 +88,8 @@ public:
     void RecvMouseUp (int button);
     
     void HideTooltip ();
-    
+    void DoQuicklist ();
+
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
 
