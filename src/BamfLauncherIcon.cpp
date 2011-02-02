@@ -90,8 +90,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
 
   /* hack */
-  SetProgress (0.5f);
-  SetEmblemIconName ("gtk-add");
+  SetProgress (0.0f);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()

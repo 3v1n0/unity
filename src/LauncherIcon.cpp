@@ -695,6 +695,15 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   remote->emblem_visible_changed.connect   (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
   remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
   remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  
+  if (remote->EmblemVisible ())
+    OnRemoteEmblemVisibleChanged (remote);
+  
+  if (remote->CountVisible ())
+    OnRemoteCountVisibleChanged (remote);
+    
+  if (remote->ProgressVisible ())
+    OnRemoteProgressVisibleChanged (remote);
 }
 
 void 
@@ -769,4 +778,7 @@ void
 LauncherIcon::OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote)
 {
   SetQuirk (QUIRK_PROGRESS, remote->ProgressVisible ());
+  
+  if (remote->ProgressVisible ())
+    SetProgress ((float) remote->Progress ());
 }
