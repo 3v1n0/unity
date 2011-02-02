@@ -48,8 +48,8 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
- 
-  _pango_entry = new nux::TextEntry (_("Search"), NUX_TRACKER_LOCATION);
+
+  _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->SetMinimumWidth (200);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
 
@@ -153,11 +153,12 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
     
     _entry->SetActiveSection (section_id);
     _entry->SetSearch (search_string ? search_string : "", hints);
+    _pango_entry->SetText (search_string ? search_string : "");
     g_free (res);
   }
   else
   {
-    _pango_entry->SetText (_("Search"));
+    _pango_entry->SetText ("");
   }
 }
 

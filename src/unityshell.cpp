@@ -58,6 +58,13 @@ static UnityScreen *uScreen = 0;
 void
 UnityScreen::nuxPrologue ()
 {
+  /* Vertex lighting isn't used in Unity, we disable that state as it could have
+   * been leaked by another plugin. That should theoretically be switched off
+   * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
+   * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
+   * drivers (lp:703140). */
+  glDisable (GL_LIGHTING);
+
   /* reset matrices */
   glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
