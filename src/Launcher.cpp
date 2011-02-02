@@ -2129,12 +2129,12 @@ Launcher::RecvKeyReleased (unsigned int  key_sym,
       else
       {
         _current_icon_index = -1;
-        // switch to global-menu
+        // FIXME: switch to global-menu here still needs to be implemented 
       }
       NeedRedraw ();
     break;
 
-    // down (move selection down and unfold launcher if needed)      
+    // down (move selection down and unfold launcher if needed)
     case XK_Down:
       if (_current_icon_index < _model->Size ())
       {
