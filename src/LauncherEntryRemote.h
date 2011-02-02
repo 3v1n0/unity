@@ -89,6 +89,7 @@ private:
   void SetProgressVisible (gboolean visible);
 
   void Update (LauncherEntryRemote *other);
+  void Update (GVariantIter *prop_iter);
 
   friend class LauncherEntryRemoteModel;
 };
