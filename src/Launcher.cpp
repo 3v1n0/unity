@@ -2160,7 +2160,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // open quicklist of currently selected icon
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
           if (i == _current_icon_index)
-            (*it)->DoQuicklist ();
+            (*it)->OpenQuicklist ();
       }
       endKeyNavMode ();
     break;
