@@ -670,7 +670,87 @@ LauncherIcon::SetEmblemIconName (const char *name)
 void 
 LauncherIcon::SetEmblemText (const char *text)
 {
-  // fixme
+  if (text == NULL)
+    return;
+
+  nux::BaseTexture     *emblem;
+  PangoLayout*          layout     = NULL;
+
+  PangoContext*         pangoCtx   = NULL;
+  PangoFontDescription* desc       = NULL;
+  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
+  gchar*                fontName   = NULL;
+
+  int width = 32;
+  int height = 8 * 2;
+  int font_height = height - 5;
+  
+  
+  nux::CairoGraphics *cg = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t *cr = cg->GetContext ();
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  
+
+  layout = pango_cairo_create_layout (cr);
+
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  desc = pango_font_description_from_string (fontName);
+  pango_font_description_set_absolute_size (desc, pango_units_from_double (font_height));
+  
+  pango_layout_set_font_description (layout, desc);
+  
+  pango_layout_set_width (layout, pango_units_from_double (width - 4.0f));
+  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+  pango_layout_set_markup_with_accel (layout, text, -1, '_', NULL);
+  
+  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+                                        
+  PangoRectangle logical_rect, ink_rect;
+  pango_layout_get_extents (layout, &logical_rect, &ink_rect);
+  
+  /* DRAW OUTLINE */
+  float radius = height / 2.0f - 1.0f;
+  float inset = radius + 1.0f;
+
+  cairo_move_to (cr, inset, height - 1.0f);
+  cairo_arc (cr, inset, inset, radius, 0.5*M_PI, 1.5*M_PI);
+  cairo_arc (cr, width - inset, inset, radius, 1.5*M_PI, 0.5*M_PI);
+  cairo_line_to (cr, inset, height - 1.0f);
+  
+  cairo_set_source_rgba (cr, 0.35f, 0.35f, 0.35f, 1.0f);
+  cairo_fill_preserve (cr);
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width (cr, 2.0f);
+  cairo_stroke (cr);
+  
+  cairo_set_line_width (cr, 1.0f);
+
+  /* DRAW TEXT */
+  cairo_move_to (cr, 
+                 (int) ((width - pango_units_to_double (logical_rect.width)) / 2.0f), 
+                 (int) ((height - pango_units_to_double (logical_rect.height)) / 2.0f - pango_units_to_double (logical_rect.y)));
+  pango_cairo_show_layout (cr, layout);
+
+  nux::NBitmapData* bitmap = cg->GetBitmap ();
+
+  emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  emblem->Update (bitmap);
+
+  SetEmblem (emblem);
+
+  // clean up
+  g_object_unref (layout);
+  g_free (fontName);
+  delete cg;
 }
     
 void 
