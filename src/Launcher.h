@@ -81,7 +81,6 @@ public:
 
   void SetFloating (bool floating);
 
-  void SetAutohideTrigger (nux::View *trigger);
   void SetAutohide (bool autohide);
   bool AutohideEnabled ();
 
@@ -162,9 +161,6 @@ private:
   bool MouseBeyondDragThreshold ();
 
   void OnDragWindowAnimCompleted ();
-  void OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnTriggerMouseMove  (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
@@ -233,6 +229,8 @@ private:
   
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
+  
+  static void OnTriggerUpdate (GVariant *data, gpointer user_data);
 
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
@@ -349,7 +347,6 @@ private:
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
-  nux::View* _autohide_trigger;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
 

@@ -310,6 +310,10 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
                                    (UBusCallback)&Launcher::OnPlaceViewHidden,
                                    this);
+
+    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE,
+                                   (UBusCallback)&Launcher::OnTriggerUpdate,
+                                   this);
 }
 
 Launcher::~Launcher()
@@ -1003,6 +1007,42 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->EnsureHiddenState ();
 }
 
+void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
+{
+  gchar        *prop_key;
+  GVariant     *prop_value;
+  GVariantIter *prop_iter;
+  int x, y;
+
+  Launcher *self = (Launcher*)user_data;
+  
+  g_variant_get (data, "(iia{sv})", &x, &y, &prop_iter);
+  self->_trigger_mouse_position = nux::Point2 (x, y);
+  
+  g_return_if_fail (prop_iter != NULL);
+
+  while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
+  {
+    if (g_str_equal ("hovered", prop_key))
+    {
+      self->_mouse_inside_trigger = g_variant_get_boolean (prop_value);
+      
+      if (self->_mouse_inside_trigger)
+      {
+        self->EnsureHiddenState ();
+        self->EnsureHoverState ();
+        self->EnsureScrollTimer ();
+      }
+      else
+      {
+        self->SetupAutohideTimer ();
+        self->EnsureHoverState ();
+        self->EnsureScrollTimer ();
+      }
+    }
+  }
+}
+
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
@@ -1077,16 +1117,6 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
     CheckWindowOverLauncher ();
 }
 
-void Launcher::OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  _mouse_inside_trigger = true;
-  _trigger_mouse_position = nux::Point2 (x, y);
-  
-  EnsureHiddenState ();
-  EnsureHoverState ();
-  EnsureScrollTimer ();
-}
-
 void Launcher::SetupAutohideTimer ()
 {
   if (_autohide)
@@ -1095,19 +1125,6 @@ void Launcher::SetupAutohideTimer ()
       g_source_remove (_autohide_handle);
     _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
   }
-}
-
-void Launcher::OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  _mouse_inside_trigger = false;
-  SetupAutohideTimer ();
-  EnsureHoverState ();
-  EnsureScrollTimer ();
-}
-
-void Launcher::OnTriggerMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-  _trigger_mouse_position = nux::Point2 (x, y);
 }
 
 bool Launcher::AutohideEnabled ()
@@ -1125,14 +1142,6 @@ gboolean Launcher::StrutHack (gpointer data)
   self->_parent->InputWindowEnableStruts(true);
 
   return false;
-}
-
-void Launcher::SetAutohideTrigger (nux::View *trigger)
-{
-  _autohide_trigger = trigger;
-  _autohide_trigger->OnMouseEnter.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseEnter));
-  _autohide_trigger->OnMouseLeave.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseLeave));
-  _autohide_trigger->OnMouseMove.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseMove));
 }
 
 void Launcher::SetAutohide (bool autohide)
