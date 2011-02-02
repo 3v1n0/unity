@@ -59,7 +59,6 @@ TimeDelta (struct timespec const *x, struct timespec const *y)
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
 
-static bool USE_ARB_SHADERS = true;
 /*
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
 	        the fragment shader to perform the texture perspective correct division.

@@ -121,7 +121,7 @@ void PlacesGroup::SetEmblem (const char *path_to_emblem)
 {
 }
 
-void PlacesGroup::SetLayout (nux::Layout *layout)
+void PlacesGroup::AddLayout (nux::Layout *layout)
 {
   _content = layout;
   _content->Reference ();
