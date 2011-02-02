@@ -1790,7 +1790,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon (GfxContext,
                 arg,
                 _icon_glow_hl_texture->GetDeviceTexture (),
-                nux::Color(0xFFFFFFFF),
+                nux::Color (0xFFFFFFFF),
                 1.0f,
                 arg.icon->_xform_coords["Glow"]);
 }
