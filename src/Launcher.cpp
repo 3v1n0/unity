@@ -2368,8 +2368,8 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     
       float emb_w = emblem->GetWidth ();
       float emb_h = emblem->GetHeight ();
-      x = ((*it).render_center.x + _icon_size/2.0f) - emb_w; // x = top left corner position of emblem
-      y = ((*it).render_center.y - _icon_size/2.0f);     // y = top left corner position of emblem
+      x = (*it).render_center.x - _icon_size/2.0f; // x = top left corner position of emblem
+      y = (*it).render_center.y - _icon_size/2.0f;     // y = top left corner position of emblem
       z = (*it).render_center.z;
       
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
