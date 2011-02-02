@@ -38,6 +38,7 @@
 #include "QuicklistView.h"
 #include "Introspectable.h"
 #include "Launcher.h"
+#include "LauncherEntryRemote.h"
 
 class Launcher;
 class QuicklistView;
@@ -104,6 +105,11 @@ public:
     
     float GetProgress ();
     
+    void SetEmblemIconName (const char *name);
+    void SetEmblemText (const char *text);
+    
+    void DeleteEmblem ();
+    
     bool GetQuirk (Quirk quirk);
     struct timespec GetQuirkTime (Quirk quirk);
     
@@ -112,11 +118,16 @@ public:
     virtual nux::Color BackgroundColor ();
     virtual nux::Color GlowColor ();
     
+    const gchar * RemoteUri () { return GetRemoteUri (); }
+    
     nux::BaseTexture * TextureForSize (int size);
     
     nux::BaseTexture * Emblem ();
     
     std::list<DbusmenuMenuitem *> Menus ();
+    
+    void InsertEntryRemote (LauncherEntryRemote *remote);
+    void RemoveEntryRemote (LauncherEntryRemote *remote);
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -156,10 +167,21 @@ protected:
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
-    virtual void OnCenterStabilized (nux::Point3 center) {};
+    virtual void OnCenterStabilized (nux::Point3 center) {}
+    
+    virtual const gchar * GetRemoteUri () { return 0; }
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);
+
+    void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
+    void OnRemoteCountChanged     (LauncherEntryRemote *remote);
+    void OnRemoteProgressChanged  (LauncherEntryRemote *remote);
+    void OnRemoteQuicklistChanged (LauncherEntryRemote *remote);
+
+    void OnRemoteEmblemVisibleChanged   (LauncherEntryRemote *remote);
+    void OnRemoteCountVisibleChanged    (LauncherEntryRemote *remote);
+    void OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote);
 
     nux::NString m_TooltipText;
     //! the window this icon belong too.
@@ -216,6 +238,7 @@ private:
     bool             _quirks[QUIRK_LAST];
     struct timespec  _quirk_times[QUIRK_LAST];
     
+    std::list<LauncherEntryRemote *> _entry_list;
 };
 
 #endif // LAUNCHERICON_H

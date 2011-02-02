@@ -195,6 +195,20 @@ LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
 {
   g_debug ("LAUNCHER ENTRY ADDED: %s %s", entry->DBusName (), entry->AppUri ());
   // FIXME: Wire the signals on entry up to matching LauncherIcon from the LauncherModel
+  
+  LauncherModel::iterator it;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    LauncherIcon *icon = *it;
+  
+    if (!icon || !icon->RemoteUri ())
+      continue;
+    
+    if (!g_strcmp0 (entry->AppUri (), icon->RemoteUri ()))
+    {
+      icon->InsertEntryRemote (entry);
+    }
+  }
 }
 
 void

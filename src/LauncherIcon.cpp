@@ -653,3 +653,120 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   _emblem = emblem;
   needs_redraw.emit (this);
 }
+
+void 
+LauncherIcon::SetEmblemIconName (const char *name)
+{
+  nux::BaseTexture *emblem;
+  
+  if (g_str_has_prefix (name, "/"))
+    emblem = TextureFromPath (name, 22);
+  else
+    emblem = TextureFromGtkTheme (name, 22);
+    
+  SetEmblem (emblem);
+}
+
+void 
+LauncherIcon::SetEmblemText (const char *text)
+{
+  // fixme
+}
+    
+void 
+LauncherIcon::DeleteEmblem ()
+{
+  SetEmblem (0);
+}
+
+void 
+LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
+{
+  if (std::find (_entry_list.begin (), _entry_list.end (), remote) != _entry_list.end ())
+    return;
+    
+  _entry_list.push_front (remote);
+  
+  remote->emblem_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
+  remote->count_changed.connect     (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
+  remote->progress_changed.connect  (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged));
+  remote->quicklist_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged));
+  
+  remote->emblem_visible_changed.connect   (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
+  remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
+  remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+}
+
+void 
+LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
+{
+  if (std::find (_entry_list.begin (), _entry_list.end (), remote) == _entry_list.end ())
+    return;
+    
+  _entry_list.remove (remote);
+}
+
+void
+LauncherIcon::OnRemoteEmblemChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->EmblemVisible ())
+    return;
+  
+  SetEmblemIconName (remote->Emblem ());
+}
+
+void
+LauncherIcon::OnRemoteCountChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->CountVisible ())
+    return;
+  
+  gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+  SetEmblemText (text);
+  g_free (text);
+}
+
+void
+LauncherIcon::OnRemoteProgressChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->ProgressVisible ())
+    return;
+  
+  SetProgress ((float) remote->Progress ());
+}
+
+void
+LauncherIcon::OnRemoteQuicklistChanged (LauncherEntryRemote *remote)
+{
+  // FIXME
+}
+
+void
+LauncherIcon::OnRemoteEmblemVisibleChanged (LauncherEntryRemote *remote)
+{
+  if (remote->EmblemVisible ())
+    SetEmblemIconName (remote->Emblem ());
+  else
+    DeleteEmblem ();
+}
+
+void
+LauncherIcon::OnRemoteCountVisibleChanged (LauncherEntryRemote *remote)
+{ 
+  if (remote->CountVisible ())
+  {
+    gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+    SetEmblemText (text);
+    g_free (text);
+  }
+  else
+  {
+    DeleteEmblem ();
+  }
+}
+
+void
+LauncherIcon::OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote)
+{
+  SetQuirk (QUIRK_PROGRESS, remote->ProgressVisible ());
+}

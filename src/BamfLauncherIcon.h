@@ -50,6 +50,8 @@ protected:
     void OnCenterStabilized (nux::Point3 center);
 
     void AddProperties (GVariantBuilder *builder);
+    
+    const gchar * GetRemoteUri ();
 
 private:
     BamfApplication *m_App;
@@ -57,6 +59,7 @@ private:
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     DbusmenuMenuitem *_menu_desktop_shortcuts;
+    gchar *_remote_uri;
 
     void EnsureWindowState ();
 

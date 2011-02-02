@@ -201,7 +201,7 @@ LauncherEntryRemote::SetDBusName(const gchar* dbus_name)
    * different name than the rest of the launcher API */
   SetQuicklist (NULL);
 
-  dbus_name_changed.emit (old_name);
+  dbus_name_changed.emit (this, old_name);
   g_free (old_name);
 }
 
@@ -215,7 +215,7 @@ LauncherEntryRemote::SetEmblem(const gchar* emblem)
     g_free (_emblem);
 
   _emblem = g_strdup (emblem);
-  emblem_changed.emit ();
+  emblem_changed.emit (this);
 }
 
 void
@@ -225,7 +225,7 @@ LauncherEntryRemote::SetCount(gint64 count)
     return;
 
   _count = count;
-  count_changed.emit ();
+  count_changed.emit (this);
 }
 
 void
@@ -235,7 +235,7 @@ LauncherEntryRemote::SetProgress(gdouble progress)
     return;
 
   _progress = progress;
-  progress_changed.emit ();
+  progress_changed.emit (this);
 }
 
 /**
@@ -271,7 +271,7 @@ LauncherEntryRemote::SetQuicklistPath(const gchar *dbus_path)
   else
     _quicklist = NULL;
 
-  quicklist_changed.emit ();
+  quicklist_changed.emit (this);
 }
 
 /**
@@ -334,7 +334,7 @@ LauncherEntryRemote::SetQuicklist(DbusmenuClient *quicklist)
   else
     _quicklist = (DbusmenuClient *) g_object_ref (quicklist);
 
-  quicklist_changed.emit ();
+  quicklist_changed.emit (this);
 }
 
 void
@@ -344,7 +344,7 @@ LauncherEntryRemote::SetEmblemVisible(gboolean visible)
     return;
 
   _emblem_visible = visible;
-  emblem_visible_changed.emit ();
+  emblem_visible_changed.emit (this);
 }
 
 void
@@ -354,7 +354,7 @@ LauncherEntryRemote::SetCountVisible(gboolean visible)
       return;
 
   _count_visible = visible;
-  count_visible_changed.emit ();
+  count_visible_changed.emit (this);
 }
 
 void
@@ -364,7 +364,7 @@ LauncherEntryRemote::SetProgressVisible(gboolean visible)
       return;
 
   _progress_visible = visible;
-  progress_visible_changed.emit ();
+  progress_visible_changed.emit (this);
 }
 
 /**

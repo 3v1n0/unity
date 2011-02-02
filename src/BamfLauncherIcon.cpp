@@ -56,6 +56,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 {
   m_App = app;
   m_Screen = screen;
+  _remote_uri = 0;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
@@ -798,4 +799,16 @@ void
 BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
 {
   UpdateIconGeometries (center);
+}
+
+const gchar *
+BamfLauncherIcon::GetRemoteUri ()
+{
+  if (!_remote_uri)
+  {
+    const gchar * desktop_file = bamf_application_get_desktop_file (BAMF_APPLICATION (m_App));
+    _remote_uri = g_strdup_printf ("application://%s", g_path_get_basename (desktop_file));
+  }
+  
+  return _remote_uri;
 }

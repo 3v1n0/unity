@@ -104,28 +104,3 @@ SimpleLauncherIcon::SetIconName (const char *name)
   
   needs_redraw.emit (this);
 }
-
-void 
-SimpleLauncherIcon::SetEmblemIconName (const char *name)
-{
-  nux::BaseTexture *emblem;
-  
-  if (g_str_has_prefix (name, "/"))
-    emblem = TextureFromPath (name, 22);
-  else
-    emblem = TextureFromGtkTheme (name, 22);
-    
-  SetEmblem (emblem);
-}
-
-void 
-SimpleLauncherIcon::SetEmblemText (const char *text)
-{
-  // fixme
-}
-    
-void 
-SimpleLauncherIcon::DeleteEmblem ()
-{
-  SetEmblem (0);
-}

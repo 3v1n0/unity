@@ -35,11 +35,6 @@ public:
     
     void SetIconName (const char *name);
     
-    void SetEmblemIconName (const char *name);
-    void SetEmblemText (const char *text);
-    
-    void DeleteEmblem ();
-
 protected:
     virtual void OnMouseDown (int button);
     virtual void OnMouseUp (int button);
