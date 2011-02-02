@@ -17,16 +17,31 @@
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
-TestArgs  *running_test_args [32];
+#include <sigc++/sigc++.h>
+
+#include "Autopilot.h"
+#include "UBusMessages.h"
+
+struct _PrivateTestArgs
+{
+  Autopilot *priv;
+  TestArgs *args;
+};
+typedef struct _PrivateTestArgs PrivateTestArgs;
+
+static float _disp_fps;
+
 nux::TimerFunctor *test_expiration_functor;
 
 void
-TestFinished (TestArgs *args)
+TestFinished (void *arg)
 {
   GError *error = NULL;
-  GVariant *result = g_variant_new ("(sb)", args->name, args->passed);
+  PrivateTestArgs *args = static_cast<PrivateTestArgs*> (arg);
+  GVariant *result = g_variant_new ("(sb)", args->args->name, args->args->passed);
 
-  g_dbus_connection_emit_signal (self->GetDBusConnection (),
+  g_debug ("firing TestFinished");
+  g_dbus_connection_emit_signal (args->priv->GetDBusConnection (),
                                  "com.canonical.Unity.Autopilot",
                                  "/com/canonical/Unity/Debug",
                                  "com.canonical.Unity.Autopilot",
@@ -41,28 +56,40 @@ TestFinished (TestArgs *args)
     g_error_free (error);
   }
 
-  self->running_tests--;
+  args->priv->running_tests--;
 
-  if (self->running_tests == 0)
+  if (args->priv->running_tests == 0)
   {
+    g_debug ("no more tests, cleaning up");
     delete test_expiration_functor;
 
-    self->GetCompisiteScreen ()->preparePaintSetEnabled (args->autopilot, false);
-    self->GetCompositeScreen ()->donePaintSetEnabled (args->autopilot, false);
-    CompositeScreenInterface::setHandler (args->autopilot->GetCompositeScreen (), false);
+    args->priv->GetCompositeScreen ()->preparePaintSetEnabled (args->priv, false);
+    args->priv->GetCompositeScreen ()->donePaintSetEnabled (args->priv, false);
   }
 
-  g_free (args->name);
+  g_free (args->args->name);
+  g_free (args->args);
   g_free (args);
 }
 
 void
-on_tooltip_shown (GVariant *payload, TestArgs *arg)
+on_tooltip_shown (GVariant *payload, PrivateTestArgs *arg)
 {
-  nux::GetTimer ().RemoveTimerHandler (arg->expiration_handler);
-  ubus_server_unregister_interest (self->GetUBusConnection (), arg->ubus_handle);
-  arg->passed = TRUE;
+  g_debug ("tooltip shown! woo!");
+  nux::GetTimer ().RemoveTimerHandler (arg->args->expiration_handle);
+  ubus_server_unregister_interest (arg->priv->GetUBusConnection (), arg->args->ubus_handle);
+  arg->args->passed = TRUE;
   TestFinished (arg);
+}
+
+void
+TestTooltip (PrivateTestArgs *arg)
+{
+  arg->args->ubus_handle = ubus_server_register_interest (arg->priv->GetUBusConnection (),
+                                                          UBUS_LAUNCHER_TOOLTIP_SHOWN,
+                                                          (UBusCallback) on_tooltip_shown,
+                                                          arg);
+  g_debug ("Test tooltip is set up and waiting");
 }
 
 Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
@@ -70,13 +97,13 @@ Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
   _cscreen (CompositeScreen::get (screen)),
   _fps (0),
   _ctime (0),
-  _frames (0)
+  _frames (0),
+  running_tests (0)
 {
   _dbus = connection;
   _ubus = ubus_server_get_default ();
   _cscreen->preparePaintSetEnabled (this, false);
   _cscreen->donePaintSetEnabled (this, false);
-
 }
 
 void
@@ -140,8 +167,10 @@ Autopilot::GetCompositeScreen ()
 void 
 Autopilot::StartTest (const gchar *name)
 {
-  running_test_args[running_tests] = (TestArgs*) g_malloc (sizeof (TestArgs));
-  TestArgs *arg = running_test_args[running_tests];
+  std::cout << "Starting test " << name << std::endl;
+  TestArgs *arg = static_cast<TestArgs*> (g_malloc (sizeof (TestArgs)));
+  std::cout << "malloc'd" << std::endl;
+
   if (arg == NULL) {
     g_error ("Failed to allocate memory for TestArgs");
     return;
@@ -149,18 +178,25 @@ Autopilot::StartTest (const gchar *name)
 
   if (running_tests == 0)
   {
+    g_debug ("making a new timerfunctor");
     test_expiration_functor = new nux::TimerFunctor ();
     test_expiration_functor->OnTimerExpired.connect (sigc::ptr_fun (&TestFinished));
   }
 
-  arg->name = g_strdup0 (name);
+  g_debug ("setting up the arg boiler plate");
+  
+  PrivateTestArgs *pargs = static_cast<PrivateTestArgs*> (g_malloc (sizeof (PrivateTestArgs*)));
+  pargs->priv = this;
+  pargs->args = arg;
+
+  arg->name = g_strdup (name);
   arg->passed = FALSE;
-  arg->autopilot = this;
-  arg->expiration_handler = nux::GetTimer ().AddTimerHandler (TEST_TIMEOUT, test_expiration_functor, arg);  
+  arg->expiration_handle = nux::GetTimer ().AddTimerHandler (TEST_TIMEOUT, test_expiration_functor, pargs);  
 
   if (g_strcmp0 (name, "show_tooltip") == 0) 
   {
-    TestTooltip (arg);
+    g_debug ("and sending it into the tooltip");
+    TestTooltip (pargs);
   }
   else if (g_strcmp0 (name, "show_quicklist") == 0)
   {
@@ -185,10 +221,10 @@ Autopilot::StartTest (const gchar *name)
   else
   {
     /* Clean up the arg we set up. Test does not exist */
-    nux::GetTimer ().RemoveTimerHandler (arg->expiration_handler);
+    nux::GetTimer ().RemoveTimerHandler (arg->expiration_handle);
     g_free (arg->name);
     g_free (arg);
-
+    g_free (pargs);
     return;
   }
 
@@ -198,15 +234,6 @@ Autopilot::StartTest (const gchar *name)
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
   CompositeScreenInterface::setHandler (_cscreen, true);
-}
-
-void
-Autopilot::TestTooltip (TestArgs *arg)
-{
-  arg->ubus_handle = ubus_server_register_interest (_ubus,
-                                                    UBUS_LAUNCHER_TOOLTIP_SHOWN,
-                                                    (UBusCallback) on_tooltip_shown,
-                                                    arg);
 }
 
 void

@@ -28,6 +28,7 @@
 #include <core/core.h>
 #include <composite/composite.h>
 
+#include "Nux/Nux.h"
 #include "Nux/TimerProc.h"
 
 #include "ubus-server.h"
@@ -40,8 +41,14 @@
    (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)))
 
 #define UPDATE_TIME 100
+#define TEST_TIMEOUT 6000
 
-typedef struct TestArgs;
+typedef struct {
+  gchar *name;
+  gboolean passed;
+  guint ubus_handle;
+  nux::TimerHandle expiration_handle;
+} TestArgs;
 
 class Autopilot :
   public PluginClassHandler<Autopilot, CompScreen>,
@@ -57,10 +64,11 @@ class Autopilot :
 
   UBusServer *GetUBusConnection ();
   GDBusConnection *GetDBusConnection ();
-  CompScreen *GetCompositeScreen ();
+  CompositeScreen *GetCompositeScreen ();
+
+  guint running_tests;
 
  private:
-  void TestTooltip (TestArgs *arg);
   void TestQuicklist ();
   void TestDragLauncher ();
   void TestDragLauncherIconAlongEdgeDrop ();
@@ -80,13 +88,5 @@ class Autopilot :
  
   struct timeval _last_redraw;
 };
-
-struct {
-  gchar *name;
-  gboolean passed;
-  guint ubus_handle;
-  nux::TimerHandle *expiration_handle;
-  Autopilot *autopilot;
-} TestArgs;
 
 #endif /* _AUTOPILOT_H */

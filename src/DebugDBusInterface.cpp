@@ -22,7 +22,6 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 #include <Nux/WindowThread.h>
-#include <sigc++/sigc++.h>
 
 #include "Autopilot.h"
 #include "DebugDBusInterface.h"
@@ -30,11 +29,11 @@
 
 #define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
 
+void StartTest (const gchar*);
+GVariant* GetState (const gchar*);
 void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
                      const gchar*, const gchar*, GVariant*,
                      GDBusMethodInvocation*, gpointer);
-GVariant* GetState (const gchar*);
-void StartTest (const gchar*);
 
 static const GDBusInterfaceVTable si_vtable =
 {
