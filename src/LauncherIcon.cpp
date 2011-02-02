@@ -134,7 +134,6 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
-  std::cout << "LauncherIcon::Activate() called" << std::endl;
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
