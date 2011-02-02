@@ -165,7 +165,7 @@ PlacesResultsController::CreateGroup (const char *groupname)
   layout->SetVerticalInternalMargin (4);
   layout->SetHorizontalInternalMargin (4);
 
-  newgroup->SetLayout (layout);
+  newgroup->AddLayout (layout);
   newgroup->SetVisible (false);
 
   _groups[groupname] = newgroup;
