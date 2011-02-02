@@ -127,6 +127,12 @@ class UnityScreen :
 	void
 	onRedrawRequested ();
 
+	void
+	Relayout ();
+
+	static gboolean
+	RelayoutTimeout (gpointer data);
+
 	static void
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 

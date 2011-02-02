@@ -38,6 +38,7 @@
 #include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <core/atoms.h>
 
@@ -442,6 +443,45 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+void
+UnityScreen::Relayout ()
+{
+  GdkScreen *scr;
+  GdkRectangle rect;
+  nux::Geometry lCurGeom, pCurGeom;
+  gint primary_monitor;
+
+  scr = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (scr);
+  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
+
+  pCurGeom = panelWindow->GetGeometry(); 
+  lCurGeom = launcherWindow->GetGeometry(); 
+
+  panelView->SetMaximumWidth(rect.width);
+  launcher->SetMaximumHeight(rect.height - pCurGeom.height);
+
+  panelWindow->SetGeometry(nux::Geometry(pCurGeom.x, pCurGeom.y, rect.width, pCurGeom.height));
+  launcherWindow->SetGeometry(nux::Geometry(lCurGeom.x, lCurGeom.y, lCurGeom.width, rect.height - pCurGeom.height));
+
+  strutHackTimeout(this);
+
+  panelView->NeedRedraw();
+  panelWindow->NeedRedraw();
+  launcher->NeedRedraw();
+  launcherWindow->NeedRedraw();
+}
+
+gboolean
+UnityScreen::RelayoutTimeout (gpointer data)
+{
+  UnityScreen *uScr = (UnityScreen*) data;
+
+  uScr->Relayout();
+
+  return FALSE;
+}
+
 static gboolean
 write_logger_data_to_disk (gpointer data)
 {
@@ -507,6 +547,10 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
+
+  g_signal_connect_swapped (gdk_screen_get_default (), "monitors-changed", G_CALLBACK (&UnityScreen::Relayout), (void*) this);
+  g_signal_connect_swapped (gdk_screen_get_default (), "size-changed", G_CALLBACK (&UnityScreen::Relayout), (void*) this);
+
   END_FUNCTION ();
 }
 
@@ -602,6 +646,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+  g_timeout_add (2000, &UnityScreen::RelayoutTimeout, self);
 
   END_FUNCTION ();
 }
