@@ -29,6 +29,8 @@
 #include "Nux/EditTextBox.h"
 #include "Nux/TextEntry.h"
 
+#include "PlaceEntry.h"
+
 class PlacesSearchBar : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
@@ -42,6 +44,8 @@ public:
 
   virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
+
+  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
   
 protected:
   // Introspectable methods
@@ -51,14 +55,19 @@ protected:
 
 private:
   void UpdateBackground ();
+  void OnSearchChanged (nux::TextEntry *text_entry);
+  void EmitLiveSearch ();
+
+  static bool OnLiveSearchTimeout (PlacesSearchBar *self);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-  nux::EditTextBox        *_entry;
-  nux::TextEntry        *_pango_entry;
+  nux::TextEntry          *_pango_entry;
   int _last_width;
   int _last_height;
+  PlaceEntry              *_entry;
+  guint                    _live_search_timeout;
 };
 
 #endif

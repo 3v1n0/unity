@@ -122,6 +122,12 @@ add_executable (test-places
                 ../src/PlacesSimpleTile.h
                 ../src/PlacesTile.cpp
                 ../src/PlacesTile.h
+                ../src/PlacesResultsController.cpp
+                ../src/PlacesResultsController.h
+                ../src/PlacesResultsView.h
+                ../src/PlacesResultsView.cpp
+                ../src/PlacesGroup.cpp
+                ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
                 ../src/UBusMessages.h

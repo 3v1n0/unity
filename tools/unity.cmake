@@ -97,13 +97,11 @@ def run_unity (verbose, debug, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
+        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
+        subprocess.Popen(["killall", "unity-panel-service"])
         if options.autopilot:
-            os.putenv('UNITY_AUTOPILOT', 1)
-            unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
             runner = UnityTestRunner(unity_instance)
             runner.start()
-        else:
-            unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
         unity_instance.wait()
     except KeyboardInterrupt, e:
         try:
