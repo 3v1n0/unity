@@ -187,7 +187,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
-    OnKeyReleased.connect (sigc::mem_fun (this, &Launcher::RecvKeyReleased));
+    OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -2115,9 +2115,9 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 }
 
 void
-Launcher::RecvKeyReleased (unsigned int  key_sym,
-                           unsigned long key_code,
-                           unsigned long key_state)
+Launcher::RecvKeyPressed (unsigned int  key_sym,
+                          unsigned long key_code,
+                          unsigned long key_state)
 {
 
   switch (key_sym)

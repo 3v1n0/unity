@@ -109,7 +109,7 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvKeyReleased (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
