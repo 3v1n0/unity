@@ -136,6 +136,11 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
 }
 
+void
+LauncherIcon::Activate ()
+{
+}
+
 nux::Color LauncherIcon::BackgroundColor ()
 {
   return _background_color;
@@ -330,53 +335,55 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
+void LauncherIcon::OpenQuicklist ()
+{
+  _tooltip->ShowWindow (false);    
+  _quicklist->RemoveAllMenuItem ();
+
+  std::list<DbusmenuMenuitem *> menus = Menus ();
+  if (menus.empty ())
+    return;
+
+  std::list<DbusmenuMenuitem *>::iterator it;
+  for (it = menus.begin (); it != menus.end (); it++)
+  {
+    DbusmenuMenuitem *menu_item = *it;
+    
+    const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
+    const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+    {
+      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+    {
+      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+    {
+      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+  }
+    
+  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+  QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+}
+
 void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
-  {
-    _tooltip->ShowWindow (false);
-    
-    _quicklist->RemoveAllMenuItem ();
-    
-    std::list<DbusmenuMenuitem *> menus = Menus ();
-    if (menus.empty ())
-      return;
-
-    std::list<DbusmenuMenuitem *>::iterator it;
-    for (it = menus.begin (); it != menus.end (); it++)
-    {
-      DbusmenuMenuitem *menu_item = *it;
-    
-      const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
-      const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-
-      if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
-      {
-        QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
-      {
-        QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-      {
-        QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
-      {
-        QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-    } 
-    
-    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
-    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
-    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
-  }
+    OpenQuicklist ();
 }
 
 void LauncherIcon::RecvMouseUp (int button)

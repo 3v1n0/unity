@@ -167,7 +167,9 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
                                        float FarClipPlane,
                                        float Fovy);
 
-Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
+Launcher::Launcher (nux::BaseWindow* parent,
+                    CompScreen*      screen,
+                    NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
 ,   m_BackgroundLayer(0)
@@ -186,6 +188,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
+    OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -203,6 +206,11 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
+
+    _current_icon       = NULL;
+    _last_selected_icon = NULL;
+    _current_icon_index = -1;
+    _last_icon_index    = -1;
 
     SetCompositionLayout(m_Layout);
 
@@ -252,6 +260,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_outline_texture   = nux::CreateTexture2DFromFile (PKGDATADIR"/round_outline_54x54.png", -1, true);
     _icon_shine_texture     = nux::CreateTexture2DFromFile (PKGDATADIR"/round_shine_54x54.png", -1, true);
     _icon_glow_texture      = nux::CreateTexture2DFromFile (PKGDATADIR"/round_glow_62x62.png", -1, true);
+    _icon_glow_hl_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_hl_62x62.png", -1, true);
     _progress_bar_trough    = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_trough.png", -1, true);
     _progress_bar_fill      = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_fill.png", -1, true);
     
@@ -274,6 +283,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _hovered                = false;
     _autohide               = false;
     _hidden                 = false;
+    _was_hidden             = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _key_show_launcher      = false;
@@ -325,6 +335,41 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::startKeyNavMode ()
+{  
+  if (_hidden)
+  {
+    _was_hidden = true;
+    _hidden = false;
+    EnsureHiddenState ();
+  }
+
+  if (_last_icon_index == -1)
+    _current_icon_index = 0;
+  else
+    _current_icon_index = _last_icon_index;
+  NeedRedraw ();
+}
+
+void
+Launcher::exitKeyNavMode ()
+{
+  if (_was_hidden)
+  {
+    _hidden = true;
+    _was_hidden = false;
+    EnsureHiddenState ();
+  }
+
+  _last_icon_index = _current_icon_index;
+  _current_icon_index = -1;
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_LAUNCHER_EXIT_KEY_NAV,
+                            NULL);
+  NeedRedraw ();
 }
 
 void
@@ -722,6 +767,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.z_rotation          = 0.0f;
     arg.skip                = false;
     arg.stick_thingy        = false;
+    arg.keyboard_nav_hl     = false;
     arg.progress_bias       = IconProgressBias (icon, current);
     arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
 
@@ -746,6 +792,14 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     {
       arg.z_rotation = IconUrgentWiggleValue (icon, current);
     }
+
+    // we've to walk the list since it is a STL-list and not a STL-vector, thus
+    // we can't use the random-access operator [] :(
+    LauncherModel::iterator it;
+    int i;
+    for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+      if (i == _current_icon_index && *it == icon)
+        arg.keyboard_nav_hl = true;
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -1744,6 +1798,15 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg.running_arrow ? arg.window_indicators : 0,
                     arg.active_arrow ? 1 : 0,
                     geo);
+
+  /* draw keyboard-navigation "highlight" if any */
+  if (arg.keyboard_nav_hl)
+    RenderIcon (GfxContext,
+                arg,
+                _icon_glow_hl_texture->GetDeviceTexture (),
+                nux::Color (0xFFFFFFFF),
+                1.0f,
+                arg.icon->_xform_coords["Glow"]);
 }
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2055,6 +2118,92 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   }
   
   EnsureAnimation ();
+}
+
+void
+Launcher::RecvKeyPressed (unsigned int  key_sym,
+                          unsigned long key_code,
+                          unsigned long key_state)
+{
+
+  switch (key_sym)
+  {
+    // up (move selection up or go to global-menu if at top-most icon)
+    case XK_Up:
+      if (_current_icon_index > 0)
+        _current_icon_index--;
+      else
+      {
+        _current_icon_index = -1;
+        // FIXME: switch to global-menu here still needs to be implemented 
+      }
+      NeedRedraw ();
+    break;
+
+    // down (move selection down and unfold launcher if needed)
+    case XK_Down:
+      if (_current_icon_index < _model->Size ())
+      {
+        _current_icon_index++;
+        NeedRedraw ();
+      }
+    break;
+
+    // esc/left (close quicklist or exit laucher key-focus)
+    case XK_Left:
+    case XK_Escape:
+      // hide again
+      exitKeyNavMode ();
+    break;
+
+    // right/shift-f10 (open quicklist of currently selected icon)      
+    case XK_F10:
+      if (key_state & NUX_STATE_SHIFT)
+      {
+        {
+          LauncherModel::iterator it;
+          int i;
+
+          // open quicklist of currently selected icon
+          for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+            if (i == _current_icon_index)
+              (*it)->OpenQuicklist ();
+        }
+        exitKeyNavMode ();
+      }
+    break;
+
+    case XK_Right:
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // open quicklist of currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->OpenQuicklist ();
+      }
+      exitKeyNavMode ();
+    break;
+
+    // <RETURN>/<SPACE> (start/activate currently selected icon)      
+    case XK_space:
+    case XK_Return:
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // start currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->Activate ();
+      }
+      exitKeyNavMode ();
+    break;
+
+    default:
+    break;
+  }
 }
 
 void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)

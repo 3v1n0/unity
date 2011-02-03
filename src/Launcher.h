@@ -33,7 +33,7 @@
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
-
+ 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
@@ -61,7 +61,7 @@ public:
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
 
-  Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
+  Launcher (nux::BaseWindow* parent, CompScreen* screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
   virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -108,8 +108,13 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
+  virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
+
+  void startKeyNavMode ();
+  void exitKeyNavMode ();
 
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
@@ -147,6 +152,7 @@ private:
     bool          active_colored;
     bool          skip;
     bool          stick_thingy;
+    bool          keyboard_nav_hl;
     int           window_indicators;
   } RenderArg;
 
@@ -238,6 +244,9 @@ private:
                          int active,
                          nux::Geometry geo);
 
+  void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
+                              nux::Geometry        geo);
+
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,
                    nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
@@ -279,12 +288,19 @@ private:
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
 
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
+  LauncherIcon* _last_selected_icon;
+  int           _current_icon_index;
+  int           _last_icon_index;
+
   QuicklistView* _active_quicklist;
 
   bool  _hovered;
   bool  _floating;
   bool  _autohide;
   bool  _hidden;
+  bool  _was_hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
   bool  _key_show_launcher;
@@ -323,6 +339,7 @@ private:
   nux::BaseTexture* _icon_shine_texture;
   nux::BaseTexture* _icon_outline_texture;
   nux::BaseTexture* _icon_glow_texture;
+  nux::BaseTexture* _icon_glow_hl_texture;
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   
@@ -349,7 +366,6 @@ private:
   nux::BaseWindow* _parent;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
-
   CompScreen* _screen;
 
   /* event times */

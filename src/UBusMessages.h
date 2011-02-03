@@ -37,5 +37,9 @@
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
 #define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
 
+// Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to
+// get rid of keyboard-input-focus
+#define UBUS_LAUNCHER_EXIT_KEY_NAV "LAUNCHER_EXIT_KEY_NAV"
+#define UBUS_QUICKLIST_EXIT_KEY_NAV "QUICKLIST_EXIT_KEY_NAV"
 
 #endif // UBUS_MESSAGES_H

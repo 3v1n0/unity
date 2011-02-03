@@ -43,7 +43,6 @@
 class Launcher;
 class QuicklistView;
 
-
 class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
@@ -89,10 +88,13 @@ public:
     void RecvMouseUp (int button);
     
     void HideTooltip ();
-    
+    void OpenQuicklist ();
+
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
-    
+
+    virtual void Activate ();
+
     void SaveCenter ();
     
     int SortPriority ();

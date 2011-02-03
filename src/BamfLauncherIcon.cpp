@@ -51,6 +51,49 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
   indicator_desktop_shortcuts_nick_exec (data->shortcuts, data->nick);
 }
 
+void
+BamfLauncherIcon::Activate ()
+{
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
+
+  bool active, running;
+  active = bamf_view_is_active (BAMF_VIEW (m_App));
+  running = bamf_view_is_running (BAMF_VIEW (m_App));
+
+  /* Behaviour:
+   * Nothing running -> launch application
+   * Running and active -> spread application
+   * Spread is active and different icon pressed -> change spread
+   * Spread is active -> Spread de-activated, and fall through
+   */
+
+  if (!running)
+  {
+    if (GetQuirk (QUIRK_STARTING))
+      return;
+    SetQuirk (QUIRK_STARTING, true);
+    OpenInstance ();
+    return;
+  }
+  else if (scaleWasActive)
+  {
+    if (!Spread ())
+    {
+      PluginAdapter::Default ()->TerminateScale ();
+      Focus ();
+      _launcher->SetLastSpreadIcon (NULL);
+    }
+  }
+  else if (!active)
+  {
+    Focus ();
+  }
+  else if (active && !scaleWasActive)
+  {
+    Spread ();
+  }
+}
+
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {
@@ -350,44 +393,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   if (button != 1)
     return;
 
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
-
-  bool active, running;
-  active = bamf_view_is_active (BAMF_VIEW (m_App));
-  running = bamf_view_is_running (BAMF_VIEW (m_App));
-
-  /* Behaviour:
-   * Nothing running -> launch application
-   * Running and active -> spread application
-   * Spread is active and different icon pressed -> change spread
-   * Spread is active -> Spread de-activated, and fall through
-   */
-
-  if (!running)
-  {
-    if (GetQuirk (QUIRK_STARTING))
-      return;
-    SetQuirk (QUIRK_STARTING, true);
-    OpenInstance ();
-    return;
-  }
-  else if (scaleWasActive)
-  {
-    if (!Spread ())
-    {
-      PluginAdapter::Default ()->TerminateScale ();
-      Focus ();
-      _launcher->SetLastSpreadIcon (NULL);
-    }
-  }
-  else if (!active)
-  {
-    Focus ();
-  }
-  else if (active && !scaleWasActive)
-  {
-    Spread ();
-  }
+  Activate ();
 }
 
 void

@@ -41,6 +41,7 @@ public:
 
     const char* DesktopFile ();
     bool IsSticky ();
+    void Activate ();
 
 protected:
     void OnMouseClick (int button);
