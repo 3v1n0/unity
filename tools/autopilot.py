@@ -18,6 +18,7 @@ from threading import Thread
 from time import sleep
 
 import dbus
+import glib
 import gobject
 import pynotify
 from dbus.mainloop.glib import DBusGMainLoop
@@ -97,7 +98,7 @@ class UnityUtil(object):
     UNITY_BUS_NAME = 'com.canonical.Unity'
     DEBUG_PATH = '/com/canonical/Unity/Debug'
     INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
-    AUTOPILOT_IFACE = 'com.canonical.Unity.Autopilot'
+    AUTOPILOT_IFACE = 'com.canonical.Unity.Debug.Autopilot'
     
     def __init__(self):
         DBusGMainLoop(set_as_default=True)
@@ -108,12 +109,7 @@ class UnityUtil(object):
                                                    self.INTROSPECTION_IFACE)
         self._autopilot_iface = dbus.Interface(self._debug_proxy_obj,
                                                self.AUTOPILOT_IFACE)
-        self._autopilot_iface.connect_to_signal ("TestFinished", _on_test_finished)
-        #self._bus.add_signal_receiver (_on_test_finished,
-        #                               "TestFinished",
-        #                               AUTOPILOT_IFACE,
-        #                               UNITY_BUS_NAME,
-        #                               DEBUG_PATH)
+        self._autopilot_iface.connect_to_signal ("TestFinished", self._on_test_finished)
 
     def run_autopilot_test(self, name, test, finished_callback):
         self._autopilot_iface.StartTest (name)
@@ -146,12 +142,14 @@ class UnityTests(object):
                 '''Move mouse to a launcher and hover to show the tooltip'''
                 print 'Showing tool tip...'
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 
         def show_quicklist(self):
                 '''Move mouse to a launcher and right click'''
                 print 'Showing quicklist...'
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 sleep(0.25)
                 self._mouse.click(button=3)
@@ -163,6 +161,7 @@ class UnityTests(object):
                 '''Click a launcher icon and drag down to move the whole launcher'''
                 print 'Dragging entire launcher...'
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 sleep(0.25)
                 self._mouse.press()
@@ -175,6 +174,7 @@ class UnityTests(object):
                 to test moving icons around on the launcher'''
                 print 'Moving launcher icon along edge...'
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 self._mouse.press()
                 self._mouse.move(self._dest_x + 25, self._dest_y)
@@ -186,6 +186,7 @@ class UnityTests(object):
                 it returns to its original position'''
                 print 'Dragging launcher straight out and dropping...'
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 self._mouse.press()
                 self._mouse.move(self._dest_x + 300, self._dest_y)
@@ -195,6 +196,7 @@ class UnityTests(object):
                 '''Click a launcher icon and drag it diagonally so that it changes position'''
                 print 'Dragging a launcher icon out, and moving it...'''
                 self._mouse.reset()
+                self._mouse.move(self._dest_x, 10)
                 self._mouse.move(self._dest_x, self._dest_y)
                 self._mouse.press()
                 self._mouse.move(self._dest_x + 300, self._dest_y)
@@ -217,12 +219,12 @@ class UnityTestRunner(Thread):
 
         # Wait 15 seconds for compiz and unity to fully start i.e., the bus owned
         sleep(15)
-        try:
-            self._unity_util = UnityUtil()
-            self._tests = UnityTests()
-        except:
-            print 'FAIL: Unity failed to launch'
-            exit(1)
+#        try:
+        self._unity_util = UnityUtil()
+        self._tests = UnityTests()
+#        except:
+#            print 'FAIL: Unity failed to launch'
+#            exit(1)
 
         # generates a list of method names that are tests.
         self._test_methods = [m for m in dir(self._tests) if callable(getattr(self._tests, m)) and not m.startswith('_')]
