@@ -41,13 +41,13 @@ TestFinished (void *arg)
   GVariant *result = g_variant_new ("(sb)", args->args->name, args->args->passed);
 
   g_debug ("firing TestFinished");
-   g_dbus_connection_emit_signal (args->priv->GetDBusConnection (),
-                                  "com.canonical.Unity.Autopilot",
-                                  "/com/canonical/Unity/Debug",
-                                  "com.canonical.Unity.Autopilot",
-                                  "TestFinished",
-                                  result,
-                                  &error);
+  g_dbus_connection_emit_signal (args->priv->GetDBusConnection (),
+                                 NULL,
+                                 "/com/canonical/Unity/Debug",
+                                 "com.canonical.Unity.Autopilot",
+                                 "TestFinished",
+                                 result,
+                                 &error);
    g_variant_unref (result);
 
    if (error != NULL)
