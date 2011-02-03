@@ -73,9 +73,9 @@ TestFinished (void *arg)
 }
 
 void
-on_tooltip_shown (GVariant *payload, PrivateTestArgs *arg)
+on_test_passed (GVariant *payload, PrivateTestArgs *arg)
 {
-  g_debug ("tooltip shown! woo!");
+  g_debug ("test passed! woo!");
   nux::GetTimer ().RemoveTimerHandler (arg->args->expiration_handle);
   ubus_server_unregister_interest (arg->priv->GetUBusConnection (), arg->args->ubus_handle);
   arg->args->passed = TRUE;
@@ -83,13 +83,13 @@ on_tooltip_shown (GVariant *payload, PrivateTestArgs *arg)
 }
 
 void
-TestTooltip (PrivateTestArgs *arg)
+RegisterUBusInterest (const gchar *signal, PrivateTestArgs *pargs)
 {
-  arg->args->ubus_handle = ubus_server_register_interest (arg->priv->GetUBusConnection (),
-                                                          UBUS_LAUNCHER_TOOLTIP_SHOWN,
-                                                          (UBusCallback) on_tooltip_shown,
-                                                          arg);
-  g_debug ("Test tooltip is set up and waiting");
+  pargs->args->ubus_handle = ubus_server_register_interest (pargs->priv->GetUBusConnection (),
+                                                            signal,
+                                                            (UBusCallback) on_test_passed,
+                                                            pargs);
+
 }
 
 Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
@@ -195,28 +195,23 @@ Autopilot::StartTest (const gchar *name)
 
   if (g_strcmp0 (name, "show_tooltip") == 0) 
   {
-    g_debug ("and sending it into the tooltip");
-    TestTooltip (pargs);
+    RegisterUBusInterest (UBUS_TOOLTIP_SHOWN, pargs);
   }
   else if (g_strcmp0 (name, "show_quicklist") == 0)
   {
-    TestQuicklist ();
+    RegisterUBusInterest (UBUS_QUICKLIST_SHOWN, pargs);
   }
   else if (g_strcmp0 (name, "drag_launcher") == 0)
   {
-    TestDragLauncher ();
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_along_edge_drop") == 0)
   {
-    TestDragLauncherIconAlongEdgeDrop ();
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_out_and_drop") == 0)
   {
-    TestDragLauncherIconOutAndDrop ();
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_out_and_move") == 0)
   {
-    TestDragLauncherIconOutAndMove ();
   }
   else
   {
@@ -234,29 +229,4 @@ Autopilot::StartTest (const gchar *name)
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
   CompositeScreenInterface::setHandler (_cscreen, true);
-}
-
-void
-Autopilot::TestQuicklist ()
-{
-}
-
-void
-Autopilot::TestDragLauncher ()
-{
-}
-
-void
-Autopilot::TestDragLauncherIconAlongEdgeDrop ()
-{
-}
-
-void
-Autopilot::TestDragLauncherIconOutAndDrop ()
-{
-}
-
-void
-Autopilot::TestDragLauncherIconOutAndMove ()
-{
 }

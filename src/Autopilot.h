@@ -69,12 +69,6 @@ class Autopilot :
   guint running_tests;
 
  private:
-  void TestQuicklist ();
-  void TestDragLauncher ();
-  void TestDragLauncherIconAlongEdgeDrop ();
-  void TestDragLauncherIconOutAndDrop ();
-  void TestDragLauncherIconOutAndMove ();
- 
   float _fps;
   float _alpha;
   float _ctime;

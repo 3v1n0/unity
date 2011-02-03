@@ -24,6 +24,9 @@
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 QuicklistManager * QuicklistManager::_default = 0;
 
 /* static */
@@ -94,6 +97,8 @@ void QuicklistManager::RecvShowQuicklist (nux::BaseWindow *window)
   _current_quicklist = quicklist;
 
   quicklist_opened.emit (quicklist);
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_QUICKLIST_SHOWN, NULL);
 }
 
 void QuicklistManager::RecvHideQuicklist (nux::BaseWindow *window)

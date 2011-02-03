@@ -125,7 +125,7 @@ namespace nux
 
     ShowWindow (true);
     UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_send_message (ubus, UBUS_LAUNCHER_TOOLTIP_SHOWN, NULL);
+    ubus_server_send_message (ubus, UBUS_TOOLTIP_SHOWN, NULL);
   }
 
   void Tooltip::Draw (GraphicsEngine& gfxContext, bool forceDraw)
