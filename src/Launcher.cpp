@@ -319,6 +319,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
                                    (UBusCallback)&Launcher::OnPlaceViewHidden,
                                    this);
+
+    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE,
+                                   (UBusCallback)&Launcher::OnTriggerUpdate,
+                                   this);
 }
 
 Launcher::~Launcher()
@@ -1056,6 +1060,42 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->EnsureHiddenState ();
 }
 
+void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
+{
+  gchar        *prop_key;
+  GVariant     *prop_value;
+  GVariantIter *prop_iter;
+  int x, y;
+
+  Launcher *self = (Launcher*)user_data;
+  
+  g_variant_get (data, "(iia{sv})", &x, &y, &prop_iter);
+  self->_trigger_mouse_position = nux::Point2 (x, y);
+  
+  g_return_if_fail (prop_iter != NULL);
+
+  while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
+  {
+    if (g_str_equal ("hovered", prop_key))
+    {
+      self->_mouse_inside_trigger = g_variant_get_boolean (prop_value);
+      
+      if (self->_mouse_inside_trigger)
+      {
+        self->EnsureHiddenState ();
+        self->EnsureHoverState ();
+        self->EnsureScrollTimer ();
+      }
+      else
+      {
+        self->SetupAutohideTimer ();
+        self->EnsureHoverState ();
+        self->EnsureScrollTimer ();
+      }
+    }
+  }
+}
+
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
@@ -1130,16 +1170,6 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
     CheckWindowOverLauncher ();
 }
 
-void Launcher::OnTriggerMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  _mouse_inside_trigger = true;
-  _trigger_mouse_position = nux::Point2 (x, y);
-  
-  EnsureHiddenState ();
-  EnsureHoverState ();
-  EnsureScrollTimer ();
-}
-
 void Launcher::SetupAutohideTimer ()
 {
   if (_autohide)
@@ -1148,19 +1178,6 @@ void Launcher::SetupAutohideTimer ()
       g_source_remove (_autohide_handle);
     _autohide_handle = g_timeout_add (1000, &Launcher::OnAutohideTimeout, this);
   }
-}
-
-void Launcher::OnTriggerMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  _mouse_inside_trigger = false;
-  SetupAutohideTimer ();
-  EnsureHoverState ();
-  EnsureScrollTimer ();
-}
-
-void Launcher::OnTriggerMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-  _trigger_mouse_position = nux::Point2 (x, y);
 }
 
 bool Launcher::AutohideEnabled ()
@@ -1178,14 +1195,6 @@ gboolean Launcher::StrutHack (gpointer data)
   self->_parent->InputWindowEnableStruts(true);
 
   return false;
-}
-
-void Launcher::SetAutohideTrigger (nux::View *trigger)
-{
-  _autohide_trigger = trigger;
-  _autohide_trigger->OnMouseEnter.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseEnter));
-  _autohide_trigger->OnMouseLeave.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseLeave));
-  _autohide_trigger->OnMouseMove.connect (sigc::mem_fun(this, &Launcher::OnTriggerMouseMove));
 }
 
 void Launcher::SetAutohide (bool autohide)
@@ -1391,6 +1400,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     icon->_xform_coords["Image"]        = new nux::Vector4[4];
     icon->_xform_coords["Tile"]         = new nux::Vector4[4];
     icon->_xform_coords["Glow"]         = new nux::Vector4[4];
+    icon->_xform_coords["Emblem"]       = new nux::Vector4[4];
 
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
@@ -1780,6 +1790,16 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                nux::Color::White,
                1.0f,
                arg.icon->_xform_coords["Tile"]);
+  }
+  
+  if (arg.icon->Emblem ())
+  {
+    RenderIcon(GfxContext,
+               arg,
+               arg.icon->Emblem ()->GetDeviceTexture (),
+               nux::Color::White,
+               1.0f,
+               arg.icon->_xform_coords["Emblem"]);
   }
 
   /* draw indicators */
@@ -2376,6 +2396,56 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
   vectors[3].w = v3.w;
 }
 
+void Launcher::SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+                             float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name)
+{
+  nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
+  nux::Vector4 v1 = nux::Vector4(x,   y+h,  z, 1.0f);
+  nux::Vector4 v2 = nux::Vector4(x+w, y+h,  z, 1.0f);
+  nux::Vector4 v3 = nux::Vector4(x+w, y,    z, 1.0f);
+
+  v0 = ViewProjectionMatrix * v0;
+  v1 = ViewProjectionMatrix * v1;
+  v2 = ViewProjectionMatrix * v2;
+  v3 = ViewProjectionMatrix * v3;
+
+  v0.divide_xyz_by_w();
+  v1.divide_xyz_by_w();
+  v2.divide_xyz_by_w();
+  v3.divide_xyz_by_w();
+
+  // normalize to the viewport coordinates and translate to the correct location
+  v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;;
+  v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+  v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width /2.0f + xx + ww/2.0f;
+  v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
+
+
+  nux::Vector4* vectors = icon->_xform_coords[name];
+
+  vectors[0].x = v0.x;
+  vectors[0].y = v0.y;
+  vectors[0].z = v0.z;
+  vectors[0].w = v0.w;
+  vectors[1].x = v1.x;
+  vectors[1].y = v1.y;
+  vectors[1].z = v1.z;
+  vectors[1].w = v1.w;
+  vectors[2].x = v2.x;
+  vectors[2].y = v2.y;
+  vectors[2].z = v2.z;
+  vectors[2].w = v2.w;
+  vectors[3].x = v3.x;
+  vectors[3].y = v3.y;
+  vectors[3].z = v3.z;
+  vectors[3].w = v3.w;
+}
+
+
 void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 {
   nux::Geometry geo = GetGeometry ();
@@ -2443,6 +2513,33 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     z = (*it).logical_center.z;
 
     SetIconXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
+    
+    if (launcher_icon->Emblem ())
+    {
+      nux::BaseTexture *emblem = launcher_icon->Emblem ();
+      
+      float inset = 0.1f;
+      
+      float w = _icon_size;
+      float h = _icon_size;
+    
+      float emb_w = emblem->GetWidth ();
+      float emb_h = emblem->GetHeight ();
+      x = (*it).render_center.x - _icon_size/2.0f; // x = top left corner position of emblem
+      y = (*it).render_center.y - _icon_size/2.0f;     // y = top left corner position of emblem
+      z = (*it).render_center.z;
+      
+      ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
+      nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
+      nux::Matrix4::ROTATEY((*it).y_rotation) *
+      nux::Matrix4::ROTATEZ((*it).z_rotation) *
+      nux::Matrix4::TRANSLATE(-((*it).render_center.x - w/2.0f) - w/2.0f, -((*it).render_center.y - h/2.0f) - h/2.0f, -z);    // Put the center the icon to (0, 0)
+
+      ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
+
+      SetIconSectionXForm (launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
+                           (*it).render_center.x - w/2.0f, (*it).render_center.y - h/2.0f, w, h, "Emblem");
+    }
   }
 }
 

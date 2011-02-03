@@ -34,6 +34,7 @@ public:
     nux::BaseTexture * GetTextureForSize (int size);
     
     void SetIconName (const char *name);
+
     virtual void Activate ();
 
 protected:
@@ -47,7 +48,6 @@ private:
     
     char *m_IconName;
     nux::BaseTexture *m_Icon;
-
 };
 
 #endif // BAMFLAUNCHERICON_H

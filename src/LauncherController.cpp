@@ -55,7 +55,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _remote_model->entry_added.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
+  _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
+  _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteRemoved));
 }
 
 LauncherController::~LauncherController()
@@ -193,8 +194,30 @@ LauncherController::OnIconAdded (LauncherIcon *icon)
 void
 LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
 {
-  g_debug ("LAUNCHER ENTRY ADDED: %s %s", entry->DBusName (), entry->AppUri ());
-  // FIXME: Wire the signals on entry up to matching LauncherIcon from the LauncherModel
+  LauncherModel::iterator it;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    LauncherIcon *icon = *it;
+  
+    if (!icon || !icon->RemoteUri ())
+      continue;
+    
+    if (!g_strcmp0 (entry->AppUri (), icon->RemoteUri ()))
+    {
+      icon->InsertEntryRemote (entry);
+    }
+  }
+}
+
+void
+LauncherController::OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry)
+{
+  LauncherModel::iterator it;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    LauncherIcon *icon = *it;
+    icon->RemoveEntryRemote (entry);
+  }
 }
 
 void
