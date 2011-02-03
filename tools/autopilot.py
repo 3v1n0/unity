@@ -112,6 +112,7 @@ class UnityUtil(object):
         self._autopilot_iface.connect_to_signal ("TestFinished", self._on_test_finished)
 
     def run_autopilot_test(self, name, test, finished_callback):
+        '''Facilitates communication with Autopilot display inside of Unity'''
         self._autopilot_iface.StartTest (name)
         test()
         self._finished_callback = finished_callback
@@ -233,11 +234,12 @@ class UnityTestRunner(Thread):
         self._loop.run()
 
     def _start_testing(self):
-        print 'starting tests'
+        '''Runs first test and returns False so that the timeout doesn't keep firing'''
         self._run_test()
         return False
         
     def _run_test(self):
+        '''Runs tests until there are no more to run, then exits the main loop'''
         try:
             test = self._test_methods.pop()
             self._unity_util.run_autopilot_test(test, getattr(self._tests, test), self._on_ap_test_finished)
@@ -246,6 +248,7 @@ class UnityTestRunner(Thread):
             self._loop.quit()
 
     def _on_ap_test_finished(self, name, passed):
+        '''Prints test pass/fail.'''
         passed = passed and self._unity_util.bus_owned() and self._unity.poll() is None
         print '%s %s' % (name, "passed" if passed else "failed")
         self._run_test()
