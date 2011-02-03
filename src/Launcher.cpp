@@ -169,7 +169,6 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
 
 Launcher::Launcher (nux::BaseWindow* parent,
                     CompScreen*      screen,
-                    UnityScreen*     uscreen,
                     NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
@@ -179,7 +178,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _parent = parent;
     _screen = screen;
     _active_quicklist = 0;
-    _uscreen = uscreen;
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -364,7 +362,9 @@ Launcher::endKeyNavMode ()
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
-  _uscreen->setKeyboardFocusBack ();
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_LAUNCHER_EXIT_KEY_NAV,
+                            NULL);
   NeedRedraw ();
 }
 

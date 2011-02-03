@@ -44,6 +44,9 @@
 #include "perf-logger-utility.h"
 #include "unitya11y.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
@@ -225,8 +228,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompOption::Vector &options)
 {
   // get CompWindow* of launcher-window
-  if (newFocusedWindow != NULL)
-    newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
+  newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
 
   // check if currently focused window isn't the launcher-window
   if (newFocusedWindow != screen->findWindow (screen->activeWindow ()))
@@ -243,12 +245,14 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
 }
 
 void
-UnityScreen::setKeyboardFocusBack ()
+UnityScreen::OnExitKeyNav (GVariant* data, void* value)
 {
+  UnityScreen *self = (UnityScreen*) value;
+
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (lastFocusedWindow != NULL)
-    lastFocusedWindow->moveInputFocusTo ();
+  if (self->lastFocusedWindow != NULL)
+    self->lastFocusedWindow->moveInputFocusTo ();
 }
 
 gboolean
@@ -541,7 +545,12 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
-    
+
+  ubus_server_register_interest (ubus_server_get_default (),
+                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
+                                 this);
+
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
   END_FUNCTION ();
@@ -578,7 +587,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
-  self->launcher = new Launcher(self->launcherWindow, self->screen, self);
+  self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();

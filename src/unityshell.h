@@ -147,8 +147,9 @@ class UnityScreen :
 	static gboolean
 	strutHackTimeout (gpointer data);
 
-  void setKeyboardFocusBack ();
-
+  static void
+  OnExitKeyNav (GVariant* data, void* value);
+            
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
