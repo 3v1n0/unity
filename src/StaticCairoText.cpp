@@ -151,9 +151,8 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
   gfxContext.QRP_1Tex (base.x,
                         base.y,

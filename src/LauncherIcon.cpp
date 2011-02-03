@@ -241,7 +241,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
 
   if (GDK_IS_PIXBUF (pbuf))
   {
-    result = nux::CreateTextureFromPixbuf (pbuf); 
+    result = nux::CreateTexture2DFromPixbuf (pbuf, true);
     ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
@@ -276,7 +276,7 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
 
   if (GDK_IS_PIXBUF (pbuf))
   {
-    result = nux::CreateTextureFromPixbuf (pbuf); 
+    result = nux::CreateTexture2DFromPixbuf (pbuf, true);
     ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);

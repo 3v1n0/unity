@@ -248,20 +248,20 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _icon_image_size_delta  = 6;
     _icon_size              = _icon_image_size + _icon_image_size_delta;
 
-    _icon_bkg_texture       = nux::CreateTextureFromFile (PKGDATADIR"/round_corner_54x54.png");
-    _icon_outline_texture   = nux::CreateTextureFromFile (PKGDATADIR"/round_outline_54x54.png");
-    _icon_shine_texture     = nux::CreateTextureFromFile (PKGDATADIR"/round_shine_54x54.png");
-    _icon_glow_texture      = nux::CreateTextureFromFile (PKGDATADIR"/round_glow_62x62.png");
-    _progress_bar_trough    = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_trough.png");
-    _progress_bar_fill      = nux::CreateTextureFromFile (PKGDATADIR"/progress_bar_fill.png");
+    _icon_bkg_texture       = nux::CreateTexture2DFromFile (PKGDATADIR"/round_corner_54x54.png", -1, true);
+    _icon_outline_texture   = nux::CreateTexture2DFromFile (PKGDATADIR"/round_outline_54x54.png", -1, true);
+    _icon_shine_texture     = nux::CreateTexture2DFromFile (PKGDATADIR"/round_shine_54x54.png", -1, true);
+    _icon_glow_texture      = nux::CreateTexture2DFromFile (PKGDATADIR"/round_glow_62x62.png", -1, true);
+    _progress_bar_trough    = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_trough.png", -1, true);
+    _progress_bar_fill      = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_fill.png", -1, true);
     
-    _pip_ltr                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_ltr.png");
-    _arrow_ltr              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_ltr.png");
-    _arrow_empty_ltr        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_ltr.png");
+    _pip_ltr                = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_pip_ltr.png", -1, true);
+    _arrow_ltr              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_ltr.png", -1, true);
+    _arrow_empty_ltr        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_ltr.png", -1, true);
 
-    _pip_rtl                = nux::CreateTextureFromFile (PKGDATADIR"/launcher_pip_rtl.png");
-    _arrow_rtl              = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_rtl.png");
-    _arrow_empty_rtl        = nux::CreateTextureFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png");
+    _pip_rtl                = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_pip_rtl.png", -1, true);
+    _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
+    _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -1595,7 +1595,8 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 //     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
 //   }
 
-  bkg_color.SetAlpha (bkg_color.A () * alpha);
+  bkg_color.SetRGBA (bkg_color.R () * alpha, bkg_color.G () * alpha,
+                     bkg_color.B () * alpha, alpha);
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
@@ -1633,12 +1634,8 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.icon->TextureForSize (_icon_image_size) == 0)
     return;
 
-  GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                GL_SRC_ALPHA,
-                                                GL_ONE_MINUS_SRC_ALPHA,
-                                                GL_ONE_MINUS_DST_ALPHA,
-                                                GL_ONE);
-
+  GfxContext.GetRenderStates ().SetBlend (true);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw tile */
@@ -1647,7 +1644,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _icon_outline_texture->GetDeviceTexture (),
-               nux::Color(0xAAFFFFFF),
+               nux::Color(0xAAAAAAAA),
                1.0f - arg.backlight_intensity,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -1662,13 +1659,6 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg.icon->_xform_coords["Tile"]);
   }
   /* end tile draw */
-
-  GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                GL_SRC_ALPHA,
-                                                GL_ONE_MINUS_SRC_ALPHA,
-                                                GL_ONE_MINUS_DST_ALPHA,
-                                                GL_ONE);
-  GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
   /* draw icon */
   RenderIcon (GfxContext,
@@ -1770,7 +1760,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     nux::ROPConfig ROP;
     ROP.Blend = false;
-    ROP.SrcBlend = GL_SRC_ALPHA;
+    ROP.SrcBlend = GL_ONE;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
     RenderArgs (args, bkg_box);
@@ -1791,11 +1781,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     // clip vertically but not horizontally
     GfxContext.PushClippingRectangle(nux::Geometry (base.x, bkg_box.y, base.width, bkg_box.height));
-    GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
 
@@ -1808,7 +1794,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       if ((*rev_it).stick_thingy)
         gPainter.Paint2DQuadColor (GfxContext, 
                                    nux::Geometry (bkg_box.x, (*rev_it).render_center.y - 3, bkg_box.width, 2), 
-                                   nux::Color(0xAAFFFFFF));
+                                   nux::Color(0xAAAAAAAA));
       
       if ((*rev_it).x_rotation >= 0.0f || (*rev_it).skip)
         continue;
@@ -1821,7 +1807,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       if ((*it).stick_thingy)
         gPainter.Paint2DQuadColor (GfxContext, 
                                    nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
-                                   nux::Color(0xAAFFFFFF));
+                                   nux::Color(0xAAAAAAAA));
                                    
       if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
@@ -1830,14 +1816,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
 
 
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60FFFFFF));
+    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
 
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetSeparateBlend (false,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA);
+    GfxContext.GetRenderStates ().SetBlend (false);
 
     gPainter.PopBackground();
     GfxContext.PopClippingRectangle();
