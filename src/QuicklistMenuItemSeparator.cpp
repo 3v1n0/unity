@@ -30,6 +30,7 @@ QuicklistMenuItem (item,
   SetBaseSize (64, 5);
   //_normalTexture = NULL;
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
+  _premultiplied_color = nux::Color (0.5f, 0.5f, 0.5f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -45,6 +46,7 @@ QuicklistMenuItem (item,
   SetBaseSize (64, 5);
   //_normalTexture = NULL;
   _color      = nux::Color (1.0f, 1.0f, 1.0f, 0.5f);
+  _premultiplied_color = nux::Color (0.5f, 0.5f, 0.5f, 0.5f);
   _item_type  = MENUITEM_TYPE_SEPARATOR;
 }
 
@@ -119,9 +121,8 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
   gfxContext.QRP_1Tex (base.x,
                             base.y,
@@ -129,7 +130,7 @@ QuicklistMenuItemSeparator::Draw (nux::GraphicsEngine& gfxContext,
                             base.height,
                             _normalTexture[0]->GetDeviceTexture(),
                             texxform,
-                            _color);
+                            _premultiplied_color);
 
   gfxContext.GetRenderStates().SetBlend (false);
 

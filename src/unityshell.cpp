@@ -44,6 +44,9 @@
 #include "perf-logger-utility.h"
 #include "unitya11y.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
@@ -217,6 +220,39 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 {
   launcher->EndKeyShowLauncher ();
   return false;
+}
+
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  // get CompWindow* of launcher-window
+  newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
+
+  // check if currently focused window isn't the launcher-window
+  if (newFocusedWindow != screen->findWindow (screen->activeWindow ()))
+    lastFocusedWindow = screen->findWindow (screen->activeWindow ());
+
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
+  }
+
+  return false;
+}
+
+void
+UnityScreen::OnExitKeyNav (GVariant* data, void* value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  // return input-focus to previously focused window (before key-nav-mode was
+  // entered)
+  if (self->lastFocusedWindow != NULL)
+    self->lastFocusedWindow->moveInputFocusTo ();
 }
 
 gboolean
@@ -489,6 +525,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   unity_a11y_init ();
 
+  newFocusedWindow  = NULL;
+  lastFocusedWindow = NULL;
+
   /* i18n init */
   bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
@@ -504,6 +543,13 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+
+  ubus_server_register_interest (ubus_server_get_default (),
+                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
+                                 this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -597,7 +643,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohideTrigger ((nux::View *) self->panelView->HomeButton ());
   self->launcher->SetAutohide (true);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);

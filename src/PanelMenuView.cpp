@@ -250,27 +250,31 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         {
           for (int x = 0; x < geo.width; x++)
           {
-            *(dest + y * lockrect.Pitch + 4*x + 0) = 223; //red
-            *(dest + y * lockrect.Pitch + 4*x + 1) = 219; //green
-            *(dest + y * lockrect.Pitch + 4*x + 2) = 210; //blue
-
+            BYTE a;
             if (x < button_width * (factor - 1))
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 0xff;
+              a = 0xff;
             }
             else if (x < button_width * factor)
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 255 - 255 * (((float)x-(button_width * (factor -1)))/(float)(button_width));
+              a = 255 - 255 * (((float)x-(button_width * (factor -1)))/(float)(button_width));
             }
             else
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 0x00;
+              a = 0x00;
             }
+
+            *(dest + y * lockrect.Pitch + 4*x + 0) = (223 * a) / 255; //red
+            *(dest + y * lockrect.Pitch + 4*x + 1) = (219 * a) / 255; //green
+            *(dest + y * lockrect.Pitch + 4*x + 2) = (210 * a) / 255; //blue
+            *(dest + y * lockrect.Pitch + 4*x + 3) = a;
           }
         }
         _gradient_texture->UnlockRect (0);
       }
-      GfxContext.GetRenderStates ().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      GfxContext.GetRenderStates ().SetBlend (true);
+      GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;

@@ -51,11 +51,55 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
   indicator_desktop_shortcuts_nick_exec (data->shortcuts, data->nick);
 }
 
+void
+BamfLauncherIcon::Activate ()
+{
+  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
+
+  bool active, running;
+  active = bamf_view_is_active (BAMF_VIEW (m_App));
+  running = bamf_view_is_running (BAMF_VIEW (m_App));
+
+  /* Behaviour:
+   * Nothing running -> launch application
+   * Running and active -> spread application
+   * Spread is active and different icon pressed -> change spread
+   * Spread is active -> Spread de-activated, and fall through
+   */
+
+  if (!running)
+  {
+    if (GetQuirk (QUIRK_STARTING))
+      return;
+    SetQuirk (QUIRK_STARTING, true);
+    OpenInstance ();
+    return;
+  }
+  else if (scaleWasActive)
+  {
+    if (!Spread ())
+    {
+      PluginAdapter::Default ()->TerminateScale ();
+      Focus ();
+      _launcher->SetLastSpreadIcon (NULL);
+    }
+  }
+  else if (!active)
+  {
+    Focus ();
+  }
+  else if (active && !scaleWasActive)
+  {
+    Spread ();
+  }
+}
+
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {
   m_App = app;
   m_Screen = screen;
+  _remote_uri = 0;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
@@ -89,7 +133,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
 
   /* hack */
-  SetProgress (0.5f);
+  SetProgress (0.0f);
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -349,44 +393,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   if (button != 1)
     return;
 
-  bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
-
-  bool active, running;
-  active = bamf_view_is_active (BAMF_VIEW (m_App));
-  running = bamf_view_is_running (BAMF_VIEW (m_App));
-
-  /* Behaviour:
-   * Nothing running -> launch application
-   * Running and active -> spread application
-   * Spread is active and different icon pressed -> change spread
-   * Spread is active -> Spread de-activated, and fall through
-   */
-
-  if (!running)
-  {
-    if (GetQuirk (QUIRK_STARTING))
-      return;
-    SetQuirk (QUIRK_STARTING, true);
-    OpenInstance ();
-    return;
-  }
-  else if (scaleWasActive)
-  {
-    if (!Spread ())
-    {
-      PluginAdapter::Default ()->TerminateScale ();
-      Focus ();
-      _launcher->SetLastSpreadIcon (NULL);
-    }
-  }
-  else if (!active)
-  {
-    Focus ();
-  }
-  else if (active && !scaleWasActive)
-  {
-    Spread ();
-  }
+  Activate ();
 }
 
 void
@@ -797,4 +804,16 @@ void
 BamfLauncherIcon::OnCenterStabilized (nux::Point3 center)
 {
   UpdateIconGeometries (center);
+}
+
+const gchar *
+BamfLauncherIcon::GetRemoteUri ()
+{
+  if (!_remote_uri)
+  {
+    const gchar * desktop_file = bamf_application_get_desktop_file (BAMF_APPLICATION (m_App));
+    _remote_uri = g_strdup_printf ("application://%s", g_path_get_basename (desktop_file));
+  }
+  
+  return _remote_uri;
 }

@@ -145,14 +145,14 @@ IconTexture::Refresh ()
   
   if (error == NULL)
   {
-    nux::BaseTexture *texture2D = nux::CreateTextureFromPixbuf (_pixbuf);
+    nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf, true);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
     nux::ROPConfig rop;
     rop.Blend = true;
-    rop.SrcBlend = GL_SRC_ALPHA;
+    rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                               texxform,
