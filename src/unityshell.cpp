@@ -597,7 +597,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohideTrigger ((nux::View *) self->panelView->HomeButton ());
   self->launcher->SetAutohide (true);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
