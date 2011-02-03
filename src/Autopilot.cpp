@@ -41,149 +41,147 @@ TestFinished (void *arg)
   GVariant *result = g_variant_new ("(sb)", args->args->name, args->args->passed);
 
   g_debug ("firing TestFinished");
-  g_dbus_connection_emit_signal (args->priv->GetDBusConnection (),
-                                 "com.canonical.Unity.Autopilot",
-                                 "/com/canonical/Unity/Debug",
-                                 "com.canonical.Unity.Autopilot",
-                                 "TestFinished",
-                                 result,
-                                 &error);
-  g_variant_unref (result);
+   g_dbus_connection_emit_signal (args->priv->GetDBusConnection (),
+                                  "com.canonical.Unity.Autopilot",
+                                  "/com/canonical/Unity/Debug",
+                                  "com.canonical.Unity.Autopilot",
+                                  "TestFinished",
+                                  result,
+                                  &error);
+   g_variant_unref (result);
 
-  if (error != NULL)
-  {
-    g_warning ("An error was encountered emitting TestFinished signal");
-    g_error_free (error);
-  }
+   if (error != NULL)
+   {
+     g_warning ("An error was encountered emitting TestFinished signal");
+     g_error_free (error);
+   }
 
-  args->priv->running_tests--;
+   args->priv->running_tests--;
 
-  if (args->priv->running_tests == 0)
-  {
-    g_debug ("no more tests, cleaning up");
-    delete test_expiration_functor;
+   if (args->priv->running_tests == 0)
+   {
+     g_debug ("no more tests, cleaning up");
+     delete test_expiration_functor;
 
-    args->priv->GetCompositeScreen ()->preparePaintSetEnabled (args->priv, false);
-    args->priv->GetCompositeScreen ()->donePaintSetEnabled (args->priv, false);
-  }
+     args->priv->GetCompositeScreen ()->preparePaintSetEnabled (args->priv, false);
+     args->priv->GetCompositeScreen ()->donePaintSetEnabled (args->priv, false);
+   }
 
-  g_free (args->args->name);
-  g_free (args->args);
-  g_free (args);
-}
+   g_free (args->args->name);
+   g_free (args->args);
+   g_free (args);
+ }
 
-void
-on_test_passed (GVariant *payload, PrivateTestArgs *arg)
-{
-  g_debug ("test passed! woo!");
-  nux::GetTimer ().RemoveTimerHandler (arg->args->expiration_handle);
-  ubus_server_unregister_interest (arg->priv->GetUBusConnection (), arg->args->ubus_handle);
-  arg->args->passed = TRUE;
-  TestFinished (arg);
-}
+ void
+ on_test_passed (GVariant *payload, PrivateTestArgs *arg)
+ {
+   g_debug ("test passed! woo!");
+   nux::GetTimer ().RemoveTimerHandler (arg->args->expiration_handle);
+   ubus_server_unregister_interest (arg->priv->GetUBusConnection (), arg->args->ubus_handle);
+   arg->args->passed = TRUE;
+   TestFinished (arg);
+ }
 
-void
-RegisterUBusInterest (const gchar *signal, PrivateTestArgs *pargs)
-{
-  pargs->args->ubus_handle = ubus_server_register_interest (pargs->priv->GetUBusConnection (),
-                                                            signal,
-                                                            (UBusCallback) on_test_passed,
-                                                            pargs);
+ void
+ RegisterUBusInterest (const gchar *signal, PrivateTestArgs *pargs)
+ {
+   pargs->args->ubus_handle = ubus_server_register_interest (pargs->priv->GetUBusConnection (),
+                                                             signal,
+                                                             (UBusCallback) on_test_passed,
+                                                             pargs);
 
-}
+ }
 
-Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
-  PluginClassHandler <Autopilot, CompScreen> (screen),
-  _cscreen (CompositeScreen::get (screen)),
-  _fps (0),
-  _ctime (0),
-  _frames (0),
-  running_tests (0)
-{
-  _dbus = connection;
-  _ubus = ubus_server_get_default ();
-  _cscreen->preparePaintSetEnabled (this, false);
-  _cscreen->donePaintSetEnabled (this, false);
-}
+ Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
+   PluginClassHandler <Autopilot, CompScreen> (screen),
+   _cscreen (CompositeScreen::get (screen)),
+   _fps (0),
+   _ctime (0),
+   _frames (0),
+   running_tests (0)
+ {
+   _dbus = connection;
+   _ubus = ubus_server_get_default ();
+   _cscreen->preparePaintSetEnabled (this, false);
+   _cscreen->donePaintSetEnabled (this, false);
+ }
 
-void
-Autopilot::preparePaint (int msSinceLastPaint)
-{
-  int timediff;
-  float ratio = 0.05;
-  struct timeval now;
-  
-  gettimeofday (&now, 0);
-  timediff = TIMEVALDIFF (&now, &_last_redraw);
+ void
+ Autopilot::preparePaint (int msSinceLastPaint)
+ {
+   int timediff;
+   float ratio = 0.05;
+   struct timeval now;
 
-  _fps = (_fps * (1.0 - ratio)) + (1000000.0 / TIMEVALDIFFU (&now, &_last_redraw) * ratio);
-  _last_redraw = now;
+   gettimeofday (&now, 0);
+   timediff = TIMEVALDIFF (&now, &_last_redraw);
 
-  _frames++;
-  _ctime += timediff;
+   _fps = (_fps * (1.0 - ratio)) + (1000000.0 / TIMEVALDIFFU (&now, &_last_redraw) * ratio);
+   _last_redraw = now;
 
-  if (1)
-  {
-    g_debug ("updating fps: %.3f", _frames / (_ctime / 1000.0));
-    _disp_fps = _frames / (_ctime / 1000.0);
-    /*g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
-             _frames, _ctime / 1000.0,
-             _frames / (_ctime / 1000.0));*/
+   _frames++;
+   _ctime += timediff;
 
-    /* reset frames and time after display */
-    _frames = 0;
-    _ctime = 0;
-  }
-  
-  _cscreen->preparePaint (_alpha > 0.0 ? timediff : msSinceLastPaint);
-  _alpha += timediff / 1000;
-  _alpha = MIN (1.0, MAX (0.0, _alpha));
-}
+   if (1)
+   {
+     g_debug ("updating fps: %.3f", _frames / (_ctime / 1000.0));
+     _disp_fps = _frames / (_ctime / 1000.0);
+     /*g_debug ("%0.0f frames in %.1f seconds = %.3f FPS",
+              _frames, _ctime / 1000.0,
+              _frames / (_ctime / 1000.0));*/
 
-void
-Autopilot::donePaint ()
-{
-  _cscreen->donePaint ();
-}
+     /* reset frames and time after display */
+     _frames = 0;
+     _ctime = 0;
+   }
 
-GDBusConnection*
-Autopilot::GetDBusConnection ()
-{
-  return _dbus;
-}
+   _cscreen->preparePaint (_alpha > 0.0 ? timediff : msSinceLastPaint);
+   _alpha += timediff / 1000;
+   _alpha = MIN (1.0, MAX (0.0, _alpha));
+ }
 
-UBusServer*
-Autopilot::GetUBusConnection ()
-{
-  return _ubus;
-}
+ void
+ Autopilot::donePaint ()
+ {
+   _cscreen->donePaint ();
+ }
 
-CompositeScreen*
-Autopilot::GetCompositeScreen ()
-{
-  return _cscreen;
-}
+ GDBusConnection*
+ Autopilot::GetDBusConnection ()
+ {
+   return _dbus;
+ }
 
-void 
-Autopilot::StartTest (const gchar *name)
-{
-  std::cout << "Starting test " << name << std::endl;
-  TestArgs *arg = static_cast<TestArgs*> (g_malloc (sizeof (TestArgs)));
-  std::cout << "malloc'd" << std::endl;
+ UBusServer*
+ Autopilot::GetUBusConnection ()
+ {
+   return _ubus;
+ }
 
-  if (arg == NULL) {
-    g_error ("Failed to allocate memory for TestArgs");
-    return;
+ CompositeScreen*
+ Autopilot::GetCompositeScreen ()
+ {
+   return _cscreen;
+ }
+
+ void 
+ Autopilot::StartTest (const gchar *name)
+ {
+   std::cout << "Starting test " << name << std::endl;
+   TestArgs *arg = static_cast<TestArgs*> (g_malloc (sizeof (TestArgs)));
+
+   if (arg == NULL) {
+     g_error ("Failed to allocate memory for TestArgs");
+     return;
   }
 
   if (running_tests == 0)
   {
-    g_debug ("making a new timerfunctor");
     test_expiration_functor = new nux::TimerFunctor ();
     test_expiration_functor->OnTimerExpired.connect (sigc::ptr_fun (&TestFinished));
   }
 
-  g_debug ("setting up the arg boiler plate");
+  running_tests++;
   
   PrivateTestArgs *pargs = static_cast<PrivateTestArgs*> (g_malloc (sizeof (PrivateTestArgs*)));
   pargs->priv = this;
@@ -215,15 +213,9 @@ Autopilot::StartTest (const gchar *name)
   }
   else
   {
-    /* Clean up the arg we set up. Test does not exist */
-    nux::GetTimer ().RemoveTimerHandler (arg->expiration_handle);
-    g_free (arg->name);
-    g_free (arg);
-    g_free (pargs);
+    /* Some anonymous test. Will always get a failed result since we don't really know how to test it */
     return;
   }
-
-  running_tests++;
 
   /* enable fps counting hooks */
   _cscreen->preparePaintSetEnabled (this, true);

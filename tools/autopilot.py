@@ -18,39 +18,15 @@ from threading import Thread
 from time import sleep
 
 import dbus
+import gobject
 import pynotify
+from dbus.mainloop.glib import DBusGMainLoop
+
+
 from Xlib import X
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
 
-class UnityUtil(object):
-    '''Utility class for poking into Unity.
-    Someday when dbus is working again we can have it get launcher info from here
-    for now we can just fake it and guess.'''
-    
-    UNITY_BUS_NAME = 'com.canonical.Unity'
-    DEBUG_PATH = '/com/canonical/Unity/Debug'
-    INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
-    AUTOPILOT_IFACE = 'com.canonical.Unity.Autopilot'
-    
-unity
-    def __init__(self):
-        self._bus = dbus.SessionBus()
-        self._debug_proxy_obj = self._bus.get_object(self.UNITY_BUS_NAME,
-                                                     self.DEBUG_PATH)
-        self._introspection_iface = dbus.Interface(self._debug_proxy_obj,
-                                                   self.INTROSPECTION_IFACE)
-        self._autopilot_iface = dbus.Interface(self._debug_proxy_obj,
-                                               self.AUTOPILOT_IFACE)
-
-    def run_autopilot(self):
-        self._autopilot_iface.Run()
-    
-    def bus_owned(self):
-        '''Checks if Unity is running by examing the session bus, and checking if
-        'com.canonical.Unity' is currently owned.''' 
-        return self._bus.name_has_owner(self.UNITY_BUS_NAME)
-        
 class Mouse(object):
         '''Wrapper around xlib to make moving the mouse easier'''
         
@@ -112,9 +88,49 @@ class Mouse(object):
         def reset(self):
                 fake_input (self._display, X.MotionNotify, x = 800, y = 500)
                 self._display.sync()
-                
+
+class UnityUtil(object):
+    '''Utility class for poking into Unity.
+    Someday when dbus is working again we can have it get launcher info from here
+    for now we can just fake it and guess.'''
+    
+    UNITY_BUS_NAME = 'com.canonical.Unity'
+    DEBUG_PATH = '/com/canonical/Unity/Debug'
+    INTROSPECTION_IFACE = 'com.canonical.Unity.Debug.Introspection'
+    AUTOPILOT_IFACE = 'com.canonical.Unity.Autopilot'
+    
+    def __init__(self):
+        DBusGMainLoop(set_as_default=True)
+        self._bus = dbus.SessionBus()
+        self._debug_proxy_obj = self._bus.get_object(self.UNITY_BUS_NAME,
+                                                     self.DEBUG_PATH)
+        self._introspection_iface = dbus.Interface(self._debug_proxy_obj,
+                                                   self.INTROSPECTION_IFACE)
+        self._autopilot_iface = dbus.Interface(self._debug_proxy_obj,
+                                               self.AUTOPILOT_IFACE)
+        self._autopilot_iface.connect_to_signal ("TestFinished", _on_test_finished)
+        #self._bus.add_signal_receiver (_on_test_finished,
+        #                               "TestFinished",
+        #                               AUTOPILOT_IFACE,
+        #                               UNITY_BUS_NAME,
+        #                               DEBUG_PATH)
+
+    def run_autopilot_test(self, name, test, finished_callback):
+        self._autopilot_iface.StartTest (name)
+        test()
+        self._finished_callback = finished_callback
+    
+    def bus_owned(self):
+        '''Checks if Unity is running by examing the session bus, and checking if
+        'com.canonical.Unity' is currently owned.''' 
+        return self._bus.name_has_owner(self.UNITY_BUS_NAME)
+
+    def _on_test_finished(self, name, passed):
+        print '%s did%s pass' % (name, '' if passed else ' not')
+        self._finished_callback (name, passed)
+        #fire a signal and then do the next test
+                        
 class UnityTests(object):
-<<<<<<< TREE
         '''Runs a series of unity actions, triggering GL calls'''
         
         # this is totally lame. This should not be hard coded, but until I can get
@@ -123,10 +139,8 @@ class UnityTests(object):
         _dest_x = 32
         _dest_y = 57
         
-        def __init__(self, unity):
+        def __init__(self):
                 self._mouse = Mouse()
-                self._unity = UnityUtil()
-                assert unity.bus_owned()
                 
         def show_tooltip(self):
                 '''Move mouse to a launcher and hover to show the tooltip'''
@@ -194,41 +208,43 @@ class UnityTestRunner(Thread):
         self._unity = unity_instance
 
     def run(self):
-        # Wait 10 seconds and show a notificationt that we're going to run an automated Unity
-        sleep(10)
+        # Wait 5 seconds and show a notification that we're going to run an automated Unity.
+        sleep(5)
         if pynotify.init('Unity Autopilot'):
             n = pynotify.Notification('Autopilot',
                                       'Your automated test run of Unity will begin in just a moment.')
             n.show()
 
-        # Wait 20 more seconds for compiz and unity to start
-        sleep(20)
+        # Wait 15 seconds for compiz and unity to fully start i.e., the bus owned
+        sleep(15)
         try:
-            self._unity_util = UnityUtil ()
-            self._tests = UnityTests(self._unity_util)
+            self._unity_util = UnityUtil()
+            self._tests = UnityTests()
         except:
-            print 'FAIL: UNITY FAILED TO LAUNCH'
+            print 'FAIL: Unity failed to launch'
             exit(1)
-        
-        tests = {'Show tooltip': self._tests.show_tooltip,
-                 'Show quicklist': self._tests.show_quicklist,
-                 'Drag launcher': self._tests.drag_launcher,
-                 'Drag launcher icon along edge and drop': self._tests.drag_launcher_icon_along_edge_drop,
-                 'Drag launcher icon out and drop': self._tests.drag_launcher_icon_out_and_drop,
-                 'Drag launcher icon out and move': self._tests.drag_launcher_icon_out_and_move
-        }
-                 
-        for (name, test) in tests.items():
-            sleep(2)
-            if self._test_passed(test):
-                continue
-            else:
-                print 'FAIL: %d CRASHED UNITY' % name
-                exit(1)
-            
-        print 'ALL TESTS PASSED'
 
-    def _test_passed(self, test):
-        '''Returns whether or not the test pass, and if Unity is still running'''
-        test()
-        return self._unity_util.bus_owned() and self._unity.poll() is None
+        # generates a list of method names that are tests.
+        self._test_methods = [m for m in dir(self._tests) if callable(getattr(self._tests, m)) and not m.startswith('_')]
+        glib.timeout_add_seconds(5, self._start_testing)
+        self._loop = gobject.MainLoop()
+        self._loop.run()
+
+    def _start_testing(self):
+        print 'starting tests'
+        self._run_test()
+        return False
+        
+        
+    def _run_test(self):
+        try:
+            test = self._test_methods.pop()
+            self._unity_util.run_autopilot_test(test, getattr(self._tests, test), self._on_ap_test_finished)
+        except IndexError:
+            print 'UnityTests did not contain any tests to run!'
+            self._loop.quit()
+
+    def _on_ap_test_finished(self, name, passed):
+        passed = passed and self._unity_util.bus_owned() and self._unity.poll() is None
+        print '%s %s' % (name, "passed" if passed else "failed")
+        self._run_test()
