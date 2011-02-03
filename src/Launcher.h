@@ -115,7 +115,7 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void endKeyNavMode ();
+  void exitKeyNavMode ();
 
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;

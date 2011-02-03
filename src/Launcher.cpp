@@ -351,7 +351,7 @@ Launcher::startKeyNavMode ()
 }
 
 void
-Launcher::endKeyNavMode ()
+Launcher::exitKeyNavMode ()
 {
   if (_was_hidden)
   {
@@ -2151,7 +2151,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     case XK_Left:
     case XK_Escape:
       // hide again
-      endKeyNavMode ();
+      exitKeyNavMode ();
     break;
 
     // right/shift-f10 (open quicklist of currently selected icon)      
@@ -2167,7 +2167,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
             if (i == _current_icon_index)
               (*it)->OpenQuicklist ();
         }
-        endKeyNavMode ();
+        exitKeyNavMode ();
       }
     break;
 
@@ -2181,7 +2181,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           if (i == _current_icon_index)
             (*it)->OpenQuicklist ();
       }
-      endKeyNavMode ();
+      exitKeyNavMode ();
     break;
 
     // <RETURN>/<SPACE> (start/activate currently selected icon)      
@@ -2196,7 +2196,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           if (i == _current_icon_index)
             (*it)->Activate ();
       }
-      endKeyNavMode ();
+      exitKeyNavMode ();
     break;
 
     default:
