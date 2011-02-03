@@ -46,7 +46,7 @@ public:
   void SetTitle (const char *title);
   void SetEmblem (const char *path_to_emblem);
 
-  void SetLayout (nux::Layout *layout);
+  void AddLayout (nux::Layout *layout);
   nux::Layout *GetLayout ();
   void SetRowHeight (unsigned int row_height);
   void SetItemDetail (unsigned int total_items, unsigned int visible_items);
