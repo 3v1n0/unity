@@ -224,26 +224,32 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  CompWindow* w = screen->findWindow (launcherWindow->GetInputWindowId ());
-    
-  // to receive the Terminate event
-  /*if (state & CompAction::StateInitKey)
-    action->setState (action->state () | CompAction::StateTermKey);*/
+  // get CompWindow* of launcher-window
+  if (newFocusedWindow != NULL)
+    newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
 
-  if (w != NULL)
-    w->moveInputFocusTo ();
+  // check if currently focused window isn't the launcher-window
+  if (newFocusedWindow != screen->findWindow (screen->activeWindow ()))
+    lastFocusedWindow = screen->findWindow (screen->activeWindow ());
+
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
     launcher->startKeyNavMode ();
+  }
 
   return false;
 }
 
-/*bool
-UnityScreen::setKeyboardFocusKeyTerminate (CompAction         *action,
-                                           CompAction::State   state,
-                                           CompOption::Vector &options)
+void
+UnityScreen::setKeyboardFocusBack ()
 {
-  return false;
-}*/
+  // return input-focus to previously focused window (before key-nav-mode was
+  // entered)
+  if (lastFocusedWindow != NULL)
+    lastFocusedWindow->moveInputFocusTo ();
+}
 
 gboolean
 UnityScreen::initPluginActions (gpointer data)
@@ -515,6 +521,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   unity_a11y_init ();
 
+  newFocusedWindow  = NULL;
+  lastFocusedWindow = NULL;
+
   /* i18n init */
   bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
@@ -569,7 +578,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT(""));
-  self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher = new Launcher(self->launcherWindow, self->screen, self);
   self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();

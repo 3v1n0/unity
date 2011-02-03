@@ -24,6 +24,8 @@
 
 #include <sigc++/sigc++.h>
 
+class LauncherIcon;
+
 class LauncherModel : public sigc::trackable
 {
 

@@ -33,7 +33,8 @@
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
-
+#include "unityshell.h"
+ 
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
@@ -61,7 +62,10 @@ public:
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
 
-  Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_PROTO);
+  Launcher (nux::BaseWindow* parent,
+            CompScreen*      screen,
+            UnityScreen*     uscreen,
+            NUX_FILE_LINE_PROTO);
   ~Launcher();
 
   virtual long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -289,8 +293,8 @@ private:
   // used by keyboard/a11y-navigation
   LauncherIcon* _current_icon;
   LauncherIcon* _last_selected_icon;
-  int _current_icon_index;
-  int _last_icon_index;
+  int           _current_icon_index;
+  int           _last_icon_index;
 
   QuicklistView* _active_quicklist;
 
@@ -365,8 +369,8 @@ private:
   nux::View* _autohide_trigger;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
-
   CompScreen* _screen;
+  UnityScreen* _uscreen;
 
   /* event times */
   struct timespec _enter_time;

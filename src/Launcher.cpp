@@ -59,7 +59,6 @@ TimeDelta (struct timespec const *x, struct timespec const *y)
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
 
-static bool USE_ARB_SHADERS = true;
 /*
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
 	        the fragment shader to perform the texture perspective correct division.
@@ -168,7 +167,10 @@ static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Mat
                                        float FarClipPlane,
                                        float Fovy);
 
-Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DECL)
+Launcher::Launcher (nux::BaseWindow* parent,
+                    CompScreen*      screen,
+                    UnityScreen*     uscreen,
+                    NUX_FILE_LINE_DECL)
 :   View(NUX_FILE_LINE_PARAM)
 ,   m_ContentOffsetY(0)
 ,   m_BackgroundLayer(0)
@@ -177,6 +179,7 @@ Launcher::Launcher(nux::BaseWindow *parent, CompScreen *screen, NUX_FILE_LINE_DE
     _parent = parent;
     _screen = screen;
     _active_quicklist = 0;
+    _uscreen = uscreen;
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -361,6 +364,7 @@ Launcher::endKeyNavMode ()
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
+  _uscreen->setKeyboardFocusBack ();
   NeedRedraw ();
 }
 
@@ -2151,8 +2155,23 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     break;
 
     // right/shift-f10 (open quicklist of currently selected icon)      
-    case XK_Right:
     case XK_F10:
+      if (key_state & NUX_STATE_SHIFT)
+      {
+        {
+          LauncherModel::iterator it;
+          int i;
+
+          // open quicklist of currently selected icon
+          for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+            if (i == _current_icon_index)
+              (*it)->OpenQuicklist ();
+        }
+        endKeyNavMode ();
+      }
+    break;
+
+    case XK_Right:
       {
         LauncherModel::iterator it;
         int i;

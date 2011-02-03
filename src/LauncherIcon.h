@@ -42,7 +42,6 @@
 class Launcher;
 class QuicklistView;
 
-
 class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);

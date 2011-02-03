@@ -33,7 +33,7 @@
  * You do not create instances of LauncherEntryRemote yourself. Instead they
  * are created and managed dynamically by a LauncherEntryRemoteModel.
  */
-class LauncherEntryRemote : public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherEntryRemote : public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherEntryRemote, nux::InitiallyUnownedObject);
 public:
