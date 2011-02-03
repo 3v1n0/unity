@@ -241,7 +241,7 @@ class UnityTestRunner(Thread):
             test = self._test_methods.pop()
             self._unity_util.run_autopilot_test(test, getattr(self._tests, test), self._on_ap_test_finished)
         except IndexError:
-            print 'UnityTests did not contain any tests to run!'
+            print 'Finished running autopilot tests'
             self._loop.quit()
 
     def _on_ap_test_finished(self, name, passed):
