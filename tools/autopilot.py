@@ -23,7 +23,6 @@ import gobject
 import pynotify
 from dbus.mainloop.glib import DBusGMainLoop
 
-
 from Xlib import X
 from Xlib.display import Display
 from Xlib.ext.xtest import fake_input
@@ -123,6 +122,7 @@ class UnityUtil(object):
         return self._bus.name_has_owner(self.UNITY_BUS_NAME)
 
     def _on_test_finished(self, name, passed):
+        '''Calls the test finished callback'''
         print '%s did%s pass' % (name, '' if passed else ' not')
         self._finished_callback (name, passed)
                         
@@ -252,3 +252,4 @@ class UnityTestRunner(Thread):
         passed = passed and self._unity_util.bus_owned() and self._unity.poll() is None
         print '%s %s' % (name, "passed" if passed else "failed")
         self._run_test()
+
