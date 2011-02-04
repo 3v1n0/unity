@@ -42,6 +42,10 @@ def reset_unity_compiz_profile ():
     
     client = gconf.client_get_default()
     
+    if not client:
+		print "WARNING: no gconf client found. No reset will be done"
+		return
+    
     # get current compiz profile to know if we need to switch or not
     # as compiz is setting that as a default key schema each time you
     # change the profile, the key isn't straightforward to get and set
