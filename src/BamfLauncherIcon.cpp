@@ -390,10 +390,11 @@ BamfLauncherIcon::Spread ()
 void
 BamfLauncherIcon::OnMouseClick (int button)
 {
-  if (button != 1)
-    return;
+  if (button == 1)
+    Activate ();
+  else if (button == 2)
+    OpenInstance ();
 
-  Activate ();
 }
 
 void
