@@ -51,7 +51,12 @@ def reset_unity_compiz_profile ():
     # change the profile, the key isn't straightforward to get and set
     # as compiz set a new schema instead of a value..
     current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    current_profile_gconfvalue = client.get_schema("/apps/compizconfig-1/current_profile").get_default_value()
+    
+    # default value to not force reset if current_profile is unset
+    current_profile_gconfvalue = ""
+    if current_profile_schema:
+		current_profile_gconfvalue = current_profile_schema.get_default_value()
+
     if current_profile_gconfvalue.get_string() == 'unity':
         print "WARNING: Unity currently default profile, so switching to metacity while resetting the values"
         subprocess.Popen(["metacity", "--replace"]) #TODO: check if compiz is indeed running
