@@ -299,7 +299,7 @@ PlacesSearchBar::UpdateBackground ()
 
   nux::ROPConfig rop;
   rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
+  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),

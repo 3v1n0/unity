@@ -86,11 +86,8 @@ public:
       tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetBlend (true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex (geo.x,
@@ -100,11 +97,7 @@ public:
                                 tex->GetDeviceTexture (),
                                 texxform,
                                 nux::Color::White);
-    GfxContext.GetRenderStates ().SetSeparateBlend (false,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetBlend (false);
     GfxContext.PopClippingRectangle();
   }
 
@@ -127,7 +120,7 @@ public:
       error = NULL;
     }
     else
-      _normal_tex = nux::CreateTextureFromPixbuf (_normal);
+      _normal_tex = nux::CreateTexture2DFromPixbuf (_normal, true);
     g_free (filename);
     g_object_unref (_normal);
 
@@ -140,7 +133,7 @@ public:
       error = NULL;
     }
     else
-      _prelight_tex = nux::CreateTextureFromPixbuf (_prelight);
+      _prelight_tex = nux::CreateTexture2DFromPixbuf (_prelight, true);
     g_free (filename);
     g_object_unref (_prelight);
 
@@ -153,7 +146,7 @@ public:
       error = NULL;
     }
     else
-      _pressed_tex = nux::CreateTextureFromPixbuf (_pressed);
+      _pressed_tex = nux::CreateTexture2DFromPixbuf (_pressed, true);
     g_free (filename);
     g_object_unref (_pressed);
 

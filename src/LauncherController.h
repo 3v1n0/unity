@@ -68,7 +68,8 @@ private:
     void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
     void OnIconAdded (LauncherIcon *icon);
 
-    void OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
     

@@ -239,6 +239,56 @@ LauncherEntryRemoteModel::RemoveEntry (LauncherEntryRemote *entry)
   entry->UnReference ();
 }
 
+/**
+ * Handle an incoming Update() signal from DBus
+ */
+void
+LauncherEntryRemoteModel::HandleUpdateRequest (const gchar *sender_name,
+                                               GVariant    *parameters)
+{
+  LauncherEntryRemote      *entry;
+  gchar                    *app_uri;
+  GVariantIter             *prop_iter;
+
+  g_return_if_fail (sender_name != NULL);
+  g_return_if_fail (parameters != NULL);
+
+  if (!g_variant_is_of_type (parameters, G_VARIANT_TYPE ("(sa{sv})")))
+    {
+      g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
+                 " illegal payload signature '%s'. Expected '(sa{sv})'.",
+                 g_variant_get_type_string (parameters));
+      return;
+    }
+
+  if (sender_name == NULL)
+    {
+      g_critical ("Received 'com.canonical.Unity.LauncherEntry.Update' from"
+                  " an undefined sender. This may happen if you are trying "
+                  "to run Unity on a p2p DBus connection.");
+      return;
+    }
+
+  g_variant_get (parameters, "(sa{sv})", &app_uri, &prop_iter);
+  entry = LookupByUri (app_uri);
+
+  if (entry)
+    {
+      /* It's important that we update the DBus name first since it might
+       * unset the quicklist if it changes */
+      entry->SetDBusName (sender_name);
+      entry->Update (prop_iter);
+    }
+  else
+    {
+      entry = new LauncherEntryRemote (sender_name, parameters);
+      AddEntry (entry); // consumes floating ref on entry
+    }
+
+  g_variant_iter_free (prop_iter);
+  g_free (app_uri);
+}
+
 static void
 on_launcher_entry_signal_received (GDBusConnection *connection,
                                    const gchar     *sender_name,
@@ -249,7 +299,6 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                                    gpointer         user_data)
 {
   LauncherEntryRemoteModel *self;
-  LauncherEntryRemote      *entry;
 
   self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
@@ -262,24 +311,7 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
 
   if (g_strcmp0 (signal_name, "Update") == 0)
     {
-      if (!g_variant_is_of_type (parameters, G_VARIANT_TYPE ("(sa{sv})")))
-        {
-          g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
-                     " illegal payload signature '%s'. Expected '(sa{sv})'.",
-                     g_variant_get_type_string (parameters));
-          return;
-        }
-
-      if (sender_name == NULL)
-        {
-          g_critical ("Received 'com.canonical.Unity.LauncherEntry.Update' from"
-                      " an undefined sender. This may happen if you are trying "
-                      "to run Unity on a p2p DBus connection.");
-          return;
-        }
-
-      entry = new LauncherEntryRemote (sender_name, parameters);
-      self->AddEntry (entry); // consumes floating ref on entry
+      self->HandleUpdateRequest (sender_name, parameters);
     }
   else
     {

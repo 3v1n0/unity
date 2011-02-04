@@ -326,8 +326,8 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
       nux::Color::White);
   }
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+  nux::GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   gfxContext.QRP_2TexMod (base.x,
     base.y,
     base.width,
@@ -344,7 +344,8 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   gfxContext.QRP_1Tex (base.x,
     base.y,
     base.width,

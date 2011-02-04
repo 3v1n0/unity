@@ -43,6 +43,11 @@ PanelHomeButton::PanelHomeButton ()
   SetMinMaxSize (BUTTON_WIDTH, PANEL_HEIGHT);
 
   OnMouseClick.connect (sigc::mem_fun (this, &PanelHomeButton::RecvMouseClick));
+  
+  // send this information over ubus
+  OnMouseEnter.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseEnter));
+  OnMouseLeave.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
+  OnMouseMove.connect  (sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
   Refresh ();
 }
@@ -122,6 +127,59 @@ PanelHomeButton::RecvMouseClick (int x,
       UBusServer *ubus = ubus_server_get_default ();
       ubus_server_send_message (ubus, UBUS_HOME_BUTTON_ACTIVATED, NULL);
     }
+}
+
+void 
+PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  GVariantBuilder builder;
+  
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_add (&builder, "i", x);
+  g_variant_builder_add (&builder, "i", y);
+  
+  g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
+  g_variant_builder_close (&builder);
+  
+
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+}
+
+void 
+PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  GVariantBuilder builder;
+  
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_add (&builder, "i", x);
+  g_variant_builder_add (&builder, "i", y);
+  
+  g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (false));
+  g_variant_builder_close (&builder);
+  
+
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+}
+
+void 
+PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+{
+  GVariantBuilder builder;
+  
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_add (&builder, "i", x);
+  g_variant_builder_add (&builder, "i", y);
+  
+  g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_close (&builder);
+  
+
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
 }
 
 const gchar*

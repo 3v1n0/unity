@@ -33,7 +33,7 @@
  * You do not create instances of LauncherEntryRemote yourself. Instead they
  * are created and managed dynamically by a LauncherEntryRemoteModel.
  */
-class LauncherEntryRemote : public nux::InitiallyUnownedObject, public sigc::trackable
+class LauncherEntryRemote : public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherEntryRemote, nux::InitiallyUnownedObject);
 public:
@@ -52,15 +52,15 @@ public:
   gboolean CountVisible();
   gboolean ProgressVisible();
 
-  sigc::signal<void, const gchar * > dbus_name_changed; // gives the old name as arg
-  sigc::signal<void> emblem_changed;
-  sigc::signal<void> count_changed;
-  sigc::signal<void> progress_changed;
-  sigc::signal<void> quicklist_changed;
+  sigc::signal<void, LauncherEntryRemote *, const gchar * > dbus_name_changed; // gives the old name as arg
+  sigc::signal<void, LauncherEntryRemote *> emblem_changed;
+  sigc::signal<void, LauncherEntryRemote *> count_changed;
+  sigc::signal<void, LauncherEntryRemote *> progress_changed;
+  sigc::signal<void, LauncherEntryRemote *> quicklist_changed;
 
-  sigc::signal<void> emblem_visible_changed;
-  sigc::signal<void> count_visible_changed;
-  sigc::signal<void> progress_visible_changed;
+  sigc::signal<void, LauncherEntryRemote *> emblem_visible_changed;
+  sigc::signal<void, LauncherEntryRemote *> count_visible_changed;
+  sigc::signal<void, LauncherEntryRemote *> progress_visible_changed;
 
 private:
 
@@ -89,6 +89,7 @@ private:
   void SetProgressVisible (gboolean visible);
 
   void Update (LauncherEntryRemote *other);
+  void Update (GVariantIter *prop_iter);
 
   friend class LauncherEntryRemoteModel;
 };

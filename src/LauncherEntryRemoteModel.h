@@ -38,8 +38,10 @@ public:
   LauncherEntryRemote* LookupByDesktopFile (const gchar *desktop_file_path);
   GList*               GetUris ();
 
-  void AddEntry (LauncherEntryRemote *entry);
-  void RemoveEntry (LauncherEntryRemote *entry);
+  void AddEntry            (LauncherEntryRemote *entry);
+  void RemoveEntry         (LauncherEntryRemote *entry);
+  void HandleUpdateRequest (const gchar *sender_name,
+                            GVariant    *paramaters);
 
   sigc::signal<void, LauncherEntryRemote *> entry_added;
   sigc::signal<void, LauncherEntryRemote *> entry_removed;
