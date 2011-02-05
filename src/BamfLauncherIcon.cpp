@@ -25,6 +25,9 @@
 #include "PluginAdapter.h"
 #include "FavoriteStore.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
@@ -394,6 +397,7 @@ BamfLauncherIcon::OnMouseClick (int button)
     return;
 
   Activate ();
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 void
