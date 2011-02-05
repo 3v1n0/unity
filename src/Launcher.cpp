@@ -1042,7 +1042,10 @@ void Launcher::StartKeyShowLauncher ()
 void Launcher::EndKeyShowLauncher ()
 {
     _key_show_launcher = false;
-    SetupAutohideTimer ();
+    if (_hide_on_action_done)
+      EnsureHiddenState ();
+    else
+      SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
