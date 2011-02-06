@@ -69,6 +69,9 @@ void
 IconTexture::Refresh ()
 {
   char   *file_path = NULL;
+  char   *stripped_icon_name = NULL;
+  char   *ext_dot_pos = NULL;
+  int     i;
   GError *error = NULL;
   GIcon  *icon;
 
@@ -92,8 +95,36 @@ IconTexture::Refresh ()
       }
       else
       {
-        g_warning ("Cannot find themed icon %s", _icon_name);
-        return;
+        // Some desktop files put the extension in the icon name for themed icon.
+        g_object_unref (icon);
+        stripped_icon_name = (char *)g_malloc0 (strlen(_icon_name));
+        ext_dot_pos = strchr (_icon_name, '.');
+        
+        if (ext_dot_pos)
+        {
+          i = 0;
+          while ((_icon_name + i) != ext_dot_pos)
+          {
+            stripped_icon_name[i] = _icon_name[i];
+            i++;
+          }
+          icon = g_icon_new_for_string (stripped_icon_name, &error);
+          info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
+                                                 icon,
+                                                 _size,
+                                                 (GtkIconLookupFlags)0);
+          g_free (stripped_icon_name);
+        }
+        if (info)
+        {
+          file_path = g_strdup (gtk_icon_info_get_filename (info));
+          gtk_icon_info_free (info);
+        }
+        else
+        {
+          g_warning ("Cannot find themed icon %s", _icon_name);
+          return;
+        }
       }
     }
     else if (G_IS_FILE_ICON (icon))
