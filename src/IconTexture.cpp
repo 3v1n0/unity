@@ -75,7 +75,7 @@ IconTexture::Refresh ()
   GError *error = NULL;
   GIcon  *icon;
 
-  icon = g_icon_new_for_string (_icon_name, &error);
+  icon = g_icon_new_for_string (_icon_name, NULL);
 
   if (G_IS_ICON (icon))
   {
@@ -108,7 +108,7 @@ IconTexture::Refresh ()
             stripped_icon_name[i] = _icon_name[i];
             i++;
           }
-          icon = g_icon_new_for_string (stripped_icon_name, &error);
+          icon = g_icon_new_for_string (stripped_icon_name, NULL);
           info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
                                                  icon,
                                                  _size,
@@ -117,16 +117,12 @@ IconTexture::Refresh ()
         if (info)
         {
           _icon_name = g_strdup (stripped_icon_name); // avoid further seek
-          g_free (stripped_icon_name);
           file_path = g_strdup (gtk_icon_info_get_filename (info));
           gtk_icon_info_free (info);
         }
         else
-        {
           g_warning ("Cannot find themed icon %s", _icon_name);
-          g_free (stripped_icon_name); // just a temporary redundance, see next merge
-          return;
-        }
+        g_free (stripped_icon_name);
       }
     }
     else if (G_IS_FILE_ICON (icon))
@@ -134,10 +130,7 @@ IconTexture::Refresh ()
       file_path = g_file_get_path (g_file_icon_get_file (G_FILE_ICON (icon)));
     }
     else
-    {
       g_warning ("Unsupported GIcon: %s", _icon_name);
-      return;
-    }
 
     g_object_unref (icon);
   }
@@ -145,11 +138,9 @@ IconTexture::Refresh ()
   {
     file_path = g_strdup (_icon_name);
   }
-  else
+
+  if (!file_path)
   {
-    if (error)
-      g_error_free (error);
-    error = NULL;
 
     GtkIconTheme *theme;
     GtkIconInfo *info;
@@ -157,7 +148,10 @@ IconTexture::Refresh ()
     theme = gtk_icon_theme_get_default ();
 
     if (!_icon_name)
+    {
+      g_message ("No icon_name defined, using default icon of the current theme");
       _icon_name = g_strdup (DEFAULT_ICON);
+    }
     info = gtk_icon_theme_lookup_icon (theme,
                                        _icon_name,
                                        _size,
