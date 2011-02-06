@@ -192,13 +192,17 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
   if (_state == STATE_HOVER)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
+    guint32 alpha = 0, src = 0, dest = 0;
+
+    gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+    gfxContext.GetRenderStates ().SetBlend (true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
     nux::TexCoordXForm texxform;
     texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-    gfxContext.GetRenderStates().SetPremultipliedBlend (nux::SRC_OVER);
+    //gfxContext.GetRenderStates().SetPremultipliedBlend (nux::SRC_OVER);
 
     texture = _hilight_background->GetDeviceTexture ();
 
@@ -209,8 +213,8 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                          texture,
                          texxform,
                          nux::Color::White);
-
-    gfxContext.GetRenderStates().SetBlend (false);
+    gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+   //  gfxContext.GetRenderStates().SetBlend (false);
   }
 
   gfxContext.PopClippingRectangle ();

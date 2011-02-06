@@ -41,19 +41,22 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   _entry (NULL)
 {
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-
+  
   _search_bar = new PlacesSearchBar ();
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
+
+  _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
+  _layout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
   
   _home_view = new PlacesHomeView ();
-  //_layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  _layered_layout->AddLayer (_home_view);
   AddChild (_home_view);
 
   _results_controller = new PlacesResultsController ();
   _results_view = new PlacesResultsView ();
   _results_controller->SetView (_results_view);
-  _layout->AddView (_results_view, 1, nux::eCenter, nux::eFull);
+  _layered_layout->AddLayer (_results_view);
 
   SetCompositionLayout (_layout);
 
