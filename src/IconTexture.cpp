@@ -113,16 +113,18 @@ IconTexture::Refresh ()
                                                  icon,
                                                  _size,
                                                  (GtkIconLookupFlags)0);
-          g_free (stripped_icon_name);
         }
         if (info)
         {
+          _icon_name = g_strdup (stripped_icon_name); // avoid further seek
+          g_free (stripped_icon_name);
           file_path = g_strdup (gtk_icon_info_get_filename (info));
           gtk_icon_info_free (info);
         }
         else
         {
           g_warning ("Cannot find themed icon %s", _icon_name);
+          g_free (stripped_icon_name); // just a temporary redundance, see next merge
           return;
         }
       }
