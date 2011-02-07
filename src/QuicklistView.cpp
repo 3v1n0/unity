@@ -265,7 +265,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   nux::Geometry base = GetGeometry();
 
   // Get the background of the QuicklistView and apply some 
-  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && _compute_blur_bkg /* Refresh the blurred background*/)
+  if (_compute_blur_bkg /* Refresh the blurred background*/)
   {
     nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
     nux::GetGpuDevice ()->DeactivateFrameBuffer ();
@@ -311,7 +311,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && bkg_blur_texture.IsValid ())
+  if (bkg_blur_texture.IsValid ())
   {
     gfxContext.QRP_2TexMod (
       base.x,
