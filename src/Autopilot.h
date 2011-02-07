@@ -26,19 +26,12 @@
 #include <gio/gio.h>
 
 #include <core/core.h>
-#include <composite/composite.h>
-
 #include "Nux/Nux.h"
 #include "Nux/TimerProc.h"
 
+#include "AutopilotDisplay.h"
 #include "ubus-server.h"
 
-#define TIMEVALDIFFU(tv1, tv2)                                              \
-  (((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ?   \
-  ((((tv1)->tv_sec - (tv2)->tv_sec) * 1000000) +                            \
-   ((tv1)->tv_usec - (tv2)->tv_usec)):                                      \
-  ((((tv1)->tv_sec - 1 - (tv2)->tv_sec) * 1000000) +                        \
-   (1000000 + (tv1)->tv_usec - (tv2)->tv_usec)))
 
 #define UPDATE_TIME 100
 #define TEST_TIMEOUT 6000
@@ -50,12 +43,11 @@ typedef struct {
   nux::TimerHandle expiration_handle;
 } TestArgs;
 
-class Autopilot :
-  public PluginClassHandler<Autopilot, CompScreen>,
-  public CompositeScreenInterface
+class Autopilot
 {
- public:
+public:
   Autopilot (CompScreen *screen, GDBusConnection *connection);
+  ~Autopilot ();
 
   void StartTest (const gchar *name);
 
@@ -64,15 +56,9 @@ class Autopilot :
 
   UBusServer *GetUBusConnection ();
   GDBusConnection *GetDBusConnection ();
-  CompositeScreen *GetCompositeScreen ();
 
-  guint running_tests;
-
- private:
-  float _fps;
-  float _alpha;
-  float _ctime;
-  float _frames;
+private:
+  AutopilotDisplay display;
 
   UBusServer *_ubus;
   GDBusConnection *_dbus; 
@@ -80,7 +66,7 @@ class Autopilot :
   CompScreen *_screen;
   CompositeScreen *_cscreen;
  
-  struct timeval _last_redraw;
+
 };
 
 #endif /* _AUTOPILOT_H */
