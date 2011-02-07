@@ -420,7 +420,7 @@ float Launcher::GetHoverProgress (struct timespec const &current)
 
 float Launcher::DnDExitProgress (struct timespec const &current)
 {
-    return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+    return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
 float Launcher::DnDStartProgress (struct timespec const &current)
