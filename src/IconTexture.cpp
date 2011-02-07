@@ -70,8 +70,7 @@ IconTexture::Refresh ()
 {
   char   *file_path = NULL;
   char   *stripped_icon_name = NULL;
-  char   *ext_dot_pos = NULL;
-  int     i;
+  char  **temp = NULL;
   GError *error = NULL;
   GIcon  *icon;
 
@@ -96,18 +95,15 @@ IconTexture::Refresh ()
       else
       {
         // Some desktop files put the extension in the icon name for themed icon.
+        // Try to remove it
         g_object_unref (icon);
-        stripped_icon_name = (char *)g_malloc0 (strlen(_icon_name));
-        ext_dot_pos = strchr (_icon_name, '.');
+        temp = g_strsplit (_icon_name, ".", -1);
+        g_free (temp [g_strv_length(temp) - 1]);
+        stripped_icon_name = g_strjoinv (".", temp);
+        g_strfreev (temp);
         
-        if (ext_dot_pos)
+        if (stripped_icon_name)
         {
-          i = 0;
-          while ((_icon_name + i) != ext_dot_pos)
-          {
-            stripped_icon_name[i] = _icon_name[i];
-            i++;
-          }
           icon = g_icon_new_for_string (stripped_icon_name, &error);
           info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
                                                  icon,
