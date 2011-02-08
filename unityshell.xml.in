@@ -39,10 +39,24 @@
         <options>
 	          <group>
                 <_short>Behaviour</_short>
-	              <option name="launcher_autohide" type="bool">
+	              <option name="launcher_autohide" type="int">
                     <_short>Autohide Launcher</_short>
-                    <_long>Make the launcher hide automatically after some time inactive</_long>
-                    <default>true</default>
+                    <_long>Make the launcher hide automatically after some time inactive: always or just when the focussed window is not over the launcher</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>1</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>Never</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Always</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>When Needed</_name>
+                    </desc>
 	              </option>
 	              <option name="show_launcher" type="key">
                     <_short>Key to show the launcher</_short>

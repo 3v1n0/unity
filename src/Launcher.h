@@ -82,7 +82,9 @@ public:
   void SetFloating (bool floating);
 
   void SetAutohide (bool autohide);
+  void SetIntelliHide (bool intellihide);
   bool AutohideEnabled ();
+  bool IntellihideEnabled ();
 
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
@@ -306,6 +308,7 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _autohide;
+  bool  _intellihide;
   bool  _hidden;
   bool  _was_hidden;
   bool  _mouse_inside_launcher;

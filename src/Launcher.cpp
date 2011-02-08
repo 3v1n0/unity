@@ -282,6 +282,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _floating               = false;
     _hovered                = false;
     _autohide               = false;
+    _intellihide            = false;
     _hidden                 = false;
     _was_hidden             = false;
     _mouse_inside_launcher  = false;
@@ -391,8 +392,8 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
+  g_variant_builder_add (builder, "{sv}", "intellihide", g_variant_new_boolean (_intellihide));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
   g_variant_builder_add (builder, "{sv}", "mouse-inside-launcher", g_variant_new_boolean (_mouse_inside_launcher));
 }
 
@@ -1161,7 +1162,7 @@ Launcher::CheckWindowOverLauncher ()
     if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
-    if (!PluginAdapter::Default ()->IsWindowFocussed(window->id()))
+    if (_intellihide && !PluginAdapter::Default ()->IsWindowFocussed(window->id()))
       continue;
 
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
@@ -1198,6 +1199,11 @@ bool Launcher::AutohideEnabled ()
   return _autohide;
 }
 
+bool Launcher::IntellihideEnabled ()
+{
+  return (_autohide && _intellihide);
+}
+
 /* End Launcher Show/Hide logic */
 
 // Hacks around compiz failing to see the struts because the window was just mapped.
@@ -1228,6 +1234,17 @@ void Launcher::SetAutohide (bool autohide)
 
   _autohide = autohide;
   EnsureAnimation ();
+}
+
+void Launcher::SetIntelliHide (bool intellihide)
+{
+  if (_intellihide == intellihide)
+    return;
+
+  _intellihide = intellihide;
+
+  if (intellihide && !_autohide)
+    SetAutohide(true);
 }
 
 void Launcher::SetFloating (bool floating)

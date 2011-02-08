@@ -462,7 +462,18 @@ UnityScreen::optionChanged (CompOption            *opt,
   switch (num)
   {
     case UnityshellOptions::LauncherAutohide:
-      launcher->SetAutohide (optionGetLauncherAutohide ());
+      switch (optionGetLauncherAutohide ())
+      {
+        case LauncherAutohideAlways:
+          launcher->SetAutohide (true);
+          break;
+        case LauncherAutohideWhenNeeded:
+          launcher->SetIntelliHide (true);
+          break;
+        default:
+          launcher->SetAutohide (false);
+          launcher->SetIntelliHide (false);
+      }
       break;
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
