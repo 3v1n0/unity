@@ -461,19 +461,8 @@ UnityScreen::optionChanged (CompOption            *opt,
 {
   switch (num)
   {
-    case UnityshellOptions::LauncherAutohide:
-      switch (optionGetLauncherAutohide ())
-      {
-        case LauncherAutohideAlways:
-          launcher->SetAutohide (true);
-          break;
-        case LauncherAutohideWhenNeeded:
-          launcher->SetIntelliHide (true);
-          break;
-        default:
-          launcher->SetAutohide (false);
-          launcher->SetIntelliHide (false);
-      }
+    case UnityshellOptions::LauncherAutohideMode:
+      launcher->SetAutohideMode ((Launcher::LauncherAutohideMode) optionGetLauncherAutohideMode ());
       break;
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
@@ -548,7 +537,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherAutohideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
@@ -577,7 +566,7 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
   UnityScreen *self = (UnityScreen*) data;
 
-  if (!self->launcher->AutohideEnabled ())
+  if (self->launcher->GetAutohideMode () == Launcher::LAUNCHER_AUTOHIDE_NEVER)
   {
     self->launcherWindow->InputWindowEnableStruts(false);
     self->launcherWindow->InputWindowEnableStruts(true);
@@ -652,7 +641,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohide (true);
+  self->launcher->SetAutohideMode (Launcher::LAUNCHER_AUTOHIDE_ALWAYS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
