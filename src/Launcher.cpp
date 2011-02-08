@@ -1161,6 +1161,9 @@ Launcher::CheckWindowOverLauncher ()
     if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
+    if (!PluginAdapter::Default ()->IsWindowFocussed(window->id()))
+      continue;
+
     if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
