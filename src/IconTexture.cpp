@@ -94,11 +94,13 @@ IconTexture::Refresh ()
       }
       else
       {
-        // Some desktop files put the extension in the icon name for themed icon.
+        gint length;        // Some desktop files put the extension in the icon name for themed icon.
         // Try to remove it
         g_object_unref (icon);
         temp = g_strsplit (_icon_name, ".", -1);
-        g_free (temp [g_strv_length(temp) - 1]);
+        length = g_strv_length(temp);
+        g_free (temp [length - 1]);
+        temp[length-1] = NULL;
         stripped_icon_name = g_strjoinv (".", temp);
         g_strfreev (temp);
         

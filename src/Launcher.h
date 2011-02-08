@@ -243,6 +243,8 @@ private:
   
   static void OnTriggerUpdate (GVariant *data, gpointer user_data);
 
+  static void OnActionDone (GVariant *data, void *val);
+
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
                          int running,
@@ -311,6 +313,7 @@ private:
   bool  _key_show_launcher;
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
+  bool  _hide_on_action_done;
   bool  _render_drag_window;
   bool  _backlight_always_on;
 

@@ -84,6 +84,7 @@ private:
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
 
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 
