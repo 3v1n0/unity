@@ -41,11 +41,12 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  void Refresh ();
+  void LoadIcon ();
+  void Refresh (GdkPixbuf *pixbuf);
+  void IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf);
 
   char *_icon_name;
   unsigned int _size;
-  GdkPixbuf *_pixbuf;
 };
 
 #endif // ICON_TEXTURE_H
