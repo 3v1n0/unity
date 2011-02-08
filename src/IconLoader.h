@@ -89,6 +89,7 @@ private:
   GQueue       *_tasks;
   guint         _idle_id;
   GtkIconTheme *_theme;
+  gint64        _idle_start_time;
 };
 
 #endif // ICON_LOADER_H

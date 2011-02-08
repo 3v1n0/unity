@@ -138,7 +138,8 @@ IconLoader::QueueTask (const char           *key,
 
   if (_idle_id < 1)
   {
-    _idle_id = g_idle_add ((GSourceFunc)Loop, this);
+    _idle_id = g_idle_add_full (G_PRIORITY_LOW, (GSourceFunc)Loop, this, NULL);
+    _idle_start_time = g_get_monotonic_time ();
   }
 }
 
@@ -171,7 +172,7 @@ IconLoader::ProcessTask (IconLoaderTask *task)
   GdkPixbuf *pixbuf = NULL;
   bool       task_complete = false;
 
-  // First thing we do is check the cache again, as previous tasks might have wanted the same
+  // Check the cache again, as previous tasks might have wanted the same
   if (CacheLookup (task->key, task->data, task->size, task->slot))
     return true;
 
@@ -352,9 +353,13 @@ IconLoader::ProcessFilenameTask (IconLoaderTask *task)
 bool
 IconLoader::Iteration ()
 {
+#define MAX_MICRO_SECS 10000
   bool is_empty;
+  gint64 time;
+
+  time = g_get_monotonic_time ();
   
-  for (int i = 0; i < 4; i++)
+  while (true)
   {
     IconLoaderTask *task;
 
@@ -368,11 +373,20 @@ IconLoader::Iteration ()
       g_free (task->data);
       g_slice_free (IconLoaderTask, task);
     }
+
+    if (g_get_monotonic_time () - time > MAX_MICRO_SECS)
+      break;
   }
+
+  g_debug ("Iteration took: %f msecs", (g_get_monotonic_time () - time)/1000.0);
   
   is_empty = g_queue_is_empty (_tasks);
   if (is_empty)
+  {
     _idle_id = 0;
+
+    g_debug ("Complete load took: %f msecs", (g_get_monotonic_time () - _idle_start_time)/1000.0);
+  }
 
   return !is_empty;
 }

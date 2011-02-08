@@ -109,7 +109,7 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
   SetPaintLayer(texture_layer);
   texture2D->UnReference ();
 
-  SetMinMaxSize (_size, _size);
+  SetMinMaxSize (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf));
   QueueDraw ();
 }
 
