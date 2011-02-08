@@ -33,6 +33,7 @@ static AtkObject *panel_root_accessible_get_parent     (AtkObject *accessible);
 
 struct _PanelRootAccessiblePrivate
 {
+  PanelService *service;
 };
 
 static void
@@ -58,6 +59,7 @@ static void
 panel_root_accessible_init (PanelRootAccessible *root)
 {
   root->priv = GET_PRIVATE (root);
+  root->priv->service = panel_service_get_default ();
 }
 
 AtkObject *
@@ -92,7 +94,7 @@ panel_root_accessible_get_n_children (AtkObject *accessible)
 
   g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), 0);
 
-  n_children = panel_service_get_n_indicators (panel_service_get_default ());
+  n_children = panel_service_get_n_indicators (PANEL_ROOT_ACCESSIBLE (accessible)->priv->service);
 
   g_debug ("PanelRootAccessible has %d children", n_children);
 
@@ -102,14 +104,19 @@ panel_root_accessible_get_n_children (AtkObject *accessible)
 static AtkObject *
 panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  AtkObject *child;
+  AtkObject *child = NULL;
+  IndicatorObject *indicator;
 
   g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-  child = panel_indicator_accessible_new (); /* FIXME */
-  atk_object_set_parent (child, accessible);
+  indicator = panel_service_get_indicator (PANEL_ROOT_ACCESSIBLE (accessible)->priv->service, i);
+  if (indicator != NULL)
+    {
+      child = panel_indicator_accessible_new (indicator);
+      atk_object_set_parent (child, accessible);
 
-  g_debug ("Returning ATK child %p", child);
+      g_debug ("Returning ATK child %p", child);
+    }
 
   return child;
 }
@@ -117,7 +124,7 @@ panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 static AtkObject *
 panel_root_accessible_get_parent (AtkObject *accessible)
 {
-	g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
+  g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-	return NULL;
+  return NULL;
 }
