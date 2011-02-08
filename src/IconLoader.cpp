@@ -202,7 +202,46 @@ IconLoader::ProcessTask (IconLoaderTask *task)
 bool
 IconLoader::ProcessIconNameTask (IconLoaderTask *task)
 {
-  return true;
+  GtkIconInfo *info;
+
+  info = gtk_icon_theme_lookup_icon (_theme,
+                                     task->data,
+                                     task->size,
+                                     (GtkIconLookupFlags)0);
+  if (info)
+  {
+    GdkPixbuf *pixbuf;
+    GError    *error = NULL;
+
+    pixbuf = gtk_icon_info_load_icon (info, &error);
+    if (GDK_IS_PIXBUF (pixbuf))
+    {
+      _cache[task->key] = pixbuf;
+      task->slot (task->data, task->size, pixbuf);
+
+      gtk_icon_info_free (info);
+      return true;
+    }
+    else
+    {
+      g_warning ("%s: Unable to load icon %s at size %d: %s",
+                  G_STRFUNC,
+                  task->data,
+                  task->size,
+                  error->message);
+      g_error_free (error);
+      gtk_icon_info_free (info);
+      return true;
+    }
+  }
+  else
+  {
+    g_warning ("%s: Unable to load icon %s at size %d",
+                G_STRFUNC,
+                task->data,
+                task->size);
+    return true;
+  }
 }
 
 bool
