@@ -51,41 +51,27 @@ private:
 
   enum IconLoaderRequestType
   {
-    ICON_NAME=0,
-    ICON_STRING
+    REQUEST_TYPE_ICON_NAME=0,
+    REQUEST_TYPE_GICON_STRING,
+    REQUEST_TYPE_FILENAME
   };
 
-  class IconLoaderTask
+  struct IconLoaderTask
   {
-  public:
-    IconLoaderTask (IconLoaderRequestType type,
-                    char                 *data,
-                    guint                 size,
-                    char                 *key,
-                    sigc::slot<void, char *, guint, GdkPixbuf *> slot)
-    : _type (type),
-      _data (data),
-      _size (size),
-      _key (key),
-      _slot (slot)
-    {
-
-    }
-
-    ~IconLoaderTask ()
-    {
-      g_free (_data);
-      g_free (_key);
-    }
-
-    IconLoaderRequestType  _type;
-    char                  *_data;
-    guint                  _size;
-    char                  *_key;
-    sigc::slot<void, char*, guint, GdkPixbuf *> _slot;
+    IconLoaderRequestType type;
+    char                 *data;
+    guint                 size;
+    char                 *key;
+    IconLoaderCallback    slot;
   };
 
-  char * Hash (const gchar *data, guint size);
+
+  void   QueueTask (const char           *key,
+                    const char           *data,
+                    guint                 size,
+                    IconLoaderCallback    slot,
+                    IconLoaderRequestType type);
+  char * Hash (const char *data, guint size);
   bool   CacheLookup (const char *key,
                       const char *data,
                       guint       size,
@@ -93,7 +79,7 @@ private:
  
 private:
  std::map<std::string, GdkPixbuf *> _cache;
- std::vector<IconLoaderTask>        _tasks;
+ std::vector<IconLoaderTask*>        _tasks;
 };
 
 #endif // ICON_LOADER_H

@@ -46,7 +46,7 @@ IconLoader::LoadFromIconName (const char        *icon_name,
                               guint              size,
                               IconLoaderCallback slot)
 {
-  char      *key;
+  char *key;
 
   g_return_if_fail (icon_name);
   g_return_if_fail (size > 1);
@@ -58,6 +58,10 @@ IconLoader::LoadFromIconName (const char        *icon_name,
     g_free (key);
     return;
   }
+
+  QueueTask (key, icon_name, size, slot, REQUEST_TYPE_ICON_NAME);
+
+  g_free (key);
 }
 
 void
@@ -65,7 +69,22 @@ IconLoader::LoadFromGIconString (const char        *gicon_string,
                                  guint              size,
                                  IconLoaderCallback slot)
 {
+  char *key;
 
+  g_return_if_fail (gicon_string);
+  g_return_if_fail (size > 1);
+
+  key = Hash (gicon_string, size);
+
+  if (CacheLookup (key, gicon_string, size, slot))
+  {
+    g_free (key);
+    return;
+  }
+
+  QueueTask (key, gicon_string, size, slot, REQUEST_TYPE_GICON_STRING);
+
+  g_free (key);
 }
 
 void
@@ -73,7 +92,45 @@ IconLoader::LoadFromFilename (const char        *filename,
                               guint              size,
                               IconLoaderCallback slot)
 {
+  char      *key;
 
+  g_return_if_fail (filename);
+  g_return_if_fail (size > 1);
+
+  key = Hash (filename, size);
+
+  if (CacheLookup (key, filename, size, slot))
+  {
+    g_free (key);
+    return;
+  }
+
+  QueueTask (key, filename, size, slot, REQUEST_TYPE_FILENAME);
+
+  g_free (key);
+}
+
+//
+// Private Methods
+//
+
+void
+IconLoader::QueueTask (const char           *key,
+                       const char           *data,
+                       guint                 size,
+                       IconLoaderCallback    slot,
+                       IconLoaderRequestType type)
+{
+  IconLoaderTask *task;
+
+  task = g_slice_new0 (IconLoaderTask);
+  task->key = g_strdup (key);
+  task->data = g_strdup (data);
+  task->size = size;
+  task->slot = slot;
+  task->type = type;
+
+  _tasks.push_back (task);
 }
 
 char *
