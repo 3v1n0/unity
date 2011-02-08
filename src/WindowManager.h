@@ -49,6 +49,7 @@ public:
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
   virtual bool IsWindowDecorated (guint32 xid) = 0;
+  virtual bool IsWindowFocussed (guint32 xid) = 0;
 
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;
@@ -72,6 +73,7 @@ public:
   sigc::signal<void, guint32> window_hidden;
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
+  sigc::signal<void, guint32> window_focussed;
   sigc::signal<void, std::list<guint32> &> initiate_spread;
   sigc::signal<void, std::list<guint32> &> terminate_spread;
 

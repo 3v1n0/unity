@@ -44,7 +44,8 @@ PluginAdapter::Initialize (CompScreen *screen)
 PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_Screen (screen),
     m_ExpoActionList (0),
-    m_ScaleActionList (0)
+    m_ScaleActionList (0),
+    m_focussed(NULL)
 {
 }
 
@@ -114,6 +115,10 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
       break;
     case CompWindowNotifyShow:
       window_shown.emit (window->id ());
+      break;
+    case CompWindowNotifyFocusChange:
+      m_focussed = window;
+      window_focussed.emit (window->id ());
       break;
     case CompWindowNotifyMap:
       WindowManager::window_mapped.emit (window->id ());
@@ -317,6 +322,18 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
     return decor & (MwmDecorAll | MwmDecorTitle);
   }
   return true;
+}
+
+bool
+PluginAdapter::IsWindowFocussed (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  if (window != NULL && xid == window->id())
+    return true;
+
+  return false;
 }
 
 void

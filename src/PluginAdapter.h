@@ -78,6 +78,7 @@ public:
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
+    bool IsWindowFocussed (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
@@ -92,6 +93,7 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
+    CompWindow *m_focussed;
     
     static PluginAdapter *_default;
 };
