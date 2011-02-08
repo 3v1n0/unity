@@ -76,6 +76,7 @@ public:
   void OnWindowRestored  (guint32 xid);
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseMiddleClicked ();
 
   void Refresh ();
   void AllMenusClosed ();
