@@ -21,13 +21,15 @@
 #define _TEMPLATE_ "%s:%d"
 
 IconLoader::IconLoader ()
+: _idle_id (0)
 {
-
+  _tasks = g_queue_new ();
+  _theme = gtk_icon_theme_get_default ();
 }
 
 IconLoader::~IconLoader ()
 {
-
+  g_queue_free (_tasks);
 }
 
 IconLoader *
@@ -130,7 +132,12 @@ IconLoader::QueueTask (const char           *key,
   task->slot = slot;
   task->type = type;
 
-  _tasks.push_back (task);
+  g_queue_push_tail (_tasks, task);
+
+  if (_idle_id < 1)
+  {
+    _idle_id = g_idle_add ((GSourceFunc)Loop, this);
+  }
 }
 
 char *
@@ -154,4 +161,92 @@ IconLoader::CacheLookup (const char *key,
     return true;
   }
   return false;
+}
+
+bool
+IconLoader::ProcessTask (IconLoaderTask *task)
+{
+  GdkPixbuf *pixbuf = NULL;
+  bool       task_complete = false;
+
+  // First thing we do is check the cache again, as previous tasks might have wanted the same
+  if (CacheLookup (task->key, task->data, task->size, task->slot))
+    return true;
+
+  if (task->type == REQUEST_TYPE_ICON_NAME)
+  {
+    task_complete = ProcessIconNameTask (task);
+  }
+  else if (task->type == REQUEST_TYPE_GICON_STRING)
+  {
+    task_complete = ProcessGIconTask (task);
+  }
+  else if (task->type == REQUEST_TYPE_FILENAME)
+  {
+    task_complete = ProcessFilenameTask (task);
+  }
+  else
+  {
+    g_warning ("%s: Request type %d is not supported (%s %d)",
+               G_STRFUNC,
+               task->type,
+               task->data,
+               task->size);
+    task->slot (task->data, task->size, pixbuf);
+    task_complete = true;
+  }
+
+  return task_complete;
+}
+
+bool
+IconLoader::ProcessIconNameTask (IconLoaderTask *task)
+{
+  return true;
+}
+
+bool
+IconLoader::ProcessGIconTask (IconLoaderTask *task)
+{
+  return true;
+}
+
+bool
+IconLoader::ProcessFilenameTask (IconLoaderTask *task)
+{
+  return true;
+}
+
+bool
+IconLoader::Iteration ()
+{
+  bool is_empty;
+  
+  for (int i = 0; i < 4; i++)
+  {
+    IconLoaderTask *task;
+
+    task = static_cast<IconLoaderTask *> (g_queue_pop_head (_tasks));
+    if (!task)
+      break;
+
+    if (ProcessTask (task))
+    {
+      g_free (task->key);
+      g_free (task->data);
+      g_slice_free (IconLoaderTask, task);
+    }
+  }
+  
+  is_empty = g_queue_is_empty (_tasks);
+  if (is_empty)
+    _idle_id = 0;
+
+  return !is_empty;
+}
+
+bool
+IconLoader::Loop (IconLoader *self)
+{
+  return static_cast<IconLoader *> (self)->Iteration ();
 }

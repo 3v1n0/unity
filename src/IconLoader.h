@@ -76,10 +76,19 @@ private:
                       const char *data,
                       guint       size,
                       IconLoaderCallback slot);
+  bool   ProcessTask (IconLoaderTask *task);
+  bool   ProcessIconNameTask (IconLoaderTask *task);
+  bool   ProcessGIconTask (IconLoaderTask *task);
+  bool   ProcessFilenameTask (IconLoaderTask *task);
+  bool   Iteration ();
+
+  static bool Loop (IconLoader *self);
  
 private:
- std::map<std::string, GdkPixbuf *> _cache;
- std::vector<IconLoaderTask*>        _tasks;
+  std::map<std::string, GdkPixbuf *> _cache;
+  GQueue       *_tasks;
+  guint         _idle_id;
+  GtkIconTheme *_theme;
 };
 
 #endif // ICON_LOADER_H
