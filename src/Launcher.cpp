@@ -2726,3 +2726,47 @@ Launcher::RestoreSystemRenderTarget ()
 {
   nux::GetWindowCompositor ().RestoreRenderingSurface ();
 }
+
+void 
+Launcher::ProcessDndEnter ()
+{
+  printf ("Drag Enter\n");
+}
+
+void 
+Launcher::ProcessDndLeave ()
+{
+  printf ("Drag Leave\n");
+}
+
+void 
+Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
+{
+  std::list<char *>::iterator it;
+  bool result = false;
+  
+  // hack to ensure accept until we have a real implementation going
+  result = true;
+  
+  for (it = mimes.begin (); it != mimes.end (); it++)
+  {
+    if (g_str_equal (*it, "text/uri-list"))
+    {
+      result = true;
+      break;
+    }
+  }
+  
+  if (result)
+    SendDndStatus (true, nux::DNDACTION_COPY, nux::Geometry (x, y, 1, 1));
+  else
+    SendDndStatus (false, nux::DNDACTION_NONE, nux::Geometry (x, y, 1, 1));
+  printf ("Drag Move\n");
+}
+
+void 
+Launcher::ProcessDndDrop (int x, int y)
+{
+  SendDndFinished (true, nux::DNDACTION_COPY);
+  printf ("Drag Drop\n");
+}
