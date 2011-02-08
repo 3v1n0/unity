@@ -93,7 +93,7 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
-    CompWindow *m_focussed;
+    guint32 m_focussed;
     
     static PluginAdapter *_default;
 };
