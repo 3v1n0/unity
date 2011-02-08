@@ -248,7 +248,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
-    _autohidemode           = LAUNCHER_AUTOHIDE_NEVER;
+    _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
@@ -390,7 +390,7 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
-  g_variant_builder_add (builder, "{sv}", "autohidemode", g_variant_new_int32 (_autohidemode));
+  g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
   g_variant_builder_add (builder, "{sv}", "mouse-inside-launcher", g_variant_new_boolean (_mouse_inside_launcher));
 }
@@ -434,7 +434,7 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 
 float Launcher::AutohideProgress (struct timespec const &current)
 {
-    if (_autohidemode == LAUNCHER_AUTOHIDE_NEVER)
+    if (_hidemode == LAUNCHER_HIDE_NEVER)
         return 0.0f;
 
     if (_hidden)
@@ -973,7 +973,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     float autohide_progress = AutohideProgress (current);
     float autohide_offset = 0.0f;
-    if (_autohidemode != LAUNCHER_AUTOHIDE_NEVER && autohide_progress > 0.0f)
+    if (_hidemode != LAUNCHER_HIDE_NEVER && autohide_progress > 0.0f)
     {
         autohide_offset -= geo.width * autohide_progress;
     }
@@ -981,7 +981,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     // Inform the painter where to paint the box
     box_geo = geo;
 
-    if (_autohidemode != LAUNCHER_AUTOHIDE_NEVER)
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
         box_geo.x += autohide_offset;
 
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
@@ -1160,10 +1160,10 @@ Launcher::CheckWindowOverLauncher ()
     if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
       continue;
 
-    if (_autohidemode == LAUNCHER_AUTOHIDE_WHEN_NEEDED && !PluginAdapter::Default ()->IsWindowFocussed(window->id()))
+    if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED && !PluginAdapter::Default ()->IsWindowFocussed(window->id()))
       continue;
 
-    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    if (_hidemode == LAUNCHER_HIDE_ALWAYS || CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
       EnsureHiddenState ();
@@ -1178,13 +1178,13 @@ Launcher::CheckWindowOverLauncher ()
 void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
-  if (_autohidemode != LAUNCHER_AUTOHIDE_NEVER)
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher ();
 }
 
 void Launcher::SetupAutohideTimer ()
 {
-  if (_autohidemode != LAUNCHER_AUTOHIDE_NEVER)
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
   {
     if (_autohide_handle > 0)
       g_source_remove (_autohide_handle);
@@ -1192,9 +1192,9 @@ void Launcher::SetupAutohideTimer ()
   }
 }
 
-Launcher::LauncherAutohideMode Launcher::GetAutohideMode ()
+Launcher::LauncherHideMode Launcher::GetHideMode ()
 {
-  return _autohidemode;
+  return _hidemode;
 }
 
 /* End Launcher Show/Hide logic */
@@ -1209,12 +1209,12 @@ gboolean Launcher::StrutHack (gpointer data)
   return false;
 }
 
-void Launcher::SetAutohideMode (LauncherAutohideMode autohidemode)
+void Launcher::SetHideMode (LauncherHideMode hidemode)
 {
-  if (_autohidemode == autohidemode)
+  if (_hidemode == hidemode)
     return;
 
-  if (autohidemode != LAUNCHER_AUTOHIDE_NEVER)
+  if (hidemode != LAUNCHER_HIDE_NEVER)
   {
     _parent->InputWindowEnableStruts(false);
   }
@@ -1225,7 +1225,7 @@ void Launcher::SetAutohideMode (LauncherAutohideMode autohidemode)
     _parent->InputWindowEnableStruts(true);
   }
 
-  _autohidemode = autohidemode;
+  _hidemode = hidemode;
   EnsureAnimation ();
 }
 

@@ -461,8 +461,8 @@ UnityScreen::optionChanged (CompOption            *opt,
 {
   switch (num)
   {
-    case UnityshellOptions::LauncherAutohideMode:
-      launcher->SetAutohideMode ((Launcher::LauncherAutohideMode) optionGetLauncherAutohideMode ());
+    case UnityshellOptions::LauncherHideMode:
+      launcher->SetHideMode ((Launcher::LauncherHideMode) optionGetLauncherHideMode ());
       break;
     case UnityshellOptions::BacklightAlwaysOn:
       launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
@@ -537,7 +537,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherAutohideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
@@ -566,7 +566,7 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
   UnityScreen *self = (UnityScreen*) data;
 
-  if (self->launcher->GetAutohideMode () == Launcher::LAUNCHER_AUTOHIDE_NEVER)
+  if (self->launcher->GetHideMode () == Launcher::LAUNCHER_HIDE_NEVER)
   {
     self->launcherWindow->InputWindowEnableStruts(false);
     self->launcherWindow->InputWindowEnableStruts(true);
@@ -641,7 +641,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohideMode (Launcher::LAUNCHER_AUTOHIDE_ALWAYS);
+  self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_ALWAYS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);

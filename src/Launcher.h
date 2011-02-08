@@ -49,10 +49,11 @@ class Launcher : public Introspectable, public nux::View
 public:
   typedef enum
   {
-    LAUNCHER_AUTOHIDE_NEVER,
-    LAUNCHER_AUTOHIDE_ALWAYS,
-    LAUNCHER_AUTOHIDE_WHEN_NEEDED,
-  } LauncherAutohideMode;
+    LAUNCHER_HIDE_NEVER,
+    LAUNCHER_HIDE_ALWAYS,
+    LAUNCHER_HIDE_AUTOMATICALLY,
+    LAUNCHER_HIDE_WHEN_NEEDED,
+  } LauncherHideMode;
 
   typedef enum
   {
@@ -88,8 +89,8 @@ public:
 
   void SetFloating (bool floating);
 
-  void SetAutohideMode (LauncherAutohideMode autohide);
-  LauncherAutohideMode GetAutohideMode ();
+  void SetHideMode (LauncherHideMode hidemode);
+  LauncherHideMode GetHideMode ();
 
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
@@ -329,7 +330,7 @@ private:
   float _launcher_top_y;
   float _launcher_bottom_y;
 
-  LauncherAutohideMode _autohidemode;
+  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
