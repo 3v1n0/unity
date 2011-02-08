@@ -86,7 +86,7 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
       atk_object_set_role (accessible, ATK_ROLE_LABEL);
       atk_object_set_name (accessible, gtk_label_get_text (piea->priv->entry->label));
     }
-  else if (GTK_IS_IMAGE (piea->priv->entry->image))
+  if (GTK_IS_IMAGE (piea->priv->entry->image))
     {
       atk_object_set_role (accessible, ATK_ROLE_IMAGE);
     }
@@ -95,11 +95,31 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
 static gint
 panel_indicator_entry_accessible_get_n_children (AtkObject *accessible)
 {
-  return 0;
+  PanelIndicatorEntryAccessible *piea;
+  gint n_children = 0;
+
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible), 0);
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  if (GTK_IS_MENU (piea->priv->entry->menu)
+      && gtk_widget_get_visible (GTK_WIDGET (piea->priv->entry->menu)))
+    n_children = 1;
+
+  return n_children;
 }
 
 static AtkObject *
 panel_indicator_entry_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  return NULL;
+  PanelIndicatorEntryAccessible *piea;
+  AtkObject *child = NULL;
+
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible), NULL);
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  if (GTK_IS_MENU (piea->priv->entry->menu)
+      && gtk_widget_get_visible (GTK_WIDGET (piea->priv->entry->menu)))
+    child = gtk_widget_get_accessible (GTK_WIDGET (piea->priv->entry->menu));
+
+  return child;
 }
