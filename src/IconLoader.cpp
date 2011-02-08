@@ -18,6 +18,8 @@
 
 #include "IconLoader.h"
 
+#include <string.h>
+
 #define _TEMPLATE_ "%s:%d"
 
 IconLoader::IconLoader ()
@@ -202,6 +204,7 @@ IconLoader::ProcessTask (IconLoaderTask *task)
 bool
 IconLoader::ProcessIconNameTask (IconLoaderTask *task)
 {
+  GdkPixbuf   *pixbuf = NULL;
   GtkIconInfo *info;
 
   info = gtk_icon_theme_lookup_icon (_theme,
@@ -210,17 +213,12 @@ IconLoader::ProcessIconNameTask (IconLoaderTask *task)
                                      (GtkIconLookupFlags)0);
   if (info)
   {
-    GdkPixbuf *pixbuf;
-    GError    *error = NULL;
+    GError *error = NULL;
 
     pixbuf = gtk_icon_info_load_icon (info, &error);
     if (GDK_IS_PIXBUF (pixbuf))
     {
       _cache[task->key] = pixbuf;
-      task->slot (task->data, task->size, pixbuf);
-
-      gtk_icon_info_free (info);
-      return true;
     }
     else
     {
@@ -230,9 +228,8 @@ IconLoader::ProcessIconNameTask (IconLoaderTask *task)
                   task->size,
                   error->message);
       g_error_free (error);
-      gtk_icon_info_free (info);
-      return true;
     }
+    gtk_icon_info_free (info);
   }
   else
   {
@@ -240,19 +237,115 @@ IconLoader::ProcessIconNameTask (IconLoaderTask *task)
                 G_STRFUNC,
                 task->data,
                 task->size);
-    return true;
   }
+
+  task->slot (task->data, task->size, pixbuf);
+  return true;
 }
 
 bool
 IconLoader::ProcessGIconTask (IconLoaderTask *task)
 {
+  GdkPixbuf   *pixbuf = NULL;
+  GIcon       *icon;
+  GError      *error = NULL;
+
+  icon = g_icon_new_for_string (task->data, &error);
+  
+  if (G_IS_ICON (icon))
+  {
+    GtkIconInfo *info;
+    info = gtk_icon_theme_lookup_by_gicon (_theme,
+                                           icon,
+                                           task->size,
+                                           (GtkIconLookupFlags)0);
+    if (info)
+    {
+      pixbuf = gtk_icon_info_load_icon (info, &error);
+
+      if (GDK_IS_PIXBUF (pixbuf))
+      {
+        _cache[task->key] = pixbuf;
+      }
+      else
+      {
+        g_warning ("%s: Unable to load icon %s at size %d: %s",
+                    G_STRFUNC,
+                    task->data,
+                    task->size,
+                    error->message);
+        g_error_free (error);
+      }
+      gtk_icon_info_free (info);
+    }
+    else
+    {
+      // There is some funkiness in some programs where they install
+      // their icon to /usr/share/icons/hicolor/apps/, but they
+      // name the Icon= key as `foo.$extension` which breaks loading
+      // So we can try and work around that here.
+      if (g_str_has_suffix (task->data, ".png")
+          || g_str_has_suffix (task->data, ".xpm")
+          || g_str_has_suffix (task->data, ".gif")
+          || g_str_has_suffix (task->data, ".jpg"))
+      {
+        char *new_data;
+        
+        new_data = g_strndup (task->data, strlen (task->data) - 4);
+        g_free (task->data);
+        task->data = new_data;
+        return ProcessIconNameTask (task);
+      }
+      else
+      {
+        g_warning ("%s: Unable to load icon %s at size %d",
+                    G_STRFUNC,
+                    task->data,
+                    task->size);
+      }
+    }
+    g_object_unref (icon);
+  }
+  else
+  {
+    g_warning ("%s: Unable to load GIcon %s at size %d: %s",
+                G_STRFUNC,
+                task->data,
+                task->size,
+                error->message);
+    g_error_free (error);
+  }
+
+  task->slot (task->data, task->size, pixbuf);
   return true;
 }
 
 bool
 IconLoader::ProcessFilenameTask (IconLoaderTask *task)
 {
+  GdkPixbuf *pixbuf;
+  GError    *error = NULL;
+
+  pixbuf = gdk_pixbuf_new_from_file_at_scale (task->data,
+                                              -1,
+                                              task->size,
+                                              true,
+                                              &error);
+  if (GDK_IS_PIXBUF (pixbuf))
+  {
+    _cache[task->key] = pixbuf;
+  }
+  else
+  {
+    g_warning ("%s: Unable to load filename icon %s at size %d: %s",
+               G_STRFUNC,
+               task->data,
+               task->size,
+               error->message);
+    g_error_free (error);
+  }
+
+  task->slot (task->data, task->size, pixbuf);
   return true;
 }
 
