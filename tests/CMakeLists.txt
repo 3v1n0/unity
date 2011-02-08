@@ -110,6 +110,8 @@ add_executable (test-panel
 
 add_executable (test-places
                 TestPlaces.cpp
+                ../src/IconLoader.cpp
+                ../src/IconLoader.h
                 ../src/IconTexture.cpp
                 ../src/IconTexture.h
                 ../src/PlacesController.cpp

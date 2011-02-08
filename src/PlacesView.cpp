@@ -65,6 +65,8 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
+
+  _icon_loader = IconLoader::GetDefault ();
 }
 
 PlacesView::~PlacesView ()

@@ -32,9 +32,8 @@ NUX_IMPLEMENT_OBJECT_TYPE (LauncherEntryRemote);
  */
 LauncherEntryRemote::LauncherEntryRemote(const gchar *dbus_name, GVariant *val)
 {
-  gchar        *app_uri, *prop_key;
+  gchar        *app_uri;
   GVariantIter *prop_iter;
-  GVariant     *prop_value;
 
   g_return_if_fail (dbus_name != NULL);
   g_return_if_fail (val != NULL);
