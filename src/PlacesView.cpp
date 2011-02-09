@@ -130,7 +130,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     DeeModelIter *iter, *last;
 
     _entry->SetActive (true);
-    
+ 
     groups = _entry->GetGroupsModel ();
     iter = dee_model_get_first_iter (groups);
     last = dee_model_get_last_iter (groups);
@@ -160,11 +160,11 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
                                            (GCallback)&PlacesView::OnResultRemoved, this);
 
-    _layered_layout->SetActiveLayerN (1);
+    _layered_layout->SetActiveLayer (_results_view);
   }
   else
   {
-    _layered_layout->SetActiveLayerN(0);
+    _layered_layout->SetActiveLayerN (0);
   }
 
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
@@ -208,7 +208,6 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   DeeModel         *groups;
   DeeModelIter     *git;
   const gchar      *group_id;
-  gchar      *result_id;
   gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
@@ -225,9 +224,6 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
   result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
                                       -1);
-  result_id = g_strdup_printf ("%s:%s",
-                               group_id,
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
   result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
 
   tile = new PlacesSimpleTile (result_icon, result_name, 48);
@@ -236,7 +232,6 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   self->GetResultsController ()->AddResultToGroup (group_id, tile, iter);
 
   g_free (result_name);
-  g_free (result_id);
 }
 
 void
@@ -246,8 +241,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
   DeeModel     *groups;
   DeeModelIter *git;
   const gchar  *group_id;
-  gchar  *result_id;
-
+  
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
     return;
@@ -257,13 +251,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
                                                                  iter,
                                                                  PlaceEntry::RESULT_GROUP_ID));
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_id = g_strdup_printf ("%s:%s",
-                               group_id, 
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
-
   self->GetResultsController ()->RemoveResultFromGroup (group_id, iter);
-
-  g_free (result_id);
 }
 
 void
