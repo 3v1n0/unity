@@ -58,6 +58,8 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   _results_controller->SetView (_results_view);
   _layered_layout->AddLayer (_results_view);
 
+  _layered_layout->SetActiveLayer (_home_view);
+
   SetCompositionLayout (_layout);
 
   // Register for all the events
@@ -109,6 +111,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   if (_entry)
   {
     _entry->SetActive (false);
+
     g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_added_id);
     g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_removed_id);
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_added_id);
@@ -118,13 +121,13 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 
     _results_controller->Clear ();
   }
-
+  
   _entry = entry;
   
   if (_entry)
   {
     std::map <gchar*, gchar*> hints;
-    DeeModel     *groups;
+    DeeModel     *groups, *results;
     DeeModelIter *iter, *last;
 
     _entry->SetActive (true);
@@ -140,6 +143,15 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
       iter = dee_model_next (groups, iter);
     }
 
+    results = _entry->GetResultsModel ();
+    iter = dee_model_get_first_iter (results);
+    last = dee_model_get_last_iter (results);
+    while (iter != last)
+    {
+      OnResultAdded (results, iter, this);
+      iter = dee_model_next (results, iter);
+    }
+
     _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
                                         (GCallback)&PlacesView::OnGroupAdded, this);
     _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
@@ -148,7 +160,14 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
                                          (GCallback)&PlacesView::OnResultAdded, this);
     _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
                                            (GCallback)&PlacesView::OnResultRemoved, this);
+
+    _layered_layout->SetActiveLayer (_results_view);
   }
+  else
+  {
+    _layered_layout->SetActiveLayer (_home_view);
+  }
+
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
 
   if (signal)
