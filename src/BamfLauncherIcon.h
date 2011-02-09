@@ -54,7 +54,7 @@ protected:
     
     const gchar * GetRemoteUri ();
     
-    bool OnCanAcceptDrop (std::list<char *> uris);
+    nux::DndAction OnCanAcceptDrop (std::list<char *> uris);
     void OnAcceptDrop (std::list<char *> uris);
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);

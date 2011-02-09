@@ -36,7 +36,7 @@ protected:
   void OnMouseClick (int button);
   void UpdateTrashIcon ();
   
-  bool OnCanAcceptDrop (std::list<char *> uris);
+  nux::DndAction OnCanAcceptDrop (std::list<char *> uris);
   void OnAcceptDrop (std::list<char *> uris);
 
 private:

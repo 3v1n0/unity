@@ -1405,7 +1405,6 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     icon->Reference ();
     EnsureAnimation();
 
-    // How to free these properly?
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
     icon->_xform_coords["Image"]        = new nux::Vector4[4];
     icon->_xform_coords["Tile"]         = new nux::Vector4[4];
@@ -2751,7 +2750,7 @@ Launcher::ProcessDndEnter ()
   _mouse_inside_launcher = true;
   
   _drag_data.clear ();
-  _accept_drag = false;
+  _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
   
@@ -2836,7 +2835,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 
   if (_steal_drag)
   {
-    _accept_drag = true;
+    _drag_action = nux::DNDACTION_COPY;
   }
   else
   {
@@ -2845,21 +2844,21 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
-        _accept_drag = hovered_icon->CanAcceptDrop (_drag_data);
+        _drag_action = hovered_icon->CanAcceptDrop (_drag_data);
       else
-        _accept_drag = false;
+        _drag_action = nux::DNDACTION_NONE;
     }
     
     _dnd_hovered_icon = hovered_icon;
   }
   
-  nux::DndAction action;
-  if (_accept_drag)
-    action = nux::DNDACTION_COPY;
+  bool accept;
+  if (_drag_action != nux::DNDACTION_NONE)
+    accept = true;
   else
-    action = nux::DNDACTION_NONE;
+    accept = false;
 
-  SendDndStatus (_accept_drag, action, nux::Geometry (x, y, 1, 1));
+  SendDndStatus (accept, _drag_action, nux::Geometry (x, y, 1, 1));
 }
 
 void 
@@ -2869,15 +2868,15 @@ Launcher::ProcessDndDrop (int x, int y)
   {
     // not done yet
   }
-  else if (_dnd_hovered_icon && _accept_drag)
+  else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
     _dnd_hovered_icon->AcceptDrop (_drag_data);
   }
 
-  if (_accept_drag)
-    SendDndFinished (true, nux::DNDACTION_COPY);
+  if (_drag_action != nux::DNDACTION_NONE)
+    SendDndFinished (true, _drag_action);
   else
-    SendDndFinished (false, nux::DNDACTION_NONE);
+    SendDndFinished (false, _drag_action);
   
   // reset our shiz
   ProcessDndLeave ();

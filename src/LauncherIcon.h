@@ -132,7 +132,7 @@ public:
     void InsertEntryRemote (LauncherEntryRemote *remote);
     void RemoveEntryRemote (LauncherEntryRemote *remote);
     
-    bool CanAcceptDrop (std::list<char *> paths) { return OnCanAcceptDrop (paths); }
+    nux::DndAction CanAcceptDrop (std::list<char *> paths) { return OnCanAcceptDrop (paths); }
     void AcceptDrop (std::list<char *> paths) { return OnAcceptDrop (paths); }
     
     sigc::signal<void, int> MouseDown;
@@ -177,7 +177,7 @@ protected:
     
     virtual const gchar * GetRemoteUri () { return 0; }
     
-    virtual bool OnCanAcceptDrop (std::list<char *> files) { return false; }
+    virtual nux::DndAction OnCanAcceptDrop (std::list<char *> files) { return nux::DNDACTION_NONE; }
     virtual void OnAcceptDrop (std::list<char *> files) {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);

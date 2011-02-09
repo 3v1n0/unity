@@ -379,7 +379,7 @@ private:
   CompScreen* _screen;
   
   std::list<char *> _drag_data;
-  bool              _accept_drag;
+  nux::DndAction    _drag_action;
   bool              _data_checked;
   bool              _steal_drag;
   LauncherIcon     *_dnd_hovered_icon;

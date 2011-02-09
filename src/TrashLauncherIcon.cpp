@@ -241,10 +241,10 @@ TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
     self->UpdateTrashIcon ();
 }
 
-bool 
+nux::DndAction 
 TrashLauncherIcon::OnCanAcceptDrop (std::list<char *> uris)
 {
-  return true;
+  return nux::DNDACTION_MOVE;
 }
   
 void 
