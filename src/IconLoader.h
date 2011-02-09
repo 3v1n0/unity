@@ -63,6 +63,7 @@ private:
     guint                 size;
     char                 *key;
     IconLoaderCallback    slot;
+    IconLoader           *self;
   };
 
 
@@ -80,9 +81,12 @@ private:
   bool   ProcessIconNameTask (IconLoaderTask *task);
   bool   ProcessGIconTask (IconLoaderTask *task);
   bool   ProcessFilenameTask (IconLoaderTask *task);
+  void   ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsize length);
   bool   Iteration ();
+  void   FreeTask (IconLoaderTask *task);
 
   static bool Loop (IconLoader *self);
+  static void LoadContentsReady (GObject *object, GAsyncResult *res, IconLoaderTask *task);
  
 private:
   std::map<std::string, GdkPixbuf *> _cache;

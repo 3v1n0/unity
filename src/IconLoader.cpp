@@ -133,6 +133,7 @@ IconLoader::QueueTask (const char           *key,
   task->size = size;
   task->slot = slot;
   task->type = type;
+  task->self = this;
 
   g_queue_push_tail (_tasks, task);
 
@@ -324,30 +325,51 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
 bool
 IconLoader::ProcessFilenameTask (IconLoaderTask *task)
 {
-  GdkPixbuf *pixbuf;
-  GError    *error = NULL;
+  GFile *file;
 
-  pixbuf = gdk_pixbuf_new_from_file_at_scale (task->data,
-                                              -1,
-                                              task->size,
-                                              true,
-                                              &error);
+  file = g_file_new_for_path (task->data);
+
+  g_file_load_contents_async (file,
+                              NULL,
+                              (GAsyncReadyCallback)LoadContentsReady,
+                              task);
+  g_object_unref (file);
+
+  return false;
+}
+
+void
+IconLoader::ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsize length)
+{
+  GdkPixbuf    *pixbuf = NULL;
+  GInputStream *stream;
+  GError       *error = NULL;
+
+  stream = g_memory_input_stream_new_from_data (contents, length, NULL);
+  pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+                                                -1,
+                                                task->size,
+                                                true,
+                                                NULL,
+                                                &error);
+
   if (GDK_IS_PIXBUF (pixbuf))
   {
     _cache[task->key] = pixbuf;
   }
   else
   {
-    g_warning ("%s: Unable to load filename icon %s at size %d: %s",
+    g_warning ("%s: Unable to create pixbuf from input stream for %s: %s",
                G_STRFUNC,
                task->data,
-               task->size,
                error->message);
     g_error_free (error);
   }
 
   task->slot (task->data, task->size, pixbuf);
-  return true;
+
+  FreeTask (task);
+  g_input_stream_close (stream, NULL, NULL);
 }
 
 bool
@@ -368,11 +390,7 @@ IconLoader::Iteration ()
       break;
 
     if (ProcessTask (task))
-    {
-      g_free (task->key);
-      g_free (task->data);
-      g_slice_free (IconLoaderTask, task);
-    }
+      FreeTask (task);
 
     if (g_get_monotonic_time () - time > MAX_MICRO_SECS)
       break;
@@ -391,8 +409,39 @@ IconLoader::Iteration ()
   return !is_empty;
 }
 
+void
+IconLoader::FreeTask (IconLoaderTask *task)
+{
+  g_free (task->key);
+  g_free (task->data);
+  g_slice_free (IconLoaderTask, task);
+}
+
 bool
 IconLoader::Loop (IconLoader *self)
 {
   return static_cast<IconLoader *> (self)->Iteration ();
+}
+
+void
+IconLoader::LoadContentsReady (GObject *obj, GAsyncResult *res, IconLoaderTask *task)
+{
+  char   *contents = NULL;
+  gsize   length = 0;
+  GError *error = NULL;
+
+  if (g_file_load_contents_finish (G_FILE (obj), res, &contents, &length, NULL, &error))
+  {
+    task->self->ProcessFilenameTaskReady (task, contents, length);
+
+    g_free (contents);
+  }
+  else
+  {
+    g_warning ("%s: Unable to load contents of %s: %s",
+               G_STRFUNC,
+               task->data,
+               error->message);
+    g_error_free (error);
+  }
 }
