@@ -36,10 +36,12 @@ namespace nux
   _fontstring (NULL),
   _cairoGraphics (NULL),
   _texture2D (NULL)
+  
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = TEXT (text);
   _texture2D  = 0;
+  _need_new_extent_cache = true;
 
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
@@ -78,7 +80,9 @@ void StaticCairoText::PreLayoutManagement ()
 {
   int textWidth  = 0;
   int textHeight = 0;
-  GetTextExtents (textWidth, textHeight);
+  
+  textWidth = _cached_extent_width;
+  textHeight = _cached_extent_height;
 
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
@@ -187,6 +191,10 @@ StaticCairoText::SetText (NString text)
   if (_text != text)
   {
     _text = text;
+    _need_new_extent_cache = true;
+    int width = 0;
+    int height = 0;
+    GetTextExtents (width, height);
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
@@ -207,6 +215,10 @@ StaticCairoText::SetFont (const char *fontstring)
 {
   g_free (_fontstring);
   _fontstring = g_strdup (fontstring);
+  _need_new_extent_cache = true;
+  int width = 0;
+  int height = 0;
+  GetTextExtents (width, height);
   NeedRedraw ();
   sigFontChanged.emit (this);
 }
@@ -248,6 +260,14 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   if (!font)
     return;
 
+  if (_need_new_extent_cache == false)
+  {
+    width = _cached_extent_width;
+    height = _cached_extent_height;
+    return;
+  }
+  
+  
   int maxwidth = GetMaximumWidth ();
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
@@ -299,6 +319,8 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
 
   width  = logRect.width / PANGO_SCALE;
   height = logRect.height / PANGO_SCALE;
+  _cached_extent_height = height;
+  _cached_extent_width = width;
 
   // clean up
   pango_font_description_free (desc);
@@ -425,6 +447,10 @@ void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
                                      gpointer data)
 {
   StaticCairoText *self = (StaticCairoText*) data;
+  self->_need_new_extent_cache = true;
+  int width = 0;
+  int height = 0;
+  self->GetTextExtents (width, height);
   self->UpdateTexture ();
   self->sigFontChanged.emit (self);
 }
