@@ -69,6 +69,13 @@ public:
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
 
+  typedef enum
+  {
+    BACKLIGHT_ALWAYS_ON,
+    BACKLIGHT_NORMAL,
+    BACKLIGHT_ALWAYS_OFF,
+  } BacklightMode;
+
   Launcher (nux::BaseWindow* parent, CompScreen* screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
 
@@ -95,8 +102,8 @@ public:
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
 
-  void SetBacklightAlwaysOn (bool always_on);
-  bool GetBacklightAlwaysOn ();
+  void SetBacklightMode (BacklightMode mode);
+  BacklightMode GetBacklightMode ();
   
   void SetLaunchAnimation (LaunchAnimation animation);
   LaunchAnimation GetLaunchAnimation ();
@@ -326,7 +333,8 @@ private:
   bool  _window_over_launcher;
   bool  _hide_on_action_done;
   bool  _render_drag_window;
-  bool  _backlight_always_on;
+  
+  BacklightMode _backlight_mode;
 
   float _folded_angle;
   float _neg_folded_angle;

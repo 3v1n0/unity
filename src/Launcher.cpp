@@ -292,7 +292,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _window_over_launcher   = false;
     _hide_on_action_done    = false;
     _render_drag_window     = false;
-    _backlight_always_on    = false;
+    _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     
 
@@ -697,7 +697,7 @@ float Launcher::IconStartingBlinkValue (LauncherIcon *icon, struct timespec cons
     struct timespec starting_time = icon->GetQuirkTime (LauncherIcon::QUIRK_STARTING);
     int starting_ms = TimeDelta (&current, &starting_time);
     double starting_progress = (double) CLAMP ((float) starting_ms / (float) (ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
-    return 0.5f + (float) (std::cos (M_PI * (_backlight_always_on ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
+    return 0.5f + (float) (std::cos (M_PI * (_backlight_mode != BACKLIGHT_NORMAL ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
 }
 
 float Launcher::IconStartingPulseValue (LauncherIcon *icon, struct timespec const &current)
@@ -731,10 +731,12 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
        icon->SetQuirk (LauncherIcon::QUIRK_STARTING, false);
     
     float backlight_strength;
-    if (_backlight_always_on)
+    if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
       backlight_strength = BACKLIGHT_STRENGTH;
-    else
+    else if (_backlight_mode == BACKLIGHT_NORMAL)
       backlight_strength = BACKLIGHT_STRENGTH * running_progress;
+    else
+      backlight_strength = 0.0f;
       
     switch (_launch_animation)
     {
@@ -742,8 +744,10 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
         result = backlight_strength;
         break;
       case LAUNCH_ANIMATION_BLINK:
-        if (_backlight_always_on)
+        if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
           result = IconStartingBlinkValue (icon, current);
+        else if (_backlight_mode == BACKLIGHT_ALWAYS_OFF)
+          result = 1.0f - IconStartingBlinkValue (icon, current);
         else
           result = backlight_strength; // The blink concept is a failure in this case (it just doesn't work right)
         break;
@@ -752,10 +756,12 @@ float Launcher::IconBackgroundIntensity (LauncherIcon *icon, struct timespec con
           icon->ResetQuirkTime (LauncherIcon::QUIRK_STARTING);
         
         result = backlight_strength;
-        if (_backlight_always_on)
+        if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
           result *= CLAMP (running_progress + IconStartingPulseValue (icon, current), 0.0f, 1.0f);
-        else
+        else if (_backlight_mode == BACKLIGHT_NORMAL)
           result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue (icon, current));
+        else
+          result = 1.0f - CLAMP (running_progress + IconStartingPulseValue (icon, current), 0.0f, 1.0f);
         break;
     }
     
@@ -1287,18 +1293,18 @@ void Launcher::SetFloating (bool floating)
   EnsureAnimation ();
 }
 
-void Launcher::SetBacklightAlwaysOn (bool always_on)
+void Launcher::SetBacklightMode (BacklightMode mode)
 {
-  if (_backlight_always_on == always_on)
+  if (_backlight_mode == mode)
     return;
   
-  _backlight_always_on = always_on;
+  _backlight_mode = mode;
   EnsureAnimation ();
 }
 
-bool Launcher::GetBacklightAlwaysOn ()
+Launcher::BacklightMode Launcher::GetBacklightMode ()
 {
-  return _backlight_always_on;
+  return _backlight_mode;
 }
 
 void 

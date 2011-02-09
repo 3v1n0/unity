@@ -464,8 +464,8 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::LauncherHideMode:
       launcher->SetHideMode ((Launcher::LauncherHideMode) optionGetLauncherHideMode ());
       break;
-    case UnityshellOptions::BacklightAlwaysOn:
-      launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
+    case UnityshellOptions::BacklightMode:
+      launcher->SetBacklightMode ((Launcher::BacklightMode) optionGetBacklightMode ());
       break;
     case UnityshellOptions::LaunchAnimation:
       launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
@@ -538,7 +538,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   debugger = new DebugDBusInterface (this);
 
   optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
@@ -612,7 +612,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
     unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
-  self->launcher->SetBacklightAlwaysOn (true);
+  self->launcher->SetBacklightMode (Launcher::BACKLIGHT_ALWAYS_ON);
   LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
