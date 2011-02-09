@@ -91,6 +91,10 @@ namespace nux
       sigc::signal<void, StaticCairoText*> sigFontChanged;
 
     private:
+      int            _cached_extent_width;
+      int            _cached_extent_height;
+      bool           _need_new_extent_cache;
+      
       NString        _text;
       Color          _textColor;
       EllipsizeState _ellipsize;
