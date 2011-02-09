@@ -199,6 +199,7 @@ private:
   static gboolean OnScrollTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
+  bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress        (struct timespec const &current);
   float DnDExitProgress         (struct timespec const &current);

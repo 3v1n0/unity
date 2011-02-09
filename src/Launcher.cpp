@@ -1144,40 +1144,47 @@ Launcher::EnsureHiddenState ()
     SetHidden (false);
 }
 
+bool
+Launcher::CheckIntersectWindow (CompWindow *window)
+{
+  nux::Geometry geo = GetGeometry ();
+  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
+
+  if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
+    return false;
+
+  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    return true;
+
+  return false;
+}
+
 void
 Launcher::CheckWindowOverLauncher ()
 {
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
-  nux::Geometry geo = GetGeometry ();
-  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
+  CompWindow *window = NULL;
 
-  for (it = window_list.begin (); it != window_list.end (); it++)
+  if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED)
   {
-    CompWindow *window = *it;
-
-    if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
+    window = _screen->findWindow (_screen->activeWindow ());
+    if (!CheckIntersectWindow (window))
+      window = NULL;
+  }
+  else
+  {
+    for (it = window_list.begin (); it != window_list.end (); it++)
     {
-      if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED &&
-          PluginAdapter::Default ()->IsWindowFocussed(window->id()))
-        return;
-      else
-        continue;
-    }
-
-    if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED && !PluginAdapter::Default ()->IsWindowFocussed(window->id()))
-      continue;
-
-    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
-    {
-      _window_over_launcher = true;
-      EnsureHiddenState ();
-      return;
+      if (CheckIntersectWindow (*it)) {
+        window = *it;
+        break;
+      }
     }
   }
 
-  _window_over_launcher = false;
+  _window_over_launcher = (window != NULL);
   EnsureHiddenState ();
 }
 

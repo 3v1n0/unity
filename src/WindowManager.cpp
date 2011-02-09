@@ -48,11 +48,6 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
 
-  bool IsWindowFocussed (guint32 xid)
-  {
-    return true;
-  }
-
   void Restore (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
