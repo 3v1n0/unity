@@ -71,6 +71,7 @@ public:
       QUIRK_SHIMMER,
       QUIRK_CENTER_SAVED,
       QUIRK_PROGRESS,
+      QURIK_DROP_PRELIGHT,
       
       QUIRK_LAST,
     } Quirk;
@@ -131,6 +132,9 @@ public:
     void InsertEntryRemote (LauncherEntryRemote *remote);
     void RemoveEntryRemote (LauncherEntryRemote *remote);
     
+    bool CanAcceptDrop (std::list<char *> paths) { return OnCanAcceptDrop (paths); }
+    void AcceptDrop (std::list<char *> paths) { return OnAcceptDrop (paths); }
+    
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;
@@ -172,6 +176,9 @@ protected:
     virtual void OnCenterStabilized (nux::Point3 center) {}
     
     virtual const gchar * GetRemoteUri () { return 0; }
+    
+    virtual bool OnCanAcceptDrop (std::list<char *> files) { return false; }
+    virtual void OnAcceptDrop (std::list<char *> files) {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);

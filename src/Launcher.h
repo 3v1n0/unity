@@ -119,6 +119,7 @@ public:
 
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
   sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
+  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -134,6 +135,7 @@ private:
     ACTION_NONE,
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
+    ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
 
   typedef struct
@@ -287,6 +289,8 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
+  
+  std::list<char *> StringToUriList (char * input);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -375,6 +379,12 @@ private:
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
   CompScreen* _screen;
+  
+  std::list<char *> _drag_data;
+  bool              _accept_drag;
+  bool              _data_checked;
+  bool              _steal_drag;
+  LauncherIcon     *_dnd_hovered_icon;
 
   /* event times */
   struct timespec _enter_time;

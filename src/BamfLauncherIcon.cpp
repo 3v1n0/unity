@@ -230,14 +230,42 @@ BamfLauncherIcon::OwnsWindow (Window w)
   return owns;
 }
 
-void
-BamfLauncherIcon::OpenInstance ()
+void 
+BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
 {
   GDesktopAppInfo *appInfo;
   GError *error = NULL;
+  std::list<char *>::iterator it;
 
   appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
-  g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, &error);
+  
+  if (g_app_info_supports_uris (G_APP_INFO (appInfo)))
+  {
+    GList *list = NULL;
+    
+    for (it = uris.begin (); it != uris.end (); it++)
+      list = g_list_prepend (list, *it);
+    
+    g_app_info_launch_uris (G_APP_INFO (appInfo), list, NULL, &error);
+    g_list_free (list);
+  }
+  else if (g_app_info_supports_files (G_APP_INFO (appInfo)))
+  {
+    GList *list = NULL, *l;
+    for (it = uris.begin (); it != uris.end (); it++)
+      list = g_list_prepend (list, g_filename_from_uri (*it, NULL, NULL));
+    
+    g_app_info_launch (G_APP_INFO (appInfo), list, NULL, &error);
+    
+    for (l = list; l; l = l->next)
+      g_free (l->data);
+    g_list_free (list);
+  }
+  else
+  {
+    g_app_info_launch (G_APP_INFO (appInfo), NULL, NULL, &error);
+  }
+
   g_object_unref (appInfo);
 
   if (error)
@@ -247,6 +275,13 @@ BamfLauncherIcon::OpenInstance ()
   }
 
   UpdateQuirkTime (QUIRK_STARTING);
+}
+
+void
+BamfLauncherIcon::OpenInstance ()
+{
+  std::list<char *> empty;
+  OpenInstanceWithUris (empty);
 }
 
 void
@@ -821,4 +856,76 @@ BamfLauncherIcon::GetRemoteUri ()
   }
   
   return _remote_uri;
+}
+
+std::list<char *>
+BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
+{
+  GKeyFile *key_file;
+  const char *desktop_file;
+  GError *error = NULL;
+  std::list<char *> results;
+  
+  desktop_file = DesktopFile ();
+  
+  if (!desktop_file || strlen (desktop_file) <= 1)
+    return results;
+  
+  key_file = g_key_file_new ();
+  g_key_file_load_from_file (key_file, desktop_file, (GKeyFileFlags) 0, &error);
+  
+  if (error)
+  {
+    g_error_free (error);
+    g_key_file_free (key_file);
+    return results;
+  }
+
+  char **mimes = g_key_file_get_string_list (key_file, "Desktop Entry", "MimeType", NULL, NULL);
+  if (!mimes)
+  {
+    g_key_file_free (key_file);
+    return results;
+  }
+  
+  std::list<char *>::iterator it;
+  for (it = uris.begin (); it != uris.end (); it++)
+  {
+    GFile *file = g_file_new_for_uri (*it);
+    GFileInfo *info = g_file_query_info (file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, NULL, NULL);
+    const char *content_type = g_file_info_get_content_type (info);
+
+    int i = 0;
+    for (; mimes[i]; i++)
+    {
+      char *super_type = g_content_type_from_mime_type (mimes[i]);
+      if (g_content_type_is_a (content_type, super_type))
+      {
+        results.push_back (*it);
+        break;
+      }
+      g_free (super_type);
+    }
+    
+    
+    g_object_unref (file);
+    g_object_unref (info);
+  }
+  
+  
+  g_strfreev (mimes);
+  g_key_file_free (key_file);
+  return results;
+}
+
+bool 
+BamfLauncherIcon::OnCanAcceptDrop (std::list<char *> uris)
+{
+  return !ValidateUrisForLaunch (uris).empty ();
+}
+
+void 
+BamfLauncherIcon::OnAcceptDrop (std::list<char *> uris)
+{
+  OpenInstanceWithUris (ValidateUrisForLaunch (uris));
 }

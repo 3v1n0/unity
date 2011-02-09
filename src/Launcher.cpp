@@ -409,9 +409,9 @@ void Launcher::SetMousePosition (int x, int y)
 
 bool Launcher::MouseBeyondDragThreshold ()
 {
-    if (_launcher_action_state != ACTION_DRAG_ICON)
-      return false;
-    return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
+    if (_launcher_action_state == ACTION_DRAG_ICON)
+      return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
+    return false;
 }
 
 /* Render Layout Logic */
@@ -1349,7 +1349,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry ();
 
-  if (!self->_hovered || self->_launcher_action_state != ACTION_DRAG_ICON)
+  if (!self->_hovered || (self->_launcher_action_state != ACTION_DRAG_ICON && self->_launcher_action_state != ACTION_DRAG_EXTERNAL))
     return TRUE;
   
   if (self->MouseOverTopScrollArea ())
@@ -2234,7 +2234,8 @@ void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
 
 void Launcher::EventLogic ()
 {
-  if (_launcher_action_state != ACTION_NONE)
+  if (_launcher_action_state == ACTION_DRAG_ICON ||
+      _launcher_action_state == ACTION_DRAG_LAUNCHER)
     return;
 
   LauncherIcon* launcher_icon = 0;
@@ -2512,8 +2513,6 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     {
       nux::BaseTexture *emblem = launcher_icon->Emblem ();
       
-      float inset = 0.1f;
-      
       float w = _icon_size;
       float h = _icon_size;
     
@@ -2742,43 +2741,138 @@ Launcher::RestoreSystemRenderTarget ()
 void 
 Launcher::ProcessDndEnter ()
 {
-  printf ("Drag Enter\n");
+  _launcher_action_state = ACTION_DRAG_EXTERNAL;
+  _mouse_inside_launcher = true;
+  
+  _drag_data.clear ();
+  _accept_drag = false;
+  _steal_drag = false;
+  _data_checked = false;
+  
+  EnsureHoverState ();
 }
 
 void 
 Launcher::ProcessDndLeave ()
 {
-  printf ("Drag Leave\n");
+  _launcher_action_state = ACTION_NONE;
+  _mouse_inside_launcher = false;
+  
+  if (!_drag_data.empty ())
+  {
+    std::list<char *>::iterator it;
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      g_free (*it);
+    }
+  }
+  _drag_data.clear ();
+  
+  EnsureHoverState ();
+}
+
+std::list<char *>
+Launcher::StringToUriList (char * input)
+{
+  std::list<char *> result;
+  
+  if (!input)
+    return result;
+  
+  char ** imtrappedinastringfactory = g_strsplit (input, "\r\n", -1);
+  int i = 0;
+  while (imtrappedinastringfactory[i]) // get kinda bored
+  {
+    // empty string check
+    if (imtrappedinastringfactory[i][0])
+      result.push_back (g_strdup (imtrappedinastringfactory[i]));
+    i++;
+  }
+  
+  g_strfreev (imtrappedinastringfactory);
+  
+  return result;
 }
 
 void 
 Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 {
   std::list<char *>::iterator it;
-  bool result = false;
+  nux::Area *parent = GetToplevel ();
   
-  // hack to ensure accept until we have a real implementation going
-  result = true;
-  
-  for (it = mimes.begin (); it != mimes.end (); it++)
+  if (!_data_checked)
   {
-    if (g_str_equal (*it, "text/uri-list"))
+    _data_checked = true;
+    
+    // get the data
+    for (it = mimes.begin (); it != mimes.end (); it++)
     {
-      result = true;
+      if (!g_str_equal (*it, "text/uri-list"))
+        continue;
+      
+      _drag_data = StringToUriList (nux::GetWindow ().GetDndData ("text/uri-list"));
       break;
+    }
+    
+    // see if the launcher wants this one
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      if (g_str_has_suffix (*it, ".desktop"))
+      {
+        _steal_drag = true;
+        break;
+      }
     }
   }
   
-  if (result)
-    SendDndStatus (true, nux::DNDACTION_COPY, nux::Geometry (x, y, 1, 1));
+  SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
+  EventLogic ();
+
+  if (_steal_drag)
+  {
+    _accept_drag = true;
+  }
   else
-    SendDndStatus (false, nux::DNDACTION_NONE, nux::Geometry (x, y, 1, 1));
-  printf ("Drag Move\n");
+  {
+    LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+    
+    if (hovered_icon != _dnd_hovered_icon)
+    {
+      if (hovered_icon)
+        _accept_drag = hovered_icon->CanAcceptDrop (_drag_data);
+      else
+        _accept_drag = false;
+    }
+    
+    _dnd_hovered_icon = hovered_icon;
+  }
+  
+  nux::DndAction action;
+  if (_accept_drag)
+    action = nux::DNDACTION_COPY;
+  else
+    action = nux::DNDACTION_NONE;
+
+  SendDndStatus (_accept_drag, action, nux::Geometry (x, y, 1, 1));
 }
 
 void 
 Launcher::ProcessDndDrop (int x, int y)
 {
-  SendDndFinished (true, nux::DNDACTION_COPY);
-  printf ("Drag Drop\n");
+  if (_steal_drag)
+  {
+    // not done yet
+  }
+  else if (_dnd_hovered_icon && _accept_drag)
+  {
+    _dnd_hovered_icon->AcceptDrop (_drag_data);
+  }
+
+  if (_accept_drag)
+    SendDndFinished (true, nux::DNDACTION_COPY);
+  else
+    SendDndFinished (false, nux::DNDACTION_NONE);
+  
+  // reset our shiz
+  ProcessDndLeave ();
 }
