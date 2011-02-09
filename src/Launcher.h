@@ -125,8 +125,7 @@ public:
   void startKeyNavMode ();
   void exitKeyNavMode ();
 
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
+  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -142,6 +141,7 @@ private:
     ACTION_NONE,
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
+    ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
 
   typedef struct
@@ -215,14 +215,15 @@ private:
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
   float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
+  float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
 
-  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
-  float  DragLimiter (float x);
+  void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
+  float DragLimiter (float x);
 
   void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
   void FillRenderArg (LauncherIcon *icon,
@@ -296,6 +297,8 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
+  
+  std::list<char *> StringToUriList (char * input);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -374,8 +377,6 @@ private:
   guint _autohide_handle;
   guint _autoscroll_handle;
 
-  nux::Matrix4  _view_matrix;
-  nux::Matrix4  _projection_matrix;
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
@@ -385,6 +386,12 @@ private:
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
   CompScreen* _screen;
+  
+  std::list<char *> _drag_data;
+  nux::DndAction    _drag_action;
+  bool              _data_checked;
+  bool              _steal_drag;
+  LauncherIcon     *_dnd_hovered_icon;
 
   /* event times */
   struct timespec _enter_time;

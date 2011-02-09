@@ -35,6 +35,7 @@
 
 #include "Launcher.h"
 #include "LauncherIcon.h"
+#include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
@@ -408,9 +409,9 @@ void Launcher::SetMousePosition (int x, int y)
 
 bool Launcher::MouseBeyondDragThreshold ()
 {
-    if (_launcher_action_state != ACTION_DRAG_ICON)
-      return false;
-    return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
+    if (_launcher_action_state == ACTION_DRAG_ICON)
+      return _mouse_position.x > GetGeometry ().width + _icon_size / 2;
+    return false;
 }
 
 /* Render Layout Logic */
@@ -496,7 +497,15 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     time = icon->GetQuirkTime (LauncherIcon::QUIRK_PROGRESS);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
-
+    
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_DIM);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+    
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_PRELIGHT);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+    
     return false;
 }
 
@@ -637,6 +646,18 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &c
       return result;
     else
       return 1.0f - result;
+}
+
+float Launcher::IconDropDimValue (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec dim_time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_DIM);
+    int dim_ms = TimeDelta (&current, &dim_time);
+    float result = CLAMP ((float) dim_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+
+    if (icon->GetQuirk (LauncherIcon::QUIRK_DROP_DIM))
+      return 1.0f - result;
+    else
+      return result;
 }
 
 float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &current)
@@ -828,13 +849,20 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         arg.alpha *= size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
     }
+    
+    float drop_dim_value = 0.2f + 0.8f * IconDropDimValue (icon, current);
+    
+    if (drop_dim_value < 1.0f)
+      arg.alpha *= drop_dim_value;
 
     if (icon == _drag_icon)
     {
         if (MouseBeyondDragThreshold ())
           arg.stick_thingy = true;
         
-        if (_launcher_action_state == ACTION_DRAG_ICON || (_drag_window && _drag_window->Animating ()))
+        if (_launcher_action_state == ACTION_DRAG_ICON || 
+            (_drag_window && _drag_window->Animating ()) ||
+            dynamic_cast<SpacerLauncherIcon *> (icon))
           arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
@@ -1372,7 +1400,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry ();
 
-  if (!self->_hovered || self->_launcher_action_state != ACTION_DRAG_ICON)
+  if (!self->_hovered || (self->_launcher_action_state != ACTION_DRAG_ICON && self->_launcher_action_state != ACTION_DRAG_EXTERNAL))
     return TRUE;
   
   if (self->MouseOverTopScrollArea ())
@@ -1428,7 +1456,6 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     icon->Reference ();
     EnsureAnimation();
 
-    // How to free these properly?
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
     icon->_xform_coords["Image"]        = new nux::Vector4[4];
     icon->_xform_coords["Tile"]         = new nux::Vector4[4];
@@ -1443,6 +1470,12 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
 void Launcher::OnIconRemoved (LauncherIcon *icon)
 {
+    delete [] icon->_xform_coords["HitArea"];
+    delete [] icon->_xform_coords["Image"];
+    delete [] icon->_xform_coords["Tile"];
+    delete [] icon->_xform_coords["Glow"];
+    delete [] icon->_xform_coords["Emblem"];
+
     icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
@@ -1732,7 +1765,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_outline_texture->GetDeviceTexture (),
                nux::Color(0xAAAAAAAA),
-               1.0f - arg.backlight_intensity,
+               (1.0f - arg.backlight_intensity) * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
 
@@ -1742,7 +1775,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_bkg_texture->GetDeviceTexture (),
                arg.icon->BackgroundColor (),
-               arg.backlight_intensity,
+               arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
   /* end tile draw */
@@ -1762,7 +1795,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_shine_texture->GetDeviceTexture (),
                nux::Color::White,
-               arg.backlight_intensity,
+               arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
 
@@ -1773,7 +1806,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
-               arg.glow_intensity,
+               arg.glow_intensity * arg.alpha,
                arg.icon->_xform_coords["Glow"]);
   }
   
@@ -1794,7 +1827,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
-               fade_out,
+               fade_out * arg.alpha,
                arg.icon->_xform_coords["Glow"]);
 
     GfxContext.PopClippingRectangle();
@@ -1811,7 +1844,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _offscreen_progress_texture,
                nux::Color::White,
-               1.0f,
+               arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
   
@@ -1821,7 +1854,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
                nux::Color::White,
-               1.0f,
+               arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
 
@@ -1838,7 +1871,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg,
                 _icon_glow_hl_texture->GetDeviceTexture (),
                 nux::Color (0xFFFFFFFF),
-                1.0f,
+                arg.alpha,
                 arg.icon->_xform_coords["Glow"]);
 }
 
@@ -2008,9 +2041,9 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
       float progress = DragThresholdProgress (current);
       
       if (progress >= 1.0f)
-        request_reorder_smart.emit (_drag_icon, hovered_icon, true);
+        _model->ReorderSmart (_drag_icon, hovered_icon, true);
       else if (progress == 0.0f)
-        request_reorder_before.emit (_drag_icon, hovered_icon, false);
+        _model->ReorderBefore (_drag_icon, hovered_icon, false);
     }
   }
 }
@@ -2257,7 +2290,8 @@ void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
 
 void Launcher::EventLogic ()
 {
-  if (_launcher_action_state != ACTION_NONE)
+  if (_launcher_action_state == ACTION_DRAG_ICON ||
+      _launcher_action_state == ACTION_DRAG_LAUNCHER)
     return;
 
   LauncherIcon* launcher_icon = 0;
@@ -2535,8 +2569,6 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
     {
       nux::BaseTexture *emblem = launcher_icon->Emblem ();
       
-      float inset = 0.1f;
-      
       float w = _icon_size;
       float h = _icon_size;
     
@@ -2765,43 +2797,194 @@ Launcher::RestoreSystemRenderTarget ()
 void 
 Launcher::ProcessDndEnter ()
 {
-  printf ("Drag Enter\n");
+  _drag_data.clear ();
+  _drag_action = nux::DNDACTION_NONE;
+  _steal_drag = false;
+  _data_checked = false;
+  _dnd_hovered_icon = 0;
 }
 
 void 
 Launcher::ProcessDndLeave ()
 {
-  printf ("Drag Leave\n");
+  _launcher_action_state = ACTION_NONE;
+  _mouse_inside_launcher = false;
+  
+  if (!_drag_data.empty ())
+  {
+    std::list<char *>::iterator it;
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      g_free (*it);
+    }
+  }
+  _drag_data.clear ();
+  
+  LauncherModel::iterator it;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, false);
+    (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+  }
+  
+  if (_steal_drag && _dnd_hovered_icon)
+  {
+    _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
+    _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
+    
+    _steal_drag = false;
+    _dnd_hovered_icon = 0;
+  }
+  
+  EnsureHoverState ();
+}
+
+std::list<char *>
+Launcher::StringToUriList (char * input)
+{
+  std::list<char *> result;
+  
+  if (!input)
+    return result;
+  
+  char ** imtrappedinastringfactory = g_strsplit (input, "\r\n", -1);
+  int i = 0;
+  while (imtrappedinastringfactory[i]) // get kinda bored
+  {
+    // empty string check
+    if (imtrappedinastringfactory[i][0])
+      result.push_back (g_strdup (imtrappedinastringfactory[i]));
+    i++;
+  }
+  
+  g_strfreev (imtrappedinastringfactory);
+  
+  return result;
 }
 
 void 
 Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 {
   std::list<char *>::iterator it;
-  bool result = false;
+  nux::Area *parent = GetToplevel ();
+  char *remote_desktop_path = NULL;
   
-  // hack to ensure accept until we have a real implementation going
-  result = true;
-  
-  for (it = mimes.begin (); it != mimes.end (); it++)
+  if (!_data_checked)
   {
-    if (g_str_equal (*it, "text/uri-list"))
+    _data_checked = true;
+    
+    // get the data
+    for (it = mimes.begin (); it != mimes.end (); it++)
     {
-      result = true;
+      if (!g_str_equal (*it, "text/uri-list"))
+        continue;
+      
+      _drag_data = StringToUriList (nux::GetWindow ().GetDndData ("text/uri-list"));
       break;
+    }
+    
+    // see if the launcher wants this one
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      if (g_str_has_suffix (*it, ".desktop"))
+      {
+        remote_desktop_path = *it;
+        _steal_drag = true;
+        break;
+      }
     }
   }
   
-  if (result)
-    SendDndStatus (true, nux::DNDACTION_COPY, nux::Geometry (x, y, 1, 1));
+  SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
+
+  if (!_mouse_inside_launcher)
+  {
+    // only set hover once we know our first x/y
+    _launcher_action_state = ACTION_DRAG_EXTERNAL;
+    _mouse_inside_launcher = true;
+    
+    LauncherModel::iterator it;
+    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
+    {
+      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
+  
+    EnsureHoverState ();
+  }
+  
+  EventLogic ();
+  LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+
+  if (_steal_drag)
+  {
+    _drag_action = nux::DNDACTION_COPY;
+    if (!_dnd_hovered_icon)
+    {
+      _dnd_hovered_icon = new SpacerLauncherIcon (this);
+      _dnd_hovered_icon->SetSortPriority (G_MAXINT);
+      _model->AddIcon (_dnd_hovered_icon);
+      
+      if (hovered_icon)
+        _model->ReorderBefore (_dnd_hovered_icon, hovered_icon, true);
+    }
+    else if (hovered_icon)
+    {
+      _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
+    }
+  }
   else
-    SendDndStatus (false, nux::DNDACTION_NONE, nux::Geometry (x, y, 1, 1));
-  printf ("Drag Move\n");
+  {
+    if (hovered_icon != _dnd_hovered_icon)
+    {
+      if (hovered_icon)
+        _drag_action = hovered_icon->QueryAcceptDrop (_drag_data);
+      else
+        _drag_action = nux::DNDACTION_NONE;
+    }
+    
+    _dnd_hovered_icon = hovered_icon;
+  }
+  
+  bool accept;
+  if (_drag_action != nux::DNDACTION_NONE)
+    accept = true;
+  else
+    accept = false;
+
+  SendDndStatus (accept, _drag_action, nux::Geometry (x, y, 1, 1));
 }
 
 void 
 Launcher::ProcessDndDrop (int x, int y)
 {
-  SendDndFinished (true, nux::DNDACTION_COPY);
-  printf ("Drag Drop\n");
+  if (_steal_drag)
+  {
+    char *path;
+    std::list<char *>::iterator it;
+    
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      if (g_str_has_suffix (*it, ".desktop"))
+      {
+        path = g_filename_from_uri (*it, NULL, NULL);
+        break;
+      }
+    }
+    launcher_dropped.emit (path, _dnd_hovered_icon);
+  }
+  else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
+  {
+    _dnd_hovered_icon->AcceptDrop (_drag_data);
+  }
+
+  if (_drag_action != nux::DNDACTION_NONE)
+    SendDndFinished (true, _drag_action);
+  else
+    SendDndFinished (false, _drag_action);
+  
+  // reset our shiz
+  ProcessDndLeave ();
 }
