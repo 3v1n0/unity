@@ -48,7 +48,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.9));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.5));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
@@ -138,6 +138,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  //FIXME: Lots of things to detect here still
   Hide ();
 }
 

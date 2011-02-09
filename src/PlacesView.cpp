@@ -118,7 +118,6 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
 
     _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
-
     _results_controller->Clear ();
   }
   
@@ -131,7 +130,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     DeeModelIter *iter, *last;
 
     _entry->SetActive (true);
-
+    
     groups = _entry->GetGroupsModel ();
     iter = dee_model_get_first_iter (groups);
     last = dee_model_get_last_iter (groups);
@@ -161,15 +160,14 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
                                            (GCallback)&PlacesView::OnResultRemoved, this);
 
-    _layered_layout->SetActiveLayer (_results_view);
+    _layered_layout->SetActiveLayerN (1);
   }
   else
   {
-    _layered_layout->SetActiveLayer (_home_view);
+    _layered_layout->SetActiveLayerN(0);
   }
 
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
-
   if (signal)
     entry_changed.emit (_entry);
 }
@@ -215,8 +213,6 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
 
-  //g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
-
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
     return;
@@ -251,8 +247,6 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
   DeeModelIter *git;
   const gchar  *group_id;
   gchar  *result_id;
-
-  //g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
 
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))

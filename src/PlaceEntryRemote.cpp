@@ -52,7 +52,9 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _proxy (NULL),
   _sections_model (NULL),
   _groups_model (NULL),
-  _results_model (NULL)
+  _results_model (NULL),
+  _previous_search (NULL),
+  _previous_section (G_MAXUINT32)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -63,6 +65,7 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_free (_dbus_path);
   g_free (_icon);
   g_free (_description);
+  g_free (_previous_search);
   g_strfreev (_mimetypes);
   
   g_object_unref (_proxy);
@@ -226,6 +229,12 @@ void
 PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
   GVariantBuilder *builder;
+
+  if (g_strcmp0 (_previous_search, search) == 0)
+    return;
+
+  g_free (_previous_search);
+  _previous_search = g_strdup (search);
   
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
@@ -244,6 +253,11 @@ PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hint
 void
 PlaceEntryRemote::SetActiveSection (guint32 section_id)
 {
+  if (_previous_section == section_id)
+    return;
+
+  _previous_section = section_id;
+
   g_dbus_proxy_call (_proxy,
                      "SetActiveSection",
                      g_variant_new ("(u)", (guint32)section_id),
