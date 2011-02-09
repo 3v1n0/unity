@@ -70,10 +70,14 @@ void
 PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
+ 
+  GfxContext.PushClippingRectangle (nux::Rect (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight) );
 
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
 
+  GfxContext.PopClippingRectangle();
+  
   if (m_vertical_scrollbar_enable)
     vscrollbar->ProcessDraw (GfxContext, force_draw);
 
