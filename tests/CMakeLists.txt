@@ -110,6 +110,8 @@ add_executable (test-panel
 
 add_executable (test-places
                 TestPlaces.cpp
+                ../src/IconLoader.cpp
+                ../src/IconLoader.h
                 ../src/IconTexture.cpp
                 ../src/IconTexture.h
                 ../src/PlacesController.cpp
@@ -151,6 +153,8 @@ add_executable (test-places
 
 add_executable (test-places-tiles
                 TestPlacesTiles.cpp
+                ../src/IconLoader.cpp
+                ../src/IconLoader.h
                 ../src/PlacesTile.cpp
                 ../src/PlacesTile.h
                 ../src/PlacesSimpleTile.cpp
@@ -166,6 +170,8 @@ add_executable (test-places-tiles
 
 add_executable (test-places-group
                 TestPlacesGroup.cpp
+                ../src/IconLoader.cpp
+                ../src/IconLoader.h
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
                 ../src/IconTexture.cpp
@@ -182,6 +188,8 @@ add_executable (test-places-group
 
 add_executable (test-places-results
                 TestPlacesResults.cpp
+                ../src/IconLoader.cpp
+                ../src/IconLoader.h
                 ../src/PlacesResultsController.cpp
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h

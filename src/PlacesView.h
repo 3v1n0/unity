@@ -22,9 +22,10 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <NuxImage/CairoGraphics.h>
-#include "NuxGraphics/GraphicsEngine.h"
-#include "Nux/AbstractPaintLayer.h"
+#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/AbstractPaintLayer.h>
 #include <Nux/VLayout.h>
+#include <Nux/LayeredLayout.h>
 
 #include "Introspectable.h"
 
@@ -39,6 +40,8 @@
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
 
+#include "IconLoader.h"
+
 class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
@@ -52,13 +55,18 @@ public:
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   // Methods
-  void         SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal=true);
+  void         SetActiveEntry (PlaceEntry *entry,
+                               guint       section_id,
+                               const char *search_string,
+                               bool        signal=true);
+
   PlaceEntry * GetActiveEntry ();
+  
+  PlacesResultsController * GetResultsController ();
+
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
-
-  PlacesResultsController * GetResultsController ();
 
   // Signals
   sigc::signal<void, PlaceEntry *> entry_changed;
@@ -79,17 +87,20 @@ private:
   void OnResultClicked (PlacesTile *tile);
 
 private:
-  nux::VLayout    *_layout;
-  PlacesSearchBar *_search_bar;
-  PlacesHomeView  *_home_view;
-  PlaceEntry      *_entry;
-  gulong           _group_added_id;
-  gulong           _group_removed_id;
-  gulong           _result_added_id;
-  gulong           _result_removed_id;
+  nux::VLayout       *_layout;
+  nux::LayeredLayout *_layered_layout;
+  PlacesSearchBar    *_search_bar;
+  PlacesHomeView     *_home_view;
+  PlaceEntry         *_entry;
+  gulong              _group_added_id;
+  gulong              _group_removed_id;
+  gulong              _result_added_id;
+  gulong              _result_removed_id;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
+
+  IconLoader     *_icon_loader;
 };
 
 #endif // PANEL_HOME_BUTTON_H
