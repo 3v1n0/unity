@@ -93,15 +93,19 @@ void
 IconTexture::Refresh (GdkPixbuf *pixbuf)
 {
   nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
   texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+  
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> dev = texture2D->GetDeviceTexture();
+  dev->SetFiltering (GL_LINEAR, GL_LINEAR);
 
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
+  nux::TextureLayer* texture_layer = new nux::TextureLayer (dev,
                                                             texxform,
                                                             nux::Color::White,
                                                             true,
@@ -109,7 +113,8 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
   SetPaintLayer(texture_layer);
   texture2D->UnReference ();
 
-  SetMinMaxSize (gdk_pixbuf_get_width (pixbuf), gdk_pixbuf_get_height (pixbuf));
+  SetMinMaxSize (gdk_pixbuf_get_width (pixbuf) * (_size/(float)gdk_pixbuf_get_height (pixbuf)),
+                 _size);
   QueueDraw ();
 }
 

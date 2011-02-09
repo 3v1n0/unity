@@ -358,12 +358,13 @@ IconLoader::ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsiz
   GError       *error = NULL;
 
   stream = g_memory_input_stream_new_from_data (contents, length, NULL);
-  pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
-                                                -1,
-                                                task->size,
-                                                true,
-                                                NULL,
-                                                &error);
+  //pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+    //                                            -1,
+      ///                                          task->size,
+         //                                       true,
+           //                                     NULL,
+             //                                   &error);
+  pixbuf = gdk_pixbuf_new_from_stream  (stream, NULL, &error);
 
   if (GDK_IS_PIXBUF (pixbuf))
   {

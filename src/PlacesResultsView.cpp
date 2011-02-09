@@ -74,7 +74,11 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   GfxContext.PushClippingRectangle (nux::Rect (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight) );
 
   if (_layout)
+  {
+    GfxContext.PushClippingRectangle (_layout->GetGeometry());
     _layout->ProcessDraw (GfxContext, force_draw);
+    GfxContext.PopClippingRectangle();
+  }
 
   GfxContext.PopClippingRectangle();
   
@@ -174,10 +178,12 @@ void
 PlacesResultsView::ScrollUp (float stepy, int mousedy)
 {
   ScrollView::ScrollUp (stepy, mousedy);
+  NeedRedraw ();
 }
 
 void
 PlacesResultsView::ScrollDown (float stepy, int mousedy)
 {
   ScrollView::ScrollDown (stepy, mousedy);
+  NeedRedraw ();
 }
