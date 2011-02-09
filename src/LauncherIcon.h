@@ -71,7 +71,8 @@ public:
       QUIRK_SHIMMER,
       QUIRK_CENTER_SAVED,
       QUIRK_PROGRESS,
-      QURIK_DROP_PRELIGHT,
+      QUIRK_DROP_PRELIGHT,
+      QUIRK_DROP_DIM,
       
       QUIRK_LAST,
     } Quirk;
@@ -132,7 +133,7 @@ public:
     void InsertEntryRemote (LauncherEntryRemote *remote);
     void RemoveEntryRemote (LauncherEntryRemote *remote);
     
-    nux::DndAction CanAcceptDrop (std::list<char *> paths) { return OnCanAcceptDrop (paths); }
+    nux::DndAction QueryAcceptDrop (std::list<char *> paths) { return OnQueryAcceptDrop (paths); }
     void AcceptDrop (std::list<char *> paths) { return OnAcceptDrop (paths); }
     
     sigc::signal<void, int> MouseDown;
@@ -177,7 +178,7 @@ protected:
     
     virtual const gchar * GetRemoteUri () { return 0; }
     
-    virtual nux::DndAction OnCanAcceptDrop (std::list<char *> files) { return nux::DNDACTION_NONE; }
+    virtual nux::DndAction OnQueryAcceptDrop (std::list<char *> files) { return nux::DNDACTION_NONE; }
     virtual void OnAcceptDrop (std::list<char *> files) {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);

@@ -208,6 +208,7 @@ private:
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
   float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
+  float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();

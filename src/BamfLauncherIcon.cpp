@@ -919,7 +919,7 @@ BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
 }
 
 nux::DndAction 
-BamfLauncherIcon::OnCanAcceptDrop (std::list<char *> uris)
+BamfLauncherIcon::OnQueryAcceptDrop (std::list<char *> uris)
 {
   return ValidateUrisForLaunch (uris).empty () ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }

@@ -497,7 +497,15 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     time = icon->GetQuirkTime (LauncherIcon::QUIRK_PROGRESS);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
-
+    
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_DIM);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+    
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_PRELIGHT);
+    if (TimeDelta (&current, &time) < ANIM_DURATION)
+        return true;
+    
     return false;
 }
 
@@ -638,6 +646,18 @@ float Launcher::IconUrgentProgress (LauncherIcon *icon, struct timespec const &c
       return result;
     else
       return 1.0f - result;
+}
+
+float Launcher::IconDropDimValue (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec dim_time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_DIM);
+    int dim_ms = TimeDelta (&current, &dim_time);
+    float result = CLAMP ((float) dim_ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+
+    if (icon->GetQuirk (LauncherIcon::QUIRK_DROP_DIM))
+      return 1.0f - result;
+    else
+      return result;
 }
 
 float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &current)
@@ -828,6 +848,15 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     {
         arg.alpha *= size_modifier;
         center.z = 300.0f * (1.0f - size_modifier);
+    }
+    
+    float drop_dim_value = 0.2f + 0.8f * IconDropDimValue (icon, current);
+    
+    if (drop_dim_value < 1.0f)
+    {
+      arg.alpha *= drop_dim_value;
+      arg.backlight_intensity *= drop_dim_value;
+      arg.glow_intensity *= drop_dim_value;
     }
 
     if (icon == _drag_icon)
@@ -2746,15 +2775,10 @@ Launcher::RestoreSystemRenderTarget ()
 void 
 Launcher::ProcessDndEnter ()
 {
-  _launcher_action_state = ACTION_DRAG_EXTERNAL;
-  _mouse_inside_launcher = true;
-  
   _drag_data.clear ();
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
-  
-  EnsureHoverState ();
 }
 
 void 
@@ -2772,6 +2796,13 @@ Launcher::ProcessDndLeave ()
     }
   }
   _drag_data.clear ();
+  
+  LauncherModel::iterator it;
+  for (it = _model->begin (); it != _model->end (); it++)
+  {
+    (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, false);
+    (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+  }
   
   EnsureHoverState ();
 }
@@ -2837,6 +2868,15 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     // only set hover once we know our first x/y
     _launcher_action_state = ACTION_DRAG_EXTERNAL;
     _mouse_inside_launcher = true;
+    
+    LauncherModel::iterator it;
+    for (it = _model->begin (); it != _model->end (); it++)
+    {
+      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
   
     EnsureHoverState ();
   }
@@ -2854,7 +2894,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
-        _drag_action = hovered_icon->CanAcceptDrop (_drag_data);
+        _drag_action = hovered_icon->QueryAcceptDrop (_drag_data);
       else
         _drag_action = nux::DNDACTION_NONE;
     }

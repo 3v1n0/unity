@@ -242,7 +242,7 @@ TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
 }
 
 nux::DndAction 
-TrashLauncherIcon::OnCanAcceptDrop (std::list<char *> uris)
+TrashLauncherIcon::OnQueryAcceptDrop (std::list<char *> uris)
 {
   return nux::DNDACTION_MOVE;
 }
