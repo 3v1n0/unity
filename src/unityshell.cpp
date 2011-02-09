@@ -602,7 +602,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->launcherWindow->SetBlurredBackground(false);
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true);
   self->launcherWindow->InputWindowEnableStruts(true);
@@ -634,7 +633,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->panelWindow->SetBlurredBackground(false);
   self->panelWindow->ShowWindow(true);
   self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);

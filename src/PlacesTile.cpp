@@ -182,13 +182,11 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 {
   UpdateBackground ();
 
-  // Check if the texture have been computed. If they haven't, exit the function.
   nux::Geometry base = GetGeometry ();
   gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
-  // FIXME: Disabled due to nux issue
   if (_state == STATE_HOVER)
   {
     nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
@@ -196,14 +194,11 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
     gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
     gfxContext.GetRenderStates ().SetBlend (true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
     nux::TexCoordXForm texxform;
     texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-    //gfxContext.GetRenderStates().SetPremultipliedBlend (nux::SRC_OVER);
-
+    
     texture = _hilight_background->GetDeviceTexture ();
 
     gfxContext.QRP_1Tex (base.x,
@@ -214,7 +209,6 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                          texxform,
                          nux::Color::White);
     gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
-   //  gfxContext.GetRenderStates().SetBlend (false);
   }
 
   gfxContext.PopClippingRectangle ();

@@ -40,6 +40,8 @@
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
 
+#include "IconLoader.h"
+
 class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
@@ -97,6 +99,8 @@ private:
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
+
+  IconLoader     *_icon_loader;
 };
 
 #endif // PANEL_HOME_BUTTON_H
