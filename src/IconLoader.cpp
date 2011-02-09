@@ -143,6 +143,12 @@ IconLoader::QueueTask (const char           *key,
 {
   IconLoaderTask *task;
 
+  if (g_strcmp0 (data, "") == 0)
+  {
+    slot (data, size, NULL);
+    return;
+  }
+
   task = g_slice_new0 (IconLoaderTask);
   task->key = g_strdup (key);
   task->data = g_strdup (data);

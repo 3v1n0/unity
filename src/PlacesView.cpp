@@ -233,7 +233,7 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   tile = new PlacesSimpleTile (result_icon, result_name, 48);
   tile->SetURI (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
   tile->sigClick.connect (sigc::mem_fun (self, &PlacesView::OnResultClicked));
-  self->GetResultsController ()->AddResultToGroup (group_id, tile, result_id);
+  self->GetResultsController ()->AddResultToGroup (group_id, tile, iter);
 
   g_free (result_name);
   g_free (result_id);
@@ -261,7 +261,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
                                group_id, 
                                dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
 
-  self->GetResultsController ()->RemoveResultFromGroup (group_id, result_id);
+  self->GetResultsController ()->RemoveResultFromGroup (group_id, iter);
 
   g_free (result_id);
 }
