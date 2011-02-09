@@ -117,8 +117,6 @@ public:
   void startKeyNavMode ();
   void exitKeyNavMode ();
 
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
   // Introspectable methods
@@ -215,8 +213,8 @@ private:
   void UnsetHover ();
   void SetHidden  (bool hidden);
 
-  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
-  float  DragLimiter (float x);
+  void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
+  float DragLimiter (float x);
 
   void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
   void FillRenderArg (LauncherIcon *icon,

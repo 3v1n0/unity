@@ -35,6 +35,7 @@
 
 #include "Launcher.h"
 #include "LauncherIcon.h"
+#include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
@@ -860,7 +861,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         if (MouseBeyondDragThreshold ())
           arg.stick_thingy = true;
         
-        if (_launcher_action_state == ACTION_DRAG_ICON || (_drag_window && _drag_window->Animating ()))
+        if (_launcher_action_state == ACTION_DRAG_ICON || 
+            (_drag_window && _drag_window->Animating ()) ||
+            dynamic_cast<SpacerLauncherIcon *> (icon))
           arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
@@ -2015,9 +2018,9 @@ void Launcher::UpdateDragWindowPosition (int x, int y)
       float progress = DragThresholdProgress (current);
       
       if (progress >= 1.0f)
-        request_reorder_smart.emit (_drag_icon, hovered_icon, true);
+        _model->ReorderSmart (_drag_icon, hovered_icon, true);
       else if (progress == 0.0f)
-        request_reorder_before.emit (_drag_icon, hovered_icon, false);
+        _model->ReorderBefore (_drag_icon, hovered_icon, false);
     }
   }
 }
@@ -2800,6 +2803,15 @@ Launcher::ProcessDndLeave ()
     (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
   }
   
+  if (_steal_drag && _dnd_hovered_icon)
+  {
+    _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
+    _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
+    
+    _steal_drag = false;
+    _dnd_hovered_icon = 0;
+  }
+  
   EnsureHoverState ();
 }
 
@@ -2831,6 +2843,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 {
   std::list<char *>::iterator it;
   nux::Area *parent = GetToplevel ();
+  char *remote_desktop_path = NULL;
   
   if (!_data_checked)
   {
@@ -2851,6 +2864,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     {
       if (g_str_has_suffix (*it, ".desktop"))
       {
+        remote_desktop_path = *it;
         _steal_drag = true;
         break;
       }
@@ -2866,7 +2880,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     _mouse_inside_launcher = true;
     
     LauncherModel::iterator it;
-    for (it = _model->begin (); it != _model->end (); it++)
+    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
     {
       if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
         (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
@@ -2878,15 +2892,27 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   }
   
   EventLogic ();
+  LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   if (_steal_drag)
   {
     _drag_action = nux::DNDACTION_COPY;
+    if (!_dnd_hovered_icon)
+    {
+      _dnd_hovered_icon = new SpacerLauncherIcon (this);
+      _dnd_hovered_icon->SetSortPriority (G_MAXINT);
+      _model->AddIcon (_dnd_hovered_icon);
+      
+      if (hovered_icon)
+        _model->ReorderBefore (_dnd_hovered_icon, hovered_icon, true);
+    }
+    else if (hovered_icon)
+    {
+      _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
+    }
   }
   else
   {
-    LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
-    
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
@@ -2912,7 +2938,18 @@ Launcher::ProcessDndDrop (int x, int y)
 {
   if (_steal_drag)
   {
-    // not done yet
+    char *path;
+    std::list<char *>::iterator it;
+    
+    for (it = _drag_data.begin (); it != _drag_data.end (); it++)
+    {
+      if (g_str_has_suffix (*it, ".desktop"))
+      {
+        path = g_filename_from_uri (*it, NULL, NULL);
+        break;
+      }
+    }
+    launcher_dropped.emit (path, _dnd_hovered_icon);
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {

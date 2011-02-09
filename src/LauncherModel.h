@@ -31,19 +31,22 @@ public:
     typedef std::list<LauncherIcon*> Base;
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
-    typedef bool (*SortFunc) (LauncherIcon *first, LauncherIcon *second);
     
     LauncherModel();
     ~LauncherModel();
 
     void AddIcon (LauncherIcon *icon);
     void RemoveIcon (LauncherIcon *icon);
-    void Sort (SortFunc func);
+    void Sort ();
     int  Size ();
 
     void OnIconRemove (LauncherIcon *icon);
     
     bool IconHasSister (LauncherIcon *icon);
+    
+    void ReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save);
+
+    void ReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
     
     iterator begin ();
     iterator end ();
@@ -74,6 +77,8 @@ private:
     bool IconShouldShelf (LauncherIcon *icon);
     
     static gboolean RemoveCallback (gpointer data);
+    
+    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
 };
 
 #endif // LAUNCHERMODEL_H

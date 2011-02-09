@@ -211,6 +211,7 @@ protected:
 
     friend class Launcher;
     friend class LauncherController;
+    friend class LauncherModel;
 
 private:
     typedef struct
