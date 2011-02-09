@@ -89,6 +89,8 @@ private:
   static void LoadContentsReady (GObject *object, GAsyncResult *res, IconLoaderTask *task);
  
 private:
+  bool _no_load;
+
   std::map<std::string, GdkPixbuf *> _cache;
   GQueue       *_tasks;
   guint         _idle_id;

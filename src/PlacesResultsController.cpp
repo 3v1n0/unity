@@ -146,8 +146,6 @@ PlacesResultsController::Clear ()
 PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
-  g_debug ("CreateGroup: %s", groupname);
-
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);

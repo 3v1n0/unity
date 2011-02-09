@@ -25,6 +25,9 @@
 IconLoader::IconLoader ()
 : _idle_id (0)
 {
+  // Option to disable loading, if your testing performance of other things
+  _no_load = g_getenv ("UNITY_ICON_LOADER_DISABLE") != NULL;
+
   _tasks = g_queue_new ();
   _theme = gtk_icon_theme_get_default ();
 }
@@ -55,6 +58,9 @@ IconLoader::LoadFromIconName (const char        *icon_name,
   g_return_if_fail (icon_name);
   g_return_if_fail (size > 1);
 
+  if (_no_load)
+    return;
+
   key = Hash (icon_name, size);
 
   if (CacheLookup (key, icon_name, size, slot))
@@ -78,6 +84,9 @@ IconLoader::LoadFromGIconString (const char        *gicon_string,
   g_return_if_fail (gicon_string);
   g_return_if_fail (size > 1);
 
+  if (_no_load)
+    return;
+
   key = Hash (gicon_string, size);
 
   if (CacheLookup (key, gicon_string, size, slot))
@@ -100,6 +109,9 @@ IconLoader::LoadFromFilename (const char        *filename,
 
   g_return_if_fail (filename);
   g_return_if_fail (size > 1);
+
+  if (_no_load)
+    return;
 
   key = Hash (filename, size);
 
@@ -396,14 +408,14 @@ IconLoader::Iteration ()
       break;
   }
 
-  g_debug ("Iteration took: %f msecs", (g_get_monotonic_time () - time)/1000.0);
+  //g_debug ("Iteration took: %f msecs", (g_get_monotonic_time () - time)/1000.0);
   
   is_empty = g_queue_is_empty (_tasks);
   if (is_empty)
   {
     _idle_id = 0;
 
-    g_debug ("Complete load took: %f msecs", (g_get_monotonic_time () - _idle_start_time)/1000.0);
+    //g_debug ("Complete load took: %f msecs", (g_get_monotonic_time () - _idle_start_time)/1000.0);
   }
 
   return !is_empty;
