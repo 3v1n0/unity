@@ -85,6 +85,7 @@ PanelMenuView::PanelMenuView (int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
   _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
 
@@ -764,6 +765,19 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
       WindowManager::Default ()->StartMove (bamf_window_get_xid (window), x, y);
     }
   }
+}
+
+void
+PanelMenuView::OnMouseMiddleClicked ()
+{
+  if (_is_maximized)
+  {
+    BamfWindow *window;
+
+    window = bamf_matcher_get_active_window (_matcher);
+    if (BAMF_IS_WINDOW (window))
+      WindowManager::Default ()->Lower (bamf_window_get_xid (window));
+  } 
 }
 
 // Introspectable

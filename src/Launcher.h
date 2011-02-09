@@ -49,6 +49,14 @@ class Launcher : public Introspectable, public nux::View
 public:
   typedef enum
   {
+    LAUNCHER_HIDE_NEVER,
+    LAUNCHER_HIDE_AUTOHIDE,
+    LAUNCHER_HIDE_DODGE_WINDOWS,
+    LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW,
+  } LauncherHideMode;
+
+  typedef enum
+  {
     LAUNCH_ANIMATION_NONE,
     LAUNCH_ANIMATION_PULSE,
     LAUNCH_ANIMATION_BLINK,
@@ -81,8 +89,8 @@ public:
 
   void SetFloating (bool floating);
 
-  void SetAutohide (bool autohide);
-  bool AutohideEnabled ();
+  void SetHideMode (LauncherHideMode hidemode);
+  LauncherHideMode GetHideMode ();
 
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
@@ -191,6 +199,7 @@ private:
   static gboolean OnScrollTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
+  bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress        (struct timespec const &current);
   float DnDExitProgress         (struct timespec const &current);
@@ -308,7 +317,6 @@ private:
 
   bool  _hovered;
   bool  _floating;
-  bool  _autohide;
   bool  _hidden;
   bool  _was_hidden;
   bool  _mouse_inside_launcher;
@@ -325,6 +333,8 @@ private:
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+
+  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
