@@ -1420,6 +1420,12 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
 void Launcher::OnIconRemoved (LauncherIcon *icon)
 {
+    delete [] icon->_xform_coords["HitArea"];
+    delete [] icon->_xform_coords["Image"];
+    delete [] icon->_xform_coords["Tile"];
+    delete [] icon->_xform_coords["Glow"];
+    delete [] icon->_xform_coords["Emblem"];
+
     icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);

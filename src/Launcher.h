@@ -368,8 +368,6 @@ private:
   guint _autohide_handle;
   guint _autoscroll_handle;
 
-  nux::Matrix4  _view_matrix;
-  nux::Matrix4  _projection_matrix;
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
