@@ -42,4 +42,7 @@
 #define UBUS_LAUNCHER_EXIT_KEY_NAV "LAUNCHER_EXIT_KEY_NAV"
 #define UBUS_QUICKLIST_EXIT_KEY_NAV "QUICKLIST_EXIT_KEY_NAV"
 
+// Signal to send on icon action and that you want to request hiding the launcher
+#define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
+
 #endif // UBUS_MESSAGES_H

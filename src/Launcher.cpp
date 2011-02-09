@@ -289,6 +289,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _key_show_launcher      = false;
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
+    _hide_on_action_done    = false;
     _render_drag_window     = false;
     _backlight_always_on    = false;
     _last_button_press      = 0;
@@ -322,6 +323,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE,
                                    (UBusCallback)&Launcher::OnTriggerUpdate,
+                                   this);
+                                   
+    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
+                                   (UBusCallback)&Launcher::OnActionDone,
                                    this);
 }
 
@@ -1032,25 +1037,22 @@ void Launcher::StartKeyShowLauncher ()
 {
     _key_show_launcher = true;
     EnsureHiddenState ();
-    // trigger the timer now as we want to hide the launcher immediately
-    // if we release the key after 1s happened.
-    SetupAutohideTimer ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
     _key_show_launcher = false;
-    EnsureHiddenState ();
+    if (_hide_on_action_done)
+      EnsureHiddenState ();
+    else
+      SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
     self->_placeview_show_launcher = true;
-    // trigger the timer now as we want to hide the launcher immediately
-    // if we close the dash after 1s happened.
     self->EnsureHiddenState ();
-    self->SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
@@ -1096,6 +1098,13 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   }
 }
 
+void Launcher::OnActionDone (GVariant *data, void *val)
+{
+    Launcher *self = (Launcher*)val;
+    self->_hide_on_action_done = true;
+    self->SetupAutohideTimer ();
+}
+
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
@@ -1122,7 +1131,8 @@ void
 Launcher::EnsureHiddenState ()
 {
   if (!_mouse_inside_trigger && 
-      !_mouse_inside_launcher && 
+      (!_mouse_inside_launcher ||
+       (_mouse_inside_launcher && _hide_on_action_done)) && 
       !_key_show_launcher &&
       !_placeview_show_launcher &&
        _launcher_action_state == ACTION_NONE &&
@@ -2244,6 +2254,8 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
+    // reset trigger has the mouse moved to another item
+    _hide_on_action_done = false;
   }
 }
 
@@ -2725,4 +2737,48 @@ void
 Launcher::RestoreSystemRenderTarget ()
 {
   nux::GetWindowCompositor ().RestoreRenderingSurface ();
+}
+
+void 
+Launcher::ProcessDndEnter ()
+{
+  printf ("Drag Enter\n");
+}
+
+void 
+Launcher::ProcessDndLeave ()
+{
+  printf ("Drag Leave\n");
+}
+
+void 
+Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
+{
+  std::list<char *>::iterator it;
+  bool result = false;
+  
+  // hack to ensure accept until we have a real implementation going
+  result = true;
+  
+  for (it = mimes.begin (); it != mimes.end (); it++)
+  {
+    if (g_str_equal (*it, "text/uri-list"))
+    {
+      result = true;
+      break;
+    }
+  }
+  
+  if (result)
+    SendDndStatus (true, nux::DNDACTION_COPY, nux::Geometry (x, y, 1, 1));
+  else
+    SendDndStatus (false, nux::DNDACTION_NONE, nux::Geometry (x, y, 1, 1));
+  printf ("Drag Move\n");
+}
+
+void 
+Launcher::ProcessDndDrop (int x, int y)
+{
+  SendDndFinished (true, nux::DNDACTION_COPY);
+  printf ("Drag Drop\n");
 }

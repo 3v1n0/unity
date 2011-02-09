@@ -25,6 +25,9 @@
 #include "PluginAdapter.h"
 #include "FavoriteStore.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
@@ -395,6 +398,7 @@ BamfLauncherIcon::OnMouseClick (int button)
   else if (button == 2)
     OpenInstance ();
 
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 void
@@ -581,6 +585,12 @@ BamfLauncherIcon::UpdateMenus ()
 }
 
 void
+BamfLauncherIcon::OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
+{
+  self->OpenInstance ();
+}
+
+void
 BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
 {
   GList *children, *l;
@@ -634,6 +644,21 @@ void
 BamfLauncherIcon::EnsureMenuItemsReady ()
 {
   DbusmenuMenuitem *menu_item;
+
+  /* Launch */
+  if (_menu_items.find ("Launch") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open New Window"));
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnLaunch, this);
+
+    _menu_items["Launch"] = menu_item;
+  }
 
   /* Pin */
   if (_menu_items.find ("Pin") == _menu_items.end ())

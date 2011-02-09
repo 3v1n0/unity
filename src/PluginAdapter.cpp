@@ -352,6 +352,17 @@ PluginAdapter::Close (guint32 xid)
     window->close (CurrentTime);
 }
 
+void
+PluginAdapter::Lower (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->lower ();
+}
+
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 {
   XClassHint   classHint;

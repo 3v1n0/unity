@@ -39,6 +39,7 @@ public:
   ~PanelTitlebarGrabArea ();
 
   sigc::signal <void, int, int> mouse_down;
+  sigc::signal <void> mouse_middleclick;
   sigc::signal <void> mouse_doubleclick;
 
 protected:
