@@ -853,11 +853,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float drop_dim_value = 0.2f + 0.8f * IconDropDimValue (icon, current);
     
     if (drop_dim_value < 1.0f)
-    {
       arg.alpha *= drop_dim_value;
-      arg.backlight_intensity *= drop_dim_value;
-      arg.glow_intensity *= drop_dim_value;
-    }
 
     if (icon == _drag_icon)
     {
@@ -1743,7 +1739,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_outline_texture->GetDeviceTexture (),
                nux::Color(0xAAAAAAAA),
-               1.0f - arg.backlight_intensity,
+               (1.0f - arg.backlight_intensity) * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
 
@@ -1753,7 +1749,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_bkg_texture->GetDeviceTexture (),
                arg.icon->BackgroundColor (),
-               arg.backlight_intensity,
+               arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
   /* end tile draw */
@@ -1773,7 +1769,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_shine_texture->GetDeviceTexture (),
                nux::Color::White,
-               arg.backlight_intensity,
+               arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
 
@@ -1784,7 +1780,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
-               arg.glow_intensity,
+               arg.glow_intensity * arg.alpha,
                arg.icon->_xform_coords["Glow"]);
   }
   
@@ -1805,7 +1801,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
-               fade_out,
+               fade_out * arg.alpha,
                arg.icon->_xform_coords["Glow"]);
 
     GfxContext.PopClippingRectangle();
@@ -1822,7 +1818,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                _offscreen_progress_texture,
                nux::Color::White,
-               1.0f,
+               arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
   
@@ -1832,7 +1828,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
                nux::Color::White,
-               1.0f,
+               arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
 
@@ -1849,7 +1845,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg,
                 _icon_glow_hl_texture->GetDeviceTexture (),
                 nux::Color (0xFFFFFFFF),
-                1.0f,
+                arg.alpha,
                 arg.icon->_xform_coords["Glow"]);
 }
 
