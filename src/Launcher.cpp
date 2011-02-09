@@ -1150,20 +1150,26 @@ Launcher::CheckWindowOverLauncher ()
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
   nux::Geometry geo = GetGeometry ();
+  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
   for (it = window_list.begin (); it != window_list.end (); it++)
   {
     CompWindow *window = *it;
-    int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                          CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
     if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
-      continue;
+    {
+      if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED &&
+          PluginAdapter::Default ()->IsWindowFocussed(window->id()))
+        return;
+      else
+        continue;
+    }
 
     if (_hidemode == LAUNCHER_HIDE_WHEN_NEEDED && !PluginAdapter::Default ()->IsWindowFocussed(window->id()))
       continue;
 
-    if (_hidemode == LAUNCHER_HIDE_ALWAYS || CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     {
       _window_over_launcher = true;
       EnsureHiddenState ();
@@ -1179,7 +1185,15 @@ void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_hidemode != LAUNCHER_HIDE_NEVER)
-    CheckWindowOverLauncher ();
+  {
+    if (_hidemode == LAUNCHER_HIDE_ALWAYS)
+    {
+      _window_over_launcher = true;
+      EnsureHiddenState ();
+    }
+    else
+      CheckWindowOverLauncher ();
+  }
 }
 
 void Launcher::SetupAutohideTimer ()
