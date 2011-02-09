@@ -61,6 +61,10 @@ IconLoader::LoadFromIconName (const char        *icon_name,
   if (_no_load)
     return;
 
+  // We need to check this because of legacy desktop files
+  if (icon_name[0] == '/')
+    LoadFromFilename (icon_name, size, slot);
+
   key = Hash (icon_name, size);
 
   if (CacheLookup (key, icon_name, size, slot))
@@ -266,7 +270,24 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
 
   icon = g_icon_new_for_string (task->data, &error);
   
-  if (G_IS_ICON (icon))
+  if (G_IS_FILE_ICON (icon))
+  {
+    GFile *file;
+    bool   ret;
+
+    // [trasfer none]
+    file = g_file_icon_get_file (G_FILE_ICON (icon));
+
+    g_free (task->data);
+    task->type = REQUEST_TYPE_FILENAME;
+    task->data = g_file_get_path (file);
+    ret = ProcessFilenameTask (task);
+
+    g_object_unref (icon);
+
+    return ret;
+  }
+  else if (G_IS_ICON (icon))
   {
     GtkIconInfo *info;
     info = gtk_icon_theme_lookup_by_gicon (_theme,
@@ -358,14 +379,12 @@ IconLoader::ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsiz
   GError       *error = NULL;
 
   stream = g_memory_input_stream_new_from_data (contents, length, NULL);
-  //pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
-    //                                            -1,
-      ///                                          task->size,
-         //                                       true,
-           //                                     NULL,
-             //                                   &error);
-  pixbuf = gdk_pixbuf_new_from_stream  (stream, NULL, &error);
-
+  pixbuf = gdk_pixbuf_new_from_stream_at_scale (stream,
+                                                -1,
+                                                task->size,
+                                                true,
+                                                NULL,
+                                                &error);
   if (GDK_IS_PIXBUF (pixbuf))
   {
     _cache[task->key] = pixbuf;
