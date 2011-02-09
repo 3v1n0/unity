@@ -248,6 +248,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
+    _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
     _drag_icon              = NULL;
@@ -281,7 +282,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _autoscroll_handle      = 0;
     _floating               = false;
     _hovered                = false;
-    _autohide               = false;
     _hidden                 = false;
     _was_hidden             = false;
     _mouse_inside_launcher  = false;
@@ -390,9 +390,8 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
-  g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
+  g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "autohide", g_variant_new_boolean (_autohide));
   g_variant_builder_add (builder, "{sv}", "mouse-inside-launcher", g_variant_new_boolean (_mouse_inside_launcher));
 }
 
@@ -435,7 +434,7 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 
 float Launcher::AutohideProgress (struct timespec const &current)
 {
-    if (!_autohide)
+    if (_hidemode == LAUNCHER_HIDE_NEVER)
         return 0.0f;
 
     if (_hidden)
@@ -974,7 +973,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     float autohide_progress = AutohideProgress (current);
     float autohide_offset = 0.0f;
-    if (_autohide && autohide_progress > 0.0f)
+    if (_hidemode != LAUNCHER_HIDE_NEVER && autohide_progress > 0.0f)
     {
         autohide_offset -= geo.width * autohide_progress;
     }
@@ -982,7 +981,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     // Inform the painter where to paint the box
     box_geo = geo;
 
-    if (_autohide)
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
         box_geo.x += autohide_offset;
 
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
@@ -1145,44 +1144,68 @@ Launcher::EnsureHiddenState ()
     SetHidden (false);
 }
 
+bool
+Launcher::CheckIntersectWindow (CompWindow *window)
+{
+  nux::Geometry geo = GetGeometry ();
+  int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
+                        CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
+
+  if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
+    return false;
+
+  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    return true;
+
+  return false;
+}
+
 void
 Launcher::CheckWindowOverLauncher ()
 {
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
-  nux::Geometry geo = GetGeometry ();
+  CompWindow *window = NULL;
 
-  for (it = window_list.begin (); it != window_list.end (); it++)
+  if (_hidemode == LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW)
   {
-    CompWindow *window = *it;
-    int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
-                          CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
-
-    if (!(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
-      continue;
-
-    if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+    window = _screen->findWindow (_screen->activeWindow ());
+    if (!CheckIntersectWindow (window))
+      window = NULL;
+  }
+  else
+  {
+    for (it = window_list.begin (); it != window_list.end (); it++)
     {
-      _window_over_launcher = true;
-      EnsureHiddenState ();
-      return;
+      if (CheckIntersectWindow (*it)) {
+        window = *it;
+        break;
+      }
     }
   }
 
-  _window_over_launcher = false;
+  _window_over_launcher = (window != NULL);
   EnsureHiddenState ();
 }
 
 void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
-  if (_autohide)
-    CheckWindowOverLauncher ();
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
+  {
+    if (_hidemode == LAUNCHER_HIDE_AUTOHIDE)
+    {
+      _window_over_launcher = true;
+      EnsureHiddenState ();
+    }
+    else
+      CheckWindowOverLauncher ();
+  }
 }
 
 void Launcher::SetupAutohideTimer ()
 {
-  if (_autohide)
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
   {
     if (_autohide_handle > 0)
       g_source_remove (_autohide_handle);
@@ -1190,9 +1213,9 @@ void Launcher::SetupAutohideTimer ()
   }
 }
 
-bool Launcher::AutohideEnabled ()
+Launcher::LauncherHideMode Launcher::GetHideMode ()
 {
-  return _autohide;
+  return _hidemode;
 }
 
 /* End Launcher Show/Hide logic */
@@ -1207,12 +1230,12 @@ gboolean Launcher::StrutHack (gpointer data)
   return false;
 }
 
-void Launcher::SetAutohide (bool autohide)
+void Launcher::SetHideMode (LauncherHideMode hidemode)
 {
-  if (_autohide == autohide)
+  if (_hidemode == hidemode)
     return;
 
-  if (autohide)
+  if (hidemode != LAUNCHER_HIDE_NEVER)
   {
     _parent->InputWindowEnableStruts(false);
   }
@@ -1223,7 +1246,7 @@ void Launcher::SetAutohide (bool autohide)
     _parent->InputWindowEnableStruts(true);
   }
 
-  _autohide = autohide;
+  _hidemode = hidemode;
   EnsureAnimation ();
 }
 
