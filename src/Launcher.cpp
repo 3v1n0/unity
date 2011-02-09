@@ -2778,6 +2778,7 @@ Launcher::ProcessDndEnter ()
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
+  _dnd_hovered_icon = 0;
 }
 
 void 
