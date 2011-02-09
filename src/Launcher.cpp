@@ -2831,6 +2831,16 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   }
   
   SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
+
+  if (!_mouse_inside_launcher)
+  {
+    // only set hover once we know our first x/y
+    _launcher_action_state = ACTION_DRAG_EXTERNAL;
+    _mouse_inside_launcher = true;
+  
+    EnsureHoverState ();
+  }
+  
   EventLogic ();
 
   if (_steal_drag)
