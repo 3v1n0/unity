@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -28,7 +29,12 @@
 #include "BamfLauncherIcon.h"
 #include "LauncherModel.h"
 
+#include "DeviceLauncherSection.h"
 #include "FavoriteStore.h"
+#include "PlaceLauncherSection.h"
+
+#include "LauncherEntryRemote.h"
+#include "LauncherEntryRemoteModel.h"
 
 #include <libbamf/libbamf.h>
 #include <sigc++/sigc++.h>
@@ -43,20 +49,31 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
-    void PresentIconOwningWindow (Window window);
-    
 private:
-    BamfMatcher*        _matcher;
-    CompAction*         _expo_action;
-    CompScreen*         _screen;
-    Launcher*           _launcher;
-    LauncherModel*      _model;
-    nux::BaseWindow*    _window;
-    FavoriteStore*      _favorite_store;
-    SimpleLauncherIcon* _expoIcon;
-    int                 _sort_priority;
-    int                 _num_workspaces;
+    BamfMatcher*           _matcher;
+    CompAction*            _expo_action;
+    CompScreen*            _screen;
+    Launcher*              _launcher;
+    LauncherModel*         _model;
+    nux::BaseWindow*       _window;
+    FavoriteStore*         _favorite_store;
+    int                    _sort_priority;
+    PlaceLauncherSection*  _place_section;
+    DeviceLauncherSection* _device_section;
+    LauncherEntryRemoteModel* _remote_model;
+    SimpleLauncherIcon*    _expoIcon;
+    int                    _num_workspaces;
 
+    void SortAndSave ();
+
+    void OnIconAdded (LauncherIcon *icon);
+    
+    void OnLauncherDropped (char *path, LauncherIcon *before);
+
+    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
+
+    void UpdateNumWorkspaces (int workspaces);
     void InsertExpoAction ();
     void RemoveExpoAction ();
     
@@ -70,11 +87,7 @@ private:
 
     void OnExpoClicked (int button);
     
-    void UpdateNumWorkspaces(int workspaces);
-    
     /* statics */
-    
-    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 

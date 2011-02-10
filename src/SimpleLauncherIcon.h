@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -27,12 +28,14 @@ class SimpleLauncherIcon : public LauncherIcon
 {
 public:
     SimpleLauncherIcon(Launcher* IconManager);
-    ~SimpleLauncherIcon();
+    virtual ~SimpleLauncherIcon();
     
     /* override */
     nux::BaseTexture * GetTextureForSize (int size);
     
     void SetIconName (const char *name);
+
+    virtual void Activate ();
 
 protected:
     virtual void OnMouseDown (int button);
@@ -40,11 +43,11 @@ protected:
     virtual void OnMouseClick (int button);
     virtual void OnMouseEnter ();
     virtual void OnMouseLeave ();
+
 private:
     
     char *m_IconName;
     nux::BaseTexture *m_Icon;
-
 };
 
 #endif // BAMFLAUNCHERICON_H

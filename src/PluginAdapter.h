@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -24,7 +25,29 @@
 
 #include <sigc++/sigc++.h>
 
-class PluginAdapter : public sigc::trackable
+#include "WindowManager.h"
+
+class MultiActionList
+{
+public:
+
+    MultiActionList (int n) :
+        m_ActionList (n),
+        _primary_action (NULL) {};
+
+    void InitiateAll (CompOption::Vector &extraArgs);
+    void TerminateAll (CompOption::Vector &extraArgs);
+
+    void AddNewAction (CompAction *, bool primary);
+    void RemoveAction (CompAction *);
+private:
+
+    std::list <CompAction *> m_ActionList;
+    CompAction *             _primary_action;
+};
+    
+
+class PluginAdapter : public sigc::trackable, public WindowManager
 {
 public:
     static PluginAdapter * Default ();
@@ -35,21 +58,41 @@ public:
     
     std::string * MatchStringForXids (std::list<Window> *windows);
     
-    void SetScaleAction (CompAction *scale);
-    
-    void SetExpoAction (CompAction *expo);
-    
+    void SetScaleAction (MultiActionList &scale);    
+    void SetExpoAction (MultiActionList &expo);
+
+    void OnScreenGrabbed ();
+    void OnScreenUngrabbed ();
+
     void InitiateScale (std::string *match);
+    void TerminateScale ();
+    bool IsScaleActive ();
     
     void InitiateExpo ();
+
+    void Notify (CompWindow *window, CompWindowNotify notify);
+    void NotifyMoved (CompWindow *window, int x, int y);
+    void NotifyResized (CompWindow *window, int x, int y, int w, int h);
+    void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
+    
+    // WindowManager implementation
+    bool IsWindowMaximized (guint xid);
+    bool IsWindowDecorated (guint xid);
+    void Restore (guint32 xid);
+    void Minimize (guint32 xid);
+    void Close (guint32 xid);
+    void Lower (guint32 xid);
+
+    void MaximizeIfBigEnough (CompWindow *window);
     
 protected:
     PluginAdapter(CompScreen *screen);
 
 private:
     CompScreen *m_Screen;
-    CompAction *m_ExpoAction;
-    CompAction *m_ScaleAction;
+    MultiActionList m_ExpoActionList;
+    MultiActionList m_ScaleActionList;
+    std::list <guint32> m_SpreadedWindows;
     
     static PluginAdapter *_default;
 };

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,7 +37,17 @@ LauncherModel::~LauncherModel()
 
 bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
 {
-  return icon->Type () == LAUNCHER_ICON_TYPE_TRASH; 
+  return icon->Type () == LauncherIcon::TYPE_TRASH; 
+}
+
+bool LauncherModel::CompareIcons (LauncherIcon *first, LauncherIcon *second)
+{
+  if (first->Type () < second->Type ())
+    return true;
+  else if (first->Type () > second->Type ())
+    return false;
+    
+  return first->SortPriority () < second->SortPriority ();
 }
 
 void
@@ -46,11 +57,18 @@ LauncherModel::Populate ()
   
   iterator it;
   
+  int i = 0;
   for (it = main_begin (); it != main_end (); it++)
+  {
     _inner.push_back (*it);
+    (*it)->SetSortPriority (i++);
+  }
   
   for (it = shelf_begin (); it != shelf_end (); it++)
+  {
     _inner.push_back (*it);
+    (*it)->SetSortPriority (i++);
+  }
 }
 
 void 
@@ -63,7 +81,7 @@ LauncherModel::AddIcon (LauncherIcon *icon)
   else
     _inner_main.push_front (icon);
   
-  Populate ();
+  Sort ();
   
   icon_added.emit (icon);
   icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
@@ -81,9 +99,10 @@ LauncherModel::RemoveIcon (LauncherIcon *icon)
   _inner.remove (icon);
 
   if (size != _inner.size ())
+  {
     icon_removed.emit (icon);
-  
-  icon->UnReference ();
+    icon->UnReference ();
+  }
 }
 
 gboolean
@@ -98,22 +117,143 @@ LauncherModel::RemoveCallback (gpointer data)
 }
 
 void 
-LauncherModel::OnIconRemove (void *icon_pointer)
+LauncherModel::OnIconRemove (LauncherIcon *icon)
 {
   RemoveArg *arg = (RemoveArg*) g_malloc0 (sizeof (RemoveArg));
-  arg->icon = (LauncherIcon*) icon_pointer;
+  arg->icon = icon;
   arg->self = this;
   
   g_timeout_add (1000, &LauncherModel::RemoveCallback, arg);
 }
 
 void 
-LauncherModel::Sort (SortFunc func)
+LauncherModel::Sort ()
 {
-  _inner.sort (func);
-  _inner_main.sort (func);
+  _inner_shelf.sort (&LauncherModel::CompareIcons);
+  _inner_main.sort (&LauncherModel::CompareIcons);
   
   Populate ();
+  order_changed.emit ();
+}
+
+bool
+LauncherModel::IconHasSister (LauncherIcon *icon)
+{
+  iterator (LauncherModel::*begin_it)(void);
+  iterator (LauncherModel::*end_it)(void);
+  iterator it;
+  
+  if (IconShouldShelf (icon))
+  {
+    begin_it = &LauncherModel::shelf_begin;
+    end_it = &LauncherModel::shelf_end;
+  }
+  else
+  {
+    begin_it = &LauncherModel::main_begin;
+    end_it = &LauncherModel::main_end;
+  }
+  
+  for (it = (this->*begin_it) (); it != (this->*end_it) (); it++)
+  {
+    if ((*it  != icon)
+        && (*it)->Type () == icon->Type ())
+      return true;
+  }
+  
+  return false;
+}
+
+void
+LauncherModel::ReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save)
+{
+  if (icon == other)
+    return;
+
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  int j = 0;
+  for (it = begin (); it != end (); it++)
+  {
+    if ((*it) == icon)
+    {
+      j++;
+      continue;
+    }
+    
+    if ((*it) == other)
+    {
+      icon->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
+  }
+  
+  Sort ();
+}
+
+void
+LauncherModel::ReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
+{
+  if (icon == other)
+    return;
+
+  LauncherModel::iterator it;
+  
+  int i = 0;
+  int j = 0;
+  bool skipped = false;
+  for (it = begin (); it != end (); it++)
+  {
+    if ((*it) == icon)
+    {
+      skipped = true;
+      j++;
+      continue;
+    }
+    
+    if ((*it) == other)
+    {
+      if (!skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+      
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+      
+      if (skipped)
+      {
+        icon->SetSortPriority (i);
+        if (i != j && save) (*it)->SaveCenter ();
+        i++;
+      }
+    }
+    else
+    {
+      (*it)->SetSortPriority (i);
+      if (i != j && save) (*it)->SaveCenter ();
+      i++;
+    }
+    j++;
+  }
+  
+  Sort ();
 }
 
 int
@@ -121,6 +261,8 @@ LauncherModel::Size ()
 {
   return _inner.size ();
 }
+
+/* iterators */
     
 LauncherModel::iterator 
 LauncherModel::begin ()

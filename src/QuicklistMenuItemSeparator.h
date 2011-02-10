@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -58,6 +59,10 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
     virtual int CairoSurfaceWidth ();
     
     friend class QuicklistView;
+
+ private:
+
+    nux::Color _premultiplied_color;
 };
 
 #endif // QUICKLISTMENUITEMSEPARATOR_H

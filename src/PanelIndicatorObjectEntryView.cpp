@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -31,27 +32,33 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
-#define PANEL_HEIGHT 24
-#define PADDING 6
-#define SPACING 3
 
 static void draw_menu_bg (cairo_t *cr, int width, int height);
 
 
-PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy)
+PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding)
 : TextureArea (NUX_TRACKER_LOCATION),
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
-  _proxy->Updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _padding = padding;
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
   
   Refresh ();
 }
 
 PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 {
+}
+
+void
+PanelIndicatorObjectEntryView::OnActiveChanged (bool is_active)
+{
+  active_changed.emit (this, is_active);
 }
 
 void
@@ -63,11 +70,26 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   if ((_proxy->label_visible && _proxy->label_sensitive)
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
-    _proxy->ShowMenu (GetGeometry ().x,
+    _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation
                       PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state)
+{
+  _proxy->Scroll (delta);
+}
+
+void
+PanelIndicatorObjectEntryView::Activate ()
+{
+  _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation FIXME: Make this into one function
+                    PANEL_HEIGHT,
+                    time (NULL),
+                    1);
 }
 
 static char *
@@ -164,7 +186,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   }
 
   if (width)
-    width += PADDING *2;
+    width += _padding *2;
 
   SetMinimumWidth (width);
 
@@ -175,7 +197,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   if (_proxy->GetActive ())
     draw_menu_bg (cr, width, height);
 
-  x = PADDING;
+  x = _padding;
   y = 0;
 
   if (_proxy->GetPixbuf () && _proxy->icon_visible)
@@ -240,9 +262,10 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
   delete texture_layer;
-  
+
   NeedRedraw ();
 
+  refreshed.emit (this);
   if (label)
     g_free (label);
 }
@@ -253,8 +276,8 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   int radius = 4;
   double x = 0;
   double y = 0;
-  double xos = 1.5;
-  double yos = 1.5;
+  double xos = 0.5;
+  double yos = 0.5;
   /* FIXME */
   double mpi = 3.14159265358979323846;
 

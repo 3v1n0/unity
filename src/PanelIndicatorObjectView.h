@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -26,9 +27,12 @@
 
 #include "Introspectable.h"
 
+#define MINIMUM_INDICATOR_WIDTH 12
+
 class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:
+  PanelIndicatorObjectView ();
   PanelIndicatorObjectView (IndicatorObjectProxy *proxy);
   ~PanelIndicatorObjectView ();
 
@@ -47,7 +51,6 @@ protected:
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
-private:
   IndicatorObjectProxy *_proxy;
   std::vector<PanelIndicatorObjectEntryView *> _entries;
 };

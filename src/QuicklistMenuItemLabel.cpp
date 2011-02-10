@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -47,7 +48,7 @@ void
 QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
 {
   _item_type  = MENUITEM_TYPE_LABEL;
-  
+
   if (item)
     _text = g_strdup (dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL));
   else
@@ -61,7 +62,7 @@ QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
 }
 
 QuicklistMenuItemLabel::~QuicklistMenuItemLabel ()
-{ 
+{
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
@@ -96,7 +97,7 @@ QuicklistMenuItemLabel::PostLayoutManagement (long layoutResult)
   int h = GetBaseHeight();
 
   long result = 0;
-  
+
   if (_pre_layout_width < w)
     result |= nux::eLargerWidth;
   else if (_pre_layout_width > w)
@@ -132,7 +133,7 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
   // Check if the texture have been computed. If they haven't, exit the function.
   if (_normalTexture[0] == NULL)
     return;
-  
+
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
   nux::Geometry base = GetGeometry ();
@@ -143,10 +144,9 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
-  
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+
   if (GetEnabled ())
   {
     if (_prelight)
@@ -164,8 +164,8 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
     texture = _normalTexture[0]->GetDeviceTexture ();
     _color = nux::Color::DarkGray;
   }
-  
-  gfxContext.QRP_GLSL_1Tex (base.x,
+
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,
@@ -196,7 +196,7 @@ QuicklistMenuItemLabel::UpdateTexture ()
   nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
   int        width       = GetBaseWidth ();
   int        height      = GetBaseHeight ();
-  
+
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
 

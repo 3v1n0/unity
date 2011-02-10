@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -87,6 +88,8 @@ class QuicklistMenuItem : public nux::View, public Introspectable
     virtual bool GetEnabled ();
 
     virtual bool GetActive ();
+
+    virtual bool GetVisible ();
     
     // Introspection
     const gchar* GetName ();

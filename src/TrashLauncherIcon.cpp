@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -17,17 +18,23 @@
  */
 
 #include "TrashLauncherIcon.h"
+#include "Launcher.h"
+#include "Nux/WindowCompositor.h"
+
+#include "QuicklistManager.h"
+#include "QuicklistMenuItemLabel.h"
 
 #include <gio/gio.h>
+#include <glib/gi18n-lib.h>
 
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
-  SetTooltipText ("Trash");
+  SetTooltipText (_("Trash"));
   SetIconName ("user-trash");
-  SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, true);
-  SetQuirk (LAUNCHER_ICON_QUIRK_RUNNING, false);
-  SetIconType (LAUNCHER_ICON_TYPE_TRASH); 
+  SetQuirk (QUIRK_VISIBLE, true);
+  SetQuirk (QUIRK_RUNNING, false);
+  SetIconType (TYPE_TRASH); 
 
   m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
 					     G_FILE_MONITOR_NONE,
@@ -47,9 +54,46 @@ TrashLauncherIcon::~TrashLauncherIcon()
   g_object_unref (m_TrashMonitor);
 }
 
+nux::Color 
+TrashLauncherIcon::BackgroundColor ()
+{
+  return nux::Color (0xFF333333);
+}
+
+nux::Color 
+TrashLauncherIcon::GlowColor ()
+{
+  return nux::Color (0xFF333333);
+}
+
+void
+TrashLauncherIcon::EnsureMenuItemsReady ()
+{
+  DbusmenuMenuitem *menu_item;
+
+  /* Empty Trash */
+  if (_menu_items.find ("Empty") == _menu_items.end ())
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    g_object_ref (menu_item);
+
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash"));
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    g_signal_connect (menu_item,
+                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
+                      (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);
+
+    _menu_items["Empty"] = menu_item;
+  }
+}
+
 void
 TrashLauncherIcon::OnMouseClick (int button)
 {
+  SimpleLauncherIcon::OnMouseClick (button);
+
   if (button == 1)
   {
     GError *error = NULL;
@@ -59,6 +103,90 @@ TrashLauncherIcon::OnMouseClick (int button)
     if (error)
       g_error_free (error);
   }
+  else if (button == 3 && _empty == FALSE)
+  {
+    EnsureMenuItemsReady ();
+
+    _quicklist->RemoveAllMenuItem ();
+    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (_menu_items["Empty"], NUX_TRACKER_LOCATION);
+    _quicklist->AddMenuItem (item);
+    
+    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+    nux::Point3 center = GetCenter ();
+    int tip_y = center.y;
+    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+  }
+}
+
+void 
+TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem *item, int time, TrashLauncherIcon *self)
+{
+  GtkWidget *dialog;
+  dialog = gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL,
+                                   GTK_MESSAGE_WARNING,
+                                   GTK_BUTTONS_CANCEL,
+                                   NULL);
+
+  g_object_set (GTK_DIALOG (dialog),
+		"text", _("Empty all items from Trash?"),
+		"secondary-text", _("All items in the Trash will be permanently deleted."),
+		NULL);
+  gtk_dialog_add_button (GTK_DIALOG (dialog), _("Empty Trash"), GTK_RESPONSE_OK );
+
+  QuicklistManager::Default ()->HideQuicklist (self->_quicklist);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) 
+    g_thread_create ((GThreadFunc)&TrashLauncherIcon::EmptyTrashAction, NULL, FALSE, NULL);
+
+  gtk_widget_destroy (dialog);
+
+}
+
+void
+TrashLauncherIcon::EmptyTrashAction()
+{
+  // This function runs in a different thread
+  // created in TrashLauncherIcon::OnEmptyTrash
+  GFile *location;
+  location = g_file_new_for_uri ("trash:///");
+  
+  RecursiveDelete (location);
+
+  g_object_unref (location);
+
+}
+void
+TrashLauncherIcon::RecursiveDelete(GFile *location)
+{
+
+  GFileInfo *info;
+  GFile *child;
+  GFileEnumerator *enumerator;
+
+  enumerator = g_file_enumerate_children (location,
+                                          G_FILE_ATTRIBUTE_STANDARD_NAME "," 
+                                          G_FILE_ATTRIBUTE_STANDARD_TYPE,
+					                                G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+					                                NULL,
+					                                NULL);
+  if (enumerator)
+  {
+    while ((info = g_file_enumerator_next_file (enumerator, NULL, NULL)) != NULL)
+    {
+      child = g_file_get_child (location, g_file_info_get_name (info));
+      if (g_file_info_get_file_type (info) == G_FILE_TYPE_DIRECTORY) RecursiveDelete (child);
+
+      g_file_delete (child, NULL, NULL);
+      g_object_unref (child);
+      g_object_unref (info);
+       
+    }
+
+    g_file_enumerator_close (enumerator, NULL, NULL);
+    g_object_unref (enumerator);
+  }
+
 }
 
 void
@@ -75,7 +203,7 @@ TrashLauncherIcon::UpdateTrashIcon ()
                            &TrashLauncherIcon::UpdateTrashIconCb, 
                            this);
 
-  g_object_unref(location);
+  g_object_unref (location);
 }
 
 void
@@ -86,12 +214,17 @@ TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
   TrashLauncherIcon *self = (TrashLauncherIcon*) data;
   GFileInfo *info;
   GIcon *icon;
+  gchar *icon_name;
 
   info = g_file_query_info_finish (G_FILE (source), res, NULL);
 
   if (info != NULL) {
     icon = g_file_info_get_icon (info);
-    self->SetIconName (g_icon_to_string (icon));
+    icon_name = g_icon_to_string (icon);
+    self->SetIconName (icon_name);
+
+    if (g_strcmp0 (icon_name, "user-trash") == 0) self->_empty = TRUE;
+    else self->_empty = FALSE;
 
     g_object_unref(info);
   }
@@ -108,3 +241,21 @@ TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
     self->UpdateTrashIcon ();
 }
 
+nux::DndAction 
+TrashLauncherIcon::OnQueryAcceptDrop (std::list<char *> uris)
+{
+  return nux::DNDACTION_MOVE;
+}
+  
+void 
+TrashLauncherIcon::OnAcceptDrop (std::list<char *> uris)
+{
+  std::list<char *>::iterator it;
+  
+  for (it = uris.begin (); it != uris.end (); it++)
+  {
+    GFile *file = g_file_new_for_uri (*it);
+    g_file_trash (file, NULL, NULL);
+    g_object_unref (file);
+  }
+}

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -31,31 +32,57 @@ namespace nux
 {
   StaticCairoText::StaticCairoText (const TCHAR* text,
                                     NUX_FILE_LINE_DECL) :
-  View (NUX_FILE_LINE_PARAM)
+  View (NUX_FILE_LINE_PARAM),
+  _fontstring (NULL),
+  _cairoGraphics (NULL),
+  _texture2D (NULL)
+  
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = TEXT (text);
   _texture2D  = 0;
+  _need_new_extent_cache = true;
 
   SetMinimumSize (1, 1);
+  _ellipsize = NUX_ELLIPSIZE_END;
+  _align = NUX_ALIGN_LEFT;
+  _fontstring = NULL;
 }
 
 StaticCairoText::~StaticCairoText ()
 {
-  delete (_cairoGraphics);
-  delete (_texture2D);
+  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+  g_signal_handlers_disconnect_by_func (settings,
+                                        (void *) &StaticCairoText::OnFontChanged,
+                                        this);
+  if (_texture2D)
+    delete (_texture2D);
+
+  if (_fontstring)
+    g_free (_fontstring);
+}
+
+void
+StaticCairoText::SetTextEllipsize (EllipsizeState state)
+{
+  _ellipsize = state;
+  NeedRedraw ();
+}
+
+void
+StaticCairoText::SetTextAlignment (AlignState state)
+{
+  _align = state;
+  NeedRedraw ();
 }
 
 void StaticCairoText::PreLayoutManagement ()
 {
-  int          textWidth  = 0;
-  int          textHeight = 0;
-  GtkSettings* settings   = gtk_settings_get_default (); // not ref'ed
-  gchar*       fontName   = NULL;
-
-  g_object_get (settings, "gtk-font-name", &fontName, NULL);
-  GetTextExtents (fontName, textWidth, textHeight);
-  g_free (fontName);
+  int textWidth  = 0;
+  int textHeight = 0;
+  
+  textWidth = _cached_extent_width;
+  textHeight = _cached_extent_height;
 
   _pre_layout_width = GetBaseWidth ();
   _pre_layout_height = GetBaseHeight ();
@@ -64,6 +91,12 @@ void StaticCairoText::PreLayoutManagement ()
 
   if((_texture2D == 0) )
   {
+    GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+    g_signal_connect (settings, "notify::gtk-font-name",
+                      (GCallback) &StaticCairoText::OnFontChanged, this);
+    g_signal_connect (settings, "notify::gtk-xft-dpi",
+                      (GCallback) &StaticCairoText::OnFontChanged, this);
+
     UpdateTexture ();
   }
 
@@ -113,23 +146,25 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
 {
   Geometry base = GetGeometry ();
 
+  if (_texture2D == 0)
+    UpdateTexture ();
+
   gfxContext.PushClippingRectangle (base);
 
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  gfxContext.QRP_GLSL_1Tex (base.x,
-                            base.y,
-                            base.width,
-                            base.height,
-                            _texture2D->GetDeviceTexture(),
-                            texxform,
-                            _textColor);
+  gfxContext.QRP_1Tex (base.x,
+                        base.y,
+                        base.width,
+                        base.height,
+                        _texture2D->GetDeviceTexture(),
+                        texxform,
+                        _textColor);
 
   gfxContext.GetRenderStates().SetBlend (false);
 
@@ -156,6 +191,10 @@ StaticCairoText::SetText (NString text)
   if (_text != text)
   {
     _text = text;
+    _need_new_extent_cache = true;
+    int width = 0;
+    int height = 0;
+    GetTextExtents (width, height);
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
@@ -171,12 +210,34 @@ StaticCairoText::SetTextColor (Color textColor)
   }
 }
 
+void
+StaticCairoText::SetFont (const char *fontstring)
+{
+  g_free (_fontstring);
+  _fontstring = g_strdup (fontstring);
+  _need_new_extent_cache = true;
+  int width = 0;
+  int height = 0;
+  GetTextExtents (width, height);
+  NeedRedraw ();
+  sigFontChanged.emit (this);
+}
+
+
 void StaticCairoText::GetTextExtents (int &width, int &height)
 {
   GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
   gchar*       fontName = NULL;
 
-  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  if (_fontstring == NULL)
+  {
+    g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  }
+  else
+  {
+    fontName = g_strdup (_fontstring);
+  }
+
   GetTextExtents (fontName, width, height);
   g_free (fontName);
 }
@@ -199,6 +260,16 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   if (!font)
     return;
 
+  if (_need_new_extent_cache == false)
+  {
+    width = _cached_extent_width;
+    height = _cached_extent_height;
+    return;
+  }
+  
+  
+  int maxwidth = GetMaximumWidth ();
+
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create (surface);
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
@@ -207,8 +278,28 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+
+  if (_ellipsize == NUX_ELLIPSIZE_START)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_START);
+  else if (_ellipsize == NUX_ELLIPSIZE_MIDDLE)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_MIDDLE);
+  else if (_ellipsize == NUX_ELLIPSIZE_END)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  else
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+
+  if (_align == NUX_ALIGN_LEFT)
+    pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
+  else if (_align == NUX_ALIGN_CENTRE)
+    pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
+  else
+    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+
+
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_height (layout, -2);
+  pango_layout_set_width (layout, maxwidth * PANGO_SCALE);
+
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
                                         gdk_screen_get_font_options (screen));
@@ -228,12 +319,15 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
 
   width  = logRect.width / PANGO_SCALE;
   height = logRect.height / PANGO_SCALE;
+  _cached_extent_height = height;
+  _cached_extent_width = width;
 
   // clean up
   pango_font_description_free (desc);
   g_object_unref (layout);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
+
 }
 
 void StaticCairoText::DrawText (cairo_t*   cr,
@@ -251,16 +345,40 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName   = NULL;
 
-  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  if (_fontstring == NULL)
+    g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  else
+    fontName = g_strdup (_fontstring);
+
   GetTextExtents (fontName, textWidth, textHeight);
 
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (fontName);
+
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+
+  if (_ellipsize == NUX_ELLIPSIZE_START)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_START);
+  else if (_ellipsize == NUX_ELLIPSIZE_MIDDLE)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_MIDDLE);
+  else if (_ellipsize == NUX_ELLIPSIZE_END)
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  else
+    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+
+
+  if (_align == NUX_ALIGN_LEFT)
+    pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
+  else if (_align == NUX_ALIGN_CENTRE)
+    pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
+  else
+    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_width (layout, textWidth * PANGO_SCALE);
+  pango_layout_set_height (layout, -2);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
                                         gdk_screen_get_font_options (screen));
@@ -303,9 +421,11 @@ void StaticCairoText::UpdateTexture ()
   _cairoGraphics = new CairoGraphics (CAIRO_FORMAT_ARGB32,
                                       GetBaseWidth (),
                                       GetBaseHeight ());
-  cairo_t *cr = _cairoGraphics->GetContext ();
+  cairo_t *cr = cairo_reference (_cairoGraphics->GetContext ());
 
   DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
+
+  cairo_destroy (cr);
 
   NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -318,7 +438,21 @@ void StaticCairoText::UpdateTexture ()
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 
+  cairo_destroy (cr);
+
   delete _cairoGraphics;
+}
+
+void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
+                                     gpointer data)
+{
+  StaticCairoText *self = (StaticCairoText*) data;
+  self->_need_new_extent_cache = true;
+  int width = 0;
+  int height = 0;
+  self->GetTextExtents (width, height);
+  self->UpdateTexture ();
+  self->sigFontChanged.emit (self);
 }
 
 }

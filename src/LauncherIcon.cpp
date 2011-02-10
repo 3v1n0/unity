@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -31,6 +32,7 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
+#include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
 #include "QuicklistMenuItemLabel.h"
 #include "QuicklistMenuItemSeparator.h"
@@ -38,6 +40,8 @@
 #include "QuicklistMenuItemRadio.h"
 
 #define DEFAULT_ICON "application-default-icon"
+
+NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
 
 nux::Tooltip *LauncherIcon::_current_tooltip = 0;
 QuicklistView *LauncherIcon::_current_quicklist = 0;
@@ -48,7 +52,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _launcher = launcher;
   m_TooltipText = "blank";
 
-  for (int i = 0; i < LAUNCHER_ICON_QUIRK_LAST; i++)
+  for (int i = 0; i < QUIRK_LAST; i++)
   {
     _quirks[i] = 0;
     _quirk_times[i].tv_sec = 0;
@@ -61,14 +65,20 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _glow_color = nux::Color::White;
   
   _mouse_inside = false;
+  _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
-  _icon_type = LAUNCHER_ICON_TYPE_NONE;
+  _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  
+  _emblem = 0;
 
   _quicklist = new QuicklistView ();
-  _quicklist->sigVisible.connect (sigc::mem_fun (this, &LauncherIcon::RecvShowQuicklist));
-  _quicklist->sigHidden.connect (sigc::mem_fun (this, &LauncherIcon::RecvHideQuicklist));
   _quicklist_is_initialized = false;
+  
+  _present_time_handle = 0;
+  _center_stabilize_handle = 0;
+
+  QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
   
   // Add to introspection
   AddChild (_quicklist);
@@ -96,6 +106,12 @@ LauncherIcon::~LauncherIcon()
   _center_stabilize_handle = 0;
 }
 
+bool
+LauncherIcon::HasVisibleWindow ()
+{
+  return _has_visible_window;
+}
+
 const gchar *
 LauncherIcon::GetName ()
 {
@@ -113,11 +129,16 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
   
   g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
-  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_ACTIVE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_URGENT)));
-  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_RUNNING)));
-  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED)));
+  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (QUIRK_ACTIVE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (QUIRK_VISIBLE)));
+  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (QUIRK_URGENT)));
+  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (QUIRK_RUNNING)));
+  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
+}
+
+void
+LauncherIcon::Activate ()
+{
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -177,8 +198,8 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   nux::RGBtoHSV (r, g, b, h, s, v);
   
   if (s > .15f)
-    s = 0.4f;
-  v = .85f;
+    s = 0.65f;
+  v = 0.90f;
   
   nux::HSVtoRGB (r, g, b, h, s, v);
   background = nux::Color (r, g, b);
@@ -225,7 +246,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
 
   if (GDK_IS_PIXBUF (pbuf))
   {
-    result = nux::CreateTextureFromPixbuf (pbuf); 
+    result = nux::CreateTexture2DFromPixbuf (pbuf, true);
     ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
@@ -260,7 +281,7 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
 
   if (GDK_IS_PIXBUF (pbuf))
   {
-    result = nux::CreateTextureFromPixbuf (pbuf); 
+    result = nux::CreateTexture2DFromPixbuf (pbuf, true);
     ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
@@ -292,14 +313,14 @@ nux::NString LauncherIcon::GetTooltipText()
 void
 LauncherIcon::RecvMouseEnter ()
 {
-  if (_launcher->GetActiveQuicklist ())
+  if (QuicklistManager::Default ()->Current ())
   {
     // A quicklist is active
     return;
   }
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -314,79 +335,55 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
+void LauncherIcon::OpenQuicklist ()
+{
+  _tooltip->ShowWindow (false);    
+  _quicklist->RemoveAllMenuItem ();
+
+  std::list<DbusmenuMenuitem *> menus = Menus ();
+  if (menus.empty ())
+    return;
+
+  std::list<DbusmenuMenuitem *>::iterator it;
+  for (it = menus.begin (); it != menus.end (); it++)
+  {
+    DbusmenuMenuitem *menu_item = *it;
+    
+    const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
+    const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+
+    if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
+    {
+      QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
+    {
+      QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
+    {
+      QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+    else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+    {
+      QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
+      _quicklist->AddMenuItem (item);
+    }
+  }
+    
+  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+  QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+}
+
 void LauncherIcon::RecvMouseDown (int button)
 {
   if (button == 3)
-  {
-    if (_launcher->GetActiveQuicklist () == _quicklist)
-    {
-      // this quicklist is already active
-      return;
-    }
-    
-    if (_launcher->GetActiveQuicklist ())
-    {
-      // Hide the active quicklist. This will prevent it from Ungrabing the pointer in 
-      // QuicklistView::RecvMouseDownOutsideOfQuicklist or void QuicklistView::RecvMouseClick.
-      // So the new quicklist that is about to be set as active will keep the grab of the pointer.
-      // Also disable theinput window.
-      _launcher->GetActiveQuicklist ()->EnableInputWindow (false);
-      _launcher->GetActiveQuicklist ()->CaptureMouseDownAnyWhereElse (false);
-      // This call must be last, because after, _launcher->GetActiveQuicklist () will return Null.
-      // the launcher listen to the sigHidden signal emitted by the BaseWindow when it becomes invisible
-      // and it set the active window to Null.
-      _launcher->GetActiveQuicklist ()->ShowWindow (false);
-    }
-    
-    _tooltip->ShowWindow (false);
-    
-    _quicklist->RemoveAllMenuItem ();
-    
-    std::list<DbusmenuMenuitem *> menus = Menus ();
-    if (menus.empty ())
-      return;
-
-    std::list<DbusmenuMenuitem *>::iterator it;
-    for (it = menus.begin (); it != menus.end (); it++)
-    {
-      DbusmenuMenuitem *menu_item = *it;
-    
-      const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
-      const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
-
-      if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
-      {
-        QuicklistMenuItemSeparator* item = new QuicklistMenuItemSeparator (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0)
-      {
-        QuicklistMenuItemCheckmark* item = new QuicklistMenuItemCheckmark (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else if (g_strcmp0 (toggle_type, DBUSMENU_MENUITEM_TOGGLE_RADIO) == 0)
-      {
-        QuicklistMenuItemRadio* item = new QuicklistMenuItemRadio (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-      else //(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
-      {
-        QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (menu_item, NUX_TRACKER_LOCATION);
-        _quicklist->AddMenuItem (item);
-      }
-    } 
-    
-    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    int tip_y = _center.y;
-    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
-
-    _quicklist->EnableInputWindow (true, 1);
-    _quicklist->GrabPointer ();
-
-    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
-
-    _quicklist->NeedRedraw ();
-  }
+    OpenQuicklist ();
 }
 
 void LauncherIcon::RecvMouseUp (int button)
@@ -396,16 +393,6 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
-}
-
-void LauncherIcon::RecvShowQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->SetActiveQuicklist (_quicklist);
-}
-
-void LauncherIcon::RecvHideQuicklist (nux::BaseWindow *quicklist)
-{
-  _launcher->CancelActiveQuicklist (_quicklist);
 }
 
 void LauncherIcon::HideTooltip ()
@@ -434,10 +421,10 @@ LauncherIcon::SetCenter (nux::Point3 center)
   _center = center;
   
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y;
+  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
     
   if (_quicklist->IsVisible ())
-    _quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
   else if (_tooltip->IsVisible ())
     _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
     
@@ -453,11 +440,28 @@ LauncherIcon::GetCenter ()
   return _center;
 }
 
+void
+LauncherIcon::SaveCenter ()
+{
+  _saved_center = _center;
+  UpdateQuirkTime (QUIRK_CENTER_SAVED);
+}
+
+void 
+LauncherIcon::SetHasVisibleWindow (bool val)
+{
+  if (_has_visible_window == val)
+    return;
+  
+  _has_visible_window = val;
+  needs_redraw.emit (this);
+}
+
 gboolean
 LauncherIcon::OnPresentTimeout (gpointer data)
 {
   LauncherIcon *self = (LauncherIcon*) data;
-  if (!self->GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (!self->GetQuirk (QUIRK_PRESENTED))
     return false;
   
   self->_present_time_handle = 0;
@@ -474,26 +478,26 @@ float LauncherIcon::PresentUrgency ()
 void 
 LauncherIcon::Present (float present_urgency, int length)
 {
-  if (GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (GetQuirk (QUIRK_PRESENTED))
     return;
   
   if (length >= 0)
     _present_time_handle = g_timeout_add (length, &LauncherIcon::OnPresentTimeout, this);
   
   _present_urgency = CLAMP (present_urgency, 0.0f, 1.0f);
-  SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, true);
+  SetQuirk (QUIRK_PRESENTED, true);
 }
 
 void
 LauncherIcon::Unpresent ()
 {
-  if (!GetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED))
+  if (!GetQuirk (QUIRK_PRESENTED))
     return;
   
   if (_present_time_handle > 0)
     g_source_remove (_present_time_handle);
   
-  SetQuirk (LAUNCHER_ICON_QUIRK_PRESENTED, false);
+  SetQuirk (QUIRK_PRESENTED, false);
 }
 
 void 
@@ -509,12 +513,12 @@ LauncherIcon::SetRelatedWindows (int windows)
 void 
 LauncherIcon::Remove ()
 {
-  SetQuirk (LAUNCHER_ICON_QUIRK_VISIBLE, false);
+  SetQuirk (QUIRK_VISIBLE, false);
   remove.emit (this);
 }
 
 void 
-LauncherIcon::SetIconType (LauncherIconType type)
+LauncherIcon::SetIconType (IconType type)
 {
   _icon_type = type;
 }
@@ -531,32 +535,35 @@ LauncherIcon::SortPriority ()
   return _sort_priority;
 }
     
-LauncherIconType 
+LauncherIcon::IconType 
 LauncherIcon::Type ()
 {
   return _icon_type;
 }
 
 bool
-LauncherIcon::GetQuirk (LauncherIconQuirk quirk)
+LauncherIcon::GetQuirk (LauncherIcon::Quirk quirk)
 {
   return _quirks[quirk];
 }
 
 void
-LauncherIcon::SetQuirk (LauncherIconQuirk quirk, bool value)
+LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
 {
   if (_quirks[quirk] == value)
     return;
     
   _quirks[quirk] = value;
-  clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
+  if (quirk == QUIRK_VISIBLE)
+    Launcher::SetTimeStruct (&(_quirk_times[quirk]), &(_quirk_times[quirk]), ANIM_DURATION_SHORT);
+  else
+    clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit (this);
   
   // Present on urgent as a general policy
-  if (quirk == LAUNCHER_ICON_QUIRK_VISIBLE && value)
+  if (quirk == QUIRK_VISIBLE && value)
     Present (0.5f, 1500);
-  if (quirk == LAUNCHER_ICON_QUIRK_URGENT && value)
+  if (quirk == QUIRK_URGENT && value)
     Present (0.5f, 1500);
 }
 
@@ -573,7 +580,7 @@ LauncherIcon::OnDelayedUpdateTimeout (gpointer data)
 }
 
 void
-LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk)
+LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIcon::Quirk quirk)
 {
   DelayedUpdateArg *arg = new DelayedUpdateArg ();
   arg->self = this;
@@ -583,21 +590,21 @@ LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk)
 }
 
 void
-LauncherIcon::UpdateQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::UpdateQuirkTime (LauncherIcon::Quirk quirk)
 {
   clock_gettime (CLOCK_MONOTONIC, &(_quirk_times[quirk]));
   needs_redraw.emit (this);
 }
 
 void 
-LauncherIcon::ResetQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::ResetQuirkTime (LauncherIcon::Quirk quirk)
 {
   _quirk_times[quirk].tv_sec = 0;
   _quirk_times[quirk].tv_nsec = 0;
 }
 
 struct timespec
-LauncherIcon::GetQuirkTime (LauncherIconQuirk quirk)
+LauncherIcon::GetQuirkTime (LauncherIcon::Quirk quirk)
 {
   return _quirk_times[quirk];
 }
@@ -606,6 +613,22 @@ int
 LauncherIcon::RelatedWindows ()
 {
   return _related_windows;
+}
+
+void
+LauncherIcon::SetProgress (float progress)
+{
+  if (progress == _progress)
+    return;
+  
+  _progress = progress;
+  needs_redraw.emit (this);
+}
+
+float
+LauncherIcon::GetProgress ()
+{
+  return _progress;
 }
 
 std::list<DbusmenuMenuitem *> LauncherIcon::Menus ()
@@ -617,4 +640,234 @@ std::list<DbusmenuMenuitem *> LauncherIcon::GetMenus ()
 {
   std::list<DbusmenuMenuitem *> result;
   return result;
+}
+
+nux::BaseTexture *
+LauncherIcon::Emblem ()
+{
+  return _emblem;
+}
+
+void 
+LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
+{
+  if (_emblem == emblem)
+    return;
+  
+  if (_emblem)
+    _emblem->UnReference ();
+  
+  _emblem = emblem;
+  needs_redraw.emit (this);
+}
+
+void 
+LauncherIcon::SetEmblemIconName (const char *name)
+{
+  nux::BaseTexture *emblem;
+  
+  if (g_str_has_prefix (name, "/"))
+    emblem = TextureFromPath (name, 22);
+  else
+    emblem = TextureFromGtkTheme (name, 22);
+    
+  SetEmblem (emblem);
+}
+
+void 
+LauncherIcon::SetEmblemText (const char *text)
+{
+  if (text == NULL)
+    return;
+
+  nux::BaseTexture     *emblem;
+  PangoLayout*          layout     = NULL;
+
+  PangoContext*         pangoCtx   = NULL;
+  PangoFontDescription* desc       = NULL;
+  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
+  gchar*                fontName   = NULL;
+
+  int width = 32;
+  int height = 8 * 2;
+  int font_height = height - 5;
+  
+  
+  nux::CairoGraphics *cg = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t *cr = cg->GetContext ();
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  
+
+  layout = pango_cairo_create_layout (cr);
+
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  desc = pango_font_description_from_string (fontName);
+  pango_font_description_set_absolute_size (desc, pango_units_from_double (font_height));
+  
+  pango_layout_set_font_description (layout, desc);
+  
+  pango_layout_set_width (layout, pango_units_from_double (width - 4.0f));
+  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+  pango_layout_set_markup_with_accel (layout, text, -1, '_', NULL);
+  
+  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
+  pango_cairo_context_set_font_options (pangoCtx,
+                                        gdk_screen_get_font_options (screen));
+                                        
+  PangoRectangle logical_rect, ink_rect;
+  pango_layout_get_extents (layout, &logical_rect, &ink_rect);
+  
+  /* DRAW OUTLINE */
+  float radius = height / 2.0f - 1.0f;
+  float inset = radius + 1.0f;
+
+  cairo_move_to (cr, inset, height - 1.0f);
+  cairo_arc (cr, inset, inset, radius, 0.5*M_PI, 1.5*M_PI);
+  cairo_arc (cr, width - inset, inset, radius, 1.5*M_PI, 0.5*M_PI);
+  cairo_line_to (cr, inset, height - 1.0f);
+  
+  cairo_set_source_rgba (cr, 0.35f, 0.35f, 0.35f, 1.0f);
+  cairo_fill_preserve (cr);
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width (cr, 2.0f);
+  cairo_stroke (cr);
+  
+  cairo_set_line_width (cr, 1.0f);
+
+  /* DRAW TEXT */
+  cairo_move_to (cr, 
+                 (int) ((width - pango_units_to_double (logical_rect.width)) / 2.0f), 
+                 (int) ((height - pango_units_to_double (logical_rect.height)) / 2.0f - pango_units_to_double (logical_rect.y)));
+  pango_cairo_show_layout (cr, layout);
+
+  nux::NBitmapData* bitmap = cg->GetBitmap ();
+
+  emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  emblem->Update (bitmap);
+
+  SetEmblem (emblem);
+
+  // clean up
+  g_object_unref (layout);
+  g_free (fontName);
+  delete cg;
+}
+    
+void 
+LauncherIcon::DeleteEmblem ()
+{
+  SetEmblem (0);
+}
+
+void 
+LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
+{
+  if (std::find (_entry_list.begin (), _entry_list.end (), remote) != _entry_list.end ())
+    return;
+    
+  _entry_list.push_front (remote);
+  
+  remote->emblem_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
+  remote->count_changed.connect     (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountChanged));
+  remote->progress_changed.connect  (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressChanged));
+  remote->quicklist_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteQuicklistChanged));
+  
+  remote->emblem_visible_changed.connect   (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
+  remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
+  remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  
+  if (remote->EmblemVisible ())
+    OnRemoteEmblemVisibleChanged (remote);
+  
+  if (remote->CountVisible ())
+    OnRemoteCountVisibleChanged (remote);
+    
+  if (remote->ProgressVisible ())
+    OnRemoteProgressVisibleChanged (remote);
+}
+
+void 
+LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
+{
+  if (std::find (_entry_list.begin (), _entry_list.end (), remote) == _entry_list.end ())
+    return;
+    
+  _entry_list.remove (remote);
+  
+  printf ("Remove\n");
+}
+
+void
+LauncherIcon::OnRemoteEmblemChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->EmblemVisible ())
+    return;
+  
+  SetEmblemIconName (remote->Emblem ());
+}
+
+void
+LauncherIcon::OnRemoteCountChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->CountVisible ())
+    return;
+  
+  gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+  SetEmblemText (text);
+  g_free (text);
+}
+
+void
+LauncherIcon::OnRemoteProgressChanged (LauncherEntryRemote *remote)
+{
+  if (!remote->ProgressVisible ())
+    return;
+  
+  SetProgress ((float) remote->Progress ());
+}
+
+void
+LauncherIcon::OnRemoteQuicklistChanged (LauncherEntryRemote *remote)
+{
+  // FIXME
+}
+
+void
+LauncherIcon::OnRemoteEmblemVisibleChanged (LauncherEntryRemote *remote)
+{
+  if (remote->EmblemVisible ())
+    SetEmblemIconName (remote->Emblem ());
+  else
+    DeleteEmblem ();
+}
+
+void
+LauncherIcon::OnRemoteCountVisibleChanged (LauncherEntryRemote *remote)
+{ 
+  if (remote->CountVisible ())
+  {
+    gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+    SetEmblemText (text);
+    g_free (text);
+  }
+  else
+  {
+    DeleteEmblem ();
+  }
+}
+
+void
+LauncherIcon::OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote)
+{
+  SetQuirk (QUIRK_PROGRESS, remote->ProgressVisible ());
+  
+  if (remote->ProgressVisible ())
+    SetProgress ((float) remote->Progress ());
 }

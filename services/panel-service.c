@@ -22,6 +22,7 @@
 
 #include "panel-service.h"
 
+#include <stdlib.h>
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-object.h>
 #include <gtk/gtk.h>
@@ -46,8 +47,10 @@ struct _PanelServicePrivate
   guint  initial_sync_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
+  IndicatorObjectEntry *last_entry;
   GtkMenu *last_menu;
   guint32  last_menu_id;
+  guint32  last_menu_move_id;
   gint32   last_x;
   gint32   last_y;
   guint32  last_menu_button;
@@ -64,6 +67,7 @@ enum
   ENTRY_ACTIVATED = 0,
   RE_SYNC,
   ACTIVE_MENU_POINTER_MOTION,
+  ENTRY_ACTIVATE_REQUEST,
 
   LAST_SIGNAL
 };
@@ -79,8 +83,9 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 static gchar * indicator_order[] = {
   "libappmenu.so",
   "libapplication.so",
-  "libnetwork.so",
   "libsoundmenu.so",
+  "libnetwork.so",
+  "libnetworkmenu.so",
   "libmessaging.so",
   "libdatetime.so",
   "libme.so",
@@ -166,6 +171,16 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
+
+ _service_signals[ENTRY_ACTIVATE_REQUEST] =
+    g_signal_new ("entry-activate-request",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__STRING,
+                  G_TYPE_NONE, 1, G_TYPE_STRING);
+
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
@@ -476,6 +491,23 @@ on_entry_moved (IndicatorObject      *object,
 }
 
 static void
+on_indicator_menu_show (IndicatorObject      *object,
+                        IndicatorObjectEntry *entry,
+                        guint32               timestamp,
+                        PanelService         *self)
+{
+  gchar *entry_id;
+  
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  entry_id = g_strdup_printf ("%p", entry);
+
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, entry_id);
+
+  g_free (entry_id);
+}
+
+static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
@@ -497,6 +529,8 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_removed), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_ENTRY_MOVED,
                     G_CALLBACK (on_entry_moved), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
+                    G_CALLBACK (on_indicator_menu_show), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
@@ -741,8 +775,11 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_menu_button = 0;
 
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
+  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
+  priv->last_menu_move_id = 0;
+  priv->last_entry = NULL;
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
 }
@@ -804,6 +841,111 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   return g_variant_builder_end (&b);
 }
 
+static void
+activate_next_prev_menu (PanelService         *self,
+                         IndicatorObject      *object,
+                         IndicatorObjectEntry *entry,
+                         GtkMenuDirectionType  direction)
+{
+  PanelServicePrivate *priv = self->priv;
+  GSList *indicators = priv->indicators;
+  GList  *entries;
+  gint    n_entries;
+  IndicatorObjectEntry *new_entry;
+  gchar  *id;
+ 
+  entries = indicator_object_get_entries (object);
+  n_entries = g_list_length (entries);
+  if (n_entries == 1
+      || (g_list_index (entries, entry) == 0 && direction == GTK_MENU_DIR_PARENT)
+      || (g_list_index (entries, entry) == n_entries - 1 && direction == GTK_MENU_DIR_CHILD))
+    {
+      int              n_indicators;
+      IndicatorObject *new_object;
+      GList           *new_entries;
+      
+      n_indicators = g_slist_length (priv->indicators);
+
+      if (g_slist_index (indicators, object) == 0 && direction == GTK_MENU_DIR_PARENT)
+        {
+          new_object = g_slist_nth_data (indicators, n_indicators - 1);
+        }
+      else if (g_slist_index (indicators, object) == n_indicators -1 && direction == GTK_MENU_DIR_CHILD)
+        {
+          new_object = g_slist_nth_data (indicators, 0);
+        }
+      else
+        {
+          gint cur_object_index = g_slist_index (indicators, object);
+          gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
+          new_object = g_slist_nth_data (indicators, new_object_index);
+        }
+
+      new_entries = indicator_object_get_entries (new_object);
+      new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
+
+      g_list_free (new_entries);
+    }
+  else
+    {
+      new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
+    }
+  
+  id = g_strdup_printf ("%p", new_entry);
+  g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
+
+  g_free (id);
+  g_list_free (entries);
+}
+
+static void
+on_active_menu_move_current (GtkMenu              *menu,
+                             GtkMenuDirectionType  direction,
+                             PanelService         *self)
+{
+  PanelServicePrivate *priv;
+  IndicatorObject     *object;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  priv = self->priv;
+
+  /* Not interested in up or down */
+  if (direction == GTK_MENU_DIR_NEXT
+      || direction == GTK_MENU_DIR_PREV)
+    return;
+
+  /* We don't want to distrupt going into submenus */
+  if (direction == GTK_MENU_DIR_CHILD)
+    {
+      GList               *children, *c;
+      children = gtk_container_get_children (GTK_CONTAINER (menu));
+      for (c = children; c; c = c->next)
+        {
+          GtkWidget *item = (GtkWidget *)c->data;
+
+          if (GTK_IS_MENU_ITEM (item)
+              && gtk_widget_get_state (item) == GTK_STATE_PRELIGHT
+              && gtk_menu_item_get_submenu (GTK_MENU_ITEM (item)))
+            {
+              /* Skip direction due to there being a submenu,
+               * and we don't want to inhibit going into that */
+              return;
+            }
+        }
+      g_list_free (children);
+    }
+
+  /* Find the next/prev indicator */
+  object = g_hash_table_lookup (priv->entry2indicator_hash, priv->last_entry);
+  if (object == NULL)
+    {
+      g_warning ("Unable to find IndicatorObject for entry");
+      return;
+    }
+
+  activate_next_prev_menu (self, object, priv->last_entry, direction);
+}
+
 void
 panel_service_show_entry (PanelService *self,
                           const gchar  *entry_id,
@@ -814,32 +956,73 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
 
+  if (priv->last_entry == entry)
+    return;
+  
   if (GTK_IS_MENU (priv->last_menu))
     {
       priv->last_x = 0;
       priv->last_y = 0;
 
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
+      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
       gtk_menu_popdown (GTK_MENU (priv->last_menu));
 
+      priv->last_entry = NULL;
       priv->last_menu = NULL;
       priv->last_menu_id = 0;
+      priv->last_menu_move_id = 0;
       priv->last_menu_button = 0;
     }
 
-  if (entry != NULL && GTK_IS_MENU (entry->menu))
+  if (entry != NULL)
     {
-      priv->last_menu = entry->menu;
+      if (GTK_IS_MENU (entry->menu))
+        {
+          priv->last_menu = entry->menu;
+        }
+      else
+        {
+          /* For some reason, this entry doesn't have a menu.  To simplify the
+             rest of the code and to keep scrubbing fluidly, we'll create a
+             stub menu for the duration of this scrub. */
+          priv->last_menu = GTK_MENU (gtk_menu_new ());
+          g_signal_connect (priv->last_menu, "deactivate",
+                            G_CALLBACK (gtk_widget_destroy), NULL);
+          g_signal_connect (priv->last_menu, "destroy",
+                            G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
+        }
+
+      priv->last_entry = entry;
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
       priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
                                              G_CALLBACK (on_active_menu_hidden), self);
+      priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
+                                                        G_CALLBACK (on_active_menu_move_current), self);
+
+      indicator_object_entry_activate (object, entry, CurrentTime);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
+}
+
+void
+panel_service_scroll_entry (PanelService   *self,
+                            const gchar    *entry_id,
+                            gint32         delta)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+
+  g_signal_emit_by_name(object, "scroll", abs(delta/120), direction);
+  g_signal_emit_by_name(object, "scroll-entry", entry, abs(delta/120), direction);
 }
 
 void

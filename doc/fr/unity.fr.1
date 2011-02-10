@@ -1,0 +1,41 @@
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH unity 1 "9 December 2010" "" "Manuel de l'utilisateur Linux"
+
+.SH NOM
+unity \- script pour dmarrer et contrler le shell Unity
+
+.SH SYNOPSIS
+\fBunity\fP [\fIoptions\fP]
+.br
+
+.SH DESCRIPTION
+Le programme \fBunity\fP peut tre utilis afin de dmarrer le shell Unity ainsi
+que pour configurer les paramtres de log, dboguage, et comment agir avec le
+profile utilisateur.
+
+.SH OPTIONS
+.IP \fB\-\-advanced\-debug\fP
+Dmarre unity avec les options de dboguage (en utilisant GDB ou un autre
+outil  cet effet) pour aider les dveloppeurs  indentifier des problmes dans
+le but de complter un rapport de bogue.
+
+.IP \fB\-\-log\fP \<filename\>
+Ce paramtre, suivi d'un chemin d'accs ou du nom d'un fichier, prcise o le
+shell Unity doit crire les logs.
+
+.IP \fB\-\-reset\fP
+Cette option permet  l'utilisateur de rinitialiser son profile et remettre
+zro les paramtres dans compiz.
+
+.IP \fB\-\-verbose\fP
+Cette option active l'affichage d'informations supplmentaires pour le shell
+Unity. Elle peut tre utilise par l'utilisateur pour dceler des problmes de
+configuration. Cette option est souvent utilise avec \fB\-\-log\fP pour
+enregistrer la sortie dans un fichier.
+
+.SH "VOIR AUSSI"
+\fBunity\-panel\-service\fP (1)

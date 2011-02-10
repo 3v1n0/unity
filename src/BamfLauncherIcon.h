@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,36 +37,50 @@ class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
     BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
-    ~BamfLauncherIcon();
-    
-    
+    virtual ~BamfLauncherIcon();
+
+    const char* DesktopFile ();
+    bool IsSticky ();
+    void Activate ();
+
 protected:
     void OnMouseClick (int button);
     std::list<DbusmenuMenuitem *> GetMenus ();
-    
+
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
-    
-    bool IconOwnsWindow (Window w);
-    
+
     void AddProperties (GVariantBuilder *builder);
+    
+    const gchar * GetRemoteUri ();
+    
+    nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+    void OnAcceptDrop (std::list<char *> uris);
+    
+    std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
-    
+    DbusmenuMenuitem *_menu_desktop_shortcuts;
+    gchar *_remote_uri;
+
     void EnsureWindowState ();
-    
+
     void UpdateMenus ();
-    
+
+    void OpenInstanceWithUris (std::list<char *> uris);
     void OpenInstance ();
     void Focus ();
-    void Spread ();
-    
+    bool Spread ();
+
     void EnsureMenuItemsReady ();
     
+    void OnWindowMinimized (guint32 xid);
+    bool OwnsWindow (Window w);
+
     static void OnClosed (BamfView *view, gpointer data);
     static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
     static void OnActiveChanged (BamfView *view, gboolean active, gpointer data);
@@ -73,9 +88,9 @@ private:
     static void OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data);
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
-    
-    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 

@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -92,6 +93,8 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
       remote = new IndicatorObjectEntryProxyRemote ();
       remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
                                                         &IndicatorObjectProxyRemote::OnShowMenuRequestReceived));
+      remote->OnScroll.connect (sigc::mem_fun(this,
+                                &IndicatorObjectProxyRemote::OnScrollReceived));
       _entries.push_back (remote);
     }
 
@@ -142,4 +145,11 @@ IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *entry_id,
                                                        guint32     button)
 {
   OnShowMenuRequest.emit (entry_id, x, y, timestamp, button);
+}
+
+void
+IndicatorObjectProxyRemote::OnScrollReceived (const char *entry_id,
+                                                          int        delta)
+{
+  OnScroll.emit(entry_id, delta);
 }

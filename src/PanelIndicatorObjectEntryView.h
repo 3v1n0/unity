@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -28,23 +29,32 @@
 
 #include "Introspectable.h"
 
+#define PANEL_HEIGHT 24
+#define SPACING 3
+
 class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
 {
 public:
-  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy);
+  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding = 3);
   ~PanelIndicatorObjectEntryView ();
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
+  void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+  void Activate ();
+  void OnActiveChanged (bool is_active);
 
-protected:
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
+
+  sigc::signal<void, PanelIndicatorObjectEntryView *, bool> active_changed;
+  sigc::signal<void, PanelIndicatorObjectEntryView *> refreshed;
 
 public:
   IndicatorObjectEntryProxy *_proxy;
 private:
   nux::CairoGraphics _util_cg;
+  int _padding;
 };
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

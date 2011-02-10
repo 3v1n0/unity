@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -40,6 +41,21 @@ namespace nux
   class StaticCairoText : public View
   {
     public:
+      typedef enum
+      {
+        NUX_ELLIPSIZE_END,
+        NUX_ELLIPSIZE_START,
+        NUX_ELLIPSIZE_MIDDLE,
+        NUX_ELLIPSIZE_NONE,
+      } EllipsizeState;
+
+      typedef enum
+      {
+        NUX_ALIGN_LEFT,
+        NUX_ALIGN_CENTRE,
+        NUX_ALIGN_RIGHT,
+      } AlignState;
+
       StaticCairoText (const TCHAR* text, NUX_FILE_LINE_PROTO);
 
       ~StaticCairoText ();
@@ -63,17 +79,27 @@ namespace nux
 
       // public API
       void SetText (NString text);
-
       void SetTextColor (Color textColor);
+      void SetTextEllipsize (EllipsizeState state);
+      void SetTextAlignment (AlignState state);
+      void SetFont (const char *fontstring);
 
       void GetTextExtents (int &width, int &height);
 
       sigc::signal<void, StaticCairoText*> sigTextChanged;
       sigc::signal<void, StaticCairoText*> sigTextColorChanged;
+      sigc::signal<void, StaticCairoText*> sigFontChanged;
 
     private:
+      int            _cached_extent_width;
+      int            _cached_extent_height;
+      bool           _need_new_extent_cache;
+      
       NString        _text;
       Color          _textColor;
+      EllipsizeState _ellipsize;
+      AlignState     _align;
+      char*           _fontstring;
 
       CairoGraphics* _cairoGraphics;
       BaseTexture*   _texture2D;
@@ -90,6 +116,9 @@ namespace nux
                      Color    color);
 
       void UpdateTexture ();
+
+      static void OnFontChanged (GObject *gobject, GParamSpec *pspec,
+                                 gpointer data);
   };
 }
 

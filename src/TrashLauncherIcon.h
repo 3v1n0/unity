@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -27,16 +28,30 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 public:
   TrashLauncherIcon  (Launcher *launcher);
   ~TrashLauncherIcon ();
+  
+  virtual nux::Color BackgroundColor ();
+  virtual nux::Color GlowColor ();
 
 protected:
   void OnMouseClick (int button);
   void UpdateTrashIcon ();
+  
+  nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+  void OnAcceptDrop (std::list<char *> uris);
 
 private:
+  std::map<std::string, DbusmenuMenuitem *> _menu_items;
   GFileMonitor *m_TrashMonitor;
+  gboolean _empty;
+
+  void EnsureMenuItemsReady ();
+
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
   static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,
                               GFileMonitorEvent event_type, gpointer data);
+  static void OnEmptyTrash (DbusmenuMenuitem *item, int time, TrashLauncherIcon *self);
+  static void EmptyTrashAction ();
+  static void RecursiveDelete (GFile *location);
 
 };
 

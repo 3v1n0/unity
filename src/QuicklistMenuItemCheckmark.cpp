@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -154,9 +155,8 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   
   if (GetEnabled ())
   {
@@ -194,7 +194,7 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
     _color = nux::Color::DarkGray;
   }
   
-  gfxContext.QRP_GLSL_1Tex (base.x,
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,

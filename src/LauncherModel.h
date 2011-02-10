@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -30,17 +31,22 @@ public:
     typedef std::list<LauncherIcon*> Base;
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
-    typedef bool (*SortFunc) (LauncherIcon *first, LauncherIcon *second);
     
     LauncherModel();
     ~LauncherModel();
 
     void AddIcon (LauncherIcon *icon);
     void RemoveIcon (LauncherIcon *icon);
-    void Sort (SortFunc func);
+    void Sort ();
     int  Size ();
 
-    void OnIconRemove (void *icon);
+    void OnIconRemove (LauncherIcon *icon);
+    
+    bool IconHasSister (LauncherIcon *icon);
+    
+    void ReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save);
+
+    void ReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
     
     iterator begin ();
     iterator end ();
@@ -57,8 +63,8 @@ public:
     reverse_iterator shelf_rbegin ();
     reverse_iterator shelf_rend ();
     
-    sigc::signal<void, void *> icon_added;
-    sigc::signal<void, void *> icon_removed;
+    sigc::signal<void, LauncherIcon *> icon_added;
+    sigc::signal<void, LauncherIcon *> icon_removed;
     sigc::signal<void> order_changed;
     
 private:
@@ -71,6 +77,28 @@ private:
     bool IconShouldShelf (LauncherIcon *icon);
     
     static gboolean RemoveCallback (gpointer data);
+    
+    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
+
+/* Template Methods */
+public:
+    template<class T>
+    std::list<T*> GetSublist ()
+    {
+      std::list<T*> result;
+      
+      iterator it;
+      for (it = begin (); it != end (); it++)
+      {
+        T *var = dynamic_cast<T*> (*it);
+        
+        if (var)
+          result.push_back (var);
+      }
+      
+      return result;
+    }
 };
 
 #endif // LAUNCHERMODEL_H
+

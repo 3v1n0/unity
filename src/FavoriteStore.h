@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2010 Canonical Ltd
 *
@@ -54,6 +55,7 @@ public:
   virtual void AddFavorite    (const char *desktop_path, gint position) = 0;
   virtual void RemoveFavorite (const char *desktop_path) = 0;
   virtual void MoveFavorite   (const char *desktop_path, gint position) = 0;
+  virtual void SetFavorites   (std::list<const char*> desktop_paths) = 0;
 
   // Signals
   // Therse only emit if something has changed the GSettings object externally

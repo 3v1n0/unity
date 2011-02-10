@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -59,14 +60,9 @@ QuicklistMenuItemRadio::Initialize (DbusmenuMenuitem* item)
   _item_type  = MENUITEM_TYPE_LABEL;
   
   if (item)
-    _text = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+    _text = g_strdup (dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL));
   else
-    _text = "QuicklistItem";
-  
-  _normalTexture[0]   = NULL;
-  _normalTexture[1]   = NULL;
-  _prelightTexture[0] = NULL;
-  _prelightTexture[1] = NULL;
+    _text = g_strdup ("Radio Button");
 
   int textWidth = 1;
   int textHeight = 1;
@@ -94,6 +90,15 @@ QuicklistMenuItemRadio::~QuicklistMenuItemRadio ()
 void
 QuicklistMenuItemRadio::PreLayoutManagement ()
 {
+  _pre_layout_width = GetBaseWidth ();
+  _pre_layout_height = GetBaseHeight ();
+
+  if (_normalTexture[0] == 0)
+  {
+    UpdateTexture ();
+  }
+
+  QuicklistMenuItem::PreLayoutManagement ();
 }
 
 long
@@ -137,7 +142,7 @@ QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
                               bool                 forceDraw)
 {
   // Check if the texture have been computed. If they haven't, exit the function.
-  if (_normalTexture[0] == NULL)
+  if (!_normalTexture[0])
     return;
   
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
@@ -150,22 +155,46 @@ QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates().SetBlend (true,
-                                         GL_ONE,
-                                         GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates ().SetBlend (true);
+  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  if (GetActive ())
-    if (GetEnabled ())
-      texture = _prelightTexture[1]->GetDeviceTexture ();
-    else
+  if (GetEnabled ())
+  {
+    if (GetActive () && _prelight)
+    {
       texture = _prelightTexture[0]->GetDeviceTexture ();
-  else
-    if (GetEnabled ())
-      texture = _normalTexture[1]->GetDeviceTexture ();
-    else
+    }
+    else if (GetActive ())
+    {
       texture = _normalTexture[0]->GetDeviceTexture ();
+    }
 
-  gfxContext.QRP_GLSL_1Tex (base.x,
+    if ((!GetActive ()) && _prelight)
+    {
+      texture = _prelightTexture[1]->GetDeviceTexture ();
+    }
+    else if (!GetActive ())
+    {
+      texture = _normalTexture[1]->GetDeviceTexture ();
+    }
+
+    _color = nux::Color::White;
+  }
+  else
+  {
+    if (GetActive ())
+    {
+      texture = _prelightTexture[0]->GetDeviceTexture ();
+    }
+    else
+    {
+      texture = _normalTexture[0]->GetDeviceTexture ();
+    }
+
+    _color = nux::Color::DarkGray;
+  }
+
+  gfxContext.QRP_1Tex (base.x,
                             base.y,
                             base.width,
                             base.height,
@@ -193,8 +222,9 @@ QuicklistMenuItemRadio::PostDraw (nux::GraphicsEngine& gfxContext,
 void
 QuicklistMenuItemRadio::UpdateTexture ()
 {
-  int width  = GetBaseWidth ();
-  int height = GetBaseHeight ();
+  nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
+  int        width       = GetBaseWidth ();
+  int        height      = GetBaseHeight ();
 
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = _cairoGraphics->GetContext ();
@@ -208,7 +238,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, nux::Color::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -236,7 +266,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, nux::Color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -266,7 +296,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, transparent);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -299,7 +329,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_arc (cr, x, y, radius, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
   cairo_fill (cr);
 
-  DrawText (cr, width, height, _textColor);
+  DrawText (cr, width, height, transparent);
 
   bitmap = _cairoGraphics->GetBitmap ();
 

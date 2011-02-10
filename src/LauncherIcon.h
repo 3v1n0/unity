@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -36,40 +37,48 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "Introspectable.h"
+#include "Launcher.h"
+#include "LauncherEntryRemote.h"
 
 class Launcher;
 class QuicklistView;
 
-typedef enum
+class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject
 {
-  LAUNCHER_ICON_TYPE_NONE,
-  LAUNCHER_ICON_TYPE_BEGIN,
-  LAUNCHER_ICON_TYPE_FAVORITE,
-  LAUNCHER_ICON_TYPE_APPLICATION,
-  LAUNCHER_ICON_TYPE_PLACE,
-  LAUNCHER_ICON_TYPE_DEVICE,
-  LAUNCHER_ICON_TYPE_TRASH,
-  LAUNCHER_ICON_TYPE_END,
-} LauncherIconType;
-
-typedef enum
-{
-  LAUNCHER_ICON_QUIRK_VISIBLE,
-  LAUNCHER_ICON_QUIRK_ACTIVE,
-  LAUNCHER_ICON_QUIRK_RUNNING,
-  LAUNCHER_ICON_QUIRK_URGENT,
-  LAUNCHER_ICON_QUIRK_PRESENTED,
-  LAUNCHER_ICON_QUIRK_STARTING,
-  LAUNCHER_ICON_QUIRK_SHIMMER,
-  
-  LAUNCHER_ICON_QUIRK_LAST,
-} LauncherIconQuirk;
-
-class LauncherIcon : public Introspectable, public nux::InitiallyUnownedObject, public sigc::trackable
-{
+  NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
 public:
+    typedef enum
+    {
+      TYPE_NONE,
+      TYPE_BEGIN,
+      TYPE_FAVORITE,
+      TYPE_APPLICATION,
+      TYPE_EXPO,
+      TYPE_PLACE,
+      TYPE_DEVICE,
+      TYPE_TRASH,
+      TYPE_END,
+    } IconType;
+
+    typedef enum
+    {
+      QUIRK_VISIBLE,
+      QUIRK_ACTIVE,
+      QUIRK_RUNNING,
+      QUIRK_URGENT,
+      QUIRK_PRESENTED,
+      QUIRK_STARTING,
+      QUIRK_SHIMMER,
+      QUIRK_CENTER_SAVED,
+      QUIRK_PROGRESS,
+      QUIRK_DROP_PRELIGHT,
+      QUIRK_DROP_DIM,
+      
+      QUIRK_LAST,
+    } Quirk;
+
     LauncherIcon(Launcher* launcher);
-    ~LauncherIcon();
+    virtual ~LauncherIcon();
 
     void SetTooltipText (const TCHAR* text);
     
@@ -80,31 +89,52 @@ public:
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
     
-    void RecvShowQuicklist (nux::BaseWindow *quicklist);
-    void RecvHideQuicklist (nux::BaseWindow *quicklist);
-    
     void HideTooltip ();
-    
+    void OpenQuicklist ();
+
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
+
+    virtual void Activate ();
+
+    void SaveCenter ();
     
     int SortPriority ();
     
     int RelatedWindows ();
+    
+    bool HasVisibleWindow ();
+    
     float PresentUrgency ();
     
-    bool GetQuirk (LauncherIconQuirk quirk);
-    struct timespec GetQuirkTime (LauncherIconQuirk quirk);
+    float GetProgress ();
     
-    LauncherIconType Type ();
+    void SetEmblemIconName (const char *name);
+    void SetEmblemText (const char *text);
     
-    nux::Color BackgroundColor ();
-    nux::Color GlowColor ();
+    void DeleteEmblem ();
+    
+    bool GetQuirk (Quirk quirk);
+    struct timespec GetQuirkTime (Quirk quirk);
+    
+    IconType Type ();
+    
+    virtual nux::Color BackgroundColor ();
+    virtual nux::Color GlowColor ();
+    
+    const gchar * RemoteUri () { return GetRemoteUri (); }
     
     nux::BaseTexture * TextureForSize (int size);
     
+    nux::BaseTexture * Emblem ();
+    
     std::list<DbusmenuMenuitem *> Menus ();
     
+    void InsertEntryRemote (LauncherEntryRemote *remote);
+    void RemoveEntryRemote (LauncherEntryRemote *remote);
+    
+    nux::DndAction QueryAcceptDrop (std::list<char *> paths) { return OnQueryAcceptDrop (paths); }
+    void AcceptDrop (std::list<char *> paths) { return OnAcceptDrop (paths); }
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -112,38 +142,56 @@ public:
     sigc::signal<void>      MouseLeave;
     sigc::signal<void, int> MouseClick;
     
-    sigc::signal<void, void *> show;
-    sigc::signal<void, void *> hide;
-    sigc::signal<void, void *> remove;
-    sigc::signal<void, void *> needs_redraw;
+    sigc::signal<void, LauncherIcon *> show;
+    sigc::signal<void, LauncherIcon *> hide;
+    sigc::signal<void, LauncherIcon *> remove;
+    sigc::signal<void, LauncherIcon *> needs_redraw;
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
 
-    void SetQuirk (LauncherIconQuirk quirk, bool value);
+    void SetQuirk (Quirk quirk, bool value);
 
-    void UpdateQuirkTimeDelayed (guint ms, LauncherIconQuirk quirk);
-    void UpdateQuirkTime (LauncherIconQuirk quirk);
-    void ResetQuirkTime (LauncherIconQuirk quirk);
+    void UpdateQuirkTimeDelayed (guint ms, Quirk quirk);
+    void UpdateQuirkTime (Quirk quirk);
+    void ResetQuirkTime (Quirk quirk);
 
     void SetRelatedWindows (int windows);
     void Remove ();
     
+    void SetProgress (float progress);
+    
+    void SetHasVisibleWindow (bool val);
     
     void Present (float urgency, int length);
     void Unpresent ();
     
-    void SetIconType (LauncherIconType type);
+    void SetIconType (IconType type);
     void SetSortPriority (int priority);
+
+    void SetEmblem (nux::BaseTexture *emblem);
 
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
     
-    virtual void OnCenterStabilized (nux::Point3 center) {};
-    virtual bool IconOwnsWindow (Window w) { return false; }
+    virtual void OnCenterStabilized (nux::Point3 center) {}
+    
+    virtual const gchar * GetRemoteUri () { return 0; }
+    
+    virtual nux::DndAction OnQueryAcceptDrop (std::list<char *> files) { return nux::DNDACTION_NONE; }
+    virtual void OnAcceptDrop (std::list<char *> files) {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);
+
+    void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
+    void OnRemoteCountChanged     (LauncherEntryRemote *remote);
+    void OnRemoteProgressChanged  (LauncherEntryRemote *remote);
+    void OnRemoteQuicklistChanged (LauncherEntryRemote *remote);
+
+    void OnRemoteEmblemVisibleChanged   (LauncherEntryRemote *remote);
+    void OnRemoteCountVisibleChanged    (LauncherEntryRemote *remote);
+    void OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote);
 
     nux::NString m_TooltipText;
     //! the window this icon belong too.
@@ -163,12 +211,13 @@ protected:
 
     friend class Launcher;
     friend class LauncherController;
+    friend class LauncherModel;
 
 private:
     typedef struct
     {
       LauncherIcon *self;
-      LauncherIconQuirk quirk;
+      Quirk quirk;
     } DelayedUpdateArg;
 
     static void ChildRealized (DbusmenuMenuitem *newitem, QuicklistView *quicklist);
@@ -184,17 +233,23 @@ private:
     int              _sort_priority;
     int              _related_windows;
     float            _present_urgency;
+    float            _progress;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
+    bool             _has_visible_window;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;
-    LauncherIconType _icon_type;
+    nux::Point3      _saved_center;
+    IconType         _icon_type;
     
-    bool             _quirks[LAUNCHER_ICON_QUIRK_LAST];
-    struct timespec  _quirk_times[LAUNCHER_ICON_QUIRK_LAST];
+    nux::BaseTexture* _emblem;
     
+    bool             _quirks[QUIRK_LAST];
+    struct timespec  _quirk_times[QUIRK_LAST];
+    
+    std::list<LauncherEntryRemote *> _entry_list;
 };
 
 #endif // LAUNCHERICON_H

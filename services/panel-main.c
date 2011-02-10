@@ -1,3 +1,4 @@
+// -*- Mode: C; tab-width:2; indent-tabs-mode: t; c-basic-offset: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
+#include "panel-a11y.h"
 #include "panel-service.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
@@ -60,6 +63,11 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='button' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='ScrollEntry'>"
+  "      <arg type='s' name='entry_id' direction='in'/>"
+  "      <arg type='i' name='delta' direction='in'/>"
+  "    </method>"
+  ""
   "    <signal name='EntryActivated'>"
   "     <arg type='s' name='entry_id' />"
   "    </signal>"
@@ -71,6 +79,10 @@ static const gchar introspection_xml[] =
   "    <signal name='ActiveMenuPointerMotion'>"
   "     <arg type='i' name='x' />"
   "     <arg type='i' name='y' />"
+  "    </signal>"
+  ""
+  "    <signal name='EntryActivateRequest'>"
+  "     <arg type='s' name='entry_id' />"
   "    </signal>"
   ""
   "  </interface>"
@@ -137,12 +149,19 @@ handle_method_call (GDBusConnection       *connection,
       gint32  button;
       g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
 
-      g_debug ("button: %u", button);
-
       panel_service_show_entry (service, entry_id, timestamp, x, y, button);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
+    }
+  else if (g_strcmp0 (method_name, "ScrollEntry") == 0)
+    {
+      gchar *entry_id;
+      gint32 delta;
+      g_variant_get (parameters, "(si)", &entry_id, &delta, NULL);
+      panel_service_scroll_entry (service, entry_id, delta);
+      g_dbus_method_invocation_return_value (invocation, NULL);
+      g_free(entry_id);
     }
 }
 
@@ -211,6 +230,27 @@ on_service_active_menu_pointer_motion (PanelService    *service,
 }
 
 static void
+on_service_entry_activate_request (PanelService    *service,
+                                   const gchar     *entry_id,
+                                   GDBusConnection *connection)
+{
+  GError *error = NULL;
+  g_dbus_connection_emit_signal (connection,
+                                 S_NAME,
+                                 S_PATH,
+                                 S_IFACE,
+                                 "EntryActivateRequest",
+                                 g_variant_new ("(s)", entry_id),
+                                 &error);
+
+  if (error)
+    {
+      g_warning ("Unable to emit EntryActivateRequest signal: %s", error->message);
+      g_error_free (error);
+    }
+}
+
+static void
 on_bus_acquired (GDBusConnection *connection,
                  const gchar     *name,
                  gpointer         user_data)
@@ -231,6 +271,8 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_entry_activated), connection);
   g_signal_connect (service, "active-menu-pointer-motion",
                     G_CALLBACK (on_service_active_menu_pointer_motion), connection);
+  g_signal_connect (service, "entry-activate-request",
+                    G_CALLBACK (on_service_entry_activate_request), connection);
 
   g_debug ("%s", G_STRFUNC);
   g_assert (reg_id > 0);
@@ -259,9 +301,15 @@ main (gint argc, gchar **argv)
   PanelService *service;
   guint         owner_id;
 
+  g_unsetenv("UBUNTU_MENUPROXY");
+  g_setenv ("NO_AT_BRIDGE", "1", TRUE);
+  g_unsetenv ("NO_GAIL");
+
   gtk_init (&argc, &argv);
-	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
-	                                   INDICATORICONDIR);
+  gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
+				     INDICATORICONDIR);
+
+  panel_a11y_init ();
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);

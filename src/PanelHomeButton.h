@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -33,6 +34,12 @@ public:
   ~PanelHomeButton ();
 
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  
+  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
 protected:
   const gchar* GetName ();
