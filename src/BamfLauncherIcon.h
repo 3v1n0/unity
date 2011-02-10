@@ -53,6 +53,11 @@ protected:
     void AddProperties (GVariantBuilder *builder);
     
     const gchar * GetRemoteUri ();
+    
+    nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+    void OnAcceptDrop (std::list<char *> uris);
+    
+    std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
 private:
     BamfApplication *m_App;
@@ -66,6 +71,7 @@ private:
 
     void UpdateMenus ();
 
+    void OpenInstanceWithUris (std::list<char *> uris);
     void OpenInstance ();
     void Focus ();
     bool Spread ();

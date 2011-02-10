@@ -102,6 +102,13 @@ void TestRunner::Init ()
   controller->AddResultToGroup ("Group2", tile23, "tile2-3");
   controller->AddResultToGroup ("Group2", tile24, "tile2-4");
 
+  for (int i = 0; i < 100; i++)
+  {
+    gchar name[20];
+    g_snprintf ((gchar*)&name, 20, "tile3-%i", i);
+    controller->AddResultToGroup ("Group3", new PlacesSimpleTile ("firefox", "FooBar Fox", 50), name);
+  }
+
   nux::GetGraphicsThread()->SetLayout (layout);
 
   g_timeout_add_seconds (2, (GSourceFunc)remove_timeout, controller);

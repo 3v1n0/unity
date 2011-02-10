@@ -241,3 +241,21 @@ TrashLauncherIcon::OnTrashChanged (GFileMonitor        *monitor,
     self->UpdateTrashIcon ();
 }
 
+nux::DndAction 
+TrashLauncherIcon::OnQueryAcceptDrop (std::list<char *> uris)
+{
+  return nux::DNDACTION_MOVE;
+}
+  
+void 
+TrashLauncherIcon::OnAcceptDrop (std::list<char *> uris)
+{
+  std::list<char *>::iterator it;
+  
+  for (it = uris.begin (); it != uris.end (); it++)
+  {
+    GFile *file = g_file_new_for_uri (*it);
+    g_file_trash (file, NULL, NULL);
+    g_object_unref (file);
+  }
+}

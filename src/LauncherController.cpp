@@ -38,6 +38,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _sort_priority = 0;
   
   _launcher->SetModel (_model);
+  _launcher->launcher_dropped.connect (sigc::mem_fun (this, &LauncherController::OnLauncherDropped));
   _favorite_store = FavoriteStore::GetDefault ();
 
   _place_section = new PlaceLauncherSection (_launcher);
@@ -50,9 +51,6 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   InsertTrash ();
 
   g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
-
-  _launcher->request_reorder_smart.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderSmart));
-  _launcher->request_reorder_before.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRequestReorderBefore));
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
   _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
@@ -67,20 +65,38 @@ LauncherController::~LauncherController()
 }
 
 void
+LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
+{
+  std::list<BamfLauncherIcon *> launchers;
+  std::list<BamfLauncherIcon *>::iterator it;
+
+  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (it = launchers.begin (); it != launchers.end (); it++)
+  {
+    if (g_str_equal (path, (*it)->DesktopFile ()))
+      return;
+  }
+
+  LauncherIcon *result = CreateFavorite (path);
+  if (result)
+  {
+    RegisterIcon (result);
+    _model->ReorderBefore (result, before, false);
+  }
+}
+
+void
 LauncherController::SortAndSave ()
 {
-  LauncherModel::iterator it;
-  _model->Sort (&LauncherController::CompareIcons);
-  
+  std::list<BamfLauncherIcon *> launchers;
+  std::list<BamfLauncherIcon *>::iterator it;
   std::list<const char*> desktop_paths;
-  for (it = _model->begin (); it != _model->end (); it++)
+  
+  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    BamfLauncherIcon *icon;
-    icon = dynamic_cast<BamfLauncherIcon*> (*it);
-    
-    if (!icon)
-      continue;
-    
+    BamfLauncherIcon *icon = *it;
+
     if (!icon->IsSticky ())
       continue;
     
@@ -91,98 +107,6 @@ LauncherController::SortAndSave ()
   }
   
   _favorite_store->SetFavorites (desktop_paths);
-}
-
-void
-LauncherController::OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save)
-{
-  if (icon == other)
-    return;
-
-  LauncherModel::iterator it;
-  
-  int i = 0;
-  int j = 0;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it) == icon)
-    {
-      j++;
-      continue;
-    }
-    
-    if ((*it) == other)
-    {
-      icon->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
-      i++;
-      
-      (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
-      i++;
-    }
-    else
-    {
-      (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
-      i++;
-    }
-    j++;
-  }
-  
-  SortAndSave ();
-}
-
-void
-LauncherController::OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
-{
-  if (icon == other)
-    return;
-
-  LauncherModel::iterator it;
-  
-  int i = 0;
-  int j = 0;
-  bool skipped = false;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    if ((*it) == icon)
-    {
-      skipped = true;
-      j++;
-      continue;
-    }
-    
-    if ((*it) == other)
-    {
-      if (!skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j && save) (*it)->SaveCenter ();
-        i++;
-      }
-      
-      (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
-      i++;
-      
-      if (skipped)
-      {
-        icon->SetSortPriority (i);
-        if (i != j && save) (*it)->SaveCenter ();
-        i++;
-      }
-    }
-    else
-    {
-      (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
-      i++;
-    }
-    j++;
-  }
-  
-  SortAndSave ();
 }
 
 void
@@ -252,31 +176,10 @@ LauncherController::InsertExpoAction ()
   RegisterIcon (expoIcon);
 }
 
-bool
-LauncherController::CompareIcons (LauncherIcon *first, LauncherIcon *second)
-{
-  if (first->Type () < second->Type ())
-    return true;
-  else if (first->Type () > second->Type ())
-    return false;
-    
-  return first->SortPriority () < second->SortPriority ();
-}
-
 void
 LauncherController::RegisterIcon (LauncherIcon *icon)
 {
   _model->AddIcon (icon);
-  _model->Sort (&LauncherController::CompareIcons);
-  
-  LauncherModel::iterator it;
-  
-  int i = 0;
-  for (it = _model->begin (); it != _model->end (); it++)
-  {
-    (*it)->SetSortPriority (i);
-    i++;
-  }
 }
 
 /* static private */
@@ -301,6 +204,9 @@ LauncherController::OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer
     return;
   
   app = BAMF_APPLICATION (view);
+  
+  if (g_object_get_qdata (G_OBJECT (app), g_quark_from_static_string ("unity-seen")))
+    return;
   
   BamfLauncherIcon *icon = new BamfLauncherIcon (self->_launcher, app, self->_screen);
   icon->SetIconType (LauncherIcon::TYPE_APPLICATION);
@@ -376,5 +282,7 @@ LauncherController::SetupBamf ()
     icon->SetSortPriority (_sort_priority++);
     RegisterIcon (icon);
   }
+  
+  _model->order_changed.connect (sigc::mem_fun (this, &LauncherController::SortAndSave));
 }
 
