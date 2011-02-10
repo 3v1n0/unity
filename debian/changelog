@@ -1,4 +1,4 @@
-unity (3.4.2-0ubuntu1) UNRELEASED; urgency=low
+unity (3.4.2-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - add --distro switch to remove local installation of unity with default
@@ -33,7 +33,7 @@ unity (3.4.2-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - depends on latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Feb 2011 18:27:14 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Feb 2011 20:45:47 +0100
 
 unity (3.4.0-0ubuntu2) natty; urgency=low
 
