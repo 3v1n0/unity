@@ -279,7 +279,7 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
 
   /* FIXME: I'm ignoring hints because we don't use them currently */
   g_dbus_proxy_call (_proxy,
-                     "SetSearch",
+                     "SetGlobalSearch",
                      g_variant_new ("(sa{ss})", search, builder),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,

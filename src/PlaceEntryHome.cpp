@@ -174,6 +174,12 @@ PlaceEntryHome::SetActive (bool is_active)
 void
 PlaceEntryHome::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
+  std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  for (it = _entries.begin (); it != eit; ++it)
+  {
+    (*it)->SetGlobalSearch (search, hints);
+  }
 }
 
 void
