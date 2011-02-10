@@ -135,6 +135,8 @@ public:
     
     nux::DndAction QueryAcceptDrop (std::list<char *> paths) { return OnQueryAcceptDrop (paths); }
     void AcceptDrop (std::list<char *> paths) { return OnAcceptDrop (paths); }
+    void SendDndEnter () { OnDndEnter (); }
+    void SendDndLeave () { OnDndLeave (); }
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -180,6 +182,8 @@ protected:
     
     virtual nux::DndAction OnQueryAcceptDrop (std::list<char *> files) { return nux::DNDACTION_NONE; }
     virtual void OnAcceptDrop (std::list<char *> files) {}
+    virtual void OnDndEnter () {}
+    virtual void OnDndLeave () {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);

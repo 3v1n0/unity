@@ -56,6 +56,8 @@ protected:
     
     nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
     void OnAcceptDrop (std::list<char *> uris);
+    void OnDndEnter ();
+    void OnDndLeave ();
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
@@ -66,6 +68,8 @@ private:
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     DbusmenuMenuitem *_menu_desktop_shortcuts;
     gchar *_remote_uri;
+    bool _dnd_hovered;
+    guint _dnd_hover_timer;
 
     void EnsureWindowState ();
 
@@ -74,7 +78,7 @@ private:
     void OpenInstanceWithUris (std::list<char *> uris);
     void OpenInstance ();
     void Focus ();
-    bool Spread ();
+    bool Spread (int state, bool force);
 
     void EnsureMenuItemsReady ();
     
@@ -92,6 +96,8 @@ private:
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    
+    static gboolean OnDndHoveredTimeout (gpointer data);
 };
 
 #endif // BAMFLAUNCHERICON_H
