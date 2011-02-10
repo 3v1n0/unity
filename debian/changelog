@@ -1,6 +1,35 @@
 unity (3.4.2-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - add --distro switch to remove local installation of unity with default
+      options (LP: #715703)
+    - global search and speedups in places
+    - Using fade effect to cut the window Title when it's longer than the panel
+      (LP: #694924)
+    - Launcher - Add ability for apps to indicate progress through Launcher icon
+      (LP: #676596)
+    - calling unity should kill unity-panel-service (LP: #711289)
+    - unity places should return a default icon when no matching icon is found
+      (LP: #711200)
+    - the launcher should start hidding when an icon is clicked (LP: #709178)
+    - Highlight drag-friendly Launcher tiles when dragging a file (LP: #607782)
+    - Fix migrate_favorites.py crashed with OSError in get_log_file(): [Errno 2]
+      No such file or directory: '/home/ubuntu/.local/share/unity' (LP: #711964)
+    - places should support wrong Icon= format (with extensions) (LP: #711189)
+    - unity crashed with AttributeError in reset_unity_compiz_profile():
+      'NoneType' object has no attribute 'get_default_value' (LP: #711105)
+    - unity crashed with GError in reset_unity_compiz_profile() (LP: #710876)
+    - Middle click on application icon should open a new window (LP: #709707)
+    - Launcher - Add interaction to support dragging and dropping behind the
+      launcher (LP: #702482)
+    - Launcher - Enable dragging and dropping of files & folders to Launcher
+      icons (LP: #676549)
+    - Launcher - Add number notifier to Launcher icons (LP: #676455)
+    - Support dragging files to trash to delete them (LP: #619686)
+    - [launcher] Indicator-only applications showing as open applications
+      (LP: #703396)
+    - Unity does not accept mouse clicks (LP: #683328)
+    - dash is empty (LP: #710792)
   * debian/control:
     - depends on latest nux
 
