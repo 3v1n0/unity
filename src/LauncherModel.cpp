@@ -256,7 +256,6 @@ LauncherModel::ReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
   Sort ();
 }
 
-
 int
 LauncherModel::Size ()
 {

@@ -79,6 +79,26 @@ private:
     static gboolean RemoveCallback (gpointer data);
     
     static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
+
+/* Template Methods */
+public:
+    template<class T>
+    std::list<T*> GetSublist ()
+    {
+      std::list<T*> result;
+      
+      iterator it;
+      for (it = begin (); it != end (); it++)
+      {
+        T *var = dynamic_cast<T*> (*it);
+        
+        if (var)
+          result.push_back (var);
+      }
+      
+      return result;
+    }
 };
 
 #endif // LAUNCHERMODEL_H
+

@@ -2980,6 +2980,8 @@ Launcher::ProcessDndDrop (int x, int y)
       }
     }
     launcher_dropped.emit (path, _dnd_hovered_icon);
+    
+    g_free (path);
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {

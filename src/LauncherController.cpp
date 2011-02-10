@@ -67,26 +67,36 @@ LauncherController::~LauncherController()
 void
 LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
 {
+  std::list<BamfLauncherIcon *> launchers;
+  std::list<BamfLauncherIcon *>::iterator it;
+
+  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (it = launchers.begin (); it != launchers.end (); it++)
+  {
+    if (g_str_equal (path, (*it)->DesktopFile ()))
+      return;
+  }
+
   LauncherIcon *result = CreateFavorite (path);
-  RegisterIcon (result);
-  
-  _model->ReorderBefore (result, before, false);
+  if (result)
+  {
+    RegisterIcon (result);
+    _model->ReorderBefore (result, before, false);
+  }
 }
 
 void
 LauncherController::SortAndSave ()
 {
-  LauncherModel::iterator it;
-  
+  std::list<BamfLauncherIcon *> launchers;
+  std::list<BamfLauncherIcon *>::iterator it;
   std::list<const char*> desktop_paths;
-  for (it = _model->begin (); it != _model->end (); it++)
+  
+  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    BamfLauncherIcon *icon;
-    icon = dynamic_cast<BamfLauncherIcon*> (*it);
-    
-    if (!icon)
-      continue;
-    
+    BamfLauncherIcon *icon = *it;
+
     if (!icon->IsSticky ())
       continue;
     
