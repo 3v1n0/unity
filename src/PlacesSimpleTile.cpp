@@ -31,7 +31,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _uri (NULL)
 {
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);

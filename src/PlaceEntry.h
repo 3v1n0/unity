@@ -84,6 +84,7 @@ public:
   virtual DeeModel * GetGroupsModel () = 0;
   virtual DeeModel * GetResultsModel () = 0;
 
+  virtual DeeModel * GetGlobalResultsModel () = 0;
   // Signals
 
   sigc::signal<void, bool>                    active_changed;
@@ -109,7 +110,7 @@ public:
   sigc::signal<void>                          entry_renderer_changed;
   
   // This is not important outside of a global search aggregator
-  sigc::signal<void>                          global_renderer_changed;
+  sigc::signal<void, PlaceEntry *>            global_renderer_changed;
 };
 
 #endif // PLACE_ENTRY_H

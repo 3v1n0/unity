@@ -61,7 +61,7 @@ PlacesResultsController::GetView ()
 void
 PlacesResultsController::AddResultToGroup (const char *groupname,
                                            PlacesTile *tile,
-                                           const char *_id)
+                                           void       *_id)
 {
   PlacesGroup *group = _groups[groupname];
 
@@ -86,7 +86,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
 
 void
 PlacesResultsController::RemoveResultFromGroup (const char *groupname,
-                                                const char *_id)
+                                                void       *_id)
 {
   PlacesTile *tile = _tiles[_id];
   PlacesGroup *group = _groups[groupname];
@@ -105,13 +105,13 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
     }
     else
     {
-      g_warning ("Unable to remove '%s' from group '%s': Unable to find tile",
+      g_warning ("Unable to remove '%p' from group '%s': Unable to find tile",
                  _id, groupname);
     }
   }
   else
   {
-    g_warning ("Unable to remove '%s' from group '%s': Unable to find group",
+    g_warning ("Unable to remove '%p' from group '%s': Unable to find group",
                _id, groupname);
   }
 
@@ -120,7 +120,7 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
 }
 
 void
-PlacesResultsController::RemoveResult (const char *_id)
+PlacesResultsController::RemoveResult (void *_id)
 {
   RemoveResultFromGroup (_tile_group_relations [_id].c_str (), _id);
 }
@@ -146,8 +146,6 @@ PlacesResultsController::Clear ()
 PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
-  g_debug ("CreateGroup: %s", groupname);
-
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);

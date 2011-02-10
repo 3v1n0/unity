@@ -54,7 +54,7 @@ private:
 static gboolean
 remove_timeout (PlacesResultsController *controller)
 {
-  controller->RemoveResult ("tile1-1");
+  //controller->RemoveResult ("tile1-1");
 
   return FALSE;
 }
@@ -92,15 +92,22 @@ void TestRunner::Init ()
   controller->CreateGroup ("Group2");
 
 
-  controller->AddResultToGroup ("Group1", tile11, "tile1-1");
-  controller->AddResultToGroup ("Group1", tile12, "tile1-2");
-  controller->AddResultToGroup ("Group1", tile13, "tile1-3");
-  controller->AddResultToGroup ("Group1", tile14, "tile1-4");
+  controller->AddResultToGroup ("Group1", tile11, tile11);
+  controller->AddResultToGroup ("Group1", tile12, tile12);
+  controller->AddResultToGroup ("Group1", tile13, tile13);
+  controller->AddResultToGroup ("Group1", tile14, tile14);
 
-  controller->AddResultToGroup ("Group2", tile21, "tile2-1");
-  controller->AddResultToGroup ("Group2", tile22, "tile2-2");
-  controller->AddResultToGroup ("Group2", tile23, "tile2-3");
-  controller->AddResultToGroup ("Group2", tile24, "tile2-4");
+  controller->AddResultToGroup ("Group2", tile21, tile21);
+  controller->AddResultToGroup ("Group2", tile22, tile22);
+  controller->AddResultToGroup ("Group2", tile23, tile23);
+  controller->AddResultToGroup ("Group2", tile24, tile24);
+
+  for (int i = 0; i < 100; i++)
+  {
+    gchar name[20];
+    g_snprintf ((gchar*)&name, 20, "tile3-%i", i);
+    controller->AddResultToGroup ("Group3", new PlacesSimpleTile ("firefox", "FooBar Fox", 50), &name);
+  }
 
   for (int i = 0; i < 100; i++)
   {
