@@ -77,19 +77,46 @@ PlaceEntryHome::OnPlaceAdded (Place *place)
 void
 PlaceEntryHome::OnPlaceEntryAdded (PlaceEntry *entry)
 {
-  _entries.push_back (entry);
-  _model_to_group[entry->GetGlobalResultsModel ()] = _entries.size ();
+  if (entry->GetGlobalResultsModel ())
+  {
+    DeeModelIter *iter;
+    gchar        *text = g_markup_escape_text (entry->GetName (), -1);
 
-  g_signal_connect (entry->GetGlobalResultsModel (), "row-added",
-                    (GCallback)&PlaceEntryHome::OnResultAdded, this);
-  g_signal_connect (entry->GetGlobalResultsModel (), "row-removed",
-                    (GCallback)&PlaceEntryHome::OnResultRemoved, this);
+    _entries.push_back (entry);
+
+    iter = dee_model_append (_groups_model, "", text, entry->GetIcon ());
+    _model_to_group[entry->GetGlobalResultsModel ()] = dee_model_get_position (_groups_model,
+                                                                               iter);
+
+    g_signal_connect (entry->GetGlobalResultsModel (), "row-added",
+                      (GCallback)&PlaceEntryHome::OnResultAdded, this);
+    g_signal_connect (entry->GetGlobalResultsModel (), "row-removed",
+                      (GCallback)&PlaceEntryHome::OnResultRemoved, this);
+
+    g_free (text);
+  }
+  else
+  {
+    entry->global_renderer_changed.connect (sigc::mem_fun (this, &PlaceEntryHome::RefreshEntry));
+  }
+}
+
+void
+PlaceEntryHome::RefreshEntry (PlaceEntry *entry)
+{
+  OnPlaceEntryAdded (entry);
 }
 
 void
 PlaceEntryHome::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self)
 {
-  g_debug ("Result added");
+  dee_model_append (self->_results_model,
+                    dee_model_get_string (model, iter, RESULT_URI),
+                    dee_model_get_string (model, iter, RESULT_ICON),
+                    self->_model_to_group[model],
+                    dee_model_get_string (model, iter, RESULT_MIMETYPE),
+                    dee_model_get_string (model, iter, RESULT_NAME),
+                    dee_model_get_string (model, iter, RESULT_COMMENT));
 }
  
 

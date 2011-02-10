@@ -69,11 +69,12 @@ private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);
   void OnPlaceEntryAdded (PlaceEntry *entry);
+  void RefreshEntry (PlaceEntry *entry);
 
   static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
   static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
 
-private:
+public:
   PlaceFactory *_factory;
   DeeModel     *_sections_model;
   DeeModel     *_groups_model;

@@ -110,7 +110,7 @@ public:
   sigc::signal<void>                          entry_renderer_changed;
   
   // This is not important outside of a global search aggregator
-  sigc::signal<void>                          global_renderer_changed;
+  sigc::signal<void, PlaceEntry *>            global_renderer_changed;
 };
 
 #endif // PLACE_ENTRY_H

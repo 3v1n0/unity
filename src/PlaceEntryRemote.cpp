@@ -453,7 +453,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     entry_renderer_changed.emit ();
 
   if (_global_renderer_changed)
-    global_renderer_changed.emit ();
+    global_renderer_changed.emit (this);
 
   // If this was the first time we know the path, let's do the Connect dance
   if (_dbus_path == NULL)
