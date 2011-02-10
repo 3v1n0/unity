@@ -151,6 +151,19 @@ private:
     ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
 
+  typedef enum
+  {
+    TIME_ENTER,
+    TIME_LEAVE,
+    TIME_DRAG_START,
+    TIME_DRAG_END,
+    TIME_DRAG_THRESHOLD,
+    TIME_AUTOHIDE,
+    TIME_DRAG_EDGE_TOUCH,
+    
+    TIME_LAST
+  } LauncherActionTimes;
+
   typedef struct
   {
     LauncherIcon *icon;
@@ -177,6 +190,8 @@ private:
   } RenderArg;
 
   void OnWindowMaybeIntellihide (guint32 xid);
+  void OnWindowMapped (guint32 xid);
+  void OnWindowUnmapped (guint32 xid);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
@@ -213,6 +228,7 @@ private:
   float GetHoverProgress        (struct timespec const &current);
   float AutohideProgress        (struct timespec const &current);
   float DragThresholdProgress   (struct timespec const &current);
+  float DragHideProgress        (struct timespec const &current);
   float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
@@ -332,6 +348,7 @@ private:
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
   bool  _hide_on_action_done;
+  bool  _hide_on_drag_hover;
   bool  _render_drag_window;
   
   BacklightMode _backlight_mode;
@@ -395,19 +412,15 @@ private:
   LauncherDragWindow* _drag_window;
   CompScreen* _screen;
   
+  bool              _dnd_window_is_mapped;
   std::list<char *> _drag_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;
   bool              _steal_drag;
+  bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
-
-  /* event times */
-  struct timespec _enter_time;
-  struct timespec _exit_time;
-  struct timespec _drag_end_time;
-  struct timespec _drag_start_time;
-  struct timespec _drag_threshold_time;
-  struct timespec _autohide_time;
+  
+  struct timespec  _times[TIME_LAST];
 };
 
 #endif // LAUNCHER_H

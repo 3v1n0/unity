@@ -203,6 +203,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     PluginAdapter::Default ()->window_hidden.connect      (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     PluginAdapter::Default ()->window_resized.connect     (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     PluginAdapter::Default ()->window_moved.connect       (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    
+    PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
+    PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
@@ -291,24 +294,20 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
     _hide_on_action_done    = false;
+    _hide_on_drag_hover     = false;
     _render_drag_window     = false;
+    _dnd_window_is_mapped   = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     
 
     // 0 out timers to avoid wonky startups
-    _enter_time.tv_sec = 0;
-    _enter_time.tv_nsec = 0;
-    _exit_time.tv_sec = 0;
-    _exit_time.tv_nsec = 0;
-    _drag_end_time.tv_sec = 0;
-    _drag_end_time.tv_nsec = 0;
-    _drag_start_time.tv_sec = 0;
-    _drag_start_time.tv_nsec = 0;
-    _drag_threshold_time.tv_sec = 0;
-    _drag_threshold_time.tv_nsec = 0;
-    _autohide_time.tv_sec = 0;
-    _autohide_time.tv_nsec = 0;
+    int i;
+    for (i = 0; i < TIME_LAST; i++)
+    {
+      _times[i].tv_sec = 0;
+      _times[i].tv_nsec = 0;
+    }
     
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
@@ -402,7 +401,7 @@ void Launcher::SetMousePosition (int x, int y)
     _mouse_position = nux::Point2 (x, y);
     
     if (beyond_drag_threshold != MouseBeyondDragThreshold ())
-      SetTimeStruct (&_drag_threshold_time, &_drag_threshold_time, ANIM_DURATION_SHORT);
+      SetTimeStruct (&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
     
     EnsureScrollTimer ();
 }
@@ -418,19 +417,19 @@ bool Launcher::MouseBeyondDragThreshold ()
 float Launcher::GetHoverProgress (struct timespec const &current)
 {
     if (_hovered)
-        return CLAMP ((float) (TimeDelta (&current, &_enter_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
+        return CLAMP ((float) (TimeDelta (&current, &_times[TIME_ENTER])) / (float) ANIM_DURATION, 0.0f, 1.0f);
     else
-        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_exit_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
+        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_LEAVE])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::DnDExitProgress (struct timespec const &current)
 {
-    return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_end_time)) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
+    return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
 float Launcher::DnDStartProgress (struct timespec const &current)
 {
-  return CLAMP ((float) (TimeDelta (&current, &_drag_start_time)) / (float) ANIM_DURATION, 0.0f, 1.0f);
+  return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_START])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
 float Launcher::AutohideProgress (struct timespec const &current)
@@ -439,17 +438,25 @@ float Launcher::AutohideProgress (struct timespec const &current)
         return 0.0f;
 
     if (_hidden)
-        return CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+        return CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
     else
-        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_autohide_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+}
+
+float Launcher::DragHideProgress (struct timespec const &current)
+{
+    if (_drag_edge_touching)
+        return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float) (ANIM_DURATION * 3), 0.0f, 1.0f);
+    else
+        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_EDGE_TOUCH])) / (float) (ANIM_DURATION * 3), 0.0f, 1.0f);
 }
 
 float Launcher::DragThresholdProgress (struct timespec const &current)
 {
   if (MouseBeyondDragThreshold ())
-    return 1.0f - CLAMP ((float) (TimeDelta (&current, &_drag_threshold_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   else
-    return CLAMP ((float) (TimeDelta (&current, &_drag_threshold_time)) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_THRESHOLD])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
 }
 
 gboolean Launcher::AnimationTimeout (gpointer data)
@@ -519,25 +526,31 @@ bool Launcher::AnimationInProgress ()
     clock_gettime (CLOCK_MONOTONIC, &current);
 
     // hover in animation
-    if (TimeDelta (&current, &_enter_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_times[TIME_ENTER]) < ANIM_DURATION)
        return true;
 
     // hover out animation
-    if (TimeDelta (&current, &_exit_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
         return true;
     
     // drag start animation
-    if (TimeDelta (&current, &_drag_start_time) < ANIM_DURATION)
+    if (TimeDelta (&current, &_times[TIME_DRAG_START]) < ANIM_DURATION)
         return true;
     
     // drag end animation
-    if (TimeDelta (&current, &_drag_end_time) < ANIM_DURATION_LONG)
+    if (TimeDelta (&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
         return true;
 
-    if (TimeDelta (&current, &_autohide_time) < ANIM_DURATION_SHORT)
+    // hide animation
+    if (TimeDelta (&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
         return true;
-        
-    if (TimeDelta (&current, &_drag_threshold_time) < ANIM_DURATION_SHORT)
+    
+    // collapse animation on DND out of launcher space
+    if (TimeDelta (&current, &_times[TIME_DRAG_THRESHOLD]) < ANIM_DURATION_SHORT)
+        return true;
+    
+    // hide animation for dnd
+    if (TimeDelta (&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
         return true;
 
     // animations happening on specific icons
@@ -1011,6 +1024,18 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         autohide_offset -= geo.width * autohide_progress;
     }
+    
+    float drag_hide_progress = DragHideProgress (current);
+    if (drag_hide_progress > 0.0f)
+    {
+        autohide_offset -= geo.width * 0.25f * drag_hide_progress;
+        
+        if (drag_hide_progress >= 1.0f)
+        {
+          _hide_on_drag_hover = true;
+          EnsureHiddenState ();
+        }
+    }
 
     // Inform the painter where to paint the box
     box_geo = geo;
@@ -1117,6 +1142,7 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
       
       if (self->_mouse_inside_trigger)
       {
+        self->_hide_on_drag_hover = false;
         self->EnsureHiddenState ();
         self->EnsureHoverState ();
         self->EnsureScrollTimer ();
@@ -1144,9 +1170,12 @@ void Launcher::SetHidden (bool hidden)
         return;
 
     _hidden = hidden;
-    SetTimeStruct (&_autohide_time, &_autohide_time, ANIM_DURATION_SHORT);
+    SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
     _parent->EnableInputWindow(!hidden);
+
+    if (!hidden && _launcher_action_state == ACTION_DRAG_EXTERNAL)
+      ProcessDndLeave ();
 
     EnsureAnimation ();
 }
@@ -1163,16 +1192,18 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
 void
 Launcher::EnsureHiddenState ()
 {
-  if (!_mouse_inside_trigger && 
-      (!_mouse_inside_launcher ||
-       (_mouse_inside_launcher && _hide_on_action_done)) && 
-      !_key_show_launcher &&
-      !_placeview_show_launcher &&
-       _launcher_action_state == ACTION_NONE &&
-      !QuicklistManager::Default ()->Current() &&
-      !_autohide_handle &&
-      _window_over_launcher &&
-      !PluginAdapter::Default ()->IsScaleActive ()) 
+  // compiler should optimize this, we do this for readability
+  bool mouse_over_launcher = _mouse_inside_trigger || (_mouse_inside_launcher && !_hide_on_action_done);
+  
+  bool required_for_external_purpose = _key_show_launcher || _placeview_show_launcher || 
+                                       QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
+                                       
+  bool in_must_be_open_mode = _launcher_action_state != ACTION_NONE || _dnd_window_is_mapped;
+  
+  bool must_be_hidden = _hide_on_drag_hover;
+  
+  if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
+                         !in_must_be_open_mode && _window_over_launcher && !_autohide_handle))
     SetHidden (true);
   else
     SetHidden (false);
@@ -1219,6 +1250,30 @@ Launcher::CheckWindowOverLauncher ()
   }
 
   _window_over_launcher = (window != NULL);
+  EnsureHiddenState ();
+}
+
+void
+Launcher::OnWindowMapped (guint32 xid)
+{
+  CompWindow *window = _screen->findWindow (xid);
+  if (window && window->type () == CompWindowTypeDndMask)
+  {
+    _dnd_window_is_mapped = true;
+  }
+  
+  EnsureHiddenState ();
+}
+
+void
+Launcher::OnWindowUnmapped (guint32 xid)
+{
+  CompWindow *window = _screen->findWindow (xid);
+  if (window && window->type () == CompWindowTypeDndMask)
+  {
+    _hide_on_drag_hover = false;
+    _dnd_window_is_mapped = false;
+  }
   EnsureHiddenState ();
 }
 
@@ -1359,7 +1414,7 @@ void Launcher::SetHover ()
   _enter_y = (int) _mouse_position.y;
 
   _hovered = true;
-  SetTimeStruct (&_enter_time, &_exit_time, ANIM_DURATION);
+  SetTimeStruct (&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
   EnsureAnimation ();
 }
 
@@ -1369,7 +1424,7 @@ void Launcher::UnsetHover ()
     return;
 
   _hovered = false;
-  SetTimeStruct (&_exit_time, &_enter_time, ANIM_DURATION);
+  SetTimeStruct (&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   SetupAutohideTimer ();
   EnsureAnimation ();
 }
@@ -2026,7 +2081,7 @@ void Launcher::EndIconDrag ()
   }
   
   if (MouseBeyondDragThreshold ())
-    SetTimeStruct (&_drag_threshold_time, &_drag_threshold_time, ANIM_DURATION_SHORT);
+    SetTimeStruct (&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
   
   _render_drag_window = false;
 }
@@ -2108,7 +2163,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (_launcher_action_state == ACTION_NONE)
   {
-    SetTimeStruct (&_drag_start_time);
+    SetTimeStruct (&_times[TIME_DRAG_START]);
     
     if (nux::Abs (_dnd_delta_y) >= nux::Abs (_dnd_delta_x))
     {
@@ -2354,7 +2409,7 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
 
   if (_launcher_action_state == ACTION_DRAG_LAUNCHER)
   {
-    SetTimeStruct (&_drag_end_time);
+    SetTimeStruct (&_times[TIME_DRAG_END]);
   }
 
   _icon_mouse_down = 0;
@@ -2807,6 +2862,7 @@ Launcher::ProcessDndEnter ()
   _drag_action = nux::DNDACTION_NONE;
   _steal_drag = false;
   _data_checked = false;
+  _drag_edge_touching = false;
   _dnd_hovered_icon = 0;
 }
 
@@ -2815,6 +2871,7 @@ Launcher::ProcessDndLeave ()
 {
   _launcher_action_state = ACTION_NONE;
   _mouse_inside_launcher = false;
+  _drag_edge_touching = false;
   
   if (!_drag_data.empty ())
   {
@@ -2902,6 +2959,19 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   }
   
   SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
+  
+  if (_mouse_position.x == 0 && !_drag_edge_touching)
+  {
+    _drag_edge_touching = true;
+    SetTimeStruct (&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
+    EnsureAnimation ();
+  } 
+  else if (_mouse_position.x != 0 && _drag_edge_touching)
+  {
+    _drag_edge_touching = false;
+    SetTimeStruct (&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
+    EnsureAnimation ();
+  }
 
   if (!_mouse_inside_launcher)
   {
