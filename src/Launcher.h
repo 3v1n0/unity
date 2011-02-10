@@ -219,6 +219,7 @@ private:
   bool MouseOverBottomScrollExtrema ();
   
   static gboolean OnScrollTimeout (gpointer data);
+  static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
@@ -419,6 +420,8 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
+  
+  Atom              _selection_atom;
   
   struct timespec  _times[TIME_LAST];
 };

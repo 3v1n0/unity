@@ -299,6 +299,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _dnd_window_is_mapped   = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
+    _selection_atom         = 0;
     
 
     // 0 out timers to avoid wonky startups
@@ -1253,13 +1254,37 @@ Launcher::CheckWindowOverLauncher ()
   EnsureHiddenState ();
 }
 
+gboolean
+Launcher::OnUpdateDragManagerTimeout (gpointer data)
+{
+  Launcher *self = (Launcher *) data;
+ 
+  if (!self->_selection_atom)
+    self->_selection_atom = XInternAtom (self->_screen->dpy (), "XdndSelection", false);
+  
+  Window drag_owner = XGetSelectionOwner (self->_screen->dpy (), self->_selection_atom);
+  
+  if (drag_owner)
+  {
+    self->_dnd_window_is_mapped = true;
+  }
+  else
+  {
+    self->_hide_on_drag_hover = false;
+    self->_dnd_window_is_mapped = false;
+  }
+  self->EnsureHiddenState ();
+
+  return false;
+}
+
 void
 Launcher::OnWindowMapped (guint32 xid)
 {
   CompWindow *window = _screen->findWindow (xid);
-  if (window && window->type () == CompWindowTypeDndMask)
+  if (window && window->type () | CompWindowTypeDndMask)
   {
-    _dnd_window_is_mapped = true;
+    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
   
   EnsureHiddenState ();
@@ -1269,10 +1294,9 @@ void
 Launcher::OnWindowUnmapped (guint32 xid)
 {
   CompWindow *window = _screen->findWindow (xid);
-  if (window && window->type () == CompWindowTypeDndMask)
+  if (window && window->type () | CompWindowTypeDndMask)
   {
-    _hide_on_drag_hover = false;
-    _dnd_window_is_mapped = false;
+    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
   EnsureHiddenState ();
 }
