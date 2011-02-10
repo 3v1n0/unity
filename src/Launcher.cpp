@@ -1026,7 +1026,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     }
     
     float drag_hide_progress = DragHideProgress (current);
-    if (drag_hide_progress > 0.0f)
+    if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
     {
         autohide_offset -= geo.width * 0.25f * drag_hide_progress;
         
@@ -1200,7 +1200,7 @@ Launcher::EnsureHiddenState ()
                                        
   bool in_must_be_open_mode = _launcher_action_state != ACTION_NONE || _dnd_window_is_mapped;
   
-  bool must_be_hidden = _hide_on_drag_hover;
+  bool must_be_hidden = _hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER;
   
   if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
                          !in_must_be_open_mode && _window_over_launcher && !_autohide_handle))
