@@ -1286,8 +1286,6 @@ Launcher::OnWindowMapped (guint32 xid)
   {
     g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  
-  EnsureHiddenState ();
 }
 
 void
@@ -1298,7 +1296,6 @@ Launcher::OnWindowUnmapped (guint32 xid)
   {
     g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  EnsureHiddenState ();
 }
 
 void
