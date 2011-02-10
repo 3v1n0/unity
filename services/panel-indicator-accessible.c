@@ -32,6 +32,7 @@ static AtkObject *panel_indicator_accessible_ref_child      (AtkObject *accessib
 struct _PanelIndicatorAccessiblePrivate
 {
   IndicatorObject *indicator;
+  GSList *a11y_children;
 };
 
 static void
@@ -43,6 +44,14 @@ panel_indicator_accessible_finalize (GObject *object)
     {
       if (pia->priv->indicator != NULL)
         g_object_unref (G_OBJECT (pia->priv->indicator));
+
+      while (pia->priv->a11y_children != NULL)
+        {
+	  AtkObject *accessible = ATK_OBJECT (pia->priv->a11y_children->data);
+
+	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
+	  g_object_unref (accessible);
+	}
     }
 
   G_OBJECT_CLASS (panel_indicator_accessible_parent_class)->finalize (object);
@@ -71,6 +80,7 @@ static void
 panel_indicator_accessible_init (PanelIndicatorAccessible *pia)
 {
   pia->priv = GET_PRIVATE (pia);
+  pia->priv->a11y_children = NULL;
 }
 
 AtkObject *
@@ -90,6 +100,7 @@ static void
 panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 {
   PanelIndicatorAccessible *pia;
+  GList *entries, *l;
 
   g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible));
 
@@ -99,21 +110,29 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   pia->priv->indicator = g_object_ref (data);
   atk_object_set_name (accessible, _("An indicator")); /* FIXME */
   atk_object_set_role (accessible, ATK_ROLE_PANEL);
+
+  /* Retrieve all entries and create their accessible objects */
+  entries = indicator_object_get_entries (pia->priv->indicator);
+  for (l = entries; l != NULL; l = l->next)
+    {
+      AtkObject *accessible;
+
+      accessible = panel_indicator_entry_accessible_new ((IndicatorObjectEntry *) l->data);
+      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+    }
+
+  g_list_free (entries);
 }
 
 static gint
 panel_indicator_accessible_get_n_children (AtkObject *accessible)
 {
-  GList *entries;
   guint n_entries;
   PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), 0);
 
-  entries = indicator_object_get_entries (pia->priv->indicator);
-  n_entries = g_list_length (entries);
-
-  g_list_free (entries);
+  n_entries = g_slist_length (pia->priv->a11y_children);
 
   return n_entries;
 }
@@ -121,19 +140,12 @@ panel_indicator_accessible_get_n_children (AtkObject *accessible)
 static AtkObject *
 panel_indicator_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  GList *entries;
-  IndicatorObjectEntry *entry;
   AtkObject *child = NULL;
   PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), NULL);
 
-  entries = indicator_object_get_entries (pia->priv->indicator);
-  entry = (IndicatorObjectEntry *) g_list_nth_data (entries, i);
-  if (entry != NULL)
-    child = panel_indicator_entry_accessible_new (entry);
-
-  g_list_free (entries);
+  child = g_slist_nth_data (pia->priv->a11y_children, i);
 
   return child;
 }

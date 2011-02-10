@@ -34,7 +34,25 @@ static AtkObject *panel_root_accessible_get_parent     (AtkObject *accessible);
 struct _PanelRootAccessiblePrivate
 {
   PanelService *service;
+  GSList *a11y_children;
 };
+
+static void
+panel_root_accessible_finalize (GObject *object)
+{
+  PanelRootAccessible *root = PANEL_ROOT_ACCESSIBLE (object);
+
+  if (root->priv != NULL)
+    {
+      while (root->priv->a11y_children != NULL)
+        {
+	  AtkObject *accessible = ATK_OBJECT (root->priv->a11y_children->data);
+
+	  root->priv->a11y_children = g_slist_remove (root->priv->a11y_children, accessible);
+	  g_object_unref (accessible);
+	}
+    }
+}
 
 static void
 panel_root_accessible_class_init (PanelRootAccessibleClass *klass)
@@ -44,6 +62,7 @@ panel_root_accessible_class_init (PanelRootAccessibleClass *klass)
 
   /* GObject */
   object_class = G_OBJECT_CLASS (klass);
+  object_class->finalize = panel_root_accessible_finalize;
 
   /* AtkObject */
   atk_class = ATK_OBJECT_CLASS (klass);
@@ -59,6 +78,7 @@ static void
 panel_root_accessible_init (PanelRootAccessible *root)
 {
   root->priv = GET_PRIVATE (root);
+  root->priv->a11y_children = NULL;
   root->priv->service = panel_service_get_default ();
 }
 
@@ -78,6 +98,9 @@ panel_root_accessible_new (void)
 static void
 panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
 {
+  gint n_children, i;
+  PanelRootAccessible *root = PANEL_ROOT_ACCESSIBLE (accessible);
+
   g_return_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible));
 
   ATK_OBJECT_CLASS (panel_root_accessible_parent_class)->initialize (accessible, data);
@@ -85,40 +108,42 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
   accessible->role = ATK_ROLE_APPLICATION;
   atk_object_set_name (accessible, g_get_prgname ());
   atk_object_set_parent (accessible, NULL);
+
+  /* Retrieve all indicators and create their accessible objects */
+  n_children = panel_service_get_n_indicators (root->priv->service);
+  for (i = 0; i < n_children; i++)
+    {
+      IndicatorObject *indicator;
+
+      indicator = panel_service_get_indicator (root->priv->service, i);
+      if (indicator != NULL)
+        {
+	  AtkObject *accessible;
+
+	  accessible = panel_indicator_accessible_new (indicator);
+	  root->priv->a11y_children = g_slist_append (root->priv->a11y_children, accessible);
+	}
+    }
 }
 
 static gint
 panel_root_accessible_get_n_children (AtkObject *accessible)
 {
-  guint n_children;
+  PanelRootAccessible *root = PANEL_ROOT_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), 0);
 
-  n_children = panel_service_get_n_indicators (PANEL_ROOT_ACCESSIBLE (accessible)->priv->service);
-
-  g_debug ("PanelRootAccessible has %d children", n_children);
-
-  return n_children;
+  return g_slist_length (root->priv->a11y_children);
 }
 
 static AtkObject *
 panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  AtkObject *child = NULL;
-  IndicatorObject *indicator;
+  PanelRootAccessible *root = PANEL_ROOT_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-  indicator = panel_service_get_indicator (PANEL_ROOT_ACCESSIBLE (accessible)->priv->service, i);
-  if (indicator != NULL)
-    {
-      child = panel_indicator_accessible_new (indicator);
-      atk_object_set_parent (child, accessible);
-
-      g_debug ("Returning ATK child %p", child);
-    }
-
-  return child;
+  return g_slist_nth_data (root->priv->a11y_children, i);
 }
 
 static AtkObject *
