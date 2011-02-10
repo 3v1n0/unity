@@ -20,6 +20,9 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
+#ifndef UNITYSHELL_H
+#define UNITYSHELL_H
+
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -100,6 +103,11 @@ class UnityScreen :
 	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
                               CompOption::Vector &options);
 
+  bool
+  setKeyboardFocusKeyInitiate (CompAction*         action,
+                               CompAction::State   state,
+                               CompOption::Vector& options);
+
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
@@ -139,6 +147,9 @@ class UnityScreen :
 	static gboolean
 	strutHackTimeout (gpointer data);
 
+  static void
+  OnExitKeyNav (GVariant* data, void* value);
+            
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
@@ -148,6 +159,10 @@ class UnityScreen :
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
+
+  /* keyboard-nav mode */
+  CompWindow* newFocusedWindow;
+  CompWindow* lastFocusedWindow;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
@@ -206,3 +221,6 @@ class UnityPluginVTable :
 	/* kickstart initialization */
 	bool init ();
 };
+
+#endif // UNITYSHELL_H
+

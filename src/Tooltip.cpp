@@ -134,7 +134,7 @@ namespace nux
     base.SetY (0);
     gfxContext.PushClippingRectangle (base);
 
-    GetGraphicsEngine().GetRenderStates().SetBlend (false, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    GetGraphicsEngine().GetRenderStates().SetBlend (false);
 
     TexCoordXForm texxform_bg;
     texxform_bg.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
@@ -161,7 +161,8 @@ namespace nux
     texxform.SetWrap(TEXWRAP_CLAMP, TEXWRAP_CLAMP);
     texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
 
-    GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
+    GetGraphicsEngine ().GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
     gfxContext.QRP_1Tex (base.x,
       base.y,
       base.width,

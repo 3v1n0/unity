@@ -23,6 +23,7 @@
 // keep ordered
 
 #define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
+#define UBUS_HOME_BUTTON_TRIGGER_UPDATE "PANEL_HOME_BUTTON_TRIGGER_UPDATE"
 
 // When other parts of Unity want to close the place view
 #define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
@@ -35,5 +36,13 @@
 // Signal send when places are shown or hidden
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
 #define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
+
+// Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to
+// get rid of keyboard-input-focus
+#define UBUS_LAUNCHER_EXIT_KEY_NAV "LAUNCHER_EXIT_KEY_NAV"
+#define UBUS_QUICKLIST_EXIT_KEY_NAV "QUICKLIST_EXIT_KEY_NAV"
+
+// Signal to send on icon action and that you want to request hiding the launcher
+#define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
 
 #endif // UBUS_MESSAGES_H

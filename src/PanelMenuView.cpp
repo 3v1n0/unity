@@ -85,6 +85,7 @@ PanelMenuView::PanelMenuView (int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
   _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
 
@@ -250,27 +251,31 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         {
           for (int x = 0; x < geo.width; x++)
           {
-            *(dest + y * lockrect.Pitch + 4*x + 0) = 223; //red
-            *(dest + y * lockrect.Pitch + 4*x + 1) = 219; //green
-            *(dest + y * lockrect.Pitch + 4*x + 2) = 210; //blue
-
+            BYTE a;
             if (x < button_width * (factor - 1))
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 0xff;
+              a = 0xff;
             }
             else if (x < button_width * factor)
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 255 - 255 * (((float)x-(button_width * (factor -1)))/(float)(button_width));
+              a = 255 - 255 * (((float)x-(button_width * (factor -1)))/(float)(button_width));
             }
             else
             {
-              *(dest + y * lockrect.Pitch + 4*x + 3) = 0x00;
+              a = 0x00;
             }
+
+            *(dest + y * lockrect.Pitch + 4*x + 0) = (223 * a) / 255; //red
+            *(dest + y * lockrect.Pitch + 4*x + 1) = (219 * a) / 255; //green
+            *(dest + y * lockrect.Pitch + 4*x + 2) = (210 * a) / 255; //blue
+            *(dest + y * lockrect.Pitch + 4*x + 3) = a;
           }
         }
         _gradient_texture->UnlockRect (0);
       }
-      GfxContext.GetRenderStates ().SetBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      GfxContext.GetRenderStates ().SetBlend (true);
+      GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
@@ -394,9 +399,11 @@ PanelMenuView::Refresh ()
   PangoFontDescription *desc = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
+  cairo_pattern_t      *linpat;
   char                 *font_description = NULL;
   GdkScreen            *screen = gdk_screen_get_default ();
   int                   dpi = 0;
+  const int             text_margin = 20;
 
   int  x = 0;
   int  y = 0;
@@ -451,15 +458,43 @@ PanelMenuView::Refresh ()
   {
     pango_cairo_update_layout (cr, layout);
 
+    y += (height - text_height)/2;
+    double startalpha = 1.0 - ((double)text_margin/(double)width);
+
     // Once for the homies that couldn't be here
-    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
-    cairo_move_to (cr, x, ((height - text_height)/2)-1);
+    if (text_width >= width)
+    {
+        linpat = cairo_pattern_create_linear (x, y-1, width-x, y-1+text_height);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, 50/255.0f, 50/255.0f, 45/255.0f);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 50/255.0f, 50/255.0f, 45/255.0f);
+        cairo_pattern_add_color_stop_rgba (linpat, startalpha, 0, 0.0, 0.0, 0);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
+        cairo_set_source(cr, linpat);
+        cairo_pattern_destroy(linpat);
+    }
+    else
+    {
+        cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
+    }
+    cairo_move_to (cr, x, y-1);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f, 1.0f);
-    cairo_move_to (cr, x, (height - text_height)/2);
+    if (text_width >= width)
+    {
+        linpat = cairo_pattern_create_linear (x, y, width-x, y+text_height);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, 223/255.0f, 219/255.0f, 210/255.0f);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 223/255.0f, 219/255.0f, 210/255.0f);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
+        cairo_set_source(cr, linpat);
+        cairo_pattern_destroy(linpat);
+    }
+    else
+    {
+        cairo_set_source_rgb (cr, 223/255.0f, 219/255.0f, 210/255.0f);
+    }
+    cairo_move_to (cr, x, y);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
   }
@@ -760,6 +795,19 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
       WindowManager::Default ()->StartMove (bamf_window_get_xid (window), x, y);
     }
   }
+}
+
+void
+PanelMenuView::OnMouseMiddleClicked ()
+{
+  if (_is_maximized)
+  {
+    BamfWindow *window;
+
+    window = bamf_matcher_get_active_window (_matcher);
+    if (BAMF_IS_WINDOW (window))
+      WindowManager::Default ()->Lower (bamf_window_get_xid (window));
+  } 
 }
 
 // Introspectable

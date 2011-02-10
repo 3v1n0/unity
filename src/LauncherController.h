@@ -33,6 +33,9 @@
 #include "FavoriteStore.h"
 #include "PlaceLauncherSection.h"
 
+#include "LauncherEntryRemote.h"
+#include "LauncherEntryRemoteModel.h"
+
 #include <libbamf/libbamf.h>
 #include <sigc++/sigc++.h>
 
@@ -57,12 +60,16 @@ private:
     int                    _sort_priority;
     PlaceLauncherSection*  _place_section;
     DeviceLauncherSection* _device_section;
+    LauncherEntryRemoteModel* _remote_model;
 
     void SortAndSave ();
 
-    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
-    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
     void OnIconAdded (LauncherIcon *icon);
+    
+    void OnLauncherDropped (char *path, LauncherIcon *before);
+
+    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
     
@@ -77,8 +84,6 @@ private:
     void OnExpoClicked (int button);
     
     /* statics */
-    
-    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 

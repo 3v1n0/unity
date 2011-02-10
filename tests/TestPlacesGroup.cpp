@@ -109,8 +109,9 @@ void TestRunner::Init ()
   group_content->SetHorizontalExternalMargin (4);
   group_content->SetVerticalInternalMargin (4);
   group_content->SetHorizontalInternalMargin (4);
+  group_content->SetHeightMatchContent (true);
 
-  group1->SetLayout (group_content);
+  group1->AddLayout (group_content);
   group1->SetVisible (false);
 
 

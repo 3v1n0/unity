@@ -1,3 +1,9 @@
+unity (3.4.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Feb 2011 18:27:14 +0100
+
 unity (3.4.0-0ubuntu2) natty; urgency=low
 
   * Cherry-pick fix when the favorite migration tools is crashing on first run

@@ -81,6 +81,7 @@ public:
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);
     

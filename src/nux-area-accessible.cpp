@@ -109,7 +109,7 @@ atk_component_interface_init (AtkComponentIface *iface)
 
   iface->get_extents    = nux_area_accessible_get_extents;
 
-  /* FIXME: focus management missing */
+  /* Focus management is done on NuxViewAccessible */
 }
 
 static void
