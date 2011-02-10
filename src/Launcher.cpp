@@ -2916,9 +2916,16 @@ Launcher::ProcessDndLeave ()
     _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
     
-    _steal_drag = false;
+  }
+  
+  if (!_steal_drag && _dnd_hovered_icon)
+  {
+    _dnd_hovered_icon->SendDndLeave ();
     _dnd_hovered_icon = 0;
   }
+  
+  _steal_drag = false;
+  _dnd_hovered_icon = 0;
   
   EnsureHoverState ();
 }
@@ -3037,12 +3044,20 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
+      {
+        hovered_icon->SendDndEnter ();
         _drag_action = hovered_icon->QueryAcceptDrop (_drag_data);
+      }
       else
+      {
         _drag_action = nux::DNDACTION_NONE;
+      }
+      
+      if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave ();
+        
+      _dnd_hovered_icon = hovered_icon;
     }
-    
-    _dnd_hovered_icon = hovered_icon;
   }
   
   bool accept;

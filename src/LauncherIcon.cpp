@@ -800,8 +800,6 @@ LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
     return;
     
   _entry_list.remove (remote);
-  
-  printf ("Remove\n");
 }
 
 void
