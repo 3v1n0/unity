@@ -1,6 +1,8 @@
 unity (3.4.2-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/control:
+    - depends on latest nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Feb 2011 18:27:14 +0100
 
