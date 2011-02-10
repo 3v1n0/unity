@@ -41,6 +41,7 @@ public:
 
     const char* DesktopFile ();
     bool IsSticky ();
+    void Activate ();
 
 protected:
     void OnMouseClick (int button);
@@ -50,6 +51,13 @@ protected:
     void OnCenterStabilized (nux::Point3 center);
 
     void AddProperties (GVariantBuilder *builder);
+    
+    const gchar * GetRemoteUri ();
+    
+    nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+    void OnAcceptDrop (std::list<char *> uris);
+    
+    std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
 private:
     BamfApplication *m_App;
@@ -57,11 +65,13 @@ private:
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     DbusmenuMenuitem *_menu_desktop_shortcuts;
+    gchar *_remote_uri;
 
     void EnsureWindowState ();
 
     void UpdateMenus ();
 
+    void OpenInstanceWithUris (std::list<char *> uris);
     void OpenInstance ();
     void Focus ();
     bool Spread ();
@@ -79,8 +89,8 @@ private:
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
 
-    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
 };
 

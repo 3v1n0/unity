@@ -19,12 +19,28 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gconf
+import glob
 from optparse import OptionParser
 import os
+import shutil
 import signal
 import subprocess
 import sys
 import time
+
+home_dir = os.path.expanduser("~%s" % os.getenv("SUDO_USER"))
+supported_prefix = "/usr/local"
+
+well_known_local_path = ("%s/share/unity" % supported_prefix,
+                         "%s/share/ccsm/icons/*/*/*/*unity*" % supported_prefix,
+                         "%s/share/locale/*/LC_MESSAGES/*unity*" % supported_prefix,
+                         "%s/.compiz-1/*/*unity*" % home_dir,
+                         "%s/.gconf/schemas/*unity*" % home_dir,
+                         "%s/lib/*unity*"  % supported_prefix,
+                         "%s/share/dbus-1/services/*Unity*"  % supported_prefix,
+                         "%s/bin/*unity*"  % supported_prefix,
+                         "%s/share/man/man1/*unity*"  % supported_prefix
+                         )
 
 
 def set_unity_env ():
@@ -42,12 +58,21 @@ def reset_unity_compiz_profile ():
     
     client = gconf.client_get_default()
     
+    if not client:
+		print "WARNING: no gconf client found. No reset will be done"
+		return
+    
     # get current compiz profile to know if we need to switch or not
     # as compiz is setting that as a default key schema each time you
     # change the profile, the key isn't straightforward to get and set
     # as compiz set a new schema instead of a value..
     current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    current_profile_gconfvalue = client.get_schema("/apps/compizconfig-1/current_profile").get_default_value()
+    
+    # default value to not force reset if current_profile is unset
+    current_profile_gconfvalue = ""
+    if current_profile_schema:
+		current_profile_gconfvalue = current_profile_schema.get_default_value()
+
     if current_profile_gconfvalue.get_string() == 'unity':
         print "WARNING: Unity currently default profile, so switching to metacity while resetting the values"
         subprocess.Popen(["metacity", "--replace"]) #TODO: check if compiz is indeed running
@@ -96,7 +121,8 @@ def run_unity (verbose, debug, compiz_args, log_file):
     '''run the unity shell and handle Ctrl + C'''
 
     try:
-        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)    
+        unity_instance = process_and_start_unity (verbose, debug, compiz_args, log_file)
+        subprocess.Popen(["killall", "unity-panel-service"])
         unity_instance.wait()
     except KeyboardInterrupt, e:
         try:
@@ -106,12 +132,41 @@ def run_unity (verbose, debug, compiz_args, log_file):
         unity_instance.wait()
     sys.exit(unity_instance.returncode)
 
+def reset_to_distro():
+	''' remove all known default local installation path '''
+	
+	# check if we are root, we need to be root
+	if os.getuid() != 0:
+		print "Error: You need to be root to remove your local unity installation"
+		return 1
+	error = False
+	
+	for filedir in well_known_local_path:
+		for elem in glob.glob(filedir):
+			try:
+				shutil.rmtree(elem)
+			except OSError, e:
+				if os.path.isfile(elem):
+					os.remove(elem)
+				else:
+					print "ERROR: Cannot remove %s", e
+					error = True
+	
+	if error:
+		print "See above: some error happened and you should clean them before trying to restart unity"
+		return 1
+	else:
+		print "Unity local install cleaned, you can now restart unity"
+		return 0
+
 if __name__ == '__main__':
     usage = "usage: %prog [options]"
     parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")    
+    parser.add_option("--distro", action="store_true",
+                      help="Remove local build if present with default values to return to the package value (this doesn't run unity and need root access)")    
     parser.add_option("--log", action="store",
                       help="Store log under filename.")
     parser.add_option("--replace", action="store_true",
@@ -123,6 +178,10 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     set_unity_env()
+
+    if options.distro:
+		sys.exit(reset_to_distro())
+    
     if options.reset:
         reset_unity_compiz_profile ()
 	

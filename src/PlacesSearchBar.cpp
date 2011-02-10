@@ -48,13 +48,12 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
- 
-  _pango_entry = new nux::TextEntry (_("Search"), NUX_TRACKER_LOCATION);
-  _pango_entry->SetMinimumWidth (200);
+
+  _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
 
 
-  _layout->AddView (_pango_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _layout->SetVerticalExternalMargin (14);
   _layout->SetHorizontalExternalMargin (18);
   
@@ -153,11 +152,12 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
     
     _entry->SetActiveSection (section_id);
     _entry->SetSearch (search_string ? search_string : "", hints);
+    _pango_entry->SetText (search_string ? search_string : "");
     g_free (res);
   }
   else
   {
-    _pango_entry->SetText (_("Search"));
+    _pango_entry->SetText ("");
   }
 }
 
@@ -170,6 +170,8 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
   _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
                                         (GSourceFunc)&OnLiveSearchTimeout,
                                         this);
+
+  search_changed.emit (_pango_entry->GetText ().c_str ());
 }
 
 bool
@@ -298,7 +300,7 @@ PlacesSearchBar::UpdateBackground ()
 
   nux::ROPConfig rop;
   rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
+  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),

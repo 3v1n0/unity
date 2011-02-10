@@ -44,6 +44,9 @@
 #include "perf-logger-utility.h"
 #include "unitya11y.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "config.h"
 
 /* FIXME: once we get a better method to add the toplevel windows to
@@ -58,6 +61,13 @@ static UnityScreen *uScreen = 0;
 void
 UnityScreen::nuxPrologue ()
 {
+  /* Vertex lighting isn't used in Unity, we disable that state as it could have
+   * been leaked by another plugin. That should theoretically be switched off
+   * right after PushAttrib since ENABLE_BIT is meant to restore the LIGHTING
+   * bit, but we do that here in order to workaround a bug (?) in the NVIDIA
+   * drivers (lp:703140). */
+  glDisable (GL_LIGHTING);
+
   /* reset matrices */
   glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
@@ -184,7 +194,7 @@ UnityScreen::handleEvent (XEvent *event)
 
   screen->handleEvent (event);
 
-  if (screen->otherGrabExist ("deco", "move", NULL))
+  if (screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
@@ -210,6 +220,39 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 {
   launcher->EndKeyShowLauncher ();
   return false;
+}
+
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  // get CompWindow* of launcher-window
+  newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
+
+  // check if currently focused window isn't the launcher-window
+  if (newFocusedWindow != screen->findWindow (screen->activeWindow ()))
+    lastFocusedWindow = screen->findWindow (screen->activeWindow ());
+
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
+  }
+
+  return false;
+}
+
+void
+UnityScreen::OnExitKeyNav (GVariant* data, void* value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  // return input-focus to previously focused window (before key-nav-mode was
+  // entered)
+  if (self->lastFocusedWindow != NULL)
+    self->lastFocusedWindow->moveInputFocusTo ();
 }
 
 gboolean
@@ -418,11 +461,11 @@ UnityScreen::optionChanged (CompOption            *opt,
 {
   switch (num)
   {
-    case UnityshellOptions::LauncherAutohide:
-      launcher->SetAutohide (optionGetLauncherAutohide ());
+    case UnityshellOptions::LauncherHideMode:
+      launcher->SetHideMode ((Launcher::LauncherHideMode) optionGetLauncherHideMode ());
       break;
-    case UnityshellOptions::BacklightAlwaysOn:
-      launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
+    case UnityshellOptions::BacklightMode:
+      launcher->SetBacklightMode ((Launcher::BacklightMode) optionGetBacklightMode ());
       break;
     case UnityshellOptions::LaunchAnimation:
       launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
@@ -482,6 +525,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   unity_a11y_init ();
 
+  newFocusedWindow  = NULL;
+  lastFocusedWindow = NULL;
+
   /* i18n init */
   bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
@@ -491,12 +537,19 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+
+  ubus_server_register_interest (ubus_server_get_default (),
+                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
+                                 this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -513,7 +566,7 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
   UnityScreen *self = (UnityScreen*) data;
 
-  if (!self->launcher->AutohideEnabled ())
+  if (self->launcher->GetHideMode () == Launcher::LAUNCHER_HIDE_NEVER)
   {
     self->launcherWindow->InputWindowEnableStruts(false);
     self->launcherWindow->InputWindowEnableStruts(true);
@@ -549,7 +602,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->launcherWindow->SetBlurredBackground(false);
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true);
   self->launcherWindow->InputWindowEnableStruts(true);
@@ -560,7 +612,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
     unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
-  self->launcher->SetBacklightAlwaysOn (true);
+  self->launcher->SetBacklightMode (Launcher::BACKLIGHT_ALWAYS_ON);
   LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
@@ -581,7 +633,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->panelWindow->SetBlurredBackground(false);
   self->panelWindow->ShowWindow(true);
   self->panelWindow->EnableInputWindow(true);
   self->panelWindow->InputWindowEnableStruts(true);
@@ -590,8 +641,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohideTrigger ((nux::View *) self->panelView->HomeButton ());
-  self->launcher->SetAutohide (true);
+  self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);

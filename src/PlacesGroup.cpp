@@ -51,7 +51,6 @@ View (NUX_FILE_LINE_PARAM)
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
   _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _label->SinkReference ();
   _label->SetFont ("Ubuntu normal 11");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -59,7 +58,6 @@ View (NUX_FILE_LINE_PARAM)
   _label->SetMinimumWidth (1);
 
   _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _title->SinkReference ();
   _title->SetFont ("Ubuntu normal 11");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
@@ -67,7 +65,6 @@ View (NUX_FILE_LINE_PARAM)
   _title->SetMinimumWidth (1);
 
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-  _header_layout->SinkReference ();
 
   _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   _header_layout->AddSpace (1, 1);
@@ -76,7 +73,6 @@ View (NUX_FILE_LINE_PARAM)
   // _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-  _group_layout->SinkReference ();
 
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
@@ -93,9 +89,6 @@ View (NUX_FILE_LINE_PARAM)
 
 PlacesGroup::~PlacesGroup ()
 {
-  _label->UnReference ();
-  _title->UnReference ();
-
   g_free (_title_string);
 
   _group_layout->RemoveChildObject (_header_layout);
@@ -103,12 +96,7 @@ PlacesGroup::~PlacesGroup ()
   if (_content != NULL)
   {
     _group_layout->RemoveChildObject (_content);
-    _content->UnReference ();
   }
-
-  _header_layout->UnReference ();
-  _group_layout->UnReference ();
-
 }
 
 void PlacesGroup::SetTitle (const char *title)
@@ -121,16 +109,13 @@ void PlacesGroup::SetEmblem (const char *path_to_emblem)
 {
 }
 
-void PlacesGroup::SetLayout (nux::Layout *layout)
+void PlacesGroup::AddLayout (nux::Layout *layout)
 {
   _content = layout;
-  _content->Reference ();
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
   _group_layout->AddLayout (_content, 0);
-
-  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -219,16 +204,6 @@ long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Pro
 void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
-  // Check if the texture have been computed. If they haven't, exit the function.
-  nux::Geometry base = GetGeometry ();
-  nux::GetPainter ().PaintBackground (GfxContext, GetGeometry ());
-
-
-  GfxContext.PushClippingRectangle (base);
-
-  _group_layout->NeedRedraw ();
-
-  GfxContext.PopClippingRectangle ();
 }
 
 void
