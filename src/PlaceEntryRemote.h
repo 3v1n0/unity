@@ -65,6 +65,8 @@ public:
   DeeModel * GetGroupsModel ();
   DeeModel * GetResultsModel ();
 
+  DeeModel * GetGlobalResultsModel ();
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();
@@ -113,6 +115,8 @@ private:
   DeeModel *_sections_model;
   DeeModel *_groups_model;
   DeeModel *_results_model;
+
+  DeeModel *_global_results_model;
 
   gchar    *_previous_search;
   guint32   _previous_section;

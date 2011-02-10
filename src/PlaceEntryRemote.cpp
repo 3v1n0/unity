@@ -53,6 +53,7 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _sections_model (NULL),
   _groups_model (NULL),
   _results_model (NULL),
+  _global_results_model (NULL),
   _previous_search (NULL),
   _previous_section (G_MAXUINT32)
 {
@@ -73,6 +74,7 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_object_unref (_sections_model);
   g_object_unref (_groups_model);
   g_object_unref (_results_model);
+  g_object_unref (_global_results_model);
 }
 
 void
@@ -271,15 +273,20 @@ PlaceEntryRemote::SetActiveSection (guint32 section_id)
 void
 PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
+  GVariantBuilder *builder;
+
+  builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
+
   /* FIXME: I'm ignoring hints because we don't use them currently */
   g_dbus_proxy_call (_proxy,
-                     "SetGlobalSearch",
-                     g_variant_new ("(sa{ss})", search, NULL),
+                     "SetSearch",
+                     g_variant_new ("(sa{ss})", search, builder),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      NULL,
                      NULL);
+  g_variant_builder_unref (builder);
 }
 
 DeeModel *
@@ -300,6 +307,11 @@ PlaceEntryRemote::GetResultsModel ()
   return _results_model;
 }
 
+DeeModel *
+PlaceEntryRemote::GetGlobalResultsModel ()
+{
+  return _global_results_model;
+}
 
 /* Other methods */
 bool
@@ -420,7 +432,18 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
   //        both places return ""
 
   // FIXME: Handle global groups model name
-  // FIXME: Handle global results model name
+
+  if (!DEE_IS_SHARED_MODEL (_global_results_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_global_results_model)), global_results_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_global_results_model))
+      g_object_unref (_global_results_model);
+
+    _global_results_model = dee_shared_model_new (global_results_model);
+    dee_model_set_schema (_global_results_model, "s", "s", "u", "s", "s", "s", NULL);
+
+    _global_renderer_changed = true;
+  }
   // FIXME: Handle global renderer hints
 
   if (_vis_changed)

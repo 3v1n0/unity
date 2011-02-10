@@ -178,12 +178,10 @@ void
 PlacesResultsView::ScrollUp (float stepy, int mousedy)
 {
   ScrollView::ScrollUp (stepy, mousedy);
-  NeedRedraw ();
 }
 
 void
 PlacesResultsView::ScrollDown (float stepy, int mousedy)
 {
   ScrollView::ScrollDown (stepy, mousedy);
-  NeedRedraw ();
 }

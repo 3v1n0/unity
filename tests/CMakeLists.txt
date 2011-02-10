@@ -135,6 +135,8 @@ add_executable (test-places
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
+                ../src/PlaceEntryHome.cpp
+                ../src/PlaceEntryRemote.h
                 ../src/PlaceEntryRemote.cpp
                 ../src/PlaceEntryRemote.h
                 ../src/PlaceEntry.h

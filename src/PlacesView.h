@@ -31,6 +31,8 @@
 
 #include "Place.h"
 #include "PlaceEntry.h"
+#include "PlaceEntryHome.h"
+#include "PlaceFactory.h"
 
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
@@ -46,7 +48,7 @@ class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
-  PlacesView (NUX_FILE_LINE_PROTO);
+  PlacesView (PlaceFactory *factory);
   ~PlacesView ();
 
   // nux::View overrides
@@ -85,12 +87,15 @@ private:
   static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
 
   void OnResultClicked (PlacesTile *tile);
+  void OnSearchChanged (const char *search_string);
 
 private:
+  PlaceFactory       *_factory;
   nux::VLayout       *_layout;
   nux::LayeredLayout *_layered_layout;
   PlacesSearchBar    *_search_bar;
   PlacesHomeView     *_home_view;
+  PlaceEntryHome     *_home_entry;
   PlaceEntry         *_entry;
   gulong              _group_added_id;
   gulong              _group_removed_id;

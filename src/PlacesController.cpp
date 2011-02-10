@@ -56,7 +56,7 @@ PlacesController::PlacesController ()
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
-  _view = new PlacesView ();
+  _view = new PlacesView (_factory);
   _window_layout->AddView(_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
