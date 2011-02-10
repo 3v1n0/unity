@@ -121,9 +121,25 @@ PlaceEntryHome::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHo
  
 
 void
-PlaceEntryHome::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self)
+PlaceEntryHome::OnResultRemoved (DeeModel *model, DeeModelIter *it, PlaceEntryHome *self)
 {
-  g_debug ("Result removed");
+  DeeModelIter *iter, *end;
+  const char   *uri;
+
+  uri = dee_model_get_string (model, it, RESULT_URI);
+
+  iter = dee_model_get_first_iter (self->_results_model);
+  end = dee_model_get_last_iter (self->_results_model);
+  while (iter != end)
+  {
+    if (g_strcmp0 (dee_model_get_string (self->_results_model, iter, RESULT_URI), uri) == 0)
+    {
+      dee_model_remove (self->_results_model, iter);
+      break;
+    }
+
+    iter = dee_model_next (self->_results_model, iter);
+  }
 }
 
 /* Overrides */

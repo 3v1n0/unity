@@ -74,6 +74,7 @@ private:
   static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
   static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
 
+  // FIXME: I know this is horrible but I can't fix it this week, have a much better plan for next
 public:
   PlaceFactory *_factory;
   DeeModel     *_sections_model;
