@@ -122,6 +122,9 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  if (signal)
+    entry_changed.emit (entry);
+
   if (entry == NULL)
     entry = _home_entry;
 
@@ -181,9 +184,6 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _layered_layout->SetActiveLayer (_results_view);
 
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
-
-  if (signal)
-    entry_changed.emit (_entry);
 }
 
 PlaceEntry *

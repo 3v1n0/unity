@@ -461,11 +461,11 @@ UnityScreen::optionChanged (CompOption            *opt,
 {
   switch (num)
   {
-    case UnityshellOptions::LauncherAutohide:
-      launcher->SetAutohide (optionGetLauncherAutohide ());
+    case UnityshellOptions::LauncherHideMode:
+      launcher->SetHideMode ((Launcher::LauncherHideMode) optionGetLauncherHideMode ());
       break;
-    case UnityshellOptions::BacklightAlwaysOn:
-      launcher->SetBacklightAlwaysOn (optionGetBacklightAlwaysOn ());
+    case UnityshellOptions::BacklightMode:
+      launcher->SetBacklightMode ((Launcher::BacklightMode) optionGetBacklightMode ());
       break;
     case UnityshellOptions::LaunchAnimation:
       launcher->SetLaunchAnimation ((Launcher::LaunchAnimation) optionGetLaunchAnimation ());
@@ -537,8 +537,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherAutohideNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightAlwaysOnNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
@@ -566,7 +566,7 @@ gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
   UnityScreen *self = (UnityScreen*) data;
 
-  if (!self->launcher->AutohideEnabled ())
+  if (self->launcher->GetHideMode () == Launcher::LAUNCHER_HIDE_NEVER)
   {
     self->launcherWindow->InputWindowEnableStruts(false);
     self->launcherWindow->InputWindowEnableStruts(true);
@@ -612,7 +612,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
     unity_util_accessible_add_window (self->launcherWindow);
 
   self->launcher->SetIconSize (54, 48);
-  self->launcher->SetBacklightAlwaysOn (true);
+  self->launcher->SetBacklightMode (Launcher::BACKLIGHT_ALWAYS_ON);
   LOGGER_END_PROCESS ("initLauncher-Launcher");
 
   /* Setup panel */
@@ -641,7 +641,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
-  self->launcher->SetAutohide (true);
+  self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);

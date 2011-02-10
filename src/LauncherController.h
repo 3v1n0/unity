@@ -64,9 +64,9 @@ private:
 
     void SortAndSave ();
 
-    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
-    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
     void OnIconAdded (LauncherIcon *icon);
+    
+    void OnLauncherDropped (char *path, LauncherIcon *before);
 
     void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
@@ -84,8 +84,6 @@ private:
     void OnExpoClicked (int button);
     
     /* statics */
-    
-    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 

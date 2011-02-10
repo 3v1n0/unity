@@ -49,6 +49,14 @@ class Launcher : public Introspectable, public nux::View
 public:
   typedef enum
   {
+    LAUNCHER_HIDE_NEVER,
+    LAUNCHER_HIDE_AUTOHIDE,
+    LAUNCHER_HIDE_DODGE_WINDOWS,
+    LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW,
+  } LauncherHideMode;
+
+  typedef enum
+  {
     LAUNCH_ANIMATION_NONE,
     LAUNCH_ANIMATION_PULSE,
     LAUNCH_ANIMATION_BLINK,
@@ -60,6 +68,13 @@ public:
     URGENT_ANIMATION_PULSE,
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
+
+  typedef enum
+  {
+    BACKLIGHT_ALWAYS_ON,
+    BACKLIGHT_NORMAL,
+    BACKLIGHT_ALWAYS_OFF,
+  } BacklightMode;
 
   Launcher (nux::BaseWindow* parent, CompScreen* screen, NUX_FILE_LINE_PROTO);
   ~Launcher();
@@ -81,14 +96,14 @@ public:
 
   void SetFloating (bool floating);
 
-  void SetAutohide (bool autohide);
-  bool AutohideEnabled ();
+  void SetHideMode (LauncherHideMode hidemode);
+  LauncherHideMode GetHideMode ();
 
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
 
-  void SetBacklightAlwaysOn (bool always_on);
-  bool GetBacklightAlwaysOn ();
+  void SetBacklightMode (BacklightMode mode);
+  BacklightMode GetBacklightMode ();
   
   void SetLaunchAnimation (LaunchAnimation animation);
   LaunchAnimation GetLaunchAnimation ();
@@ -117,8 +132,7 @@ public:
   void startKeyNavMode ();
   void exitKeyNavMode ();
 
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_smart;
-  sigc::signal<void, LauncherIcon *, LauncherIcon *, bool> request_reorder_before;
+  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -134,7 +148,21 @@ private:
     ACTION_NONE,
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
+    ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
+
+  typedef enum
+  {
+    TIME_ENTER,
+    TIME_LEAVE,
+    TIME_DRAG_START,
+    TIME_DRAG_END,
+    TIME_DRAG_THRESHOLD,
+    TIME_AUTOHIDE,
+    TIME_DRAG_EDGE_TOUCH,
+    
+    TIME_LAST
+  } LauncherActionTimes;
 
   typedef struct
   {
@@ -162,6 +190,8 @@ private:
   } RenderArg;
 
   void OnWindowMaybeIntellihide (guint32 xid);
+  void OnWindowMapped (guint32 xid);
+  void OnWindowUnmapped (guint32 xid);
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
@@ -189,14 +219,17 @@ private:
   bool MouseOverBottomScrollExtrema ();
   
   static gboolean OnScrollTimeout (gpointer data);
+  static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
+  bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress        (struct timespec const &current);
   float DnDExitProgress         (struct timespec const &current);
   float GetHoverProgress        (struct timespec const &current);
   float AutohideProgress        (struct timespec const &current);
   float DragThresholdProgress   (struct timespec const &current);
+  float DragHideProgress        (struct timespec const &current);
   float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
@@ -206,14 +239,15 @@ private:
   float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
   float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
   float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
+  float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover   ();
   void UnsetHover ();
   void SetHidden  (bool hidden);
 
-  void SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
-  float  DragLimiter (float x);
+  void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
+  float DragLimiter (float x);
 
   void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);
   void FillRenderArg (LauncherIcon *icon,
@@ -287,6 +321,8 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
+  
+  std::list<char *> StringToUriList (char * input);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -305,7 +341,6 @@ private:
 
   bool  _hovered;
   bool  _floating;
-  bool  _autohide;
   bool  _hidden;
   bool  _was_hidden;
   bool  _mouse_inside_launcher;
@@ -314,14 +349,18 @@ private:
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
   bool  _hide_on_action_done;
+  bool  _hide_on_drag_hover;
   bool  _render_drag_window;
-  bool  _backlight_always_on;
+  
+  BacklightMode _backlight_mode;
 
   float _folded_angle;
   float _neg_folded_angle;
   float _folded_z_distance;
   float _launcher_top_y;
   float _launcher_bottom_y;
+
+  LauncherHideMode _hidemode;
 
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
@@ -364,8 +403,6 @@ private:
   guint _autohide_handle;
   guint _autoscroll_handle;
 
-  nux::Matrix4  _view_matrix;
-  nux::Matrix4  _projection_matrix;
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
@@ -375,14 +412,18 @@ private:
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
   CompScreen* _screen;
-
-  /* event times */
-  struct timespec _enter_time;
-  struct timespec _exit_time;
-  struct timespec _drag_end_time;
-  struct timespec _drag_start_time;
-  struct timespec _drag_threshold_time;
-  struct timespec _autohide_time;
+  
+  bool              _dnd_window_is_mapped;
+  std::list<char *> _drag_data;
+  nux::DndAction    _drag_action;
+  bool              _data_checked;
+  bool              _steal_drag;
+  bool              _drag_edge_touching;
+  LauncherIcon     *_dnd_hovered_icon;
+  
+  Atom              _selection_atom;
+  
+  struct timespec  _times[TIME_LAST];
 };
 
 #endif // LAUNCHER_H

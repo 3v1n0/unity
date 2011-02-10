@@ -399,9 +399,11 @@ PanelMenuView::Refresh ()
   PangoFontDescription *desc = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
+  cairo_pattern_t      *linpat;
   char                 *font_description = NULL;
   GdkScreen            *screen = gdk_screen_get_default ();
   int                   dpi = 0;
+  const int             text_margin = 20;
 
   int  x = 0;
   int  y = 0;
@@ -456,15 +458,43 @@ PanelMenuView::Refresh ()
   {
     pango_cairo_update_layout (cr, layout);
 
+    y += (height - text_height)/2;
+    double startalpha = 1.0 - ((double)text_margin/(double)width);
+
     // Once for the homies that couldn't be here
-    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
-    cairo_move_to (cr, x, ((height - text_height)/2)-1);
+    if (text_width >= width)
+    {
+        linpat = cairo_pattern_create_linear (x, y-1, width-x, y-1+text_height);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, 50/255.0f, 50/255.0f, 45/255.0f);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 50/255.0f, 50/255.0f, 45/255.0f);
+        cairo_pattern_add_color_stop_rgba (linpat, startalpha, 0, 0.0, 0.0, 0);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
+        cairo_set_source(cr, linpat);
+        cairo_pattern_destroy(linpat);
+    }
+    else
+    {
+        cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
+    }
+    cairo_move_to (cr, x, y-1);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f, 1.0f);
-    cairo_move_to (cr, x, (height - text_height)/2);
+    if (text_width >= width)
+    {
+        linpat = cairo_pattern_create_linear (x, y, width-x, y+text_height);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, 223/255.0f, 219/255.0f, 210/255.0f);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 223/255.0f, 219/255.0f, 210/255.0f);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
+        cairo_set_source(cr, linpat);
+        cairo_pattern_destroy(linpat);
+    }
+    else
+    {
+        cairo_set_source_rgb (cr, 223/255.0f, 219/255.0f, 210/255.0f);
+    }
+    cairo_move_to (cr, x, y);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
   }
