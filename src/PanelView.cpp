@@ -74,12 +74,6 @@ PanelView::HomeButton ()
   return _home_button;
 }
 
-nux::HLayout *
-PanelView::Layout ()
-{
-  return _layout;
-}
-
 const gchar* PanelView::GetName ()
 {
 	return "Panel";

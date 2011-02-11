@@ -49,7 +49,6 @@ public:
   void OnEntryActivated (const char *entry_id);
   
   PanelHomeButton * HomeButton ();
-  nux::HLayout * Layout ();
 
 protected:
   // Introspectable methods
