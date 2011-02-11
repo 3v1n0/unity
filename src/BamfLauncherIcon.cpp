@@ -55,7 +55,7 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
 }
 
 void
-BamfLauncherIcon::Activate ()
+BamfLauncherIcon::ActivateLauncherIcon ()
 {
   bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
 
@@ -75,7 +75,7 @@ BamfLauncherIcon::Activate ()
     if (GetQuirk (QUIRK_STARTING))
       return;
     SetQuirk (QUIRK_STARTING, true);
-    OpenInstance ();
+    OpenInstanceLauncherIcon ();
     return;
   }
   else if (scaleWasActive)
@@ -95,6 +95,8 @@ BamfLauncherIcon::Activate ()
   {
     Spread (0, false);
   }
+
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
@@ -281,10 +283,11 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
 }
 
 void
-BamfLauncherIcon::OpenInstance ()
+BamfLauncherIcon::OpenInstanceLauncherIcon ()
 {
   std::list<char *> empty;
   OpenInstanceWithUris (empty);
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 void
@@ -432,11 +435,9 @@ void
 BamfLauncherIcon::OnMouseClick (int button)
 {
   if (button == 1)
-    Activate ();
+    ActivateLauncherIcon ();
   else if (button == 2)
-    OpenInstance ();
-
-  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
+    OpenInstanceLauncherIcon ();
 }
 
 void

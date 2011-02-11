@@ -140,6 +140,13 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
+    ActivateLauncherIcon ();
+}
+
+void
+LauncherIcon::OpenInstance ()
+{
+    OpenInstanceLauncherIcon ();
 }
 
 nux::Color LauncherIcon::BackgroundColor ()

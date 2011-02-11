@@ -287,10 +287,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
-    _was_hidden             = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
-    _key_show_launcher      = false;
+    _super_show_launcher    = false;
+    _navmod_show_launcher   = false;
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
     _hide_on_action_done    = false;
@@ -346,12 +346,9 @@ Launcher::GetName ()
 void
 Launcher::startKeyNavMode ()
 {  
-  if (_hidden)
-  {
-    _was_hidden = true;
-    _hidden = false;
-    EnsureHiddenState ();
-  }
+  
+  _navmod_show_launcher = true;
+  EnsureHiddenState ();
 
   if (_last_icon_index == -1)
     _current_icon_index = 0;
@@ -363,12 +360,9 @@ Launcher::startKeyNavMode ()
 void
 Launcher::exitKeyNavMode ()
 {
-  if (_was_hidden)
-  {
-    _hidden = true;
-    _was_hidden = false;
-    EnsureHiddenState ();
-  }
+    
+  _navmod_show_launcher = false;
+  EnsureHiddenState ();
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
@@ -1094,17 +1088,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 void Launcher::StartKeyShowLauncher ()
 {
-    _key_show_launcher = true;
+    _super_show_launcher = true;
     EnsureHiddenState ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
-    _key_show_launcher = false;
-    if (_hide_on_action_done)
-      EnsureHiddenState ();
-    else
-      SetupAutohideTimer ();
+    _super_show_launcher = false;
+    SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
@@ -1196,7 +1187,7 @@ Launcher::EnsureHiddenState ()
   // compiler should optimize this, we do this for readability
   bool mouse_over_launcher = _mouse_inside_trigger || (_mouse_inside_launcher && !_hide_on_action_done);
   
-  bool required_for_external_purpose = _key_show_launcher || _placeview_show_launcher || 
+  bool required_for_external_purpose = _super_show_launcher || _placeview_show_launcher || _navmod_show_launcher ||
                                        QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
                                        
   bool in_must_be_open_mode = _launcher_action_state != ACTION_NONE || _dnd_window_is_mapped;
@@ -2338,8 +2329,21 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       exitKeyNavMode ();
     break;
 
-    // <RETURN>/<SPACE> (start/activate currently selected icon)      
+    // <SPACE> (open a new instance)
     case XK_space:
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // start currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->OpenInstance ();
+      }
+      exitKeyNavMode ();
+      break;
+
+    // <RETURN> (start/activate currently selected icon)
     case XK_Return:
       {
         LauncherModel::iterator it;
