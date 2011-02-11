@@ -1203,8 +1203,10 @@ Launcher::EnsureHiddenState ()
   
   bool must_be_hidden = _hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER;
   
+  bool autohide_handle_hold = _autohide_handle && !_hidden;
+  
   if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
-                         !in_must_be_open_mode && _window_over_launcher && !_autohide_handle))
+                         !in_must_be_open_mode && _window_over_launcher && !autohide_handle_hold))
     SetHidden (true);
   else
     SetHidden (false);
@@ -1309,7 +1311,9 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
       EnsureHiddenState ();
     }
     else
+    {
       CheckWindowOverLauncher ();
+    }
   }
 }
 
