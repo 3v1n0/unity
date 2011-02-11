@@ -62,6 +62,11 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug ("%s", G_STRFUNC);
   }
+  
+ void Lower (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
 };
 
 WindowManager *

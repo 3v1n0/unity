@@ -24,11 +24,13 @@
 
 #include "IconTexture.h"
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size) :
-PlacesTile (NUX_TRACKER_LOCATION)
+PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
+: PlacesTile (NUX_TRACKER_LOCATION),
+  _label (NULL),
+  _icon (NULL),
+  _uri (NULL)
 {
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
@@ -44,7 +46,6 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _cairotext->SetMaximumWidth (140);
 
   _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->SinkReference ();
   _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   _layout->AddSpace (6, 0);
   _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
@@ -57,6 +58,8 @@ PlacesTile (NUX_TRACKER_LOCATION)
   _cairotext->GetTextExtents (textwidth, textheight);
 
   AddChild (_icontex);
+
+  SetCompositionLayout (_layout);
 }
 
 
@@ -64,9 +67,10 @@ PlacesSimpleTile::~PlacesSimpleTile ()
 {
   _icontex->UnReference ();
   _cairotext->UnReference ();
-  _layout->UnReference ();
-  g_free ((void *)_label);
-  g_free ((void *)_icon);
+
+  g_free (_label);
+  g_free (_icon);
+  g_free (_uri);
 }
 
 const char *
@@ -79,6 +83,24 @@ const char *
 PlacesSimpleTile::GetIcon ()
 {
   return _icon;
+}
+
+const char *
+PlacesSimpleTile::GetURI ()
+{
+  return _uri;
+}
+
+void
+PlacesSimpleTile::SetURI (const char *uri)
+{
+  if (_uri)
+    g_free (_uri);
+  
+  _uri = NULL;
+
+  if (uri)
+    _uri = g_strdup (uri);
 }
 
 const gchar*

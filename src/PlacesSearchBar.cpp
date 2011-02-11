@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
@@ -34,21 +36,24 @@
 
 #include "PlacesSearchBar.h"
 
+#define LIVE_SEARCH_TIMEOUT 250
+
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
 
 PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+:   View (NUX_FILE_LINE_PARAM),
+    _entry (NULL),
+    _live_search_timeout (0)
 {
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
- 
-  _pango_entry = new nux::TextEntry (_("Search"), NUX_TRACKER_LOCATION);
-  _pango_entry->SetMinimumWidth (200);
- //  _entry->SetMinimumHeight (30);
-  //_entry->SetTextBackgroundColor (nux::Color (0xFF000000));
 
-  _layout->AddView (_pango_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
+  _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+
+
+  _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _layout->SetVerticalExternalMargin (14);
   _layout->SetHorizontalExternalMargin (18);
   
@@ -127,9 +132,66 @@ PlacesSearchBar::PreLayoutManagement ()
 long
 PlacesSearchBar::PostLayoutManagement (long LayoutResult)
 {
-  // I'm imagining this is a good as time as any to update the background
-
   return nux::View::PostLayoutManagement (LayoutResult);
+}
+
+void
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+{
+   std::map<gchar *, gchar *> hints;
+
+   _entry = entry;
+
+  if (_entry)
+  {
+    // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
+    const gchar *search_template = _("Search %s");
+    gchar       *res;
+
+    res = g_strdup_printf (search_template, _entry->GetName ());
+    
+    _entry->SetActiveSection (section_id);
+    _entry->SetSearch (search_string ? search_string : "", hints);
+    _pango_entry->SetText (search_string ? search_string : "");
+    g_free (res);
+  }
+  else
+  {
+    _pango_entry->SetText ("");
+  }
+}
+
+void
+PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
+{
+  if (_live_search_timeout)
+    g_source_remove (_live_search_timeout);
+  
+  _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
+                                        (GSourceFunc)&OnLiveSearchTimeout,
+                                        this);
+
+  search_changed.emit (_pango_entry->GetText ().c_str ());
+}
+
+bool
+PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
+{
+  self->EmitLiveSearch ();
+
+  return FALSE;
+}
+
+void
+PlacesSearchBar::EmitLiveSearch ()
+{
+  if (_entry)
+  {
+    std::map<gchar *, gchar *> hints;
+
+    _entry->SetSearch (_pango_entry->GetText ().c_str (), hints);
+  }
+  _live_search_timeout = 0;
 }
 
 static void
@@ -238,7 +300,7 @@ PlacesSearchBar::UpdateBackground ()
 
   nux::ROPConfig rop;
   rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
+  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),

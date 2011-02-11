@@ -48,7 +48,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.9));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.7));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
@@ -56,13 +56,15 @@ PlacesController::PlacesController ()
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
-  _view = new PlacesView ();
+  _view = new PlacesView (_factory);
   _window_layout->AddView(_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
   _window_layout->SetHorizontalExternalMargin(0);
 
   _window->SetLayout (_window_layout);
+
+  _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
 }
 
 PlacesController::~PlacesController ()
@@ -101,6 +103,8 @@ void PlacesController::Hide ()
   
   _visible = false;
 
+  _view->SetActiveEntry (NULL, 0, "", false);
+
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
@@ -134,8 +138,16 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  //FIXME: Lots of things to detect here still
   Hide ();
 }
+
+void
+PlacesController::OnActivePlaceEntryChanged (PlaceEntry *entry)
+{
+  entry ? Show () : Hide ();
+}
+
 
 /* Introspection */
 const gchar *

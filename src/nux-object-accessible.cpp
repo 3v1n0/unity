@@ -92,7 +92,6 @@ nux_object_accessible_initialize (AtkObject *accessible,
 
   ATK_OBJECT_CLASS (nux_object_accessible_parent_class)->initialize (accessible, data);
 
-  /* FIXME: focus management missing */
   self = NUX_OBJECT_ACCESSIBLE (accessible);
   object = (nux::Object*)data;
 

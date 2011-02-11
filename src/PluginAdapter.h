@@ -33,18 +33,17 @@ public:
 
     MultiActionList (int n) :
         m_ActionList (n),
-	m_ToggledAction (NULL) {};
+        _primary_action (NULL) {};
 
-    void InitiateAll (CompOption::Vector &extraArgs);
+    void InitiateAll (CompOption::Vector &extraArgs, int state);
     void TerminateAll (CompOption::Vector &extraArgs);
-    bool IsAnyActive (bool onlyOwn = false);
 
-    void AddNewAction (CompAction *);
+    void AddNewAction (CompAction *, bool primary);
     void RemoveAction (CompAction *);
 private:
 
     std::list <CompAction *> m_ActionList;
-    CompAction *             m_ToggledAction;
+    CompAction *             _primary_action;
 };
     
 
@@ -65,9 +64,9 @@ public:
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
 
-    void InitiateScale (std::string *match);
+    void InitiateScale (std::string *match, int state = 0);
     void TerminateScale ();
-    bool IsScaleActive (bool onlyOwn = false);
+    bool IsScaleActive ();
     
     void InitiateExpo ();
 
@@ -82,6 +81,7 @@ public:
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);
     
@@ -93,7 +93,6 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
-    bool                m_AnimationPluginLoaded;
     
     static PluginAdapter *_default;
 };

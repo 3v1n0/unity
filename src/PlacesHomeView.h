@@ -21,12 +21,13 @@
 #define PLACES_HOME_VIEW_H
 
 #include <Nux/View.h>
+#include <Nux/Layout.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
 
-#include "Nux/GridHLayout.h"
+#include <Nux/GridHLayout.h>
 
 #include "PlacesTile.h"
 
