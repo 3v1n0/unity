@@ -95,8 +95,8 @@ public:
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
 
-    virtual void Activate ();
-    virtual void OpenInstance ();
+    void Activate ();
+    void OpenInstance ();
 
     void SaveCenter ();
     
@@ -185,6 +185,9 @@ protected:
     virtual void OnAcceptDrop (std::list<char *> files) {}
     virtual void OnDndEnter () {}
     virtual void OnDndLeave () {}
+    
+    virtual void ActivateLauncherIcon () {}
+    virtual void OpenInstanceLauncherIcon () {}
 
     nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
     nux::BaseTexture * TextureFromPath     (const char *name, int size);

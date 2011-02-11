@@ -41,8 +41,6 @@ public:
 
     const char* DesktopFile ();
     bool IsSticky ();
-    void Activate ();
-    void OpenInstance ();
 
 protected:
     void OnMouseClick (int button);
@@ -59,6 +57,9 @@ protected:
     void OnAcceptDrop (std::list<char *> uris);
     void OnDndEnter ();
     void OnDndLeave ();
+    
+    void ActivateLauncherIcon ();
+    void OpenInstanceLauncherIcon ();
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 

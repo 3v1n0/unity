@@ -55,7 +55,7 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
 }
 
 void
-BamfLauncherIcon::Activate ()
+BamfLauncherIcon::ActivateLauncherIcon ()
 {
   bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
 
@@ -75,7 +75,7 @@ BamfLauncherIcon::Activate ()
     if (GetQuirk (QUIRK_STARTING))
       return;
     SetQuirk (QUIRK_STARTING, true);
-    OpenInstance ();
+    OpenInstanceLauncherIcon ();
     return;
   }
   else if (scaleWasActive)
@@ -283,7 +283,7 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
 }
 
 void
-BamfLauncherIcon::OpenInstance ()
+BamfLauncherIcon::OpenInstanceLauncherIcon ()
 {
   std::list<char *> empty;
   OpenInstanceWithUris (empty);
@@ -435,9 +435,9 @@ void
 BamfLauncherIcon::OnMouseClick (int button)
 {
   if (button == 1)
-    Activate ();
+    ActivateLauncherIcon ();
   else if (button == 2)
-    OpenInstance ();
+    OpenInstanceLauncherIcon ();
 }
 
 void
