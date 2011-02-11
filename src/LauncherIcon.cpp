@@ -29,6 +29,7 @@
 #include "Nux/MenuPage.h"
 #include "NuxCore/Color.h"
 
+#include "LauncherEntryRemoteModel.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
@@ -771,7 +772,7 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
 {
   if (std::find (_entry_list.begin (), _entry_list.end (), remote) != _entry_list.end ())
     return;
-    
+  
   _entry_list.push_front (remote);
   
   remote->emblem_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
@@ -782,6 +783,7 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   remote->emblem_visible_changed.connect   (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
   remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
   remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  
   
   if (remote->EmblemVisible ())
     OnRemoteEmblemVisibleChanged (remote);
@@ -798,8 +800,11 @@ LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
 {
   if (std::find (_entry_list.begin (), _entry_list.end (), remote) == _entry_list.end ())
     return;
-    
+  
   _entry_list.remove (remote);
+  
+  DeleteEmblem ();
+  SetQuirk (QUIRK_PROGRESS, false);
 }
 
 void
