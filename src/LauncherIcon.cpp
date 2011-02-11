@@ -142,6 +142,11 @@ LauncherIcon::Activate ()
 {
 }
 
+void
+LauncherIcon::OpenInstance ()
+{
+}
+
 nux::Color LauncherIcon::BackgroundColor ()
 {
   return _background_color;

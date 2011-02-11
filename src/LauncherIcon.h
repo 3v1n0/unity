@@ -96,6 +96,7 @@ public:
     nux::Point3 GetCenter ();
 
     virtual void Activate ();
+    virtual void OpenInstance ();
 
     void SaveCenter ();
     

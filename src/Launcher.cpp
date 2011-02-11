@@ -1095,7 +1095,7 @@ void Launcher::StartKeyShowLauncher ()
 void Launcher::EndKeyShowLauncher ()
 {
     _super_show_launcher = false;
-    EnsureHiddenState ();
+    SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
@@ -2329,8 +2329,21 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       exitKeyNavMode ();
     break;
 
-    // <RETURN>/<SPACE> (start/activate currently selected icon)      
+    // <SPACE> (open a new instance)
     case XK_space:
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // start currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->OpenInstance ();
+      }
+      exitKeyNavMode ();
+      break;
+
+    // <RETURN> (start/activate currently selected icon)
     case XK_Return:
       {
         LauncherModel::iterator it;

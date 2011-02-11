@@ -95,6 +95,8 @@ BamfLauncherIcon::Activate ()
   {
     Spread (0, false);
   }
+
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
@@ -285,6 +287,7 @@ BamfLauncherIcon::OpenInstance ()
 {
   std::list<char *> empty;
   OpenInstanceWithUris (empty);
+  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 void
@@ -435,8 +438,6 @@ BamfLauncherIcon::OnMouseClick (int button)
     Activate ();
   else if (button == 2)
     OpenInstance ();
-
-  ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
 }
 
 void

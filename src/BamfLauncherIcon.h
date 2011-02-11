@@ -42,6 +42,7 @@ public:
     const char* DesktopFile ();
     bool IsSticky ();
     void Activate ();
+    void OpenInstance ();
 
 protected:
     void OnMouseClick (int button);
@@ -76,7 +77,6 @@ private:
     void UpdateMenus ();
 
     void OpenInstanceWithUris (std::list<char *> uris);
-    void OpenInstance ();
     void Focus ();
     bool Spread (int state, bool force);
 
