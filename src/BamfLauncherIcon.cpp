@@ -80,7 +80,7 @@ BamfLauncherIcon::Activate ()
   }
   else if (scaleWasActive)
   {
-    if (!Spread ())
+    if (!Spread (0, false))
     {
       PluginAdapter::Default ()->TerminateScale ();
       Focus ();
@@ -93,7 +93,7 @@ BamfLauncherIcon::Activate ()
   }
   else if (active && !scaleWasActive)
   {
-    Spread ();
+    Spread (0, false);
   }
 }
 
@@ -103,6 +103,8 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   m_App = app;
   m_Screen = screen;
   _remote_uri = 0;
+  _dnd_hover_timer = 0;
+  _dnd_hovered = false;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
@@ -137,6 +139,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
   /* hack */
   SetProgress (0.0f);
+  
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -391,7 +394,7 @@ BamfLauncherIcon::Focus ()
 }
 
 bool
-BamfLauncherIcon::Spread ()
+BamfLauncherIcon::Spread (int state, bool force)
 {
   BamfView *view;
   GList *children, *l;
@@ -410,11 +413,11 @@ BamfLauncherIcon::Spread ()
     }
   }
 
-  if (windowList.size () > 1)
+  if (windowList.size () > 1 || (windowList.size () > 0 && force))
   {
     std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
     _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
-    PluginAdapter::Default ()->InitiateScale (match);
+    PluginAdapter::Default ()->InitiateScale (match, state);
     delete match;
     g_list_free (children);
     return true;
@@ -891,10 +894,36 @@ BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
     g_object_unref (info);
   }
   
-  
   g_strfreev (mimes);
   g_key_file_free (key_file);
   return results;
+}
+
+gboolean
+BamfLauncherIcon::OnDndHoveredTimeout (gpointer data)
+{
+  BamfLauncherIcon *self = (BamfLauncherIcon*) data;
+  if (self->_dnd_hovered && bamf_view_is_running (BAMF_VIEW (self->m_App)))
+    self->Spread (CompAction::StateInitEdgeDnd, true);
+  
+  return false;
+}
+
+void
+BamfLauncherIcon::OnDndEnter ()
+{
+  _dnd_hovered = true;
+  _dnd_hover_timer = g_timeout_add (1000, &BamfLauncherIcon::OnDndHoveredTimeout, this);
+}
+
+void
+BamfLauncherIcon::OnDndLeave ()
+{
+  _dnd_hovered = false;
+  
+  if (_dnd_hover_timer)
+    g_source_remove (_dnd_hover_timer);
+  _dnd_hover_timer = 0;
 }
 
 nux::DndAction 

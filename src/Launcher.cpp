@@ -1203,8 +1203,10 @@ Launcher::EnsureHiddenState ()
   
   bool must_be_hidden = _hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER;
   
+  bool autohide_handle_hold = _autohide_handle && !_hidden;
+  
   if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
-                         !in_must_be_open_mode && _window_over_launcher && !_autohide_handle))
+                         !in_must_be_open_mode && _window_over_launcher && !autohide_handle_hold))
     SetHidden (true);
   else
     SetHidden (false);
@@ -1286,8 +1288,6 @@ Launcher::OnWindowMapped (guint32 xid)
   {
     g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  
-  EnsureHiddenState ();
 }
 
 void
@@ -1298,7 +1298,6 @@ Launcher::OnWindowUnmapped (guint32 xid)
   {
     g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  EnsureHiddenState ();
 }
 
 void
@@ -1312,7 +1311,9 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
       EnsureHiddenState ();
     }
     else
+    {
       CheckWindowOverLauncher ();
+    }
   }
 }
 
@@ -2919,9 +2920,16 @@ Launcher::ProcessDndLeave ()
     _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
     
-    _steal_drag = false;
+  }
+  
+  if (!_steal_drag && _dnd_hovered_icon)
+  {
+    _dnd_hovered_icon->SendDndLeave ();
     _dnd_hovered_icon = 0;
   }
+  
+  _steal_drag = false;
+  _dnd_hovered_icon = 0;
   
   EnsureHoverState ();
 }
@@ -3040,12 +3048,20 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
+      {
+        hovered_icon->SendDndEnter ();
         _drag_action = hovered_icon->QueryAcceptDrop (_drag_data);
+      }
       else
+      {
         _drag_action = nux::DNDACTION_NONE;
+      }
+      
+      if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave ();
+        
+      _dnd_hovered_icon = hovered_icon;
     }
-    
-    _dnd_hovered_icon = hovered_icon;
   }
   
   bool accept;
