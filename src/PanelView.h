@@ -49,6 +49,9 @@ public:
   
   PanelHomeButton * HomeButton ();
 
+  void StartFirstMenuShow ();
+  void EndFirstMenuShow ();
+
 protected:
   // Introspectable methods
   const gchar * GetName ();

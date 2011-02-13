@@ -68,11 +68,15 @@
                     <default>&lt;Super&gt;</default>
                   </option>
                   <option name="keyboard_focus" type="key">
-		    <_short>Key to put keyboard-focus on launcher</_short>
-		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
-		    <default>&lt;Alt&gt;F1</default>
+            		    <_short>Key to put keyboard-focus on launcher</_short>
+            		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
+            		    <default>&lt;Alt&gt;F1</default>
                   </option>
-	          </group>
+                  <option name="panel_first_menu" type="key">
+            		    <_short>Key to open the first panel menu</_short>
+            		    <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>
+            		    <default>F10</default>
+                  </option>	          </group>
 	          <group>
                 <_short>Experimental</_short>
                 <option name="backlight_mode" type="int">

@@ -104,6 +104,14 @@ class UnityScreen :
                               CompOption::Vector &options);
 
   bool
+  showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                 CompAction::State   state,
+                                 CompOption::Vector &options);
+  bool
+  showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                  CompAction::State   state,
+                                  CompOption::Vector &options);
+  bool
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);

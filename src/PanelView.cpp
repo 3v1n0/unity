@@ -66,12 +66,6 @@ PanelView::~PanelView ()
   delete _bg_layer;
 }
 
-PanelHomeButton * 
-PanelView::HomeButton ()
-{
-  return _home_button;
-}
-
 const gchar* PanelView::GetName ()
 {
 	return "Panel";
@@ -305,3 +299,45 @@ PanelView::OnEntryActivated (const char *entry_id)
   if (g_strcmp0 (entry_id, "") == 0)
     _menu_view->AllMenusClosed ();
 }
+
+//
+// Useful Public Methods
+//
+PanelHomeButton * 
+PanelView::HomeButton ()
+{
+  return _home_button;
+}
+
+void
+PanelView::StartFirstMenuShow ()
+{
+
+}
+
+void
+PanelView::EndFirstMenuShow ()
+{
+  std::list<Area *>::iterator it;
+
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+    {
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+      entry->Activate ();
+      return;
+    }
+  }
+}
+

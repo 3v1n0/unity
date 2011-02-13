@@ -223,6 +223,28 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 }
 
 bool
+UnityScreen::showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                            CompAction::State   state,
+                                            CompOption::Vector &options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);
+  
+  panelView->StartFirstMenuShow ();
+  return false;
+}
+
+bool
+UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                             CompAction::State   state,
+                                             CompOption::Vector &options)
+{
+  panelView->EndFirstMenuShow ();
+  return false;
+}
+
+bool
 UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
@@ -545,6 +567,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate (boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
   ubus_server_register_interest (ubus_server_get_default (),
                                  UBUS_LAUNCHER_EXIT_KEY_NAV,
