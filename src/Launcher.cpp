@@ -1164,7 +1164,7 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-    _parent->EnableInputWindow(!hidden);
+    _parent->EnableInputWindow(!hidden, "launcher");
 
     if (!hidden && _launcher_action_state == ACTION_DRAG_EXTERNAL)
       ProcessDndLeave ();
@@ -1346,7 +1346,7 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true);
+    _parent->EnableInputWindow(true, "launcher");
     g_timeout_add (1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
