@@ -230,7 +230,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    if (_is_inside || _last_active_view)
+    if ((_is_inside || _last_active_view) && _entries.size ())
     {
       if (_gradient_texture == NULL)
       {
