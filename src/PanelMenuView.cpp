@@ -56,6 +56,7 @@ PanelMenuView::PanelMenuView (int padding)
   _title_tex (NULL),
   _is_inside (false),
   _is_maximized (false),
+  _is_own_window (false),
   _last_active_view (NULL)
 {
   WindowManager *win_manager;
@@ -223,7 +224,11 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_maximized)
+  if (_is_own_window)
+  {
+
+  }
+  else if (_is_maximized)
   {
     if (!_is_inside && !_last_active_view)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
@@ -317,14 +322,17 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (_is_inside || _last_active_view)
+  if (!_is_own_window)
   {
-    _layout->ProcessDraw (GfxContext, force_draw);
-  }
+    if (_is_inside || _last_active_view)
+    {
+      _layout->ProcessDraw (GfxContext, force_draw);
+    }
 
-  if (_is_maximized)
-  {
-    _window_buttons->ProcessDraw (GfxContext, true);
+    if (_is_maximized)
+    {
+      _window_buttons->ProcessDraw (GfxContext, true);
+    }
   }
 
   GfxContext.PopClippingRectangle();
@@ -333,7 +341,20 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 gchar *
 PanelMenuView::GetActiveViewName ()
 {
-  gchar *label = NULL;
+  gchar         *label = NULL;
+  BamfWindow    *window;
+
+  // There's probably a better way to do this, but we really only want to ignore our own windows
+  // as there could be cases where windows like ours have menus and we don't want them to fall
+  // into this statement. Still, will investigate better ways to do this.
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window) 
+      && g_str_has_prefix (bamf_view_get_name (BAMF_VIEW (window)), "nux input"))
+  {
+    _is_own_window = true;
+  }
+  else
+    _is_own_window = false;
 
   if (_is_maximized)
   {
