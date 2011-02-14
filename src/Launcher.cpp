@@ -190,6 +190,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -360,6 +361,8 @@ Launcher::startKeyNavMode ()
 void
 Launcher::exitKeyNavMode ()
 {
+  if (!_navmod_show_launcher)
+    return;
     
   _navmod_show_launcher = false;
   EnsureHiddenState ();
