@@ -26,6 +26,7 @@
 #include "Nux/WindowCompositor.h"
 
 #include "PanelIndicatorObjectEntryView.h"
+#include "PanelStyle.h"
 
 #include <glib.h>
 #include <pango/pangocairo.h>
