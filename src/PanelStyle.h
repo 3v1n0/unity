@@ -19,7 +19,9 @@
 #ifndef PANEL_STYLE_H
 #define PANEL_STYLE_H
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+
+#include <gtk/gtk.h>
 
 class PanelStyle : public nux::Object
 {
@@ -27,17 +29,22 @@ class PanelStyle : public nux::Object
     PanelStyle ();
     ~PanelStyle ();
 
-    static PanelStyle* GetDefault ();
-
     nux::Color& GetTextColor ();
     nux::Color& GetBackgroundTop ();
     nux::Color& GetBackgroundBottom ();
     nux::Color& GetTextShadow ();
 
-    sigc::signal<void, PanelStyle&> sigChanged;
+    GdkPixbuf * GetBackground (int width, int height);
+
+    sigc::signal<void, PanelStyle*> changed;
 
   private:
-    static PanelStyle* _panel_style;
+    void        Refresh ();
+    static void OnStyleChanged (GObject*    gobject,
+                                GParamSpec* pspec,
+                                gpointer    data);
+  private:
+    GtkWidget         *_offscreen;
     nux::Color         _text;
     nux::Color         _bg_top;
     nux::Color         _bg_bottom;

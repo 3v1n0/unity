@@ -26,12 +26,12 @@
 
 #include <gdk/gdkx.h>
 
-#include "PanelHomeButton.h"
-#include "PanelMenuView.h"
 #include "IndicatorObjectFactoryRemote.h"
 #include "Introspectable.h"
-
+#include "PanelHomeButton.h"
+#include "PanelMenuView.h"
 #include "PanelTray.h"
+#include "PanelStyle.h"
 
 class PanelView : public Introspectable, public nux::View
 {
@@ -75,9 +75,11 @@ private:
   PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-
+  
   int _last_width;
   int _last_height;
+
+  PanelStyle *_style;
 };
 
 #endif // PANEL_VIEW_H

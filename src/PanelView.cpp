@@ -40,6 +40,8 @@
 PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM)
 {
+  _style = new PanelStyle ();
+
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
@@ -67,6 +69,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 
 PanelView::~PanelView ()
 {
+  _style->UnReference ();
   delete _remote;
   delete _bg_layer;
 }
@@ -155,18 +158,18 @@ PanelView::UpdateBackground ()
   _last_width = geo.width;
   _last_height = geo.height;
 
+#if 0
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
   cairo_t *cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
   cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
 
-  PanelStyle* style = PanelStyle::GetDefault ();
   nux::Color  start;
   nux::Color  end;
 
-  start = style->GetBackgroundTop ();
-  end = style->GetBackgroundBottom ();
+  start = _style->GetBackgroundTop ();
+  end = _style->GetBackgroundBottom ();
 
   cairo_pattern_add_color_stop_rgb (pat,
                                     0.0f,
@@ -187,11 +190,14 @@ PanelView::UpdateBackground ()
   cairo_destroy (cr);
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
   nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
+#endif
 
+  GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
+  nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+  g_object_unref (pixbuf);
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -199,17 +205,15 @@ PanelView::UpdateBackground ()
     delete _bg_layer;
 
   nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                     texxform,          // The Oject that defines the texture wraping and coordinate transformation.
-                                     nux::Color::White, // The color used to modulate the texture.
-                                     true,              // Write the alpha value of the texture to the destination buffer.
-                                     rop                // Use the given raster operation to set the blending when the layer is being rendered.
-  );
-
+                                     texxform,
+                                     nux::Color::White,
+                                     true,
+                                     rop);
   texture2D->UnReference ();
 
   NeedRedraw ();

@@ -20,74 +20,28 @@
 
 #include "PanelStyle.h"
 
-PanelStyle* PanelStyle::_panel_style = NULL;
-
-void
-OnStyleChanged (GObject*    gobject,
-                GParamSpec* pspec,
-                gpointer    data)
-{
-  PanelStyle* self = (PanelStyle*) data;
-
-  self->sigChanged.emit (*self);
-}
-
-PanelStyle*
-PanelStyle::GetDefault ()
-{
-  if (_panel_style == NULL)
-  {
-    _panel_style = new PanelStyle ();
-
-    g_signal_connect (gtk_settings_get_default (),
-                      "notify::gtk-theme-name",
-                      G_CALLBACK (OnStyleChanged),
-                      _panel_style);
-  }
-
-  _panel_style->Reference (); 
-  return _panel_style;
-}
-
-nux::Color&
-PanelStyle::GetTextColor ()
-{
-  nux::Color& color = _text;
-
-  return color;
-}
-
-nux::Color&
-PanelStyle::GetBackgroundTop ()
-{
-  nux::Color& color = _bg_top;
-
-  return color;
-}
-
-nux::Color&
-PanelStyle::GetBackgroundBottom ()
-{
-  nux::Color& color = _bg_bottom;
-
-  return color;
-}
-
-nux::Color&
-PanelStyle::GetTextShadow ()
-{
-  nux::Color& color = _text_shadow;
-
-  return color;
-}
-
 PanelStyle::PanelStyle ()
 {
-  GtkWidget* menu_bar = NULL;
+  _offscreen = gtk_offscreen_window_new ();
+  gtk_widget_set_name (_offscreen, "UnityPanelWidget");
+  gtk_widget_set_size_request (_offscreen, 100, 24);
+  gtk_widget_show (_offscreen);
+
+  g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
+                    G_CALLBACK (PanelStyle::OnStyleChanged), this);
+}
+
+PanelStyle::~PanelStyle ()
+{
+  gtk_widget_destroy (_offscreen);
+}
+
+void
+PanelStyle::Refresh ()
+{
   GtkStyle*  style    = NULL;
 
-  menu_bar = gtk_menu_bar_new ();
-  style = gtk_widget_get_style (menu_bar);
+  style = gtk_widget_get_style (_offscreen);
 
   _text.SetRed ((float) style->text[4].red / (float) 0xffff);
   _text.SetGreen ((float) style->text[4].green / (float) 0xffff);
@@ -111,12 +65,48 @@ PanelStyle::PanelStyle ()
   _text_shadow.SetBlue ((float) style->text[2].blue / (float) 0xffff);
   _text_shadow.SetAlpha (1.0f);
 
-  g_object_unref (style);
-  g_object_unref (menu_bar);
+  changed.emit (this);
 }
 
-PanelStyle::~PanelStyle ()
+nux::Color&
+PanelStyle::GetTextColor ()
 {
-  if (GetReferenceCount () != 0)
-    g_warning ("PanelStyle::~PanelStyle() - Reference-counter is not 0!");
+  return _text;
 }
+
+nux::Color&
+PanelStyle::GetBackgroundTop ()
+{
+  return _bg_top;
+}
+
+nux::Color&
+PanelStyle::GetBackgroundBottom ()
+{
+  return _bg_bottom;
+}
+
+nux::Color&
+PanelStyle::GetTextShadow ()
+{
+  return _text_shadow;
+}
+
+void
+PanelStyle::OnStyleChanged (GObject*    gobject,
+                            GParamSpec* pspec,
+                            gpointer    data)
+{
+  PanelStyle* self = (PanelStyle*) data;
+
+  self->Refresh ();
+}
+
+GdkPixbuf *
+PanelStyle::GetBackground (int width, int height)
+{
+  gtk_widget_set_size_request (_offscreen, width, height);
+
+  return gtk_offscreen_window_get_pixbuf (GTK_OFFSCREEN_WINDOW (_offscreen));
+}
+
