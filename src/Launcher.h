@@ -342,10 +342,10 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _was_hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
-  bool  _key_show_launcher;
+  bool  _super_show_launcher;
+  bool  _navmod_show_launcher;
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
   bool  _hide_on_action_done;
