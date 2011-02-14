@@ -22,9 +22,15 @@
 #include <Nux/View.h>
 #include <gtk/gtk.h>
 
+#include <gdk/gdkx.h>
+
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
+
+#include <unity-misc/na-tray.h>
+#include <unity-misc/na-tray-child.h>
+#include <unity-misc/na-tray-manager.h>
 
 class PanelTray : public PanelIndicatorObjectView
 {
@@ -32,6 +38,8 @@ public:
 
   PanelTray ();
   ~PanelTray ();
+
+  Window GetTrayWindow ();
 
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
@@ -43,5 +51,10 @@ protected:
   void          AddProperties (GVariantBuilder *builder);
 
 private:
+  static gboolean FilterTrayCallback (NaTray *tray, NaTrayChild *child, PanelTray *self);
+
+private:
+  GtkWidget *_window;
+  NaTray    *_tray;
 };
 #endif

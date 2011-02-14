@@ -351,3 +351,8 @@ PanelView::EndFirstMenuShow ()
   }
 }
 
+Window
+PanelView::GetTrayWindow ()
+{
+  return _tray->GetTrayWindow ();
+}

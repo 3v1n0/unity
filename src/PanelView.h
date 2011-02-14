@@ -24,6 +24,8 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
+#include <gdk/gdkx.h>
+
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
 #include "IndicatorObjectFactoryRemote.h"
@@ -53,6 +55,8 @@ public:
 
   void StartFirstMenuShow ();
   void EndFirstMenuShow ();
+
+  Window GetTrayWindow ();
 
 protected:
   // Introspectable methods
