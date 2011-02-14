@@ -289,12 +289,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
-    _autohide_locked        = false;
+    _mouseover_launcher_locked = false;
     _super_show_launcher    = false;
     _navmod_show_launcher   = false;
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
-    _hide_on_action_done    = false;
     _hide_on_drag_hover     = false;
     _render_drag_window     = false;
     _dnd_window_is_mapped   = false;
@@ -433,7 +432,7 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 
 float Launcher::AutohideProgress (struct timespec const &current)
 {
-    if (_hidemode == LAUNCHER_HIDE_NEVER || _autohide_locked)
+    if (_hidemode == LAUNCHER_HIDE_NEVER)
         return 0.0f;
         
     float computation_progress;
@@ -445,7 +444,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
          * of the launcher, so prioritize this one
          */
         
-        if(_trigger_mouse_position.x == 0 and _trigger_mouse_position.y == 0)
+        if(_mouseover_launcher_locked || ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0)))
             return 0.0f;
         
         float _max_size_on_position;
@@ -576,7 +575,7 @@ bool Launcher::AnimationInProgress ()
     // hide animation (time or position)
     if (TimeDelta (&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
         return true;
-    if (_mouse_inside_trigger && !_autohide_locked)
+    if (_mouse_inside_trigger && !_mouseover_launcher_locked)
         return true;
     
     // collapse animation on DND out of launcher space
@@ -1062,10 +1061,10 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         *launcher_alpha = 1.0f - autohide_progress;
         if (autohide_progress == 0.0f) {
-            _autohide_locked = true;
+            _mouseover_launcher_locked = true;
             printf ("locked!\n");
+            EnsureHiddenState ();
         }
-        printf ("autohide_progress: %f\n", autohide_progress);
     }
     
     float drag_hide_progress = DragHideProgress (current);
@@ -1192,19 +1191,15 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
       }
       else
       {
-        if (self->_onmouseover_launcher_locked)
-        {
-            self->_onmouseover_launcher_locked = false;
-            self->SetupAutohideTimer ();
-        }
-        else
-        {
-            // as we weren't up to lock the trigger, we don't want the launcher
-            // to be falsy fully redrawn: it's already hidden
-            self->EnsureHiddenState();
-            self->_times[TIME_AUTOHIDE].tv_sec = 0;
-            self->_times[TIME_AUTOHIDE].tv_nsec = 0;
-        }
+        if (self->_mouse_inside_launcher)
+            return;
+
+        self->_mouseover_launcher_locked = false;
+        self->EnsureHiddenState();
+        // as we could have not lock up the launcher, we don't want the launcher
+        // to be falsy fully redrawn: it's already hidden
+        self->_times[TIME_AUTOHIDE].tv_sec = 0;
+        self->_times[TIME_AUTOHIDE].tv_nsec = 0;
         self->EnsureHoverState ();
         self->EnsureScrollTimer ();
         
@@ -1216,7 +1211,7 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
 void Launcher::OnActionDone (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
-    self->_hide_on_action_done = true;
+    self->_mouseover_launcher_locked = false;
     self->SetupAutohideTimer ();
 }
 
@@ -1249,7 +1244,7 @@ void
 Launcher::EnsureHiddenState ()
 {
   // compiler should optimize this, we do this for readability
-  bool mouse_over_launcher = _mouse_inside_trigger && !_hide_on_action_done && _onmouseover_launcher_locked;
+  bool mouse_over_launcher = _mouseover_launcher_locked && (_mouse_inside_trigger || _mouse_inside_launcher);
   
   bool required_for_external_purpose = _super_show_launcher || _placeview_show_launcher || _navmod_show_launcher ||
                                        QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
@@ -2293,7 +2288,15 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition (x, y);
   _mouse_inside_launcher = false;
+  
+  if (!_mouse_inside_trigger)
+  {
+      // FIXME: here is where things go bad
+      printf ("mouse OUTSIDE the trigger\n");
+      _mouseover_launcher_locked = false;
+  }
 
+      
   if (_launcher_action_state == ACTION_NONE)
       EnsureHoverState ();
 
@@ -2467,7 +2470,7 @@ void Launcher::EventLogic ()
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
     // reset trigger has the mouse moved to another item
-    _hide_on_action_done = false;
+    _mouseover_launcher_locked = true;
   }
 }
 

@@ -344,12 +344,11 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
-  bool  _autohide_locked;
+  bool  _mouseover_launcher_locked;
   bool  _super_show_launcher;
   bool  _navmod_show_launcher;
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
-  bool  _hide_on_action_done;
   bool  _hide_on_drag_hover;
   bool  _render_drag_window;
   
