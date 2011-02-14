@@ -74,6 +74,10 @@ protected:
   virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
 
+  virtual nux::Geometry GetHighlightGeometry ();
+  
+  GdkPixbuf *_background_tile;
+
 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -103,6 +107,7 @@ protected:
                              double   cornerRadius,
                              double   width,
                              double   height);
+
 
 private:
   int _last_width;
