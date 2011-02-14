@@ -29,6 +29,8 @@
 #include "IndicatorObjectFactoryRemote.h"
 #include "Introspectable.h"
 
+#include "PanelTray.h"
+
 class PanelView : public Introspectable, public nux::View
 {
 public:
@@ -66,6 +68,7 @@ private:
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
+  PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
 

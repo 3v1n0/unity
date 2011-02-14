@@ -53,6 +53,10 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
    AddChild (_menu_view);
 
+   _tray = new PanelTray ();
+   _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
+   AddChild (_menu_view);
+
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
@@ -199,20 +203,26 @@ PanelView::UpdateBackground ()
 void
 PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
 {
-  PanelIndicatorObjectView *view = new PanelIndicatorObjectView (proxy);
-
+  PanelIndicatorObjectView *view;
+  
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
   if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
+  {
+    view = _menu_view;
     _menu_view->SetProxy (proxy);
+  }
   else
+  {
+    view = new PanelIndicatorObjectView (proxy);
+
     _layout->AddView (view, 0, nux::eCenter, nux::eFull);
+    AddChild (view);
+  }
 
   _layout->SetContentDistribution (nux::eStackLeft);
   
-  AddChild (view);
-
-  this->ComputeChildLayout (); 
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
