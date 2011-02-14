@@ -100,6 +100,8 @@ PlacesTile::UpdateBackground ()
                                      nux::Color::White,
                                      true,
                                      rop);
+  _hilight_background->UnReference ();
+  _hilight_background = NULL;
   delete cairo_graphics;
 }
 
@@ -189,27 +191,8 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
   if (_state == STATE_HOVER)
   {
-    nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
-    guint32 alpha = 0, src = 0, dest = 0;
-
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-
-    gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
-    gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    texture = _hilight_background->GetDeviceTexture ();
-
-    gfxContext.QRP_1Tex (base.x,
-                         base.y ,
-                         base.width,
-                         base.height,
-                         texture,
-                         texxform,
-                         nux::Color::White);
-
-    gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+    gPainter.PushDrawLayer (gfxContext, GetGeometry (), _hilight_layer);
+    gPainter.PopBackground ();
   }
 
   gfxContext.PopClippingRectangle ();

@@ -50,11 +50,10 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
-  _pango_entry->SetMinimumWidth (200);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
 
 
-  _layout->AddView (_pango_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _layout->SetVerticalExternalMargin (14);
   _layout->SetHorizontalExternalMargin (18);
   
@@ -171,6 +170,8 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
   _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
                                         (GSourceFunc)&OnLiveSearchTimeout,
                                         this);
+
+  search_changed.emit (_pango_entry->GetText ().c_str ());
 }
 
 bool

@@ -185,7 +185,7 @@ void QuicklistView::Show ()
   {
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
-    EnableInputWindow (true, 1);
+    EnableInputWindow (true, "quicklist", true);
     GrabPointer ();
     NeedRedraw ();
 

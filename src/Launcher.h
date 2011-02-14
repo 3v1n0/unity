@@ -219,6 +219,7 @@ private:
   bool MouseOverBottomScrollExtrema ();
   
   static gboolean OnScrollTimeout (gpointer data);
+  static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
   void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
@@ -341,10 +342,10 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _was_hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
-  bool  _key_show_launcher;
+  bool  _super_show_launcher;
+  bool  _navmod_show_launcher;
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
   bool  _hide_on_action_done;
@@ -419,6 +420,8 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
+  
+  Atom              _selection_atom;
   
   struct timespec  _times[TIME_LAST];
 };

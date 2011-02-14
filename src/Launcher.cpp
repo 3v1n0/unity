@@ -287,10 +287,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
-    _was_hidden             = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
-    _key_show_launcher      = false;
+    _super_show_launcher    = false;
+    _navmod_show_launcher   = false;
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
     _hide_on_action_done    = false;
@@ -299,6 +299,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _dnd_window_is_mapped   = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
+    _selection_atom         = 0;
     
 
     // 0 out timers to avoid wonky startups
@@ -345,12 +346,9 @@ Launcher::GetName ()
 void
 Launcher::startKeyNavMode ()
 {  
-  if (_hidden)
-  {
-    _was_hidden = true;
-    _hidden = false;
-    EnsureHiddenState ();
-  }
+  
+  _navmod_show_launcher = true;
+  EnsureHiddenState ();
 
   if (_last_icon_index == -1)
     _current_icon_index = 0;
@@ -362,12 +360,9 @@ Launcher::startKeyNavMode ()
 void
 Launcher::exitKeyNavMode ()
 {
-  if (_was_hidden)
-  {
-    _hidden = true;
-    _was_hidden = false;
-    EnsureHiddenState ();
-  }
+    
+  _navmod_show_launcher = false;
+  EnsureHiddenState ();
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
@@ -1093,17 +1088,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 void Launcher::StartKeyShowLauncher ()
 {
-    _key_show_launcher = true;
+    _super_show_launcher = true;
     EnsureHiddenState ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
-    _key_show_launcher = false;
-    if (_hide_on_action_done)
-      EnsureHiddenState ();
-    else
-      SetupAutohideTimer ();
+    _super_show_launcher = false;
+    SetupAutohideTimer ();
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
@@ -1172,7 +1164,7 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-    _parent->EnableInputWindow(!hidden);
+    _parent->EnableInputWindow(!hidden, "launcher");
 
     if (!hidden && _launcher_action_state == ACTION_DRAG_EXTERNAL)
       ProcessDndLeave ();
@@ -1195,15 +1187,17 @@ Launcher::EnsureHiddenState ()
   // compiler should optimize this, we do this for readability
   bool mouse_over_launcher = _mouse_inside_trigger || (_mouse_inside_launcher && !_hide_on_action_done);
   
-  bool required_for_external_purpose = _key_show_launcher || _placeview_show_launcher || 
+  bool required_for_external_purpose = _super_show_launcher || _placeview_show_launcher || _navmod_show_launcher ||
                                        QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
                                        
   bool in_must_be_open_mode = _launcher_action_state != ACTION_NONE || _dnd_window_is_mapped;
   
   bool must_be_hidden = _hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER;
   
+  bool autohide_handle_hold = _autohide_handle && !_hidden;
+  
   if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
-                         !in_must_be_open_mode && _window_over_launcher && !_autohide_handle))
+                         !in_must_be_open_mode && _window_over_launcher && !autohide_handle_hold))
     SetHidden (true);
   else
     SetHidden (false);
@@ -1253,28 +1247,48 @@ Launcher::CheckWindowOverLauncher ()
   EnsureHiddenState ();
 }
 
+gboolean
+Launcher::OnUpdateDragManagerTimeout (gpointer data)
+{
+  Launcher *self = (Launcher *) data;
+ 
+  if (!self->_selection_atom)
+    self->_selection_atom = XInternAtom (self->_screen->dpy (), "XdndSelection", false);
+  
+  Window drag_owner = XGetSelectionOwner (self->_screen->dpy (), self->_selection_atom);
+  
+  if (drag_owner)
+  {
+    self->_dnd_window_is_mapped = true;
+  }
+  else
+  {
+    self->_hide_on_drag_hover = false;
+    self->_dnd_window_is_mapped = false;
+  }
+  self->EnsureHiddenState ();
+
+  return false;
+}
+
 void
 Launcher::OnWindowMapped (guint32 xid)
 {
   CompWindow *window = _screen->findWindow (xid);
-  if (window && window->type () == CompWindowTypeDndMask)
+  if (window && window->type () | CompWindowTypeDndMask)
   {
-    _dnd_window_is_mapped = true;
+    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  
-  EnsureHiddenState ();
 }
 
 void
 Launcher::OnWindowUnmapped (guint32 xid)
 {
   CompWindow *window = _screen->findWindow (xid);
-  if (window && window->type () == CompWindowTypeDndMask)
+  if (window && window->type () | CompWindowTypeDndMask)
   {
-    _hide_on_drag_hover = false;
-    _dnd_window_is_mapped = false;
+    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
-  EnsureHiddenState ();
 }
 
 void
@@ -1288,7 +1302,9 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
       EnsureHiddenState ();
     }
     else
+    {
       CheckWindowOverLauncher ();
+    }
   }
 }
 
@@ -1330,7 +1346,7 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true);
+    _parent->EnableInputWindow(true, "launcher");
     g_timeout_add (1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
@@ -2313,8 +2329,21 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       exitKeyNavMode ();
     break;
 
-    // <RETURN>/<SPACE> (start/activate currently selected icon)      
+    // <SPACE> (open a new instance)
     case XK_space:
+      {
+        LauncherModel::iterator it;
+        int i;
+
+        // start currently selected icon
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+          if (i == _current_icon_index)
+            (*it)->OpenInstance ();
+      }
+      exitKeyNavMode ();
+      break;
+
+    // <RETURN> (start/activate currently selected icon)
     case XK_Return:
       {
         LauncherModel::iterator it;
@@ -2895,9 +2924,16 @@ Launcher::ProcessDndLeave ()
     _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
     _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
     
-    _steal_drag = false;
+  }
+  
+  if (!_steal_drag && _dnd_hovered_icon)
+  {
+    _dnd_hovered_icon->SendDndLeave ();
     _dnd_hovered_icon = 0;
   }
+  
+  _steal_drag = false;
+  _dnd_hovered_icon = 0;
   
   EnsureHoverState ();
 }
@@ -3016,12 +3052,20 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     if (hovered_icon != _dnd_hovered_icon)
     {
       if (hovered_icon)
+      {
+        hovered_icon->SendDndEnter ();
         _drag_action = hovered_icon->QueryAcceptDrop (_drag_data);
+      }
       else
+      {
         _drag_action = nux::DNDACTION_NONE;
+      }
+      
+      if (_dnd_hovered_icon)
+        _dnd_hovered_icon->SendDndLeave ();
+        
+      _dnd_hovered_icon = hovered_icon;
     }
-    
-    _dnd_hovered_icon = hovered_icon;
   }
   
   bool accept;
