@@ -47,8 +47,10 @@ struct _PanelIndicatorEntryAccessibleClass
   AtkObjectClass parent_class;
 };
 
-GType      panel_indicator_entry_accessible_get_type (void);
-AtkObject *panel_indicator_entry_accessible_new (IndicatorObjectEntry *entry);
+GType                 panel_indicator_entry_accessible_get_type (void);
+AtkObject            *panel_indicator_entry_accessible_new (IndicatorObjectEntry *entry);
+
+IndicatorObjectEntry *panel_indicator_entry_accessible_get_entry (PanelIndicatorEntryAccessible *piea);
 
 G_END_DECLS
 

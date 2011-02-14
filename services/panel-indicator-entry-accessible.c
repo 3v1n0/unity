@@ -67,6 +67,14 @@ panel_indicator_entry_accessible_new (IndicatorObjectEntry *entry)
   return (AtkObject *) piea;
 }
 
+IndicatorObjectEntry *
+panel_indicator_entry_accessible_get_entry (PanelIndicatorEntryAccessible *piea)
+{
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea), NULL);
+
+  return piea->priv->entry;
+}
+
 /* Implementation of AtkObject methods */
 
 static void

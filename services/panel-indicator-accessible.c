@@ -94,6 +94,46 @@ panel_indicator_accessible_new (IndicatorObject *indicator)
   return (AtkObject *) pia;
 }
 
+/* Indicator callbacks */
+
+static void
+on_indicator_entry_added (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
+{
+  AtkObject *accessible;
+  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  accessible = panel_indicator_entry_accessible_new (entry);
+  if (accessible != NULL)
+    {
+      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
+			     g_slist_length (pia->priv->a11y_children) - 1,
+			     accessible);
+    }
+}
+
+static void
+on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
+{
+  GSList *l;
+  guint count = 0;
+  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next, count++)
+    {
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
+        {
+	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
+	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
+				 count, accessible);
+
+	  g_object_unref (accessible);
+	}
+    }
+}
+
 /* Implementation of AtkObject methods */
 
 static void
@@ -107,9 +147,15 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);
 
   pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
-  pia->priv->indicator = g_object_ref (data);
   atk_object_set_name (accessible, _("An indicator")); /* FIXME */
   atk_object_set_role (accessible, ATK_ROLE_PANEL);
+
+  /* Setup the indicator object */
+  pia->priv->indicator = g_object_ref (data);
+  g_signal_connect (G_OBJECT (pia->priv->indicator), "entry-added",
+		    G_CALLBACK (on_indicator_entry_added), pia);
+  g_signal_connect (G_OBJECT (pia->priv->indicator), "entry-removed",
+		    G_CALLBACK (on_indicator_entry_removed), pia);
 
   /* Retrieve all entries and create their accessible objects */
   entries = indicator_object_get_entries (pia->priv->indicator);
