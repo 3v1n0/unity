@@ -127,25 +127,19 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 static gint
 panel_indicator_accessible_get_n_children (AtkObject *accessible)
 {
-  guint n_entries;
   PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), 0);
 
-  n_entries = g_slist_length (pia->priv->a11y_children);
-
-  return n_entries;
+  return g_slist_length (pia->priv->a11y_children);
 }
 
 static AtkObject *
 panel_indicator_accessible_ref_child (AtkObject *accessible, gint i)
 {
-  AtkObject *child = NULL;
   PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), NULL);
 
-  child = g_slist_nth_data (pia->priv->a11y_children, i);
-
-  return child;
+  return g_slist_nth_data (pia->priv->a11y_children, i);
 }
