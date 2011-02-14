@@ -48,7 +48,10 @@ public:
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
+
+public:
   int        _n_children;
+  char     **_whitelist;
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
@@ -61,6 +64,7 @@ private:
   static gboolean OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray);
 
 private:
+  GSettings *_settings;
   GtkWidget *_window;
   NaTray    *_tray;
   int        _last_x;

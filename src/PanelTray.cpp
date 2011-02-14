@@ -18,11 +18,16 @@
 
 #include "PanelTray.h"
 
+#define SETTINGS_NAME "com.canonical.Unity.Panel"
+
 PanelTray::PanelTray ()
 : _n_children (0),
   _last_x (0),
   _last_y (0)
 {
+  _settings = g_settings_new (SETTINGS_NAME);
+  _whitelist = g_settings_get_strv (_settings, "systray-whitelist");
+
   _window = gtk_window_new (GTK_WINDOW_POPUP);
   gtk_window_set_type_hint (GTK_WINDOW (_window), GDK_WINDOW_TYPE_HINT_DOCK);
   gtk_window_set_keep_above (GTK_WINDOW (_window), TRUE);
@@ -55,6 +60,8 @@ PanelTray::PanelTray ()
 
 PanelTray::~PanelTray ()
 {
+  g_strfreev (_whitelist);
+  g_object_unref (_settings);
 }
 
 void
@@ -89,22 +96,55 @@ PanelTray::Sync ()
 gboolean
 PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
 {
+  char *title;
   char *res_name = NULL;
   char *res_class = NULL;
+  char *name;
+  int   i = 0;
+  bool  accept = false;
 
+  title = na_tray_child_get_title (icon);
   na_tray_child_get_wm_class (icon, &res_name, &res_class);
-  if (na_tray_child_has_alpha (icon))
-    na_tray_child_set_composited (icon, TRUE);
+
+  while ((name = self->_whitelist[i]))
+  {
+    if (g_strcmp0 (name, "all") == 0)
+    {
+      accept = true;
+      break;
+    }
+    else if (!name || g_strcmp0 (name, "") == 0)
+    {
+      accept = false;
+      break;
+    }
+    else if (g_str_has_prefix (title, name)
+             || g_str_has_prefix (res_name, name)
+             || g_str_has_prefix (res_class, name))
+    {
+      accept = true;
+      break;
+    }
+
+    i++;
+  }
+
+  if (accept)
+  {
+    if (na_tray_child_has_alpha (icon))
+      na_tray_child_set_composited (icon, TRUE);
+
+    self->_n_children++;
+    g_idle_add ((GSourceFunc)IdleSync, self);
+  }
 
   g_debug ("TrayChild %s: %s %s", na_tray_child_get_title (icon), res_name, res_class);
   
   g_free (res_name);
   g_free (res_class);
+  g_free (title);
 
-  self->_n_children++;  
-
-  g_idle_add ((GSourceFunc)IdleSync, self);
-  return TRUE;
+  return accept ? TRUE : FALSE;
 }
 
 void
