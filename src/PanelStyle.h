@@ -29,6 +29,8 @@ class PanelStyle : public nux::Object
     PanelStyle ();
     ~PanelStyle ();
 
+    static PanelStyle * GetDefault ();
+
     nux::Color& GetTextColor ();
     nux::Color& GetBackgroundTop ();
     nux::Color& GetBackgroundBottom ();

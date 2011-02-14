@@ -20,6 +20,8 @@
 
 #include "PanelStyle.h"
 
+static PanelStyle *_style = NULL;
+
 PanelStyle::PanelStyle ()
 {
   _offscreen = gtk_offscreen_window_new ();
@@ -29,11 +31,25 @@ PanelStyle::PanelStyle ()
 
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
                     G_CALLBACK (PanelStyle::OnStyleChanged), this);
+
+  Refresh ();
 }
 
 PanelStyle::~PanelStyle ()
 {
   gtk_widget_destroy (_offscreen);
+
+  if (_style == this)
+    _style = NULL;
+}
+
+PanelStyle *
+PanelStyle::GetDefault ()
+{
+  if (G_UNLIKELY (!_style))
+    _style = new PanelStyle ();
+
+  return _style;
 }
 
 void
@@ -43,9 +59,9 @@ PanelStyle::Refresh ()
 
   style = gtk_widget_get_style (_offscreen);
 
-  _text.SetRed ((float) style->text[4].red / (float) 0xffff);
-  _text.SetGreen ((float) style->text[4].green / (float) 0xffff);
-  _text.SetBlue ((float) style->text[4].blue / (float) 0xffff);
+  _text.SetRed ((float) style->text[0].red / (float) 0xffff);
+  _text.SetGreen ((float) style->text[0].green / (float) 0xffff);
+  _text.SetBlue ((float) style->text[0].blue / (float) 0xffff);
   _text.SetAlpha (1.0f);
 
   _bg_top.SetRed ((float) style->bg[4].red / (float) 0xffff);
@@ -60,9 +76,9 @@ PanelStyle::Refresh ()
   _bg_bottom = 0.22f * _bg_bottom;
   _bg_bottom.SetAlpha (1.0f);
 
-  _text_shadow.SetRed ((float) style->text[2].red / (float) 0xffff);
-  _text_shadow.SetGreen ((float) style->text[2].green / (float) 0xffff);
-  _text_shadow.SetBlue ((float) style->text[2].blue / (float) 0xffff);
+  _text_shadow.SetRed ((float) style->dark[0].red / (float) 0xffff);
+  _text_shadow.SetGreen ((float) style->dark[0].green / (float) 0xffff);
+  _text_shadow.SetBlue ((float) style->dark[0].blue / (float) 0xffff);
   _text_shadow.SetAlpha (1.0f);
 
   changed.emit (this);

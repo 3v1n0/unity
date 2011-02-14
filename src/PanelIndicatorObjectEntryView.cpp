@@ -142,6 +142,9 @@ PanelIndicatorObjectEntryView::Refresh ()
   int  text_width = 0;
   int  text_height = 0;
 
+  PanelStyle *style = PanelStyle::GetDefault ();
+  nux::Color  textcol = style->GetTextColor ();
+  nux::Color  textshadowcol = style->GetTextShadow ();
 
   // First lets figure out our size
   if (pixbuf && _proxy->icon_visible)
@@ -216,13 +219,20 @@ PanelIndicatorObjectEntryView::Refresh ()
     pango_cairo_update_layout (cr, layout);
 
     // Once for the homies that couldn't be here
-    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
+    cairo_set_source_rgba (cr,
+                           textshadowcol.GetRed (),
+                           textshadowcol.GetGreen (),
+                           textshadowcol.GetBlue (),
+                           1.0f - textshadowcol.GetRed ());
     cairo_move_to (cr, x, ((height - text_height)/2)-1);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f,
+    cairo_set_source_rgba (cr,
+                           textcol.GetRed (),
+                           textcol.GetGreen (),
+                           textcol.GetBlue (),
                            _proxy->label_sensitive ? 1.0f : 0.0f);
     cairo_move_to (cr, x, (height - text_height)/2);
     pango_cairo_show_layout (cr, layout);

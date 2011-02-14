@@ -29,6 +29,7 @@
 #include "Nux/WindowCompositor.h"
 
 #include "PanelMenuView.h"
+#include "PanelStyle.h"
 
 #include "WindowManager.h"
 
@@ -482,6 +483,7 @@ PanelMenuView::Refresh ()
     y += (height - text_height)/2;
     double startalpha = 1.0 - ((double)text_margin/(double)width);
 
+#if 0
     // Once for the homies that couldn't be here
     if (x+text_width >= width-1)
     {
@@ -500,7 +502,7 @@ PanelMenuView::Refresh ()
     cairo_move_to (cr, x, y-1);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
-
+#endif 
     // Once again for the homies that could
     if (x+text_width >= width-1)
     {
@@ -510,10 +512,13 @@ PanelMenuView::Refresh ()
         cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
         cairo_set_source(cr, linpat);
         cairo_pattern_destroy(linpat);
+
+        g_print ("Hello");
     }
     else
     {
-        cairo_set_source_rgb (cr, 223/255.0f, 219/255.0f, 210/255.0f);
+      nux::Color col = PanelStyle::GetDefault ()->GetTextColor ();
+      cairo_set_source_rgb (cr, col.GetRed (), col.GetGreen (), col.GetBlue ());
     }
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout (cr, layout);
