@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -65,7 +65,9 @@ long
 PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+
+  if (_layout)
+    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
@@ -79,7 +81,8 @@ void
 PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-  _layout->ProcessDraw (GfxContext, force_draw);
+  if (_layout)
+    _layout->ProcessDraw (GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 

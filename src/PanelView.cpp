@@ -54,8 +54,8 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    AddChild (_menu_view);
 
    _tray = new PanelTray ();
-   _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
-   AddChild (_menu_view);
+   _layout->AddView (_tray, 0, nux::eCenter, nux::eFull);
+   AddChild (_tray);
 
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));

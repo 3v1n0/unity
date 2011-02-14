@@ -39,12 +39,16 @@ public:
   PanelTray ();
   ~PanelTray ();
 
+  void Draw (nux::GraphicsEngine& gfx_content, bool force_draw);
+  
   Window GetTrayWindow ();
+
+  void Sync ();
 
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
-
+  int        _n_children;
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
@@ -52,9 +56,14 @@ protected:
 
 private:
   static gboolean FilterTrayCallback (NaTray *tray, NaTrayChild *child, PanelTray *self);
+  static void     OnTrayIconRemoved  (NaTrayManager *manager, NaTrayChild *child, PanelTray *self);
+  static gboolean IdleSync (PanelTray *tray);
+  static gboolean OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray);
 
 private:
   GtkWidget *_window;
   NaTray    *_tray;
+  int        _last_x;
+  int        _last_y;
 };
 #endif
