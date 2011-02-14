@@ -182,5 +182,5 @@ unity_root_accessible_add_window (UnityRootAccessible *self,
     unity_a11y_get_accessible (window);
 
   self->priv->window_list =
-	  g_slist_append (self->priv->window_list, window_accessible);
+        g_slist_append (self->priv->window_list, window_accessible);
 }
