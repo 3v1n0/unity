@@ -262,7 +262,7 @@ private:
                       struct timespec const &current);
                       
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
-                   nux::Geometry &box_geo);
+                   nux::Geometry &box_geo, float *launcher_alpha);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
@@ -344,6 +344,7 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
+  bool  _autohide_locked;
   bool  _super_show_launcher;
   bool  _navmod_show_launcher;
   bool  _placeview_show_launcher;
@@ -381,6 +382,9 @@ private:
   int _dnd_security;
   int _enter_y;
   int _last_button_press;
+  
+  int _trigger_width;
+  int _trigger_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;

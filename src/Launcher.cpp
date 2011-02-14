@@ -289,6 +289,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
+    _autohide_locked        = false;
     _super_show_launcher    = false;
     _navmod_show_launcher   = false;
     _placeview_show_launcher = false;
@@ -301,6 +302,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _last_button_press      = 0;
     _selection_atom         = 0;
     
+    // set them to 1 instead of 0 to avoid :0 in case something is racy
+    _trigger_width = 1;
+    _trigger_height = 1;
 
     // 0 out timers to avoid wonky startups
     int i;
@@ -429,13 +433,46 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 
 float Launcher::AutohideProgress (struct timespec const &current)
 {
-    if (_hidemode == LAUNCHER_HIDE_NEVER)
+    if (_hidemode == LAUNCHER_HIDE_NEVER || _autohide_locked)
         return 0.0f;
-
-    if (_hidden)
-        return CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+        
+    float computation_progress;
+        
+    if (_mouse_inside_trigger)
+    {
+        /* 
+         * most of the mouse movement should be done by the inferior part
+         * of the launcher, so prioritize this one
+         */
+        
+        if(_trigger_mouse_position.x == 0 and _trigger_mouse_position.y == 0)
+            return 0.0f;
+        
+        float _max_size_on_position;
+        float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
+        
+        if (position_on_border < _trigger_width)
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_height, 2), 0.5);
+        else
+        {
+            position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
+        }
+        // only triggered on _hidden = false
+        return CLAMP (pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position, 0.0f, 1.0f);
+    }
     else
-        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    {
+        computation_progress = (float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT;
+        computation_progress = CLAMP (computation_progress, 0.0f, 1.0f);
+        if (_hidden)
+            return computation_progress;
+        else
+            return 1.0f - computation_progress;
+    }
+    
+    return 0.0f;
+    
 }
 
 float Launcher::DragHideProgress (struct timespec const &current)
@@ -536,8 +573,10 @@ bool Launcher::AnimationInProgress ()
     if (TimeDelta (&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
         return true;
 
-    // hide animation
+    // hide animation (time or position)
     if (TimeDelta (&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
+        return true;
+    if (_mouse_inside_trigger && !_autohide_locked)
         return true;
     
     // collapse animation on DND out of launcher space
@@ -932,7 +971,7 @@ float Launcher::DragLimiter (float x)
 }
 
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
-                           nux::Geometry &box_geo)
+                           nux::Geometry &box_geo, float *launcher_alpha)
 {
     nux::Geometry geo = GetGeometry ();
     LauncherModel::iterator it;
@@ -1018,6 +1057,15 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     if (_hidemode != LAUNCHER_HIDE_NEVER && autohide_progress > 0.0f)
     {
         autohide_offset -= geo.width * autohide_progress;
+    }
+    if (_mouse_inside_trigger)
+    {
+        *launcher_alpha = 1.0f - autohide_progress;
+        if (autohide_progress == 0.0f) {
+            _autohide_locked = true;
+            printf ("locked!\n");
+        }
+        printf ("autohide_progress: %f\n", autohide_progress);
     }
     
     float drag_hide_progress = DragHideProgress (current);
@@ -1117,13 +1165,16 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   gchar        *prop_key;
   GVariant     *prop_value;
   GVariantIter *prop_iter;
-  int x, y;
+  int x, y, trigger_width, trigger_height;
 
   Launcher *self = (Launcher*)user_data;
   
-  g_variant_get (data, "(iia{sv})", &x, &y, &prop_iter);
+  g_variant_get (data, "(iiiia{sv})", &x, &y, &trigger_width, &trigger_height, &prop_iter);
   self->_trigger_mouse_position = nux::Point2 (x, y);
   
+  self->_trigger_width = trigger_width;
+  self->_trigger_height = trigger_height;
+    
   g_return_if_fail (prop_iter != NULL);
 
   while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
@@ -1141,9 +1192,22 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
       }
       else
       {
-        self->SetupAutohideTimer ();
+        if (self->_onmouseover_launcher_locked)
+        {
+            self->_onmouseover_launcher_locked = false;
+            self->SetupAutohideTimer ();
+        }
+        else
+        {
+            // as we weren't up to lock the trigger, we don't want the launcher
+            // to be falsy fully redrawn: it's already hidden
+            self->EnsureHiddenState();
+            self->_times[TIME_AUTOHIDE].tv_sec = 0;
+            self->_times[TIME_AUTOHIDE].tv_nsec = 0;
+        }
         self->EnsureHoverState ();
         self->EnsureScrollTimer ();
+        
       }
     }
   }
@@ -1185,7 +1249,7 @@ void
 Launcher::EnsureHiddenState ()
 {
   // compiler should optimize this, we do this for readability
-  bool mouse_over_launcher = _mouse_inside_trigger || (_mouse_inside_launcher && !_hide_on_action_done);
+  bool mouse_over_launcher = _mouse_inside_trigger && !_hide_on_action_done && _onmouseover_launcher_locked;
   
   bool required_for_external_purpose = _super_show_launcher || _placeview_show_launcher || _navmod_show_launcher ||
                                        QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
@@ -1959,6 +2023,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg> args;
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     std::list<Launcher::RenderArg>::iterator it;
+    float launcher_alpha = 1.0f;
 
     // rely on the compiz event loop to come back to us in a nice throttling
     if (AnimationInProgress ())   
@@ -1969,7 +2034,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     ROP.SrcBlend = GL_ONE;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    RenderArgs (args, bkg_box);
+    RenderArgs (args, bkg_box, &launcher_alpha);
 
     if (_drag_icon && _render_drag_window)
     {
