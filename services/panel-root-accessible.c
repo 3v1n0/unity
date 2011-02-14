@@ -143,7 +143,7 @@ panel_root_accessible_ref_child (AtkObject *accessible, gint i)
 
   g_return_val_if_fail (PANEL_IS_ROOT_ACCESSIBLE (accessible), NULL);
 
-  return g_slist_nth_data (root->priv->a11y_children, i);
+  return g_object_ref (g_slist_nth_data (root->priv->a11y_children, i));
 }
 
 static AtkObject *

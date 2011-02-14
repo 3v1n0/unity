@@ -141,5 +141,5 @@ panel_indicator_accessible_ref_child (AtkObject *accessible, gint i)
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), NULL);
 
-  return g_slist_nth_data (pia->priv->a11y_children, i);
+  return g_object_ref (g_slist_nth_data (pia->priv->a11y_children, i));
 }
