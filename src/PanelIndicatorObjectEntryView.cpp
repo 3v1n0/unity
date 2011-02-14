@@ -292,6 +292,11 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   /* FIXME */
   double mpi = 3.14159265358979323846;
 
+  PanelStyle *style = PanelStyle::GetDefault ();
+  nux::Color bgtop = style->GetBackgroundTop ();
+  nux::Color bgbot = style->GetBackgroundBottom ();
+  nux::Color line = style->GetTextShadow ();
+
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   cairo_set_line_width (cr, 1.0);
@@ -305,15 +310,31 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
 
   cairo_pattern_t * pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 83/255.0f, 82/255.0f, 78/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 66/255.0f, 65/255.0f, 63/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     bgtop.GetRed (),
+                                     bgtop.GetGreen (),
+                                     bgtop.GetBlue (),
+                                     1.0f - bgbot.GetRed ());
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f - bgtop.GetRed ());
   cairo_set_source (cr, pat);
   cairo_fill_preserve (cr);
   cairo_pattern_destroy (pat);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 62/255.0f, 61/255.0f, 58/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 54/255.0f, 54/255.0f, 52/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     line.GetRed (),
+                                     line.GetGreen (),
+                                     line.GetBlue (),
+                                     1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     line.GetRed (),
+                                     line.GetGreen (),
+                                     line.GetBlue (),
+                                     1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);
@@ -329,8 +350,16 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+3);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 92/255.0f, 90/255.0f, 85/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 70/255.0f, 69/255.0f, 66/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);

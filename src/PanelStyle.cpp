@@ -64,22 +64,20 @@ PanelStyle::Refresh ()
   _text.SetBlue ((float) style->text[0].blue / (float) 0xffff);
   _text.SetAlpha (1.0f);
 
-  _bg_top.SetRed ((float) style->bg[4].red / (float) 0xffff);
-  _bg_top.SetGreen ((float) style->bg[4].green / (float) 0xffff);
-  _bg_top.SetBlue ((float) style->bg[4].blue / (float) 0xffff);
-  _bg_top = 0.4f * _bg_top;
-  _bg_top.SetAlpha (1.0f);
-
-  _bg_bottom.SetRed ((float) style->bg[4].red / (float) 0xffff);
-  _bg_bottom.SetGreen ((float) style->bg[4].green / (float) 0xffff);
-  _bg_bottom.SetBlue ((float) style->bg[4].blue / (float) 0xffff);
-  _bg_bottom = 0.22f * _bg_bottom;
-  _bg_bottom.SetAlpha (1.0f);
-
   _text_shadow.SetRed ((float) style->dark[0].red / (float) 0xffff);
   _text_shadow.SetGreen ((float) style->dark[0].green / (float) 0xffff);
   _text_shadow.SetBlue ((float) style->dark[0].blue / (float) 0xffff);
   _text_shadow.SetAlpha (1.0f);
+
+  _bg_top.SetRed ((float) style->bg[1].red / (float) 0xffff);
+  _bg_top.SetGreen ((float) style->bg[1].green / (float) 0xffff);
+  _bg_top.SetBlue ((float) style->bg[1].blue / (float) 0xffff);
+  _bg_top.SetAlpha (1.0f);
+
+  _bg_bottom.SetRed ((float) style->bg[0].red / (float) 0xffff);
+  _bg_bottom.SetGreen ((float) style->bg[0].green / (float) 0xffff);
+  _bg_bottom.SetBlue ((float) style->bg[0].blue / (float) 0xffff);
+  _bg_bottom.SetAlpha (1.0f);
 
   changed.emit (this);
 }
