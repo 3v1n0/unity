@@ -40,8 +40,6 @@ static void unity_panel_home_button_accessible_init       (UnityPanelHomeButtonA
 
 /* AtkObject */
 static void       unity_panel_home_button_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint       unity_panel_home_button_accessible_get_n_children (AtkObject *accessible);
-static AtkObject *unity_panel_home_button_accessible_ref_child      (AtkObject *accessible, gint i);
 
 #define UNITY_PANEL_HOME_BUTTON_ACCESSIBLE_GET_PRIVATE(obj)                      \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_HOME_BUTTON_ACCESSIBLE, UnityPanelHomeButtonAccessiblePrivate))
@@ -60,8 +58,6 @@ unity_panel_home_button_accessible_class_init (UnityPanelHomeButtonAccessibleCla
 
   /* AtkObject */
   atk_class->initialize = unity_panel_home_button_accessible_initialize;
-  atk_class->get_n_children = unity_panel_home_button_accessible_get_n_children;
-  atk_class->ref_child = unity_panel_home_button_accessible_ref_child;
 
   g_type_class_add_private (gobject_class, sizeof (UnityPanelHomeButtonAccessiblePrivate));
 }
@@ -93,16 +89,4 @@ unity_panel_home_button_accessible_initialize (AtkObject *accessible, gpointer d
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
   atk_object_set_name (accessible, _("Home Button"));
-}
-
-static gint
-unity_panel_home_button_accessible_get_n_children (AtkObject *accessible)
-{
-  return 0;
-}
-
-static AtkObject *
-unity_panel_home_button_accessible_ref_child (AtkObject *accessible, gint i)
-{
-  return NULL;
 }
