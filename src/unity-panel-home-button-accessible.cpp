@@ -27,6 +27,7 @@
  *
  */
 
+#include <glib/gi18n-lib.h>
 #include <Nux/Nux.h>
 #include "PanelHomeButton.h"
 #include "unity-panel-home-button-accessible.h"
@@ -91,6 +92,7 @@ unity_panel_home_button_accessible_initialize (AtkObject *accessible, gpointer d
   ATK_OBJECT_CLASS (unity_panel_home_button_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
+  atk_object_set_name (accessible, _("Home Button"));
 }
 
 static gint

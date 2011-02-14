@@ -28,6 +28,7 @@
  *
  */
 
+#include <glib/gi18n-lib.h>
 #include <Nux/Nux.h>
 #include "PanelView.h"
 #include "unity-panel-view-accessible.h"
@@ -92,6 +93,7 @@ unity_panel_view_accessible_initialize (AtkObject *accessible, gpointer data)
   ATK_OBJECT_CLASS (unity_panel_view_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
+  atk_object_set_name (accessible, _("Panel"));
 }
 
 static gint
