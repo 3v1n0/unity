@@ -2079,6 +2079,9 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window->UnReference ();
     _drag_window = NULL;
   }
+
+  if (_navmod_show_launcher)
+    exitKeyNavMode ();
   
   _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
