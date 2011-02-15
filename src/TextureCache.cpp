@@ -61,8 +61,7 @@ TextureCache::FindTexture (const char *texture_id, int width, int height, Textur
   if (texture == NULL)
   {
     // no texture yet, lets make one
-    texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-    slot (texture_id, width, height, texture);
+    slot (texture_id, width, height, &texture);
 
     TexDestroyPayload *payload;
     

@@ -35,7 +35,7 @@ class TextureCache
 
 public:
   // id, width, height, texture 
-  typedef sigc::slot<void, const char *, int, int, nux::BaseTexture *> TextureCacheCallback;
+  typedef sigc::slot<void, const char *, int, int, nux::BaseTexture **> TextureCacheCallback;
   
   /* don't new this class, use getdefault */
   TextureCache();

@@ -41,12 +41,16 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
+  void CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture);
   void LoadIcon ();
   void Refresh (GdkPixbuf *pixbuf);
   void IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf);
 
   char *_icon_name;
   unsigned int _size;
+
+  GdkPixbuf *_pixbuf_cached; // not guarunteed outside of a IconLoader callback
+  nux::BaseTexture *_texture_cached;
 };
 
 #endif // ICON_TEXTURE_H

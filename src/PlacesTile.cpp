@@ -61,7 +61,7 @@ PlacesTile::GetHighlightGeometry ()
 }
 
 void
-PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTexture *texture)
+PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture)
 {
   nux::Geometry base = GetGeometry ();
   nux::Geometry highlight_geo = GetHighlightGeometry ();
@@ -111,8 +111,11 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   
   cairo_destroy (cr);
   
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
-  texture->Update (bitmap);
+  nux::NBitmapData *bitmap =  cairo_graphics->GetBitmap();
+  nux::BaseTexture *tex = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  tex->Update (bitmap);
+  *texture = tex;
+
   delete bitmap;
 }
 
