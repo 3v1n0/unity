@@ -91,7 +91,7 @@ panel_indicator_accessible_new (IndicatorObject *indicator)
   pia = g_object_new (PANEL_TYPE_INDICATOR_ACCESSIBLE, NULL);
   atk_object_initialize (ATK_OBJECT (pia), indicator);
 
-  return (AtkObject *) pia;
+  return ATK_OBJECT (pia);
 }
 
 /* Indicator callbacks */

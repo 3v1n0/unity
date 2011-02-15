@@ -64,7 +64,7 @@ panel_indicator_entry_accessible_new (IndicatorObjectEntry *entry)
   piea = g_object_new (PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, NULL);
   atk_object_initialize (ATK_OBJECT (piea), entry);
 
-  return (AtkObject *) piea;
+  return ATK_OBJECT (piea);
 }
 
 IndicatorObjectEntry *
