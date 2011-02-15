@@ -190,6 +190,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -360,6 +361,8 @@ Launcher::startKeyNavMode ()
 void
 Launcher::exitKeyNavMode ()
 {
+  if (!_navmod_show_launcher)
+    return;
     
   _navmod_show_launcher = false;
   EnsureHiddenState ();
@@ -1164,7 +1167,7 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-    _parent->EnableInputWindow(!hidden);
+    _parent->EnableInputWindow(!hidden, "launcher");
 
     if (!hidden && _launcher_action_state == ACTION_DRAG_EXTERNAL)
       ProcessDndLeave ();
@@ -1346,7 +1349,7 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true);
+    _parent->EnableInputWindow(true, "launcher");
     g_timeout_add (1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
@@ -2079,6 +2082,9 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window->UnReference ();
     _drag_window = NULL;
   }
+
+  if (_navmod_show_launcher)
+    exitKeyNavMode ();
   
   _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
