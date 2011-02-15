@@ -2087,7 +2087,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
-    alpha_mask.SetAlpha (launcher_alpha);
+    alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
+                        alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
