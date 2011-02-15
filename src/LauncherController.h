@@ -61,6 +61,8 @@ private:
     PlaceLauncherSection*  _place_section;
     DeviceLauncherSection* _device_section;
     LauncherEntryRemoteModel* _remote_model;
+    SimpleLauncherIcon*    _expoIcon;
+    int                    _num_workspaces;
 
     void SortAndSave ();
 
@@ -71,7 +73,9 @@ private:
     void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
+    void UpdateNumWorkspaces (int workspaces);
     void InsertExpoAction ();
+    void RemoveExpoAction ();
     
     void InsertTrash ();
 
