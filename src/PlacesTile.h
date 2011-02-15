@@ -78,6 +78,8 @@ protected:
   
   GdkPixbuf *_background_tile;
 
+  void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture *texture);
+  
 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);

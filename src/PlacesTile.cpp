@@ -21,14 +21,16 @@
 
 #include "config.h"
 
+#include "TextureCache.h"
 #include "Nux/Nux.h"
 #include "PlacesTile.h"
+
 PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM),
-_hilight_background (NULL),
-_hilight_layer (NULL),
-_last_width (0),
-_last_height (0)
+  View (NUX_FILE_LINE_PARAM),
+  _hilight_background (NULL),
+  _hilight_layer (NULL),
+  _last_width (0),
+  _last_height (0)
 {
   _state = STATE_DEFAULT;
 
@@ -46,6 +48,9 @@ _last_height (0)
 
 PlacesTile::~PlacesTile ()
 {
+  _hilight_background->UnReference ();
+  if (_hilight_layer)
+    delete _hilight_layer;
 }
 
 nux::Geometry
@@ -56,26 +61,19 @@ PlacesTile::GetHighlightGeometry ()
 }
 
 void
-PlacesTile::UpdateBackground ()
+PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTexture *texture)
 {
   nux::Geometry base = GetGeometry ();
   nux::Geometry highlight_geo = GetHighlightGeometry ();
-
-  if ((base.width == _last_width) && (base.height == _last_height))
-    return;
-
-  _last_width = base.width;
-  _last_height = base.height;
-
   nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, highlight_geo.width + 6, highlight_geo.height + 6);
   cairo_t *cr = cairo_graphics->GetContext();
-
+  
   cairo_scale (cr, 1.0f, 1.0f);
-
+  
   cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
-
+  
   // draw tiled background
   // set up clip path
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -102,26 +100,48 @@ PlacesTile::UpdateBackground ()
   
   cairo_pattern_destroy (pattern);
   cairo_surface_destroy (image);
-
+  
   // draw the outline
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-
+  
   DrawRoundedRectangle (cr, 1.0, 0, 0, 5.0, highlight_geo.width + 6, highlight_geo.height + 6);
   cairo_set_source_rgba (cr, 0.66, 0.66, 0.66, 1.0);
   cairo_set_line_width (cr, 1.0);
-   cairo_stroke (cr);
-
-  cairo_destroy (cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  cairo_stroke (cr);
   
+  cairo_destroy (cr);
+  
+  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  texture->Update (bitmap);
+  delete bitmap;
+}
+
+
+void
+PlacesTile::UpdateBackground ()
+{
+  nux::Geometry base = GetGeometry ();
+  nux::Geometry highlight_geo = GetHighlightGeometry ();
+
+  if ((base.width == _last_width) && (base.height == _last_height))
+    return;
+
+  _last_width = base.width;
+  _last_height = base.height;
+
+  // try and get a texture from the texture cache
+  TextureCache *cache = TextureCache::GetDefault ();
+  nux::BaseTexture * hilight_tex = cache->FindTexture ("PlacesTile.HilightTexture",
+                                                       highlight_geo.width, highlight_geo.height,
+                                                       sigc::mem_fun (this, &PlacesTile::DrawHighlight));
+
   if (_hilight_background)
     _hilight_background->UnReference ();
-
-  _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _hilight_background->Update (bitmap);
-  delete bitmap;
-
+  
+  _hilight_background = hilight_tex;
+  _hilight_background->Reference ();
+  
+  
   nux::ROPConfig rop; 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
@@ -135,13 +155,10 @@ PlacesTile::UpdateBackground ()
     delete _hilight_layer;
 
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
-                                     texxform,
-                                     nux::Color::White,
-                                     true,
-                                     rop);
-  _hilight_background->UnReference ();
-  _hilight_background = NULL;
-  delete cairo_graphics;
+                                          texxform,
+                                          nux::Color::White,
+                                          true,
+                                          rop);
 }
 
 static inline double
