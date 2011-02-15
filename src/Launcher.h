@@ -34,7 +34,7 @@
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
  
-#define ANIM_DURATION_SHORT 125
+#define ANIM_DURATION_SHORT 5125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
@@ -242,9 +242,10 @@ private:
   float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
-  void SetHover   ();
-  void UnsetHover ();
-  void SetHidden  (bool hidden);
+  void SetHover         ();
+  void UnsetHover       ();
+  void ForceHiddenState (bool hidden);
+  void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
   float DragLimiter (float x);

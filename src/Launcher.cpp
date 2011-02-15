@@ -1057,15 +1057,16 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         autohide_offset -= geo.width * autohide_progress;
     }
-    if (_mouse_inside_trigger)
+    if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
         *launcher_alpha = 1.0f - autohide_progress;
         if (autohide_progress == 0.0f) {
-            _mouseover_launcher_locked = true;
+            ForceHiddenState (false); // lock the launcher
             printf ("locked!\n");
-            EnsureHiddenState ();
         }
     }
+    else
+       *launcher_alpha = 1.0f; 
     
     float drag_hide_progress = DragHideProgress (current);
     if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
@@ -1181,29 +1182,11 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
     if (g_str_equal ("hovered", prop_key))
     {
       self->_mouse_inside_trigger = g_variant_get_boolean (prop_value);
-      
       if (self->_mouse_inside_trigger)
-      {
         self->_hide_on_drag_hover = false;
-        self->EnsureHiddenState ();
-        self->EnsureHoverState ();
-        self->EnsureScrollTimer ();
-      }
-      else
-      {
-        if (self->_mouse_inside_launcher)
-            return;
-
-        self->_mouseover_launcher_locked = false;
-        self->EnsureHiddenState();
-        // as we could have not lock up the launcher, we don't want the launcher
-        // to be falsy fully redrawn: it's already hidden
-        self->_times[TIME_AUTOHIDE].tv_sec = 0;
-        self->_times[TIME_AUTOHIDE].tv_nsec = 0;
-        self->EnsureHoverState ();
-        self->EnsureScrollTimer ();
-        
-      }
+      self->EnsureHiddenState ();
+      self->EnsureHoverState ();
+      self->EnsureScrollTimer ();    
     }
   }
 }
@@ -1215,10 +1198,25 @@ void Launcher::OnActionDone (GVariant *data, void *val)
     self->SetupAutohideTimer ();
 }
 
+void Launcher::ForceHiddenState (bool hidden)
+{
+    // force hidden state skipping the animation
+    SetHidden (hidden);
+    _times[TIME_AUTOHIDE].tv_sec = 0;
+    _times[TIME_AUTOHIDE].tv_nsec = 0;
+}
+
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
+    printf ("SetHidden change pour %i\n", hidden);
+
+    // auto lock/unlock the launcher depending on the state switch
+    if (hidden)
+        _mouseover_launcher_locked = false;
+    else
+        _mouseover_launcher_locked = true;
 
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
@@ -2288,14 +2286,6 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition (x, y);
   _mouse_inside_launcher = false;
-  
-  if (!_mouse_inside_trigger)
-  {
-      // FIXME: here is where things go bad
-      printf ("mouse OUTSIDE the trigger\n");
-      _mouseover_launcher_locked = false;
-  }
-
       
   if (_launcher_action_state == ACTION_NONE)
       EnsureHoverState ();
