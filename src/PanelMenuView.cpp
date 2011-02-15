@@ -281,9 +281,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         _gradient_texture->UnlockRect (0);
       }
+      guint alpha = 0, src = 0, dest = 0;
 
-      GfxContext.GetRenderStates ().SetBlend (true);
-      GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+      GfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+      GfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
@@ -297,8 +298,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::Color::White);
 
-      GfxContext.GetRenderStates ().SetBlend(false);
-
+      GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
@@ -537,7 +537,7 @@ PanelMenuView::Refresh ()
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
                                         nux::Color::White,
-                                        false, 
+                                        true, 
                                         rop);
 
   

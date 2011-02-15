@@ -261,23 +261,17 @@ PanelIndicatorObjectEntryView::Refresh ()
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   
   nux::ROPConfig rop; 
-  rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                                            texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            nux::Color::White,  // The color used to modulate the texture.
-                                                            false,  // Write the alpha value of the texture to the destination buffer.
-                                                            rop     // Use the given raster operation to set the blending when the layer is being rendered.
-                                                            );
-
+                                                            texxform,
+                                                            nux::Color::White,
+                                                            true,
+                                                            rop);
   SetPaintLayer (texture_layer);
     
-  // We don't need the texture anymore. Since it hasn't been reference, it ref count should still be 1.
-  // UnReference it and it will be destroyed.
   texture2D->UnReference ();
-
-  // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
   delete texture_layer;
 
   NeedRedraw ();

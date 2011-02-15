@@ -58,6 +58,8 @@ public:
 
   Window GetTrayWindow ();
 
+  void SetOpacity (float opacity);
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
@@ -81,6 +83,8 @@ private:
   int _last_height;
 
   PanelStyle *_style;
+  bool        _is_dirty;
+  float       _opacity;
 };
 
 #endif // PANEL_VIEW_H

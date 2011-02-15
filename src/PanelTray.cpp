@@ -19,6 +19,7 @@
 #include "PanelTray.h"
 
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
+#define PADDING 3
 
 PanelTray::PanelTray ()
 : _n_children (0),
@@ -30,7 +31,7 @@ PanelTray::PanelTray ()
 
   _window = gtk_window_new (GTK_WINDOW_POPUP);
   gtk_window_set_type_hint (GTK_WINDOW (_window), GDK_WINDOW_TYPE_HINT_DOCK);
-  gtk_window_set_keep_above (GTK_WINDOW (_window), TRUE);
+  //gtk_window_set_keep_above (GTK_WINDOW (_window), TRUE);
   gtk_window_set_skip_pager_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_set_skip_taskbar_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_resize (GTK_WINDOW (_window), 1, 24);
@@ -74,7 +75,7 @@ PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
     _last_x = geo.x;
     _last_y = geo.y;
 
-    gtk_window_move (GTK_WINDOW (_window), geo.x, geo.y + 24);
+    gtk_window_move (GTK_WINDOW (_window), geo.x + PADDING, geo.y);
   }
 }
 
@@ -87,7 +88,7 @@ PanelTray::GetTrayWindow ()
 void
 PanelTray::Sync ()
 {
-  SetMinMaxSize (_n_children * 24, 24);
+  SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
   ComputeChildLayout ();
 
   QueueDraw ();

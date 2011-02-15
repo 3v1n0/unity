@@ -136,6 +136,14 @@
                         <_name>Wiggle</_name>
                     </desc>
                 </option>
+                <option type="float" name="panel_opacity">
+              		<_short>Panel Opacity</_short>
+                  <_long>The opacity of the Panel background.</_long>
+              		<default>1.0</default>
+              		<min>0.0</min>
+              		<max>1.0</max>
+              		<precision>0.01</precision>
+                </option>
             </group>
         </options>
     </plugin>

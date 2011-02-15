@@ -38,7 +38,9 @@
 #include "PanelIndicatorObjectView.h"
 
 PanelView::PanelView (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+:   View (NUX_FILE_LINE_PARAM),
+  _is_dirty (true),
+  _opacity (1.0f)
 {
   _style = new PanelStyle ();
   _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
@@ -153,11 +155,13 @@ PanelView::UpdateBackground ()
 {
   nux::Geometry geo = GetGeometry ();
 
-  if (geo.width == _last_width && geo.height == _last_height)
+  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
     return;
 
   _last_width = geo.width;
   _last_height = geo.height;
+  _is_dirty = false;
+
   GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
   nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
   g_object_unref (pixbuf);
@@ -171,10 +175,12 @@ PanelView::UpdateBackground ()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  nux::Color col = nux::Color::White;
+  col.SetAlpha (_opacity);
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,
-                                     nux::Color::White,
+                                     col,
                                      true,
                                      rop);
   texture2D->UnReference ();
@@ -185,7 +191,7 @@ PanelView::UpdateBackground ()
 void
 PanelView::ForceUpdateBackground ()
 {
-  _last_width = _last_height = 0;
+  _is_dirty = true;
 
   UpdateBackground ();
 
@@ -350,4 +356,18 @@ Window
 PanelView::GetTrayWindow ()
 {
   return _tray->GetTrayWindow ();
+}
+
+void
+PanelView::SetOpacity (float opacity)
+{
+  if (_opacity == opacity)
+    return;
+
+  _opacity = opacity;
+  _is_dirty = true;
+
+  UpdateBackground ();
+  NeedRedraw ();
+  _layout->NeedRedraw ();
 }
