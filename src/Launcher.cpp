@@ -190,6 +190,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
     OnStartFocus.connect (sigc::mem_fun (this, &Launcher::RecvStartFocus));
     OnEndFocus.connect (sigc::mem_fun (this, &Launcher::RecvEndFocus));
@@ -375,6 +376,8 @@ Launcher::startKeyNavMode ()
 void
 Launcher::exitKeyNavMode ()
 {
+  if (!_navmod_show_launcher)
+    return;
     
   _navmod_show_launcher = false;
   EnsureHiddenState ();
@@ -2094,6 +2097,9 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window->UnReference ();
     _drag_window = NULL;
   }
+
+  if (_navmod_show_launcher)
+    exitKeyNavMode ();
   
   _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
