@@ -163,6 +163,7 @@ LauncherController::InsertTrash ()
   RegisterIcon (icon);
 }
 
+void
 LauncherController::UpdateNumWorkspaces (int workspaces)
 {
   if ((_num_workspaces == 0) && (workspaces > 0))
@@ -196,7 +197,7 @@ LauncherController::InsertExpoAction ()
 void
 LauncherController::RemoveExpoAction ()
 {
-  _model->RemoveIcon (__expoIcon);
+  _model->RemoveIcon (_expoIcon);
 }
 
 void

@@ -49,6 +49,7 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
+    void UpdateNumWorkspaces (int workspaces);
 private:
     BamfMatcher*           _matcher;
     CompAction*            _expo_action;
@@ -73,7 +74,6 @@ private:
     void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
-    void UpdateNumWorkspaces (int workspaces);
     void InsertExpoAction ();
     void RemoveExpoAction ();
     
