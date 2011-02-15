@@ -34,7 +34,7 @@
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
  
-#define ANIM_DURATION_SHORT 5125
+#define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
@@ -224,22 +224,23 @@ private:
   void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
 
-  float DnDStartProgress        (struct timespec const &current);
-  float DnDExitProgress         (struct timespec const &current);
-  float GetHoverProgress        (struct timespec const &current);
-  float AutohideProgress        (struct timespec const &current);
-  float DragThresholdProgress   (struct timespec const &current);
-  float DragHideProgress        (struct timespec const &current);
-  float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
-  float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentWiggleValue   (LauncherIcon *icon, struct timespec const &current);
-  float IconStartingBlinkValue  (LauncherIcon *icon, struct timespec const &current);
-  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
-  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
-  float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
-  float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
+  float DnDStartProgress             (struct timespec const &current);
+  float DnDExitProgress              (struct timespec const &current);
+  float GetHoverProgress             (struct timespec const &current);
+  float AutohidePositionProgress     (struct timespec const &current);
+  float AutohideFadeProgress         ();
+  float DragThresholdProgress        (struct timespec const &current);
+  float DragHideProgress             (struct timespec const &current);
+  float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
+  float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentPulseValue         (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentWiggleValue        (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingBlinkValue       (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingPulseValue       (LauncherIcon *icon, struct timespec const &current);
+  float IconBackgroundIntensity      (LauncherIcon *icon, struct timespec const &current);
+  float IconProgressBias             (LauncherIcon *icon, struct timespec const &current);
+  float IconDropDimValue             (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
   void SetHover         ();
