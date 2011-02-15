@@ -251,8 +251,8 @@ UnityScreen::OnExitKeyNav (GVariant* data, void* value)
 
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (self->lastFocusedWindow != NULL)
-    self->lastFocusedWindow->moveInputFocusTo ();
+  //if (self->lastFocusedWindow != NULL)
+//    self->lastFocusedWindow->moveInputFocusTo ();
 }
 
 gboolean
@@ -603,7 +603,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true, "launcher");
+  self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
 
   /* FIXME: this should not be manual, should be managed with a
@@ -634,7 +634,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true, "panel");
+  self->panelWindow->EnableInputWindow(true, "panel", false, false);
   self->panelWindow->InputWindowEnableStruts(true);
   LOGGER_END_PROCESS ("initLauncher-Panel");
 

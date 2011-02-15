@@ -191,6 +191,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
 
+    OnStartFocus.connect (sigc::mem_fun (this, &Launcher::RecvStartFocus));
+    OnEndFocus.connect (sigc::mem_fun (this, &Launcher::RecvEndFocus));
+
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
     
@@ -334,6 +337,18 @@ Launcher::Launcher (nux::BaseWindow* parent,
 Launcher::~Launcher()
 {
 
+}
+
+void
+Launcher::RecvStartFocus ()
+{
+  std::cout << "Launcher::RecvStartFocus() called" << std::endl;
+}
+
+void
+Launcher::RecvEndFocus ()
+{
+  std::cout << "Launcher::RecvEndFocus() called" << std::endl;
 }
 
 /* Introspection */
@@ -1164,7 +1179,7 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-    _parent->EnableInputWindow(!hidden, "launcher");
+    _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
     if (!hidden && _launcher_action_state == ACTION_DRAG_EXTERNAL)
       ProcessDndLeave ();
@@ -1346,7 +1361,7 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true, "launcher");
+    _parent->EnableInputWindow(true, "launcher", false, false);
     g_timeout_add (1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }

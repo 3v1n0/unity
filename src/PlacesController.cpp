@@ -78,7 +78,7 @@ void PlacesController::Show ()
     return;
 
   _window->ShowWindow (true, false);
-  _window->EnableInputWindow (true, "places", true);
+  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
   _window->GrabKeyboard ();
   _window->NeedRedraw ();

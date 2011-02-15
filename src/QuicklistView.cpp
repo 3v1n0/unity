@@ -91,10 +91,35 @@ QuicklistView::QuicklistView ()
   OnMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseClick));
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
-  
+
+  OnStartFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
+  OnEndFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
+
+  OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
+
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
   _compute_blur_bkg = true;
+}
+
+void
+QuicklistView::RecvStartFocus ()
+{
+  std::cout << "QuicklistView::RecvStartFocus() called" << std::endl;
+}
+
+void
+QuicklistView::RecvEndFocus ()
+{
+  std::cout << "QuicklistView::RecvEndFocus() called" << std::endl;
+}
+
+void
+QuicklistView::RecvKeyPressed (unsigned int  key_sym,
+                               unsigned long key_code,
+                               unsigned long key_state)
+{
+  std::cout << "QuicklistView::RecvKeyPressed() called" << std::endl;
 }
 
 QuicklistView::~QuicklistView ()
@@ -185,7 +210,8 @@ void QuicklistView::Show ()
   {
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
-    EnableInputWindow (true, "quicklist", true);
+    EnableInputWindow (true, "quicklist", true, false);
+    ForceInputFocus ();
     GrabPointer ();
     NeedRedraw ();
 

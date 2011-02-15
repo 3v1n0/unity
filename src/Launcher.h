@@ -125,6 +125,9 @@ public:
 
   virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 
+  void RecvStartFocus ();
+  void RecvEndFocus ();
+
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
   
