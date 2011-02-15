@@ -1064,11 +1064,10 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
             if (!_mouseover_launcher_locked)
             {
                 autohide_progress = AutohideFadeProgress ();
-                *launcher_alpha = 1.0f - autohide_progress;
+                *launcher_alpha = 1.0f - (autohide_progress / 1.5f);
                 if (autohide_progress == 0.0f)
                     ForceHiddenState (false); // lock the launcher
             }
-            printf ("launcher alpha: %f\n", *launcher_alpha);
         }
     }
     
@@ -1214,7 +1213,6 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-    printf ("SetHidden change pour %i\n", hidden);
 
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
@@ -2086,6 +2084,12 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
 
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
+    nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
+    alpha_mask.SetAlpha (launcher_alpha);
+    gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
+    
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetBlend (false);
 
