@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
 #if HAVE_CONFIG_H
@@ -23,8 +24,6 @@
 #include "panel-service.h"
 
 #include <stdlib.h>
-#include <libindicator/indicator.h>
-#include <libindicator/indicator-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
@@ -339,6 +338,14 @@ panel_service_get_n_indicators (PanelService *self)
   g_return_val_if_fail (PANEL_IS_SERVICE (self), 0);
 
   return g_slist_length (self->priv->indicators);
+}
+
+IndicatorObject *
+panel_service_get_indicator (PanelService *self, guint position)
+{
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), NULL);
+
+  return (IndicatorObject *) g_slist_nth_data (self->priv->indicators, position);
 }
 
 /*
