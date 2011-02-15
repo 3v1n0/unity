@@ -2298,6 +2298,15 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   if (_launcher_action_state == ACTION_NONE)
       EnsureHoverState ();
 
+  // exit immediatly on action and mouse leaving the launcher
+  if (!_mouseover_launcher_locked)
+  {
+    if (_autohide_handle > 0)
+      g_source_remove (_autohide_handle);
+    _autohide_handle = 0;
+    EnsureHiddenState ();
+  }
+
   EventLogic ();
   EnsureAnimation ();
 }
