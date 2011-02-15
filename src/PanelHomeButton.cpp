@@ -35,6 +35,8 @@
 #define PANEL_HEIGHT 24
 #define BUTTON_WIDTH 66
 
+NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
+
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
   _util_cg (CAIRO_FORMAT_ARGB32, BUTTON_WIDTH, PANEL_HEIGHT)

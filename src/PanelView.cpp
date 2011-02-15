@@ -36,6 +36,8 @@
 #include "IndicatorObjectFactoryRemote.h"
 #include "PanelIndicatorObjectView.h"
 
+NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
+
 PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM)
 {
