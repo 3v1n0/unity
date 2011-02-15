@@ -79,7 +79,7 @@ PanelStyle::Refresh ()
   _bg_bottom.SetBlue ((float) style->bg[0].blue / (float) 0xffff);
   _bg_bottom.SetAlpha (1.0f);
 
-  changed.emit (this);
+  changed.emit ();
 }
 
 nux::Color&

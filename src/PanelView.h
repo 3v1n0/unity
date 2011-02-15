@@ -66,6 +66,7 @@ protected:
 
 private:
   void UpdateBackground ();
+  void ForceUpdateBackground ();
 
 private:
   IndicatorObjectFactoryRemote *_remote;

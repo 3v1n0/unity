@@ -48,7 +48,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
-  
+
+  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
@@ -197,6 +198,11 @@ PanelIndicatorObjectEntryView::Refresh ()
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   if (_proxy->GetActive ())
     draw_menu_bg (cr, width, height);

@@ -38,7 +38,7 @@ class PanelStyle : public nux::Object
 
     GdkPixbuf * GetBackground (int width, int height);
 
-    sigc::signal<void, PanelStyle*> changed;
+    sigc::signal<void> changed;
 
   private:
     void        Refresh ();

@@ -41,6 +41,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM)
 {
   _style = new PanelStyle ();
+  _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -158,43 +159,6 @@ PanelView::UpdateBackground ()
   _last_width = geo.width;
   _last_height = geo.height;
 
-#if 0
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
-  cairo_t *cr = cairo_graphics.GetContext();
-  cairo_set_line_width (cr, 1);
-
-  cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
-
-  nux::Color  start;
-  nux::Color  end;
-
-  start = _style->GetBackgroundTop ();
-  end = _style->GetBackgroundBottom ();
-
-  cairo_pattern_add_color_stop_rgb (pat,
-                                    0.0f,
-                                    start.GetRed (),
-                                    start.GetGreen (),
-                                    start.GetBlue ());
-  cairo_pattern_add_color_stop_rgb (pat,
-                                    1.0f,
-                                    end.GetRed (),
-                                    end.GetGreen (),
-                                    end.GetBlue ());
-
-  cairo_set_source (cr, pat);
-  cairo_rectangle (cr, 0, 0, _last_width, _last_height);
-  cairo_fill (cr);
-  cairo_pattern_destroy (pat);
-
-  cairo_destroy (cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
-  texture2D->Update(bitmap);
-  delete bitmap;
-#endif
-
   GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
   nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
   g_object_unref (pixbuf);
@@ -217,6 +181,16 @@ PanelView::UpdateBackground ()
   texture2D->UnReference ();
 
   NeedRedraw ();
+}
+
+void
+PanelView::ForceUpdateBackground ()
+{
+  _last_width = _last_height = 0;
+
+  UpdateBackground ();
+
+  QueueDraw ();
 }
 
 //

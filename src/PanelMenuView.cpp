@@ -100,6 +100,8 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
 
+  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+
   Refresh ();
 }
 
@@ -469,6 +471,11 @@ PanelMenuView::Refresh ()
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   x = _padding;
   y = 0;
