@@ -27,7 +27,7 @@ PanelStyle::PanelStyle ()
   _offscreen = gtk_offscreen_window_new ();
   gtk_widget_set_name (_offscreen, "UnityPanelWidget");
   gtk_widget_set_size_request (_offscreen, 100, 24);
-  gtk_widget_show (_offscreen);
+  gtk_widget_show_all (_offscreen);
 
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
                     G_CALLBACK (PanelStyle::OnStyleChanged), this);
@@ -120,7 +120,8 @@ GdkPixbuf *
 PanelStyle::GetBackground (int width, int height)
 {
   gtk_widget_set_size_request (_offscreen, width, height);
-
+  gdk_window_process_updates (gtk_widget_get_window (_offscreen), TRUE);
+  
   return gtk_offscreen_window_get_pixbuf (GTK_OFFSCREEN_WINDOW (_offscreen));
 }
 

@@ -158,7 +158,6 @@ PanelView::UpdateBackground ()
 
   _last_width = geo.width;
   _last_height = geo.height;
-
   GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
   nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
   g_object_unref (pixbuf);

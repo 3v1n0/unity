@@ -33,6 +33,7 @@
 
 PanelIndicatorObjectView::PanelIndicatorObjectView ()
 : View (NUX_TRACKER_LOCATION),
+  _layout (NULL),
   _proxy (NULL),
   _entries ()
 {
