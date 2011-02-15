@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-02-15 10:49+0000\n"
+"POT-Creation-Date: 2010-11-02 23:58+0000\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: German\n"
@@ -17,58 +17,69 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "All items in the Trash will be permanently deleted."
-msgstr ""
-
-msgid "Browse the Web"
-msgstr ""
-
-msgid "Check Email"
-msgstr ""
-
 msgid "Eject"
+msgstr ""
+
+msgid "Email & Chat"
 msgstr ""
 
 msgid "Empty Trash"
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Files & Folders"
 msgstr ""
 
-msgid "Find Files"
+#. i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason
+#, c-format
+msgid "Files in trash: %d"
 msgstr ""
 
-msgid "Find Internet Apps"
+msgid "Games"
 msgstr ""
 
-msgid "Find Media Apps"
-msgstr ""
-
-msgid "Find More Apps"
+msgid "Get New Apps"
 msgstr ""
 
 #, fuzzy
-msgid "Keep In Launcher"
+msgid "Keep in Launcher"
 msgstr "Im Startprogramm behalten"
 
-msgid "Listen to Music"
+msgid "Music"
+msgstr ""
+
+msgid "Office"
 msgstr ""
 
 msgid "Open"
 msgstr ""
 
+msgid "Photos & Videos"
+msgstr ""
+
 msgid "Quit"
 msgstr "Beenden"
+
+#, fuzzy
+msgid "Remove from launcher"
+msgstr "Aus Startprogramm entfernen"
+
+msgid "Search"
+msgstr ""
+
+#. i18n: This is meant to be used like Search $PLACES_NAME, so eg.
+#. * 'Search Applications'
+#.
+#, c-format
+msgid "Search %s"
+msgstr ""
+
+#, c-format
+msgid "See %u more results"
+msgstr ""
 
 msgid "Trash"
 msgstr ""
 
-msgid "View Photos"
+#. Load up the world
+msgid "Web"
 msgstr ""
-
-msgid "Workspace Switcher"
-msgstr ""
-
-#, fuzzy
-#~ msgid "Remove from launcher"
-#~ msgstr "Aus Startprogramm entfernen"
