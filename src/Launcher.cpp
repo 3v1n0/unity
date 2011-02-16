@@ -252,6 +252,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
+    _autohide_animation     = FADE_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -383,7 +384,7 @@ Launcher::AddProperties (GVariantBuilder *builder)
 
   g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
-  g_variant_builder_add (builder, "{sv}", "autohide-position-progress", g_variant_new_double ((double) AutohidePositionProgress (current)));
+  g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
 
   g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
   g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
@@ -430,42 +431,44 @@ float Launcher::DnDStartProgress (struct timespec const &current)
   return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_START])) / (float) ANIM_DURATION, 0.0f, 1.0f);
 }
 
-float Launcher::AutohidePositionProgress (struct timespec const &current)
-{
-        
-    float animation_progress;
-        
-    animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
-    if (_hidden)
-        return animation_progress;
-    else
-        return 1.0f - animation_progress;
-    
-}
-
-float Launcher::AutohideFadeProgress ()
+float Launcher::AutohideProgress (struct timespec const &current)
 {
     
-    /* 
-     * most of the mouse movement should be done by the inferior part
-     * of the launcher, so prioritize this one
-     */
+    // bfb position progress
+    if (_mouse_inside_trigger)
+    {
+        /* 
+        * most of the mouse movement should be done by the inferior part
+        * of the launcher, so prioritize this one
+        */
+        
+        if(_mouseover_launcher_locked || ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0)))
+            return 0.0f;
+        
+        float _max_size_on_position;
+        float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
+        
+        if (position_on_border < _trigger_width)
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_height, 2), 0.5);
+        else
+        {
+            position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
+        }
+        // only triggered on _hidden = false, no need for check
+        return CLAMP (pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position, 0.0f, 1.0f);  
+    }
     
-    if(_mouseover_launcher_locked || ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0)))
-        return 0.0f;
-    
-    float _max_size_on_position;
-    float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
-    
-    if (position_on_border < _trigger_width)
-        _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_height, 2), 0.5);
+    // time-based progress
     else
     {
-        position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
-        _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
+        float animation_progress;    
+        animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+        if (_hidden)
+            return animation_progress;
+        else
+            return 1.0f - animation_progress;  
     }
-    // only triggered on _hidden = false, no need for check
-    return CLAMP (pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position, 0.0f, 1.0f);
     
 }
 
@@ -558,7 +561,7 @@ bool Launcher::AnimationInProgress ()
     // hover out animation
     if (TimeDelta (&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
         return true;
-    
+  
     // drag start animation
     if (TimeDelta (&current, &_times[TIME_DRAG_START]) < ANIM_DURATION)
         return true;
@@ -1050,25 +1053,33 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     *launcher_alpha = 1.0f; 
     if (_hidemode != LAUNCHER_HIDE_NEVER)
     {
-        float autohide_progress;
-        // time based position
-        if (!_mouse_inside_trigger)
+        float autohide_progress = AutohideProgress (current);
+
+        if (_autohide_animation == FADE_ONLY
+            || (_autohide_animation == FADE_SLIDE && _mouse_inside_trigger))
         {
-            autohide_progress = AutohidePositionProgress (current);
+            if (autohide_progress > 0.0f)
+            {    
+                if (_mouse_inside_trigger)
+                {
+                    if (!_mouseover_launcher_locked)
+                        *launcher_alpha = 1.0f - (autohide_progress / 1.5f);
+                }
+                else
+                    *launcher_alpha = 1.0f - autohide_progress;
+            }
+        }
+        else
+        {
             if (autohide_progress > 0.0f)
                 autohide_offset -= geo.width * autohide_progress;
         }
-        // proximity based fading
-        else
-        {
-            if (!_mouseover_launcher_locked)
-            {
-                autohide_progress = AutohideFadeProgress ();
-                *launcher_alpha = 1.0f - (autohide_progress / 1.5f);
-                if (autohide_progress == 0.0f)
-                    ForceHiddenState (false); // lock the launcher
-            }
-        }
+        /* _mouse_inside_trigger is particular because we don't change _hidden state
+        * as we can go back and for. We have to lock the launcher manually changing
+        * the _hidden state then
+        */
+        if (autohide_progress == 0.0f && _mouse_inside_trigger && !_mouseover_launcher_locked)
+            ForceHiddenState (false); // lock the launcher
     }
     
     float drag_hide_progress = DragHideProgress (current);
@@ -1412,6 +1423,19 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
 
   _hidemode = hidemode;
   EnsureAnimation ();
+}
+
+Launcher::AutoHideAnimation Launcher::GetAutoHideAnimation ()
+{
+  return _autohide_animation;
+}
+
+void Launcher::SetAutoHideAnimation (AutoHideAnimation animation)
+{
+  if (_autohide_animation == animation)
+    return;
+
+  _autohide_animation = animation;
 }
 
 void Launcher::SetFloating (bool floating)

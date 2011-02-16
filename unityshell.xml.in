@@ -132,6 +132,25 @@
                         <_name>Wiggle</_name>
                     </desc>
                 </option>
+                <option name="autohide_animation" type="int">
+                    <_short>Hide Animation</_short>
+                    <_long>Animation played when the launcher is showing or hiding</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>0</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>Fade on bfb and Slide</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Side only</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Fade only</_name>
+                    </desc>
+                </option>
             </group>
         </options>
     </plugin>

@@ -68,6 +68,13 @@ public:
     URGENT_ANIMATION_PULSE,
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
+  
+  typedef enum
+  {
+    FADE_SLIDE,
+    SLIDE_ONLY,
+    FADE_ONLY,
+  } AutoHideAnimation;
 
   typedef enum
   {
@@ -98,7 +105,7 @@ public:
 
   void SetHideMode (LauncherHideMode hidemode);
   LauncherHideMode GetHideMode ();
-
+  
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
 
@@ -110,6 +117,9 @@ public:
   
   void SetUrgentAnimation (UrgentAnimation animation);
   UrgentAnimation GetUrgentAnimation ();
+  
+  void SetAutoHideAnimation (AutoHideAnimation animation);
+  AutoHideAnimation GetAutoHideAnimation ();
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -227,8 +237,7 @@ private:
   float DnDStartProgress             (struct timespec const &current);
   float DnDExitProgress              (struct timespec const &current);
   float GetHoverProgress             (struct timespec const &current);
-  float AutohidePositionProgress     (struct timespec const &current);
-  float AutohideFadeProgress         ();
+  float AutohideProgress             (struct timespec const &current);
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
@@ -367,6 +376,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
+  AutoHideAnimation _autohide_animation;
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
