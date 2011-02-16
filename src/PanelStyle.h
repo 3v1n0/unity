@@ -26,10 +26,26 @@
 class PanelStyle : public nux::Object
 {
   public:
+    typedef enum
+    {
+      CLOSE = 0,
+      MINIMIZE,
+      MAXIMIZE
+
+    } PanelWindowButtonType;
+
+    typedef enum
+    {
+      NORMAL,
+      PRELIGHT,
+      PRESSED
+    
+    } PanelWindowState;
+    
+    static PanelStyle * GetDefault ();
+
     PanelStyle ();
     ~PanelStyle ();
-
-    static PanelStyle * GetDefault ();
 
     nux::Color& GetTextColor ();
     nux::Color& GetBackgroundTop ();
@@ -37,6 +53,8 @@ class PanelStyle : public nux::Object
     nux::Color& GetTextShadow ();
 
     GdkPixbuf * GetBackground (int width, int height);
+
+    nux::BaseTexture * GetWindowButton (PanelWindowButtonType type, PanelWindowState state);
 
     sigc::signal<void> changed;
 

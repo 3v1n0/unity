@@ -191,10 +191,30 @@ PanelView::UpdateBackground ()
 void
 PanelView::ForceUpdateBackground ()
 {
-  _is_dirty = true;
+  std::list<Area *>::iterator it;
 
+  _is_dirty = true;
   UpdateBackground ();
 
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    view->QueueDraw ();
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+    {
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+      entry->QueueDraw ();
+    }
+  }
+  _home_button->QueueDraw ();
   QueueDraw ();
 }
 
@@ -365,9 +385,6 @@ PanelView::SetOpacity (float opacity)
     return;
 
   _opacity = opacity;
-  _is_dirty = true;
-
-  UpdateBackground ();
-  NeedRedraw ();
-  _layout->NeedRedraw ();
+  
+  ForceUpdateBackground ();
 }

@@ -125,3 +125,8 @@ PanelStyle::GetBackground (int width, int height)
   return gtk_offscreen_window_get_pixbuf (GTK_OFFSCREEN_WINDOW (_offscreen));
 }
 
+nux::BaseTexture *
+PanelStyle::GetWindowButton (PanelWindowButtonType type, PanelWindowState state)
+{
+  return NULL;
+}

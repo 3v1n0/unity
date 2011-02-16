@@ -100,7 +100,7 @@ PanelHomeButton::Refresh ()
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
                                                             nux::Color::White,  // The color used to modulate the texture.
-                                                            false,  // Write the alpha value of the texture to the destination buffer.
+                                                            true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );
 
