@@ -30,13 +30,21 @@
 
 #include "nux-object-accessible.h"
 
+#include <sigc++/connection.h>
+
 /* GObject */
 static void nux_object_accessible_class_init (NuxObjectAccessibleClass *klass);
 static void nux_object_accessible_init       (NuxObjectAccessible *object_accessible);
+static void nux_object_accessible_finalize   (GObject *object);
 
 /* AtkObject.h */
 static void       nux_object_accessible_initialize     (AtkObject *accessible,
-                                                      gpointer   data);
+                                                        gpointer   data);
+static AtkStateSet* nux_object_accessible_ref_state_set  (AtkObject *accessible);
+
+/* Private methods */
+static void       on_object_destroy_cb (NuxObjectAccessible *object_accessible);
+
 
 #define NUX_OBJECT_ACCESSIBLE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_OBJECT_ACCESSIBLE, NuxObjectAccessiblePrivate))
@@ -46,6 +54,7 @@ G_DEFINE_TYPE (NuxObjectAccessible, nux_object_accessible,  ATK_TYPE_OBJECT)
 struct _NuxObjectAccessiblePrivate
 {
   nux::Object *object;
+  sigc::connection on_destroyed_connection;
 };
 
 static void
@@ -54,8 +63,11 @@ nux_object_accessible_class_init (NuxObjectAccessibleClass *klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
+  gobject_class->finalize = nux_object_accessible_finalize;
+
   /* AtkObject */
   atk_class->initialize = nux_object_accessible_initialize;
+  atk_class->ref_state_set = nux_object_accessible_ref_state_set;
 
   g_type_class_add_private (gobject_class, sizeof (NuxObjectAccessiblePrivate));
 }
@@ -82,10 +94,20 @@ nux_object_accessible_new (nux::Object *object)
   return accessible;
 }
 
+static void
+nux_object_accessible_finalize (GObject *object)
+{
+  NuxObjectAccessible *self = NUX_OBJECT_ACCESSIBLE (object);
+
+  self->priv->on_destroyed_connection.disconnect ();
+
+  G_OBJECT_CLASS (nux_object_accessible_parent_class)->finalize (object);
+}
+
 /* AtkObject.h */
 static void
 nux_object_accessible_initialize (AtkObject *accessible,
-                                gpointer data)
+                                  gpointer data)
 {
   NuxObjectAccessible *self = NULL;
   nux::Object *object = NULL;
@@ -93,10 +115,13 @@ nux_object_accessible_initialize (AtkObject *accessible,
   ATK_OBJECT_CLASS (nux_object_accessible_parent_class)->initialize (accessible, data);
 
   self = NUX_OBJECT_ACCESSIBLE (accessible);
-  object = (nux::Object*)data;
+  object = (nux::Object *) data;
 
-  self->priv->object = object; /* FIXME: object destruction management (for
-                                  the defunct state) */
+  self->priv->object = object;
+
+  self->priv->on_destroyed_connection =
+    object->OnDestroyed.connect (sigc::bind (sigc::ptr_fun (on_object_destroy_cb), self));
+
   accessible->role = ATK_ROLE_UNKNOWN;
 }
 
@@ -114,4 +139,29 @@ nux::Object *
 nux_object_accessible_get_object (NuxObjectAccessible *self)
 {
   return self->priv->object;
+}
+
+static AtkStateSet*
+nux_object_accessible_ref_state_set (AtkObject *obj)
+{
+  AtkStateSet *state_set = NULL;
+
+  g_return_val_if_fail (NUX_IS_OBJECT_ACCESSIBLE (obj), NULL);
+
+  state_set = ATK_OBJECT_CLASS (nux_object_accessible_parent_class)->ref_state_set (obj);
+
+  if (NUX_OBJECT_ACCESSIBLE (obj)->priv->object == NULL)
+    atk_state_set_add_state (state_set, ATK_STATE_DEFUNCT);
+
+  return state_set;
+}
+
+/* Private methods */
+static void
+on_object_destroy_cb (NuxObjectAccessible *object_accessible)
+{
+  object_accessible->priv->object = NULL;
+  object_accessible->priv->on_destroyed_connection.disconnect ();
+  atk_object_notify_state_change (ATK_OBJECT (object_accessible), ATK_STATE_DEFUNCT,
+                                  TRUE);
 }
