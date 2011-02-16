@@ -28,19 +28,19 @@ class PanelStyle : public nux::Object
   public:
     typedef enum
     {
-      CLOSE = 0,
-      MINIMIZE,
-      MAXIMIZE
+      WINDOW_BUTTON_CLOSE = 0,
+      WINDOW_BUTTON_MINIMIZE,
+      WINDOW_BUTTON_UNMAXIMIZE
 
-    } PanelWindowButtonType;
+    } WindowButtonType;
 
     typedef enum
     {
-      NORMAL,
-      PRELIGHT,
-      PRESSED
+      WINDOW_STATE_NORMAL,
+      WINDOW_STATE_PRELIGHT,
+      WINDOW_STATE_PRESSED
     
-    } PanelWindowState;
+    } WindowState;
     
     static PanelStyle * GetDefault ();
 
@@ -54,7 +54,7 @@ class PanelStyle : public nux::Object
 
     GdkPixbuf * GetBackground (int width, int height);
 
-    nux::BaseTexture * GetWindowButton (PanelWindowButtonType type, PanelWindowState state);
+    nux::BaseTexture * GetWindowButton (WindowButtonType type, WindowState state);
 
     sigc::signal<void> changed;
 
@@ -65,6 +65,7 @@ class PanelStyle : public nux::Object
                                 gpointer    data);
   private:
     GtkWidget         *_offscreen;
+    char              *_theme_name;
     nux::Color         _text;
     nux::Color         _bg_top;
     nux::Color         _bg_bottom;
