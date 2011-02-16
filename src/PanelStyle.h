@@ -56,6 +56,8 @@ class PanelStyle : public nux::Object
 
     nux::BaseTexture * GetWindowButton (WindowButtonType type, WindowState state);
 
+    GdkPixbuf * GetHomeButton ();
+
     sigc::signal<void> changed;
 
   private:

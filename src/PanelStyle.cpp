@@ -16,6 +16,8 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
+#include "config.h"
+
 #include <math.h>
 #include <gtk/gtk.h>
 
@@ -246,4 +248,26 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   delete bitmap;
 
   return texture;
+}
+
+GdkPixbuf *
+PanelStyle::GetHomeButton ()
+{
+  GdkPixbuf *pixbuf = NULL;
+
+  if (g_str_has_prefix (_theme_name, "Ambiance"))
+    pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/bfb.png", NULL);
+  else
+    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                       "start-here",
+                                       24,
+                                       (GtkIconLookupFlags)0,
+                                       NULL); 
+  if (pixbuf == NULL)
+    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                       "distributor-logo",
+                                       24,
+                                       (GtkIconLookupFlags)0,
+                                       NULL);
+  return pixbuf;
 }
