@@ -16,7 +16,12 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
+#include <math.h>
 #include <gtk/gtk.h>
+
+#include <Nux/Nux.h>
+#include <NuxGraphics/GraphicsEngine.h>
+#include <NuxImage/CairoGraphics.h>
 
 #include "PanelStyle.h"
 
@@ -169,8 +174,76 @@ PanelStyle::GetWindowButton (WindowButtonType type, WindowState state)
   }
   else
   {
-
+    texture = GetWindowButtonForTheme (type, state);
   }
+
+  return texture;
+}
+
+nux::BaseTexture *
+PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
+{
+  nux::BaseTexture *texture = NULL;
+  int width = 18, height = 18;
+  float w = width/3.0f;
+  float h = height/3.0f;
+  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 22, 22);
+  cairo_t *cr;
+  nux::Color main = _text;
+
+  if (type == WINDOW_BUTTON_CLOSE)
+  {
+    main = nux::Color (1.0f, 0.3f, 0.3f, 0.8f);
+  }
+
+  if (state == WINDOW_STATE_PRELIGHT)
+    main = main * 1.2f;
+  else if (state == WINDOW_STATE_PRESSED)
+    main = main * 0.8f;
+  
+  cr  = cairo_graphics.GetContext();
+  cairo_translate (cr, 0.5, 0.5);
+  cairo_set_line_width (cr, 1.5f);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  
+  cairo_set_source_rgba (cr, main.GetRed (), main.GetGreen (), main.GetBlue (), main.GetAlpha ());
+
+  cairo_arc (cr, width/2.0f, height/2.0f, (width - 2)/2.0f, 0.0f, 360 * (M_PI/180));
+  cairo_stroke (cr);
+
+  if (type == WINDOW_BUTTON_CLOSE)
+  {
+    cairo_move_to (cr, w, h);
+    cairo_line_to (cr, width - w, height - h);
+    cairo_move_to (cr, width -w, h);
+    cairo_line_to (cr, w, height - h);
+  }
+  else if (type == WINDOW_BUTTON_MINIMIZE)
+  {
+    cairo_move_to (cr, w, height/2.0f);
+    cairo_line_to (cr, width - w, height/2.0f);
+  }
+  else
+  {
+    cairo_move_to (cr, w, h);
+    cairo_line_to (cr, width - w, h);
+    cairo_line_to (cr, width - w, height - h);
+    cairo_line_to (cr, w, height -h);
+    cairo_close_path (cr);
+  }
+
+  cairo_stroke (cr);
+
+  cairo_destroy (cr);
+  
+  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
+  texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  texture->Update(bitmap);
+  delete bitmap;
 
   return texture;
 }

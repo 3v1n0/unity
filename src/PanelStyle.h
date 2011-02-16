@@ -63,6 +63,7 @@ class PanelStyle : public nux::Object
     static void OnStyleChanged (GObject*    gobject,
                                 GParamSpec* pspec,
                                 gpointer    data);
+    nux::BaseTexture * GetWindowButtonForTheme (WindowButtonType type, WindowState state);
   private:
     GtkWidget         *_offscreen;
     char              *_theme_name;

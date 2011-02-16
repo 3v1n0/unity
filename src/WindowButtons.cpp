@@ -104,7 +104,7 @@ public:
     _pressed_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_PRESSED);
 
     if (_normal_tex)
-      SetMinimumSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
+      SetMinMaxSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
 
     QueueDraw ();
   }
