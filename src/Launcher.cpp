@@ -253,6 +253,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
+    _autohide_animation     = FADE_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -290,11 +291,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
+    _mouseover_launcher_locked = false;
     _super_show_launcher    = false;
     _navmod_show_launcher   = false;
     _placeview_show_launcher = false;
     _window_over_launcher   = false;
-    _hide_on_action_done    = false;
     _hide_on_drag_hover     = false;
     _render_drag_window     = false;
     _dnd_window_is_mapped   = false;
@@ -302,6 +303,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _last_button_press      = 0;
     _selection_atom         = 0;
     
+    // set them to 1 instead of 0 to avoid :0 in case something is racy
+    _trigger_width = 1;
+    _trigger_height = 1;
 
     // 0 out timers to avoid wonky startups
     int i;
@@ -432,13 +436,43 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 
 float Launcher::AutohideProgress (struct timespec const &current)
 {
-    if (_hidemode == LAUNCHER_HIDE_NEVER)
-        return 0.0f;
-
-    if (_hidden)
-        return CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    
+    // bfb position progress
+    if (_mouse_inside_trigger)
+    {
+        /* 
+        * most of the mouse movement should be done by the inferior part
+        * of the launcher, so prioritize this one
+        */
+        
+        if(_mouseover_launcher_locked || ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0)))
+            return 0.0f;
+        
+        float _max_size_on_position;
+        float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
+        
+        if (position_on_border < _trigger_width)
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_height, 2), 0.5);
+        else
+        {
+            position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
+        }
+        // only triggered on _hidden = false, no need for check
+        return CLAMP (pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position, 0.0f, 1.0f);  
+    }
+    
+    // time-based progress
     else
-        return 1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    {
+        float animation_progress;    
+        animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+        if (_hidden)
+            return animation_progress;
+        else
+            return 1.0f - animation_progress;  
+    }
+    
 }
 
 float Launcher::DragHideProgress (struct timespec const &current)
@@ -530,7 +564,7 @@ bool Launcher::AnimationInProgress ()
     // hover out animation
     if (TimeDelta (&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
         return true;
-    
+  
     // drag start animation
     if (TimeDelta (&current, &_times[TIME_DRAG_START]) < ANIM_DURATION)
         return true;
@@ -539,8 +573,10 @@ bool Launcher::AnimationInProgress ()
     if (TimeDelta (&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
         return true;
 
-    // hide animation
+    // hide animation (time or position)
     if (TimeDelta (&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
+        return true;
+    if (_mouse_inside_trigger && !_mouseover_launcher_locked)
         return true;
     
     // collapse animation on DND out of launcher space
@@ -935,7 +971,7 @@ float Launcher::DragLimiter (float x)
 }
 
 void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
-                           nux::Geometry &box_geo)
+                           nux::Geometry &box_geo, float *launcher_alpha)
 {
     nux::Geometry geo = GetGeometry ();
     LauncherModel::iterator it;
@@ -1016,11 +1052,37 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         _launcher_drag_delta = 0;
     }
 
-    float autohide_progress = AutohideProgress (current);
     float autohide_offset = 0.0f;
-    if (_hidemode != LAUNCHER_HIDE_NEVER && autohide_progress > 0.0f)
+    *launcher_alpha = 1.0f; 
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
     {
-        autohide_offset -= geo.width * autohide_progress;
+        float autohide_progress = AutohideProgress (current);
+
+        if (_autohide_animation == FADE_ONLY
+            || (_autohide_animation == FADE_SLIDE && _mouse_inside_trigger))
+        {
+            if (autohide_progress > 0.0f)
+            {    
+                if (_mouse_inside_trigger)
+                {
+                    if (!_mouseover_launcher_locked)
+                        *launcher_alpha = 1.0f - (autohide_progress / 1.5f);
+                }
+                else
+                    *launcher_alpha = 1.0f - autohide_progress;
+            }
+        }
+        else
+        {
+            if (autohide_progress > 0.0f)
+                autohide_offset -= geo.width * autohide_progress;
+        }
+        /* _mouse_inside_trigger is particular because we don't change _hidden state
+        * as we can go back and for. We have to lock the launcher manually changing
+        * the _hidden state then
+        */
+        if (autohide_progress == 0.0f && _mouse_inside_trigger && !_mouseover_launcher_locked)
+            ForceHiddenState (false); // lock the launcher
     }
     
     float drag_hide_progress = DragHideProgress (current);
@@ -1120,13 +1182,16 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   gchar        *prop_key;
   GVariant     *prop_value;
   GVariantIter *prop_iter;
-  int x, y;
+  int x, y, trigger_width, trigger_height;
 
   Launcher *self = (Launcher*)user_data;
   
-  g_variant_get (data, "(iia{sv})", &x, &y, &prop_iter);
+  g_variant_get (data, "(iiiia{sv})", &x, &y, &trigger_width, &trigger_height, &prop_iter);
   self->_trigger_mouse_position = nux::Point2 (x, y);
   
+  self->_trigger_width = trigger_width;
+  self->_trigger_height = trigger_height;
+    
   g_return_if_fail (prop_iter != NULL);
 
   while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
@@ -1134,20 +1199,11 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
     if (g_str_equal ("hovered", prop_key))
     {
       self->_mouse_inside_trigger = g_variant_get_boolean (prop_value);
-      
       if (self->_mouse_inside_trigger)
-      {
         self->_hide_on_drag_hover = false;
-        self->EnsureHiddenState ();
-        self->EnsureHoverState ();
-        self->EnsureScrollTimer ();
-      }
-      else
-      {
-        self->SetupAutohideTimer ();
-        self->EnsureHoverState ();
-        self->EnsureScrollTimer ();
-      }
+      self->EnsureHiddenState ();
+      self->EnsureHoverState ();
+      self->EnsureScrollTimer ();    
     }
   }
 }
@@ -1155,14 +1211,28 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
 void Launcher::OnActionDone (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
-    self->_hide_on_action_done = true;
+    self->_mouseover_launcher_locked = false;
     self->SetupAutohideTimer ();
+}
+
+void Launcher::ForceHiddenState (bool hidden)
+{
+    // force hidden state skipping the animation
+    SetHidden (hidden);
+    _times[TIME_AUTOHIDE].tv_sec = 0;
+    _times[TIME_AUTOHIDE].tv_nsec = 0;
 }
 
 void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
+
+    // auto lock/unlock the launcher depending on the state switch
+    if (hidden)
+        _mouseover_launcher_locked = false;
+    else
+        _mouseover_launcher_locked = true;
 
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
@@ -1188,7 +1258,7 @@ void
 Launcher::EnsureHiddenState ()
 {
   // compiler should optimize this, we do this for readability
-  bool mouse_over_launcher = _mouse_inside_trigger || (_mouse_inside_launcher && !_hide_on_action_done);
+  bool mouse_over_launcher = _mouseover_launcher_locked && (_mouse_inside_trigger || _mouse_inside_launcher);
   
   bool required_for_external_purpose = _super_show_launcher || _placeview_show_launcher || _navmod_show_launcher ||
                                        QuicklistManager::Default ()->Current() || PluginAdapter::Default ()->IsScaleActive ();
@@ -1356,6 +1426,19 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
 
   _hidemode = hidemode;
   EnsureAnimation ();
+}
+
+Launcher::AutoHideAnimation Launcher::GetAutoHideAnimation ()
+{
+  return _autohide_animation;
+}
+
+void Launcher::SetAutoHideAnimation (AutoHideAnimation animation)
+{
+  if (_autohide_animation == animation)
+    return;
+
+  _autohide_animation = animation;
 }
 
 void Launcher::SetFloating (bool floating)
@@ -1962,6 +2045,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     std::list<Launcher::RenderArg> args;
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
     std::list<Launcher::RenderArg>::iterator it;
+    float launcher_alpha = 1.0f;
 
     // rely on the compiz event loop to come back to us in a nice throttling
     if (AnimationInProgress ())   
@@ -1972,7 +2056,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     ROP.SrcBlend = GL_ONE;
     ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    RenderArgs (args, bkg_box);
+    RenderArgs (args, bkg_box, &launcher_alpha);
 
     if (_drag_icon && _render_drag_window)
     {
@@ -2027,6 +2111,13 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
 
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
+    nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
+    alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
+                        alpha_mask.B () * launcher_alpha, launcher_alpha);
+    gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
+    
     GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetBlend (false);
 
@@ -2234,9 +2325,18 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition (x, y);
   _mouse_inside_launcher = false;
-
+      
   if (_launcher_action_state == ACTION_NONE)
       EnsureHoverState ();
+
+  // exit immediatly on action and mouse leaving the launcher
+  if (!_mouseover_launcher_locked)
+  {
+    if (_autohide_handle > 0)
+      g_source_remove (_autohide_handle);
+    _autohide_handle = 0;
+    EnsureHiddenState ();
+  }
 
   EventLogic ();
   EnsureAnimation ();
@@ -2408,7 +2508,7 @@ void Launcher::EventLogic ()
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
     // reset trigger has the mouse moved to another item
-    _hide_on_action_done = false;
+    _mouseover_launcher_locked = true;
   }
 }
 
@@ -2973,6 +3073,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   std::list<char *>::iterator it;
   nux::Area *parent = GetToplevel ();
   char *remote_desktop_path = NULL;
+  char *uri_list_const = g_strdup ("text/uri-list");
   
   if (!_data_checked)
   {
@@ -2981,10 +3082,10 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     // get the data
     for (it = mimes.begin (); it != mimes.end (); it++)
     {
-      if (!g_str_equal (*it, "text/uri-list"))
+      if (!g_str_equal (*it, uri_list_const))
         continue;
       
-      _drag_data = StringToUriList (nux::GetWindow ().GetDndData ("text/uri-list"));
+      _drag_data = StringToUriList (nux::GetWindow ().GetDndData (uri_list_const));
       break;
     }
     
@@ -2999,6 +3100,8 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
       }
     }
   }
+  
+  g_free (uri_list_const);
   
   SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
   

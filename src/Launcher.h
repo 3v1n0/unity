@@ -68,6 +68,13 @@ public:
     URGENT_ANIMATION_PULSE,
     URGENT_ANIMATION_WIGGLE,
   } UrgentAnimation;
+  
+  typedef enum
+  {
+    FADE_SLIDE,
+    SLIDE_ONLY,
+    FADE_ONLY,
+  } AutoHideAnimation;
 
   typedef enum
   {
@@ -98,7 +105,7 @@ public:
 
   void SetHideMode (LauncherHideMode hidemode);
   LauncherHideMode GetHideMode ();
-
+  
   void StartKeyShowLauncher ();
   void EndKeyShowLauncher ();
 
@@ -110,6 +117,9 @@ public:
   
   void SetUrgentAnimation (UrgentAnimation animation);
   UrgentAnimation GetUrgentAnimation ();
+  
+  void SetAutoHideAnimation (AutoHideAnimation animation);
+  AutoHideAnimation GetAutoHideAnimation ();
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -224,27 +234,28 @@ private:
   void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
 
-  float DnDStartProgress        (struct timespec const &current);
-  float DnDExitProgress         (struct timespec const &current);
-  float GetHoverProgress        (struct timespec const &current);
-  float AutohideProgress        (struct timespec const &current);
-  float DragThresholdProgress   (struct timespec const &current);
-  float DragHideProgress        (struct timespec const &current);
-  float IconPresentProgress     (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentProgress      (LauncherIcon *icon, struct timespec const &current);
-  float IconShimmerProgress     (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentPulseValue    (LauncherIcon *icon, struct timespec const &current);
-  float IconUrgentWiggleValue   (LauncherIcon *icon, struct timespec const &current);
-  float IconStartingBlinkValue  (LauncherIcon *icon, struct timespec const &current);
-  float IconStartingPulseValue  (LauncherIcon *icon, struct timespec const &current);
-  float IconBackgroundIntensity (LauncherIcon *icon, struct timespec const &current);
-  float IconProgressBias        (LauncherIcon *icon, struct timespec const &current);
-  float IconDropDimValue        (LauncherIcon *icon, struct timespec const &current);
+  float DnDStartProgress             (struct timespec const &current);
+  float DnDExitProgress              (struct timespec const &current);
+  float GetHoverProgress             (struct timespec const &current);
+  float AutohideProgress             (struct timespec const &current);
+  float DragThresholdProgress        (struct timespec const &current);
+  float DragHideProgress             (struct timespec const &current);
+  float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
+  float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentPulseValue         (LauncherIcon *icon, struct timespec const &current);
+  float IconUrgentWiggleValue        (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingBlinkValue       (LauncherIcon *icon, struct timespec const &current);
+  float IconStartingPulseValue       (LauncherIcon *icon, struct timespec const &current);
+  float IconBackgroundIntensity      (LauncherIcon *icon, struct timespec const &current);
+  float IconProgressBias             (LauncherIcon *icon, struct timespec const &current);
+  float IconDropDimValue             (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
-  void SetHover   ();
-  void UnsetHover ();
-  void SetHidden  (bool hidden);
+  void SetHover         ();
+  void UnsetHover       ();
+  void ForceHiddenState (bool hidden);
+  void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
   float DragLimiter (float x);
@@ -262,7 +273,7 @@ private:
                       struct timespec const &current);
                       
   void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
-                   nux::Geometry &box_geo);
+                   nux::Geometry &box_geo, float *launcher_alpha);
 
   void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
@@ -344,11 +355,11 @@ private:
   bool  _hidden;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
+  bool  _mouseover_launcher_locked;
   bool  _super_show_launcher;
   bool  _navmod_show_launcher;
   bool  _placeview_show_launcher;
   bool  _window_over_launcher;
-  bool  _hide_on_action_done;
   bool  _hide_on_drag_hover;
   bool  _render_drag_window;
   
@@ -365,6 +376,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
+  AutoHideAnimation _autohide_animation;
   
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
@@ -381,6 +393,9 @@ private:
   int _dnd_security;
   int _enter_y;
   int _last_button_press;
+  
+  int _trigger_width;
+  int _trigger_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
