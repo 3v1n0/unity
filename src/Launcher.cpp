@@ -3067,6 +3067,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   std::list<char *>::iterator it;
   nux::Area *parent = GetToplevel ();
   char *remote_desktop_path = NULL;
+  char *uri_list_const = g_strdup ("text/uri-list");
   
   if (!_data_checked)
   {
@@ -3075,10 +3076,10 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     // get the data
     for (it = mimes.begin (); it != mimes.end (); it++)
     {
-      if (!g_str_equal (*it, "text/uri-list"))
+      if (!g_str_equal (*it, uri_list_const))
         continue;
       
-      _drag_data = StringToUriList (nux::GetWindow ().GetDndData ("text/uri-list"));
+      _drag_data = StringToUriList (nux::GetWindow ().GetDndData (uri_list_const));
       break;
     }
     
@@ -3093,6 +3094,8 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
       }
     }
   }
+  
+  g_free (uri_list_const);
   
   SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
   
