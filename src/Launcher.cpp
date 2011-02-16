@@ -2507,8 +2507,9 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
-    // reset trigger has the mouse moved to another item
-    _mouseover_launcher_locked = true;
+    // reset trigger has the mouse moved to another item (only if the launcher is supposed to be seen)
+    if (!_hidden)
+      _mouseover_launcher_locked = true;
   }
 }
 
