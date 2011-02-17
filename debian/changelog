@@ -1,3 +1,9 @@
+unity (3.4.2-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/source_unity.py: enhanced apport hook for incoming compiz hook
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Feb 2011 13:12:08 +0100
+
 unity (3.4.2-0ubuntu2) natty; urgency=low
 
   * backport some fixes from trunk like launcher can be wrongly shown
