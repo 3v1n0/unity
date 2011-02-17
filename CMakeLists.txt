@@ -85,6 +85,12 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
+SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self")
+option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
+if (DISABLE_MAINTAINER_CFLAGS)
+  SET (MAINTAINER_CFLAGS "")
+endif (DISABLE_MAINTAINER_CFLAGS)
+
 #
 # src (Compiz Plugin)
 #
@@ -95,7 +101,7 @@ include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"'"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
                )
  
 #

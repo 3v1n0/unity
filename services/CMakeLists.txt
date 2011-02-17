@@ -10,6 +10,7 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable iconsdir 
 set(CFLAGS
     ${SERVICE_DEPS_CFLAGS}
     ${SERVICE_DEPS_CFLAGS_OTHER}
+    ${MAINTAINER_CFLAGS}
     "-DGETTEXT_PACKAGE=\"unity\""
     "-DINDICATORDIR=\"${_indicatordir}\""
     "-DINDICATORICONDIR=\"${_iconsdir}\""
