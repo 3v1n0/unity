@@ -17,8 +17,8 @@
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
-#ifndef VARIANTBUILDER_H
-#define VARIANTBUILDER_H
+#ifndef UNITY_VARIANT_H
+#define UNITY_VARIANT_H
 
 #include <glib.h>
 
