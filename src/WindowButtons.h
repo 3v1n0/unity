@@ -19,6 +19,7 @@
 #ifndef WINDOW_BUTTONS_H
 #define WINDOW_BUTTONS_H
 
+#include <Nux/HLayout.h>
 #include <Nux/View.h>
 
 #include "Introspectable.h"

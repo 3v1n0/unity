@@ -37,6 +37,8 @@
 #define PANEL_HEIGHT 24
 #define BUTTON_WIDTH 66
 
+NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
+
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
   _util_cg (CAIRO_FORMAT_ARGB32, BUTTON_WIDTH, PANEL_HEIGHT)
@@ -139,10 +141,12 @@ PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsig
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
-  
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
+      
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
   g_variant_builder_close (&builder);
@@ -157,9 +161,11 @@ PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsig
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (false));
@@ -175,9 +181,11 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_close (&builder);

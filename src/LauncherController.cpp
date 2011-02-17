@@ -47,7 +47,11 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _device_section = new DeviceLauncherSection (_launcher);
   _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
-  InsertExpoAction ();
+  _num_workspaces = _screen->vpSize ().width ();
+  if(_num_workspaces > 1)
+  {
+    InsertExpoAction ();
+  }
   InsertTrash ();
 
   g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
@@ -160,20 +164,40 @@ LauncherController::InsertTrash ()
 }
 
 void
+LauncherController::UpdateNumWorkspaces (int workspaces)
+{
+  if ((_num_workspaces == 0) && (workspaces > 0))
+  {
+    InsertExpoAction ();
+  }
+  else if((_num_workspaces > 0) && (workspaces == 0))
+  {
+    RemoveExpoAction ();
+  }
+  
+  _num_workspaces = workspaces;
+}
+
+void
 LauncherController::InsertExpoAction ()
 {
-  SimpleLauncherIcon *expoIcon;
-  expoIcon = new SimpleLauncherIcon (_launcher);
+  _expoIcon = new SimpleLauncherIcon (_launcher);
   
-  expoIcon->SetTooltipText (_("Workspace Switcher"));
-  expoIcon->SetIconName ("workspace-switcher");
-  expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
-  expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
-  expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
+  _expoIcon->SetTooltipText (_("Workspace Switcher"));
+  _expoIcon->SetIconName ("workspace-switcher");
+  _expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
+  _expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
+  _expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
   
-  expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
+  _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   
-  RegisterIcon (expoIcon);
+  RegisterIcon (_expoIcon);
+}
+
+void
+LauncherController::RemoveExpoAction ()
+{
+  _model->RemoveIcon (_expoIcon);
 }
 
 void

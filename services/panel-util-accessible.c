@@ -22,7 +22,7 @@
 G_DEFINE_TYPE(PanelUtilAccessible, panel_util_accessible, ATK_TYPE_UTIL)
 
 /* AtkUtil methods */
-static AtkObject   *panel_util_accessible_get_root (void);
+static AtkObject *panel_util_accessible_get_root (void);
 
 static AtkObject *root = NULL;
 
@@ -52,8 +52,6 @@ panel_util_accessible_get_root (void)
 {
   if (!root)
     root = panel_root_accessible_new ();
-
-  g_debug ("Returning root A11Y object at %p", root);
 
   return root;
 }
