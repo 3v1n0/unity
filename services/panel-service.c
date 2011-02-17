@@ -963,10 +963,13 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  GtkWidget            *last_menu;
 
   if (priv->last_entry == entry)
     return;
+
+  last_menu = GTK_WIDGET (priv->last_menu);
   
   if (GTK_IS_MENU (priv->last_menu))
     {
@@ -975,7 +978,6 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-      gtk_menu_popdown (GTK_MENU (priv->last_menu));
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
@@ -1016,6 +1018,13 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
+
+  /* We popdown the old one last so we don't accidently send key focus back to the
+   * active application (which will make it change colour (as state changes), which
+   * then looks like flickering to the user.
+   */
+  if (GTK_MENU (last_menu))
+    gtk_menu_popdown (GTK_MENU (last_menu));
 }
 
 void

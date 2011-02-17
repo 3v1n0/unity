@@ -51,7 +51,6 @@ private:
 
 private:
   nux::CairoGraphics _util_cg;
-  GdkPixbuf *_pixbuf;
 };
 
 #endif // PANEL_HOME_BUTTON_H

@@ -223,6 +223,28 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 }
 
 bool
+UnityScreen::showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                            CompAction::State   state,
+                                            CompOption::Vector &options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);
+  
+  panelView->StartFirstMenuShow ();
+  return false;
+}
+
+bool
+UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                             CompAction::State   state,
+                                             CompOption::Vector &options)
+{
+  panelView->EndFirstMenuShow ();
+  return false;
+}
+
+bool
 UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
@@ -473,6 +495,8 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::UrgentAnimation:
       launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
       break;
+    case UnityshellOptions::PanelOpacity:
+      panelView->SetOpacity (optionGetPanelOpacity ());
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation ((Launcher::AutoHideAnimation) optionGetAutohideAnimation ());
       break;
@@ -558,15 +582,18 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
   ubus_server_register_interest (ubus_server_get_default (),
                                  UBUS_LAUNCHER_EXIT_KEY_NAV,

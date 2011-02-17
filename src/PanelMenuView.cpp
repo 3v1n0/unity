@@ -29,6 +29,7 @@
 #include "Nux/WindowCompositor.h"
 
 #include "PanelMenuView.h"
+#include "PanelStyle.h"
 
 #include "WindowManager.h"
 
@@ -56,6 +57,7 @@ PanelMenuView::PanelMenuView (int padding)
   _title_tex (NULL),
   _is_inside (false),
   _is_maximized (false),
+  _is_own_window (false),
   _last_active_view (NULL)
 {
   WindowManager *win_manager;
@@ -97,6 +99,8 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
+
+  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
 
   Refresh ();
 }
@@ -223,14 +227,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_maximized)
+  if (_is_own_window)
+  {
+
+  }
+  else if (_is_maximized)
   {
     if (!_is_inside && !_last_active_view)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
   {
-    if (_is_inside || _last_active_view)
+    if ((_is_inside || _last_active_view) && _entries.size ())
     {
       if (_gradient_texture == NULL)
       {
@@ -273,9 +281,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         _gradient_texture->UnlockRect (0);
       }
+      guint alpha = 0, src = 0, dest = 0;
 
-      GfxContext.GetRenderStates ().SetBlend (true);
-      GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+      GfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+      GfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
@@ -289,8 +298,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::Color::White);
 
-      GfxContext.GetRenderStates ().SetBlend(false);
-
+      GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
@@ -317,14 +325,17 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (_is_inside || _last_active_view)
+  if (!_is_own_window)
   {
-    _layout->ProcessDraw (GfxContext, force_draw);
-  }
+    if (_is_inside || _last_active_view)
+    {
+      _layout->ProcessDraw (GfxContext, force_draw);
+    }
 
-  if (_is_maximized)
-  {
-    _window_buttons->ProcessDraw (GfxContext, true);
+    if (_is_maximized)
+    {
+      _window_buttons->ProcessDraw (GfxContext, true);
+    }
   }
 
   GfxContext.PopClippingRectangle();
@@ -333,7 +344,20 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 gchar *
 PanelMenuView::GetActiveViewName ()
 {
-  gchar *label = NULL;
+  gchar         *label = NULL;
+  BamfWindow    *window;
+
+  // There's probably a better way to do this, but we really only want to ignore our own windows
+  // as there could be cases where windows like ours have menus and we don't want them to fall
+  // into this statement. Still, will investigate better ways to do this.
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window) 
+      && g_str_has_prefix (bamf_view_get_name (BAMF_VIEW (window)), "nux input"))
+  {
+    _is_own_window = true;
+  }
+  else
+    _is_own_window = false;
 
   if (_is_maximized)
   {
@@ -448,6 +472,11 @@ PanelMenuView::Refresh ()
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
   x = _padding;
   y = 0;
 
@@ -456,43 +485,27 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
+    nux::Color col = PanelStyle::GetDefault ()->GetTextColor ();
+    float red = col.GetRed (), blue = col.GetBlue (), green = col.GetGreen ();
+
     pango_cairo_update_layout (cr, layout);
 
     y += (height - text_height)/2;
     double startalpha = 1.0 - ((double)text_margin/(double)width);
 
-    // Once for the homies that couldn't be here
-    if (x+text_width >= width-1)
-    {
-        linpat = cairo_pattern_create_linear (x, y-1, width-1, y-1+text_height);
-        cairo_pattern_add_color_stop_rgb (linpat, 0, 50/255.0f, 50/255.0f, 45/255.0f);
-        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 50/255.0f, 50/255.0f, 45/255.0f);
-        cairo_pattern_add_color_stop_rgba (linpat, startalpha, 0, 0.0, 0.0, 0);
-        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
-        cairo_set_source(cr, linpat);
-        cairo_pattern_destroy(linpat);
-    }
-    else
-    {
-        cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
-    }
-    cairo_move_to (cr, x, y-1);
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
-
     // Once again for the homies that could
     if (x+text_width >= width-1)
     {
         linpat = cairo_pattern_create_linear (x, y, width-1, y+text_height);
-        cairo_pattern_add_color_stop_rgb (linpat, 0, 223/255.0f, 219/255.0f, 210/255.0f);
-        cairo_pattern_add_color_stop_rgb (linpat, startalpha, 223/255.0f, 219/255.0f, 210/255.0f);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, red, green, blue);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, red, green, blue);
         cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
         cairo_set_source(cr, linpat);
         cairo_pattern_destroy(linpat);
     }
     else
     {
-        cairo_set_source_rgb (cr, 223/255.0f, 219/255.0f, 210/255.0f);
+      cairo_set_source_rgb (cr, red, green, blue);
     }
     cairo_move_to (cr, x, y);
     pango_cairo_show_layout (cr, layout);
@@ -524,7 +537,7 @@ PanelMenuView::Refresh ()
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
                                         nux::Color::White,
-                                        false, 
+                                        true, 
                                         rop);
 
   
