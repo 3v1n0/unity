@@ -74,6 +74,10 @@ protected:
   virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
 
+  virtual nux::Geometry GetHighlightGeometry ();
+  
+  void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
+  
 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -89,6 +93,9 @@ protected:
   sigc::signal<void, PlacesTile*, int, int> sigMouseClick;
   sigc::signal<void, PlacesTile*, int, int> sigMouseDrag;
 
+  sigc::connection con_obj;
+  void OnDestroyNotify (nux::Trackable *Object);
+  
   TileState _state;
   nux::Layout *_layout;
   nux::BaseTexture *_hilight_background;
@@ -103,6 +110,7 @@ protected:
                              double   cornerRadius,
                              double   width,
                              double   height);
+
 
 private:
   int _last_width;

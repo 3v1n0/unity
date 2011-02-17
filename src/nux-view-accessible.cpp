@@ -53,36 +53,25 @@ static void on_end_focus_cb                   (AtkObject *accessible);
 static void nux_view_accessible_focus_handler (AtkObject *accessible,
                                                gboolean focus_in);
 
-#define NUX_VIEW_ACCESSIBLE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_VIEW_ACCESSIBLE, NuxViewAccessiblePrivate))
-
 G_DEFINE_TYPE_WITH_CODE (NuxViewAccessible,
                          nux_view_accessible,
                          NUX_TYPE_AREA_ACCESSIBLE,
                          G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
                                                 atk_component_interface_init))
 
-struct _NuxViewAccessiblePrivate
-{
-};
-
 static void
 nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = nux_view_accessible_initialize;
   atk_class->ref_state_set = nux_view_accessible_ref_state_set;
-
-  g_type_class_add_private (gobject_class, sizeof (NuxViewAccessiblePrivate));
 }
 
 static void
 nux_view_accessible_init (NuxViewAccessible *view_accessible)
 {
-  view_accessible->priv = NUX_VIEW_ACCESSIBLE_GET_PRIVATE (view_accessible);
 }
 
 AtkObject*

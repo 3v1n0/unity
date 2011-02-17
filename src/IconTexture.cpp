@@ -23,6 +23,7 @@
 #include "NuxGraphics/GLThread.h"
 #include "IconLoader.h"
 #include "IconTexture.h"
+#include "TextureCache.h"
 
 #include <glib.h>
 #include <pango/pangocairo.h>
@@ -43,6 +44,7 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
+  _texture_cached->UnReference ();
 }
 
 void
@@ -90,9 +92,21 @@ IconTexture::LoadIcon ()
 }
 
 void
+IconTexture::CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture)
+{
+  nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf_cached, true);
+  *texture = texture2D;
+}
+
+void
 IconTexture::Refresh (GdkPixbuf *pixbuf)
 {
-  nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+  // try and get a texture from the texture cache
+  char *id = g_strdup_printf ("IconTexture.%s", _icon_name);
+  _pixbuf_cached = pixbuf;
+  TextureCache *cache = TextureCache::GetDefault ();
+  nux::BaseTexture * texture2D = cache->FindTexture (id, _size, _size,
+                                                     sigc::mem_fun (this, &IconTexture::CreateTextureCallback));
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
@@ -111,7 +125,9 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
                                                             true,
                                                             rop);
   SetPaintLayer(texture_layer);
-  texture2D->UnReference ();
+
+  texture2D->Reference ();
+  _texture_cached = texture2D;
 
   SetMinMaxSize (gdk_pixbuf_get_width (pixbuf) * (_size/(float)gdk_pixbuf_get_height (pixbuf)),
                  _size);

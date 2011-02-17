@@ -49,32 +49,21 @@ static void nux_area_accessible_get_extents  (AtkComponent *component,
 
 
 
-#define NUX_AREA_ACCESSIBLE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_AREA_ACCESSIBLE, NuxAreaAccessiblePrivate))
-
 G_DEFINE_TYPE_WITH_CODE (NuxAreaAccessible, nux_area_accessible,  NUX_TYPE_OBJECT_ACCESSIBLE,
                          G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT, atk_component_interface_init))
-
-struct _NuxAreaAccessiblePrivate
-{
-};
 
 static void
 nux_area_accessible_class_init (NuxAreaAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = nux_area_accessible_initialize;
-
-  g_type_class_add_private (gobject_class, sizeof (NuxAreaAccessiblePrivate));
 }
 
 static void
 nux_area_accessible_init (NuxAreaAccessible *area_accessible)
 {
-  area_accessible->priv = NUX_AREA_ACCESSIBLE_GET_PRIVATE (area_accessible);
 }
 
 AtkObject*

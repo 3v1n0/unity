@@ -171,7 +171,7 @@ if migration_level < '3.2.0':
     migrating_chapter_log("unity mutter", apps_list, unity_mutter_favorites_list, log_file)
     for candidate in unity_mutter_favorites_list:
         candidate_path = '/desktop/unity/launcher/favorites/%s' % candidate
-        if (client.get_string('%s/type' % candidate_path) == 'application'):
+        if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
             launcher_location = client.get_string('%s/desktop_file' % candidate_path)
             position = client.get_string('%s/desktop_file' % candidate_path)
             if launcher_location:
@@ -186,7 +186,7 @@ if migration_level < '3.2.0':
     migrating_chapter_log("netbook-launcher favorites", apps_list, lucid_favorites_list, log_file)
     for candidate in lucid_favorites_list:
         candidate_path = '/apps/netbook-launcher/favorites/%s' % candidate
-        if (client.get_string('%s/type' % candidate_path) == 'application'):
+        if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
             launcher_location = client.get_string('%s/desktop_file' % candidate_path)
             if launcher_location:     
                 apps_list = register_new_app(launcher_location, apps_list, log_file)
@@ -197,7 +197,7 @@ if migration_level < '3.2.0':
     migrating_chapter_log("gnome-panel items", apps_list, candidate_objects, log_file)
     for candidate in candidate_objects:
         candidate_path = '/apps/panel/objects/%s' % candidate
-        if (client.get_string('%s/object_type' % candidate_path) == 'launcher-object'
+        if (candidate and client.get_string('%s/object_type' % candidate_path) == 'launcher-object'
            and client.get_string('%s/toplevel_id' % candidate_path) in panel_list):
             launcher_location = client.get_string('%s/launcher_location' % candidate_path)
             if launcher_location:

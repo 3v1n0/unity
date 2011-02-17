@@ -55,8 +55,9 @@ StaticCairoText::~StaticCairoText ()
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
                                         this);
+  
   if (_texture2D)
-    delete (_texture2D);
+    _texture2D->UnReference ();
 
   if (_fontstring)
     g_free (_fontstring);
@@ -433,8 +434,11 @@ void StaticCairoText::UpdateTexture ()
   // an actual opengl texture.
 
   if (_texture2D)
+  {
     _texture2D->UnReference ();
-
+    _texture2D = NULL;
+  }
+  
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 

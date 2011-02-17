@@ -29,6 +29,7 @@
 
 class PanelHomeButton : public nux::TextureArea, public Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE (PanelHomeButton, nux::TextureArea);
 public:
   PanelHomeButton ();
   ~PanelHomeButton ();
@@ -50,7 +51,6 @@ private:
 
 private:
   nux::CairoGraphics _util_cg;
-  GdkPixbuf *_pixbuf;
 };
 
 #endif // PANEL_HOME_BUTTON_H
