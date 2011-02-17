@@ -45,13 +45,17 @@
 
 #include "Variant.h"
 
-#define URGENT_BLINKS       3
-#define WIGGLE_CYCLES       6
+namespace {
 
-#define MAX_STARTING_BLINKS 5
-#define STARTING_BLINK_LAMBDA 3
+const int URGENT_BLINKS = 3;
+const int WIGGLE_CYCLES = 6;
 
-#define BACKLIGHT_STRENGTH  0.9f
+const int MAX_STARTING_BLINKS = 5;
+const int STARTING_BLINK_LAMBDA = 3;
+
+const float BACKLIGHT_STRENGTH = 0.9f;
+
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
