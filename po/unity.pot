@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-02-17 13:48+0100\n"
+"POT-Creation-Date: 2011-01-25 00:10-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,53 +17,67 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Keep In Launcher"
+msgid "Keep in Launcher"
+msgstr ""
+
+msgid "Remove from launcher"
 msgstr ""
 
 msgid "Quit"
 msgstr ""
 
-msgid "Open"
+#, c-format
+msgid "See %u more results"
 msgstr ""
 
-msgid "Eject"
+#. Load up the world
+msgid "Web"
 msgstr ""
 
-msgid "Workspace Switcher"
+msgid "Music"
 msgstr ""
 
-msgid "Find Media Apps"
+msgid "Photos & Videos"
 msgstr ""
 
-msgid "Find Internet Apps"
+msgid "Games"
 msgstr ""
 
-msgid "Find More Apps"
+msgid "Email & Chat"
 msgstr ""
 
-msgid "Find Files"
+msgid "Office"
 msgstr ""
 
-msgid "Browse the Web"
+msgid "Files & Folders"
 msgstr ""
 
-msgid "View Photos"
+msgid "Get New Apps"
 msgstr ""
 
-msgid "Check Email"
+msgid "Search"
 msgstr ""
 
-msgid "Listen to Music"
+#. i18n: This is meant to be used like Search $PLACES_NAME, so eg.
+#. * 'Search Applications'
+#.
+#, c-format
+msgid "Search %s"
 msgstr ""
 
 msgid "Trash"
 msgstr ""
 
+#. i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason
+#, c-format
+msgid "Files in trash: %d"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
 msgid "Empty Trash"
 msgstr ""
 
-msgid "Empty all items from Trash?"
-msgstr ""
-
-msgid "All items in the Trash will be permanently deleted."
+msgid "Eject"
 msgstr ""
