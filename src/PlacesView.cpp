@@ -88,7 +88,23 @@ PlacesView::~PlacesView ()
 long
 PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
+  // FIXME: This breaks with multi-monitor
+  nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
+
+  if (ievent.e_event == nux::NUX_KEYDOWN
+      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  {
+    SetActiveEntry (NULL, 0, "");
+    return TraverseInfo;
+  }
+
+  if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
+  {
+    if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+      SetActiveEntry (NULL, 0, "");
+    return TraverseInfo;
+  }
     
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
