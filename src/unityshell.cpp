@@ -222,10 +222,8 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
   return false;
 }
 
-bool
-UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
-                                          CompAction::State  state,
-                                          CompOption::Vector &options)
+void
+UnityScreen::startLauncherKeyNav ()
 {
   // get CompWindow* of launcher-window
   newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
@@ -240,8 +238,24 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
     newFocusedWindow->moveInputFocusTo ();
     launcher->startKeyNavMode ();
   }
+}
+
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  startLauncherKeyNav ();
 
   return false;
+}
+
+void
+UnityScreen::OnStartKeyNav (GVariant* data, void* value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  self->startLauncherKeyNav ();
 }
 
 void
@@ -251,8 +265,8 @@ UnityScreen::OnExitKeyNav (GVariant* data, void* value)
 
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  //if (self->lastFocusedWindow != NULL)
-//    self->lastFocusedWindow->moveInputFocusTo ();
+  if (self->lastFocusedWindow != NULL)
+    self->lastFocusedWindow->moveInputFocusTo ();
 }
 
 gboolean
@@ -545,6 +559,11 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+
+  ubus_server_register_interest (ubus_server_get_default (),
+                                 UBUS_LAUNCHER_START_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnStartKeyNav,
+                                 this);
 
   ubus_server_register_interest (ubus_server_get_default (),
                                  UBUS_LAUNCHER_EXIT_KEY_NAV,

@@ -228,6 +228,8 @@ add_executable (test-quicklist
                 ../src/QuicklistMenuItemSeparator.h
                 ../src/QuicklistView.cpp
                 ../src/QuicklistView.h
+                ../src/ubus-server.cpp
+                ../src/ubus-server.h
                 )
 
 add_executable (test-places-backend

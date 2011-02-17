@@ -89,7 +89,8 @@ public:
   QuicklistMenuItem* GetNthItems (int index);
   QuicklistMenuItemType GetNthType (int index);
   std::list<QuicklistMenuItem*> GetChildren ();
-  
+  void DefaultToFirstItem ();
+
   void TestMenuItems (DbusmenuMenuitem* root);
   
   // Introspection
@@ -113,10 +114,7 @@ private:
   void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
-  void RecvStartFocus ();
-  void RecvEndFocus ();
-
+    
   void RecvKeyPressed (unsigned int  key_sym,
                        unsigned long key_code,
                        unsigned long key_state);
@@ -182,6 +180,8 @@ private:
   // Introspection
   gchar *_name;
 
+  // used by keyboard/a11y-navigation
+  int _current_item_index;
 };
 
 #endif // QUICKLISTVIEW_H

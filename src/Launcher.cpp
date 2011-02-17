@@ -191,10 +191,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
     OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
-
-    OnStartFocus.connect (sigc::mem_fun (this, &Launcher::RecvStartFocus));
-    OnEndFocus.connect (sigc::mem_fun (this, &Launcher::RecvEndFocus));
-
+    
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
     
@@ -338,18 +335,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
 Launcher::~Launcher()
 {
 
-}
-
-void
-Launcher::RecvStartFocus ()
-{
-  std::cout << "Launcher::RecvStartFocus() called" << std::endl;
-}
-
-void
-Launcher::RecvEndFocus ()
-{
-  std::cout << "Launcher::RecvEndFocus() called" << std::endl;
 }
 
 /* Introspection */
@@ -2293,7 +2278,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
-    case XK_Up:
+    case NUX_VK_UP:
       if (_current_icon_index > 0)
         _current_icon_index--;
       else
@@ -2305,7 +2290,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     break;
 
     // down (move selection down and unfold launcher if needed)
-    case XK_Down:
+    case NUX_VK_DOWN:
       if (_current_icon_index < _model->Size ())
       {
         _current_icon_index++;
@@ -2314,8 +2299,8 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     break;
 
     // esc/left (close quicklist or exit laucher key-focus)
-    case XK_Left:
-    case XK_Escape:
+    case NUX_VK_LEFT:
+    case NUX_VK_ESCAPE:
       // hide again
       exitKeyNavMode ();
     break;
@@ -2331,13 +2316,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           // open quicklist of currently selected icon
           for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
             if (i == _current_icon_index)
-              (*it)->OpenQuicklist ();
+              (*it)->OpenQuicklist (true);
         }
         exitKeyNavMode ();
       }
     break;
 
-    case XK_Right:
+    case NUX_VK_RIGHT:
       {
         LauncherModel::iterator it;
         int i;
@@ -2345,13 +2330,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // open quicklist of currently selected icon
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
           if (i == _current_icon_index)
-            (*it)->OpenQuicklist ();
+            (*it)->OpenQuicklist (true);
       }
       exitKeyNavMode ();
     break;
 
     // <SPACE> (open a new instance)
-    case XK_space:
+    case NUX_VK_SPACE:
       {
         LauncherModel::iterator it;
         int i;
@@ -2365,7 +2350,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       break;
 
     // <RETURN> (start/activate currently selected icon)
-    case XK_Return:
+    case NUX_VK_ENTER:
       {
         LauncherModel::iterator it;
         int i;

@@ -343,7 +343,7 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-void LauncherIcon::OpenQuicklist ()
+void LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
@@ -381,7 +381,10 @@ void LauncherIcon::OpenQuicklist ()
       _quicklist->AddMenuItem (item);
     }
   }
-    
+
+  if (default_to_first_item)
+    _quicklist->DefaultToFirstItem ();
+
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
   int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);

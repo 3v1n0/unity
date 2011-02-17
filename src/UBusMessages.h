@@ -39,6 +39,7 @@
 
 // Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to
 // get rid of keyboard-input-focus
+#define UBUS_LAUNCHER_START_KEY_NAV "LAUNCHER_START_KEY_NAV"
 #define UBUS_LAUNCHER_EXIT_KEY_NAV "LAUNCHER_EXIT_KEY_NAV"
 #define UBUS_QUICKLIST_EXIT_KEY_NAV "QUICKLIST_EXIT_KEY_NAV"
 

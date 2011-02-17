@@ -148,8 +148,14 @@ class UnityScreen :
 	strutHackTimeout (gpointer data);
 
   static void
+  OnStartKeyNav (GVariant* data, void* value);
+
+  static void
   OnExitKeyNav (GVariant* data, void* value);
-            
+
+  void
+  startLauncherKeyNav ();
+
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;

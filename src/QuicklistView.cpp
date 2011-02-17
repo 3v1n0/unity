@@ -38,6 +38,9 @@
 
 #include "Introspectable.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
@@ -92,26 +95,13 @@ QuicklistView::QuicklistView ()
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
 
-  OnStartFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
-  OnEndFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
-
   OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
 
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
   _compute_blur_bkg = true;
-}
 
-void
-QuicklistView::RecvStartFocus ()
-{
-  std::cout << "QuicklistView::RecvStartFocus() called" << std::endl;
-}
-
-void
-QuicklistView::RecvEndFocus ()
-{
-  std::cout << "QuicklistView::RecvEndFocus() called" << std::endl;
+  _current_item_index = 0;
 }
 
 void
@@ -119,7 +109,66 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
                                unsigned long key_code,
                                unsigned long key_state)
 {
-  std::cout << "QuicklistView::RecvKeyPressed() called" << std::endl;
+  switch (key_sym)
+  {
+    // up (highlight previous menu-item)
+    case NUX_VK_UP:
+      if (_current_item_index > 0)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index--;
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // down (highlight next menu-item)
+    case NUX_VK_DOWN:
+      if (_current_item_index < GetNumItems () - 1)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index++;
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // left (close quicklist, go back to laucher key-nav)
+    case NUX_VK_LEFT:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_LAUNCHER_START_KEY_NAV,
+                                NULL);
+    break;
+
+    // esc (close quicklist, exit key-nav)
+    case NUX_VK_ESCAPE:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+    break;
+
+    // <SPACE>, <RETURN> (activate selected menu-item)          
+    case NUX_VK_SPACE:
+    case NUX_VK_ENTER:
+      if (_current_item_index >= 0 && _current_item_index < GetNumItems ())
+      {
+
+        dbusmenu_menuitem_handle_event (GetNthItems (_current_item_index)->_menuItem,
+                                        "clicked",
+                                        NULL,
+                                        0);
+        _current_item_index = 0;
+        GetNthItems (_current_item_index)->_prelight = true;
+        Hide ();
+      }
+    break;
+
+    default:
+    break;
+  }
 }
 
 QuicklistView::~QuicklistView ()
@@ -211,7 +260,7 @@ void QuicklistView::Show ()
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
     EnableInputWindow (true, "quicklist", true, false);
-    ForceInputFocus ();
+    SetInputFocus ();
     GrabPointer ();
     NeedRedraw ();
 
@@ -281,6 +330,8 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     Hide ();
     return nux::eMouseEventSolved;
   }
+
+  ret = OnEvent (ievent, ret, ProcessEventInfo);
 
   return ret;    
 }
@@ -809,6 +860,15 @@ std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
 {
   std::list<QuicklistMenuItem*> l;
   return l;
+}
+
+void QuicklistView::DefaultToFirstItem ()
+{
+  if (GetNumItems () >= 1)
+  {
+    GetNthItems (0)->_prelight= true;
+    QueueDraw ();
+  }
 }
 
 static inline void ql_blurinner (guchar* pixel,
