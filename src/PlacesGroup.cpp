@@ -115,7 +115,7 @@ void PlacesGroup::AddLayout (nux::Layout *layout)
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
-  _group_layout->AddLayout (_content, 0);
+  _group_layout->AddLayout (_content, 1);
   NeedRedraw ();
 }
 
