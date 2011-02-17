@@ -51,5 +51,15 @@ BuilderWrapper& BuilderWrapper::add(char const* name, float value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
+{
+  add("x", value.x);
+  add("y", value.y);
+  add("width", value.width);
+  add("height", value.height);
+  return *this;
+}
+
+
 }
 }

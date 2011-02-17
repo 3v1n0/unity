@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include <NuxCore/Rect.h>
+
 namespace unity {
 namespace variant {
 
@@ -34,6 +36,7 @@ public:
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, int value);
   BuilderWrapper& add(char const* name, float value);
+  BuilderWrapper& add(nux::Rect const& value);
 
 private:
   GVariantBuilder* builder_;
