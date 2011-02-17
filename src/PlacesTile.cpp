@@ -46,10 +46,12 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
 
 PlacesTile::~PlacesTile ()
 {
-  g_debug ("attempting to do a thing!");
-  g_debug ("_hilight_backgrounds decrecing reference count %i", _hilight_background->GetReferenceCount ());
   if (_hilight_background)
+  {
     _hilight_background->UnReference ();
+    con_obj.disconnect ();
+  }
+
   if (_hilight_layer)
     delete _hilight_layer;
 }
@@ -120,6 +122,16 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   delete bitmap;
 }
 
+//texture->OnDestroyed.connect (sigc::mem_fun (this, &TextureCache::OnDestroyNotify));
+
+void
+PlacesTile::OnDestroyNotify (nux::Trackable *Object)
+{
+  g_warning ("Texture destroyed before we were ready");
+  _hilight_background = NULL;
+  UpdateBackground ();
+}
+
 
 void
 PlacesTile::UpdateBackground ()
@@ -140,11 +152,16 @@ PlacesTile::UpdateBackground ()
                                                        sigc::mem_fun (this, &PlacesTile::DrawHighlight));
 
   if (_hilight_background)
+  {
     _hilight_background->UnReference ();
+    con_obj.disconnect ();
+  }
+    
+  con_obj = hilight_tex->OnDestroyed.connect (sigc::mem_fun (this, &PlacesTile::OnDestroyNotify));
   
   _hilight_background = hilight_tex;
   _hilight_background->Reference ();
-  g_debug ("_hilight_backgrounds reference count %i", _hilight_background->GetReferenceCount ());
+  //g_debug ("_hilight_backgrounds reference count %i", _hilight_background->GetReferenceCount ());
   
   nux::ROPConfig rop; 
   rop.Blend = true;

@@ -434,8 +434,11 @@ void StaticCairoText::UpdateTexture ()
   // an actual opengl texture.
 
   if (_texture2D)
+  {
     _texture2D->UnReference ();
-
+    _texture2D = NULL;
+  }
+  
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 

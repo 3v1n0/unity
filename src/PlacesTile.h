@@ -93,6 +93,9 @@ protected:
   sigc::signal<void, PlacesTile*, int, int> sigMouseClick;
   sigc::signal<void, PlacesTile*, int, int> sigMouseDrag;
 
+  sigc::connection con_obj;
+  void OnDestroyNotify (nux::Trackable *Object);
+  
   TileState _state;
   nux::Layout *_layout;
   nux::BaseTexture *_hilight_background;
