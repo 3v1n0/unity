@@ -142,11 +142,7 @@ IconTexture::GetName ()
 void
 IconTexture::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
   unity::variant::BuilderWrapper(builder)
-    .add("x", geo.x)
-    .add("y", geo.y)
-    .add("width", geo.width)
-    .add("height", geo.height)
+    .add(GetGeometry())
     .add("iconname", _icon_name);
 }
