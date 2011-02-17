@@ -34,14 +34,10 @@ G_BEGIN_DECLS
 
 typedef struct _UnityPanelViewAccessible        UnityPanelViewAccessible;
 typedef struct _UnityPanelViewAccessibleClass   UnityPanelViewAccessibleClass;
-typedef struct _UnityPanelViewAccessiblePrivate UnityPanelViewAccessiblePrivate;
 
 struct _UnityPanelViewAccessible
 {
   NuxViewAccessible parent;
-
-  /* < private > */
-  UnityPanelViewAccessiblePrivate *priv;
 };
 
 struct _UnityPanelViewAccessibleClass

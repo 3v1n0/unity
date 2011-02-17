@@ -34,14 +34,10 @@ G_BEGIN_DECLS
 
 typedef struct _UnityLauncherIconAccessible        UnityLauncherIconAccessible;
 typedef struct _UnityLauncherIconAccessibleClass   UnityLauncherIconAccessibleClass;
-typedef struct _UnityLauncherIconAccessiblePrivate UnityLauncherIconAccessiblePrivate;
 
 struct _UnityLauncherIconAccessible
 {
   NuxObjectAccessible parent;
-
-  /* < private > */
-  UnityLauncherIconAccessiblePrivate *priv;
 };
 
 struct _UnityLauncherIconAccessibleClass

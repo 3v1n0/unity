@@ -41,31 +41,20 @@ static void unity_panel_home_button_accessible_init       (UnityPanelHomeButtonA
 /* AtkObject */
 static void       unity_panel_home_button_accessible_initialize     (AtkObject *accessible, gpointer data);
 
-#define UNITY_PANEL_HOME_BUTTON_ACCESSIBLE_GET_PRIVATE(obj)                      \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_HOME_BUTTON_ACCESSIBLE, UnityPanelHomeButtonAccessiblePrivate))
-
 G_DEFINE_TYPE (UnityPanelHomeButtonAccessible, unity_panel_home_button_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
-
-struct _UnityPanelHomeButtonAccessiblePrivate
-{
-};
 
 static void
 unity_panel_home_button_accessible_class_init (UnityPanelHomeButtonAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = unity_panel_home_button_accessible_initialize;
-
-  g_type_class_add_private (gobject_class, sizeof (UnityPanelHomeButtonAccessiblePrivate));
 }
 
 static void
 unity_panel_home_button_accessible_init (UnityPanelHomeButtonAccessible *self)
 {
-  self->priv = UNITY_PANEL_HOME_BUTTON_ACCESSIBLE_GET_PRIVATE (self);
 }
 
 AtkObject *

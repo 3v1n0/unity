@@ -37,14 +37,10 @@ G_BEGIN_DECLS
 
 typedef struct _NuxViewAccessible        NuxViewAccessible;
 typedef struct _NuxViewAccessibleClass   NuxViewAccessibleClass;
-typedef struct _NuxViewAccessiblePrivate NuxViewAccessiblePrivate;
 
 struct _NuxViewAccessible
 {
   NuxAreaAccessible parent;
-
-  /* < private > */
-  NuxViewAccessiblePrivate *priv;
 };
 
 struct _NuxViewAccessibleClass

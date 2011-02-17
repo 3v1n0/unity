@@ -45,33 +45,22 @@ static gint       unity_launcher_accessible_get_n_children (AtkObject *obj);
 static AtkObject *unity_launcher_accessible_ref_child      (AtkObject *obj,
                                                             gint i);
 
-#define UNITY_LAUNCHER_ACCESSIBLE_GET_PRIVATE(obj)                      \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_LAUNCHER_ACCESSIBLE, UnityLauncherAccessiblePrivate))
-
 G_DEFINE_TYPE (UnityLauncherAccessible, unity_launcher_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
-
-struct _UnityLauncherAccessiblePrivate
-{
-};
 
 static void
 unity_launcher_accessible_class_init (UnityLauncherAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->get_n_children = unity_launcher_accessible_get_n_children;
   atk_class->ref_child = unity_launcher_accessible_ref_child;
   atk_class->initialize = unity_launcher_accessible_initialize;
-
-  g_type_class_add_private (gobject_class, sizeof (UnityLauncherAccessiblePrivate));
 }
 
 static void
 unity_launcher_accessible_init (UnityLauncherAccessible *self)
 {
-  self->priv = UNITY_LAUNCHER_ACCESSIBLE_GET_PRIVATE (self);
 }
 
 AtkObject*
