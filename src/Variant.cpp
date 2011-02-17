@@ -44,5 +44,11 @@ BuilderWrapper& BuilderWrapper::add(char const* name, int value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(char const* name, double value)
+{
+  g_variant_builder_add(builder, "{sv}", name, g_variant_new_double(value));
+  return *this;
+}
+
 }
 }

@@ -33,6 +33,7 @@ public:
   BuilderWrapper& add(char const* name, bool value);
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, int value);
+  BuilderWrapper& add(char const* name, double value);
 
 private:
   GVariantBuilder* builder_;
