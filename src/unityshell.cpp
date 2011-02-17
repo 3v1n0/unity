@@ -458,34 +458,37 @@ UnityScreen::Relayout ()
   pCurGeom = panelWindow->GetGeometry(); 
   lCurGeom = launcherWindow->GetGeometry(); 
 
+  panelWindow->EnableInputWindow(false);
+  launcherWindow->EnableInputWindow(false);
+
   panelView->SetMaximumWidth(rect.width);
   launcher->SetMaximumHeight(rect.height - pCurGeom.height);
 
+  g_warning ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
+		rect.x, rect.y, rect.width, rect.height );
+
   panelWindow->SetGeometry(nux::Geometry(rect.x,
-						rect.y,
-						rect.width,
-						pCurGeom.height));
+					rect.y,
+					rect.width,
+					pCurGeom.height));
   panelView->SetGeometry(nux::Geometry(rect.x,
 					rect.y,
 					rect.width,
 					pCurGeom.height));
+
   launcherWindow->SetGeometry(nux::Geometry(rect.x,
-						rect.y + pCurGeom.height,
-						lCurGeom.width,
-						rect.height - pCurGeom.height));
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
   launcher->SetGeometry(nux::Geometry(rect.x,
 					rect.y + pCurGeom.height,
 					lCurGeom.width,
 					rect.height - pCurGeom.height));
 
-  panelWindow->EnableInputWindow(false);
-  launcherWindow->EnableInputWindow(false);
   panelWindow->EnableInputWindow(true);
   launcherWindow->EnableInputWindow(true);
 
   strutHackTimeout(this);
-
-  damageNuxRegions ();
 }
 
 gboolean
