@@ -461,15 +461,31 @@ UnityScreen::Relayout ()
   panelView->SetMaximumWidth(rect.width);
   launcher->SetMaximumHeight(rect.height - pCurGeom.height);
 
-  panelWindow->SetGeometry(nux::Geometry(pCurGeom.x, pCurGeom.y, rect.width, pCurGeom.height));
-  launcherWindow->SetGeometry(nux::Geometry(lCurGeom.x, lCurGeom.y, lCurGeom.width, rect.height - pCurGeom.height));
+  panelWindow->SetGeometry(nux::Geometry(rect.x,
+						rect.y,
+						rect.width,
+						pCurGeom.height));
+  panelView->SetGeometry(nux::Geometry(rect.x,
+					rect.y,
+					rect.width,
+					pCurGeom.height));
+  launcherWindow->SetGeometry(nux::Geometry(rect.x,
+						rect.y + pCurGeom.height,
+						lCurGeom.width,
+						rect.height - pCurGeom.height));
+  launcher->SetGeometry(nux::Geometry(rect.x,
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
+
+  panelWindow->EnableInputWindow(false);
+  launcherWindow->EnableInputWindow(false);
+  panelWindow->EnableInputWindow(true);
+  launcherWindow->EnableInputWindow(true);
 
   strutHackTimeout(this);
 
-  panelView->NeedRedraw();
-  panelWindow->NeedRedraw();
-  launcher->NeedRedraw();
-  launcherWindow->NeedRedraw();
+  damageNuxRegions ();
 }
 
 gboolean
