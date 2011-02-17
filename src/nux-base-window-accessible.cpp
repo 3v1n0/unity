@@ -48,20 +48,11 @@ static AtkObject *nux_base_window_accessible_ref_child      (AtkObject *obj,
 static AtkObject *nux_base_window_accessible_get_parent     (AtkObject *obj);
 
 
-#define NUX_BASE_WINDOW_ACCESSIBLE_GET_PRIVATE(obj) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_BASE_WINDOW_ACCESSIBLE, NuxBaseWindowAccessiblePrivate))
-
 G_DEFINE_TYPE (NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
-
-struct _NuxBaseWindowAccessiblePrivate
-{
-
-};
 
 static void
 nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
@@ -69,14 +60,11 @@ nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
   atk_class->get_n_children = nux_base_window_accessible_get_n_children;
   atk_class->ref_child = nux_base_window_accessible_ref_child;
   atk_class->get_parent = nux_base_window_accessible_get_parent;
-
-  g_type_class_add_private (gobject_class, sizeof (NuxBaseWindowAccessiblePrivate));
 }
 
 static void
 nux_base_window_accessible_init (NuxBaseWindowAccessible *base_window_accessible)
 {
-  base_window_accessible->priv = NUX_BASE_WINDOW_ACCESSIBLE_GET_PRIVATE (base_window_accessible);
 }
 
 AtkObject*
