@@ -223,6 +223,28 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 }
 
 bool
+UnityScreen::showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                            CompAction::State   state,
+                                            CompOption::Vector &options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);
+  
+  panelView->StartFirstMenuShow ();
+  return false;
+}
+
+bool
+UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                             CompAction::State   state,
+                                             CompOption::Vector &options)
+{
+  panelView->EndFirstMenuShow ();
+  return false;
+}
+
+bool
 UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
@@ -473,9 +495,32 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::UrgentAnimation:
       launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
       break;
+    case UnityshellOptions::PanelOpacity:
+      panelView->SetOpacity (optionGetPanelOpacity ());
+    case UnityshellOptions::AutohideAnimation:
+      launcher->SetAutoHideAnimation ((Launcher::AutoHideAnimation) optionGetAutohideAnimation ());
+      break;
     default:
       break;
   }
+}
+
+/* Handle changes in the number of workspaces by showing the switcher
+ * or not showing the switcher */
+bool
+UnityScreen::setOptionForPlugin(const char *plugin, const char *name, 
+                                CompOption::Value &v)
+{
+  bool status;
+  status = screen->setOptionForPlugin (plugin, name, v);
+  if (status)
+  {
+    if (strcmp (plugin, "core") == 0 && strcmp (name, "hsize") == 0)
+    {
+      controller->UpdateNumWorkspaces(screen->vpSize ().width ());
+    }
+  }
+  return status;
 }
 
 static gboolean
@@ -537,14 +582,18 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
   ubus_server_register_interest (ubus_server_get_default (),
                                  UBUS_LAUNCHER_EXIT_KEY_NAV,
@@ -603,7 +652,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true);
+  self->launcherWindow->EnableInputWindow(true, "launcher");
   self->launcherWindow->InputWindowEnableStruts(true);
 
   /* FIXME: this should not be manual, should be managed with a
@@ -634,8 +683,14 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true);
+  self->panelWindow->EnableInputWindow(true, "panel");
   self->panelWindow->InputWindowEnableStruts(true);
+
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized () == TRUE)
+    unity_util_accessible_add_window (self->panelWindow);
+
   LOGGER_END_PROCESS ("initLauncher-Panel");
 
   /* Setup Places */

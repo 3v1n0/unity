@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
 #if HAVE_CONFIG_H
@@ -23,8 +24,6 @@
 #include "panel-service.h"
 
 #include <stdlib.h>
-#include <libindicator/indicator.h>
-#include <libindicator/indicator-object.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
@@ -339,6 +338,14 @@ panel_service_get_n_indicators (PanelService *self)
   g_return_val_if_fail (PANEL_IS_SERVICE (self), 0);
 
   return g_slist_length (self->priv->indicators);
+}
+
+IndicatorObject *
+panel_service_get_indicator (PanelService *self, guint position)
+{
+  g_return_val_if_fail (PANEL_IS_SERVICE (self), NULL);
+
+  return (IndicatorObject *) g_slist_nth_data (self->priv->indicators, position);
 }
 
 /*
@@ -956,10 +963,13 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  GtkWidget            *last_menu;
 
   if (priv->last_entry == entry)
     return;
+
+  last_menu = GTK_WIDGET (priv->last_menu);
   
   if (GTK_IS_MENU (priv->last_menu))
     {
@@ -968,7 +978,6 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-      gtk_menu_popdown (GTK_MENU (priv->last_menu));
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
@@ -1009,6 +1018,13 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
+
+  /* We popdown the old one last so we don't accidently send key focus back to the
+   * active application (which will make it change colour (as state changes), which
+   * then looks like flickering to the user.
+   */
+  if (GTK_MENU (last_menu))
+    gtk_menu_popdown (GTK_MENU (last_menu));
 }
 
 void

@@ -49,6 +49,7 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
+    void UpdateNumWorkspaces (int workspaces);
 private:
     BamfMatcher*           _matcher;
     CompAction*            _expo_action;
@@ -61,6 +62,8 @@ private:
     PlaceLauncherSection*  _place_section;
     DeviceLauncherSection* _device_section;
     LauncherEntryRemoteModel* _remote_model;
+    SimpleLauncherIcon*    _expoIcon;
+    int                    _num_workspaces;
 
     void SortAndSave ();
 
@@ -72,6 +75,7 @@ private:
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
+    void RemoveExpoAction ();
     
     void InsertTrash ();
 
