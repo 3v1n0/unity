@@ -1,11 +1,33 @@
-unity (3.4.4-0ubuntu1) UNRELEASED; urgency=low
+unity (3.4.4-0ubuntu1) natty; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - add systray support (LP: #655140, #596879)
+    - Dragging and holding a selection over an entry in the Launcher should
+      spread out windows belonging to that application (LP: #607796)
+    - Unity shouldn't allow to Quit itself (LP: #705536)
+    - Launcher should not be locked in place until the pointer is actually in
+      the corner (LP: #706146)
+    - Top Panel does not respect GTK theme (LP: #663524)
+    - Update Unity-Panel Style implementation (LP: #685830)
+    - Add keyboard shortcut for the panel (LP: #701663)
+    - clicking on the ubuntu logo doesn't close the dash dialog (LP: #708762)
+    - "Escape" doesn't close the dash screen (LP: #711195)
+    - migrate_favorites.py crashed with GError in __main__: Bad key or
+       directory name: "/desktop/unity/launcher/favorites//type": Can't have
+       two slashes '/' in a row (LP: #716382)
+    - Icon state does not revert when remote libunity user closes (LP: #716863)
+    - transparency in places window a bit too high (LP: #718357)
+    - Navigating between menus briefly gives focus back to applications
+      (LP: #690714)
+    - pace on cursor navigation mode should act like middle click (LP: #717213)
+    - Do not switch to fallback menu on mouse-over (LP: #703555)
+    - Fix the panel service and menus atk object hierarchy (LP: #704350)
+    - Expose home panel button via ATK (LP: #715295)
   * debian/source_unity.py: enhanced apport hook for incoming compiz hook
   * debian/control:
     - bump nux and libunity-misc dep
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Feb 2011 19:15:36 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Feb 2011 20:37:42 +0100
 
 unity (3.4.2-0ubuntu2) natty; urgency=low
 
