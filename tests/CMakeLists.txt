@@ -14,6 +14,7 @@ pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
+     ${MAINTAINER_CFLAGS}
      "-DTESTDATADIR=${TESTDATADIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -75,6 +76,8 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/PanelStyle.cpp
+                ../src/PanelStyle.h
                 ../src/PanelView.cpp
                 ../src/PanelView.h
                 ../src/PanelIndicatorObjectView.cpp
@@ -83,6 +86,8 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectEntryView.h
             		../src/PanelTitlebarGrabAreaView.h
             		../src/PanelTitlebarGrabAreaView.cpp
+                ../src/PanelTray.cpp
+                ../src/PanelTray.h
                 ../src/IndicatorObjectFactory.h
                 ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectEntryProxy.h
@@ -132,6 +137,8 @@ add_executable (test-places
                 ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
+                ../src/TextureCache.h
+                ../src/TextureCache.cpp
                 ../src/UBusMessages.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
@@ -167,6 +174,8 @@ add_executable (test-places-tiles
                 ../src/IconTexture.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
+                ../src/TextureCache.h
+                ../src/TextureCache.cpp
                 )
 
 
@@ -186,6 +195,8 @@ add_executable (test-places-group
                 ../src/PlacesTile.h
                 ../src/PlacesSimpleTile.cpp
                 ../src/PlacesSimpleTile.h
+                ../src/TextureCache.h
+                ../src/TextureCache.cpp
                 )
 
 add_executable (test-places-results
@@ -208,6 +219,8 @@ add_executable (test-places-results
                 ../src/Introspectable.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
+                ../src/TextureCache.h
+                ../src/TextureCache.cpp
                 )
 
 add_executable (test-quicklist

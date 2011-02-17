@@ -48,7 +48,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.7));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.85));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
@@ -78,7 +78,7 @@ void PlacesController::Show ()
     return;
 
   _window->ShowWindow (true, false);
-  _window->EnableInputWindow (true, 1);
+  _window->EnableInputWindow (true, "places", true);
   _window->GrabPointer ();
   _window->GrabKeyboard ();
   _window->NeedRedraw ();

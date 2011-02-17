@@ -57,6 +57,9 @@ PlacesResultsView::ReJiggyGroups ()
     if ((*it)->IsVisible ())
     {
       _layout->AddView ((*it), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+      _layout->QueueDraw ();
+      (*it)->QueueDraw ();
+      QueueDraw ();
     }
   }
 }
