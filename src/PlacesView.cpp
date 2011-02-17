@@ -89,6 +89,12 @@ long
 PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
+
+  if (ievent.e_event == nux::NUX_KEYDOWN
+      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  {
+    SetActiveEntry (NULL, 0, "");
+  }
     
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
