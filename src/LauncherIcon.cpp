@@ -40,6 +40,8 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "Variant.h"
+
 #define DEFAULT_ICON "application-default-icon"
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
@@ -122,19 +124,19 @@ LauncherIcon::GetName ()
 void
 LauncherIcon::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "x", _center.x);
-  g_variant_builder_add (builder, "{sv}", "y", _center.y);
-  g_variant_builder_add (builder, "{sv}", "z", _center.z);
-  g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
-  g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
-  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
-  
-  g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
-  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (QUIRK_ACTIVE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (QUIRK_VISIBLE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (QUIRK_URGENT)));
-  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (QUIRK_RUNNING)));
-  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
+  unity::variant::BuilderWrapper(builder)
+    .add("x", _center.x)
+    .add("y", _center.y)
+    .add("z", _center.z)
+    .add("related-windows", _related_windows)
+    .add("icon-type", _icon_type)
+    .add("tooltip-text", m_TooltipText.GetTCharPtr ())
+    .add("sort-priority", _sort_priority)
+    .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
+    .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
+    .add("quirk-urgent", GetQuirk (QUIRK_URGENT))
+    .add("quirk-running", GetQuirk (QUIRK_RUNNING))
+    .add("quirk-presented", GetQuirk (QUIRK_PRESENTED));
 }
 
 void
