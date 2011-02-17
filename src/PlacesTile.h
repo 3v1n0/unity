@@ -76,8 +76,6 @@ protected:
 
   virtual nux::Geometry GetHighlightGeometry ();
   
-  GdkPixbuf *_background_tile;
-
   void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
   
 

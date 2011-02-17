@@ -42,13 +42,14 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
   _hilight_view = this;
-
-  _background_tile = gdk_pixbuf_new_from_file (PKGDATADIR"/places-tile-bg-tilable.png.png", NULL);
 }
 
 PlacesTile::~PlacesTile ()
 {
-  _hilight_background->UnReference ();
+  g_debug ("attempting to do a thing!");
+  g_debug ("_hilight_backgrounds decrecing reference count %i", _hilight_background->GetReferenceCount ());
+  if (_hilight_background)
+    _hilight_background->UnReference ();
   if (_hilight_layer)
     delete _hilight_layer;
 }
@@ -143,7 +144,7 @@ PlacesTile::UpdateBackground ()
   
   _hilight_background = hilight_tex;
   _hilight_background->Reference ();
-  
+  g_debug ("_hilight_backgrounds reference count %i", _hilight_background->GetReferenceCount ());
   
   nux::ROPConfig rop; 
   rop.Blend = true;

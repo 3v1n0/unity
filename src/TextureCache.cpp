@@ -63,31 +63,33 @@ TextureCache::FindTexture (const char *texture_id, int width, int height, Textur
     // no texture yet, lets make one
     slot (texture_id, width, height, &texture);
 
-    TexDestroyPayload *payload;
-    
-    payload = g_slice_new0 (TexDestroyPayload);
-    payload->self = this;
-    payload->texid = g_strdup (key);
-
-    texture->add_destroy_notify_callback (payload, &(TextureCache::OnDestroyNotify));
+    //texture->add_destroy_notify_callback (payload, &(TextureCache::OnDestroyNotify));
+    //sigc::mem_fun(myalerter, &AlienAlerter::alert)
+    texture->OnDestroyed.connect (sigc::mem_fun (this, &TextureCache::OnDestroyNotify));
 
     _cache[key] = texture;
+    _cache_inverse[texture] = key;
   }
 
   g_free (key);
-
+ 
   return texture;
 }
 
-void *
-TextureCache::OnDestroyNotify (void *data)
+void
+TextureCache::OnDestroyNotify (nux::Trackable *Object)
 {
-  TexDestroyPayload *payload = (TexDestroyPayload *)data;
-  TextureCache *self = payload->self;
+  nux::BaseTexture *texture = (nux::BaseTexture *)Object;
+  std::string      key = _cache_inverse[texture];
+  
+  if (key.empty ())
+  {
+    g_error ("Texture cache has got into a weird state, we have problems");
+    return;
+  }
 
-  self->_cache.erase (self->_cache.find (payload->texid));
-  g_free (payload->texid);
+  _cache.erase (_cache.find (key));
+  _cache_inverse.erase (_cache_inverse.find (texture));
 
-  g_slice_free (TexDestroyPayload, payload);
-  return 0;
+  return;
 }

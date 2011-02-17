@@ -45,15 +45,10 @@ public:
   nux::BaseTexture * FindTexture (const char *texture_id, int width, int height, TextureCacheCallback slot);
 
 protected:
-  struct TexDestroyPayload
-  {
-    TextureCache *self;
-    char         *texid;
-  };
-
   char * Hash (const char *id, int width, int height);
   std::map<std::string, nux::BaseTexture *> _cache;
-  static void *OnDestroyNotify (void *data);
+  std::map<nux::BaseTexture *, std::string> _cache_inverse; // just for faster lookups
+  void OnDestroyNotify (nux::Trackable *Object);
 };
 
 #endif // TEXTURECACHE_H
