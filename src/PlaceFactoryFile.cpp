@@ -28,8 +28,8 @@ static void on_directory_enumeration_ready (GObject      *source,
 PlaceFactoryFile::PlaceFactoryFile (const char *directory)
 {
   //FIXME: This is a temporary Alpha 2 fix
-  g_spawn_command_line_async ("killall unity-files-daemon", NULL);
-  g_spawn_command_line_async ("killall unity-applications-daemon", NULL);
+  g_spawn_command_line_sync ("killall unity-files-daemon", NULL, NULL, NULL, NULL);
+  g_spawn_command_line_sync ("killall unity-applications-daemon", NULL, NULL, NULL, NULL);
 
   /* Use the default lookup location */
   if (directory == NULL)

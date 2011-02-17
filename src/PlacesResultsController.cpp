@@ -81,6 +81,10 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   {
     group->SetVisible (true);
     _results_view->ReJiggyGroups ();
+
+    group->QueueDraw ();
+    group->ComputeChildLayout ();
+    group->GetLayout ()->QueueDraw ();
   }
 }
 
@@ -101,6 +105,12 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
       {
         group->SetVisible (false);
         _results_view->ReJiggyGroups ();
+      }
+      else
+      {
+        group->QueueDraw ();
+        group->GetLayout ()->QueueDraw ();
+        group->ComputeChildLayout ();
       }
     }
     else
