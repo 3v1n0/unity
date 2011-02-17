@@ -636,7 +636,15 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
     _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
 
     if (_decor_map.find (xid) == _decor_map.end ())
+    {
       _decor_map[xid] = true;
+      
+      // if we've just started tracking this window and it is maximized, let's 
+      // make sure it's undecorated just in case it slipped by us earlier 
+      // (I'm looking at you, Chromium!)
+      if (_is_maximized)
+        WindowManager::Default ()->Undecorate (xid);
+    }
 
     // first see if we need to remove and old callback
     if (_name_changed_callback_id != 0)
