@@ -20,6 +20,8 @@
 #define _PANEL_INDICATOR_ACCESSIBLE_H_
 
 #include <atk/atk.h>
+#include <libindicator/indicator.h>
+#include <libindicator/indicator-object.h>
 
 G_BEGIN_DECLS
 
@@ -46,7 +48,7 @@ struct _PanelIndicatorAccessibleClass
 };
 
 GType      panel_indicator_accessible_get_type (void);
-AtkObject *panel_indicator_accessible_new (void);
+AtkObject *panel_indicator_accessible_new      (IndicatorObject *indicator);
 
 G_END_DECLS
 

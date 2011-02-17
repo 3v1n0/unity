@@ -32,14 +32,17 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
+#include "PanelStyle.h"
+
 #define PANEL_HEIGHT 24
 #define BUTTON_WIDTH 66
+
+NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
   _util_cg (CAIRO_FORMAT_ARGB32, BUTTON_WIDTH, PANEL_HEIGHT)
 {
-  _pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/bfb.png", NULL);
   SetMinMaxSize (BUTTON_WIDTH, PANEL_HEIGHT);
 
   OnMouseClick.connect (sigc::mem_fun (this, &PanelHomeButton::RecvMouseClick));
@@ -49,12 +52,12 @@ PanelHomeButton::PanelHomeButton ()
   OnMouseLeave.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
   OnMouseMove.connect  (sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
+  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelHomeButton::Refresh));
   Refresh ();
 }
 
 PanelHomeButton::~PanelHomeButton ()
 {
-  g_object_unref (_pixbuf);
 }
 
 void
@@ -62,14 +65,18 @@ PanelHomeButton::Refresh ()
 {
   int width = BUTTON_WIDTH;
   int height = PANEL_HEIGHT;
+  GdkPixbuf *pixbuf;
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
-  gdk_cairo_set_source_pixbuf (cr, _pixbuf,
-                               (BUTTON_WIDTH-gdk_pixbuf_get_width (_pixbuf))/2,
-                               (PANEL_HEIGHT-gdk_pixbuf_get_height (_pixbuf))/2);
+  pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
+  gdk_cairo_set_source_pixbuf (cr, pixbuf,
+                               (BUTTON_WIDTH-gdk_pixbuf_get_width (pixbuf))/2,
+                               (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
+  g_object_unref (pixbuf);
+
   cairo_paint (cr);
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.2f);
@@ -100,7 +107,7 @@ PanelHomeButton::Refresh ()
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
                                                             nux::Color::White,  // The color used to modulate the texture.
-                                                            false,  // Write the alpha value of the texture to the destination buffer.
+                                                            true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );
 
@@ -134,10 +141,12 @@ PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsig
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
-  
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
+      
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
   g_variant_builder_close (&builder);
@@ -152,9 +161,11 @@ PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsig
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (false));
@@ -170,9 +181,11 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   GVariantBuilder builder;
   
-  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iia{sv})"));
+  g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
+  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
   g_variant_builder_close (&builder);
@@ -197,5 +210,4 @@ PanelHomeButton::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-  g_variant_builder_add (builder, "{sv}", "have-pixbuf", g_variant_new_boolean (GDK_IS_PIXBUF (_pixbuf)));
 }

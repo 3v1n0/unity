@@ -28,6 +28,8 @@ add_executable(unity-panel-service
                panel-a11y.h
                panel-indicator-accessible.c
                panel-indicator-accessible.h
+               panel-indicator-entry-accessible.c
+               panel-indicator-entry-accessible.h
                panel-main.c
                panel-root-accessible.c
                panel-root-accessible.h
