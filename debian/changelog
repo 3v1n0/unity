@@ -1,3 +1,10 @@
+unity (3.4.4-0ubuntu2) natty; urgency=low
+
+  * debian/control
+    - bump build depends for libindicator-dev to >= 0.3.19
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Thu, 17 Feb 2011 15:26:07 -0500
+
 unity (3.4.4-0ubuntu1) natty; urgency=low
 
   * New upstream release:
