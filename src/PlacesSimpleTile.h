@@ -58,6 +58,8 @@ public:
   void SetURI (const char *uri);
 
 protected:
+  nux::Geometry GetHighlightGeometry ();
+  nux::Geometry _highlight_geometry;
   const gchar* GetName ();
   const gchar *GetChildsName ();
   void AddProperties (GVariantBuilder *builder);

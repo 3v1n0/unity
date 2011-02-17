@@ -155,7 +155,7 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (140, 90);
+  layout->SetChildrenSize (140, 100);
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (4);
