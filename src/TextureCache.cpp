@@ -46,7 +46,7 @@ TextureCache::Hash (const char *id, int width, int height)
 }
 
 nux::BaseTexture *
-TextureCache::FindTexture (const char *texture_id, int width, int height, TextureCacheCallback slot)
+TextureCache::FindTexture (const char *texture_id, int width, int height, CreateTextureCallback slot)
 {
   nux::BaseTexture *texture = NULL;
   if (texture_id == NULL)
