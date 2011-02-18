@@ -2370,11 +2370,22 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 }
 
 void
+Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
+                                     unsigned long key_code,
+                                     unsigned long key_state)
+{
+  if (_super_show_launcher)
+    RecvKeyPressed (key_sym, key_code, key_state);
+}
+
+void
 Launcher::RecvKeyPressed (unsigned int  key_sym,
                           unsigned long key_code,
                           unsigned long key_state)
 {
 
+  LauncherModel::iterator it;
+  
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
@@ -2410,13 +2421,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (key_state & NUX_STATE_SHIFT)
       {
         {
-          LauncherModel::iterator it;
-          int i;
-
           // open quicklist of currently selected icon
-          for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-            if (i == _current_icon_index)
-              (*it)->OpenQuicklist ();
+          it = _model->at (_current_icon_index);
+          if (it != (LauncherModel::iterator)NULL)
+            (*it)->OpenQuicklist ();
         }
         exitKeyNavMode ();
       }
@@ -2424,13 +2432,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     case XK_Right:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // open quicklist of currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->OpenQuicklist ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->OpenQuicklist ();
       }
       exitKeyNavMode ();
     break;
@@ -2438,13 +2443,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     // <SPACE> (open a new instance)
     case XK_space:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // start currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->OpenInstance ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->OpenInstance ();
       }
       exitKeyNavMode ();
       break;
@@ -2452,17 +2454,86 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     // <RETURN> (start/activate currently selected icon)
     case XK_Return:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // start currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->Activate ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
       }
       exitKeyNavMode ();
     break;
 
+    // Shortcuts to launch applications
+    case XK_0:
+      {
+        it = _model->at (9);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_1:
+      {
+        it = _model->at (0);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_2:
+      {
+        it = _model->at (1);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_3:
+      {
+        it = _model->at (2);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_4:
+      {
+        it = _model->at (3);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_5:
+      {
+        it = _model->at (4);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_6:
+      {
+        it = _model->at (5);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_7:
+      {
+        it = _model->at (6);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_8:
+      {
+        it = _model->at (7);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_9:
+      {
+        it = _model->at (8);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+      
     default:
     break;
   }

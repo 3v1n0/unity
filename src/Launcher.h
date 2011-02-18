@@ -121,6 +121,8 @@ public:
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
   
+  void CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  
   nux::BaseWindow* GetParent () { return _parent; };
 
   static void SetTimeStruct (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
