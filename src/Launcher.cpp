@@ -51,8 +51,6 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
-#define TRIGGER_AUTOHIDE_MIN 0.25f
-
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -452,13 +450,13 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 float Launcher::AutohideProgress (struct timespec const &current)
 {
     
-    // bfb position progress. Go from 1.0f -> TRIGGER_AUTOHIDE_MIN linearly
+    // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
         
         // "dead" zone
         if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
-            return TRIGGER_AUTOHIDE_MIN;
+            return GetAutohidePositionMin ();
         
        /* 
         * most of the mouse movement should be done by the inferior part
@@ -476,7 +474,8 @@ float Launcher::AutohideProgress (struct timespec const &current)
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
         // only triggered on _hidden = false, no need for check
-        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * 0.5f + TRIGGER_AUTOHIDE_MIN;
+        float _position_min = GetAutohidePositionMin ();
+        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
     
     // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
@@ -632,6 +631,24 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
     timer->tv_sec = current.tv_sec;
     timer->tv_nsec = current.tv_nsec;
 }
+
+/* Min is when you lock the trigger */
+float Launcher::GetAutohidePositionMin ()
+{
+    if (_autohide_animation == SLIDE_ONLY)
+        return 0.75f;
+    else
+        return 0.25f;
+}
+/* Max is the initial state */
+float Launcher::GetAutohidePositionMax ()
+{
+    if (_autohide_animation == SLIDE_ONLY)
+        return 1.00f;
+    else
+        return 0.75f;
+}
+
 
 float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
 {
@@ -1079,11 +1096,12 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         * as we can go back and for. We have to lock the launcher manually changing
         * the _hidden state then
         */
-        if (autohide_progress == TRIGGER_AUTOHIDE_MIN && _mouse_inside_trigger && !_mouseover_launcher_locked)
+        float _position_min = GetAutohidePositionMin ();
+        if (autohide_progress == _position_min && _mouse_inside_trigger && !_mouseover_launcher_locked)
         {
             ForceHiddenState (false); // lock the launcher
             _times[TIME_AUTOHIDE] = current;
-            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * TRIGGER_AUTOHIDE_MIN);
+            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * _position_min);
             SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT); // finish the animation 
         }
     }
