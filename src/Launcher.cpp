@@ -455,14 +455,16 @@ float Launcher::AutohideProgress (struct timespec const &current)
     // bfb position progress. Go from 1.0f -> TRIGGER_AUTOHIDE_MIN linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
-        /* 
+        
+        // "dead" zone
+        if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
+            return TRIGGER_AUTOHIDE_MIN;
+        
+       /* 
         * most of the mouse movement should be done by the inferior part
         * of the launcher, so prioritize this one
         */
-        
-        if ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0))
-            return TRIGGER_AUTOHIDE_MIN;
-        
+                
         float _max_size_on_position;
         float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
         
