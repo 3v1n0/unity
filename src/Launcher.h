@@ -327,6 +327,9 @@ private:
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
+  
+  float GetAutohidePositionMin ();
+  float GetAutohidePositionMax ();
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
