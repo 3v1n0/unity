@@ -36,7 +36,7 @@
  
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
-#define ANIM_DURATION_LONG  5350
+#define ANIM_DURATION_LONG  350
 
 class LauncherModel;
 class QuicklistView;

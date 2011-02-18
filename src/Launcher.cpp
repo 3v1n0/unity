@@ -51,6 +51,8 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+#define TRIGGER_AUTOHIDE_MIN 0.25f
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -61,7 +63,6 @@ TimeDelta (struct timespec const *x, struct timespec const *y)
 
 void SetTimeBack (struct timespec *timeref, int remove)
 {
-  printf ("old time: %ld:%ld\n", timeref->tv_sec, timeref->tv_nsec);
   timeref->tv_sec -= remove / 1000;
   remove = remove % 1000;
 
@@ -71,7 +72,6 @@ void SetTimeBack (struct timespec *timeref, int remove)
       timeref->tv_nsec += 1000000000;
   }
   timeref->tv_nsec -= remove * 1000000;
-  printf ("new time (back normally): %ld:%ld\n", timeref->tv_sec, timeref->tv_nsec);
 }
 
 
@@ -452,7 +452,7 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 float Launcher::AutohideProgress (struct timespec const &current)
 {
     
-    // bfb position progress. Go from 1.0f -> 0.25f linearly
+    // bfb position progress. Go from 1.0f -> TRIGGER_AUTOHIDE_MIN linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
         /* 
@@ -461,7 +461,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
         */
         
         if ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0))
-            return 0.25f;
+            return TRIGGER_AUTOHIDE_MIN;
         
         float _max_size_on_position;
         float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
@@ -474,14 +474,14 @@ float Launcher::AutohideProgress (struct timespec const &current)
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
         // only triggered on _hidden = false, no need for check
-        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * 0.5f + 0.25f;
+        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * 0.5f + TRIGGER_AUTOHIDE_MIN;
     }
     
-    // time-based progress (full scale or finish the 0.25f -> 0.00f on bfb)
+    // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
     else
     {
         float animation_progress;
-        animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+        animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
         if (_hidden)
             return animation_progress;
         else
@@ -1077,16 +1077,13 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         * as we can go back and for. We have to lock the launcher manually changing
         * the _hidden state then
         */
-        if (autohide_progress == 0.25f && _mouse_inside_trigger && !_mouseover_launcher_locked)
+        if (autohide_progress == TRIGGER_AUTOHIDE_MIN && _mouse_inside_trigger && !_mouseover_launcher_locked)
         {
             ForceHiddenState (false); // lock the launcher
             _times[TIME_AUTOHIDE] = current;
-            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_LONG * 0.25f);
-            printf ("TIMEAUTOHIDE reset: %ld:%ld\n", _times[TIME_AUTOHIDE].tv_sec, _times[TIME_AUTOHIDE].tv_nsec);
-            SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_LONG); // finish the animation 
-            printf ("locked!\n");
+            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * TRIGGER_AUTOHIDE_MIN);
+            SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT); // finish the animation 
         }
-        printf ("autohide_progress: %f\n", autohide_progress);
     }
     
     float drag_hide_progress = DragHideProgress (current);
