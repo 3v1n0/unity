@@ -631,12 +631,11 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
     timer->tv_sec = current.tv_sec;
     timer->tv_nsec = current.tv_nsec;
 }
-
 /* Min is when you lock the trigger */
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY)
-        return 0.75f;
+        return 0.55f;
     else
         return 0.25f;
 }
