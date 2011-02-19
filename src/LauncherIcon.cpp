@@ -759,6 +759,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
+  delete bitmap;
 
   SetEmblem (emblem);
 
