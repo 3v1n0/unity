@@ -42,6 +42,8 @@ namespace nux
   _text       = TEXT (text);
   _texture2D  = 0;
   _need_new_extent_cache = true;
+  _pre_layout_width = 0;
+  _pre_layout_height = 0;
 
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
@@ -54,8 +56,7 @@ StaticCairoText::~StaticCairoText ()
   GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
-                                        this);
-  
+                                        this);  
   if (_texture2D)
     _texture2D->UnReference ();
 

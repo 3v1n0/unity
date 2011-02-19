@@ -34,7 +34,8 @@
 IconTexture::IconTexture (const char *icon_name, unsigned int size)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL),
-  _size (size)
+  _size (size),
+  _texture_cached (NULL)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
@@ -44,7 +45,9 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
-  _texture_cached->UnReference ();
+  
+  if (_texture_cached)
+    _texture_cached->UnReference ();
 }
 
 void
@@ -125,6 +128,9 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
                                                             true,
                                                             rop);
   SetPaintLayer(texture_layer);
+
+  if (_texture_cached)
+    _texture_cached->UnReference ();
 
   texture2D->Reference ();
   _texture_cached = texture2D;
