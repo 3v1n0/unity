@@ -136,7 +136,7 @@ PlacesSearchBar::PostLayoutManagement (long LayoutResult)
 }
 
 void
-PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool ignore)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -150,8 +150,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
 
     res = g_strdup_printf (search_template, _entry->GetName ());
     
-    _entry->SetActiveSection (section_id);
-    _entry->SetSearch (search_string ? search_string : "", hints);
+    if (!ignore)
+    {
+      _entry->SetActiveSection (section_id);
+      _entry->SetSearch (search_string ? search_string : "", hints);
+    }
     _pango_entry->SetText (search_string ? search_string : "");
     g_free (res);
   }
@@ -299,14 +302,14 @@ PlacesSearchBar::UpdateBackground ()
     delete _bg_layer;
 
   nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
+  rop.Blend = true;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
-                                     false,              // Write the alpha value of the texture to the destination buffer.
+                                     true,              // Write the alpha value of the texture to the destination buffer.
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 

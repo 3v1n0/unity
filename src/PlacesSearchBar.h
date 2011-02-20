@@ -45,7 +45,7 @@ public:
   virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
 
-  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool ignore=false);
 
   sigc::signal<void, const char *> search_changed;
   
