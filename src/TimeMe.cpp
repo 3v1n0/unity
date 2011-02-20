@@ -16,5 +16,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "TimeMe.h"
+
 gint64 _____last_time_____ = 0;
 gint64 _____start_time_____ = 0;

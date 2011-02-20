@@ -133,6 +133,8 @@ add_executable (test-places
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h
                 ../src/PlacesResultsView.cpp
+                ../src/PlacesSettings.cpp
+                ../src/PlacesSettings.h
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
@@ -156,6 +158,8 @@ add_executable (test-places
                 ../src/Place.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
+                ../src/TimeMe.cpp
+                ../src/TimeMe.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )

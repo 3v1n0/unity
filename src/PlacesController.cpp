@@ -65,6 +65,8 @@ PlacesController::PlacesController ()
   _window->SetLayout (_window_layout);
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
+
+  PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
 }
 
 PlacesController::~PlacesController ()
@@ -115,8 +117,34 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  // FIXME: This will be a ratio
-  geo = nux::Geometry (66, 24, 938, 500);
+  //FIXME: This needs to come from one place
+#define TILE_SIZE 140
+
+  GdkScreen   *screen;
+  gint         primary_monitor, width=0, height=0;
+  GdkRectangle rect;
+
+  screen = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (screen);
+  gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
+
+  if (PlacesSettings::GetDefault ()->GetFormFactor () == PlacesSettings::DESKTOP)
+  {
+    gint half = rect.width / 2;
+
+    while ((width + TILE_SIZE) <= half)
+      width += TILE_SIZE;
+    
+    width = MAX (width, TILE_SIZE * 7);
+    height = ((width/TILE_SIZE) - 3) * TILE_SIZE;
+  }
+  else
+  {
+    width = rect.width - 66;
+    height = rect.height - 24;
+  }
+
+  geo = nux::Geometry (66, 24, width, height);
 }
 
 void
@@ -159,3 +187,8 @@ PlacesController::AddProperties (GVariantBuilder *builder)
 {
 }
 
+void
+PlacesController::OnSettingsChanged (PlacesSettings *settings)
+{
+  g_debug ("Changed");
+}
