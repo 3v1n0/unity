@@ -146,7 +146,7 @@ MultiActionList::RemoveAction (CompAction *a)
 }
 
 void
-MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
+MultiActionList::InitiateAll (CompOption::Vector &extraArgs, int state)
 {
   CompOption::Vector argument;
   if (!m_ActionList.size ())
@@ -168,7 +168,7 @@ MultiActionList::InitiateAll (CompOption::Vector &extraArgs)
     a = m_ActionList.front ();
   
   /* Initiate the first available action with the arguments */
-  a->initiate () (a, 0, argument);
+  a->initiate () (a, state, argument);
 }
 
 void
@@ -237,7 +237,7 @@ PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 }
     
 void 
-PluginAdapter::InitiateScale (std::string *match)
+PluginAdapter::InitiateScale (std::string *match, int state)
 {
   CompOption::Vector argument;
   CompMatch	     m (*match);
@@ -252,15 +252,14 @@ PluginAdapter::InitiateScale (std::string *match)
   {
     if (m.evaluate (w))
     {
-      if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) ==
-                     m_SpreadedWindows.end ())
+      if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) == m_SpreadedWindows.end ())
         m_SpreadedWindows.push_back (w->id ());
       xids.push_back (w->id ());
     }
   }
 
   initiate_spread.emit (xids);
-  m_ScaleActionList.InitiateAll (argument);
+  m_ScaleActionList.InitiateAll (argument, state);
 }
 
 void 
@@ -284,7 +283,7 @@ PluginAdapter::InitiateExpo ()
 {
     CompOption::Vector argument (0);
     
-    m_ExpoActionList.InitiateAll (argument);
+    m_ExpoActionList.InitiateAll (argument, 0);
 }
 
 // WindowManager implementation
@@ -350,6 +349,17 @@ PluginAdapter::Close (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->close (CurrentTime);
+}
+
+void
+PluginAdapter::Lower (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->lower ();
 }
 
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)

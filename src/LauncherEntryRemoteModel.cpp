@@ -19,14 +19,6 @@
 
 #include "LauncherEntryRemoteModel.h"
 
-static void on_launcher_entry_signal_received (GDBusConnection *connection,
-                                               const gchar *sender_name,
-                                               const gchar *object_path,
-                                               const gchar *interface_name,
-                                               const gchar *signal_name,
-                                               GVariant *parameters,
-                                               gpointer user_data);
-
 static void nux_object_destroy_notify (nux::Object *obj);
 
 /**
@@ -68,7 +60,19 @@ LauncherEntryRemoteModel::LauncherEntryRemoteModel()
                                           NULL,                       // path
                                           NULL,                       // arg0
                                           G_DBUS_SIGNAL_FLAGS_NONE,
-                                          on_launcher_entry_signal_received,
+                                          &on_launcher_entry_signal_received,
+                                          this,
+                                          NULL);
+
+  _dbus_name_owner_changed_signal_id =
+      g_dbus_connection_signal_subscribe (_conn,
+                                          "org.freedesktop.DBus",     // sender
+                                          "org.freedesktop.DBus",     // interface
+                                          "NameOwnerChanged",         // member
+                                          "/org/freedesktop/DBus",    // path
+                                          NULL,                       // arg0
+                                          G_DBUS_SIGNAL_FLAGS_NONE,
+                                          &on_dbus_name_owner_changed_signal_received,
                                           this,
                                           NULL);
 }
@@ -228,19 +232,66 @@ LauncherEntryRemoteModel::RemoveEntry (LauncherEntryRemote *entry)
 {
   g_return_if_fail (entry != NULL);
 
-  /* We need a temp ref on entry to keep it alive during signal emission */
-  entry->SinkReference ();
+  entry->Reference ();
 
   if (g_hash_table_remove (_entries_by_uri, entry->AppUri ()))
-    {
-      entry_removed.emit (entry);
-    }
-
+    entry_removed.emit (entry);
+  
   entry->UnReference ();
 }
 
-static void
-on_launcher_entry_signal_received (GDBusConnection *connection,
+/**
+ * Handle an incoming Update() signal from DBus
+ */
+void
+LauncherEntryRemoteModel::HandleUpdateRequest (const gchar *sender_name,
+                                               GVariant    *parameters)
+{
+  LauncherEntryRemote      *entry;
+  gchar                    *app_uri;
+  GVariantIter             *prop_iter;
+
+  g_return_if_fail (sender_name != NULL);
+  g_return_if_fail (parameters != NULL);
+
+  if (!g_variant_is_of_type (parameters, G_VARIANT_TYPE ("(sa{sv})")))
+    {
+      g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
+                 " illegal payload signature '%s'. Expected '(sa{sv})'.",
+                 g_variant_get_type_string (parameters));
+      return;
+    }
+
+  if (sender_name == NULL)
+    {
+      g_critical ("Received 'com.canonical.Unity.LauncherEntry.Update' from"
+                  " an undefined sender. This may happen if you are trying "
+                  "to run Unity on a p2p DBus connection.");
+      return;
+    }
+
+  g_variant_get (parameters, "(sa{sv})", &app_uri, &prop_iter);
+  entry = LookupByUri (app_uri);
+
+  if (entry)
+    {
+      /* It's important that we update the DBus name first since it might
+       * unset the quicklist if it changes */
+      entry->SetDBusName (sender_name);
+      entry->Update (prop_iter);
+    }
+  else
+    {
+      entry = new LauncherEntryRemote (sender_name, parameters);
+      AddEntry (entry); // consumes floating ref on entry
+    }
+
+  g_variant_iter_free (prop_iter);
+  g_free (app_uri);
+}
+
+void
+LauncherEntryRemoteModel::on_launcher_entry_signal_received (GDBusConnection *connection,
                                    const gchar     *sender_name,
                                    const gchar     *object_path,
                                    const gchar     *interface_name,
@@ -249,7 +300,6 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
                                    gpointer         user_data)
 {
   LauncherEntryRemoteModel *self;
-  LauncherEntryRemote      *entry;
 
   self = static_cast<LauncherEntryRemoteModel *> (user_data);
 
@@ -262,32 +312,55 @@ on_launcher_entry_signal_received (GDBusConnection *connection,
 
   if (g_strcmp0 (signal_name, "Update") == 0)
     {
-      if (!g_variant_is_of_type (parameters, G_VARIANT_TYPE ("(sa{sv})")))
-        {
-          g_warning ("Received 'com.canonical.Unity.LauncherEntry.Update' with"
-                     " illegal payload signature '%s'. Expected '(sa{sv})'.",
-                     g_variant_get_type_string (parameters));
-          return;
-        }
-
-      if (sender_name == NULL)
-        {
-          g_critical ("Received 'com.canonical.Unity.LauncherEntry.Update' from"
-                      " an undefined sender. This may happen if you are trying "
-                      "to run Unity on a p2p DBus connection.");
-          return;
-        }
-
-      entry = new LauncherEntryRemote (sender_name, parameters);
-      self->AddEntry (entry); // consumes floating ref on entry
+      self->HandleUpdateRequest (sender_name, parameters);
     }
   else
     {
       g_warning ("Unknown signal '%s.%s' from %s",
                  interface_name, signal_name, sender_name);
     }
+}
 
+void 
+LauncherEntryRemoteModel::on_dbus_name_owner_changed_signal_received (GDBusConnection *connection,
+                                            const gchar *sender_name,
+                                            const gchar *object_path,
+                                            const gchar *interface_name,
+                                            const gchar *signal_name,
+                                            GVariant *parameters,
+                                            gpointer user_data)
+{
+  LauncherEntryRemoteModel *self;
+  char *name, *before, *after;
+  
+  self = static_cast<LauncherEntryRemoteModel *> (user_data);
+  
+  if (parameters == NULL)
+    return;
+  
+  g_variant_get (parameters, "(sss)", &name, &before, &after);
+  
+  if (!after[0])
+  {
+    // Name gone, find and destroy LauncherEntryRemote
+    GHashTableIter iter;
+    GList *remove = NULL, *l;
+    gpointer key, value;
 
+    g_hash_table_iter_init (&iter, self->_entries_by_uri);
+    while (g_hash_table_iter_next (&iter, &key, &value)) 
+    {
+      /* do something with key and value */
+      LauncherEntryRemote *entry = static_cast<LauncherEntryRemote *> (value);
+      if (g_str_equal (entry->DBusName (), name))
+        remove = g_list_prepend (remove, entry);
+    }
+    
+    for (l = remove; l; l = l->next)
+      self->RemoveEntry (static_cast<LauncherEntryRemote *> (l->data));
+    
+    g_list_free (remove);
+  }
 }
 
 static void

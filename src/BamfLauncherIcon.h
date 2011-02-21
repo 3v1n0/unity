@@ -50,6 +50,18 @@ protected:
     void OnCenterStabilized (nux::Point3 center);
 
     void AddProperties (GVariantBuilder *builder);
+    
+    const gchar * GetRemoteUri ();
+    
+    nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+    void OnAcceptDrop (std::list<char *> uris);
+    void OnDndEnter ();
+    void OnDndLeave ();
+    
+    void ActivateLauncherIcon ();
+    void OpenInstanceLauncherIcon ();
+    
+    std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
 private:
     BamfApplication *m_App;
@@ -57,14 +69,17 @@ private:
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     DbusmenuMenuitem *_menu_desktop_shortcuts;
+    gchar *_remote_uri;
+    bool _dnd_hovered;
+    guint _dnd_hover_timer;
 
     void EnsureWindowState ();
 
     void UpdateMenus ();
 
-    void OpenInstance ();
+    void OpenInstanceWithUris (std::list<char *> uris);
     void Focus ();
-    bool Spread ();
+    bool Spread (int state, bool force);
 
     void EnsureMenuItemsReady ();
     
@@ -79,9 +94,11 @@ private:
     static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
     static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
 
-    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+    
+    static gboolean OnDndHoveredTimeout (gpointer data);
 };
 
 #endif // BAMFLAUNCHERICON_H

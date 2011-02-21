@@ -48,7 +48,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.9));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.85));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
@@ -56,7 +56,7 @@ PlacesController::PlacesController ()
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
-  _view = new PlacesView ();
+  _view = new PlacesView (_factory);
   _window_layout->AddView(_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
@@ -78,7 +78,7 @@ void PlacesController::Show ()
     return;
 
   _window->ShowWindow (true, false);
-  _window->EnableInputWindow (true, 1);
+  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
   _window->GrabKeyboard ();
   _window->NeedRedraw ();
@@ -138,6 +138,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  //FIXME: Lots of things to detect here still
   Hide ();
 }
 

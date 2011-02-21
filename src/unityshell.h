@@ -20,6 +20,9 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
+#ifndef UNITYSHELL_H
+#define UNITYSHELL_H
+
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -100,9 +103,27 @@ class UnityScreen :
 	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
                               CompOption::Vector &options);
 
+  bool
+  showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                 CompAction::State   state,
+                                 CompOption::Vector &options);
+  bool
+  showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                  CompAction::State   state,
+                                  CompOption::Vector &options);
+  bool
+  setKeyboardFocusKeyInitiate (CompAction*         action,
+                               CompAction::State   state,
+                               CompOption::Vector& options);
+
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
+	
+	/* Handle changes in the number of workspaces by showing the switcher
+     * or not showing the switcher */
+	bool setOptionForPlugin(const char *plugin, const char *name, 
+                            CompOption::Value &v);
 
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
@@ -145,6 +166,27 @@ class UnityScreen :
 	static gboolean
 	strutHackTimeout (gpointer data);
 
+  static void
+  OnStartKeyNav (GVariant* data, void* value);
+
+  static void
+  OnExitKeyNav (GVariant* data, void* value);
+
+  void
+  startLauncherKeyNav ();
+
+  void
+  restartLauncherKeyNav ();
+
+  static void
+  OnQuicklistEndKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherStartKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherEndKeyNav (GVariant* data, void* value);
+
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
@@ -154,6 +196,10 @@ class UnityScreen :
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
+
+  /* keyboard-nav mode */
+  CompWindow* newFocusedWindow;
+  CompWindow* lastFocusedWindow;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
@@ -212,3 +258,6 @@ class UnityPluginVTable :
 	/* kickstart initialization */
 	bool init ();
 };
+
+#endif // UNITYSHELL_H
+

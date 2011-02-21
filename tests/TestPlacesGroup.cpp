@@ -109,8 +109,9 @@ void TestRunner::Init ()
   group_content->SetHorizontalExternalMargin (4);
   group_content->SetVerticalInternalMargin (4);
   group_content->SetHorizontalInternalMargin (4);
+  group_content->SetHeightMatchContent (true);
 
-  group1->SetLayout (group_content);
+  group1->AddLayout (group_content);
   group1->SetVisible (false);
 
 
@@ -133,8 +134,9 @@ ControlThread (nux::NThread* thread,
   nux::SleepForMilliseconds (3000);
   printf ("ControlThread successfully started\n");
 
-  nux::WindowThread* mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*,
-                                                         data);
+  nux::WindowThread* mainWindowThread;
+  
+  mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 
 

@@ -38,6 +38,9 @@
 
 #include "Introspectable.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
@@ -91,10 +94,85 @@ QuicklistView::QuicklistView ()
   OnMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseClick));
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
-  
+  OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
+
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
   _compute_blur_bkg = true;
+
+  _current_item_index = 0;
+}
+
+void
+QuicklistView::RecvKeyPressed (unsigned int  key_sym,
+                               unsigned long key_code,
+                               unsigned long key_state)
+{
+  switch (key_sym)
+  {
+    // up (highlight previous menu-item)
+    case NUX_VK_UP:
+      if (_current_item_index > 0)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index--;
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // down (highlight next menu-item)
+    case NUX_VK_DOWN:
+      if (_current_item_index < GetNumItems () - 1)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index++;
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // left (close quicklist, go back to laucher key-nav)
+    case NUX_VK_LEFT:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+      // inform Launcher we switch back to Launcher key-nav
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_QUICKLIST_END_KEY_NAV,
+                                NULL);
+    break;
+
+    // esc (close quicklist, exit key-nav)
+    case NUX_VK_ESCAPE:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+      // inform UnityScreen we leave key-nav completely
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_LAUNCHER_END_KEY_NAV,
+                                NULL);
+    break;
+
+    // <SPACE>, <RETURN> (activate selected menu-item)          
+    case NUX_VK_SPACE:
+    case NUX_VK_ENTER:
+      if (_current_item_index >= 0 && _current_item_index < GetNumItems ())
+      {
+
+        dbusmenu_menuitem_handle_event (GetNthItems (_current_item_index)->_menuItem,
+                                        "clicked",
+                                        NULL,
+                                        0);
+        _current_item_index = 0;
+        GetNthItems (_current_item_index)->_prelight = true;
+        Hide ();
+      }
+    break;
+
+    default:
+    break;
+  }
 }
 
 QuicklistView::~QuicklistView ()
@@ -185,7 +263,8 @@ void QuicklistView::Show ()
   {
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
-    EnableInputWindow (true, 1);
+    EnableInputWindow (true, "quicklist", true, false);
+    SetInputFocus ();
     GrabPointer ();
     NeedRedraw ();
 
@@ -256,6 +335,8 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     return nux::eMouseEventSolved;
   }
 
+  ret = OnEvent (ievent, ret, ProcessEventInfo);
+
   return ret;    
 }
 
@@ -265,7 +346,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   nux::Geometry base = GetGeometry();
 
   // Get the background of the QuicklistView and apply some 
-  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && _compute_blur_bkg /* Refresh the blurred background*/)
+  if (_compute_blur_bkg /* Refresh the blurred background*/)
   {
     nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
     nux::GetGpuDevice ()->DeactivateFrameBuffer ();
@@ -311,7 +392,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  if ((nux::GetGpuDevice ()->GetGPUBrand () == nux::GPU_BRAND_NVIDIA) && bkg_blur_texture.IsValid ())
+  if (bkg_blur_texture.IsValid ())
   {
     gfxContext.QRP_2TexMod (
       base.x,
@@ -326,8 +407,8 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
       nux::Color::White);
   }
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+  nux::GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   gfxContext.QRP_2TexMod (base.x,
     base.y,
     base.width,
@@ -344,7 +425,8 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
-  nux::GetGraphicsEngine().GetRenderStates().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
+  nux::GetGraphicsEngine ().GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   gfxContext.QRP_1Tex (base.x,
     base.y,
     base.width,
@@ -782,6 +864,15 @@ std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
 {
   std::list<QuicklistMenuItem*> l;
   return l;
+}
+
+void QuicklistView::DefaultToFirstItem ()
+{
+  if (GetNumItems () >= 1)
+  {
+    GetNthItems (0)->_prelight= true;
+    QueueDraw ();
+  }
 }
 
 static inline void ql_blurinner (guchar* pixel,

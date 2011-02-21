@@ -12,7 +12,7 @@ subdirs (services tests tools doc)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 4)
-set (UNITY_MICRO 0)
+set (UNITY_MICRO 4)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -85,19 +85,25 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
+SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self")
+option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
+if (DISABLE_MAINTAINER_CFLAGS)
+  SET (MAINTAINER_CFLAGS "")
+endif (DISABLE_MAINTAINER_CFLAGS)
+
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk;unity-misc")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"'"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
                )
-               
+ 
 #
 # GSettings Schema
 #

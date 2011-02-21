@@ -31,7 +31,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _uri (NULL)
 {
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
@@ -48,15 +47,11 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
 
   _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
-  _layout->AddSpace (6, 0);
+  _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
 
   SetMinimumSize (160, 128);
   SetMaximumSize (160, 128);
-
-  int textwidth, textheight;
-  textwidth = textheight = 0;
-  _cairotext->GetTextExtents (textwidth, textheight);
 
   AddChild (_icontex);
 
@@ -72,6 +67,20 @@ PlacesSimpleTile::~PlacesSimpleTile ()
   g_free (_label);
   g_free (_icon);
   g_free (_uri);
+}
+
+nux::Geometry
+PlacesSimpleTile::GetHighlightGeometry ()
+{
+  nux::Geometry base = GetGeometry ();
+  nux::Geometry icontex_base = _icontex->GetGeometry ();
+  
+  _highlight_geometry.x = (base.width - icontex_base.width) / 2;
+  _highlight_geometry.y = 12;
+  _highlight_geometry.width = icontex_base.width;
+  _highlight_geometry.height = icontex_base.height;
+
+  return _highlight_geometry;
 }
 
 const char *

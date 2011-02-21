@@ -32,9 +32,8 @@ NUX_IMPLEMENT_OBJECT_TYPE (LauncherEntryRemote);
  */
 LauncherEntryRemote::LauncherEntryRemote(const gchar *dbus_name, GVariant *val)
 {
-  gchar        *app_uri, *prop_key;
+  gchar        *app_uri;
   GVariantIter *prop_iter;
-  GVariant     *prop_value;
 
   g_return_if_fail (dbus_name != NULL);
   g_return_if_fail (val != NULL);
@@ -55,27 +54,7 @@ LauncherEntryRemote::LauncherEntryRemote(const gchar *dbus_name, GVariant *val)
 
   _app_uri = app_uri; // steal ref
 
-  while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
-    {
-      if (g_str_equal ("emblem", prop_key))
-        g_variant_get (prop_value, "s", &_emblem);
-      else if (g_str_equal ("count", prop_key))
-        _count = g_variant_get_int64 (prop_value);
-      else if (g_str_equal ("progress", prop_key))
-        _progress = g_variant_get_double (prop_value);
-      else if (g_str_equal ("emblem-visible", prop_key))
-        _emblem_visible = g_variant_get_boolean (prop_value);
-      else if (g_str_equal ("count-visible", prop_key))
-        _count_visible = g_variant_get_boolean (prop_value);
-      else if (g_str_equal ("progress-visible", prop_key))
-        _progress_visible = g_variant_get_boolean (prop_value);
-      else if (g_str_equal ("quicklist", prop_key))
-        {
-          const gchar *ql_path;
-          ql_path = g_variant_get_string (prop_value,  NULL);
-          _quicklist = dbusmenu_client_new (_dbus_name, ql_path);
-        }
-    }
+  Update (prop_iter);
 
   g_variant_iter_free (prop_iter);
   g_variant_unref (val);
@@ -201,7 +180,7 @@ LauncherEntryRemote::SetDBusName(const gchar* dbus_name)
    * different name than the rest of the launcher API */
   SetQuicklist (NULL);
 
-  dbus_name_changed.emit (old_name);
+  dbus_name_changed.emit (this, old_name);
   g_free (old_name);
 }
 
@@ -215,7 +194,7 @@ LauncherEntryRemote::SetEmblem(const gchar* emblem)
     g_free (_emblem);
 
   _emblem = g_strdup (emblem);
-  emblem_changed.emit ();
+  emblem_changed.emit (this);
 }
 
 void
@@ -225,7 +204,7 @@ LauncherEntryRemote::SetCount(gint64 count)
     return;
 
   _count = count;
-  count_changed.emit ();
+  count_changed.emit (this);
 }
 
 void
@@ -235,18 +214,24 @@ LauncherEntryRemote::SetProgress(gdouble progress)
     return;
 
   _progress = progress;
-  progress_changed.emit ();
+  progress_changed.emit (this);
 }
 
 /**
  * Set the quicklist of this entry to be the Dbusmenu on the given path.
  * If entry already has a quicklist with the same path this call is a no-op.
  *
- * To unset the quicklist pass in a NULL path.
+ * To unset the quicklist pass in a NULL path or empty string.
  */
 void
 LauncherEntryRemote::SetQuicklistPath(const gchar *dbus_path)
 {
+  /* Replace "" with NULL to simplify the logic below */
+  if (g_strcmp0 ("", dbus_path) == 0)
+    {
+      dbus_path = NULL;
+    }
+
   /* Check if existing quicklist have exact same path
    * and ignore the change in that case */
   if (_quicklist)
@@ -271,7 +256,7 @@ LauncherEntryRemote::SetQuicklistPath(const gchar *dbus_path)
   else
     _quicklist = NULL;
 
-  quicklist_changed.emit ();
+  quicklist_changed.emit (this);
 }
 
 /**
@@ -334,7 +319,7 @@ LauncherEntryRemote::SetQuicklist(DbusmenuClient *quicklist)
   else
     _quicklist = (DbusmenuClient *) g_object_ref (quicklist);
 
-  quicklist_changed.emit ();
+  quicklist_changed.emit (this);
 }
 
 void
@@ -344,7 +329,7 @@ LauncherEntryRemote::SetEmblemVisible(gboolean visible)
     return;
 
   _emblem_visible = visible;
-  emblem_visible_changed.emit ();
+  emblem_visible_changed.emit (this);
 }
 
 void
@@ -354,7 +339,7 @@ LauncherEntryRemote::SetCountVisible(gboolean visible)
       return;
 
   _count_visible = visible;
-  count_visible_changed.emit ();
+  count_visible_changed.emit (this);
 }
 
 void
@@ -364,7 +349,7 @@ LauncherEntryRemote::SetProgressVisible(gboolean visible)
       return;
 
   _progress_visible = visible;
-  progress_visible_changed.emit ();
+  progress_visible_changed.emit (this);
 }
 
 /**
@@ -385,4 +370,43 @@ LauncherEntryRemote::Update(LauncherEntryRemote *other)
   SetEmblemVisible (other->EmblemVisible ());
   SetCountVisible(other->CountVisible ());
   SetProgressVisible(other->ProgressVisible());
+}
+
+/**
+ * Iterate over a GVariantIter containing elements of type '{sv}' and apply
+ * any properties to 'this'.
+ */
+void
+LauncherEntryRemote::Update(GVariantIter *prop_iter)
+{
+  gchar       *prop_key;
+  const gchar *prop_value_s;
+  GVariant    *prop_value;
+
+  g_return_if_fail (prop_iter != NULL);
+
+  while (g_variant_iter_loop (prop_iter, "{sv}", &prop_key, &prop_value))
+    {
+      if (g_str_equal ("emblem", prop_key))
+        {
+          prop_value_s = g_variant_get_string (prop_value, NULL);
+          SetEmblem (prop_value_s);
+        }
+      else if (g_str_equal ("count", prop_key))
+        SetCount (g_variant_get_int64 (prop_value));
+      else if (g_str_equal ("progress", prop_key))
+        SetProgress (g_variant_get_double (prop_value));
+      else if (g_str_equal ("emblem-visible", prop_key))
+        SetEmblemVisible (g_variant_get_boolean (prop_value));
+      else if (g_str_equal ("count-visible", prop_key))
+        SetCountVisible (g_variant_get_boolean (prop_value));
+      else if (g_str_equal ("progress-visible", prop_key))
+        SetProgressVisible (g_variant_get_boolean (prop_value));
+      else if (g_str_equal ("quicklist", prop_key))
+        {
+          /* The value is the object path of the dbusmenu */
+          prop_value_s = g_variant_get_string (prop_value,  NULL);
+          SetQuicklistPath (prop_value_s);
+        }
+    }
 }

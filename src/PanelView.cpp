@@ -32,13 +32,21 @@
 #include <glib.h>
 
 #include "PanelView.h"
+#include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
 #include "PanelIndicatorObjectView.h"
 
+NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
+
 PanelView::PanelView (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+:   View (NUX_FILE_LINE_PARAM),
+  _is_dirty (true),
+  _opacity (1.0f)
 {
+  _style = new PanelStyle ();
+  _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
+
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
@@ -53,6 +61,10 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
    AddChild (_menu_view);
 
+   _tray = new PanelTray ();
+   _layout->AddView (_tray, 0, nux::eCenter, nux::eFull);
+   AddChild (_tray);
+
   _remote = new IndicatorObjectFactoryRemote ();
   _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
@@ -62,14 +74,9 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 
 PanelView::~PanelView ()
 {
+  _style->UnReference ();
   delete _remote;
   delete _bg_layer;
-}
-
-PanelHomeButton * 
-PanelView::HomeButton ()
-{
-  return _home_button;
 }
 
 const gchar* PanelView::GetName ()
@@ -150,32 +157,16 @@ PanelView::UpdateBackground ()
 {
   nux::Geometry geo = GetGeometry ();
 
-  if (geo.width == _last_width && geo.height == _last_height)
+  if (geo.width == _last_width && geo.height == _last_height && !_is_dirty)
     return;
 
   _last_width = geo.width;
   _last_height = geo.height;
+  _is_dirty = false;
 
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
-  cairo_t *cr = cairo_graphics.GetContext();
-  cairo_set_line_width (cr, 1);
-
-  cairo_pattern_t *pat = cairo_pattern_create_linear (0, 0, 0, _last_height);
-  cairo_pattern_add_color_stop_rgb (pat, 0.0f, 89/255.0f, 88/255.0f, 83/255.0f);
-  cairo_pattern_add_color_stop_rgb (pat, 1.0f, 50/255.0f, 50/255.0f, 45/255.0f);
-  cairo_set_source (cr, pat);
-  cairo_rectangle (cr, 0, 0, _last_width, _last_height);
-  cairo_fill (cr);
-  cairo_pattern_destroy (pat);
-
-  cairo_destroy (cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
-  texture2D->Update(bitmap);
-  delete bitmap;
-
+  GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
+  nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+  g_object_unref (pixbuf);
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -183,20 +174,50 @@ PanelView::UpdateBackground ()
     delete _bg_layer;
 
   nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_SRC_ALPHA;            // Set the source blend factor.
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  nux::Color col = nux::Color::White;
+  col.SetAlpha (_opacity);
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                     texxform,          // The Oject that defines the texture wraping and coordinate transformation.
-                                     nux::Color::White, // The color used to modulate the texture.
-                                     true,              // Write the alpha value of the texture to the destination buffer.
-                                     rop                // Use the given raster operation to set the blending when the layer is being rendered.
-  );
-
+                                     texxform,
+                                     col,
+                                     true,
+                                     rop);
   texture2D->UnReference ();
 
   NeedRedraw ();
+}
+
+void
+PanelView::ForceUpdateBackground ()
+{
+  std::list<Area *>::iterator it;
+
+  _is_dirty = true;
+  UpdateBackground ();
+
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    view->QueueDraw ();
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+    {
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+      entry->QueueDraw ();
+    }
+  }
+  _home_button->QueueDraw ();
+  QueueDraw ();
 }
 
 //
@@ -205,20 +226,26 @@ PanelView::UpdateBackground ()
 void
 PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
 {
-  PanelIndicatorObjectView *view = new PanelIndicatorObjectView (proxy);
-
+  PanelIndicatorObjectView *view;
+  
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
   if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
+  {
+    view = _menu_view;
     _menu_view->SetProxy (proxy);
+  }
   else
+  {
+    view = new PanelIndicatorObjectView (proxy);
+
     _layout->AddView (view, 0, nux::eCenter, nux::eFull);
+    AddChild (view);
+  }
 
   _layout->SetContentDistribution (nux::eStackLeft);
   
-  AddChild (view);
-
-  this->ComputeChildLayout (); 
+  ComputeChildLayout ();
   NeedRedraw ();
 }
 
@@ -304,4 +331,62 @@ PanelView::OnEntryActivated (const char *entry_id)
 {
   if (g_strcmp0 (entry_id, "") == 0)
     _menu_view->AllMenusClosed ();
+}
+
+//
+// Useful Public Methods
+//
+PanelHomeButton * 
+PanelView::HomeButton ()
+{
+  return _home_button;
+}
+
+void
+PanelView::StartFirstMenuShow ()
+{
+
+}
+
+void
+PanelView::EndFirstMenuShow ()
+{
+  std::list<Area *>::iterator it;
+
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+    {
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+      entry->Activate ();
+      return;
+    }
+  }
+}
+
+Window
+PanelView::GetTrayWindow ()
+{
+  return _tray->GetTrayWindow ();
+}
+
+void
+PanelView::SetOpacity (float opacity)
+{
+  if (_opacity == opacity)
+    return;
+
+  _opacity = opacity;
+  
+  ForceUpdateBackground ();
 }

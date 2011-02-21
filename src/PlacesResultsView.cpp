@@ -32,7 +32,6 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   m_horizontal_scrollbar_enable   = false;
   m_vertical_scrollbar_enable      = true;
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-  _layout->SinkReference ();
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
 
@@ -44,14 +43,7 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
 PlacesResultsView::~PlacesResultsView ()
 {
-  std::list<PlacesGroup *>::iterator it;
-  for (it = _groups.begin(); it != _groups.end(); it++)
-  {
-    (*it)->UnReference ();
-  }
-
   _layout->Clear ();
-  _layout->UnReference ();
 }
 
 void
@@ -65,6 +57,9 @@ PlacesResultsView::ReJiggyGroups ()
     if ((*it)->IsVisible ())
     {
       _layout->AddView ((*it), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+      _layout->QueueDraw ();
+      (*it)->QueueDraw ();
+      QueueDraw ();
     }
   }
 }
@@ -72,43 +67,26 @@ PlacesResultsView::ReJiggyGroups ()
 void
 PlacesResultsView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
-
-  nux::Geometry base = GetGeometry();
-
-  if (_layout)
-    _layout->NeedRedraw();
-
-  nux::GetPainter().PaintBackground (GfxContext, base);
-
-  if (m_vertical_scrollbar_enable)
-  {
-    vscrollbar->NeedRedraw();
-  }
-
-  GfxContext.PopClippingRectangle();
 }
 
 void
 PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-
+ 
   GfxContext.PushClippingRectangle (nux::Rect (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight) );
 
   if (_layout)
   {
-    GfxContext.PushClippingRectangle (_layout->GetGeometry() );
+    GfxContext.PushClippingRectangle (_layout->GetGeometry());
     _layout->ProcessDraw (GfxContext, force_draw);
     GfxContext.PopClippingRectangle();
   }
 
   GfxContext.PopClippingRectangle();
-
+  
   if (m_vertical_scrollbar_enable)
-  {
     vscrollbar->ProcessDraw (GfxContext, force_draw);
-  }
 
   GfxContext.PopClippingRectangle();
 }
@@ -116,19 +94,15 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)
 {
-  group->Reference ();
   _groups.push_back (group);
   _layout->AddView (group, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  ComputeChildLayout ();
 }
 
 void
 PlacesResultsView::RemoveGroup (PlacesGroup *group)
 {
-  group->UnReference ();
   _groups.remove (group);
   _layout->RemoveChildObject (group);
-  ComputeChildLayout ();
 }
 
 void
@@ -207,14 +181,10 @@ void
 PlacesResultsView::ScrollUp (float stepy, int mousedy)
 {
   ScrollView::ScrollUp (stepy, mousedy);
-  ComputeChildLayout();
-  NeedRedraw();
 }
 
 void
 PlacesResultsView::ScrollDown (float stepy, int mousedy)
 {
   ScrollView::ScrollDown (stepy, mousedy);
-  ComputeChildLayout();
-  NeedRedraw();
 }

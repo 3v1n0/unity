@@ -59,6 +59,10 @@ class QuicklistMenuItemSeparator : public QuicklistMenuItem
     virtual int CairoSurfaceWidth ();
     
     friend class QuicklistView;
+
+ private:
+
+    nux::Color _premultiplied_color;
 };
 
 #endif // QUICKLISTMENUITEMSEPARATOR_H

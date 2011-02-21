@@ -35,7 +35,7 @@ public:
         m_ActionList (n),
         _primary_action (NULL) {};
 
-    void InitiateAll (CompOption::Vector &extraArgs);
+    void InitiateAll (CompOption::Vector &extraArgs, int state);
     void TerminateAll (CompOption::Vector &extraArgs);
 
     void AddNewAction (CompAction *, bool primary);
@@ -64,7 +64,7 @@ public:
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
 
-    void InitiateScale (std::string *match);
+    void InitiateScale (std::string *match, int state = 0);
     void TerminateScale ();
     bool IsScaleActive ();
     
@@ -81,6 +81,7 @@ public:
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);
     

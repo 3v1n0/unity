@@ -76,6 +76,7 @@ public:
   void OnWindowRestored  (guint32 xid);
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseMiddleClicked ();
 
   void Refresh ();
   void AllMenusClosed ();
@@ -105,6 +106,7 @@ private:
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized; 
+  bool _is_own_window;
   PanelIndicatorObjectEntryView *_last_active_view;
 
   WindowButtons * _window_buttons;

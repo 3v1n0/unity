@@ -36,24 +36,33 @@ static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
-PlacesView::PlacesView (NUX_FILE_LINE_DECL)
+PlacesView::PlacesView (PlaceFactory *factory)
 : nux::View (NUX_TRACKER_LOCATION),
+  _factory (factory),
   _entry (NULL)
 {
-  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  _home_entry = new PlaceEntryHome (_factory);
 
+  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  
   _search_bar = new PlacesSearchBar ();
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
+  _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
+
+  _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
+  _layout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
   
   _home_view = new PlacesHomeView ();
-  //_layout->AddView (_home_view, 1, nux::eCenter, nux::eFull);
+  _layered_layout->AddLayer (_home_view);
   AddChild (_home_view);
 
   _results_controller = new PlacesResultsController ();
   _results_view = new PlacesResultsView ();
   _results_controller->SetView (_results_view);
-  _layout->AddView (_results_view, 1, nux::eCenter, nux::eFull);
+  _layered_layout->AddLayer (_results_view);
+
+  _layered_layout->SetActiveLayer (_home_view);
 
   SetCompositionLayout (_layout);
 
@@ -65,17 +74,37 @@ PlacesView::PlacesView (NUX_FILE_LINE_DECL)
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
+
+  _icon_loader = IconLoader::GetDefault ();
+
+  SetActiveEntry (_home_entry, 0, "");
 }
 
 PlacesView::~PlacesView ()
 {
-
+  delete _home_entry;
 }
 
 long
 PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
+  // FIXME: This breaks with multi-monitor
+  nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
+
+  if (ievent.e_event == nux::NUX_KEYDOWN
+      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  {
+    SetActiveEntry (NULL, 0, "");
+    return TraverseInfo;
+  }
+
+  if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
+  {
+    if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+      SetActiveEntry (NULL, 0, "");
+    return TraverseInfo;
+  }
     
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
@@ -84,15 +113,23 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 void
 PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  GfxContext.PushClippingRectangle (GetGeometry() );
 
+  gPainter.PaintBackground (GfxContext, GetGeometry ());
+
+  GfxContext.PopClippingRectangle ();
 }
 
 
 void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  GfxContext.PushClippingRectangle (GetGeometry() );
+
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
+
+  GfxContext.PopClippingRectangle ();
 }
 
 //
@@ -101,53 +138,68 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  if (signal)
+    entry_changed.emit (entry);
+
+  if (entry == NULL)
+    entry = _home_entry;
+
   if (_entry)
   {
     _entry->SetActive (false);
+
     g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_added_id);
     g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_removed_id);
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_added_id);
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
 
     _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
-
     _results_controller->Clear ();
   }
-
+  
   _entry = entry;
   
-  if (_entry)
+  std::map <gchar*, gchar*> hints;
+  DeeModel     *groups, *results;
+  DeeModelIter *iter, *last;
+
+  _entry->SetActive (true);
+
+  groups = _entry->GetGroupsModel ();
+  iter = dee_model_get_first_iter (groups);
+  last = dee_model_get_last_iter (groups);
+  while (iter != last)
   {
-    std::map <gchar*, gchar*> hints;
-    DeeModel     *groups;
-    DeeModelIter *iter, *last;
-
-    _entry->SetActive (true);
-
-    groups = _entry->GetGroupsModel ();
-    iter = dee_model_get_first_iter (groups);
-    last = dee_model_get_last_iter (groups);
-    while (iter != last)
-    {
-      _results_controller->CreateGroup (dee_model_get_string (groups,
-                                                              iter,
-                                                              PlaceEntry::GROUP_NAME));
-      iter = dee_model_next (groups, iter);
-    }
-
-    _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
-                                        (GCallback)&PlacesView::OnGroupAdded, this);
-    _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
-                                          (GCallback)&PlacesView::OnGroupRemoved, this);
-    _result_added_id = g_signal_connect (_entry->GetResultsModel (), "row-added",
-                                         (GCallback)&PlacesView::OnResultAdded, this);
-    _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
-                                           (GCallback)&PlacesView::OnResultRemoved, this);
+    _results_controller->CreateGroup (dee_model_get_string (groups,
+                                                            iter,
+                                                            PlaceEntry::GROUP_NAME));
+    iter = dee_model_next (groups, iter);
   }
-  _search_bar->SetActiveEntry (_entry, section_id, search_string);
 
-  if (signal)
-    entry_changed.emit (_entry);
+  results = _entry->GetResultsModel ();
+  iter = dee_model_get_first_iter (results);
+  last = dee_model_get_last_iter (results);
+  while (iter != last)
+  {
+    OnResultAdded (results, iter, this);
+    iter = dee_model_next (results, iter);
+  }
+
+  _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
+                                      (GCallback)&PlacesView::OnGroupAdded, this);
+  _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
+                                        (GCallback)&PlacesView::OnGroupRemoved, this);
+  _result_added_id = g_signal_connect (_entry->GetResultsModel (), "row-added",
+                                       (GCallback)&PlacesView::OnResultAdded, this);
+  _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
+                                         (GCallback)&PlacesView::OnResultRemoved, this);
+
+  if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
+    _layered_layout->SetActiveLayer (_home_view);
+  else
+    _layered_layout->SetActiveLayer (_results_view);
+
+  _search_bar->SetActiveEntry (_entry, section_id, search_string);
 }
 
 PlaceEntry *
@@ -186,12 +238,9 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   DeeModel         *groups;
   DeeModelIter     *git;
   const gchar      *group_id;
-  gchar      *result_id;
   gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
-
-  //g_debug ("ResultAdded: %s", dee_model_get_string (model, iter, 4));
 
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
@@ -205,18 +254,14 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
   result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
                                       -1);
-  result_id = g_strdup_printf ("%s:%s",
-                               group_id,
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
   result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
 
   tile = new PlacesSimpleTile (result_icon, result_name, 48);
   tile->SetURI (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
   tile->sigClick.connect (sigc::mem_fun (self, &PlacesView::OnResultClicked));
-  self->GetResultsController ()->AddResultToGroup (group_id, tile, result_id);
+  self->GetResultsController ()->AddResultToGroup (group_id, tile, iter);
 
   g_free (result_name);
-  g_free (result_id);
 }
 
 void
@@ -226,10 +271,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
   DeeModel     *groups;
   DeeModelIter *git;
   const gchar  *group_id;
-  gchar  *result_id;
-
-  //g_debug ("ResultRemoved: %s", dee_model_get_string (model, iter, 4));
-
+  
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
     return;
@@ -239,13 +281,7 @@ PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *se
                                                                  iter,
                                                                  PlaceEntry::RESULT_GROUP_ID));
   group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_id = g_strdup_printf ("%s:%s",
-                               group_id, 
-                               dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
-
-  self->GetResultsController ()->RemoveResultFromGroup (group_id, result_id);
-
-  g_free (result_id);
+  self->GetResultsController ()->RemoveResultFromGroup (group_id, iter);
 }
 
 void
@@ -296,6 +332,29 @@ PlacesView::OnResultClicked (PlacesTile *tile)
                             NULL);
 }
 
+void
+PlacesView::OnSearchChanged (const char *search_string)
+{
+  if (_entry == _home_entry)
+  {
+    if (g_strcmp0 (search_string, "") == 0)
+    {
+      _layered_layout->SetActiveLayer (_home_view);
+      _home_view->QueueDraw ();
+    }
+    else
+    {
+      _layered_layout->SetActiveLayer (_results_view);
+      _results_view->QueueDraw ();
+    }
+
+    _results_view->QueueDraw ();
+    _home_view->QueueDraw ();
+    _layered_layout->QueueDraw ();
+    QueueDraw ();
+  }
+}
+
 //
 // UBus handlers
 //
@@ -306,6 +365,12 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
 {
   std::vector<Place *> places = PlaceFactory::GetDefault ()->GetPlaces ();
   std::vector<Place *>::iterator it;
+
+  if (g_strcmp0 (entry_id, "PlaceEntryHome") == 0)
+  {
+    SetActiveEntry (_home_entry, section_id, search_string);
+    return;
+  }
   
   for (it = places.begin (); it != places.end (); ++it)
   {

@@ -29,33 +29,20 @@
 
 #include <glib.h>
 
-
-// FIXME: This will be all automatic in the future
-#define AMBIANCE "/usr/share/themes/Ambiance/metacity-1"
-
-enum
-{
-  BUTTON_CLOSE=0,
-  BUTTON_MINIMISE,
-  BUTTON_UNMAXIMISE
-};
-
+#include "PanelStyle.h"
 class WindowButton : public nux::Button
 {
   // A single window button
 public:
-  WindowButton (int type)
+  WindowButton (PanelStyle::WindowButtonType type)
   : nux::Button ("X", NUX_TRACKER_LOCATION),
+    _type (type),
     _normal_tex (NULL),
     _prelight_tex (NULL),
     _pressed_tex (NULL)
   {
-    if (type == BUTTON_CLOSE)
-      LoadImages ("close");
-    else if (type == BUTTON_MINIMISE)
-      LoadImages ("minimize");
-    else
-      LoadImages ("unmaximize");
+    LoadImages ();
+    PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &WindowButton::LoadImages));
   }
 
   ~WindowButton ()
@@ -86,11 +73,8 @@ public:
       tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates ().SetSeparateBlend (true,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetBlend (true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     if (tex)
       GfxContext.QRP_1Tex (geo.x,
@@ -100,68 +84,33 @@ public:
                                 tex->GetDeviceTexture (),
                                 texxform,
                                 nux::Color::White);
-    GfxContext.GetRenderStates ().SetSeparateBlend (false,
-                                                    GL_SRC_ALPHA,
-                                                    GL_ONE_MINUS_SRC_ALPHA,
-                                                    GL_ONE_MINUS_DST_ALPHA,
-                                                    GL_ONE);
+    GfxContext.GetRenderStates ().SetBlend (false);
     GfxContext.PopClippingRectangle();
   }
 
-  void LoadImages (const char *name)
+  void LoadImages ()
   {
-    //FIXME: We need to somehow be theme aware. Or, at least support the themes
-    //       we know and have a good default fallback
-    gchar  *filename;
-    GError *error = NULL;
-    GdkPixbuf *_normal;
-    GdkPixbuf *_prelight;
-    GdkPixbuf *_pressed;
-
-    filename = g_strdup_printf ("%s/%s.png", AMBIANCE, name);
-    _normal = gdk_pixbuf_new_from_file (filename, &error);
-    if (error)
-    {
-      g_warning ("Unable to load window button %s: %s", filename, error->message);
-      g_error_free (error);
-      error = NULL;
-    }
-    else
-      _normal_tex = nux::CreateTextureFromPixbuf (_normal);
-    g_free (filename);
-    g_object_unref (_normal);
-
-    filename = g_strdup_printf ("%s/%s_focused_prelight.png", AMBIANCE, name);
-    _prelight = gdk_pixbuf_new_from_file (filename, &error);
-    if (error)
-    {
-      g_warning ("Unable to load window button %s: %s", filename, error->message);
-      g_error_free (error);
-      error = NULL;
-    }
-    else
-      _prelight_tex = nux::CreateTextureFromPixbuf (_prelight);
-    g_free (filename);
-    g_object_unref (_prelight);
-
-    filename = g_strdup_printf ("%s/%s_focused_pressed.png", AMBIANCE, name);
-    _pressed = gdk_pixbuf_new_from_file (filename, &error);
-    if (error)
-    {
-      g_warning ("Unable to load window button %s: %s", name, error->message);
-      g_error_free (error);
-      error = NULL;
-    }
-    else
-      _pressed_tex = nux::CreateTextureFromPixbuf (_pressed);
-    g_free (filename);
-    g_object_unref (_pressed);
+    PanelStyle *style = PanelStyle::GetDefault ();
 
     if (_normal_tex)
-      SetMinimumSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
+      _normal_tex->UnReference ();
+    if (_prelight_tex)
+      _prelight_tex->UnReference ();
+    if (_pressed_tex)
+      _pressed_tex->UnReference ();
+
+    _normal_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_NORMAL);
+    _prelight_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_PRELIGHT);
+    _pressed_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_PRESSED);
+
+    if (_normal_tex)
+      SetMinMaxSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
+
+    QueueDraw ();
   }
 
 private:
+  PanelStyle::WindowButtonType _type;
   nux::BaseTexture *_normal_tex;
   nux::BaseTexture *_prelight_tex;
   nux::BaseTexture *_pressed_tex;
@@ -173,19 +122,19 @@ WindowButtons::WindowButtons ()
 {
   WindowButton *but;
 
-  but = new WindowButton (BUTTON_CLOSE);
+  but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
   but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
   but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
 
-  but = new WindowButton (BUTTON_MINIMISE);
+  but = new WindowButton (PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
   but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
   but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
 
-  but = new WindowButton (BUTTON_UNMAXIMISE);
+  but = new WindowButton (PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
   but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));

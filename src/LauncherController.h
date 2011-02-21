@@ -49,6 +49,7 @@ public:
     LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
     ~LauncherController();
 
+    void UpdateNumWorkspaces (int workspaces);
 private:
     BamfMatcher*           _matcher;
     CompAction*            _expo_action;
@@ -61,16 +62,20 @@ private:
     PlaceLauncherSection*  _place_section;
     DeviceLauncherSection* _device_section;
     LauncherEntryRemoteModel* _remote_model;
+    SimpleLauncherIcon*    _expoIcon;
+    int                    _num_workspaces;
 
     void SortAndSave ();
 
-    void OnLauncherRequestReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save);
-    void OnLauncherRequestReorderBefore (LauncherIcon *icon, LauncherIcon *before, bool save);
     void OnIconAdded (LauncherIcon *icon);
+    
+    void OnLauncherDropped (char *path, LauncherIcon *before);
 
-    void OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
+    void RemoveExpoAction ();
     
     void InsertTrash ();
 
@@ -83,8 +88,6 @@ private:
     void OnExpoClicked (int button);
     
     /* statics */
-    
-    static bool CompareIcons (LauncherIcon *first, LauncherIcon *second);
     
     static bool BamfTimerCallback (void *data);
 

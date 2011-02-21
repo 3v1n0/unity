@@ -24,13 +24,18 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include "PanelHomeButton.h"
-#include "PanelMenuView.h"
+#include <gdk/gdkx.h>
+
 #include "IndicatorObjectFactoryRemote.h"
 #include "Introspectable.h"
+#include "PanelHomeButton.h"
+#include "PanelMenuView.h"
+#include "PanelTray.h"
+#include "PanelStyle.h"
 
 class PanelView : public Introspectable, public nux::View
 {
+  NUX_DECLARE_OBJECT_TYPE (PanelView, nux::View);
 public:
   PanelView (NUX_FILE_LINE_PROTO);
   ~PanelView ();
@@ -49,6 +54,13 @@ public:
   
   PanelHomeButton * HomeButton ();
 
+  void StartFirstMenuShow ();
+  void EndFirstMenuShow ();
+
+  Window GetTrayWindow ();
+
+  void SetOpacity (float opacity);
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
@@ -57,17 +69,23 @@ protected:
 
 private:
   void UpdateBackground ();
+  void ForceUpdateBackground ();
 
 private:
   IndicatorObjectFactoryRemote *_remote;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
+  PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-
+  
   int _last_width;
   int _last_height;
+
+  PanelStyle *_style;
+  bool        _is_dirty;
+  float       _opacity;
 };
 
 #endif // PANEL_VIEW_H
