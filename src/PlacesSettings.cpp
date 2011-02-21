@@ -84,3 +84,10 @@ PlacesSettings::GetFormFactor ()
 {
   return _form_factor;
 }
+
+int
+PlacesSettings::GetDefaultTileWidth ()
+{
+  //FIXME: We want to calculate this from DPI
+  return 140;
+}

@@ -117,26 +117,27 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  //FIXME: This needs to come from one place
-#define TILE_SIZE 140
-
-  GdkScreen   *screen;
-  gint         primary_monitor, width=0, height=0;
-  GdkRectangle rect;
+  PlacesSettings *settings = PlacesSettings::GetDefault ();
+  GdkScreen      *screen;
+  gint            primary_monitor, width=0, height=0;
+  GdkRectangle    rect;
+  gint            tile_width;
 
   screen = gdk_screen_get_default ();
   primary_monitor = gdk_screen_get_primary_monitor (screen);
   gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
 
-  if (PlacesSettings::GetDefault ()->GetFormFactor () == PlacesSettings::DESKTOP)
+  tile_width = settings->GetDefaultTileWidth (); 
+
+  if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
   {
     gint half = rect.width / 2;
 
-    while ((width + TILE_SIZE) <= half)
-      width += TILE_SIZE;
+    while ((width + tile_width) <= half)
+      width += tile_width;
     
-    width = MAX (width, TILE_SIZE * 7);
-    height = ((width/TILE_SIZE) - 3) * TILE_SIZE;
+    width = MAX (width, tile_width * 7);
+    height = ((width/tile_width) - 3) * tile_width;
   }
   else
   {
@@ -190,5 +191,5 @@ PlacesController::AddProperties (GVariantBuilder *builder)
 void
 PlacesController::OnSettingsChanged (PlacesSettings *settings)
 {
-  g_debug ("Changed");
+  // We don't need to do anything just yet over here, it's a placeholder for when we do
 }

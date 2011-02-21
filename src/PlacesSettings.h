@@ -41,6 +41,7 @@ public:
   static PlacesSettings * GetDefault ();
 
   FormFactor GetFormFactor ();
+  int        GetDefaultTileWidth ();
 
   sigc::signal<void, PlacesSettings *> changed;
 

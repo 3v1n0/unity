@@ -31,6 +31,7 @@
 #include "PlacesGroup.h"
 #include "PlacesSimpleTile.h"
 
+#include "PlacesSettings.h"
 
 PlacesResultsController::PlacesResultsController ()
 {
@@ -156,6 +157,8 @@ PlacesResultsController::Clear ()
 PlacesGroup *
 PlacesResultsController::CreateGroup (const char *groupname)
 {
+  PlacesSettings *settings = PlacesSettings::GetDefault ();
+
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);
@@ -165,7 +168,7 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (140, 100);
+  layout->SetChildrenSize (settings->GetDefaultTileWidth (), 100);
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (4);
