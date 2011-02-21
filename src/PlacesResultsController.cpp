@@ -145,10 +145,13 @@ PlacesResultsController::Clear ()
 
   for (it = _groups.begin (); it != _groups.end (); ++it)
   {
-    PlacesGroup *group = static_cast <PlacesGroup *> (it->second);
-
-    _results_view->RemoveGroup (group);
-    group->UnReference ();
+    PlacesGroup *group = dynamic_cast <PlacesGroup *> (it->second);
+    
+    if (group)
+    {
+      _results_view->RemoveGroup (group);
+      group->UnReference ();
+    }
   }
 
   _groups.erase (_groups.begin (), _groups.end ());

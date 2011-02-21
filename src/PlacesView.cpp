@@ -246,7 +246,8 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   PlacesSimpleTile *tile;
 
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
+                        "unity-install"))
     return;
   
   active = self->GetActiveEntry ();
@@ -270,21 +271,12 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
 void
 PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  PlaceEntry   *active;
-  DeeModel     *groups;
-  DeeModelIter *git;
-  const gchar  *group_id;
-  
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
+                        "unity-install"))
     return;
-  active = self->GetActiveEntry ();
-  groups = active->GetGroupsModel ();
-  git = dee_model_get_iter_at_row (groups, dee_model_get_uint32 (model,
-                                                                 iter,
-                                                                 PlaceEntry::RESULT_GROUP_ID));
-  group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  self->GetResultsController ()->RemoveResultFromGroup (group_id, iter);
+
+  self->GetResultsController ()->RemoveResult (iter);
 }
 
 void
