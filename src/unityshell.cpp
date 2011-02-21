@@ -188,7 +188,11 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
-
+      break;
+    case KeyPress:
+      KeySym key_sym;
+      if (XLookupString(&(event->xkey), NULL, 0, &key_sym, 0) > 0)
+          launcher->CheckSuperShortcutPressed (key_sym, 0, 0);
       break;
   }
 
@@ -244,10 +248,19 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
   return false;
 }
 
-bool
-UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
-                                          CompAction::State  state,
-                                          CompOption::Vector &options)
+void
+UnityScreen::restartLauncherKeyNav ()
+{
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
+  }
+}
+
+void
+UnityScreen::startLauncherKeyNav ()
 {
   // get CompWindow* of launcher-window
   newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
@@ -262,12 +275,28 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
     newFocusedWindow->moveInputFocusTo ();
     launcher->startKeyNavMode ();
   }
+}
+
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  startLauncherKeyNav ();
 
   return false;
 }
 
 void
-UnityScreen::OnExitKeyNav (GVariant* data, void* value)
+UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  self->startLauncherKeyNav ();
+}
+
+void
+UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
 {
   UnityScreen *self = (UnityScreen*) value;
 
@@ -275,6 +304,15 @@ UnityScreen::OnExitKeyNav (GVariant* data, void* value)
   // entered)
   if (self->lastFocusedWindow != NULL)
     self->lastFocusedWindow->moveInputFocusTo ();
+}
+
+void
+UnityScreen::OnQuicklistEndKeyNav (GVariant* data,
+                                   void*     value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  self->restartLauncherKeyNav ();
 }
 
 gboolean
@@ -595,9 +633,20 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
-  ubus_server_register_interest (ubus_server_get_default (),
-                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
+  UBusServer* ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus,
+                                 UBUS_LAUNCHER_START_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+                                 this);
+
+  ubus_server_register_interest (ubus,
+                                 UBUS_LAUNCHER_END_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                 this);
+
+  ubus_server_register_interest (ubus,
+                                 UBUS_QUICKLIST_END_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
                                  this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
@@ -652,7 +701,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true, "launcher");
+  self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
 
   /* FIXME: this should not be manual, should be managed with a
@@ -683,7 +732,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true, "panel");
+  self->panelWindow->EnableInputWindow(true, "panel", false, false);
   self->panelWindow->InputWindowEnableStruts(true);
 
   /* FIXME: this should not be manual, should be managed with a

@@ -121,6 +121,8 @@ public:
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
   
+  void CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  
   nux::BaseWindow* GetParent () { return _parent; };
 
   static void SetTimeStruct (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
@@ -137,10 +139,10 @@ public:
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
-  
 
   void startKeyNavMode ();
   void exitKeyNavMode ();
+  void leaveKeyNavMode ();
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
@@ -215,6 +217,9 @@ private:
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
+
+  void SetActionState (LauncherActionState actionstate);
+  LauncherActionState GetActionState(); 
 
   void EnsureHoverState ();
   void EnsureHiddenState ();
@@ -325,6 +330,9 @@ private:
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
+  
+  float GetAutohidePositionMin ();
+  float GetAutohidePositionMax ();
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
