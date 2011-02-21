@@ -65,6 +65,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
                                            void       *_id)
 {
   PlacesGroup *group = _groups[groupname];
+  static int i = 0;
 
   if (!group)
     {
@@ -81,12 +82,14 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   if (group->IsVisible () == false)
   {
     group->SetVisible (true);
-    _results_view->ReJiggyGroups ();
-
+    
     group->QueueDraw ();
     group->ComputeChildLayout ();
     group->GetLayout ()->QueueDraw ();
   }
+
+  tile->SetVisible (i % 2);
+  i++;
 }
 
 void
@@ -105,7 +108,6 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
       if (group->GetLayout ()->GetChildren ().empty ())
       {
         group->SetVisible (false);
-        _results_view->ReJiggyGroups ();
       }
       else
       {
@@ -182,7 +184,6 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   _groups[groupname] = newgroup;
   _results_view->AddGroup (newgroup);
-  _results_view->ReJiggyGroups ();
 
   return newgroup;
 }

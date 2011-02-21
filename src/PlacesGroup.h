@@ -52,9 +52,6 @@ public:
   void SetItemDetail (unsigned int total_items, unsigned int visible_items);
   void SetExpanded (bool expanded);
 
-  void SetVisible (bool visible);
-  bool IsVisible ();
-
 protected:
   nux::StaticCairoText *_label;
   nux::StaticCairoText *_title;
@@ -63,8 +60,6 @@ protected:
   unsigned int _row_height;
   unsigned int _total_items;
   unsigned int _visible_items;
-
-  bool  _is_visible;
 
   nux::Layout *_content;
   nux::VLayout *_group_layout;
