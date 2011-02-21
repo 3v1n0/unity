@@ -245,6 +245,17 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
 }
 
 void
+UnityScreen::restartLauncherKeyNav ()
+{
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
+  }
+}
+
+void
 UnityScreen::startLauncherKeyNav ()
 {
   // get CompWindow* of launcher-window
@@ -273,7 +284,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
 }
 
 void
-UnityScreen::OnStartKeyNav (GVariant* data, void* value)
+UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
 {
   UnityScreen *self = (UnityScreen*) value;
 
@@ -281,7 +292,7 @@ UnityScreen::OnStartKeyNav (GVariant* data, void* value)
 }
 
 void
-UnityScreen::OnExitKeyNav (GVariant* data, void* value)
+UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
 {
   UnityScreen *self = (UnityScreen*) value;
 
@@ -289,6 +300,15 @@ UnityScreen::OnExitKeyNav (GVariant* data, void* value)
   // entered)
   if (self->lastFocusedWindow != NULL)
     self->lastFocusedWindow->moveInputFocusTo ();
+}
+
+void
+UnityScreen::OnQuicklistEndKeyNav (GVariant* data,
+                                   void*     value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  self->restartLauncherKeyNav ();
 }
 
 gboolean
@@ -609,14 +629,20 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
-  ubus_server_register_interest (ubus_server_get_default (),
+  UBusServer* ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus,
                                  UBUS_LAUNCHER_START_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnStartKeyNav,
+                                 (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
                                  this);
 
-  ubus_server_register_interest (ubus_server_get_default (),
-                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
+  ubus_server_register_interest (ubus,
+                                 UBUS_LAUNCHER_END_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                 this);
+
+  ubus_server_register_interest (ubus,
+                                 UBUS_QUICKLIST_END_KEY_NAV,
+                                 (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
                                  this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);

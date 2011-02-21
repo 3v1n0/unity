@@ -94,7 +94,6 @@ QuicklistView::QuicklistView ()
   OnMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseClick));
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
-
   OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
 
   _mouse_down = false;
@@ -138,8 +137,9 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
       _current_item_index = 0;
       GetNthItems (_current_item_index)->_prelight = true;
       Hide ();
+      // inform Launcher we switch back to Launcher key-nav
       ubus_server_send_message (ubus_server_get_default (),
-                                UBUS_LAUNCHER_START_KEY_NAV,
+                                UBUS_QUICKLIST_END_KEY_NAV,
                                 NULL);
     break;
 
@@ -148,6 +148,10 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
       _current_item_index = 0;
       GetNthItems (_current_item_index)->_prelight = true;
       Hide ();
+      // inform UnityScreen we leave key-nav completely
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_LAUNCHER_END_KEY_NAV,
+                                NULL);
     break;
 
     // <SPACE>, <RETURN> (activate selected menu-item)          

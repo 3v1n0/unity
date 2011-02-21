@@ -350,8 +350,7 @@ Launcher::GetName ()
 
 void
 Launcher::startKeyNavMode ()
-{  
-  
+{
   _navmod_show_launcher = true;
   EnsureHiddenState ();
 
@@ -360,6 +359,17 @@ Launcher::startKeyNavMode ()
   else
     _current_icon_index = _last_icon_index;
   NeedRedraw ();
+}
+
+void
+Launcher::leaveKeyNavMode ()
+{
+  _last_icon_index = _current_icon_index;
+  _current_icon_index = -1;
+  QueueDraw ();
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_LAUNCHER_END_KEY_NAV,
+                            NULL);
 }
 
 void
@@ -373,10 +383,10 @@ Launcher::exitKeyNavMode ()
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
+  QueueDraw ();
   ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_LAUNCHER_EXIT_KEY_NAV,
+                            UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
-  NeedRedraw ();
 }
 
 void
@@ -2418,7 +2428,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
             if (i == _current_icon_index)
               (*it)->OpenQuicklist (true);
         }
-        exitKeyNavMode ();
+        leaveKeyNavMode ();
       }
     break;
 
@@ -2432,7 +2442,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           if (i == _current_icon_index)
             (*it)->OpenQuicklist (true);
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
     break;
 
     // <SPACE> (open a new instance)
@@ -2446,7 +2456,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           if (i == _current_icon_index)
             (*it)->OpenInstance ();
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
       break;
 
     // <RETURN> (start/activate currently selected icon)
@@ -2460,7 +2470,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           if (i == _current_icon_index)
             (*it)->Activate ();
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
     break;
 
     default:

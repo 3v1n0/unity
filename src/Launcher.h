@@ -137,10 +137,10 @@ public:
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
-  
 
   void startKeyNavMode ();
   void exitKeyNavMode ();
+  void leaveKeyNavMode ();
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
