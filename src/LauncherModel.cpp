@@ -276,6 +276,22 @@ LauncherModel::end ()
   return _inner.end ();
 }
 
+LauncherModel::iterator 
+LauncherModel::at (int index)
+{
+  LauncherModel::iterator it;
+  int i;
+
+  // start currently selected icon
+  for (it = _inner.begin (), i = 0; it != _inner.end (); it++, i++)
+  {
+    if (i == index)
+      return it;
+  }
+      
+  return (LauncherModel::iterator)NULL;
+}
+      
 LauncherModel::reverse_iterator 
 LauncherModel::rbegin ()
 {

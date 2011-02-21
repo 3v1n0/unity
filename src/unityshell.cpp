@@ -188,7 +188,11 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
-
+      break;
+    case KeyPress:
+      KeySym key_sym;
+      if (XLookupString(&(event->xkey), NULL, 0, &key_sym, 0) > 0)
+          launcher->CheckSuperShortcutPressed (key_sym, 0, 0);
       break;
   }
 
