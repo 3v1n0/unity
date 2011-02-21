@@ -90,7 +90,7 @@ public:
     void RecvMouseUp (int button);
     
     void HideTooltip ();
-    void OpenQuicklist ();
+    void OpenQuicklist (bool default_to_first_item = false);
 
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();

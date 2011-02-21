@@ -204,7 +204,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
     OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
-
+    
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
     
@@ -363,8 +363,7 @@ Launcher::GetName ()
 
 void
 Launcher::startKeyNavMode ()
-{  
-  
+{
   _navmod_show_launcher = true;
   EnsureHiddenState ();
 
@@ -373,6 +372,17 @@ Launcher::startKeyNavMode ()
   else
     _current_icon_index = _last_icon_index;
   NeedRedraw ();
+}
+
+void
+Launcher::leaveKeyNavMode ()
+{
+  _last_icon_index = _current_icon_index;
+  _current_icon_index = -1;
+  QueueDraw ();
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_LAUNCHER_END_KEY_NAV,
+                            NULL);
 }
 
 void
@@ -386,10 +396,10 @@ Launcher::exitKeyNavMode ()
 
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
+  QueueDraw ();
   ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_LAUNCHER_EXIT_KEY_NAV,
+                            UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
-  NeedRedraw ();
 }
 
 void
@@ -1257,7 +1267,7 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-    _parent->EnableInputWindow(!hidden, "launcher");
+    _parent->EnableInputWindow(!hidden, "launcher", false, false);
 
     if (!hidden && GetActionState () == ACTION_DRAG_EXTERNAL)
       ProcessDndLeave ();
@@ -1439,7 +1449,7 @@ void Launcher::SetHideMode (LauncherHideMode hidemode)
   }
   else
   {
-    _parent->EnableInputWindow(true, "launcher");
+    _parent->EnableInputWindow(true, "launcher", false, false);
     g_timeout_add (1000, &Launcher::StrutHack, this);
     _parent->InputWindowEnableStruts(true);
   }
@@ -2421,7 +2431,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
-    case XK_Up:
+    case NUX_VK_UP:
       if (_current_icon_index > 0)
         _current_icon_index--;
       else
@@ -2433,7 +2443,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     break;
 
     // down (move selection down and unfold launcher if needed)
-    case XK_Down:
+    case NUX_VK_DOWN:
       if (_current_icon_index < _model->Size ())
       {
         _current_icon_index++;
@@ -2442,8 +2452,8 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     break;
 
     // esc/left (close quicklist or exit laucher key-focus)
-    case XK_Left:
-    case XK_Escape:
+    case NUX_VK_LEFT:
+    case NUX_VK_ESCAPE:
       // hide again
       exitKeyNavMode ();
     break;
@@ -2456,42 +2466,42 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           // open quicklist of currently selected icon
           it = _model->at (_current_icon_index);
           if (it != (LauncherModel::iterator)NULL)
-            (*it)->OpenQuicklist ();
+            (*it)->OpenQuicklist (true);
         }
-        exitKeyNavMode ();
+        leaveKeyNavMode ();
       }
     break;
 
-    case XK_Right:
+    case NUX_VK_RIGHT:
       {
         // open quicklist of currently selected icon
         it = _model->at (_current_icon_index);
         if (it != (LauncherModel::iterator)NULL)
-          (*it)->OpenQuicklist ();
+          (*it)->OpenQuicklist (true);
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
     break;
 
     // <SPACE> (open a new instance)
-    case XK_space:
+    case NUX_VK_SPACE:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);
         if (it != (LauncherModel::iterator)NULL)
           (*it)->OpenInstance ();
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
       break;
 
     // <RETURN> (start/activate currently selected icon)
-    case XK_Return:
+    case NUX_VK_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);
         if (it != (LauncherModel::iterator)NULL)
           (*it)->Activate ();
       }
-      exitKeyNavMode ();
+      leaveKeyNavMode ();
     break;
 
     // Shortcuts to launch applications
