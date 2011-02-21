@@ -55,10 +55,23 @@ NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
 TimeDelta (struct timespec const *x, struct timespec const *y)
-
 {
   return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
 }
+
+void SetTimeBack (struct timespec *timeref, int remove)
+{
+  timeref->tv_sec -= remove / 1000;
+  remove = remove % 1000;
+
+  if (remove > timeref->tv_nsec / 1000000)
+  {
+      timeref->tv_sec--;
+      timeref->tv_nsec += 1000000000;
+  }
+  timeref->tv_nsec -= remove * 1000000;
+}
+
 
 /*
 	        Use this shader to pass vertices in screen coordinates in the C++ code and compute use
@@ -437,17 +450,19 @@ float Launcher::DnDStartProgress (struct timespec const &current)
 float Launcher::AutohideProgress (struct timespec const &current)
 {
     
-    // bfb position progress
-    if (_mouse_inside_trigger)
+    // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
+    if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
-        /* 
+        
+        // "dead" zone
+        if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
+            return GetAutohidePositionMin ();
+        
+       /* 
         * most of the mouse movement should be done by the inferior part
         * of the launcher, so prioritize this one
         */
-        
-        if(_mouseover_launcher_locked || ((_trigger_mouse_position.x == 0) && (_trigger_mouse_position.y == 0)))
-            return 0.0f;
-        
+                
         float _max_size_on_position;
         float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
         
@@ -459,13 +474,14 @@ float Launcher::AutohideProgress (struct timespec const &current)
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
         // only triggered on _hidden = false, no need for check
-        return CLAMP (pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position, 0.0f, 1.0f);  
+        float _position_min = GetAutohidePositionMin ();
+        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
     
-    // time-based progress
+    // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
     else
     {
-        float animation_progress;    
+        float animation_progress;
         animation_progress = CLAMP ((float) (TimeDelta (&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
         if (_hidden)
             return animation_progress;
@@ -608,21 +624,30 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
         if (diff < sister_relation)
         {
             int remove = sister_relation - diff;
-            current.tv_sec -= remove / 1000;
-            remove = remove % 1000;
-
-            if (remove > current.tv_nsec / 1000000)
-            {
-                current.tv_sec--;
-                current.tv_nsec += 1000000000;
-            }
-            current.tv_nsec -= remove * 1000000;
+            SetTimeBack (&current, remove);
         }
     }
 
     timer->tv_sec = current.tv_sec;
     timer->tv_nsec = current.tv_nsec;
 }
+/* Min is when you lock the trigger */
+float Launcher::GetAutohidePositionMin ()
+{
+    if (_autohide_animation == SLIDE_ONLY)
+        return 0.55f;
+    else
+        return 0.25f;
+}
+/* Max is the initial state */
+float Launcher::GetAutohidePositionMax ()
+{
+    if (_autohide_animation == SLIDE_ONLY)
+        return 1.00f;
+    else
+        return 0.75f;
+}
+
 
 float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
 {
@@ -1060,18 +1085,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
         if (_autohide_animation == FADE_ONLY
             || (_autohide_animation == FADE_SLIDE && _mouse_inside_trigger))
-        {
-            if (autohide_progress > 0.0f)
-            {    
-                if (_mouse_inside_trigger)
-                {
-                    if (!_mouseover_launcher_locked)
-                        *launcher_alpha = 1.0f - (autohide_progress / 1.5f);
-                }
-                else
-                    *launcher_alpha = 1.0f - autohide_progress;
-            }
-        }
+            *launcher_alpha = 1.0f - autohide_progress;
         else
         {
             if (autohide_progress > 0.0f)
@@ -1081,8 +1095,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         * as we can go back and for. We have to lock the launcher manually changing
         * the _hidden state then
         */
-        if (autohide_progress == 0.0f && _mouse_inside_trigger && !_mouseover_launcher_locked)
+        float _position_min = GetAutohidePositionMin ();
+        if (autohide_progress == _position_min && _mouse_inside_trigger && !_mouseover_launcher_locked)
+        {
             ForceHiddenState (false); // lock the launcher
+            _times[TIME_AUTOHIDE] = current;
+            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * _position_min);
+            SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT); // finish the animation 
+        }
     }
     
     float drag_hide_progress = DragHideProgress (current);
@@ -2370,11 +2390,22 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 }
 
 void
+Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
+                                     unsigned long key_code,
+                                     unsigned long key_state)
+{
+  if (_super_show_launcher)
+    RecvKeyPressed (key_sym, key_code, key_state);
+}
+
+void
 Launcher::RecvKeyPressed (unsigned int  key_sym,
                           unsigned long key_code,
                           unsigned long key_state)
 {
 
+  LauncherModel::iterator it;
+  
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
@@ -2410,13 +2441,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (key_state & NUX_STATE_SHIFT)
       {
         {
-          LauncherModel::iterator it;
-          int i;
-
           // open quicklist of currently selected icon
-          for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-            if (i == _current_icon_index)
-              (*it)->OpenQuicklist ();
+          it = _model->at (_current_icon_index);
+          if (it != (LauncherModel::iterator)NULL)
+            (*it)->OpenQuicklist ();
         }
         exitKeyNavMode ();
       }
@@ -2424,13 +2452,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     case XK_Right:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // open quicklist of currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->OpenQuicklist ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->OpenQuicklist ();
       }
       exitKeyNavMode ();
     break;
@@ -2438,13 +2463,10 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     // <SPACE> (open a new instance)
     case XK_space:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // start currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->OpenInstance ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->OpenInstance ();
       }
       exitKeyNavMode ();
       break;
@@ -2452,17 +2474,86 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     // <RETURN> (start/activate currently selected icon)
     case XK_Return:
       {
-        LauncherModel::iterator it;
-        int i;
-
         // start currently selected icon
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-          if (i == _current_icon_index)
-            (*it)->Activate ();
+        it = _model->at (_current_icon_index);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
       }
       exitKeyNavMode ();
     break;
 
+    // Shortcuts to launch applications
+    case XK_0:
+      {
+        it = _model->at (9);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_1:
+      {
+        it = _model->at (0);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_2:
+      {
+        it = _model->at (1);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_3:
+      {
+        it = _model->at (2);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_4:
+      {
+        it = _model->at (3);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_5:
+      {
+        it = _model->at (4);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_6:
+      {
+        it = _model->at (5);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_7:
+      {
+        it = _model->at (6);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_8:
+      {
+        it = _model->at (7);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+    case XK_9:
+      {
+        it = _model->at (8);
+        if (it != (LauncherModel::iterator)NULL)
+          (*it)->Activate ();
+        break;
+      }
+      
     default:
     break;
   }
