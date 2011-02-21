@@ -82,10 +82,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   if (group->IsVisible () == false)
   {
     group->SetVisible (true);
-    
-    group->QueueDraw ();
-    group->ComputeChildLayout ();
-    group->GetLayout ()->QueueDraw ();
+    group->Relayout ();
   }
 
   tile->SetVisible (i % 2);
@@ -111,9 +108,7 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
       }
       else
       {
-        group->QueueDraw ();
-        group->GetLayout ()->QueueDraw ();
-        group->ComputeChildLayout ();
+        group->Relayout ();
       }
     }
     else
