@@ -35,7 +35,9 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL),
   _size (size),
-  _texture_cached (NULL)
+  _texture_cached (NULL),
+  _texture_width (0),
+  _texture_height (0)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
@@ -90,8 +92,6 @@ IconTexture::LoadIcon ()
                                                  _size,
                                                  sigc::mem_fun (this, &IconTexture::IconLoaded));
   }
-
-  SetMinMaxSize (_size, _size);
 }
 
 void
@@ -104,40 +104,26 @@ IconTexture::CreateTextureCallback (const char *texid, int width, int height, nu
 void
 IconTexture::Refresh (GdkPixbuf *pixbuf)
 {
-  // try and get a texture from the texture cache
-  char *id = g_strdup_printf ("IconTexture.%s", _icon_name);
-  _pixbuf_cached = pixbuf;
   TextureCache *cache = TextureCache::GetDefault ();
-  nux::BaseTexture * texture2D = cache->FindTexture (id, _size, _size,
-                                                     sigc::mem_fun (this, &IconTexture::CreateTextureCallback));
+  char *id = NULL;
 
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
-  texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
-  
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> dev = texture2D->GetDeviceTexture();
-  dev->SetFiltering (GL_LINEAR, GL_LINEAR);
+  _pixbuf_cached = pixbuf;
 
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::TextureLayer* texture_layer = new nux::TextureLayer (dev,
-                                                            texxform,
-                                                            nux::Color::White,
-                                                            true,
-                                                            rop);
-  SetPaintLayer(texture_layer);
+  // Cache the pixbuf dimensions so we scale correctly
+  _texture_width = gdk_pixbuf_get_width (pixbuf);
+  _texture_height = gdk_pixbuf_get_height (pixbuf);
 
-  if (_texture_cached)
-    _texture_cached->UnReference ();
+  // Try and get a texture from the texture cache
+  id = g_strdup_printf ("IconTexture.%s", _icon_name);
+  _texture_cached = cache->FindTexture (id,
+                                        _texture_width,
+                                        _texture_height,
+                                        sigc::mem_fun (this, &IconTexture::CreateTextureCallback));
+  _texture_cached->Reference ();
 
-  texture2D->Reference ();
-  _texture_cached = texture2D;
-
-  SetMinMaxSize (gdk_pixbuf_get_width (pixbuf) * (_size/(float)gdk_pixbuf_get_height (pixbuf)),
-                 _size);
   QueueDraw ();
+
+  g_free (id);
 }
 
 void
@@ -151,6 +137,47 @@ IconTexture::IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf)
   {
     SetByIconName (DEFAULT_ICON, _size);
   }
+}
+
+void
+IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  GfxContext.PushClippingRectangle (geo);
+  
+  if (_texture_cached)
+  {
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
+    texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+    guint alpha = 0, src = 0, dest = 0;
+
+    GfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+    GfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _texture_width)/2),
+                         geo.y + ((geo.height - _texture_height)/2),
+                         _texture_width,
+                         _texture_height,
+                         _texture_cached->GetDeviceTexture (),
+                         texxform,
+                         nux::Color::White);
+
+    GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+  }
+
+  GfxContext.PopClippingRectangle ();
+}
+
+void
+IconTexture::GetTextureSize (int *width, int *height)
+{
+  if (width)
+    *width = _texture_width;
+  if (height)
+    *height = _texture_height;
 }
 
 const gchar*

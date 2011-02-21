@@ -103,6 +103,8 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
+                ../src/TimeMe.cpp
+                ../src/TimeMe.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
                 ../src/WindowButtons.cpp

@@ -34,6 +34,8 @@
 #include <X11/Xlib.h>
 #endif
 
+#include "TimeMe.h"
+
 namespace nux
 {
   class Validator;
@@ -85,6 +87,14 @@ namespace nux
       void SetFont (const char *fontstring);
 
       void GetTextExtents (int &width, int &height);
+
+      long ComputeLayout2 ()
+      {
+        TIME_ME_FUNC ();
+        int ret = View::ComputeLayout2 (); 
+        TIME_ME_ENDFUNC ();
+        return ret;
+      }
 
       sigc::signal<void, StaticCairoText*> sigTextChanged;
       sigc::signal<void, StaticCairoText*> sigTextColorChanged;
