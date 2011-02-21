@@ -218,6 +218,9 @@ private:
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
 
+  void SetActionState (LauncherActionState actionstate);
+  LauncherActionState GetActionState(); 
+
   void EnsureHoverState ();
   void EnsureHiddenState ();
   void EnsureAnimation    ();
