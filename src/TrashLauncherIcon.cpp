@@ -113,7 +113,7 @@ TrashLauncherIcon::OnMouseClick (int button)
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
     nux::Point3 center = GetCenter ();
-    int tip_y = center.y;
+    int tip_y = center.y+ _launcher->GetParent ()->GetGeometry ().y;
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
   }
