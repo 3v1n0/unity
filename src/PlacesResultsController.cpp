@@ -65,8 +65,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
                                            void       *_id)
 {
   PlacesGroup *group = _groups[groupname];
-  static int i = 0;
-
+  
   if (!group)
     {
       group = CreateGroup (groupname);
@@ -85,8 +84,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
     group->Relayout ();
   }
 
-  tile->SetVisible (i % 2);
-  i++;
+  tile->QueueDraw ();
 }
 
 void

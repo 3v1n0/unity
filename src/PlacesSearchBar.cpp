@@ -53,7 +53,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
   _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  _layout->SetVerticalExternalMargin (14);
+  _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
   SetCompositionLayout (_layout);
@@ -174,6 +174,9 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
                                         this);
 
   search_changed.emit (_pango_entry->GetText ().c_str ());
+
+  _pango_entry->QueueDraw ();
+  QueueDraw ();
 }
 
 bool
@@ -255,7 +258,7 @@ draw_rounded_rect (cairo_t* cr,
 void
 PlacesSearchBar::UpdateBackground ()
 {
-#define PADDING 8
+#define PADDING 14
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();

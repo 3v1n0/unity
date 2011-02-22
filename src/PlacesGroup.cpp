@@ -186,6 +186,7 @@ void PlacesGroup::Relayout ()
 gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
   self->QueueDraw ();
+  self->_group_layout->QueueDraw ();
   self->GetLayout ()->QueueDraw ();
   self->ComputeChildLayout ();
   self->_idle_id = 0;

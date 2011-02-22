@@ -125,9 +125,13 @@ void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-
+  GfxContext.GetRenderStates ().SetBlend (true);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
+  
+  GfxContext.GetRenderStates ().SetBlend (false);
 
   GfxContext.PopClippingRectangle ();
 }

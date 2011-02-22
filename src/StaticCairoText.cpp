@@ -156,9 +156,11 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
+  
+  t_u32 alpha = 0, src = 0, dest = 0;
 
-  gfxContext.GetRenderStates ().SetBlend (true);
-  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+  gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   gfxContext.QRP_1Tex (base.x,
                         base.y,
@@ -167,9 +169,9 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                         _texture2D->GetDeviceTexture(),
                         texxform,
                         _textColor);
-
-  gfxContext.GetRenderStates().SetBlend (false);
-
+  
+  gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+  
   gfxContext.PopClippingRectangle ();
 }
 

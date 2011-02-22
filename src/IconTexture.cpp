@@ -154,11 +154,6 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-    guint alpha = 0, src = 0, dest = 0;
-
-    GfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
-    GfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _texture_width)/2),
                          geo.y + ((geo.height - _texture_height)/2),
                          _texture_width,
@@ -166,8 +161,6 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _texture_cached->GetDeviceTexture (),
                          texxform,
                          nux::Color::White);
-
-    GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
   }
 
   GfxContext.PopClippingRectangle ();
