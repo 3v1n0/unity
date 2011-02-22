@@ -89,8 +89,7 @@ void
 PanelTray::Sync ()
 {
   SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
-  ComputeChildLayout ();
-
+  QueueRelayout ();
   QueueDraw ();
 }
 

@@ -555,7 +555,7 @@ PanelMenuView::Refresh ()
 void
 PanelMenuView::OnEntryRefreshed (PanelIndicatorObjectEntryView *view)
 {
-  ComputeChildLayout ();
+  QueueRelayout ();
 }
 
 void
@@ -589,8 +589,8 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   AddChild (view);
 
-  this->ComputeChildLayout ();
-  NeedRedraw ();  
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void
@@ -617,8 +617,8 @@ PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
       }
   }
 
-  this->ComputeChildLayout (); 
-  NeedRedraw ();
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void

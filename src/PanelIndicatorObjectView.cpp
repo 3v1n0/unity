@@ -98,8 +98,8 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   AddChild (view);
 
-  this->ComputeChildLayout ();
-  NeedRedraw ();  
+  QueueRelayout();
+  QueueDraw ();
 }
 
 void
@@ -126,8 +126,8 @@ PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
       }
   }
 
-  this->ComputeChildLayout (); 
-  NeedRedraw ();
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 const gchar *

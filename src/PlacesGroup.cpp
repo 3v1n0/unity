@@ -188,7 +188,6 @@ gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
   self->QueueDraw ();
   self->GetLayout ()->QueueDraw ();
   self->ComputeChildLayout ();
-
   self->_idle_id = 0;
 
   return FALSE;
