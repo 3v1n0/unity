@@ -37,7 +37,6 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   setBorder (12);
   EnableVerticalScrollBar (true);
-  EnableHorizontalScrollBar (false);
 
   SetCompositionLayout (_layout);
 }
@@ -109,12 +108,37 @@ long PlacesResultsView::PostLayoutManagement (long LayoutResult)
 long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
+  long ProcEvInfo = 0;
 
-  ret = ScrollView::ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (!m_Geometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    {
+      ProcEvInfo = nux::eDoNotProcess;
+      //return TraverseInfo;
+    }
+  }
+
+  if (m_vertical_scrollbar_enable)
+    ret = vscrollbar->ProcessEvent (ievent, ret, ProcEvInfo);
+
+  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
+  nux::Geometry viewGeometry = nux::Geometry (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight);
+  bool traverse = true;
+
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    {
+      ProcEvInfo = nux::eDoNotProcess;
+      traverse = false;
+    }
+  }
 
   if (_layout)
-    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+    ret = _layout->ProcessEvent (ievent, ret, ProcEvInfo);
 
+  ret = PostProcessEvent2 (ievent, ret, 0);
   return ret;
 }
 
