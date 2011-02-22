@@ -34,7 +34,8 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetIconName ("user-trash");
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_TRASH); 
+  SetIconType (TYPE_TRASH);
+  SetShortcut ('t');
 
   m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
 					     G_FILE_MONITOR_NONE,

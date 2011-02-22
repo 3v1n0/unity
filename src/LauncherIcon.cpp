@@ -70,6 +70,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  _shortcut = 0;
   
   _emblem = 0;
 
@@ -319,6 +320,25 @@ nux::NString LauncherIcon::GetTooltipText()
 }
 
 void
+LauncherIcon::SetShortcut (guint64 shortcut)
+{
+  // only relocate a digit with a digit (don't overwrite other shortcuts)
+  printf ("shortcut: %c\n", (gchar)shortcut);
+  if ((!_shortcut || (g_ascii_isdigit ((gchar)_shortcut)))
+        || !(g_ascii_isdigit ((gchar) shortcut)))
+  {
+    _shortcut = shortcut;
+    printf ("Added!\n");
+  }
+}
+
+guint64
+LauncherIcon::GetShortcut ()
+{
+    return _shortcut;
+}
+
+void
 LauncherIcon::RecvMouseEnter ()
 {
   if (QuicklistManager::Default ()->Current ())
@@ -534,7 +554,20 @@ LauncherIcon::SetIconType (IconType type)
 void 
 LauncherIcon::SetSortPriority (int priority)
 {
+  gchar *buff = NULL;
+  gint   shortcut;
+  
   _sort_priority = priority;
+  
+  shortcut = priority+1;
+  if (shortcut == 10)
+    shortcut = 0;
+  if (shortcut < 10)
+  {
+    buff = g_strdup_printf ("%d", shortcut);  
+    SetShortcut (buff[0]);
+    g_free (buff);
+  }
 }
 
 int 

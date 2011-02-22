@@ -35,6 +35,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   escape = g_markup_escape_text (entry->GetName (), -1);
 
   SetTooltipText (escape);
+  SetShortcut (entry->GetShortcut());
   SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, true);
