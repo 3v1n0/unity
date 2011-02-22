@@ -58,7 +58,6 @@ IconTexture::SetByIconName (const char *icon_name, unsigned int size)
   g_free (_icon_name);
   _icon_name = g_strdup (icon_name);
   _size = size;
-
   LoadIcon ();
 }
 
@@ -115,6 +114,9 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
 
   // Try and get a texture from the texture cache
   id = g_strdup_printf ("IconTexture.%s", _icon_name);
+  if (_texture_cached)
+    _texture_cached->UnReference ();
+
   _texture_cached = cache->FindTexture (id,
                                         _texture_width,
                                         _texture_height,

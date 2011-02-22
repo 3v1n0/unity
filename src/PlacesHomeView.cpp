@@ -39,6 +39,7 @@
 
 #include "PlacesSimpleTile.h"
 
+/*
 typedef struct
 {
   gchar *name;
@@ -49,7 +50,7 @@ typedef struct
 
 static TileInfo tile_infos[] = {
   {
-    (gchar*)_("Find Media Apps"),
+    (gchar*)_("Find Media Apps"v),
     (gchar*)"applications-multimedia",
     (gchar*)"xdg-open /usr/share/applications"
   },
@@ -90,6 +91,32 @@ static TileInfo tile_infos[] = {
   }
 };
 
+*/
+
+class Shortcut : public PlacesSimpleTile
+{
+public:
+  Shortcut (const char *icon, const char *name, int size)
+  : PlacesSimpleTile (icon, name, size),
+    _id (0),
+    _place_id (NULL),
+    _place_section (0),
+    _exec (NULL)
+  {
+  }
+
+  ~Shortcut ()
+  {
+    g_free (_place_id);
+    g_free (_exec);
+  }
+
+  int      _id;
+  gchar   *_place_id;
+  guint32  _place_section;
+  char    *_exec;
+};
+
 PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM)
 {
@@ -98,20 +125,6 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
   _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
  
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
-  {
-    gchar *markup = g_strdup_printf ("<big><b>%s</b></big>", tile_infos[i].name);
-
-    PlacesSimpleTile *tile = new PlacesSimpleTile (tile_infos[i].icon,
-                                                   markup,
-                                                   96);
-    _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
-
-    tile->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnTileClicked));
-
-    g_free (markup);
-  }
-
   _layout->ForceChildrenSize (true);
   _layout->SetChildrenSize (186, 186);
   _layout->EnablePartialVisibility (false);
@@ -120,6 +133,8 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
   _layout->SetHorizontalExternalMargin (48);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+
+  Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
@@ -128,28 +143,49 @@ PlacesHomeView::~PlacesHomeView ()
 }
 
 void
-PlacesHomeView::OnTileClicked (PlacesTile *_tile)
+PlacesHomeView::Refresh ()
 {
-  PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
+  Shortcut   *shortcut = NULL;
+  gchar      *markup = NULL;
+  const char *temp = "<big><b>%s</b></big>";
   
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
-  {
-    if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
-    {
-      GError *error = NULL;
+  if (_layout->GetChildren ().size () == 0)
+    _layout->Clear ();
 
-      g_spawn_command_line_async (tile_infos[i].exec, &error);
-      if (error)
-      {
-        g_warning ("Unable to launch tile: %s", error->message);
-        g_error_free (error);
-      }
-    }
+  markup = g_strdup_printf (temp, _("Find Media Apps"));
+  shortcut = new Shortcut ("applications-multimedia",
+                           markup,
+                           96);
+  shortcut->_id = 0;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 4;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+}
+
+void
+PlacesHomeView::OnShortcutClicked (PlacesTile *tile)
+{
+  Shortcut *shortcut = static_cast<Shortcut *> (tile);
+  int id = shortcut->_id;
+
+  if (id < 2 || id == 3)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new ("(sus)",
+                                             shortcut->_place_id,
+                                             shortcut->_place_section,
+                                             ""));
   }
 
-  ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                            NULL);
+  if (shortcut->_id > 3)
+  {
+     ubus_server_send_message (ubus_server_get_default (),
+                               UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                               NULL);
+  }
 }
 
 const gchar* PlacesHomeView::GetName ()
@@ -200,20 +236,6 @@ PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
   _layout->ProcessDraw (GfxContext, force_draw);
   nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesHomeView::PostLayoutManagement (long LayoutResult)
-{
-  // I'm imagining this is a good as time as any to update the background
-
-  return nux::View::PostLayoutManagement (LayoutResult);
 }
 
 void

@@ -41,9 +41,7 @@ public:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  void PreLayoutManagement ();
-  long PostLayoutManagement (long LayoutResult);
-  void OnTileClicked (PlacesTile *tile);
+  void Refresh ();
   
 protected:
   // Introspectable methods
@@ -60,7 +58,7 @@ private:
                              double   cornerRadius,
                              double   width,
                              double   height);
-
+  void OnShortcutClicked (PlacesTile *_tile);
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::GridHLayout        *_layout;
