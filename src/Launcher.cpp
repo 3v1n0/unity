@@ -2482,18 +2482,14 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       exitKeyNavMode ();
     break;
       
-    // Shortcut to launch applications
+    // Shortcut to start launcher icons
     default:
     {
         int i;
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
         {
-          printf ("Shortcut pour: %c\n", (int)((*it)->GetShortcut ()));
           if ((*it)->GetShortcut () == key_sym)
-          {
-            printf ("Shortcut Match!\n");
             (*it)->Activate ();
-          }
         }
       
       

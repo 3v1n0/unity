@@ -95,11 +95,25 @@ LauncherController::SortAndSave ()
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
   std::list<const char*> desktop_paths;
-  
+  gint   shortcut = 1;
+  gchar *buff;
+    
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
     BamfLauncherIcon *icon = *it;
+    
+    if (shortcut != 0 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
+    {
+      buff = NULL;
+      if (shortcut == 10)
+        shortcut = 0;
+      buff = g_strdup_printf ("%d", shortcut);  
+      (*it)->SetShortcut (buff[0]);
+      g_free (buff);  
+      shortcut++;
+    }
+    
 
     if (!icon->IsSticky ())
       continue;

@@ -70,6 +70,12 @@ SimpleLauncherIcon::OnMouseLeave ()
 {
 }
 
+void
+SimpleLauncherIcon::ActivateLauncherIcon ()
+{
+  MouseClick.emit (1);
+}
+
 nux::BaseTexture *
 SimpleLauncherIcon::GetTextureForSize (int size)
 {

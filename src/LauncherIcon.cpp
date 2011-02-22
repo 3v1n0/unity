@@ -323,13 +323,9 @@ void
 LauncherIcon::SetShortcut (guint64 shortcut)
 {
   // only relocate a digit with a digit (don't overwrite other shortcuts)
-  printf ("shortcut: %c\n", (gchar)shortcut);
   if ((!_shortcut || (g_ascii_isdigit ((gchar)_shortcut)))
         || !(g_ascii_isdigit ((gchar) shortcut)))
-  {
     _shortcut = shortcut;
-    printf ("Added!\n");
-  }
 }
 
 guint64
@@ -554,20 +550,7 @@ LauncherIcon::SetIconType (IconType type)
 void 
 LauncherIcon::SetSortPriority (int priority)
 {
-  gchar *buff = NULL;
-  gint   shortcut;
-  
   _sort_priority = priority;
-  
-  shortcut = priority+1;
-  if (shortcut == 10)
-    shortcut = 0;
-  if (shortcut < 10)
-  {
-    buff = g_strdup_printf ("%d", shortcut);  
-    SetShortcut (buff[0]);
-    g_free (buff);
-  }
 }
 
 int 

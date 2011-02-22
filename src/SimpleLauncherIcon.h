@@ -46,6 +46,7 @@ private:
     
     char *m_IconName;
     nux::BaseTexture *m_Icon;
+    void ActivateLauncherIcon ();
 };
 
 #endif // BAMFLAUNCHERICON_H
