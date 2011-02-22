@@ -96,14 +96,8 @@ TrashLauncherIcon::OnMouseClick (int button)
   SimpleLauncherIcon::OnMouseClick (button);
 
   if (button == 1)
-  {
-    GError *error = NULL;
+    ActivateLauncherIcon ();
 
-    g_spawn_command_line_async ("xdg-open trash://", &error);
-
-    if (error)
-      g_error_free (error);
-  }
   else if (button == 3 && _empty == FALSE)
   {
     EnsureMenuItemsReady ();
@@ -118,6 +112,17 @@ TrashLauncherIcon::OnMouseClick (int button)
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
   }
+}
+
+void
+TrashLauncherIcon::ActivateLauncherIcon ()
+{
+  GError *error = NULL;
+
+  g_spawn_command_line_async ("xdg-open trash://", &error);
+
+  if (error)
+    g_error_free (error);
 }
 
 void 

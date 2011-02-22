@@ -71,8 +71,14 @@ PlaceLauncherIcon::OnMouseClick (int button)
 
   if (button == 1)
   {
-    Activate (0, "");
+    ActivateLauncherIcon ();
   }
+}
+
+void
+PlaceLauncherIcon::ActivateLauncherIcon ()
+{
+  ActivatePlace (0, "");
 }
 
 void
@@ -102,7 +108,7 @@ PlaceLauncherIcon::GetMenus ()
 }
 
 void
-PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
+PlaceLauncherIcon::ActivatePlace (guint section_id, const char *search_string)
 {
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -115,7 +121,7 @@ PlaceLauncherIcon::Activate (guint section_id, const char *search_string)
 void
 PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
 {
-  self->Activate (0, "");
+  self->ActivateLauncherIcon ();
 }
 
 void

@@ -44,11 +44,6 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
 }
 
 void
-SimpleLauncherIcon::Activate ()
-{
-}
-
-void
 SimpleLauncherIcon::OnMouseDown (int button)
 {
 }
