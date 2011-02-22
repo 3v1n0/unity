@@ -490,7 +490,7 @@ UnityScreen::setOptionForPlugin(const char *plugin, const char *name,
   {
     if (strcmp (plugin, "core") == 0 && strcmp (name, "hsize") == 0)
     {
-      controller->UpdateNumWorkspaces(screen->vpSize ().width ());
+      controller->UpdateNumWorkspaces(screen->vpSize ().width () * screen->vpSize ().height ());
     }
   }
   return status;
