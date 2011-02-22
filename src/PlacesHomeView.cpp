@@ -270,7 +270,7 @@ PlacesHomeView::Refresh ()
 
   QueueDraw ();
   _layout->QueueDraw ();
-  nux::GetWindowThread ()->QueueObjectLayout (this);
+  QueueRelayout ();
 }
 
 void
