@@ -31,6 +31,8 @@
 
 #include "PlacesTile.h"
 
+#include <gconf/gconf-client.h>
+
 class PlacesHomeView : public Introspectable, public nux::View
 {
 public:
@@ -59,11 +61,20 @@ private:
                              double   width,
                              double   height);
   void OnShortcutClicked (PlacesTile *_tile);
+  static void OnKeyChanged (GConfClient    *client,
+                            guint           cnxn_id,
+                            GConfEntry     *entry,
+                            PlacesHomeView *self);
+  void CreateShortcutFromExec (const char *exec, 
+                               const char *name,
+                               const char *icon_hint);
+
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::GridHLayout        *_layout;
-  int _last_width;
-  int _last_height;
+  int          _last_width;
+  int          _last_height;
+  GConfClient *_client;
 };
 
 
