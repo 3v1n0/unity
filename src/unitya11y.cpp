@@ -58,7 +58,7 @@ load_unity_atk_util ()
 
 #define INIT_METHOD "gnome_accessibility_module_init"
 #define DESKTOP_SCHEMA "org.gnome.desktop.interface"
-#define ACCESSIBILITY_ENABLED_KEY "accessibility"
+#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
 #define AT_SPI_SCHEMA "org.a11y.atspi"
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
@@ -501,7 +501,7 @@ unity_a11y_get_accessible (nux::Object *object)
                          object);
 
       object->OnDestroyed.connect (sigc::bind(sigc::ptr_fun (on_object_destroy_cb),
-                                              object, accessible_object));
+                                              accessible_object));
     }
 
   return accessible_object;

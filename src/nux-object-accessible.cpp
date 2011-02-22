@@ -43,7 +43,8 @@ static void       nux_object_accessible_initialize     (AtkObject *accessible,
 static AtkStateSet* nux_object_accessible_ref_state_set  (AtkObject *accessible);
 
 /* Private methods */
-static void       on_object_destroy_cb (NuxObjectAccessible *object_accessible);
+static void       on_object_destroy_cb (nux::Object *base_object,
+                                        NuxObjectAccessible *object_accessible);
 
 
 #define NUX_OBJECT_ACCESSIBLE_GET_PRIVATE(obj) \
@@ -158,7 +159,8 @@ nux_object_accessible_ref_state_set (AtkObject *obj)
 
 /* Private methods */
 static void
-on_object_destroy_cb (NuxObjectAccessible *object_accessible)
+on_object_destroy_cb (nux::Object *base_object,
+                      NuxObjectAccessible *object_accessible)
 {
   object_accessible->priv->object = NULL;
   object_accessible->priv->on_destroyed_connection.disconnect ();
