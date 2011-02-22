@@ -122,7 +122,7 @@ DeviceLauncherIcon::OnMouseClick (int button)
 
   if (button == 1)
   {
-    Activate ();
+    ActivateLauncherIcon ();
   }
 }
 
@@ -196,7 +196,7 @@ DeviceLauncherIcon::ShowMount (GMount *mount)
 }
 
 void
-DeviceLauncherIcon::Activate ()
+DeviceLauncherIcon::ActivateLauncherIcon ()
 {
   GMount *mount;
   gchar  *name;
@@ -273,7 +273,7 @@ DeviceLauncherIcon::Eject ()
 void
 DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
-  self->Activate ();
+  self->ActivateLauncherIcon ();
 }
 
 void

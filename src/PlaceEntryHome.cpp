@@ -167,6 +167,12 @@ PlaceEntryHome::GetDescription ()
   return _("Search across all places");
 }
 
+guint64
+PlaceEntryHome::GetShortcut ()
+{
+  return 0;
+}
+
 guint32
 PlaceEntryHome::GetPosition  ()
 {

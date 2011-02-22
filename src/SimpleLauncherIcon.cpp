@@ -44,11 +44,6 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
 }
 
 void
-SimpleLauncherIcon::Activate ()
-{
-}
-
-void
 SimpleLauncherIcon::OnMouseDown (int button)
 {
 }
@@ -73,6 +68,12 @@ SimpleLauncherIcon::OnMouseEnter ()
 void
 SimpleLauncherIcon::OnMouseLeave ()
 {
+}
+
+void
+SimpleLauncherIcon::ActivateLauncherIcon ()
+{
+  MouseClick.emit (1);
 }
 
 nux::BaseTexture *

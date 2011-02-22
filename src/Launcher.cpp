@@ -2503,80 +2503,19 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       }
       leaveKeyNavMode ();
     break;
-
-    // Shortcuts to launch applications
-    case XK_0:
-      {
-        it = _model->at (9);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_1:
-      {
-        it = _model->at (0);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_2:
-      {
-        it = _model->at (1);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_3:
-      {
-        it = _model->at (2);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_4:
-      {
-        it = _model->at (3);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_5:
-      {
-        it = _model->at (4);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_6:
-      {
-        it = _model->at (5);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_7:
-      {
-        it = _model->at (6);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_8:
-      {
-        it = _model->at (7);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
-    case XK_9:
-      {
-        it = _model->at (8);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
-        break;
-      }
       
+    // Shortcut to start launcher icons
     default:
+    {
+        int i;
+        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+        {
+          if ((*it)->GetShortcut () == key_sym)
+            (*it)->Activate ();
+        }
+      
+      
+    }
     break;
   }
 }

@@ -50,13 +50,14 @@ public:
   virtual const gchar * GetName        () = 0;
   virtual const gchar * GetIcon        () = 0;
   virtual const gchar * GetDescription () = 0;
-
+  virtual       guint64 GetShortcut    () = 0;
+  
   // For ordering entries within a place
   virtual guint32        GetPosition  () = 0;
 
   // For DND, what can this entry handle
   virtual const gchar ** GetMimetypes () = 0;
-
+  
   virtual const std::map<gchar *, gchar *>& GetHints () = 0;
 
   // Whether the entry is sensitive to input (clicks/DND)
