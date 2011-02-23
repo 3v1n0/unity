@@ -39,60 +39,6 @@
 
 #include "PlacesSimpleTile.h"
 
-/*
-typedef struct
-{
-  gchar *name;
-  gchar *icon;
-  gchar *exec;
-
-} TileInfo;
-
-static TileInfo tile_infos[] = {
-  {
-    (gchar*)_("Find Media Apps"v),
-    (gchar*)"applications-multimedia",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Internet Apps"),
-    (gchar*)"applications-internet",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find More Apps"),
-    (gchar*)"find",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Files"),
-    (gchar*)"folder-saved-search",
-    (gchar*)"xdg-open ~"
-  },
-  {
-    (gchar*)_("Browse the Web"),
-    (gchar*)"firefox",
-    (gchar*)"firefox"
-  },
-  {
-    (gchar*)_("View Photos"),
-    (gchar*)"shotwell",
-    (gchar*)"shotwell"
-  },
-  {
-    (gchar*)_("Check Email"),
-    (gchar*)"evolution",
-    (gchar*)"evolution"
-  },
-  {
-    (gchar*)_("Listen to Music"),
-    (gchar*)"media-player-banshee",
-    (gchar*)"banshee"
-  }
-};
-
-*/
-
 #define DESKTOP_DIR  "/desktop/gnome/applications"
 #define BROWSER_DIR  DESKTOP_DIR"/browser"
 #define CALENDAR_DIR DESKTOP_DIR"/calendar"
