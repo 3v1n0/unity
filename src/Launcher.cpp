@@ -203,6 +203,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnStartFocus.connect (sigc::mem_fun (this, &Launcher::enterKeyNavMode));
     OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
     
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -383,6 +384,13 @@ Launcher::leaveKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+}
+
+void 
+Launcher::enterKeyNavMode ()
+{
+  printf ("Launcher::enterKeyNavMode\n");
+  startKeyNavMode ();
 }
 
 void
@@ -1902,7 +1910,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetOpenGLModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }

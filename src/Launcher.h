@@ -141,8 +141,11 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void exitKeyNavMode ();
   void leaveKeyNavMode ();
+
+  void enterKeyNavMode ();  // Connected to signal OnStartFocus
+  void exitKeyNavMode ();   // Connected to signal OnEndFocus
+
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
