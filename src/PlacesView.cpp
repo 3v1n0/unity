@@ -142,6 +142,9 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  if ((entry && _entry == entry) || (!entry && _entry == _home_entry))
+    return;
+
   if (signal)
     entry_changed.emit (entry);
 

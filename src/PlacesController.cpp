@@ -105,6 +105,8 @@ void PlacesController::Hide ()
  
   _visible = false;
 
+  _view->SetActiveEntry (NULL, 0, "");
+
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
