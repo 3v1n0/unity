@@ -273,7 +273,6 @@ UnityScreen::startLauncherKeyNav ()
   if (newFocusedWindow != NULL)
   {
     newFocusedWindow->moveInputFocusTo ();
-    launcher->startKeyNavMode ();
   }
 }
 
@@ -282,7 +281,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  startLauncherKeyNav ();
+  launcher->startKeyNavMode();
 
   return false;
 }

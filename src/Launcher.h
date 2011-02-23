@@ -301,6 +301,7 @@ private:
                          int active,
                          nux::Geometry geo);
 
+  void NoveFocusToKeyNavMode();
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
                               nux::Geometry        geo);
 
