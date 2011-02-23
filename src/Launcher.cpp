@@ -369,7 +369,7 @@ Launcher::startKeyNavMode ()
 }
 
 void
-Launcher::NoveFocusToKeyNavMode()
+Launcher::MoveFocusToKeyNavMode()
 {
   if (_last_icon_index == -1)
      _current_icon_index = 0;
@@ -1254,7 +1254,7 @@ void Launcher::OnActionDone (GVariant *data, void *val)
 
     // move focus to key nav mode when activated
     if(self->_navmod_show_launcher)
-      self->NoveFocusToKeyNavMode();
+      self->MoveFocusToKeyNavMode();
 }
 
 void Launcher::ForceHiddenState (bool hidden)
