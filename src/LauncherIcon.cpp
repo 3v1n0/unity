@@ -73,6 +73,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _shortcut = 0;
   
   _emblem = 0;
+  _superkey_label = 0;
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
@@ -686,6 +687,24 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   
   _emblem = emblem;
   needs_redraw.emit (this);
+}
+
+void
+LauncherIcon::SetSuperkeyLabel (nux::BaseTexture* label)
+{
+  if (_superkey_label == label)
+    return;
+  
+  if (_superkey_label)
+    _superkey_label->UnReference ();
+  
+  _superkey_label = label;  
+}
+
+nux::BaseTexture*
+LauncherIcon::GetSuperkeyLabel ()
+{
+  return _superkey_label;
 }
 
 void 

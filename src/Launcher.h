@@ -352,9 +352,9 @@ private:
                         double   height);
 
   nux::BaseTexture*
-  cairoToTexture2D (const char* label,
-                    int         width,
-                    int         height);
+  cairoToTexture2D (const char label,
+                    int        width,
+                    int        height);
 
   std::list<char *> StringToUriList (char * input);
 
@@ -435,7 +435,7 @@ private:
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
 
-  nux::BaseTexture* _superkey_labels[12];
+  nux::BaseTexture* _superkey_labels[10];
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;

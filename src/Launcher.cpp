@@ -292,18 +292,16 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
-    _superkey_labels[0]     = cairoToTexture2D ("1", 54, 54);
-    _superkey_labels[1]     = cairoToTexture2D ("2", 54, 54);
-    _superkey_labels[2]     = cairoToTexture2D ("3", 54, 54);
-    _superkey_labels[3]     = cairoToTexture2D ("4", 54, 54);
-    _superkey_labels[4]     = cairoToTexture2D ("5", 54, 54);
-    _superkey_labels[5]     = cairoToTexture2D ("6", 54, 54);
-    _superkey_labels[6]     = cairoToTexture2D ("7", 54, 54);
-    _superkey_labels[7]     = cairoToTexture2D ("8", 54, 54);
-    _superkey_labels[8]     = cairoToTexture2D ("9", 54, 54);
-    _superkey_labels[9]     = cairoToTexture2D ("0", 54, 54);
-    _superkey_labels[10]    = cairoToTexture2D ("w", 54, 54);
-    _superkey_labels[11]    = cairoToTexture2D ("t", 54, 54);
+    _superkey_labels[0]     = cairoToTexture2D ('1', 54, 54);
+    _superkey_labels[1]     = cairoToTexture2D ('2', 54, 54);
+    _superkey_labels[2]     = cairoToTexture2D ('3', 54, 54);
+    _superkey_labels[3]     = cairoToTexture2D ('4', 54, 54);
+    _superkey_labels[4]     = cairoToTexture2D ('5', 54, 54);
+    _superkey_labels[5]     = cairoToTexture2D ('6', 54, 54);
+    _superkey_labels[6]     = cairoToTexture2D ('7', 54, 54);
+    _superkey_labels[7]     = cairoToTexture2D ('8', 54, 54);
+    _superkey_labels[8]     = cairoToTexture2D ('9', 54, 54);
+    _superkey_labels[9]     = cairoToTexture2D ('0', 54, 54);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -431,7 +429,7 @@ Launcher::DrawRoundedRectangle (cairo_t* cr,
 }
 
 nux::BaseTexture*
-Launcher::cairoToTexture2D (const char* label, int width, int height)
+Launcher::cairoToTexture2D (const char label, int width, int height)
 {
   nux::BaseTexture*     texture  = NULL;
   nux::CairoGraphics*   cg       = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
@@ -457,7 +455,7 @@ Launcher::cairoToTexture2D (const char* label, int width, int height)
   desc = pango_font_description_from_string (fontName);
   pango_font_description_set_size (desc, 11 * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
-  pango_layout_set_text (layout, label, 1);
+  pango_layout_set_text (layout, &label, 1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
 
   PangoRectangle logRect;
@@ -1805,6 +1803,10 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
+   guint64 shortcut = icon->GetShortcut ();
+    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
+      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, 54, 54));
+
     AddChild (icon);
 }
 
@@ -2214,69 +2216,49 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg.alpha,
                 arg.icon->_xform_coords["Glow"]);
 
+  /* draw superkey-shortcut label */ 
   if (_super_show_launcher)
   {
-    gchar key   = (gchar) arg.icon->GetShortcut ();
-    int   index = -1;
+    guint64 shortcut = arg.icon->GetShortcut ();
 
-    switch (key)
+    /* deal with dynamic labels for places, which can be set via the locale */
+    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
     {
-      case '1':
-          index = 0;
-      break;
-
-      case '2':
-          index = 1;
-      break;
-
-      case '3':
-          index = 2;
-      break;
-
-      case '4':
-          index = 3;
-      break;
-
-      case '5':
-          index = 4;
-      break;
-
-      case '6':
-          index = 5;
-      break;
-
-      case '7':
-          index = 6;
-      break;
-
-      case '8':
-          index = 7;
-      break;
-
-      case '9':
-          index = 8;
-      break;
-
-      case '0':
-          index = 9;
-      break;
-
-      case 'w':
-          index = 10;
-      break;
-
-      case 't':
-          index = 11;
-      break;
-    }
-
-    if (index != -1)
       RenderIcon (GfxContext,
                   arg,
-                  _superkey_labels[index]->GetDeviceTexture (),
+                  arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
                   nux::Color (0xFFFFFFFF),
                   arg.alpha,
                   arg.icon->_xform_coords["Tile"]);
+    }
+    else
+    {
+      /* deal with the hardcoded labels used for the first 10 icons on the launcher */
+      gchar key   = (gchar) shortcut;
+      int   index = -1;
+
+      switch (key)
+      {
+        case '1': index = 0; break;
+        case '2': index = 1; break;
+        case '3': index = 2; break;
+        case '4': index = 3; break;
+        case '5': index = 4; break;
+        case '6': index = 5; break;
+        case '7': index = 6; break;
+        case '8': index = 7; break;
+        case '9': index = 8; break;
+        case '0': index = 9; break;
+      }
+
+      if (index != -1)
+        RenderIcon (GfxContext,
+                    arg,
+                    _superkey_labels[index]->GetDeviceTexture (),
+                    nux::Color (0xFFFFFFFF),
+                    arg.alpha,
+                    arg.icon->_xform_coords["Tile"]);
+    }
   }
 }
 
