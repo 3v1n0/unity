@@ -110,8 +110,9 @@ LauncherController::SortAndSave ()
         shortcut = 0;
       buff = g_strdup_printf ("%d", shortcut);  
       (*it)->SetShortcut (buff[0]);
-      g_free (buff);  
-      shortcut++;
+      g_free (buff); 
+      if (shortcut != 0) 
+        shortcut++;
     }
     
 
