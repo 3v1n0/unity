@@ -449,7 +449,7 @@ Launcher::cairoToTexture2D (const char* label, int width, int height)
   cairo_scale (cr, 1.0f, 1.0f);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   DrawRoundedRectangle (cr, 1.0f, 18.0f, 18.0f, 3.0f, 18.0f, 18.0f);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.65f);
   cairo_fill (cr);
 
   layout = pango_cairo_create_layout (cr);
