@@ -292,6 +292,19 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
+    _superkey_labels[0]     = cairoToTexture2D ("1", 54, 54);
+    _superkey_labels[1]     = cairoToTexture2D ("2", 54, 54);
+    _superkey_labels[2]     = cairoToTexture2D ("3", 54, 54);
+    _superkey_labels[3]     = cairoToTexture2D ("4", 54, 54);
+    _superkey_labels[4]     = cairoToTexture2D ("5", 54, 54);
+    _superkey_labels[5]     = cairoToTexture2D ("6", 54, 54);
+    _superkey_labels[6]     = cairoToTexture2D ("7", 54, 54);
+    _superkey_labels[7]     = cairoToTexture2D ("8", 54, 54);
+    _superkey_labels[8]     = cairoToTexture2D ("9", 54, 54);
+    _superkey_labels[9]     = cairoToTexture2D ("0", 54, 54);
+    _superkey_labels[10]    = cairoToTexture2D ("w", 54, 54);
+    _superkey_labels[11]    = cairoToTexture2D ("t", 54, 54);
+
     _enter_y                = 0;
     _dnd_security           = 15;
     _launcher_drag_delta    = 0;
@@ -359,6 +372,114 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::DrawRoundedRectangle (cairo_t* cr,
+                                double   aspect,
+                                double   x,
+                                double   y,
+                                double   cornerRadius,
+                                double   width,
+                                double   height)
+{
+  double radius = cornerRadius / aspect;
+  
+  // top-left, right of the corner
+  cairo_move_to (cr, x + radius, y);
+  
+  // top-right, left of the corner
+  cairo_line_to (cr, x + width - radius, y);
+  
+  // top-right, below the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + radius,
+             radius,
+             -90.0f * G_PI / 180.0f,
+             0.0f * G_PI / 180.0f);
+  
+  // bottom-right, above the corner
+  cairo_line_to (cr, x + width, y + height - radius);
+
+  // bottom-right, left of the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + height - radius,
+             radius,
+             0.0f * G_PI / 180.0f,
+             90.0f * G_PI / 180.0f);
+  
+  // bottom-left, right of the corner
+  cairo_line_to (cr, x + radius, y + height);
+  
+  // bottom-left, above the corner
+  cairo_arc (cr,
+             x + radius,
+             y + height - radius,
+             radius,
+             90.0f * G_PI / 180.0f,
+             180.0f * G_PI / 180.0f);
+  
+  // top-left, right of the corner
+  cairo_arc (cr,
+             x + radius,
+             y + radius,
+             radius,
+             180.0f * G_PI / 180.0f,
+             270.0f * G_PI / 180.0f);
+}
+
+nux::BaseTexture*
+Launcher::cairoToTexture2D (const char* label, int width, int height)
+{
+  nux::BaseTexture*     texture  = NULL;
+  nux::CairoGraphics*   cg       = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
+                                                           width,
+                                                           height);
+  cairo_t*              cr       = cg->GetContext ();
+  PangoLayout*          layout   = NULL;
+  PangoContext*         pangoCtx = NULL;
+  PangoFontDescription* desc     = NULL;
+  GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
+  gchar*                fontName = NULL;
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+  cairo_scale (cr, 1.0f, 1.0f);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  DrawRoundedRectangle (cr, 1.0f, 18.0f, 18.0f, 3.0f, 18.0f, 18.0f);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.5f);
+  cairo_fill (cr);
+
+  layout = pango_cairo_create_layout (cr);
+  g_object_get (settings, "gtk-font-name", &fontName, NULL);
+  desc = pango_font_description_from_string (fontName);
+  pango_font_description_set_size (desc, 11 * PANGO_SCALE);
+  pango_layout_set_font_description (layout, desc);
+  pango_layout_set_text (layout, label, 1);
+  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
+
+  PangoRectangle logRect;
+  pango_layout_get_extents (layout, NULL, &logRect);
+
+  /* position and paint text */
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  double x = 18.0f - ((logRect.width / PANGO_SCALE) - 18.0f) / 2.0f;
+  double y = 17.0f - ((logRect.height / PANGO_SCALE) - 18.0f) / 2.0f;
+  cairo_move_to (cr, x, y);
+  pango_cairo_show_layout (cr, layout);
+
+  nux::NBitmapData* bitmap = cg->GetBitmap ();
+  texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  texture->Update (bitmap);
+  delete bitmap;
+  delete cg;
+  g_object_unref (layout);
+  pango_font_description_free (desc);
+  g_free (fontName);
+
+  return texture;
 }
 
 void
@@ -1184,12 +1305,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 void Launcher::StartKeyShowLauncher ()
 {
     _super_show_launcher = true;
+    QueueDraw ();
     EnsureHiddenState ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
     _super_show_launcher = false;
+    QueueDraw ();
     SetupAutohideTimer ();
 }
 
@@ -2081,6 +2204,71 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 nux::Color (0xFFFFFFFF),
                 arg.alpha,
                 arg.icon->_xform_coords["Glow"]);
+
+  if (_super_show_launcher)
+  {
+    gchar key   = (gchar) arg.icon->GetShortcut ();
+    int   index = -1;
+
+    switch (key)
+    {
+      case '1':
+          index = 0;
+      break;
+
+      case '2':
+          index = 1;
+      break;
+
+      case '3':
+          index = 2;
+      break;
+
+      case '4':
+          index = 3;
+      break;
+
+      case '5':
+          index = 4;
+      break;
+
+      case '6':
+          index = 5;
+      break;
+
+      case '7':
+          index = 6;
+      break;
+
+      case '8':
+          index = 7;
+      break;
+
+      case '9':
+          index = 8;
+      break;
+
+      case '0':
+          index = 9;
+      break;
+
+      case 'w':
+          index = 10;
+      break;
+
+      case 't':
+          index = 11;
+      break;
+    }
+
+    if (index != -1)
+      RenderIcon (GfxContext,
+                  arg,
+                  _superkey_labels[index]->GetDeviceTexture (),
+                  nux::Color (0xFFFFFFFF),
+                  arg.alpha,
+                  arg.icon->_xform_coords["Tile"]);
+  }
 }
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2417,7 +2605,10 @@ Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_state)
 {
   if (_super_show_launcher)
+  {
     RecvKeyPressed (key_sym, key_code, key_state);
+    QueueDraw ();
+  }
 }
 
 void
