@@ -355,6 +355,11 @@ unity_a11y_init (void)
 
   unity_a11y_restore_environment ();
 
+  /* FIXME: gsettings is causing some crashes checking if a11y is
+     enabled, so we are move to gconf, meanwhile we require a sanity
+     commit. */
+  return;
+
   if (!should_enable_a11y ())
     return;
 

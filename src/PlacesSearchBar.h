@@ -35,6 +35,7 @@
 
 #include <gtk/gtk.h>
 
+#include "IconTexture.h"
 #include "StaticCairoText.h"
 
 class PlacesSearchBar : public Introspectable, public nux::View
@@ -79,6 +80,7 @@ private:
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
+  IconTexture             *_search_icon;
 };
 
 #endif

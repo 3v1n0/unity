@@ -152,7 +152,7 @@ PlaceEntryHome::GetId ()
 const gchar *
 PlaceEntryHome::GetName ()
 {
-  return _("Global Search");
+  return "";
 }
 
 const gchar *

@@ -172,6 +172,7 @@ private:
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_TAP_SUPER,
     
     TIME_LAST
   } LauncherActionTimes;
