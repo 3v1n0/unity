@@ -2488,7 +2488,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         int i;
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
         {
-          printf ("Shortcut for: %c\n", (int)((*it)->GetShortcut ()));
           if ((*it)->GetShortcut () == key_sym)
             (*it)->Activate ();
         }
