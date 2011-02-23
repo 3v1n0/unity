@@ -84,6 +84,9 @@ public:
     
     nux::NString GetTooltipText ();
     
+    void    SetShortcut (guint64 shortcut);
+    guint64 GetShortcut ();
+    
     void RecvMouseEnter ();
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
@@ -246,6 +249,8 @@ private:
     guint            _center_stabilize_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
+    
+    gint64           _shortcut;
     
     nux::Point3      _center;
     nux::Point3      _last_stable;

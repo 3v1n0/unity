@@ -40,7 +40,7 @@ protected:
   std::list<DbusmenuMenuitem *> GetMenus ();
 
 private:
-  void Activate ();
+  void ActivateLauncherIcon ();
   void ShowMount (GMount *mount);
   void Eject ();
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);

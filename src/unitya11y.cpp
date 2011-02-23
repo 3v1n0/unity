@@ -58,7 +58,7 @@ load_unity_atk_util ()
 
 #define INIT_METHOD "gnome_accessibility_module_init"
 #define DESKTOP_SCHEMA "org.gnome.desktop.interface"
-#define ACCESSIBILITY_ENABLED_KEY "accessibility"
+#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
 #define AT_SPI_SCHEMA "org.a11y.atspi"
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
@@ -89,6 +89,9 @@ should_enable_a11y (void)
 {
   GSettings *desktop_settings = NULL;
   gboolean value = FALSE;
+
+  if (g_getenv ("UNITY_A11Y_DISABLE"))
+    return FALSE;
 
   if (!has_gsettings_schema (DESKTOP_SCHEMA))
     return FALSE;
@@ -153,6 +156,174 @@ a11y_invoke_module (const char *module_path)
 
   return TRUE;
 }
+
+
+/*
+ * This unit test checks if the destroy management is working:
+ *
+ * - If the state of a accessibility object is properly updated after
+ *   the object destruction
+ *
+ */
+static gboolean
+a11y_unit_test_destroy_management (void)
+{
+  QuicklistView *quicklist = NULL;
+  AtkObject *accessible = NULL;
+  nux::Object *base_object = NULL;
+  AtkStateSet *state_set = NULL;
+
+  quicklist = new QuicklistView ();
+  quicklist->SinkReference ();
+  accessible = unity_a11y_get_accessible (quicklist);
+
+  base_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  if (base_object != quicklist)
+    {
+      g_debug ("[a11y] destroy management unit test: base object"
+               " different to the original one");
+      return FALSE;
+    }
+
+  if (quicklist->UnReference () == false)
+    {
+      g_debug ("[a11y] destroy management unit test: base object not destroyed");
+      return FALSE;
+    }
+
+  base_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  if (base_object != NULL)
+    {
+      g_debug ("[a11y] destroy management unit test: base object"
+               " not NULL after base object destruction");
+      return FALSE;
+    }
+
+  state_set = atk_object_ref_state_set (accessible);
+  if (!atk_state_set_contains_state (state_set, ATK_STATE_DEFUNCT))
+    {
+      g_debug ("[a11y] destroy management unit test: accessible object"
+               " doesn't include DEFUNCT state");
+      return FALSE;
+    }
+
+  g_object_unref (state_set);
+  g_object_unref (accessible);
+
+  return TRUE;
+}
+
+/**
+ * This unit test checks if the hash table destroy management is working:
+ *
+ * - If the hash table removes properly the accessible object once it
+ *   is destroyed.
+ */
+static gboolean
+a11y_unit_test_hash_table_destroy_management (void)
+{
+  QuicklistView *quicklist = NULL;
+  AtkObject *accessible = NULL;
+  guint prev_hash_size = 0;
+  guint hash_size = 0;
+
+  /* test the hash table management with the accessible destroy */
+
+  prev_hash_size = g_hash_table_size (accessible_table);
+
+  quicklist = new QuicklistView ();
+  quicklist->SinkReference ();
+  accessible = unity_a11y_get_accessible (quicklist);
+
+  if (accessible == NULL)
+    {
+      g_debug ("[a11y] hash table destroy management unit test: error creating"
+               " the accessible object (accessible == NULL)");
+      return FALSE;
+    }
+
+  hash_size = g_hash_table_size (accessible_table);
+
+  if ((hash_size - prev_hash_size) != 1 )
+    {
+      g_debug ("[a11y] hash table destroy management unit test: accessible object"
+               " not added to the hash table after his creation");
+      return FALSE;
+    }
+
+  prev_hash_size = g_hash_table_size (accessible_table);
+
+  g_object_unref (accessible);
+
+  hash_size = g_hash_table_size (accessible_table);
+
+  if ((prev_hash_size - hash_size) != 1 )
+    {
+      g_debug ("[a11y] hash table destroy management unit test: accessible object"
+               " not removed from the hash table after his destruction");
+      return FALSE;
+    }
+
+  quicklist->UnReference ();
+
+  /* Test the hash table management after the object destroy */
+
+  prev_hash_size = g_hash_table_size (accessible_table);
+
+  quicklist = new QuicklistView ();
+  quicklist->SinkReference ();
+  accessible = unity_a11y_get_accessible (quicklist);
+
+  if (accessible == NULL)
+    {
+      g_debug ("[a11y] hash table destroy management unit test: error creating"
+               " the accessible object (accessible == NULL)");
+      return FALSE;
+    }
+
+  hash_size = g_hash_table_size (accessible_table);
+
+  if ((hash_size - prev_hash_size) != 1 )
+    {
+      g_debug ("[a11y] hash table destroy management unit test: accessible object"
+               " not added to the hash table after his creation");
+      return FALSE;
+    }
+
+  prev_hash_size = g_hash_table_size (accessible_table);
+
+  if (quicklist->UnReference () == false)
+    {
+      g_debug ("[a11y] hash table destroy management unit test: base object not destroyed");
+      return FALSE;
+    }
+
+  hash_size = g_hash_table_size (accessible_table);
+
+  if ((prev_hash_size - hash_size) != 1 )
+    {
+      g_debug ("[a11y] hash table destroy management unit test: accessible object"
+               " not removed from the hash table after base object destruction");
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+void
+unity_run_a11y_unit_tests (void)
+{
+  if (a11y_unit_test_destroy_management ())
+    g_debug ("[a11y] destroy management unit test: SUCCESS");
+  else
+    g_debug ("[a11y] destroy management unit test: FAIL");
+
+  if (a11y_unit_test_hash_table_destroy_management ())
+    g_debug ("[a11y] hash table destroy management unit test: SUCCESS");
+  else
+    g_debug ("[a11y] hash table destroy management unit test: FAIL");
+}
+
 
 /********************************************************************************/
 /*
@@ -268,6 +439,30 @@ unity_a11y_create_accessible (nux::Object *object)
   return nux_object_accessible_new (object);
 }
 
+static void
+on_object_destroy_cb (nux::Object *base_object,
+                      AtkObject *accessible_object)
+{
+  /* NOTE: the pair key:value (base_object:accessible_object) could be
+     already removed on on_accessible_destroy_cb. That just mean that
+     g_hash_table_remove would return FALSE. We don't add a
+     debug/warning message to avoid being too verbose */
+
+  g_hash_table_remove (accessible_table, base_object);
+}
+
+static void
+on_accessible_destroy_cb (gpointer data,
+                          GObject *where_the_object_was)
+{
+  /* NOTE: the pair key:value (base_object:accessible_object) could be
+     already removed on on_object_destroy_cb. That just mean that
+     g_hash_table_remove would return FALSE. We don't add a
+     debug/warning message to avoid being too verbose */
+
+  g_hash_table_remove (accessible_table, data);
+}
+
 /*
  * Returns the accessible object of a nux::View object
  *
@@ -299,6 +494,17 @@ unity_a11y_get_accessible (nux::Object *object)
       accessible_object = unity_a11y_create_accessible (object);
 
       g_hash_table_insert (accessible_table, object, accessible_object);
+
+      /* there are two reasons the object should be removed from the
+       * table: base object destroyed, or accessible object
+       * destroyed
+       */
+      g_object_weak_ref (G_OBJECT (accessible_object),
+                         on_accessible_destroy_cb,
+                         object);
+
+      object->OnDestroyed.connect (sigc::bind(sigc::ptr_fun (on_object_destroy_cb),
+                                              accessible_object));
     }
 
   return accessible_object;
