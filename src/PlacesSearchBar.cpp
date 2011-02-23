@@ -51,12 +51,17 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->SetMinimumHeight (20);
   _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
   SetCompositionLayout (_layout);
+
+  g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
+                    G_CALLBACK (OnFontChanged), this);
+  OnFontChanged (NULL, NULL, this);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -197,6 +202,31 @@ PlacesSearchBar::EmitLiveSearch ()
     _entry->SetSearch (_pango_entry->GetText ().c_str (), hints);
   }
   _live_search_timeout = 0;
+}
+
+void
+PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self)
+{
+#define HOW_LARGE 10
+  GtkSettings          *settings;
+  gchar                *font_name = NULL;
+  PangoFontDescription *desc;
+  gint                  size;
+
+  settings = gtk_settings_get_default ();
+  g_object_get (settings, "gtk-font-name", &font_name, NULL);
+
+  desc = pango_font_description_from_string (font_name);
+  self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
+
+  size = pango_font_description_get_size (desc);
+  size /= pango_font_description_get_size_is_absolute (desc) ? 1 : PANGO_SCALE;
+  self->_pango_entry->SetFontSize ( size + HOW_LARGE);
+
+  self->_pango_entry->SetFontOptions (gdk_screen_get_font_options (gdk_screen_get_default ()));
+
+  pango_font_description_free (desc);
+  g_free (font_name);
 }
 
 static void

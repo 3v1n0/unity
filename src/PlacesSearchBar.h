@@ -31,6 +31,8 @@
 
 #include "PlaceEntry.h"
 
+#include <gtk/gtk.h>
+
 class PlacesSearchBar : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
@@ -61,6 +63,7 @@ private:
   void EmitLiveSearch ();
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
+  static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
