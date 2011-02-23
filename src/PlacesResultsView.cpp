@@ -23,6 +23,8 @@
 #include "Nux/VScrollBar.h"
 #include "Nux/HScrollBar.h"
 #include "Nux/Panel.h"
+#include "Nux/GridHLayout.h"
+#include "Nux/GridVLayout.h"
 #include "PlacesGroup.h"
 #include "PlacesResultsView.h"
 
@@ -35,10 +37,34 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
 
-  setBorder (12);
-  EnableVerticalScrollBar (true);
 
-  SetCompositionLayout (_layout);
+  /*nux::GridHLayout *grid_h_layout ((new nux::GridHLayout (NUX_TRACKER_LOCATION)));
+  for (int i = 0; i < 360; i++)
+  {
+    nux::ColorLayer color (nux::Color::RandomColor ());
+    nux::TextureArea* texture_area = new nux::TextureArea ();
+    texture_area->SetPaintLayer (&color);
+
+    grid_h_layout->AddView (texture_area, 1, nux::eLeft, nux::eFull);
+  }
+
+  grid_h_layout->ForceChildrenSize (true);
+  grid_h_layout->SetChildrenSize (64, 42);
+  grid_h_layout->EnablePartialVisibility (true);
+
+  grid_h_layout->SetVerticalExternalMargin (4);
+  grid_h_layout->SetHorizontalExternalMargin (4);
+  grid_h_layout->SetVerticalInternalMargin (4);
+  grid_h_layout->SetHorizontalInternalMargin (4);
+  grid_h_layout->SetStretchFactor(1);
+
+  _layout->AddLayout(grid_h_layout, 1);
+
+  setBorder (12);
+  EnableVerticalScrollBar (true);*/
+
+  SetLayout (_layout);
+
 }
 
 PlacesResultsView::~PlacesResultsView ()
@@ -50,7 +76,7 @@ void
 PlacesResultsView::ReJiggyGroups ()
 {
   _layout->Clear ();
- std::list<PlacesGroup *>::iterator it;
+  std::list<PlacesGroup *>::iterator it;
 
   for (it = _groups.begin(); it != _groups.end(); it++)
   {
@@ -64,7 +90,7 @@ PlacesResultsView::ReJiggyGroups ()
   }
 }
 
-void
+/*void
 PlacesResultsView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
 }
@@ -91,6 +117,12 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   GfxContext.PopClippingRectangle();
 }
 
+void PlacesResultsView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
+{
+
+}  
+*/
+
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)
 {
@@ -105,7 +137,7 @@ PlacesResultsView::RemoveGroup (PlacesGroup *group)
   _layout->RemoveChildObject (group);
 }
 
-void
+/*void
 PlacesResultsView::PositionChildLayout (float offsetX, float offsetY)
 {
   ScrollView::PositionChildLayout (offsetX, offsetY);
@@ -122,15 +154,15 @@ long PlacesResultsView::PostLayoutManagement (long LayoutResult)
   long result = ScrollView::PostLayoutManagement (LayoutResult);
   return result;
 }
-
-long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+*/
+/*long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
   long ProcEvInfo = 0;
 
   if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (!m_Geometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
+    if (!GetGeometry ().IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
     {
       ProcEvInfo = nux::eDoNotProcess;
       //return TraverseInfo;
@@ -159,15 +191,9 @@ long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, lo
   ret = PostProcessEvent2 (ievent, ret, 0);
   return ret;
 }
+*/
 
-void PlacesResultsView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-
-}
-
-
-
-void
+/*void
 PlacesResultsView::ScrollLeft (float stepx, int mousedx)
 {
 }
@@ -187,4 +213,4 @@ void
 PlacesResultsView::ScrollDown (float stepy, int mousedy)
 {
   ScrollView::ScrollDown (stepy, mousedy);
-}
+}*/

@@ -53,10 +53,10 @@ public:
   void ReJiggyGroups ();
 
 protected:
-  virtual void ScrollLeft (float stepx, int mousedx);
+  /*virtual void ScrollLeft (float stepx, int mousedx);
   virtual void ScrollRight (float stepx, int mousedx);
   virtual void ScrollUp (float stepy, int mousedy);
-  virtual void ScrollDown (float stepy, int mousedy);
+  virtual void ScrollDown (float stepy, int mousedy);*/
 
 private:
   nux::Layout *_layout;
@@ -64,15 +64,15 @@ private:
 
 protected:
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  //virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  /*virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);*/
 
-  virtual void PreLayoutManagement ();
+  /*virtual void PreLayoutManagement ();
   virtual long PostLayoutManagement (long LayoutResult);
   virtual void PositionChildLayout (float offsetX, float offsetY);
-
+*/
 };
 
 #endif // PLACE_RESULTS_VIEW_H
