@@ -1306,13 +1306,22 @@ void Launcher::StartKeyShowLauncher ()
 {
     _super_show_launcher = true;
     QueueDraw ();
+    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, ANIM_DURATION_SHORT);
     EnsureHiddenState ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);  
+
     _super_show_launcher = false;
     QueueDraw ();
+
+    // it's a tap on super
+    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < ANIM_DURATION_SHORT)
+      ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
+      
     SetupAutohideTimer ();
 }
 

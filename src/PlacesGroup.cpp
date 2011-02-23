@@ -41,7 +41,8 @@
 #include <glib/gi18n-lib.h>
 
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM)
+View (NUX_FILE_LINE_PARAM),
+_idle_id (0)
 {
   //~ OnMouseDown.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseDown));
   //~ OnMouseUp.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseUp));
@@ -176,20 +177,22 @@ PlacesGroup::UpdateLabel ()
   NeedRedraw ();
 }
 
-void
-PlacesGroup::SetVisible (bool visible)
+void PlacesGroup::Relayout ()
 {
-  _is_visible = visible;
-  ComputeChildLayout ();
-  NeedRedraw ();
+  if (_idle_id == 0)
+    _idle_id = g_idle_add ((GSourceFunc)OnIdleRelayout, this);
 }
 
-bool
-PlacesGroup::IsVisible ()
+gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
-  return _is_visible;
-}
+  self->QueueDraw ();
+  self->_group_layout->QueueDraw ();
+  self->GetLayout ()->QueueDraw ();
+  self->ComputeChildLayout ();
+  self->_idle_id = 0;
 
+  return FALSE;
+}
 
 long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {

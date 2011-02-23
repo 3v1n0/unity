@@ -22,7 +22,7 @@
 // Add ubus messages here so we can easily export them around the place
 // keep ordered
 
-#define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
+#define UBUS_DASH_EXTERNAL_ACTIVATION   "DASH_EXTERNAL_ACTIVATION"
 #define UBUS_HOME_BUTTON_TRIGGER_UPDATE "PANEL_HOME_BUTTON_TRIGGER_UPDATE"
 
 // When other parts of Unity want to close the place view

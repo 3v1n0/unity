@@ -49,9 +49,6 @@ public:
   void AddGroup (PlacesGroup *group);
   void RemoveGroup (PlacesGroup *group);
 
-  /* I am going to remove this API, its just temporary till nux is fixed */
-  void ReJiggyGroups ();
-
 protected:
   virtual void ScrollLeft (float stepx, int mousedx);
   virtual void ScrollRight (float stepx, int mousedx);
