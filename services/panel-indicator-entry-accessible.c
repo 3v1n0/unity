@@ -37,6 +37,40 @@ struct _PanelIndicatorEntryAccessiblePrivate
 };
 
 static void
+on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer user_data)
+{
+  gchar *s;
+  gboolean adding;
+  PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+
+  /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
+  s = g_strdup_printf ("%p", piea->priv->entry);
+  if (g_str_equal (s, entry_id))
+    {
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ACTIVE);
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSED);
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SHOWING);
+
+      adding = TRUE;
+    }
+  else
+    {
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_ACTIVE);
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_FOCUSED);
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_SHOWING);
+
+      adding = FALSE;
+    }
+
+  /* Notify AT's about the states' changes */
+  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_ACTIVE, adding);
+  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_FOCUSED, adding);
+  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_SHOWING, adding);
+
+  g_free (s);
+}
+
+static void
 panel_indicator_entry_accessible_finalize (GObject *object)
 {
   PanelIndicatorEntryAccessible *piea;
@@ -47,6 +81,7 @@ panel_indicator_entry_accessible_finalize (GObject *object)
 
   if (piea->priv != NULL)
     {
+      g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
       if (piea->priv->state_set != NULL)
         g_object_unref (piea->priv->state_set);
     }
@@ -72,30 +107,6 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
   atk_class->ref_state_set = panel_indicator_entry_accessible_ref_state_set;
 
   g_type_class_add_private (object_class, sizeof (PanelIndicatorEntryAccessiblePrivate));
-}
-
-static void
-on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer user_data)
-{
-  gchar *s;
-  PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
-
-  /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
-  s = g_strdup_printf ("%p", piea->priv->entry);
-  if (g_str_equal (s, entry_id))
-    {
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ACTIVE);
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSED);
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SHOWING);
-    }
-  else
-    {
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_ACTIVE);
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_FOCUSED);
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_SHOWING);
-    }
-
-  g_free (s);
 }
 
 static void

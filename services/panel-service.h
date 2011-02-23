@@ -57,12 +57,6 @@ struct _PanelServiceClass
 {
   GObjectClass   parent_class;
 
-  /* Signals */
-  void (* entry_activated) (PanelService *self, const gchar *id);
-  void (* re_sync) (PanelService *self, const gchar *id);
-  void (* active_menu_pointer_motion) (PanelService *self);
-  void (* entry_activate_request) (PanelService *self, const gchar *id);
-
   /*< private >*/
   void (*_view_padding1) (void);
   void (*_view_padding2) (void);
