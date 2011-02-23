@@ -211,7 +211,7 @@ PlacesHomeView::Refresh ()
 
   // Music
   markup = gconf_client_get_string (_client, MEDIA_DIR"/exec", NULL);
-  CreateShortcutFromExec (markup, _("Listen to Music"), "banshee");
+  CreateShortcutFromExec (markup, _("Listen to Music"), "banshee-1");
   g_free (markup);
 
   QueueDraw ();
@@ -251,7 +251,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   }
   else
   {
-    id = g_strdup ("firefox.desktop");
+    id = g_strdup_printf ("%s.desktop", icon_hint);
   }
   
   info = g_desktop_app_info_new (id);
