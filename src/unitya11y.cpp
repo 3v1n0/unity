@@ -90,6 +90,9 @@ should_enable_a11y (void)
   GSettings *desktop_settings = NULL;
   gboolean value = FALSE;
 
+  if (g_getenv ("UNITY_A11Y_DISABLE"))
+    return FALSE;
+
   if (!has_gsettings_schema (DESKTOP_SCHEMA))
     return FALSE;
    

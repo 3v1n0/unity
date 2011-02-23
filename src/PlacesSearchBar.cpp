@@ -51,10 +51,9 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
-
-
   _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _layout->SetVerticalExternalMargin (14);
+
+  _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
   SetCompositionLayout (_layout);
@@ -136,7 +135,7 @@ PlacesSearchBar::PostLayoutManagement (long LayoutResult)
 }
 
 void
-PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool ignore)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -150,8 +149,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
 
     res = g_strdup_printf (search_template, _entry->GetName ());
     
-    _entry->SetActiveSection (section_id);
-    _entry->SetSearch (search_string ? search_string : "", hints);
+    if (!ignore)
+    {
+      _entry->SetActiveSection (section_id);
+      _entry->SetSearch (search_string ? search_string : "", hints);
+    }
     _pango_entry->SetText (search_string ? search_string : "");
     g_free (res);
   }
@@ -172,6 +174,9 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
                                         this);
 
   search_changed.emit (_pango_entry->GetText ().c_str ());
+
+  _pango_entry->QueueDraw ();
+  QueueDraw ();
 }
 
 bool
@@ -253,7 +258,7 @@ draw_rounded_rect (cairo_t* cr,
 void
 PlacesSearchBar::UpdateBackground ()
 {
-#define PADDING 8
+#define PADDING 14
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
@@ -299,14 +304,14 @@ PlacesSearchBar::UpdateBackground ()
     delete _bg_layer;
 
   nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
+  rop.Blend = true;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
-                                     false,              // Write the alpha value of the texture to the destination buffer.
+                                     true,              // Write the alpha value of the texture to the destination buffer.
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 

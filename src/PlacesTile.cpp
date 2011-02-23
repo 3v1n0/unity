@@ -59,7 +59,6 @@ PlacesTile::~PlacesTile ()
 nux::Geometry
 PlacesTile::GetHighlightGeometry ()
 {
-
   return GetGeometry ();
 }
 
@@ -258,19 +257,19 @@ long PlacesTile::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
-  UpdateBackground ();
-  nux::Geometry hl_geo = GetHighlightGeometry ();
   nux::Geometry base = GetGeometry ();
-
-  nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - 3, base.y + hl_geo.y - 3,
-                                                     hl_geo.width + 7, hl_geo.height + 7);
-
   gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
 
   if (_state == STATE_HOVER)
   {
+    UpdateBackground ();
+    nux::Geometry hl_geo = GetHighlightGeometry ();
+  
+    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - 3, base.y + hl_geo.y - 3,
+                                                     hl_geo.width + 7, hl_geo.height + 7);
+
     gPainter.PushDrawLayer (gfxContext, total_highlight_geo, _hilight_layer);
     gPainter.PopBackground ();
   }
@@ -280,11 +279,13 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
 void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  UpdateBackground ();
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   if (_state == STATE_HOVER)
+  {
+    UpdateBackground ();
     nux::GetPainter ().PushLayer (GfxContext, GetGeometry (), _hilight_layer);
+  }
 
   _layout->ProcessDraw (GfxContext, force_draw);
   

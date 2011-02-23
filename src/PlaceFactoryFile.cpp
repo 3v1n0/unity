@@ -45,13 +45,14 @@ PlaceFactoryFile::PlaceFactoryFile (const char *directory)
     return;
   }
 
-  g_file_enumerate_children_async (_dir,
-                                   G_FILE_ATTRIBUTE_STANDARD_NAME,
-                                   G_FILE_QUERY_INFO_NONE,
-                                   0,
-                                   NULL,
-                                   on_directory_enumeration_ready,
-                                   this);
+  if (!g_getenv ("UNITY_PLACES_DISABLE"))
+    g_file_enumerate_children_async (_dir,
+                                     G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                     G_FILE_QUERY_INFO_NONE,
+                                     0,
+                                     NULL,
+                                     on_directory_enumeration_ready,
+                                     this);
 }
 
 PlaceFactoryFile::~PlaceFactoryFile ()

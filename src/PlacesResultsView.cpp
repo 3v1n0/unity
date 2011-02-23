@@ -47,24 +47,6 @@ PlacesResultsView::~PlacesResultsView ()
 }
 
 void
-PlacesResultsView::ReJiggyGroups ()
-{
-  _layout->Clear ();
- std::list<PlacesGroup *>::iterator it;
-
-  for (it = _groups.begin(); it != _groups.end(); it++)
-  {
-    if ((*it)->IsVisible ())
-    {
-      _layout->AddView ((*it), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-      _layout->QueueDraw ();
-      (*it)->QueueDraw ();
-      QueueDraw ();
-    }
-  }
-}
-
-void
 PlacesResultsView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
 }
