@@ -37,6 +37,24 @@ struct _PanelIndicatorEntryAccessiblePrivate
 };
 
 static void
+panel_indicator_entry_accessible_finalize (GObject *object)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (object));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (object);
+
+  if (piea->priv != NULL)
+    {
+      if (piea->priv->state_set != NULL)
+        g_object_unref (piea->priv->state_set);
+    }
+
+  G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
+}
+
+static void
 panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass *klass)
 {
   GObjectClass *object_class;
@@ -44,6 +62,7 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
 
   /* GObject */
   object_class = G_OBJECT_CLASS (klass);
+  object_class->finalize = panel_indicator_entry_accessible_finalize;
 
   /* AtkObject */
   atk_class = ATK_OBJECT_CLASS (klass);
@@ -180,5 +199,5 @@ panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
 
-  return g_object_ref (piea->priv->state_set);
+  return ATK_STATE_SET (g_object_ref (piea->priv->state_set));
 }

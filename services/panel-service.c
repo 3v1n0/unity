@@ -148,7 +148,7 @@ panel_service_class_init (PanelServiceClass *klass)
     g_signal_new ("entry-activated",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
-                  0,
+                  G_STRUCT_OFFSET (PanelServiceClass, entry_activated),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -157,7 +157,7 @@ panel_service_class_init (PanelServiceClass *klass)
     g_signal_new ("re-sync",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
-                  0,
+                  G_STRUCT_OFFSET (PanelServiceClass, re_sync),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
@@ -166,7 +166,7 @@ panel_service_class_init (PanelServiceClass *klass)
     g_signal_new ("active-menu-pointer-motion",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
-                  0,
+                  G_STRUCT_OFFSET (PanelServiceClass, active_menu_pointer_motion),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
@@ -175,7 +175,7 @@ panel_service_class_init (PanelServiceClass *klass)
     g_signal_new ("entry-activate-request",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
-                  0,
+                  G_STRUCT_OFFSET (PanelServiceClass, entry_activate_request),
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
