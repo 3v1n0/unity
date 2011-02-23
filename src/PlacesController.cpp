@@ -36,7 +36,7 @@ PlacesController::PlacesController ()
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
+  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION,
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
