@@ -17,19 +17,23 @@
  */
 
 #include "panel-indicator-entry-accessible.h"
+#include "panel-service.h"
 
 G_DEFINE_TYPE(PanelIndicatorEntryAccessible, panel_indicator_entry_accessible, ATK_TYPE_OBJECT)
 
 #define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
 
 /* AtkObject methods */
-static void       panel_indicator_entry_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint       panel_indicator_entry_accessible_get_n_children (AtkObject *accessible);
-static AtkObject *panel_indicator_entry_accessible_ref_child      (AtkObject *accessible, gint i);
+static void         panel_indicator_entry_accessible_initialize     (AtkObject *accessible, gpointer data);
+static gint         panel_indicator_entry_accessible_get_n_children (AtkObject *accessible);
+static AtkObject   *panel_indicator_entry_accessible_ref_child      (AtkObject *accessible, gint i);
+static AtkStateSet *panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible);
 
 struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
+  PanelService         *service;
+  AtkStateSet          *state_set;
 };
 
 static void
@@ -46,14 +50,51 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
   atk_class->initialize = panel_indicator_entry_accessible_initialize;
   atk_class->get_n_children = panel_indicator_entry_accessible_get_n_children;
   atk_class->ref_child = panel_indicator_entry_accessible_ref_child;
+  atk_class->ref_state_set = panel_indicator_entry_accessible_ref_state_set;
 
   g_type_class_add_private (object_class, sizeof (PanelIndicatorEntryAccessiblePrivate));
+}
+
+static void
+on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer user_data)
+{
+  gchar *s;
+  PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+
+  /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
+  s = g_strdup_printf ("%p", piea->priv->entry);
+  if (g_str_equal (s, entry_id))
+    {
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ACTIVE);
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSED);
+      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SHOWING);
+    }
+  else
+    {
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_ACTIVE);
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_FOCUSED);
+      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_SHOWING);
+    }
+
+  g_free (s);
 }
 
 static void
 panel_indicator_entry_accessible_init (PanelIndicatorEntryAccessible *piea)
 {
   piea->priv = GET_PRIVATE (piea);
+
+  piea->priv->state_set = atk_state_set_new ();
+  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ENABLED);
+  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSABLE);
+  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_HORIZONTAL);
+  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SENSITIVE);
+  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_VISIBLE);
+
+  /* Set up signals for listening to service changes */
+  piea->priv->service = panel_service_get_default ();
+  g_signal_connect (piea->priv->service, "entry-activated",
+		    G_CALLBACK (on_entry_activated_cb), piea);
 }
 
 AtkObject *
@@ -128,4 +169,16 @@ panel_indicator_entry_accessible_ref_child (AtkObject *accessible, gint i)
     child = gtk_widget_get_accessible (GTK_WIDGET (piea->priv->entry->menu));
 
   return child;
+}
+
+static AtkStateSet *
+panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible), NULL);
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+
+  return g_object_ref (piea->priv->state_set);
 }
