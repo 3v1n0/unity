@@ -49,10 +49,20 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
 
+  _layered_layout = new nux::LayeredLayout ();
+
+  _hint = new nux::StaticCairoText (" ");
+  _layered_layout->AddLayer (_hint);
+
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
   _pango_entry->SetMinimumHeight (20);
-  _layout->AddView (_pango_entry, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layered_layout->AddLayer (_pango_entry);
+
+  _layered_layout->SetPaintAll (true);
+  _layered_layout->SetActiveLayerN (1);
+
+  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
@@ -128,19 +138,10 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 }
 
 void
-PlacesSearchBar::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesSearchBar::PostLayoutManagement (long LayoutResult)
-{
-  return nux::View::PostLayoutManagement (LayoutResult);
-}
-
-void
-PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool ignore)
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
+                                 guint       section_id,
+                                 const char *search_string,
+                                 bool        ignore_search)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -153,13 +154,16 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
     gchar       *res;
 
     res = g_strdup_printf (search_template, _entry->GetName ());
-    
-    if (!ignore)
+    _hint->SetText (res);
+
+    if (!ignore_search)
     {
       _entry->SetActiveSection (section_id);
       _entry->SetSearch (search_string ? search_string : "", hints);
     }
+    
     _pango_entry->SetText (search_string ? search_string : "");
+    
     g_free (res);
   }
   else
