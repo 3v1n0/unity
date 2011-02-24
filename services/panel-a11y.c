@@ -24,7 +24,7 @@ static gboolean a11y_initialized = FALSE;
 
 #define INIT_METHOD "gnome_accessibility_module_init"
 #define DESKTOP_SCHEMA "org.gnome.desktop.interface"
-#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
+#define ACCESSIBILITY_ENABLED_KEY "accessibility"
 #define AT_SPI_SCHEMA "org.a11y.atspi"
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
