@@ -1320,7 +1320,7 @@ void Launcher::EndKeyShowLauncher ()
     QueueDraw ();
 
     // it's a tap on super
-    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < ANIM_DURATION_SHORT)
+    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
       
     SetupAutohideTimer ();
