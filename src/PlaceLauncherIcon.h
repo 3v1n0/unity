@@ -41,7 +41,8 @@ protected:
   std::list<DbusmenuMenuitem *> GetMenus ();
 
 private:
-  void Activate (guint section_id, const char *search_string);
+  void ActivateLauncherIcon ();
+  void ActivatePlace (guint section_id, const char *search_string);
   void OnActiveChanged (bool is_active);
   static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
 

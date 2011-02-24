@@ -35,12 +35,16 @@ public:
 protected:
   void OnMouseClick (int button);
   void UpdateTrashIcon ();
+  
+  nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
+  void OnAcceptDrop (std::list<char *> uris);
 
 private:
   std::map<std::string, DbusmenuMenuitem *> _menu_items;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
 
+  void ActivateLauncherIcon ();
   void EnsureMenuItemsReady ();
 
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);

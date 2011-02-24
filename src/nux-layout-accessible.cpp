@@ -44,33 +44,22 @@ static AtkObject *nux_layout_accessible_ref_child      (AtkObject *obj,
                                                         gint i);
 
 
-#define NUX_LAYOUT_ACCESSIBLE_GET_PRIVATE(obj)                          \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_LAYOUT_ACCESSIBLE, NuxLayoutAccessiblePrivate))
-
 G_DEFINE_TYPE (NuxLayoutAccessible, nux_layout_accessible,  NUX_TYPE_AREA_ACCESSIBLE)
-
-struct _NuxLayoutAccessiblePrivate
-{
-};
 
 static void
 nux_layout_accessible_class_init (NuxLayoutAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = nux_layout_accessible_initialize;
   atk_class->ref_child = nux_layout_accessible_ref_child;
   atk_class->get_n_children = nux_layout_accessible_get_n_children;
-
-  g_type_class_add_private (gobject_class, sizeof (NuxLayoutAccessiblePrivate));
 }
 
 static void
 nux_layout_accessible_init (NuxLayoutAccessible *layout_accessible)
 {
-  layout_accessible->priv = NUX_LAYOUT_ACCESSIBLE_GET_PRIVATE (layout_accessible);
 }
 
 AtkObject*

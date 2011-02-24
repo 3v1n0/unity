@@ -48,17 +48,35 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
+  _layout->SetHorizontalInternalMargin (12);
+
+  _search_icon = new IconTexture ("find", 32);
+  _layout->AddView (_search_icon, 0);
+
+  _layered_layout = new nux::LayeredLayout ();
+
+  _hint = new nux::StaticCairoText (" ");
+  _hint->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.5f));
+  _layered_layout->AddLayer (_hint);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
-  _pango_entry->SetMinimumWidth (200);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->SetMinimumHeight (30);
+  _layered_layout->AddLayer (_pango_entry);
 
+  _layered_layout->SetPaintAll (true);
+  _layered_layout->SetActiveLayerN (1);
 
-  _layout->AddView (_pango_entry, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _layout->SetVerticalExternalMargin (14);
+  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
+  _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
   SetCompositionLayout (_layout);
+
+  g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
+                    G_CALLBACK (OnFontChanged), this);
+  OnFontChanged (NULL, NULL, this);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -125,19 +143,10 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 }
 
 void
-PlacesSearchBar::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesSearchBar::PostLayoutManagement (long LayoutResult)
-{
-  return nux::View::PostLayoutManagement (LayoutResult);
-}
-
-void
-PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string)
+PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
+                                 guint       section_id,
+                                 const char *search_string,
+                                 bool        ignore_search)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -146,15 +155,25 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
   if (_entry)
   {
     // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
-    const gchar *search_template = _("Search %s");
+    const gchar *search_template = _("<span font_size='x-small' font_style='italic'>Search %s</span>");
     gchar       *res;
+    gchar       *tmp;
 
-    res = g_strdup_printf (search_template, _entry->GetName ());
+    tmp = g_markup_escape_text (entry->GetName (), -1);
+    res = g_strdup_printf (search_template, tmp);
+
+    _hint->SetText (res);
+
+    if (!ignore_search)
+    {
+      _entry->SetActiveSection (section_id);
+      _entry->SetSearch (search_string ? search_string : "", hints);
+    }
     
-    _entry->SetActiveSection (section_id);
-    _entry->SetSearch (search_string ? search_string : "", hints);
     _pango_entry->SetText (search_string ? search_string : "");
+    
     g_free (res);
+    g_free (tmp);
   }
   else
   {
@@ -165,12 +184,24 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry, guint section_id, const char
 void
 PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
+  bool is_empty;
+
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
   
   _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
                                         (GSourceFunc)&OnLiveSearchTimeout,
                                         this);
+
+  search_changed.emit (_pango_entry->GetText ().c_str ());
+
+
+  is_empty = g_strcmp0 (_pango_entry->GetText ().c_str (), "") == 0;
+  _hint->SetVisible (is_empty);
+
+  _hint->QueueDraw ();
+  _pango_entry->QueueDraw ();
+  QueueDraw ();
 }
 
 bool
@@ -191,6 +222,36 @@ PlacesSearchBar::EmitLiveSearch ()
     _entry->SetSearch (_pango_entry->GetText ().c_str (), hints);
   }
   _live_search_timeout = 0;
+}
+
+void
+PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self)
+{
+#define HOW_LARGE 10
+  GtkSettings          *settings;
+  gchar                *font_name = NULL;
+  PangoFontDescription *desc;
+  gint                  size;
+  gchar                *font_desc;
+
+  settings = gtk_settings_get_default ();
+  g_object_get (settings, "gtk-font-name", &font_name, NULL);
+
+  desc = pango_font_description_from_string (font_name);
+  self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
+
+  size = pango_font_description_get_size (desc);
+  size /= pango_font_description_get_size_is_absolute (desc) ? 1 : PANGO_SCALE;
+  self->_pango_entry->SetFontSize ( size + HOW_LARGE);
+
+  self->_pango_entry->SetFontOptions (gdk_screen_get_font_options (gdk_screen_get_default ()));
+
+  font_desc = g_strdup_printf ("%s %d", pango_font_description_get_family (desc), size + HOW_LARGE);
+  self->_hint->SetFont (font_desc);
+
+  pango_font_description_free (desc);
+  g_free (font_name);
+  g_free (font_desc);
 }
 
 static void
@@ -247,12 +308,13 @@ draw_rounded_rect (cairo_t* cr,
                radius,
                180.0f * G_PI / 180.0f,
                270.0f * G_PI / 180.0f);
+  cairo_close_path (cr);
 }
 
 void
 PlacesSearchBar::UpdateBackground ()
 {
-#define PADDING 8
+#define PADDING 14
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
@@ -272,15 +334,25 @@ PlacesSearchBar::UpdateBackground ()
   cairo_translate (cr, 0.5, 0.5);
   cairo_set_line_width (cr, 1.0);
 
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 1.0f);
-
   draw_rounded_rect (cr, 1.0f, x, y, RADIUS, width, height);
 
-  cairo_close_path (cr);
-
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.8f);
   cairo_fill_preserve (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.8f);
+  cairo_stroke (cr);
+
+  //FIXME: This is until we get proper glow
+  draw_rounded_rect (cr, 1.0f, x-1, y-1, RADIUS, width+2, height+2);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.4f);
+  cairo_stroke (cr);
+
+  draw_rounded_rect (cr, 1.0f, x-2, y-2, RADIUS, width+4, height+4);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.2f);
+  cairo_stroke (cr);
+
+  draw_rounded_rect (cr, 1.0f, x-3, y-3, RADIUS, width+6, height+6);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.1f);
   cairo_stroke (cr);
 
   cairo_destroy (cr);
@@ -298,14 +370,14 @@ PlacesSearchBar::UpdateBackground ()
     delete _bg_layer;
 
   nux::ROPConfig rop;
-  rop.Blend = false;                      // Disable the blending. By default rop.Blend is false.
+  rop.Blend = true;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
-                                     false,              // Write the alpha value of the texture to the destination buffer.
+                                     true,              // Write the alpha value of the texture to the destination buffer.
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );
 

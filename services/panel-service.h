@@ -20,6 +20,8 @@
 #define _PANEL_SERVICE_H_
 
 #include <glib-object.h>
+#include <libindicator/indicator.h>
+#include <libindicator/indicator-object.h>
 
 G_BEGIN_DECLS
 
@@ -64,33 +66,35 @@ struct _PanelServiceClass
   void (*_view_padding6) (void);
 };
 
-GType          panel_service_get_type      (void) G_GNUC_CONST;
+GType             panel_service_get_type      (void) G_GNUC_CONST;
 
-PanelService * panel_service_get_default   ();
+PanelService    * panel_service_get_default   ();
 
-PanelService * panel_service_get_default_with_indicators (GList *indicators);
+PanelService    * panel_service_get_default_with_indicators (GList *indicators);
 
-guint          panel_service_get_n_indicators (PanelService *self);
+guint             panel_service_get_n_indicators (PanelService *self);
 
-GVariant     * panel_service_sync          (PanelService *self);
+IndicatorObject * panel_service_get_indicator (PanelService *self, guint position);
 
-GVariant     * panel_service_sync_one      (PanelService *self,
-                                            const gchar  *indicator_id);
+GVariant        * panel_service_sync          (PanelService *self);
 
-void           panel_service_show_entry    (PanelService *self,
-                                            const gchar  *entry_id,
-                                            guint32       timestamp,
-                                            gint32        x,
-                                            gint32        y,
-                                            gint32        button);
+GVariant        * panel_service_sync_one      (PanelService *self,
+					       const gchar  *indicator_id);
 
-void           panel_service_scroll_entry   (PanelService *self,
-                                             const gchar  *entry_id,
-                                             gint32       delta);
+void              panel_service_show_entry    (PanelService *self,
+					       const gchar  *entry_id,
+					       guint32       timestamp,
+					       gint32        x,
+					       gint32        y,
+					       gint32        button);
 
-void           panel_service_get_last_xy   (PanelService  *self,
-                                            gint          *x,
-                                            gint          *y);
+void              panel_service_scroll_entry   (PanelService *self,
+						const gchar  *entry_id,
+						gint32       delta);
+
+void              panel_service_get_last_xy   (PanelService  *self,
+					       gint          *x,
+					       gint          *y);
 
 G_END_DECLS
 

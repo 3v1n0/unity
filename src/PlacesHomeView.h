@@ -21,14 +21,17 @@
 #define PLACES_HOME_VIEW_H
 
 #include <Nux/View.h>
+#include <Nux/Layout.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
 
-#include "Nux/GridHLayout.h"
+#include <Nux/GridHLayout.h>
 
 #include "PlacesTile.h"
+
+#include <gconf/gconf-client.h>
 
 class PlacesHomeView : public Introspectable, public nux::View
 {
@@ -40,9 +43,7 @@ public:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  void PreLayoutManagement ();
-  long PostLayoutManagement (long LayoutResult);
-  void OnTileClicked (PlacesTile *tile);
+  void Refresh ();
   
 protected:
   // Introspectable methods
@@ -59,12 +60,21 @@ private:
                              double   cornerRadius,
                              double   width,
                              double   height);
+  void OnShortcutClicked (PlacesTile *_tile);
+  static void OnKeyChanged (GConfClient    *client,
+                            guint           cnxn_id,
+                            GConfEntry     *entry,
+                            PlacesHomeView *self);
+  void CreateShortcutFromExec (const char *exec, 
+                               const char *name,
+                               const char *icon_hint);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::GridHLayout        *_layout;
-  int _last_width;
-  int _last_height;
+  int          _last_width;
+  int          _last_height;
+  GConfClient *_client;
 };
 
 

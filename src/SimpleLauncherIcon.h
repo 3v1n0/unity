@@ -35,8 +35,6 @@ public:
     
     void SetIconName (const char *name);
 
-    virtual void Activate ();
-
 protected:
     virtual void OnMouseDown (int button);
     virtual void OnMouseUp (int button);
@@ -48,6 +46,7 @@ private:
     
     char *m_IconName;
     nux::BaseTexture *m_Icon;
+    void ActivateLauncherIcon ();
 };
 
 #endif // BAMFLAUNCHERICON_H

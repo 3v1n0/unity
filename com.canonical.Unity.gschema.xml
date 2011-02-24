@@ -1,4 +1,17 @@
 <schemalist>
+  <enum id="form-factor-enum">
+    <value nick="Automatic" value="0" />
+    <value nick="Desktop" value="1" />
+    <value nick="Netbook" value="2" />
+  </enum>
+
+  <schema path="/desktop/unity/" id="com.canonical.Unity" gettext-domain="unity">
+    <key enum="form-factor-enum" name="form-factor">
+      <default>"Automatic"</default>
+      <summary>The form factor Unity should target.</summary>
+      <description>The form factor chosen will affect the size and appearance of the Dash, Launcher and also the Window Management behaviour.</description>
+    </key>
+  </schema>
 	<schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
       <default>[ 'ubiquity-gtkui.desktop', 'nautilus.desktop', 'firefox.desktop', 'ubuntuone-control-panel-gtk.desktop', 'tomboy.desktop' ]</default>
@@ -10,5 +23,12 @@
       <summary>Version of last migration done</summary>
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
-    </schema>
+  </schema>
+	<schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
+    <key type="as" name="systray-whitelist">
+      <default>[ 'JavaEmbeddedFrame', 'Wine', 'Skype' ]</default>
+      <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
+      <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
+    </key>
+  </schema>
 </schemalist>

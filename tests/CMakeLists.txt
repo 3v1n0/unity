@@ -14,6 +14,7 @@ pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
+     ${MAINTAINER_CFLAGS}
      "-DTESTDATADIR=${TESTDATADIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -75,6 +76,8 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/PanelStyle.cpp
+                ../src/PanelStyle.h
                 ../src/PanelView.cpp
                 ../src/PanelView.h
                 ../src/PanelIndicatorObjectView.cpp
@@ -83,6 +86,8 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectEntryView.h
             		../src/PanelTitlebarGrabAreaView.h
             		../src/PanelTitlebarGrabAreaView.cpp
+                ../src/PanelTray.cpp
+                ../src/PanelTray.h
                 ../src/IndicatorObjectFactory.h
                 ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectEntryProxy.h
@@ -98,6 +103,8 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
+                ../src/TimeMe.cpp
+                ../src/TimeMe.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
                 ../src/WindowButtons.cpp
@@ -108,20 +115,37 @@ add_executable (test-panel
                 ../src/ubus-server.h
                 )
 
+set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
+                          ../src/ubus-server.h
+                          ../src/IconLoader.cpp
+                          ../src/IconLoader.h
+                          ../src/IconTexture.cpp
+                          ../src/IconTexture.h
+                          ../src/Introspectable.cpp
+                          ../src/Introspectable.h
+                          ../src/PlacesSettings.cpp
+                          ../src/PlacesSettings.h
+                          ../src/PlacesTile.cpp
+                          ../src/PlacesTile.h
+                          ../src/PlacesSimpleTile.cpp
+                          ../src/PlacesSimpleTile.h
+                          ../src/TextureCache.h
+                          ../src/TextureCache.cpp
+                          ../src/TimeMe.cpp
+                          ../src/TimeMe.h
+                          ../src/StaticCairoText.cpp
+                          ../src/StaticCairoText.h
+                          ../src/UBusMessages.h
+                          )
 add_executable (test-places
                 TestPlaces.cpp
-                ../src/IconTexture.cpp
-                ../src/IconTexture.h
+                ${PLACES_COMMON_SOURCE}
                 ../src/PlacesController.cpp
                 ../src/PlacesController.h
                 ../src/PlacesHomeView.cpp
                 ../src/PlacesHomeView.h
                 ../src/PlacesSearchBar.cpp
                 ../src/PlacesSearchBar.h
-                ../src/PlacesSimpleTile.cpp
-                ../src/PlacesSimpleTile.h
-                ../src/PlacesTile.cpp
-                ../src/PlacesTile.h
                 ../src/PlacesResultsController.cpp
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h
@@ -130,9 +154,8 @@ add_executable (test-places
                 ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
-                ../src/UBusMessages.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
+                ../src/PlaceEntryHome.cpp
+                ../src/PlaceEntryRemote.h
                 ../src/PlaceEntryRemote.cpp
                 ../src/PlaceEntryRemote.h
                 ../src/PlaceEntry.h
@@ -143,61 +166,30 @@ add_executable (test-places
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
                 ../src/Place.h
-                ../src/StaticCairoText.cpp
-                ../src/StaticCairoText.h
-                ../src/ubus-server.cpp
-                ../src/ubus-server.h
                 )
 
 add_executable (test-places-tiles
                 TestPlacesTiles.cpp
-                ../src/PlacesTile.cpp
-                ../src/PlacesTile.h
-                ../src/PlacesSimpleTile.cpp
-                ../src/PlacesSimpleTile.h
-                ../src/StaticCairoText.cpp
-                ../src/StaticCairoText.h
-                ../src/IconTexture.cpp
-                ../src/IconTexture.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
+                ${PLACES_COMMON_SOURCE}
                 )
 
 
 add_executable (test-places-group
                 TestPlacesGroup.cpp
+                ${PLACES_COMMON_SOURCE}
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
-                ../src/IconTexture.cpp
-                ../src/IconTexture.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
-                ../src/StaticCairoText.cpp
-                ../src/StaticCairoText.h
-                ../src/PlacesTile.cpp
-                ../src/PlacesTile.h
-                ../src/PlacesSimpleTile.cpp
-                ../src/PlacesSimpleTile.h
                 )
 
 add_executable (test-places-results
                 TestPlacesResults.cpp
+                ${PLACES_COMMON_SOURCE}
                 ../src/PlacesResultsController.cpp
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h
                 ../src/PlacesResultsView.cpp
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
-                ../src/PlacesTile.cpp
-                ../src/PlacesTile.h
-                ../src/PlacesSimpleTile.cpp
-                ../src/PlacesSimpleTile.h
-                ../src/IconTexture.cpp
-                ../src/IconTexture.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
-                ../src/StaticCairoText.cpp
-                ../src/StaticCairoText.h
                 )
 
 add_executable (test-quicklist
@@ -218,6 +210,8 @@ add_executable (test-quicklist
                 ../src/QuicklistMenuItemSeparator.h
                 ../src/QuicklistView.cpp
                 ../src/QuicklistView.h
+                ../src/ubus-server.cpp
+                ../src/ubus-server.h
                 )
 
 add_executable (test-places-backend

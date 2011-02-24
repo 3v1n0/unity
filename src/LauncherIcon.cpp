@@ -29,6 +29,7 @@
 #include "Nux/MenuPage.h"
 #include "NuxCore/Color.h"
 
+#include "LauncherEntryRemoteModel.h"
 #include "LauncherIcon.h"
 #include "Launcher.h"
 
@@ -69,8 +70,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  _shortcut = 0;
   
   _emblem = 0;
+  _superkey_label = 0;
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
@@ -104,6 +107,9 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+
+  if (_superkey_label)
+    _superkey_label->UnReference ();
 }
 
 bool
@@ -139,6 +145,13 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
+    ActivateLauncherIcon ();
+}
+
+void
+LauncherIcon::OpenInstance ()
+{
+    OpenInstanceLauncherIcon ();
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -216,16 +229,27 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   GtkIconInfo *info;
   nux::BaseTexture *result;
   GError *error = NULL;
-  
-  theme = gtk_icon_theme_get_default ();
-      
+  GIcon *icon;
+
   if (!icon_name)
     icon_name = g_strdup (DEFAULT_ICON);
    
-  info = gtk_icon_theme_lookup_icon (theme,
-                                     icon_name,
-                                     size,
-                                     (GtkIconLookupFlags) 0);            
+  theme = gtk_icon_theme_get_default ();
+  icon = g_icon_new_for_string (icon_name, NULL);
+
+  if (G_IS_ICON (icon))
+  {
+    info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref (icon);
+  }
+  else
+  {   
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       icon_name,
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
   if (!info)
   {
     info = gtk_icon_theme_lookup_icon (theme,
@@ -236,13 +260,16 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
         
   if (gtk_icon_info_get_filename (info) == NULL)
   {
+    gtk_icon_info_free (info);
+
     info = gtk_icon_theme_lookup_icon (theme,
                                        DEFAULT_ICON,
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-  
+
   pbuf = gtk_icon_info_load_icon (info, &error);
+  gtk_icon_info_free (info);
 
   if (GDK_IS_PIXBUF (pbuf))
   {
@@ -311,6 +338,21 @@ nux::NString LauncherIcon::GetTooltipText()
 }
 
 void
+LauncherIcon::SetShortcut (guint64 shortcut)
+{
+  // only relocate a digit with a digit (don't overwrite other shortcuts)
+  if ((!_shortcut || (g_ascii_isdigit ((gchar)_shortcut)))
+        || !(g_ascii_isdigit ((gchar) shortcut)))
+    _shortcut = shortcut;
+}
+
+guint64
+LauncherIcon::GetShortcut ()
+{
+    return _shortcut;
+}
+
+void
 LauncherIcon::RecvMouseEnter ()
 {
   if (QuicklistManager::Default ()->Current ())
@@ -335,7 +377,7 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-void LauncherIcon::OpenQuicklist ()
+void LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
@@ -373,7 +415,10 @@ void LauncherIcon::OpenQuicklist ()
       _quicklist->AddMenuItem (item);
     }
   }
-    
+
+  if (default_to_first_item)
+    _quicklist->DefaultToFirstItem ();
+
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
   int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
@@ -661,6 +706,24 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   needs_redraw.emit (this);
 }
 
+void
+LauncherIcon::SetSuperkeyLabel (nux::BaseTexture* label)
+{
+  if (_superkey_label == label)
+    return;
+  
+  if (_superkey_label)
+    _superkey_label->UnReference ();
+  
+  _superkey_label = label;  
+}
+
+nux::BaseTexture*
+LauncherIcon::GetSuperkeyLabel ()
+{
+  return _superkey_label;
+}
+
 void 
 LauncherIcon::SetEmblemIconName (const char *name)
 {
@@ -751,6 +814,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
+  delete bitmap;
 
   SetEmblem (emblem);
 
@@ -771,7 +835,7 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
 {
   if (std::find (_entry_list.begin (), _entry_list.end (), remote) != _entry_list.end ())
     return;
-    
+  
   _entry_list.push_front (remote);
   
   remote->emblem_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemChanged));
@@ -782,6 +846,7 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   remote->emblem_visible_changed.connect   (sigc::mem_fun(this, &LauncherIcon::OnRemoteEmblemVisibleChanged));
   remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
   remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
+  
   
   if (remote->EmblemVisible ())
     OnRemoteEmblemVisibleChanged (remote);
@@ -798,10 +863,11 @@ LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
 {
   if (std::find (_entry_list.begin (), _entry_list.end (), remote) == _entry_list.end ())
     return;
-    
+  
   _entry_list.remove (remote);
   
-  printf ("Remove\n");
+  DeleteEmblem ();
+  SetQuirk (QUIRK_PROGRESS, false);
 }
 
 void

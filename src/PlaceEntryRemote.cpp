@@ -42,6 +42,7 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _name (NULL),
   _icon (NULL),
   _description (NULL),
+  _shortcut (10), // impossible shortcut
   _position (0),
   _mimetypes (NULL),
   _sensitive (true),
@@ -52,7 +53,11 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _proxy (NULL),
   _sections_model (NULL),
   _groups_model (NULL),
-  _results_model (NULL)
+  _results_model (NULL),
+  _global_results_model (NULL),
+  _global_groups_model (NULL),
+  _previous_search (NULL),
+  _previous_section (G_MAXUINT32)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -63,6 +68,7 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_free (_dbus_path);
   g_free (_icon);
   g_free (_description);
+  g_free (_previous_search);
   g_strfreev (_mimetypes);
   
   g_object_unref (_proxy);
@@ -70,6 +76,8 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_object_unref (_sections_model);
   g_object_unref (_groups_model);
   g_object_unref (_results_model);
+  g_object_unref (_global_results_model);
+  g_object_unref (_global_groups_model);
 }
 
 void
@@ -80,6 +88,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   gchar  *domain;
   gchar  *name;
   gchar  *description;
+  gchar  *shortcut_entry;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
   if (_dbus_path == NULL
@@ -120,6 +129,16 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   {
     _name = g_strdup (name);
     _description = g_strdup (description);
+  }
+  
+  if (g_key_file_has_key (key_file, group, "Shortcut", NULL))
+  {
+    shortcut_entry = g_key_file_get_string(key_file, group, "Shortcut", NULL);
+    if (strlen (shortcut_entry) == 1)
+      _shortcut = shortcut_entry[0];
+    else
+      g_warning ("Place %s has an uncompatible shortcut: %s", name, shortcut_entry);    
+    g_free (shortcut_entry);
   }
 
   /* Finally the two that should default to true */
@@ -162,6 +181,12 @@ const gchar *
 PlaceEntryRemote::GetDescription ()
 {
   return _description;
+}
+
+guint64
+PlaceEntryRemote::GetShortcut ()
+{
+  return _shortcut;
 }
 
 guint32
@@ -226,6 +251,12 @@ void
 PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
   GVariantBuilder *builder;
+
+  if (g_strcmp0 (_previous_search, search) == 0)
+    return;
+
+  g_free (_previous_search);
+  _previous_search = g_strdup (search);
   
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
@@ -244,6 +275,11 @@ PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hint
 void
 PlaceEntryRemote::SetActiveSection (guint32 section_id)
 {
+  if (_previous_section == section_id)
+    return;
+
+  _previous_section = section_id;
+
   g_dbus_proxy_call (_proxy,
                      "SetActiveSection",
                      g_variant_new ("(u)", (guint32)section_id),
@@ -257,15 +293,20 @@ PlaceEntryRemote::SetActiveSection (guint32 section_id)
 void
 PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
+  GVariantBuilder *builder;
+
+  builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
+
   /* FIXME: I'm ignoring hints because we don't use them currently */
   g_dbus_proxy_call (_proxy,
                      "SetGlobalSearch",
-                     g_variant_new ("(sa{ss})", search, NULL),
+                     g_variant_new ("(sa{ss})", search, builder),
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
                      NULL,
                      NULL,
                      NULL);
+  g_variant_builder_unref (builder);
 }
 
 DeeModel *
@@ -286,6 +327,17 @@ PlaceEntryRemote::GetResultsModel ()
   return _results_model;
 }
 
+DeeModel *
+PlaceEntryRemote::GetGlobalResultsModel ()
+{
+  return _global_results_model;
+}
+
+DeeModel *
+PlaceEntryRemote::GetGlobalGroupsModel ()
+{
+  return _global_groups_model;
+}
 
 /* Other methods */
 bool
@@ -335,7 +387,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _state_changed = true;
   }
   
-  if (g_strcmp0 (_icon, icon) != 0)
+  if (g_strcmp0 ("", icon) != 0 && g_strcmp0 (_icon, icon) != 0)
   {
     g_free (_icon);
     _icon = g_strdup (icon);
@@ -405,8 +457,29 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
   // FIXME: Spec says if global_renderer == "", then ShowInGlobal () == false, but currently
   //        both places return ""
 
-  // FIXME: Handle global groups model name
-  // FIXME: Handle global results model name
+  if (!DEE_IS_SHARED_MODEL (_global_groups_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_global_groups_model)), global_groups_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_global_groups_model))
+      g_object_unref (_global_groups_model);
+
+    _global_groups_model = dee_shared_model_new (global_groups_model);
+    dee_model_set_schema (_global_groups_model, "s", "s", "s", NULL);
+
+    _global_renderer_changed = true;
+  }
+
+  if (!DEE_IS_SHARED_MODEL (_global_results_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_global_results_model)), global_results_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_global_results_model))
+      g_object_unref (_global_results_model);
+
+    _global_results_model = dee_shared_model_new (global_results_model);
+    dee_model_set_schema (_global_results_model, "s", "s", "u", "s", "s", "s", NULL);
+
+    _global_renderer_changed = true;
+  }
   // FIXME: Handle global renderer hints
 
   if (_vis_changed)
@@ -416,7 +489,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     entry_renderer_changed.emit ();
 
   if (_global_renderer_changed)
-    global_renderer_changed.emit ();
+    global_renderer_changed.emit (this);
 
   // If this was the first time we know the path, let's do the Connect dance
   if (_dbus_path == NULL)

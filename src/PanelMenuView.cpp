@@ -25,10 +25,12 @@
 #include <Nux/TextureArea.h>
 
 #include "NuxGraphics/GLThread.h"
+#include "NuxGraphics/XInputWindow.h"
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
 #include "PanelMenuView.h"
+#include "PanelStyle.h"
 
 #include "WindowManager.h"
 
@@ -56,6 +58,7 @@ PanelMenuView::PanelMenuView (int padding)
   _title_tex (NULL),
   _is_inside (false),
   _is_maximized (false),
+  _is_own_window (false),
   _last_active_view (NULL)
 {
   WindowManager *win_manager;
@@ -85,6 +88,7 @@ PanelMenuView::PanelMenuView (int padding)
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
   _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
 
@@ -96,6 +100,8 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
+
+  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
 
   Refresh ();
 }
@@ -222,14 +228,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_maximized)
+  if (_is_own_window)
+  {
+
+  }
+  else if (_is_maximized)
   {
     if (!_is_inside && !_last_active_view)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
   {
-    if (_is_inside || _last_active_view)
+    if ((_is_inside || _last_active_view) && _entries.size ())
     {
       if (_gradient_texture == NULL)
       {
@@ -272,9 +282,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         }
         _gradient_texture->UnlockRect (0);
       }
+      guint alpha = 0, src = 0, dest = 0;
 
-      GfxContext.GetRenderStates ().SetBlend (true);
-      GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+      GfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+      GfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
       nux::TexCoordXForm texxform0;
       nux::TexCoordXForm texxform1;
@@ -288,8 +299,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::Color::White);
 
-      GfxContext.GetRenderStates ().SetBlend(false);
-
+      GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
       // is a slight loss of clarity. This fixes that
       geo.width = button_width * (factor - 1);
@@ -316,14 +326,17 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (_is_inside || _last_active_view)
+  if (!_is_own_window)
   {
-    _layout->ProcessDraw (GfxContext, force_draw);
-  }
+    if (_is_inside || _last_active_view)
+    {
+      _layout->ProcessDraw (GfxContext, force_draw);
+    }
 
-  if (_is_maximized)
-  {
-    _window_buttons->ProcessDraw (GfxContext, true);
+    if (_is_maximized)
+    {
+      _window_buttons->ProcessDraw (GfxContext, true);
+    }
   }
 
   GfxContext.PopClippingRectangle();
@@ -332,7 +345,21 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 gchar *
 PanelMenuView::GetActiveViewName ()
 {
-  gchar *label = NULL;
+  gchar         *label = NULL;
+  BamfWindow    *window;
+
+  _is_own_window = false;
+  
+  window = bamf_matcher_get_active_window (_matcher);
+  if (BAMF_IS_WINDOW (window))
+  {
+    std::list<Window> our_xids = nux::XInputWindow::NativeHandleList ();
+    std::list<Window>::iterator it;
+
+    it = std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window)));
+    if (it != our_xids.end ())
+      _is_own_window = true;
+  }
 
   if (_is_maximized)
   {
@@ -398,9 +425,11 @@ PanelMenuView::Refresh ()
   PangoFontDescription *desc = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
+  cairo_pattern_t      *linpat;
   char                 *font_description = NULL;
   GdkScreen            *screen = gdk_screen_get_default ();
   int                   dpi = 0;
+  const int             text_margin = 30;
 
   int  x = 0;
   int  y = 0;
@@ -445,6 +474,11 @@ PanelMenuView::Refresh ()
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
   x = _padding;
   y = 0;
 
@@ -453,17 +487,29 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
+    nux::Color col = PanelStyle::GetDefault ()->GetTextColor ();
+    float red = col.GetRed (), blue = col.GetBlue (), green = col.GetGreen ();
+
     pango_cairo_update_layout (cr, layout);
 
-    // Once for the homies that couldn't be here
-    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
-    cairo_move_to (cr, x, ((height - text_height)/2)-1);
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
+    y += (height - text_height)/2;
+    double startalpha = 1.0 - ((double)text_margin/(double)width);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f, 1.0f);
-    cairo_move_to (cr, x, (height - text_height)/2);
+    if (x+text_width >= width-1)
+    {
+        linpat = cairo_pattern_create_linear (x, y, width-1, y+text_height);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, red, green, blue);
+        cairo_pattern_add_color_stop_rgb (linpat, startalpha, red, green, blue);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
+        cairo_set_source(cr, linpat);
+        cairo_pattern_destroy(linpat);
+    }
+    else
+    {
+      cairo_set_source_rgb (cr, red, green, blue);
+    }
+    cairo_move_to (cr, x, y);
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
   }
@@ -493,7 +539,7 @@ PanelMenuView::Refresh ()
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
                                         nux::Color::White,
-                                        false, 
+                                        true, 
                                         rop);
 
   
@@ -509,7 +555,7 @@ PanelMenuView::Refresh ()
 void
 PanelMenuView::OnEntryRefreshed (PanelIndicatorObjectEntryView *view)
 {
-  ComputeChildLayout ();
+  QueueRelayout ();
 }
 
 void
@@ -543,8 +589,8 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   AddChild (view);
 
-  this->ComputeChildLayout ();
-  NeedRedraw ();  
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void
@@ -571,8 +617,8 @@ PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
       }
   }
 
-  this->ComputeChildLayout (); 
-  NeedRedraw ();
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void
@@ -605,7 +651,15 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
     _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
 
     if (_decor_map.find (xid) == _decor_map.end ())
+    {
       _decor_map[xid] = true;
+      
+      // if we've just started tracking this window and it is maximized, let's 
+      // make sure it's undecorated just in case it slipped by us earlier 
+      // (I'm looking at you, Chromium!)
+      if (_is_maximized)
+        WindowManager::Default ()->Undecorate (xid);
+    }
 
     // first see if we need to remove and old callback
     if (_name_changed_callback_id != 0)
@@ -764,6 +818,19 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
       WindowManager::Default ()->StartMove (bamf_window_get_xid (window), x, y);
     }
   }
+}
+
+void
+PanelMenuView::OnMouseMiddleClicked ()
+{
+  if (_is_maximized)
+  {
+    BamfWindow *window;
+
+    window = bamf_matcher_get_active_window (_matcher);
+    if (BAMF_IS_WINDOW (window))
+      WindowManager::Default ()->Lower (bamf_window_get_xid (window));
+  } 
 }
 
 // Introspectable

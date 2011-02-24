@@ -31,6 +31,7 @@
 #include "PlacesGroup.h"
 #include "PlacesSimpleTile.h"
 
+#include "PlacesSettings.h"
 
 PlacesResultsController::PlacesResultsController ()
 {
@@ -61,10 +62,10 @@ PlacesResultsController::GetView ()
 void
 PlacesResultsController::AddResultToGroup (const char *groupname,
                                            PlacesTile *tile,
-                                           const char *_id)
+                                           void       *_id)
 {
   PlacesGroup *group = _groups[groupname];
-
+  
   if (!group)
     {
       group = CreateGroup (groupname);
@@ -80,13 +81,15 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
   if (group->IsVisible () == false)
   {
     group->SetVisible (true);
-    _results_view->ReJiggyGroups ();
+    group->Relayout ();
   }
+
+  tile->QueueDraw ();
 }
 
 void
 PlacesResultsController::RemoveResultFromGroup (const char *groupname,
-                                                const char *_id)
+                                                void       *_id)
 {
   PlacesTile *tile = _tiles[_id];
   PlacesGroup *group = _groups[groupname];
@@ -100,18 +103,21 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
       if (group->GetLayout ()->GetChildren ().empty ())
       {
         group->SetVisible (false);
-        _results_view->ReJiggyGroups ();
+      }
+      else
+      {
+        group->Relayout ();
       }
     }
     else
     {
-      g_warning ("Unable to remove '%s' from group '%s': Unable to find tile",
+      g_warning ("Unable to remove '%p' from group '%s': Unable to find tile",
                  _id, groupname);
     }
   }
   else
   {
-    g_warning ("Unable to remove '%s' from group '%s': Unable to find group",
+    g_warning ("Unable to remove '%p' from group '%s': Unable to find group",
                _id, groupname);
   }
 
@@ -120,7 +126,7 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
 }
 
 void
-PlacesResultsController::RemoveResult (const char *_id)
+PlacesResultsController::RemoveResult (void *_id)
 {
   RemoveResultFromGroup (_tile_group_relations [_id].c_str (), _id);
 }
@@ -132,10 +138,13 @@ PlacesResultsController::Clear ()
 
   for (it = _groups.begin (); it != _groups.end (); ++it)
   {
-    PlacesGroup *group = static_cast <PlacesGroup *> (it->second);
-
-    _results_view->RemoveGroup (group);
-    group->UnReference ();
+    PlacesGroup *group = dynamic_cast <PlacesGroup *> (it->second);
+    
+    if (group)
+    {
+      _results_view->RemoveGroup (group);
+      group->UnReference ();
+    }
   }
 
   _groups.erase (_groups.begin (), _groups.end ());
@@ -144,20 +153,21 @@ PlacesResultsController::Clear ()
 }
 
 PlacesGroup *
-PlacesResultsController::CreateGroup (const char *groupname)
+PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
 {
-  g_debug ("CreateGroup: %s", groupname);
+  PlacesSettings *settings = PlacesSettings::GetDefault ();
 
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);
+  newgroup->SetEmblem (icon);
   newgroup->SetRowHeight (92);
   newgroup->SetItemDetail (1, 100);
   newgroup->SetExpanded (true);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (140, 90);
+  layout->SetChildrenSize (settings->GetDefaultTileWidth (), 100);
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (4);
@@ -171,7 +181,6 @@ PlacesResultsController::CreateGroup (const char *groupname)
 
   _groups[groupname] = newgroup;
   _results_view->AddGroup (newgroup);
-  _results_view->ReJiggyGroups ();
 
   return newgroup;
 }

@@ -21,30 +21,36 @@
 
 #include "Nux/Nux.h"
 #include "NuxGraphics/GLThread.h"
+#include "IconLoader.h"
 #include "IconTexture.h"
+#include "TextureCache.h"
 
 #include <glib.h>
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
-#define DEFAULT_ICON "application-default-icon"
+#define DEFAULT_ICON "text-x-preview"
 
 IconTexture::IconTexture (const char *icon_name, unsigned int size)
 : TextureArea (NUX_TRACKER_LOCATION),
-  _icon_name (NULL)
+  _icon_name (NULL),
+  _size (size),
+  _texture_cached (NULL),
+  _texture_width (0),
+  _texture_height (0)
 {
-  if (_icon_name && strlen (_icon_name) > 3)
-    _icon_name = g_strdup ("folder");
-  else
-    _icon_name = g_strdup (icon_name);
+  _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
-  _size = size;
-  Refresh ();
+  if (!g_strcmp0 (_icon_name, "") == 0)
+    LoadIcon ();
 }
 
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
+  
+  if (_texture_cached)
+    _texture_cached->UnReference ();
 }
 
 void
@@ -53,7 +59,7 @@ IconTexture::SetByIconName (const char *icon_name, unsigned int size)
   g_free (_icon_name);
   _icon_name = g_strdup (icon_name);
   _size = size;
-  Refresh ();
+  LoadIcon ();
 }
 
 void
@@ -62,145 +68,112 @@ IconTexture::SetByFilePath (const char *file_path, unsigned int size)
   g_free (_icon_name);
   _icon_name = g_strdup (file_path);
   _size = size;
-  Refresh ();
+
+  LoadIcon ();
 }
 
 void
-IconTexture::Refresh ()
+IconTexture::LoadIcon ()
 {
-  char   *file_path = NULL;
-  char   *stripped_icon_name = NULL;
-  char  **temp = NULL;
-  GError *error = NULL;
   GIcon  *icon;
 
   icon = g_icon_new_for_string (_icon_name, NULL);
 
   if (G_IS_ICON (icon))
   {
-    if (G_IS_THEMED_ICON (icon))
-    {
-      GtkIconInfo *info;
-
-      info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
-                                             icon,
-                                             _size,
-                                             (GtkIconLookupFlags)0);
-      if (info)
-      {
-        file_path = g_strdup (gtk_icon_info_get_filename (info));
-
-        gtk_icon_info_free (info);
-      }
-      else
-      {
-        gint length;        // Some desktop files put the extension in the icon name for themed icon.
-        // Try to remove it
-        g_object_unref (icon);
-        temp = g_strsplit (_icon_name, ".", -1);
-        length = g_strv_length(temp);
-        g_free (temp [length - 1]);
-        temp[length-1] = NULL;
-        stripped_icon_name = g_strjoinv (".", temp);
-        g_strfreev (temp);
-        
-        if (stripped_icon_name)
-        {
-          icon = g_icon_new_for_string (stripped_icon_name, NULL);
-          info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (),
-                                                 icon,
-                                                 _size,
-                                                 (GtkIconLookupFlags)0);
-        }
-        if (info)
-        {
-          _icon_name = g_strdup (stripped_icon_name); // avoid further seek
-          file_path = g_strdup (gtk_icon_info_get_filename (info));
-          gtk_icon_info_free (info);
-        }
-        else
-          g_warning ("Cannot find themed icon %s", _icon_name);
-        g_free (stripped_icon_name);
-      }
-    }
-    else if (G_IS_FILE_ICON (icon))
-    {
-      file_path = g_file_get_path (g_file_icon_get_file (G_FILE_ICON (icon)));
-    }
-    else
-      g_warning ("Unsupported GIcon: %s", _icon_name);
-
+    IconLoader::GetDefault ()->LoadFromGIconString (_icon_name,
+                                                    _size,
+                                                    sigc::mem_fun (this, &IconTexture::IconLoaded));
     g_object_unref (icon);
   }
-  else if (g_file_test (_icon_name, G_FILE_TEST_EXISTS))
+  else
   {
-    file_path = g_strdup (_icon_name);
+    IconLoader::GetDefault ()->LoadFromIconName (_icon_name,
+                                                 _size,
+                                                 sigc::mem_fun (this, &IconTexture::IconLoaded));
   }
+}
 
-  if (!file_path)
+void
+IconTexture::CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture)
+{
+  nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf_cached, true);
+  *texture = texture2D;
+}
+
+void
+IconTexture::Refresh (GdkPixbuf *pixbuf)
+{
+  TextureCache *cache = TextureCache::GetDefault ();
+  char *id = NULL;
+
+  _pixbuf_cached = pixbuf;
+
+  // Cache the pixbuf dimensions so we scale correctly
+  _texture_width = gdk_pixbuf_get_width (pixbuf);
+  _texture_height = gdk_pixbuf_get_height (pixbuf);
+
+  // Try and get a texture from the texture cache
+  id = g_strdup_printf ("IconTexture.%s", _icon_name);
+  if (_texture_cached)
+    _texture_cached->UnReference ();
+
+  _texture_cached = cache->FindTexture (id,
+                                        _texture_width,
+                                        _texture_height,
+                                        sigc::mem_fun (this, &IconTexture::CreateTextureCallback));
+  _texture_cached->Reference ();
+
+  QueueDraw ();
+
+  g_free (id);
+}
+
+void
+IconTexture::IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf)
+{
+  if (GDK_IS_PIXBUF (pixbuf))
   {
-
-    GtkIconTheme *theme;
-    GtkIconInfo *info;
-
-    theme = gtk_icon_theme_get_default ();
-
-    if (!_icon_name)
-    {
-      g_message ("No icon_name defined, using default icon of the current theme");
-      _icon_name = g_strdup (DEFAULT_ICON);
-    }
-    info = gtk_icon_theme_lookup_icon (theme,
-                                       _icon_name,
-                                       _size,
-                                       (GtkIconLookupFlags) 0);
-    if (!info || gtk_icon_info_get_filename (info) == NULL)
-    {
-      g_message ("Could not find icon %s: using default icon", _icon_name);
-      info = gtk_icon_theme_lookup_icon (theme,
-                                         DEFAULT_ICON,
-                                         _size,
-                                         (GtkIconLookupFlags) 0);
-    }
-
-    file_path = g_strdup (gtk_icon_info_get_filename (info));
+    Refresh (pixbuf);
   }
+  else
+  {
+    SetByIconName (DEFAULT_ICON, _size);
+  }
+}
 
-  _pixbuf = gdk_pixbuf_new_from_file_at_size (file_path, _size, _size, &error);
+void
+IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  GfxContext.PushClippingRectangle (geo);
   
-  if (error == NULL)
+  if (_texture_cached)
   {
-    nux::BaseTexture *texture2D = nux::CreateTexture2DFromPixbuf (_pixbuf, true);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                                              texxform,
-                                                              nux::Color::White,
-                                                              true,
-                                                              rop);
-
-    SetPaintLayer(texture_layer);
-    texture2D->UnReference ();
-    g_object_unref (_pixbuf);
-  }
-  else
-  {
-    g_warning ("Unable to load '%s' from icon theme: %s",
-               _icon_name,
-               error ? error->message : "unknown");
-    g_error_free (error);
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _texture_width)/2),
+                         geo.y + ((geo.height - _texture_height)/2),
+                         _texture_width,
+                         _texture_height,
+                         _texture_cached->GetDeviceTexture (),
+                         texxform,
+                         nux::Color::White);
   }
 
-  SetMinMaxSize (_size, _size);
-  NeedRedraw ();
+  GfxContext.PopClippingRectangle ();
+}
 
-  g_free (file_path);
+void
+IconTexture::GetTextureSize (int *width, int *height)
+{
+  if (width)
+    *width = _texture_width;
+  if (height)
+    *height = _texture_height;
 }
 
 const gchar*
@@ -219,6 +192,5 @@ IconTexture::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-  g_variant_builder_add (builder, "{sv}", "have-pixbuf", g_variant_new_boolean (GDK_IS_PIXBUF (_pixbuf)));
   g_variant_builder_add (builder, "{sv}", "iconname", g_variant_new_string (_icon_name));
 }

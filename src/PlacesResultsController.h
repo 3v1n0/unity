@@ -41,12 +41,13 @@ public:
 
   void AddResultToGroup      (const char *groupname,
                               PlacesTile *tile,
-                              const char *id);
-  void RemoveResult          (const char *id);
+                              void       *id);
+  void RemoveResult          (void       *id);
   void RemoveResultFromGroup (const char *groupname,
-                              const char *_id);
+                              void       *_id);
   void Clear                 ();
-  PlacesGroup  *CreateGroup  (const char *groupname);
+  PlacesGroup  *CreateGroup  (const char *groupname,
+                              const char *icon="");
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
@@ -54,9 +55,8 @@ protected:
 private:
   PlacesResultsView *_results_view;
   std::map<std::string, PlacesGroup *>   _groups;
-  std::map<std::string, PlacesTile *>    _tiles;
-  std::map<std::string, std::string>     _tile_group_relations;
-
+  std::map<void *, PlacesTile *>    _tiles;
+  std::map<void *, std::string>     _tile_group_relations;
 };
 
 #endif // PLACES_RESULTS_CONTROLLER_H

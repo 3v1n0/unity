@@ -50,13 +50,14 @@ public:
   virtual const gchar * GetName        () = 0;
   virtual const gchar * GetIcon        () = 0;
   virtual const gchar * GetDescription () = 0;
-
+  virtual       guint64 GetShortcut    () = 0;
+  
   // For ordering entries within a place
   virtual guint32        GetPosition  () = 0;
 
   // For DND, what can this entry handle
   virtual const gchar ** GetMimetypes () = 0;
-
+  
   virtual const std::map<gchar *, gchar *>& GetHints () = 0;
 
   // Whether the entry is sensitive to input (clicks/DND)
@@ -84,6 +85,9 @@ public:
   virtual DeeModel * GetGroupsModel () = 0;
   virtual DeeModel * GetResultsModel () = 0;
 
+  virtual DeeModel * GetGlobalResultsModel () = 0;
+  virtual DeeModel * GetGlobalGroupsModel () = 0;
+
   // Signals
 
   sigc::signal<void, bool>                    active_changed;
@@ -109,7 +113,7 @@ public:
   sigc::signal<void>                          entry_renderer_changed;
   
   // This is not important outside of a global search aggregator
-  sigc::signal<void>                          global_renderer_changed;
+  sigc::signal<void, PlaceEntry *>            global_renderer_changed;
 };
 
 #endif // PLACE_ENTRY_H

@@ -48,13 +48,13 @@ public:
     _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
-    PlacesView *view = new PlacesView ();
-    view->SetMinMaxSize(938, 500);
-    layout->AddView(view, 1, nux::eCenter, nux::eFix);
-
     _factory = PlaceFactory::GetDefault ();
     PopulateEntries ();
     _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
+    
+    PlacesView *view = new PlacesView (_factory);
+    view->SetMinMaxSize(938, 500);
+    layout->AddView(view, 1, nux::eCenter, nux::eFix);
 
     layout->SetContentDistribution(nux::eStackCenter);
     nux::GetGraphicsThread()->SetLayout (layout);

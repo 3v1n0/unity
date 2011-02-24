@@ -35,17 +35,27 @@ public:
 
   void SetByIconName (const char *icon_name, unsigned int size);
   void SetByFilePath (const char *file_path, unsigned int size);
+  void GetTextureSize (int *width, int *height);
 
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  void Refresh ();
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture);
+  void LoadIcon ();
+  void Refresh (GdkPixbuf *pixbuf);
+  void IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf);
 
   char *_icon_name;
   unsigned int _size;
-  GdkPixbuf *_pixbuf;
+
+  GdkPixbuf        *_pixbuf_cached;
+  nux::BaseTexture *_texture_cached;
+  int               _texture_width;
+  int               _texture_height;
 };
 
 #endif // ICON_TEXTURE_H

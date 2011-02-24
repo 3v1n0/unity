@@ -41,32 +41,21 @@ static void          unity_launcher_icon_accessible_initialize (AtkObject *acces
 static const gchar * unity_launcher_icon_accessible_get_name   (AtkObject *obj);
 
 
-#define UNITY_LAUNCHER_ICON_ACCESSIBLE_GET_PRIVATE(obj)                 \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_LAUNCHER_ICON_ACCESSIBLE, UnityLauncherIconAccessiblePrivate))
-
 G_DEFINE_TYPE (UnityLauncherIconAccessible, unity_launcher_icon_accessible,  NUX_TYPE_OBJECT_ACCESSIBLE)
-
-struct _UnityLauncherIconAccessiblePrivate
-{
-};
 
 static void
 unity_launcher_icon_accessible_class_init (UnityLauncherIconAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = unity_launcher_icon_accessible_initialize;
   atk_class->get_name = unity_launcher_icon_accessible_get_name;
-
-  g_type_class_add_private (gobject_class, sizeof (UnityLauncherIconAccessiblePrivate));
 }
 
 static void
 unity_launcher_icon_accessible_init (UnityLauncherIconAccessible *launcher_icon_accessible)
 {
-  launcher_icon_accessible->priv = UNITY_LAUNCHER_ICON_ACCESSIBLE_GET_PRIVATE (launcher_icon_accessible);
 }
 
 AtkObject*
