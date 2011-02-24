@@ -87,7 +87,7 @@ PlaceEntryHome::OnPlaceEntryAdded (PlaceEntry *entry)
     iter = dee_model_append (_groups_model, "", text, entry->GetIcon ());
     _model_to_group[entry->GetGlobalResultsModel ()] = dee_model_get_position (_groups_model,
                                                                                iter);
-
+    _model_to_group_model[entry->GetGlobalResultsModel ()] = entry->GetGlobalGroupsModel ();
     g_signal_connect (entry->GetGlobalResultsModel (), "row-added",
                       (GCallback)&PlaceEntryHome::OnResultAdded, this);
     g_signal_connect (entry->GetGlobalResultsModel (), "row-removed",
@@ -110,6 +110,10 @@ PlaceEntryHome::RefreshEntry (PlaceEntry *entry)
 void
 PlaceEntryHome::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self)
 {
+  // FIXME: This is a hack
+  if (dee_model_get_uint32 (model, iter, RESULT_GROUP_ID) == 5)
+    return;
+
   dee_model_append (self->_results_model,
                     dee_model_get_string (model, iter, RESULT_URI),
                     dee_model_get_string (model, iter, RESULT_ICON),
@@ -125,6 +129,10 @@ PlaceEntryHome::OnResultRemoved (DeeModel *model, DeeModelIter *it, PlaceEntryHo
 {
   DeeModelIter *iter, *end;
   const char   *uri;
+
+  // FIXME: This is a hack
+  if (dee_model_get_uint32 (model, iter, RESULT_GROUP_ID) == 5)
+    return;
 
   uri = dee_model_get_string (model, it, RESULT_URI);
 
