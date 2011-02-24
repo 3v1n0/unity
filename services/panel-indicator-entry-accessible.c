@@ -33,6 +33,7 @@ struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
   PanelService         *service;
+  gboolean              active;
 };
 
 static void
@@ -47,6 +48,11 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
   if (g_str_equal (s, entry_id))
     {
       adding = TRUE;
+      piea->priv->active = TRUE;
+    }
+  else
+    {
+      piea->priv->active = FALSE;
     }
 
   /* Notify AT's about the states' changes */
@@ -102,6 +108,7 @@ panel_indicator_entry_accessible_init (PanelIndicatorEntryAccessible *piea)
   piea->priv = GET_PRIVATE (piea);
 
   /* Set up signals for listening to service changes */
+  piea->priv->active = FALSE;
   piea->priv->service = panel_service_get_default ();
   g_signal_connect (piea->priv->service, "entry-activated",
 		    G_CALLBACK (on_entry_activated_cb), piea);
@@ -185,8 +192,11 @@ static AtkStateSet *
 panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
 {
   AtkStateSet *state_set;
+  PanelIndicatorEntryAccessible *piea;
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible), NULL);
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
 
   /* Retrieve state_set from parent_class */
   state_set = ATK_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->ref_state_set (accessible);
@@ -196,6 +206,19 @@ panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
   atk_state_set_add_state (state_set, ATK_STATE_HORIZONTAL);
   atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
   atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+
+  if (piea->priv->active)
+    {
+      atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
+      atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
+      atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
+    }
+  else
+    {
+      atk_state_set_remove_state (state_set, ATK_STATE_ACTIVE);
+      atk_state_set_remove_state (state_set, ATK_STATE_FOCUSED);
+      atk_state_set_remove_state (state_set, ATK_STATE_SHOWING);
+    }
 
   return state_set;
 }

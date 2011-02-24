@@ -25,9 +25,10 @@ G_DEFINE_TYPE(PanelIndicatorAccessible, panel_indicator_accessible, ATK_TYPE_OBJ
 #define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ACCESSIBLE, PanelIndicatorAccessiblePrivate))
 
 /* AtkObject methods */
-static void       panel_indicator_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint       panel_indicator_accessible_get_n_children (AtkObject *accessible);
-static AtkObject *panel_indicator_accessible_ref_child      (AtkObject *accessible, gint i);
+static void         panel_indicator_accessible_initialize     (AtkObject *accessible, gpointer data);
+static gint         panel_indicator_accessible_get_n_children (AtkObject *accessible);
+static AtkObject   *panel_indicator_accessible_ref_child      (AtkObject *accessible, gint i);
+static AtkStateSet *panel_indicator_accessible_ref_state_set  (AtkObject *accessible);
 
 struct _PanelIndicatorAccessiblePrivate
 {
@@ -72,6 +73,7 @@ panel_indicator_accessible_class_init (PanelIndicatorAccessibleClass *klass)
   atk_class->initialize = panel_indicator_accessible_initialize;
   atk_class->get_n_children = panel_indicator_accessible_get_n_children;
   atk_class->ref_child = panel_indicator_accessible_ref_child;
+  atk_class->ref_state_set = panel_indicator_accessible_ref_state_set;
 
   g_type_class_add_private (object_class, sizeof (PanelIndicatorAccessiblePrivate));
 }
@@ -188,4 +190,19 @@ panel_indicator_accessible_ref_child (AtkObject *accessible, gint i)
   g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia), NULL);
 
   return g_object_ref (g_slist_nth_data (pia->priv->a11y_children, i));
+}
+
+static AtkStateSet *
+panel_indicator_accessible_ref_state_set (AtkObject *accessible)
+{
+  AtkStateSet *state_set;
+
+  g_return_val_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (accessible), NULL);
+
+  /* Retrieve state_set from parent_class */
+  state_set = ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->ref_state_set (accessible);
+
+  atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+
+  return state_set;
 }
