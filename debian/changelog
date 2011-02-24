@@ -1,6 +1,35 @@
 unity (3.4.6-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - dash times out (LP: #662618)
+    - possible memory leak in compiz when using places, dashboard
+      (LP:#720446)
+    - compiz crashed with SIGSEGV in IconTexture::~IconTexture() (LP: #721907)
+    - dash - search string not always taken into account (LP: #701569)
+    - Unity allows you to Quit itself (LP: #705536)
+    - invisible window border problems (LP: #710271)
+    - Slowliness in the file places (LP: #710791)
+    - add super shortcuts to the launcher - logic (LP: #721264)
+    - key navigation doesn't activate trash, keys, expo or places
+      (LP:#723141)
+    - Super-shortcuts for apps, files, and workspace switcher (LP: #617356)
+    - New launcher tile super key overlay aesthetic (LP: #646712)
+    - add cursor-key navigation to quicklists (LP: #701543)
+    - Super key should open Dash (LP: #706713)
+    - Dash view should use "Prefferred Applications" icons where appropriate
+      (LP: #708479)
+    - some partitions appear with questionmark icon (LP: #710809)
+    - Unity wrongly resizes thumbnails after first opening of Files place
+      (LP:#721123)
+    - Change the fading and showing curve effect when hovering the bfb
+      (LP:#721125)
+    - Recent files appear duplicated in the Dash (LP: #646758)
+    - All Applications tab only shows first 100 applications (LP: #660979)
+    - slide animation typo in unity configuration (LP: #723354)
+    - Place icons should be in their respective packages (LP: #672447)
+    - Trash right click menu is positioned incorrectly (LP: #718880)
+    - Require to use gconf to check on unity and the panel-service if the
+      accessibility should be enabled (LP: #723699)
   * debian/control:
     - dep on latest nux
 
