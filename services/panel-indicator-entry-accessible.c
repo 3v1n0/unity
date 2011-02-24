@@ -92,11 +92,18 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
   if (GTK_IS_LABEL (piea->priv->entry->label))
     {
       atk_object_set_role (accessible, ATK_ROLE_LABEL);
-      atk_object_set_name (accessible, gtk_label_get_text (piea->priv->entry->label));
+      atk_object_set_name (accessible,
+			   piea->priv->entry->accessible_desc ? 
+			   piea->priv->entry->accessible_desc :
+			   gtk_label_get_text (piea->priv->entry->label));
     }
   if (GTK_IS_IMAGE (piea->priv->entry->image))
     {
       atk_object_set_role (accessible, ATK_ROLE_IMAGE);
+      if (piea->priv->entry->accessible_desc != NULL)
+        {
+ 	  atk_object_set_name (accessible, piea->priv->entry->accessible_desc);
+	}
     }
 }
 

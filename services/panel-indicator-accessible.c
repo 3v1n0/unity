@@ -147,7 +147,6 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);
 
   pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
-  atk_object_set_name (accessible, _("An indicator"));
   atk_object_set_role (accessible, ATK_ROLE_PANEL);
 
   /* Setup the indicator object */
