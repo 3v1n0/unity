@@ -153,13 +153,14 @@ PlacesResultsController::Clear ()
 }
 
 PlacesGroup *
-PlacesResultsController::CreateGroup (const char *groupname)
+PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
 {
   PlacesSettings *settings = PlacesSettings::GetDefault ();
 
   PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);
+  newgroup->SetEmblem (icon);
   newgroup->SetRowHeight (92);
   newgroup->SetItemDetail (1, 100);
   newgroup->SetExpanded (true);

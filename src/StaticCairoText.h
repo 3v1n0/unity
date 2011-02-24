@@ -106,7 +106,7 @@ namespace nux
 
       int            _pre_layout_width;
       int            _pre_layout_height;
-
+      
       void GetTextExtents (const TCHAR* font,
                            int&         width,
                            int&         height);

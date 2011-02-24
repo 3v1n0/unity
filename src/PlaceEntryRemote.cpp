@@ -379,7 +379,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _state_changed = true;
   }
   
-  if (g_strcmp0 (_icon, icon) != 0)
+  if (g_strcmp0 ("", icon) != 0 && g_strcmp0 (_icon, icon) != 0)
   {
     g_free (_icon);
     _icon = g_strdup (icon);

@@ -36,6 +36,8 @@
 #include <sigc++/functors/ptr_fun.h>
 #include <sigc++/functors/mem_fun.h>
 
+#include "IconTexture.h"
+
 class PlacesGroup : public nux::View
 {
 public:
@@ -63,6 +65,7 @@ protected:
   unsigned int _visible_items;
 
   nux::Layout *_content;
+  IconTexture  *_icon_texture;
   nux::VLayout *_group_layout;
   nux::HLayout *_header_layout;
 

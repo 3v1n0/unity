@@ -178,7 +178,11 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   {
     _results_controller->CreateGroup (dee_model_get_string (groups,
                                                             iter,
-                                                            PlaceEntry::GROUP_NAME));
+                                                            PlaceEntry::GROUP_NAME),
+                                      dee_model_get_string (groups,
+                                                            iter,
+                                                            PlaceEntry::GROUP_ICON));
+    g_debug ("%s", dee_model_get_string (groups, iter, PlaceEntry::GROUP_ICON));
     iter = dee_model_next (groups, iter);
   }
 
@@ -228,7 +232,12 @@ PlacesView::GetResultsController ()
 void
 PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+  self->_results_controller->CreateGroup (dee_model_get_string (model,
+                                                                iter,
+                                                                PlaceEntry::GROUP_NAME),
+                                          dee_model_get_string (model,
+                                                                iter,
+                                                                PlaceEntry::GROUP_ICON));
 }
 
 
