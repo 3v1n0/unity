@@ -107,6 +107,9 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+
+  if (_superkey_label)
+    _superkey_label->UnReference ();
 }
 
 bool

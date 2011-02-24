@@ -38,6 +38,9 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define MAX_SUPERKEY_LABELS 10
+#define LAUNCHER_ICON_SIZE  54
+
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -435,7 +438,7 @@ private:
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
 
-  nux::BaseTexture* _superkey_labels[10];
+  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;

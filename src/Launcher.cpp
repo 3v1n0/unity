@@ -292,16 +292,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
-    _superkey_labels[0]     = cairoToTexture2D ('1', 54, 54);
-    _superkey_labels[1]     = cairoToTexture2D ('2', 54, 54);
-    _superkey_labels[2]     = cairoToTexture2D ('3', 54, 54);
-    _superkey_labels[3]     = cairoToTexture2D ('4', 54, 54);
-    _superkey_labels[4]     = cairoToTexture2D ('5', 54, 54);
-    _superkey_labels[5]     = cairoToTexture2D ('6', 54, 54);
-    _superkey_labels[6]     = cairoToTexture2D ('7', 54, 54);
-    _superkey_labels[7]     = cairoToTexture2D ('8', 54, 54);
-    _superkey_labels[8]     = cairoToTexture2D ('9', 54, 54);
-    _superkey_labels[9]     = cairoToTexture2D ('0', 54, 54);
+    for (int i = 0; i < MAX_SUPERKEY_LABELS - 1; i++)
+      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
+    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -362,7 +355,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
 Launcher::~Launcher()
 {
-
+  for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+  {
+    if (_superkey_labels[i])
+      _superkey_labels[i]->UnReference ();
+  }
 }
 
 /* Introspection */
@@ -441,12 +438,17 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName = NULL;
+  double                label_x  = 18.0f;
+  double                label_y  = 18.0f;
+  double                label_w  = 18.0f;
+  double                label_h  = 18.0f;
+  double                label_r  = 3.0f;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
   cairo_scale (cr, 1.0f, 1.0f);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  DrawRoundedRectangle (cr, 1.0f, 18.0f, 18.0f, 3.0f, 18.0f, 18.0f);
+  DrawRoundedRectangle (cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.65f);
   cairo_fill (cr);
 
@@ -459,12 +461,13 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
 
   PangoRectangle logRect;
-  pango_layout_get_extents (layout, NULL, &logRect);
+  PangoRectangle inkRect;
+  pango_layout_get_extents (layout, &inkRect, &logRect);
 
   /* position and paint text */
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  double x = 18.0f - ((logRect.width / PANGO_SCALE) - 18.0f) / 2.0f;
-  double y = 17.0f - ((logRect.height / PANGO_SCALE) - 18.0f) / 2.0f;
+  double x = label_x - ((logRect.width / PANGO_SCALE) - label_w) / 2.0f;
+  double y = label_y - ((logRect.height / PANGO_SCALE) - label_h) / 2.0f - 1;
   cairo_move_to (cr, x, y);
   pango_cairo_show_layout (cr, layout);
 
@@ -1805,7 +1808,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
    guint64 shortcut = icon->GetShortcut ();
     if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
-      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, 54, 54));
+      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE));
 
     AddChild (icon);
 }
