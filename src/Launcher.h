@@ -38,6 +38,11 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define SUPER_TAP_DURATION  250
+
+#define MAX_SUPERKEY_LABELS 10
+#define LAUNCHER_ICON_SIZE  54
+
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -121,6 +126,8 @@ public:
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
   
+  void CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  
   nux::BaseWindow* GetParent () { return _parent; };
 
   static void SetTimeStruct (struct timespec *timer, struct timespec *sister = 0, int sister_relation = 0);
@@ -137,10 +144,10 @@ public:
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
-  
 
   void startKeyNavMode ();
   void exitKeyNavMode ();
+  void leaveKeyNavMode ();
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
 protected:
@@ -170,6 +177,7 @@ private:
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_TAP_SUPER,
     
     TIME_LAST
   } LauncherActionTimes;
@@ -215,6 +223,9 @@ private:
 
   bool IconNeedsAnimation  (LauncherIcon *icon, struct timespec const &current);
   bool AnimationInProgress ();
+
+  void SetActionState (LauncherActionState actionstate);
+  LauncherActionState GetActionState(); 
 
   void EnsureHoverState ();
   void EnsureHiddenState ();
@@ -325,6 +336,9 @@ private:
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
+  
+  float GetAutohidePositionMin ();
+  float GetAutohidePositionMax ();
 
   virtual void PreLayoutManagement();
   virtual long PostLayoutManagement(long LayoutResult);
@@ -332,7 +346,21 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
-  
+
+  void
+  DrawRoundedRectangle (cairo_t* cr,
+                        double   aspect,
+                        double   x,
+                        double   y,
+                        double   cornerRadius,
+                        double   width,
+                        double   height);
+
+  nux::BaseTexture*
+  cairoToTexture2D (const char label,
+                    int        width,
+                    int        height);
+
   std::list<char *> StringToUriList (char * input);
 
   nux::HLayout* m_Layout;
@@ -411,6 +439,8 @@ private:
   nux::BaseTexture* _arrow_rtl;
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
+
+  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;

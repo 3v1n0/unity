@@ -247,6 +247,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
+  delete bitmap;
 
   // draw normal, enabled version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -275,6 +276,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   _normalTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _normalTexture[1]->Update (bitmap);
+  delete bitmap;
 
   // draw active/prelight, unchecked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -305,6 +307,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
+  delete bitmap;
 
   // draw active/prelight, unchecked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -338,6 +341,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
 
   _prelightTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[1]->Update (bitmap);
+  delete bitmap;
 
   // finally clean up
   delete _cairoGraphics;

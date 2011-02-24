@@ -50,6 +50,7 @@ public:
     
     iterator begin ();
     iterator end ();
+    iterator at (int index);
     reverse_iterator rbegin ();
     reverse_iterator rend ();
     
