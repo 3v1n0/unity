@@ -64,7 +64,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   _layered_layout->SetActiveLayer (_home_view);
 
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
@@ -405,6 +405,12 @@ PlacesView::CloseRequest (GVariant *data, PlacesView *self)
   self->SetActiveEntry (NULL, 0, "");
 }
 
+nux::TextEntry*
+PlacesView::GetTextEntryView ()
+{
+  return _search_bar->_pango_entry;
+}
+
 //
 // Introspection
 //
@@ -444,3 +450,4 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
   g_free (id);
   g_free (search_string);
 }
+

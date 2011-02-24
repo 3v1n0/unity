@@ -389,7 +389,6 @@ Launcher::leaveKeyNavMode ()
 void 
 Launcher::enterKeyNavMode ()
 {
-  printf ("Launcher::enterKeyNavMode\n");
   startKeyNavMode ();
 }
 

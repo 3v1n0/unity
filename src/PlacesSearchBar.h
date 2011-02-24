@@ -31,6 +31,8 @@
 
 #include "PlaceEntry.h"
 
+class PlacesView;
+
 class PlacesSearchBar : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
@@ -70,6 +72,8 @@ private:
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
+
+  friend class PlacesView;
 };
 
 #endif

@@ -215,7 +215,7 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
 
-  _group_layout->ProcessDraw (GfxContext, force_draw);
+  _group_layout->ProcessDraw (GfxContext, force_draw || IsFullRedraw ());
 
   GfxContext.PopClippingRectangle();
 }

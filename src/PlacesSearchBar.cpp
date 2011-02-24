@@ -56,7 +56,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -317,5 +317,5 @@ PlacesSearchBar::UpdateBackground ()
 
   texture2D->UnReference ();
 
-  NeedRedraw ();
+  QueueDraw ();
 }

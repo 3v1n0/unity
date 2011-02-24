@@ -51,6 +51,10 @@ public:
   PlacesView (PlaceFactory *factory);
   ~PlacesView ();
 
+  // Return the TextEntry View. This is required to enable the keyboard focus on the text entry when the
+  // dahs is shown.
+  nux::TextEntry* GetTextEntryView ();
+
   // nux::View overrides
   long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
