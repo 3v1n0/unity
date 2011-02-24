@@ -45,6 +45,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
@@ -66,6 +67,7 @@ public:
   DeeModel * GetResultsModel ();
 
   DeeModel * GetGlobalResultsModel ();
+  DeeModel * GetGlobalGroupsModel ();
 
   /* Other methods */
   bool          IsValid ();
@@ -101,6 +103,7 @@ private:
   gchar   *_name;
   gchar   *_icon;
   gchar   *_description;
+  guint64  _shortcut;
   guint32  _position;
   gchar  **_mimetypes;
   std::map<gchar *, gchar *> _hints;
@@ -117,6 +120,7 @@ private:
   DeeModel *_results_model;
 
   DeeModel *_global_results_model;
+  DeeModel *_global_groups_model;
 
   gchar    *_previous_search;
   guint32   _previous_section;

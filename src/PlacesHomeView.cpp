@@ -31,7 +31,7 @@
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
-
+#include <gio/gdesktopappinfo.h>
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -39,55 +39,39 @@
 
 #include "PlacesSimpleTile.h"
 
-typedef struct
+#define DESKTOP_DIR  "/desktop/gnome/applications"
+#define BROWSER_DIR  DESKTOP_DIR"/browser"
+#define CALENDAR_DIR DESKTOP_DIR"/calendar"
+#define MEDIA_DIR    DESKTOP_DIR"/media"
+
+enum
 {
-  gchar *name;
-  gchar *icon;
-  gchar *exec;
+  TYPE_PLACE=0,
+  TYPE_EXEC
+};
 
-} TileInfo;
-
-static TileInfo tile_infos[] = {
+class Shortcut : public PlacesSimpleTile
+{
+public:
+  Shortcut (const char *icon, const char *name, int size)
+  : PlacesSimpleTile (icon, name, size),
+    _id (0),
+    _place_id (NULL),
+    _place_section (0),
+    _exec (NULL)
   {
-    (gchar*)_("Find Media Apps"),
-    (gchar*)"applications-multimedia",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Internet Apps"),
-    (gchar*)"applications-internet",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find More Apps"),
-    (gchar*)"find",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Files"),
-    (gchar*)"folder-saved-search",
-    (gchar*)"xdg-open ~"
-  },
-  {
-    (gchar*)_("Browse the Web"),
-    (gchar*)"firefox",
-    (gchar*)"firefox"
-  },
-  {
-    (gchar*)_("View Photos"),
-    (gchar*)"shotwell",
-    (gchar*)"shotwell"
-  },
-  {
-    (gchar*)_("Check Email"),
-    (gchar*)"evolution",
-    (gchar*)"evolution"
-  },
-  {
-    (gchar*)_("Listen to Music"),
-    (gchar*)"media-player-banshee",
-    (gchar*)"banshee"
   }
+
+  ~Shortcut ()
+  {
+    g_free (_place_id);
+    g_free (_exec);
+  }
+
+  int      _id;
+  gchar   *_place_id;
+  guint32  _place_section;
+  char    *_exec;
 };
 
 PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
@@ -98,20 +82,6 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
   _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   SetCompositionLayout (_layout);
  
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
-  {
-    gchar *markup = g_strdup_printf ("<big><b>%s</b></big>", tile_infos[i].name);
-
-    PlacesSimpleTile *tile = new PlacesSimpleTile (tile_infos[i].icon,
-                                                   markup,
-                                                   96);
-    _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
-
-    tile->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnTileClicked));
-
-    g_free (markup);
-  }
-
   _layout->ForceChildrenSize (true);
   _layout->SetChildrenSize (186, 186);
   _layout->EnablePartialVisibility (false);
@@ -120,36 +90,227 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
   _layout->SetHorizontalExternalMargin (48);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+
+  _client = gconf_client_get_default ();
+  gconf_client_add_dir (_client,
+                        BROWSER_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_add_dir (_client,
+                        CALENDAR_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_add_dir (_client,
+                        MEDIA_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_notify_add(_client,
+                          BROWSER_DIR"/exec", 
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+  gconf_client_notify_add(_client,
+                          CALENDAR_DIR"/exec",
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+  gconf_client_notify_add(_client,
+                          MEDIA_DIR"/exec",
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+
+  Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
 {
+  g_object_unref (_client);
   delete _bg_layer;
 }
 
 void
-PlacesHomeView::OnTileClicked (PlacesTile *_tile)
+PlacesHomeView::OnKeyChanged (GConfClient    *client,
+                              guint           cnxn_id,
+                              GConfEntry     *entry,
+                              PlacesHomeView *self)
 {
-  PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
-  
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
-  {
-    if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
-    {
-      GError *error = NULL;
+  self->Refresh ();
+}
 
-      g_spawn_command_line_async (tile_infos[i].exec, &error);
-      if (error)
-      {
-        g_warning ("Unable to launch tile: %s", error->message);
-        g_error_free (error);
-      }
-    }
+void
+PlacesHomeView::Refresh ()
+{
+  Shortcut   *shortcut = NULL;
+  gchar      *markup = NULL;
+  const char *temp = "<big><b>%s</b></big>";
+  
+  _layout->Clear ();
+
+  // Find Media Apps
+  markup = g_strdup_printf (temp, _("Find Media Apps"));
+  shortcut = new Shortcut ("applications-multimedia",
+                           markup,
+                           96);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 4;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Find Internet Apps
+  markup = g_strdup_printf (temp, _("Find Internet Apps"));
+  shortcut = new Shortcut ("applications-internet",
+                           markup,
+                           96);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 3;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Find More Apps
+  markup = g_strdup_printf (temp, _("Find More Apps"));
+  shortcut = new Shortcut ("find",
+                           markup,
+                           96);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 0;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Find Files
+  markup = g_strdup_printf (temp, _("Find Files"));
+  shortcut = new Shortcut ("folder-saved-search",
+                           markup,
+                           96);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/filesplace/files");
+  shortcut->_place_section = 0;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Browser
+  markup = gconf_client_get_string (_client, BROWSER_DIR"/exec", NULL);
+  CreateShortcutFromExec (markup, _("Browse the Web"), "firefox");
+  g_free (markup);
+
+  // Photos
+  // FIXME: Need to figure out the default
+  CreateShortcutFromExec ("shotwell", _("View Photos"), "shotwell");
+
+  // Email
+  markup = gconf_client_get_string (_client, CALENDAR_DIR"/exec", NULL);
+  CreateShortcutFromExec (markup, _("Check Email"), "evolution");
+  g_free (markup);
+
+  // Music
+  markup = gconf_client_get_string (_client, MEDIA_DIR"/exec", NULL);
+  CreateShortcutFromExec (markup, _("Listen to Music"), "banshee-1");
+  g_free (markup);
+
+  QueueDraw ();
+  _layout->QueueDraw ();
+  QueueRelayout ();
+}
+
+void
+PlacesHomeView::CreateShortcutFromExec (const char *exec,
+                                        const char *name,
+                                        const char *icon_hint)
+{
+  Shortcut        *shortcut = NULL;
+  gchar           *id;
+  gchar           *markup;
+  gchar           *icon;
+  gchar           *real_exec;
+  GDesktopAppInfo *info;
+
+  markup = g_strdup_printf ("<big><b>%s</b></big>", name);
+
+  // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
+  // best of times but the following is the closest best-guess without having to do D-Bus
+  // roundtrips to BAMF.
+  if (exec)
+  {
+    char *basename;
+
+    if (exec[0] == '/')
+      basename = g_path_get_basename (exec);
+    else
+      basename = g_strdup (exec);
+
+    id = g_strdup_printf ("%s.desktop", basename);
+
+    g_free (basename);
+  }
+  else
+  {
+    id = g_strdup_printf ("%s.desktop", icon_hint);
+  }
+  
+  info = g_desktop_app_info_new (id);
+  if (G_IS_DESKTOP_APP_INFO (info))
+  {
+    icon = g_icon_to_string (g_app_info_get_icon (G_APP_INFO (info)));
+    real_exec = g_strdup (g_app_info_get_executable (G_APP_INFO (info)));
+
+    g_object_unref (info);
+  }
+  else
+  {
+    icon = g_strdup (icon_hint);
+    real_exec = g_strdup ("firefox");
   }
 
-  ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                            NULL);
+  shortcut = new Shortcut (icon, markup, 96);
+  shortcut->_id = TYPE_EXEC;
+  shortcut->_exec = real_exec; //shorcut will free
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+
+  g_free (id);
+  g_free (markup);
+  g_free (icon);
+}
+
+void
+PlacesHomeView::OnShortcutClicked (PlacesTile *tile)
+{
+  Shortcut *shortcut = static_cast<Shortcut *> (tile);
+  int id = shortcut->_id;
+
+  if (id == TYPE_PLACE)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new ("(sus)",
+                                             shortcut->_place_id,
+                                             shortcut->_place_section,
+                                             ""));
+  }
+  else if (id == TYPE_EXEC)
+  {
+    GError *error = NULL;
+
+    if (!g_spawn_command_line_async (shortcut->_exec, &error))
+    {
+      g_warning ("%s: Unable to launch %s: %s",
+                 G_STRFUNC,
+                 shortcut->_exec,
+                 error->message);
+      g_error_free (error);
+    }
+    
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                              NULL);
+  }
 }
 
 const gchar* PlacesHomeView::GetName ()
@@ -200,20 +361,6 @@ PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
   _layout->ProcessDraw (GfxContext, force_draw);
   nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesHomeView::PostLayoutManagement (long LayoutResult)
-{
-  // I'm imagining this is a good as time as any to update the background
-
-  return nux::View::PostLayoutManagement (LayoutResult);
 }
 
 void

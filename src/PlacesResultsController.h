@@ -46,7 +46,8 @@ public:
   void RemoveResultFromGroup (const char *groupname,
                               void       *_id);
   void Clear                 ();
-  PlacesGroup  *CreateGroup  (const char *groupname);
+  PlacesGroup  *CreateGroup  (const char *groupname,
+                              const char *icon="");
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);

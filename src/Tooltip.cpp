@@ -853,7 +853,7 @@ void ctk_surface_blur (cairo_surface_t* surface,
 
     _labelText = text;
     _tooltip_text->SetText (_labelText);
-    this->ComputeChildLayout (); 
+    QueueRelayout ();
   }
 
   // Introspection

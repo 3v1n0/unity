@@ -60,42 +60,15 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
   
   {
     GIcon *icon;
+    gchar *icon_string;
 
     icon = g_volume_get_icon (_volume);
-    if (G_IS_THEMED_ICON (icon))
-    {
-      const gchar * const *names;
+    icon_string = g_icon_to_string (icon);
 
-      names = g_themed_icon_get_names (G_THEMED_ICON (icon));
-
-      if (names)
-        SetIconName (names[0]);
-      else
-        SetIconName (DEFAULT_ICON);
-    }
-    else if (G_IS_FILE_ICON (icon))
-    {
-      GFile *file;
-
-      file = g_file_icon_get_file (G_FILE_ICON (icon));
-      if (file)
-      {
-        gchar *path;
-
-        path = g_file_get_path (file);
-        SetIconName (path);
-
-        g_free (path);
-      }
-      else
-        SetIconName (DEFAULT_ICON);
-    }
-    else
-    {
-      SetIconName (DEFAULT_ICON);
-    }
+    SetIconName (icon_string);
 
     g_object_unref (icon);
+    g_free (icon_string);
   }
   
   SetQuirk (QUIRK_VISIBLE, true);
@@ -122,7 +95,7 @@ DeviceLauncherIcon::OnMouseClick (int button)
 
   if (button == 1)
   {
-    Activate ();
+    ActivateLauncherIcon ();
   }
 }
 
@@ -196,7 +169,7 @@ DeviceLauncherIcon::ShowMount (GMount *mount)
 }
 
 void
-DeviceLauncherIcon::Activate ()
+DeviceLauncherIcon::ActivateLauncherIcon ()
 {
   GMount *mount;
   gchar  *name;
@@ -273,7 +246,7 @@ DeviceLauncherIcon::Eject ()
 void
 DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
-  self->Activate ();
+  self->ActivateLauncherIcon ();
 }
 
 void
