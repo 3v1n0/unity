@@ -147,7 +147,7 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   ATK_OBJECT_CLASS (panel_indicator_accessible_parent_class)->initialize (accessible, data);
 
   pia = PANEL_INDICATOR_ACCESSIBLE (accessible);
-  atk_object_set_name (accessible, _("An indicator")); /* FIXME */
+  atk_object_set_name (accessible, _("An indicator"));
   atk_object_set_role (accessible, ATK_ROLE_PANEL);
 
   /* Setup the indicator object */
@@ -162,9 +162,12 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   for (l = entries; l != NULL; l = l->next)
     {
       AtkObject *accessible;
+      IndicatorObjectEntry *entry = (IndicatorObjectEntry *) l->data;
 
-      accessible = panel_indicator_entry_accessible_new ((IndicatorObjectEntry *) l->data);
+      accessible = panel_indicator_entry_accessible_new (entry);
       pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+
+      atk_object_set_name (accessible, entry->accessible_desc);
     }
 
   g_list_free (entries);
