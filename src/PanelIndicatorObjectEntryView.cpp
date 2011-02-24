@@ -212,7 +212,7 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   if (_proxy->GetPixbuf () && _proxy->icon_visible)
   {
-    gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (height - gdk_pixbuf_get_height (pixbuf))/2);
+    gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
@@ -230,7 +230,7 @@ PanelIndicatorObjectEntryView::Refresh ()
                            textshadowcol.GetGreen (),
                            textshadowcol.GetBlue (),
                            1.0f - textshadowcol.GetRed ());
-    cairo_move_to (cr, x, ((height - text_height)/2)-1);
+    cairo_move_to (cr, x, (int)(((height - text_height)/2)+1));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
@@ -240,7 +240,7 @@ PanelIndicatorObjectEntryView::Refresh ()
                            textcol.GetGreen (),
                            textcol.GetBlue (),
                            _proxy->label_sensitive ? 1.0f : 0.0f);
-    cairo_move_to (cr, x, (height - text_height)/2);
+    cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
   }
@@ -295,7 +295,7 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   PanelStyle *style = PanelStyle::GetDefault ();
   nux::Color bgtop = style->GetBackgroundTop ();
   nux::Color bgbot = style->GetBackgroundBottom ();
-  nux::Color line = style->GetTextShadow ();
+  nux::Color line = style->GetLineColor ();
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 

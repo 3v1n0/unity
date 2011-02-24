@@ -20,8 +20,10 @@
 #ifndef PLACES_SEARCH_BAR_H
 #define PLACES_SEARCH_BAR_H
 
-#include <Nux/View.h>
+#include <Nux/LayeredLayout.h>
 #include <Nux/TextureArea.h>
+#include <Nux/View.h>
+
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
@@ -30,6 +32,11 @@
 #include "Nux/TextEntry.h"
 
 #include "PlaceEntry.h"
+
+#include <gtk/gtk.h>
+
+#include "IconTexture.h"
+#include "StaticCairoText.h"
 
 class PlacesSearchBar : public Introspectable, public nux::View
 {
@@ -42,10 +49,10 @@ public:
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
-
-  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool ignore=false);
+  void SetActiveEntry (PlaceEntry *entry,
+                       guint       section_id,
+                       const char *search_string,
+                       bool        ignore=false);
 
   sigc::signal<void, const char *> search_changed;
   
@@ -61,15 +68,19 @@ private:
   void EmitLiveSearch ();
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
+  static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
+  nux::LayeredLayout      *_layered_layout;
+  nux::StaticCairoText    *_hint;
   nux::TextEntry          *_pango_entry;
   int _last_width;
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
+  IconTexture             *_search_icon;
 };
 
 #endif

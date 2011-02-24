@@ -86,6 +86,8 @@ public:
   virtual DeeModel * GetResultsModel () = 0;
 
   virtual DeeModel * GetGlobalResultsModel () = 0;
+  virtual DeeModel * GetGlobalGroupsModel () = 0;
+
   // Signals
 
   sigc::signal<void, bool>                    active_changed;

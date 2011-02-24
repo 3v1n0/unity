@@ -52,6 +52,7 @@ class PanelStyle : public nux::Object
     nux::Color& GetBackgroundTop ();
     nux::Color& GetBackgroundBottom ();
     nux::Color& GetTextShadow ();
+    nux::Color& GetLineColor ();
 
     GdkPixbuf * GetBackground (int width, int height);
 
@@ -74,6 +75,7 @@ class PanelStyle : public nux::Object
     nux::Color         _bg_top;
     nux::Color         _bg_bottom;
     nux::Color         _text_shadow;
+    nux::Color         _line;
 };
 
 #endif // PANEL_STYLE_H

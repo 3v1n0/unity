@@ -51,23 +51,22 @@ _idle_id (0)
   //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
+  _icon_texture = new IconTexture ("", 24);
+  _icon_texture->SetMinimumSize (24, 24);
+
   _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _label->SetFont ("Ubuntu normal 11");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _label->SetMaximumWidth (320);
-  _label->SetMinimumWidth (1);
 
   _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _title->SetFont ("Ubuntu normal 11");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
-  _title->SetMaximumWidth (320);
-  _title->SetMinimumWidth (1);
+  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
 
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _header_layout->SetHorizontalInternalMargin (12);
 
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   _header_layout->AddSpace (1, 1);
 
   // FIXME: We don't want to show this as it does nothing right now
@@ -102,12 +101,15 @@ PlacesGroup::~PlacesGroup ()
 
 void PlacesGroup::SetTitle (const char *title)
 {
-  _title_string = g_strdup (title);
+  const gchar *temp = "<big>%s</big>";
+
+  _title_string = g_strdup_printf (temp, title);
   UpdateTitle ();
 }
 
 void PlacesGroup::SetEmblem (const char *path_to_emblem)
 {
+  _icon_texture->SetByIconName (path_to_emblem, 24);
 }
 
 void PlacesGroup::AddLayout (nux::Layout *layout)
