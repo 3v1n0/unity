@@ -51,7 +51,6 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->SetHorizontalInternalMargin (12);
 
   _search_icon = new IconTexture ("find", 32);
-  _search_icon->SetMinMaxSize (32, 32);
   _layout->AddView (_search_icon, 0);
 
   _layered_layout = new nux::LayeredLayout ();
