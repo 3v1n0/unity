@@ -165,8 +165,6 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 
       accessible = panel_indicator_entry_accessible_new (entry);
       pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
-
-      atk_object_set_name (accessible, entry->accessible_desc);
     }
 
   g_list_free (entries);
