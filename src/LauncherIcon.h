@@ -176,6 +176,8 @@ protected:
     void SetSortPriority (int priority);
 
     void SetEmblem (nux::BaseTexture *emblem);
+    void SetSuperkeyLabel (nux::BaseTexture* label);
+    nux::BaseTexture* GetSuperkeyLabel ();
 
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
@@ -258,6 +260,7 @@ private:
     IconType         _icon_type;
     
     nux::BaseTexture* _emblem;
+    nux::BaseTexture* _superkey_label;
     
     bool             _quirks[QUIRK_LAST];
     struct timespec  _quirk_times[QUIRK_LAST];
