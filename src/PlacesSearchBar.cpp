@@ -157,8 +157,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
     const gchar *search_template = _("<span font_size='x-small' font_style='italic'>Search %s</span>");
     gchar       *res;
+    gchar       *tmp;
 
-    res = g_strdup_printf (search_template, _entry->GetName ());
+    tmp = g_markup_escape_text (entry->GetName (), -1);
+    res = g_strdup_printf (search_template, tmp);
+
     _hint->SetText (res);
 
     if (!ignore_search)
@@ -170,6 +173,7 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     _pango_entry->SetText (search_string ? search_string : "");
     
     g_free (res);
+    g_free (tmp);
   }
   else
   {
