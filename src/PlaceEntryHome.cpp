@@ -131,7 +131,7 @@ PlaceEntryHome::OnResultRemoved (DeeModel *model, DeeModelIter *it, PlaceEntryHo
   const char   *uri;
 
   // FIXME: This is a hack
-  if (dee_model_get_uint32 (model, iter, RESULT_GROUP_ID) == 5)
+  if (dee_model_get_uint32 (model, it, RESULT_GROUP_ID) == 5)
     return;
 
   uri = dee_model_get_string (model, it, RESULT_URI);
