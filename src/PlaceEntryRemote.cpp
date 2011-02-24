@@ -42,6 +42,7 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _name (NULL),
   _icon (NULL),
   _description (NULL),
+  _shortcut (10), // impossible shortcut
   _position (0),
   _mimetypes (NULL),
   _sensitive (true),
@@ -85,6 +86,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   gchar  *domain;
   gchar  *name;
   gchar  *description;
+  gchar  *shortcut_entry;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
   if (_dbus_path == NULL
@@ -125,6 +127,16 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   {
     _name = g_strdup (name);
     _description = g_strdup (description);
+  }
+  
+  if (g_key_file_has_key (key_file, group, "Shortcut", NULL))
+  {
+    shortcut_entry = g_key_file_get_string(key_file, group, "Shortcut", NULL);
+    if (strlen (shortcut_entry) == 1)
+      _shortcut = shortcut_entry[0];
+    else
+      g_warning ("Place %s has an uncompatible shortcut: %s", name, shortcut_entry);    
+    g_free (shortcut_entry);
   }
 
   /* Finally the two that should default to true */
@@ -167,6 +179,12 @@ const gchar *
 PlaceEntryRemote::GetDescription ()
 {
   return _description;
+}
+
+guint64
+PlaceEntryRemote::GetShortcut ()
+{
+  return _shortcut;
 }
 
 guint32

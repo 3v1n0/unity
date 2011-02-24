@@ -70,8 +70,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _tooltip = new nux::Tooltip ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
+  _shortcut = 0;
   
   _emblem = 0;
+  _superkey_label = 0;
 
   _quicklist = new QuicklistView ();
   _quicklist_is_initialized = false;
@@ -105,6 +107,9 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+
+  if (_superkey_label)
+    _superkey_label->UnReference ();
 }
 
 bool
@@ -316,6 +321,21 @@ void LauncherIcon::SetTooltipText(const TCHAR* text)
 nux::NString LauncherIcon::GetTooltipText()
 {
     return m_TooltipText;
+}
+
+void
+LauncherIcon::SetShortcut (guint64 shortcut)
+{
+  // only relocate a digit with a digit (don't overwrite other shortcuts)
+  if ((!_shortcut || (g_ascii_isdigit ((gchar)_shortcut)))
+        || !(g_ascii_isdigit ((gchar) shortcut)))
+    _shortcut = shortcut;
+}
+
+guint64
+LauncherIcon::GetShortcut ()
+{
+    return _shortcut;
 }
 
 void
@@ -672,6 +692,24 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   needs_redraw.emit (this);
 }
 
+void
+LauncherIcon::SetSuperkeyLabel (nux::BaseTexture* label)
+{
+  if (_superkey_label == label)
+    return;
+  
+  if (_superkey_label)
+    _superkey_label->UnReference ();
+  
+  _superkey_label = label;  
+}
+
+nux::BaseTexture*
+LauncherIcon::GetSuperkeyLabel ()
+{
+  return _superkey_label;
+}
+
 void 
 LauncherIcon::SetEmblemIconName (const char *name)
 {
@@ -762,6 +800,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
+  delete bitmap;
 
   SetEmblem (emblem);
 

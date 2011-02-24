@@ -84,6 +84,9 @@ public:
     
     nux::NString GetTooltipText ();
     
+    void    SetShortcut (guint64 shortcut);
+    guint64 GetShortcut ();
+    
     void RecvMouseEnter ();
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
@@ -173,6 +176,8 @@ protected:
     void SetSortPriority (int priority);
 
     void SetEmblem (nux::BaseTexture *emblem);
+    void SetSuperkeyLabel (nux::BaseTexture* label);
+    nux::BaseTexture* GetSuperkeyLabel ();
 
     virtual std::list<DbusmenuMenuitem *> GetMenus ();
     virtual nux::BaseTexture * GetTextureForSize (int size) = 0;
@@ -247,12 +252,15 @@ private:
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
     
+    gint64           _shortcut;
+    
     nux::Point3      _center;
     nux::Point3      _last_stable;
     nux::Point3      _saved_center;
     IconType         _icon_type;
     
     nux::BaseTexture* _emblem;
+    nux::BaseTexture* _superkey_label;
     
     bool             _quirks[QUIRK_LAST];
     struct timespec  _quirk_times[QUIRK_LAST];

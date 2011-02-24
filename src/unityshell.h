@@ -128,6 +128,8 @@ class UnityScreen :
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
 
+  void NeedsRelayout ();
+
     protected:
 
 	const gchar* GetName ();
@@ -148,8 +150,7 @@ class UnityScreen :
 	void
 	onRedrawRequested ();
 
-	void
-	Relayout ();
+	void Relayout ();
 
 	static gboolean
 	RelayoutTimeout (gpointer data);
@@ -196,6 +197,7 @@ class UnityScreen :
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
+  bool                   needsRelayout;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

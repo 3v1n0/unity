@@ -89,8 +89,7 @@ void
 PanelTray::Sync ()
 {
   SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
-  ComputeChildLayout ();
-
+  QueueRelayout ();
   QueueDraw ();
 }
 
@@ -119,9 +118,9 @@ PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
       accept = false;
       break;
     }
-    else if (g_str_has_prefix (title, name)
-             || g_str_has_prefix (res_name, name)
-             || g_str_has_prefix (res_class, name))
+    else if ((title && g_str_has_prefix (title, name))
+             || (res_name && g_str_has_prefix (res_name, name))
+             || ( res_class && g_str_has_prefix (res_class, name)))
     {
       accept = true;
       break;

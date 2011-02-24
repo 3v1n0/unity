@@ -42,6 +42,8 @@ namespace nux
   _text       = TEXT (text);
   _texture2D  = 0;
   _need_new_extent_cache = true;
+  _pre_layout_width = 0;
+  _pre_layout_height = 0;
 
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
@@ -54,8 +56,7 @@ StaticCairoText::~StaticCairoText ()
   GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
-                                        this);
-  
+                                        this);  
   if (_texture2D)
     _texture2D->UnReference ();
 
@@ -155,9 +156,11 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
+  
+  t_u32 alpha = 0, src = 0, dest = 0;
 
-  gfxContext.GetRenderStates ().SetBlend (true);
-  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
+  gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   gfxContext.QRP_1Tex (base.x,
                         base.y,
@@ -166,9 +169,9 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                         _texture2D->GetDeviceTexture(),
                         texxform,
                         _textColor);
-
-  gfxContext.GetRenderStates().SetBlend (false);
-
+  
+  gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+  
   gfxContext.PopClippingRectangle ();
 }
 

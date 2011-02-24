@@ -545,12 +545,21 @@ UnityScreen::optionChanged (CompOption            *opt,
 }
 
 void
+UnityScreen::NeedsRelayout ()
+{
+  needsRelayout = true;
+}
+
+void
 UnityScreen::Relayout ()
 {
   GdkScreen *scr;
   GdkRectangle rect;
   nux::Geometry lCurGeom, pCurGeom;
   gint primary_monitor;
+
+  if (!needsRelayout)
+    return;
 
   scr = gdk_screen_get_default ();
   primary_monitor = gdk_screen_get_primary_monitor (scr);
@@ -565,8 +574,11 @@ UnityScreen::Relayout ()
   panelView->SetMaximumWidth(rect.width);
   launcher->SetMaximumHeight(rect.height - pCurGeom.height);
 
-  g_warning ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
-		rect.x, rect.y, rect.width, rect.height );
+  g_debug ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
+           rect.x,
+           rect.y,
+           rect.width,
+           rect.height);
 
   panelWindow->SetGeometry(nux::Geometry(rect.x,
 					rect.y,
@@ -589,7 +601,7 @@ UnityScreen::Relayout ()
   panelWindow->EnableInputWindow(true);
   launcherWindow->EnableInputWindow(true);
 
-  strutHackTimeout(this);
+  needsRelayout = false;
 }
 
 gboolean
@@ -597,6 +609,7 @@ UnityScreen::RelayoutTimeout (gpointer data)
 {
   UnityScreen *uScr = (UnityScreen*) data;
 
+  uScr->NeedsRelayout ();
   uScr->Relayout();
 
   return FALSE;
@@ -625,6 +638,22 @@ write_logger_data_to_disk (gpointer data)
 {
   LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
   return FALSE;
+}
+
+void
+OnMonitorChanged (GdkScreen* screen,
+                  gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
+}
+
+void
+OnSizeChanged (GdkScreen* screen,
+               gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -711,8 +740,14 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
 
-  g_signal_connect_swapped (gdk_screen_get_default (), "monitors-changed", G_CALLBACK (&UnityScreen::Relayout), (void*) this);
-  g_signal_connect_swapped (gdk_screen_get_default (), "size-changed", G_CALLBACK (&UnityScreen::Relayout), (void*) this);
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "monitors-changed",
+                            G_CALLBACK (OnMonitorChanged),
+                            this);
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "size-changed",
+                            G_CALLBACK (OnSizeChanged),
+                            this);
 
   END_FUNCTION ();
 }

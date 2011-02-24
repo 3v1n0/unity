@@ -24,6 +24,10 @@
 
 #include "IconTexture.h"
 
+#include "PlacesSettings.h"
+
+#define ICON_HEIGHT 48
+
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
 : PlacesTile (NUX_TRACKER_LOCATION),
   _label (NULL),
@@ -36,6 +40,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _icon = g_strdup (icon_name);
 
   _icontex = new IconTexture (_icon, icon_size);
+  _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
   _icontex->SinkReference ();
 
   _cairotext = new nux::StaticCairoText (_label);
@@ -50,8 +55,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
 
-  SetMinimumSize (160, 128);
-  SetMaximumSize (160, 128);
+  SetMinMaxSize (160, 128);
 
   AddChild (_icontex);
 
@@ -73,12 +77,14 @@ nux::Geometry
 PlacesSimpleTile::GetHighlightGeometry ()
 {
   nux::Geometry base = GetGeometry ();
-  nux::Geometry icontex_base = _icontex->GetGeometry ();
+  int width = 0, height = 0;
+
+  _icontex->GetTextureSize (&width, &height);
   
-  _highlight_geometry.x = (base.width - icontex_base.width) / 2;
+  _highlight_geometry.x = (base.width - width) / 2;
   _highlight_geometry.y = 12;
-  _highlight_geometry.width = icontex_base.width;
-  _highlight_geometry.height = icontex_base.height;
+  _highlight_geometry.width = width;
+  _highlight_geometry.height = height;
 
   return _highlight_geometry;
 }

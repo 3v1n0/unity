@@ -44,6 +44,7 @@ private:
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
 
+  void ActivateLauncherIcon ();
   void EnsureMenuItemsReady ();
 
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);

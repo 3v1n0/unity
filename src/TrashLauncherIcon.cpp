@@ -34,7 +34,8 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetIconName ("user-trash");
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_TRASH); 
+  SetIconType (TYPE_TRASH);
+  SetShortcut ('t');
 
   m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
 					     G_FILE_MONITOR_NONE,
@@ -95,14 +96,8 @@ TrashLauncherIcon::OnMouseClick (int button)
   SimpleLauncherIcon::OnMouseClick (button);
 
   if (button == 1)
-  {
-    GError *error = NULL;
+    ActivateLauncherIcon ();
 
-    g_spawn_command_line_async ("xdg-open trash://", &error);
-
-    if (error)
-      g_error_free (error);
-  }
   else if (button == 3 && _empty == FALSE)
   {
     EnsureMenuItemsReady ();
@@ -113,10 +108,21 @@ TrashLauncherIcon::OnMouseClick (int button)
     
     int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
     nux::Point3 center = GetCenter ();
-    int tip_y = center.y;
+    int tip_y = center.y+ _launcher->GetParent ()->GetGeometry ().y;
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
     nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
   }
+}
+
+void
+TrashLauncherIcon::ActivateLauncherIcon ()
+{
+  GError *error = NULL;
+
+  g_spawn_command_line_async ("xdg-open trash://", &error);
+
+  if (error)
+    g_error_free (error);
 }
 
 void 

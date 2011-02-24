@@ -38,6 +38,9 @@
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
+#define MAX_SUPERKEY_LABELS 10
+#define LAUNCHER_ICON_SIZE  54
+
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -172,6 +175,7 @@ private:
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_TAP_SUPER,
     
     TIME_LAST
   } LauncherActionTimes;
@@ -340,7 +344,21 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
-  
+
+  void
+  DrawRoundedRectangle (cairo_t* cr,
+                        double   aspect,
+                        double   x,
+                        double   y,
+                        double   cornerRadius,
+                        double   width,
+                        double   height);
+
+  nux::BaseTexture*
+  cairoToTexture2D (const char label,
+                    int        width,
+                    int        height);
+
   std::list<char *> StringToUriList (char * input);
 
   nux::HLayout* m_Layout;
@@ -419,6 +437,8 @@ private:
   nux::BaseTexture* _arrow_rtl;
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
+
+  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
