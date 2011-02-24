@@ -33,33 +33,20 @@ struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
   PanelService         *service;
-  AtkStateSet          *state_set;
 };
 
 static void
 on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer user_data)
 {
   gchar *s;
-  gboolean adding;
+  gboolean adding = FALSE;
   PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
 
   /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
   s = g_strdup_printf ("%p", piea->priv->entry);
   if (g_str_equal (s, entry_id))
     {
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ACTIVE);
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSED);
-      atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SHOWING);
-
       adding = TRUE;
-    }
-  else
-    {
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_ACTIVE);
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_FOCUSED);
-      atk_state_set_remove_state (piea->priv->state_set, ATK_STATE_SHOWING);
-
-      adding = FALSE;
     }
 
   /* Notify AT's about the states' changes */
@@ -79,11 +66,11 @@ panel_indicator_entry_accessible_finalize (GObject *object)
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (object);
 
+  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_DEFUNCT, TRUE);
+
   if (piea->priv != NULL)
     {
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
-      if (piea->priv->state_set != NULL)
-        g_object_unref (piea->priv->state_set);
     }
 
   G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
@@ -113,13 +100,6 @@ static void
 panel_indicator_entry_accessible_init (PanelIndicatorEntryAccessible *piea)
 {
   piea->priv = GET_PRIVATE (piea);
-
-  piea->priv->state_set = atk_state_set_new ();
-  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_ENABLED);
-  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_FOCUSABLE);
-  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_HORIZONTAL);
-  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_SENSITIVE);
-  atk_state_set_add_state (piea->priv->state_set, ATK_STATE_VISIBLE);
 
   /* Set up signals for listening to service changes */
   piea->priv->service = panel_service_get_default ();
@@ -204,11 +184,18 @@ panel_indicator_entry_accessible_ref_child (AtkObject *accessible, gint i)
 static AtkStateSet *
 panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
 {
-  PanelIndicatorEntryAccessible *piea;
+  AtkStateSet *state_set;
 
   g_return_val_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible), NULL);
 
-  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  /* Retrieve state_set from parent_class */
+  state_set = ATK_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->ref_state_set (accessible);
 
-  return ATK_STATE_SET (g_object_ref (piea->priv->state_set));
+  atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
+  atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
+  atk_state_set_add_state (state_set, ATK_STATE_HORIZONTAL);
+  atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
+  atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+
+  return state_set;
 }
