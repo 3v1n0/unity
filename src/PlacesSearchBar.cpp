@@ -61,7 +61,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
-  _pango_entry->SetMinimumHeight (20);
+  _pango_entry->SetMinimumHeight (30);
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
