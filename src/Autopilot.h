@@ -32,8 +32,6 @@
 #include "AutopilotDisplay.h"
 #include "ubus-server.h"
 
-
-#define UPDATE_TIME 100
 #define TEST_TIMEOUT 6000
 
 typedef struct {
@@ -59,14 +57,6 @@ public:
 
 private:
   AutopilotDisplay display;
-
-  UBusServer *_ubus;
-  GDBusConnection *_dbus; 
-
-  CompScreen *_screen;
-  CompositeScreen *_cscreen;
- 
-
 };
 
 #endif /* _AUTOPILOT_H */

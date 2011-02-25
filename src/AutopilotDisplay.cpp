@@ -17,15 +17,34 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <glib/gi18n-lib.h>
+
 #include "AutopilotDisplay.h"
+#include "UBusMessages.h"
 
 static float _disp_fps;
+static guint _ubus_handle;
+static UBusServer *_ubus;
 
-void on_test_finished (GVariant *payload)
+nux::TimerHandle _timer_handler;
+nux::TimerFunctor *_timer_functor;
+
+void
+on_test_finished (GVariant *payload, AutopilotDisplay *self)
 {
-     args->priv->GetCompositeScreen ()->preparePaintSetEnabled (args->priv, false);
-     args->priv->GetCompositeScreen ()->donePaintSetEnabled (args->priv, false);
-     CompositeScreenInterface::setHandler (_cscreen, false);
+  ubus_server_unregister_interest (_ubus, _ubus_handle);
+
+  self->GetCompositeScreen ()->preparePaintSetEnabled (self, false);
+  self->GetCompositeScreen ()->donePaintSetEnabled (self, false);
+}
+
+void
+GraphTimerInterrupt (void *data)
+{
+  nux::TimeGraph *timegraph = NUX_STATIC_CAST (nux::TimeGraph*, data);
+
+  timegraph->UpdateGraph (0, _disp_fps);
+  _timer_handler = nux::GetTimer ().AddTimerHandler (UPDATE_TIME, _timer_functor, timegraph);
 }
 
 AutopilotDisplay::AutopilotDisplay (CompScreen *screen) :
@@ -38,28 +57,43 @@ AutopilotDisplay::AutopilotDisplay (CompScreen *screen) :
   _cscreen->donePaintSetEnabled (this, false);
   CompositeScreenInterface::setHandler (_cscreen, false);
 
+  _ubus = ubus_server_get_default ();
   _tab_view = new nux::TabView (NUX_TRACKER_LOCATION);
   _window = new nux::FloatingWindow (TEXT (_("Autopilot Statistics")), NUX_TRACKER_LOCATION);
-  _moveable_view->AddWidget (_tab_view);
+  _window->AddWidget (_tab_view);
 
   /* set up our initial window tab for the overall stats, then tabs will be added when StartTest is called */
   SetupTab (_("Overview"));
 }
 
+AutopilotDisplay::~AutopilotDisplay ()
+{
+  _cscreen->preparePaintSetEnabled (this, false);
+  _cscreen->donePaintSetEnabled (this, false);
+  CompositeScreenInterface::setHandler (_cscreen, false);
+
+  delete _tab_view;
+  delete _window;
+}
+
 void
-AutopilotDisplay::StartTest (gchar *name)
+AutopilotDisplay::StartTest (const gchar *name)
 {
   SetupTab (name);
 
   if (!_window->IsVisible ())
     _window->ShowWindow (true);
 
+  _ubus_handle = ubus_server_register_interest (_ubus,
+                                                UBUS_AUTOPILOT_TEST_FINISHED,
+                                                (UBusCallback) on_test_finished,
+                                                this);
  /* enable fps counting hooks */
   _cscreen->preparePaintSetEnabled (this, true);
   _cscreen->donePaintSetEnabled (this, true);
   CompositeScreenInterface::setHandler (_cscreen, true);
   _timer_functor = new nux::TimerFunctor ();
-  _timer_functor->OnTimerExpired.connect (sigc::ptr_fun &GraphTimerInterrupt);
+  _timer_functor->OnTimerExpired.connect (sigc::ptr_fun (&GraphTimerInterrupt));
 }
 
 void
@@ -70,7 +104,7 @@ AutopilotDisplay::SetupTab (const gchar *name)
   timegraph->ShowColumnStyle ();
   timegraph->SetYAxisBounds (0.0, 200.0f);
   timegraph->AddGraph (nux::Color (0xFF9AD61F), nux::Color (0x50191919));
-  _timer_handler = nux::GetTimer ().AddTimerHandler (1000, timer_functor, timegraph);
+  _timer_handler = nux::GetTimer ().AddTimerHandler (1000, _timer_functor, timegraph);
 
   layout->AddView (timegraph,
                    1,
@@ -78,9 +112,15 @@ AutopilotDisplay::SetupTab (const gchar *name)
                    nux::MINOR_SIZE_FULL);
   layout->SetContentDistribution (nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (4);
-  layout->SetHorizontalVerticalMargin (4);
+  layout->SetVerticalExternalMargin (4);
  
   _tab_view->AddTab (name, layout);
+}
+
+CompositeScreen*
+AutopilotDisplay::GetCompositeScreen ()
+{
+  return _cscreen;
 }
 
 void

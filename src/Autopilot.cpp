@@ -20,12 +20,10 @@
 #include <sigc++/sigc++.h>
 
 #include "Autopilot.h"
-#include "AutopilotDisplay.h"
 #include "UBusMessages.h"
 
-static UBusServer _ubus;
-static GDBusConnection _dbus;
-
+UBusServer *_ubus;
+GDBusConnection *_dbus;
 nux::TimerFunctor *test_expiration_functor;
 
 void
@@ -81,7 +79,7 @@ RegisterUBusInterest (const gchar *signal, TestArgs *args)
 }
 
 Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
-  display (screen),
+  display (screen)
 {
   _dbus = connection;
   _ubus = ubus_server_get_default ();

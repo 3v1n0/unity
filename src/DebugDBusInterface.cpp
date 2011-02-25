@@ -45,8 +45,8 @@ static const GDBusInterfaceVTable si_vtable =
 static const GDBusArgInfo si_getstate_in_args =
 {
   -1,
-  "piece",
-  "s",
+  (gchar*) "piece",
+  (gchar*) "s",
   NULL
 };
 
@@ -55,8 +55,8 @@ static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
-  "state",
-  "a{sv}",
+  (gchar*) "state",
+  (gchar*) "a{sv}",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -64,7 +64,7 @@ static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  "GetState",
+  (gchar*) "GetState",
   (GDBusArgInfo **) &si_getstate_in_arg_pointers,
   (GDBusArgInfo **) &si_getstate_out_arg_pointers,
   NULL
@@ -73,8 +73,8 @@ static const GDBusMethodInfo si_method_info_getstate =
 static const GDBusArgInfo ap_in_args =
 {
   -1,
-  "name",
-  "s",
+  (gchar*) "name",
+  (gchar*) "s",
   NULL
 };
 static const GDBusArgInfo *const ap_in_arg_pointers[] = { &ap_in_args, NULL };
@@ -82,7 +82,7 @@ static const GDBusArgInfo *const ap_in_arg_pointers[] = { &ap_in_args, NULL };
 static GDBusMethodInfo ap_method_info_starttest =
 {
   -1,
-  "StartTest",
+  (gchar*) "StartTest",
   (GDBusArgInfo **) &ap_in_arg_pointers,
   NULL,
   NULL
@@ -94,16 +94,16 @@ static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_in
 static GDBusArgInfo ap_testfinished_arg_name = 
 {
   -1,
-  "name",
-  "s",
+  (gchar*) "name",
+  (gchar*) "s",
   NULL
 };
 
 static GDBusArgInfo ap_testfinished_arg_passed = 
 {
   -1,
-  "passed",
-  "b",
+  (gchar*) "passed",
+  (gchar*) "b",
   NULL
 };
 
@@ -113,7 +113,7 @@ static const GDBusArgInfo *const ap_signal_testfinished_arg_pointers [] = { &ap_
 static GDBusSignalInfo ap_signal_info_testfinished = 
 {
   -1,
-  "TestFinished",
+  (gchar*) "TestFinished",
   (GDBusArgInfo **) &ap_signal_testfinished_arg_pointers,
   NULL
 };
@@ -123,7 +123,7 @@ static const GDBusSignalInfo *const ap_signal_info_pointers [] = { &ap_signal_in
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  "com.canonical.Unity.Debug.Introspection",
+  (gchar*) "com.canonical.Unity.Debug.Introspection",
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,

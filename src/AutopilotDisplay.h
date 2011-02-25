@@ -33,6 +33,9 @@
 #include "Nux/VLayout.h"
 #include "NuxGraphics/GraphicsEngine.h"
 
+#include "ubus-server.h"
+
+#define UPDATE_TIME 100
 
 #define TIMEVALDIFFU(tv1, tv2)                                              \
   (((tv1)->tv_sec == (tv2)->tv_sec || (tv1)->tv_usec >= (tv2)->tv_usec) ?   \
@@ -47,14 +50,19 @@ class AutopilotDisplay :
 {
 public:
   AutopilotDisplay (CompScreen *screen);
-  void StartTest (gchar *name);
+  ~AutopilotDisplay ();
+  void StartTest (const gchar *name);
+  void SetupTab (const gchar *name);
 
+  CompositeScreen* GetCompositeScreen ();
   void preparePaint (int msSinceLastPaint);
   void donePaint ();
 
 private:
   nux::TabView *_tab_view;
   nux::FloatingWindow *_window;
+
+  CompositeScreen *_cscreen;
 
   float _fps;
   float _alpha;
