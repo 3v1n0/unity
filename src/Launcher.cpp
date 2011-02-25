@@ -316,6 +316,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hide_on_drag_hover     = false;
     _render_drag_window     = false;
     _dnd_window_is_mapped   = false;
+    _drag_edge_touching     = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
