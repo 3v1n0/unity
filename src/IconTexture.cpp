@@ -41,7 +41,8 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
-  LoadIcon ();
+  if (!g_strcmp0 (_icon_name, "") == 0)
+    LoadIcon ();
 }
 
 IconTexture::~IconTexture ()
