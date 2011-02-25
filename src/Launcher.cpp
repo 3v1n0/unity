@@ -586,7 +586,10 @@ float Launcher::AutohideProgress (struct timespec const &current)
     // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
-        
+        // all this code should only be triggered when _hidden is true
+        if (!_hidden)
+          return 0.0f;
+          
         // "dead" zone
         if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
             return GetAutohidePositionMin ();
@@ -606,7 +609,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
             position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
-        // only triggered on _hidden = false, no need for check
+        
         float _position_min = GetAutohidePositionMin ();
         return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
@@ -1394,7 +1397,13 @@ void Launcher::SetHidden (bool hidden)
 
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
+    {
         _mouseover_launcher_locked = false;
+        // RecvMouseLeave isn't receive if the launcher is hiding while we have the mouse on it
+        // (like, click on a icon, wait the timeout time without moving the mouse, then the launcher hide)
+        if (_mouse_inside_launcher)
+          RecvMouseLeave(-1, -1, 0, 0);
+    }
     else
         _mouseover_launcher_locked = true;
 
@@ -2554,8 +2563,8 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   if (GetActionState () == ACTION_NONE)
       EnsureHoverState ();
 
-  // exit immediatly on action and mouse leaving the launcher
-  if (!_mouseover_launcher_locked)
+  // exit immediatly on action and mouse leaving the launcher (avoid loop when called manually)
+  if (!_mouseover_launcher_locked && (x != -1) && (y != -1))
   {
     if (_autohide_handle > 0)
       g_source_remove (_autohide_handle);
