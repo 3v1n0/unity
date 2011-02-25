@@ -60,6 +60,7 @@ AutopilotDisplay::AutopilotDisplay (CompScreen *screen) :
   _ubus = ubus_server_get_default ();
   _tab_view = new nux::TabView (NUX_TRACKER_LOCATION);
   _window = new nux::FloatingWindow (TEXT (_("Autopilot Statistics")), NUX_TRACKER_LOCATION);
+  _window->EnableInputWindow (true, 1);
   _window->AddWidget (_tab_view);
 
   /* set up our initial window tab for the overall stats, then tabs will be added when StartTest is called */
