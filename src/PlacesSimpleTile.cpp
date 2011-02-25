@@ -59,7 +59,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
 
   AddChild (_icontex);
 
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 }
 
 
