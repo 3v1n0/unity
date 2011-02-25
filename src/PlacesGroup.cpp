@@ -41,7 +41,8 @@
 #include <glib/gi18n-lib.h>
 
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM)
+View (NUX_FILE_LINE_PARAM),
+_idle_id (0)
 {
   //~ OnMouseDown.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseDown));
   //~ OnMouseUp.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseUp));
@@ -50,23 +51,22 @@ View (NUX_FILE_LINE_PARAM)
   //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 
+  _icon_texture = new IconTexture ("", 24);
+  _icon_texture->SetMinimumSize (24, 24);
+
   _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _label->SetFont ("Ubuntu normal 11");
   _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _label->SetMaximumWidth (320);
-  _label->SetMinimumWidth (1);
 
   _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _title->SetFont ("Ubuntu normal 11");
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_RIGHT);
-  _title->SetMaximumWidth (320);
-  _title->SetMinimumWidth (1);
+  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
 
   _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _header_layout->SetHorizontalInternalMargin (12);
 
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   _header_layout->AddSpace (1, 1);
 
   // FIXME: We don't want to show this as it does nothing right now
@@ -101,12 +101,15 @@ PlacesGroup::~PlacesGroup ()
 
 void PlacesGroup::SetTitle (const char *title)
 {
-  _title_string = g_strdup (title);
+  const gchar *temp = "<big>%s</big>";
+
+  _title_string = g_strdup_printf (temp, title);
   UpdateTitle ();
 }
 
 void PlacesGroup::SetEmblem (const char *path_to_emblem)
 {
+  _icon_texture->SetByIconName (path_to_emblem, 24);
 }
 
 void PlacesGroup::AddLayout (nux::Layout *layout)
@@ -176,20 +179,22 @@ PlacesGroup::UpdateLabel ()
   NeedRedraw ();
 }
 
-void
-PlacesGroup::SetVisible (bool visible)
+void PlacesGroup::Relayout ()
 {
-  _is_visible = visible;
-  ComputeChildLayout ();
-  NeedRedraw ();
+  if (_idle_id == 0)
+    _idle_id = g_idle_add ((GSourceFunc)OnIdleRelayout, this);
 }
 
-bool
-PlacesGroup::IsVisible ()
+gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
-  return _is_visible;
-}
+  self->QueueDraw ();
+  self->_group_layout->QueueDraw ();
+  self->GetLayout ()->QueueDraw ();
+  self->ComputeChildLayout ();
+  self->_idle_id = 0;
 
+  return FALSE;
+}
 
 long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {

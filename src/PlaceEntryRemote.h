@@ -67,6 +67,7 @@ public:
   DeeModel * GetResultsModel ();
 
   DeeModel * GetGlobalResultsModel ();
+  DeeModel * GetGlobalGroupsModel ();
 
   /* Other methods */
   bool          IsValid ();
@@ -119,6 +120,7 @@ private:
   DeeModel *_results_model;
 
   DeeModel *_global_results_model;
+  DeeModel *_global_groups_model;
 
   gchar    *_previous_search;
   guint32   _previous_section;

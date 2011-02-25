@@ -132,7 +132,7 @@ PanelHomeButton::RecvMouseClick (int x,
   if (nux::GetEventButton (button_flags) == 1)
     {
       UBusServer *ubus = ubus_server_get_default ();
-      ubus_server_send_message (ubus, UBUS_HOME_BUTTON_ACTIVATED, NULL);
+      ubus_server_send_message (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
     }
 }
 

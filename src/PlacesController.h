@@ -26,6 +26,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "PlaceFactoryFile.h"
+#include "PlacesSettings.h"
 #include "PlacesView.h"
 #include "Introspectable.h"
 
@@ -52,6 +53,7 @@ protected:
 
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnActivePlaceEntryChanged (PlaceEntry *entry);
+  void OnSettingsChanged (PlacesSettings *settings);
 
 private:
   nux::BaseWindow  *_window;

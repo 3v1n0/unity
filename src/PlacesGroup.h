@@ -36,6 +36,8 @@
 #include <sigc++/functors/ptr_fun.h>
 #include <sigc++/functors/mem_fun.h>
 
+#include "IconTexture.h"
+
 class PlacesGroup : public nux::View
 {
 public:
@@ -51,9 +53,7 @@ public:
   void SetRowHeight (unsigned int row_height);
   void SetItemDetail (unsigned int total_items, unsigned int visible_items);
   void SetExpanded (bool expanded);
-
-  void SetVisible (bool visible);
-  bool IsVisible ();
+  void Relayout ();
 
 protected:
   nux::StaticCairoText *_label;
@@ -64,13 +64,16 @@ protected:
   unsigned int _total_items;
   unsigned int _visible_items;
 
-  bool  _is_visible;
-
   nux::Layout *_content;
+  IconTexture  *_icon_texture;
   nux::VLayout *_group_layout;
   nux::HLayout *_header_layout;
 
   bool _expanded;
+
+  guint32 _idle_id;
+
+  static gboolean OnIdleRelayout (PlacesGroup *self);
   void UpdateTitle ();
   void UpdateLabel ();
 

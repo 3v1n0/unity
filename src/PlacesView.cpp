@@ -105,7 +105,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
       SetActiveEntry (NULL, 0, "");
     return TraverseInfo;
   }
-    
+
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
@@ -125,9 +125,13 @@ void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-
+  GfxContext.GetRenderStates ().SetBlend (true);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
+  
+  GfxContext.GetRenderStates ().SetBlend (false);
 
   GfxContext.PopClippingRectangle ();
 }
@@ -154,16 +158,18 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
 
     _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
+
     _results_controller->Clear ();
   }
   
   _entry = entry;
-  
+
   std::map <gchar*, gchar*> hints;
   DeeModel     *groups, *results;
   DeeModelIter *iter, *last;
 
   _entry->SetActive (true);
+  _search_bar->SetActiveEntry (_entry, section_id, search_string, (_entry == _home_entry));
 
   groups = _entry->GetGroupsModel ();
   iter = dee_model_get_first_iter (groups);
@@ -172,17 +178,24 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   {
     _results_controller->CreateGroup (dee_model_get_string (groups,
                                                             iter,
-                                                            PlaceEntry::GROUP_NAME));
+                                                            PlaceEntry::GROUP_NAME),
+                                      dee_model_get_string (groups,
+                                                            iter,
+                                                            PlaceEntry::GROUP_ICON));
+    g_debug ("%s", dee_model_get_string (groups, iter, PlaceEntry::GROUP_ICON));
     iter = dee_model_next (groups, iter);
   }
 
-  results = _entry->GetResultsModel ();
-  iter = dee_model_get_first_iter (results);
-  last = dee_model_get_last_iter (results);
-  while (iter != last)
+  if (_entry != _home_entry)
   {
-    OnResultAdded (results, iter, this);
-    iter = dee_model_next (results, iter);
+    results = _entry->GetResultsModel ();
+    iter = dee_model_get_first_iter (results);
+    last = dee_model_get_last_iter (results);
+    while (iter != last)
+    {
+      OnResultAdded (results, iter, this);
+      iter = dee_model_next (results, iter);
+    }
   }
 
   _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
@@ -198,8 +211,6 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _layered_layout->SetActiveLayer (_home_view);
   else
     _layered_layout->SetActiveLayer (_results_view);
-
-  _search_bar->SetActiveEntry (_entry, section_id, search_string);
 }
 
 PlaceEntry *
@@ -221,7 +232,12 @@ PlacesView::GetResultsController ()
 void
 PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  g_debug ("GroupAdded: %s", dee_model_get_string (model, iter, 1));
+  self->_results_controller->CreateGroup (dee_model_get_string (model,
+                                                                iter,
+                                                                PlaceEntry::GROUP_NAME),
+                                          dee_model_get_string (model,
+                                                                iter,
+                                                                PlaceEntry::GROUP_ICON));
 }
 
 
@@ -243,7 +259,8 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
   PlacesSimpleTile *tile;
 
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
+                        "unity-install"))
     return;
   
   active = self->GetActiveEntry ();
@@ -267,21 +284,12 @@ PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self
 void
 PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
 {
-  PlaceEntry   *active;
-  DeeModel     *groups;
-  DeeModelIter *git;
-  const gchar  *group_id;
-  
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI), "unity-install"))
+  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
+                        "unity-install"))
     return;
-  active = self->GetActiveEntry ();
-  groups = active->GetGroupsModel ();
-  git = dee_model_get_iter_at_row (groups, dee_model_get_uint32 (model,
-                                                                 iter,
-                                                                 PlaceEntry::RESULT_GROUP_ID));
-  group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  self->GetResultsController ()->RemoveResultFromGroup (group_id, iter);
+
+  self->GetResultsController ()->RemoveResult (iter);
 }
 
 void
