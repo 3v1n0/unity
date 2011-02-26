@@ -25,6 +25,37 @@
 #include <sigc++/trackable.h>
 #include <dee.h>
 
+
+class PlaceEntryGroup
+{
+public:
+  // As this class is to hide the implementation of the PlaceEntry, and will often be
+  // hiding a more C-like API, the decision taken is to make all these stack allocated
+  // and to discourage the views or controllers from saving references to these. Instead
+  // please use GetId(), which will return a pointer that you can guarentee will be valid
+  // and you can use to do lookups to views.
+  virtual const void * GetId () const = 0;
+  virtual const char * GetRenderer () const = 0;
+  virtual const char * GetName () const = 0;
+  virtual const char * GetIcon () const = 0;
+};
+
+class PlaceEntryResult
+{
+public:
+  // As this class is to hide the implementation of the PlaceEntry, and will often be
+  // hiding a more C-like API, the decision taken is to make all these stack allocated
+  // and to discourage the views or controllers from saving references to these. Instead
+  // please use GetId(), which will return a pointer that you can guarentee will be valid
+  // and you can use to do lookups to views.
+  virtual const void * GetId          () const = 0;
+  virtual const char * GetName        () const = 0;
+  virtual const char * GetIcon        () const = 0;
+  virtual const char * GetDescription () const = 0;
+  virtual const char * GetURI         () const = 0;  
+  virtual const char * GetComment     () const = 0;
+};
+
 class PlaceEntry : public sigc::trackable
 {
 public:
@@ -45,6 +76,9 @@ public:
     RESULT_NAME,
     RESULT_COMMENT
   };
+
+  typedef sigc::slot<void, PlaceEntryGroup&>  GroupForeachCallback;
+  typedef sigc::slot<void, PlaceEntryGroup&, PlaceEntryResult&> ResultForeachCallback;
 
   virtual const gchar * GetId          () = 0;
   virtual const gchar * GetName        () = 0;
@@ -88,6 +122,9 @@ public:
   virtual DeeModel * GetGlobalResultsModel () = 0;
   virtual DeeModel * GetGlobalGroupsModel () = 0;
 
+  virtual void ForeachGroup  (GroupForeachCallback slot) = 0;
+  virtual void ForeachResult (ResultForeachCallback slot) = 0;
+
   // Signals
 
   sigc::signal<void, bool>                    active_changed;
@@ -114,6 +151,10 @@ public:
   
   // This is not important outside of a global search aggregator
   sigc::signal<void, PlaceEntry *>            global_renderer_changed;
+
+  sigc::signal<void, PlaceEntryGroup&>                    group_added;
+  sigc::signal<void, PlaceEntryGroup&, PlaceEntryResult&> result_added;
+  sigc::signal<void, PlaceEntryGroup&, PlaceEntryResult&> result_removed;
 };
 
 #endif // PLACE_ENTRY_H

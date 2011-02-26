@@ -67,6 +67,9 @@ public:
   DeeModel * GetGlobalResultsModel () { return NULL; };
   DeeModel * GetGlobalGroupsModel () { return NULL; };
 
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
+
 private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);

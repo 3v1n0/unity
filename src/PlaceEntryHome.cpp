@@ -266,3 +266,15 @@ PlaceEntryHome::GetResultsModel ()
 {
   return _results_model;
 }
+
+void
+PlaceEntryHome::ForeachGroup (GroupForeachCallback slot)
+{
+
+}
+
+void
+PlaceEntryHome::ForeachResult (ResultForeachCallback slot)
+{
+
+}

@@ -339,6 +339,18 @@ PlaceEntryRemote::GetGlobalGroupsModel ()
   return _global_groups_model;
 }
 
+void
+PlaceEntryRemote::ForeachGroup (GroupForeachCallback slot)
+{
+
+}
+
+void
+PlaceEntryRemote::ForeachResult (ResultForeachCallback slot)
+{
+
+}
+
 /* Other methods */
 bool
 PlaceEntryRemote::IsValid ()

@@ -69,6 +69,9 @@ public:
   DeeModel * GetGlobalResultsModel ();
   DeeModel * GetGlobalGroupsModel ();
 
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();
