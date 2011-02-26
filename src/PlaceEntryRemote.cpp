@@ -36,6 +36,114 @@ static void on_proxy_signal_received (GDBusProxy *proxy,
                                               GVariant   *parameters,
                                               gpointer    user_data);
 
+enum
+{
+  GROUP_RENDERER,
+  GROUP_NAME,
+  GROUP_ICON
+};
+
+enum
+{
+  RESULT_URI,
+  RESULT_ICON,
+  RESULT_GROUP_ID,
+  RESULT_MIMETYPE,
+  RESULT_NAME,
+  RESULT_COMMENT
+};
+
+class PlaceEntryGroupRemote
+{
+public:
+  PlaceEntryGroupRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntryGroupRemote (const PlaceEntryGroupRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const void * GetId () const
+  {
+    return _iter;
+  }
+
+  const char * GetRenderer () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_RENDERER);
+  }
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_NAME); 
+  }
+
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_ICON);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
+};
+
+class PlaceEntryResultRemote
+{
+public:
+  
+  PlaceEntryResultRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntryResultRemote (PlaceEntryResultRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const void * GetId () const
+  {
+    return _iter; 
+  };
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_NAME);
+  }
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_ICON);
+  }
+
+  const char * GetMimeType () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_MIMETYPE);
+  }
+
+  const char * GetURI () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_URI);
+  }
+
+  const char * GetComment () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_COMMENT);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
+};
+
+
 PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
 : dirty (false),
   _dbus_path (NULL),

@@ -48,12 +48,12 @@ public:
   // and to discourage the views or controllers from saving references to these. Instead
   // please use GetId(), which will return a pointer that you can guarentee will be valid
   // and you can use to do lookups to views.
-  virtual const void * GetId          () const = 0;
-  virtual const char * GetName        () const = 0;
-  virtual const char * GetIcon        () const = 0;
-  virtual const char * GetDescription () const = 0;
-  virtual const char * GetURI         () const = 0;  
-  virtual const char * GetComment     () const = 0;
+  virtual const void * GetId      () const = 0;
+  virtual const char * GetName    () const = 0;
+  virtual const char * GetIcon    () const = 0;
+  virtual const char * GetMimeType() const = 0;
+  virtual const char * GetURI     () const = 0;  
+  virtual const char * GetComment () const = 0;
 };
 
 class PlaceEntry : public sigc::trackable
