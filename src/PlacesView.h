@@ -81,9 +81,9 @@ protected:
 private:
   static void CloseRequest (GVariant *data, PlacesView *self);
 
-  void OnGroupAdded    (PlaceEntryGroup& group);
-  void OnResultAdded   (PlaceEntryGroup& group, PlaceEntryResult& result);
-  void OnResultRemoved (PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnGroupAdded    (PlaceEntry *entry, PlaceEntryGroup& group);
+  void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
   void OnResultClicked (PlacesTile *tile);
   void OnSearchChanged (const char *search_string);

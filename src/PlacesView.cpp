@@ -196,13 +196,13 @@ PlacesView::GetResultsController ()
 // Model handlers
 //
 void
-PlacesView::OnGroupAdded (PlaceEntryGroup& group)
+PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 {
   _results_controller->CreateGroup (group.GetName (), group.GetIcon ());
 }
 
 void
-PlacesView::OnResultAdded (PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   gchar            *result_name;
   const gchar      *result_icon;
@@ -225,7 +225,7 @@ PlacesView::OnResultAdded (PlaceEntryGroup& group, PlaceEntryResult& result)
 }
 
 void
-PlacesView::OnResultRemoved (PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (result.GetURI (), "unity-install"))

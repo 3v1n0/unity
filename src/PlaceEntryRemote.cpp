@@ -417,36 +417,6 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
   g_variant_builder_unref (builder);
 }
 
-DeeModel *
-PlaceEntryRemote::GetSectionsModel ()
-{
-  return _sections_model;
-}
-
-DeeModel *
-PlaceEntryRemote::GetGroupsModel ()
-{
-  return _groups_model;
-}
-
-DeeModel *
-PlaceEntryRemote::GetResultsModel ()
-{
-  return _results_model;
-}
-
-DeeModel *
-PlaceEntryRemote::GetGlobalResultsModel ()
-{
-  return _global_results_model;
-}
-
-DeeModel *
-PlaceEntryRemote::GetGlobalGroupsModel ()
-{
-  return _global_groups_model;
-}
-
 void
 PlaceEntryRemote::ForeachGroup (GroupForeachCallback slot)
 {
@@ -457,7 +427,7 @@ PlaceEntryRemote::ForeachGroup (GroupForeachCallback slot)
   while (iter != eiter)
   {
     PlaceEntryGroupRemote group (_groups_model, iter);
-    slot (group);
+    slot (this, group);
 
     iter = dee_model_next (_groups_model, iter);
   }
@@ -493,9 +463,62 @@ PlaceEntryRemote::ForeachResult (ResultForeachCallback slot)
     PlaceEntryGroupRemote group (_groups_model, group_iter);
     PlaceEntryResultRemote result (_results_model, iter);
 
-    slot (group, result);
+    slot (this, group, result);
 
     iter = dee_model_next (_results_model, iter);
+  }
+}
+
+
+void
+PlaceEntryRemote::ForeachGlobalGroup (GroupForeachCallback slot)
+{
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_global_groups_model);
+  eiter = dee_model_get_last_iter (_global_groups_model);
+  while (iter != eiter)
+  {
+    PlaceEntryGroupRemote group (_global_groups_model, iter);
+    slot (this, group);
+
+    iter = dee_model_next (_global_groups_model, iter);
+  }
+}
+
+void
+PlaceEntryRemote::ForeachGlobalResult (ResultForeachCallback slot)
+{
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_global_results_model);
+  eiter = dee_model_get_last_iter (_global_results_model);
+
+  while (iter != eiter)
+  {
+    guint         n_group;
+    DeeModelIter *group_iter;
+
+    n_group = dee_model_get_uint32 (_global_results_model, iter, RESULT_GROUP_ID);
+    group_iter = dee_model_get_iter_at_row (_global_groups_model, n_group);
+   
+    if (!group_iter)
+    {
+      g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                  G_STRFUNC,
+                  dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                  n_group);
+
+      iter = dee_model_next (_global_results_model, iter);
+      continue;
+    }
+
+    PlaceEntryGroupRemote group (_global_groups_model, group_iter);
+    PlaceEntryResultRemote result (_global_results_model, iter);
+
+    slot (this, group, result);
+
+    iter = dee_model_next (_global_results_model, iter);
   }
 }
 
@@ -634,6 +657,9 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _global_groups_model = dee_shared_model_new (global_groups_model);
     dee_model_set_schema (_global_groups_model, "s", "s", "s", NULL);
 
+    g_signal_connect (_global_groups_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGlobalGroupAdded, this);
+
     _global_renderer_changed = true;
   }
 
@@ -645,6 +671,11 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 
     _global_results_model = dee_shared_model_new (global_results_model);
     dee_model_set_schema (_global_results_model, "s", "s", "u", "s", "s", "s", NULL);
+
+    g_signal_connect (_global_results_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGlobalResultAdded, this);
+    g_signal_connect (_global_results_model, "row-removed",
+                      (GCallback)PlaceEntryRemote::OnGlobalResultRemoved, this);
 
     _global_renderer_changed = true;
   }
@@ -717,7 +748,7 @@ PlaceEntryRemote::OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntry
 {
   PlaceEntryGroupRemote group (model, iter);
   
-  self->group_added.emit (group);
+  self->group_added.emit (self, group);
 }
 
 void
@@ -741,7 +772,7 @@ PlaceEntryRemote::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntry
   PlaceEntryGroupRemote group (self->_groups_model, group_iter);
   PlaceEntryResultRemote result (model, iter);
 
-  self->result_added.emit (group, result);
+  self->result_added.emit (self, group, result);
 }
 
 void
@@ -765,7 +796,64 @@ PlaceEntryRemote::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEnt
   PlaceEntryGroupRemote group (self->_groups_model, group_iter);
   PlaceEntryResultRemote result (model, iter);
 
-  self->result_removed.emit (group, result);
+  self->result_removed.emit (self, group, result);
+}
+
+
+void
+PlaceEntryRemote::OnGlobalGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  PlaceEntryGroupRemote group (model, iter);
+  
+  self->global_group_added.emit (self, group);
+}
+
+void
+PlaceEntryRemote::OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->global_result_added.emit (self, group, result);
+}
+
+void
+PlaceEntryRemote::OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->global_result_removed.emit (self, group, result);
 }
 
 /*

@@ -23,8 +23,8 @@
 #include <vector>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
-#include <dee.h>
 
+#include <glib.h>
 
 class PlaceEntryGroup
 {
@@ -60,39 +60,22 @@ class PlaceEntry : public sigc::trackable
 {
 public:
 
-  enum
-  {
-    GROUP_RENDERER,
-    GROUP_NAME,
-    GROUP_ICON
-  };
+  typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&>  GroupForeachCallback;
+  typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> ResultForeachCallback;
 
-  enum
-  {
-    RESULT_URI,
-    RESULT_ICON,
-    RESULT_GROUP_ID,
-    RESULT_MIMETYPE,
-    RESULT_NAME,
-    RESULT_COMMENT
-  };
-
-  typedef sigc::slot<void, PlaceEntryGroup&>  GroupForeachCallback;
-  typedef sigc::slot<void, PlaceEntryGroup&, PlaceEntryResult&> ResultForeachCallback;
-
-  virtual const gchar * GetId          () = 0;
-  virtual const gchar * GetName        () = 0;
-  virtual const gchar * GetIcon        () = 0;
-  virtual const gchar * GetDescription () = 0;
+  virtual const char * GetId          () = 0;
+  virtual const char * GetName        () = 0;
+  virtual const char * GetIcon        () = 0;
+  virtual const char * GetDescription () = 0;
   virtual       guint64 GetShortcut    () = 0;
   
   // For ordering entries within a place
   virtual guint32        GetPosition  () = 0;
 
   // For DND, what can this entry handle
-  virtual const gchar ** GetMimetypes () = 0;
+  virtual const char ** GetMimetypes () = 0;
   
-  virtual const std::map<gchar *, gchar *>& GetHints () = 0;
+  virtual const std::map<char *, char *>& GetHints () = 0;
 
   // Whether the entry is sensitive to input (clicks/DND)
   virtual bool IsSensitive () = 0;
@@ -110,20 +93,15 @@ public:
   // if necessary
   virtual void SetActive        (bool is_active) = 0;
 
-  virtual void SetSearch        (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
+  virtual void SetSearch        (const char *search, std::map<char*, char*>& hints) = 0;
   virtual void SetActiveSection (guint32 section_id) = 0;
-  virtual void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints) = 0;
-
-  virtual DeeModel * GetSectionsModel () = 0;
-
-  virtual DeeModel * GetGroupsModel () = 0;
-  virtual DeeModel * GetResultsModel () = 0;
-
-  virtual DeeModel * GetGlobalResultsModel () = 0;
-  virtual DeeModel * GetGlobalGroupsModel () = 0;
+  virtual void SetGlobalSearch  (const char *search, std::map<char*, char*>& hints) = 0;
 
   virtual void ForeachGroup  (GroupForeachCallback slot) = 0;
   virtual void ForeachResult (ResultForeachCallback slot) = 0;
+
+  virtual void ForeachGlobalGroup  (GroupForeachCallback slot) = 0;
+  virtual void ForeachGlobalResult (ResultForeachCallback slot) = 0;
 
   // Signals
 
@@ -133,7 +111,7 @@ public:
   sigc::signal<void>                          state_changed;
 
   sigc::signal<void, guint32>                 position_changed;
-  sigc::signal<void, const gchar **>          mimetypes_changed;
+  sigc::signal<void, const char **>          mimetypes_changed;
   sigc::signal<void, bool>                    sensitive_changed;
 
   // If ShowInLauncher or ShowInGlobal changes
@@ -152,9 +130,13 @@ public:
   // This is not important outside of a global search aggregator
   sigc::signal<void, PlaceEntry *>            global_renderer_changed;
 
-  sigc::signal<void, PlaceEntryGroup&>                    group_added;
-  sigc::signal<void, PlaceEntryGroup&, PlaceEntryResult&> result_added;
-  sigc::signal<void, PlaceEntryGroup&, PlaceEntryResult&> result_removed;
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&>                    group_added;
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> result_added;
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> result_removed;
+
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&>                    global_group_added;
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_added;
+  sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_removed;
 };
 
 #endif // PLACE_ENTRY_H
