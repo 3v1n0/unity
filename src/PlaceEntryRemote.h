@@ -72,6 +72,10 @@ public:
   void ForeachGroup  (GroupForeachCallback slot);
   void ForeachResult (ResultForeachCallback slot);
 
+  static void OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();

@@ -53,7 +53,7 @@ enum
   RESULT_COMMENT
 };
 
-class PlaceEntryGroupRemote
+class PlaceEntryGroupRemote : public PlaceEntryGroup
 {
 public:
   PlaceEntryGroupRemote (DeeModel *model, DeeModelIter *iter)
@@ -93,7 +93,7 @@ private:
   DeeModelIter *_iter;
 };
 
-class PlaceEntryResultRemote
+class PlaceEntryResultRemote : public PlaceEntryResult
 {
 public:
   
@@ -664,6 +664,61 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
   g_free (name_owner);
 }
 
+void
+PlaceEntryRemote::OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  PlaceEntryGroupRemote group (model, iter);
+  
+  self->group_added.emit (group);
+}
+
+void
+PlaceEntryRemote::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->result_added.emit (group, result);
+}
+
+void
+PlaceEntryRemote::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->result_removed.emit (group, result);
+}
 
 /*
  * C -> C++ glue
