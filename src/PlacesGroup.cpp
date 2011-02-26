@@ -40,17 +40,12 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
-PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM),
-_idle_id (0)
+PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
+: View (NUX_FILE_LINE_PARAM),
+  _idle_id (0),
+  _title_string (NULL),
+  _content (NULL)
 {
-  //~ OnMouseDown.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseDown));
-  //~ OnMouseUp.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseUp));
-  //~ OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
-  //~ OnMouseMove.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseMove));
-  //~ OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
-  //~ OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
-
   _icon_texture = new IconTexture ("", 24);
   _icon_texture->SetMinimumSize (24, 24);
 
@@ -68,43 +63,28 @@ _idle_id (0)
   _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   _header_layout->AddView (_title, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   _header_layout->AddSpace (1, 1);
-
-  // FIXME: We don't want to show this as it does nothing right now
-  // _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
-  _content = NULL;
-  _expanded = false;
-  _title_string = NULL;
-  _row_height = 0;
-  _total_items = 0;
-  _visible_items = 0;
-
-  SetCompositionLayout (_group_layout);
-
+  SetLayout (_group_layout);
 }
 
 PlacesGroup::~PlacesGroup ()
 {
   g_free (_title_string);
-
-  _group_layout->RemoveChildObject (_header_layout);
-
-  if (_content != NULL)
-  {
-    _group_layout->RemoveChildObject (_content);
-  }
 }
 
 void PlacesGroup::SetTitle (const char *title)
 {
   const gchar *temp = "<big>%s</big>";
+  gchar *tmp = g_markup_escape_text (title, -1);
 
-  _title_string = g_strdup_printf (temp, title);
+  _title_string = g_strdup_printf (temp, tmp);
   UpdateTitle ();
+
+  g_free (tmp);
 }
 
 void PlacesGroup::SetEmblem (const char *path_to_emblem)
@@ -112,41 +92,20 @@ void PlacesGroup::SetEmblem (const char *path_to_emblem)
   _icon_texture->SetByIconName (path_to_emblem, 24);
 }
 
-void PlacesGroup::AddLayout (nux::Layout *layout)
+void PlacesGroup::SetChildLayout (nux::Layout *layout)
 {
   _content = layout;
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
   _group_layout->AddLayout (_content, 1);
-  NeedRedraw ();
+  QueueDraw ();
 }
 
 nux::Layout *
-PlacesGroup::GetLayout ()
+PlacesGroup::GetChildLayout ()
 {
   return _content;
-}
-
-void PlacesGroup::SetRowHeight (unsigned int row_height)
-{
-  _row_height = row_height;
-}
-
-void PlacesGroup::SetItemDetail (unsigned int total_items, unsigned int visible_items)
-{
-  _total_items = total_items;
-  _visible_items = visible_items;
-  UpdateLabel ();
-}
-
-void PlacesGroup::SetExpanded (bool expanded)
-{
-  if (_expanded == expanded)
-    return;
-
-  _expanded = expanded;
-  UpdateLabel ();
 }
 
 void
@@ -154,29 +113,25 @@ PlacesGroup::UpdateTitle ()
 {
   _title->SetText (_title_string);
   ComputeChildLayout ();
-  NeedRedraw ();
+  QueueDraw ();
 }
 
 void
 PlacesGroup::UpdateLabel ()
 {
-  if (_expanded)
-  {
-    _label->SetText (_("See less results"));
-  }
-  else
-  {
-    char *result_string = NULL;
-    result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                                       "See one less result",
+#if 0
+  char *result_string = NULL;
+  result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
+                                                     "See one less result",
                                                        _total_items - _visible_items));
 
-    _label->SetText (result_string);
-    g_free ((result_string));
-  }
+  _label->SetText (result_string);
 
   ComputeChildLayout ();
-  NeedRedraw ();
+  QueueDraw ();
+  
+  g_free ((result_string));
+#endif
 }
 
 void PlacesGroup::Relayout ()
@@ -189,7 +144,7 @@ gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
   self->QueueDraw ();
   self->_group_layout->QueueDraw ();
-  self->GetLayout ()->QueueDraw ();
+  self->GetChildLayout ()->QueueDraw ();
   self->ComputeChildLayout ();
   self->_idle_id = 0;
 
@@ -227,16 +182,3 @@ PlacesGroup::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
 
 }
-
-void
-PlacesGroup::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesGroup::PostLayoutManagement (long LayoutResult)
-{
-  return nux::View::PostLayoutManagement (LayoutResult);
-}
-

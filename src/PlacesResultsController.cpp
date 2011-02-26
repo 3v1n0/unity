@@ -71,7 +71,7 @@ PlacesResultsController::AddResultToGroup (const char *groupname,
       group = CreateGroup (groupname);
     }
 
-  group->GetLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
+  group->GetChildLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
   _tiles[_id] = tile;
   _tile_group_relations[_id] = groupname;
 
@@ -98,9 +98,9 @@ PlacesResultsController::RemoveResultFromGroup (const char *groupname,
   {
     if (tile)
     {
-      group->GetLayout ()->RemoveChildObject (tile);
+      group->GetChildLayout ()->RemoveChildObject (tile);
 
-      if (group->GetLayout ()->GetChildren ().empty ())
+      if (group->GetChildLayout ()->GetChildren ().empty ())
       {
         group->SetVisible (false);
       }
@@ -161,9 +161,6 @@ PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
   newgroup->SinkReference ();
   newgroup->SetTitle (groupname);
   newgroup->SetEmblem (icon);
-  newgroup->SetRowHeight (92);
-  newgroup->SetItemDetail (1, 100);
-  newgroup->SetExpanded (true);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
@@ -176,7 +173,7 @@ PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
   layout->SetHorizontalInternalMargin (4);
   layout->SetHeightMatchContent (true);
 
-  newgroup->AddLayout (layout);
+  newgroup->SetChildLayout (layout);
   newgroup->SetVisible (false);
 
   _groups[groupname] = newgroup;

@@ -29,18 +29,16 @@
 PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   :   ScrollView (NUX_FILE_LINE_PARAM)
 {
-  m_horizontal_scrollbar_enable   = false;
-  m_vertical_scrollbar_enable      = true;
   _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
   _layout->SetHorizontalExternalMargin (14);
   _layout->SetVerticalInternalMargin (14);
 
-  setBorder (12);
-  EnableVerticalScrollBar (true);
+  SetLayout (_layout);
 
-  SetCompositionLayout (_layout);
+  EnableVerticalScrollBar (true);
+  EnableHorizontalScrollBar (false);
 }
 
 PlacesResultsView::~PlacesResultsView ()
@@ -49,8 +47,17 @@ PlacesResultsView::~PlacesResultsView ()
 }
 
 void
-PlacesResultsView::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+PlacesResultsView::AddGroup (PlacesGroup *group)
 {
+  _groups.push_back (group);
+  _layout->AddView (group, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+}
+
+void
+PlacesResultsView::RemoveGroup (PlacesGroup *group)
+{
+  _groups.remove (group);
+  _layout->RemoveChildObject (group);
 }
 
 void
@@ -75,39 +82,8 @@ PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   GfxContext.PopClippingRectangle();
 }
 
-void
-PlacesResultsView::AddGroup (PlacesGroup *group)
-{
-  _groups.push_back (group);
-  _layout->AddView (group, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-}
-
-void
-PlacesResultsView::RemoveGroup (PlacesGroup *group)
-{
-  _groups.remove (group);
-  _layout->RemoveChildObject (group);
-}
-
-void
-PlacesResultsView::PositionChildLayout (float offsetX, float offsetY)
-{
-  ScrollView::PositionChildLayout (offsetX, offsetY);
-}
-
-
-void PlacesResultsView::PreLayoutManagement()
-{
-  ScrollView::PreLayoutManagement();
-}
-
-long PlacesResultsView::PostLayoutManagement (long LayoutResult)
-{
-  long result = ScrollView::PostLayoutManagement (LayoutResult);
-  return result;
-}
-
-long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long
+PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
   long ProcEvInfo = 0;
@@ -142,33 +118,4 @@ long PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, lo
 
   ret = PostProcessEvent2 (ievent, ret, 0);
   return ret;
-}
-
-void PlacesResultsView::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-
-}
-
-
-
-void
-PlacesResultsView::ScrollLeft (float stepx, int mousedx)
-{
-}
-
-void
-PlacesResultsView::ScrollRight (float stepx, int mousedx)
-{
-}
-
-void
-PlacesResultsView::ScrollUp (float stepy, int mousedy)
-{
-  ScrollView::ScrollUp (stepy, mousedy);
-}
-
-void
-PlacesResultsView::ScrollDown (float stepy, int mousedy)
-{
-  ScrollView::ScrollDown (stepy, mousedy);
 }
