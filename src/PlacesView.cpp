@@ -152,60 +152,26 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   {
     _entry->SetActive (false);
 
-    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_added_id);
-    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_removed_id);
-    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_added_id);
-    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
-
-    _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
+    _group_added_conn.disconnect ();
+    _result_added_conn.disconnect ();
+    _result_removed_conn.disconnect ();
 
     _results_controller->Clear ();
   }
   
   _entry = entry;
 
-  std::map <gchar*, gchar*> hints;
-  DeeModel     *groups, *results;
-  DeeModelIter *iter, *last;
-
   _entry->SetActive (true);
   _search_bar->SetActiveEntry (_entry, section_id, search_string, (_entry == _home_entry));
 
-  groups = _entry->GetGroupsModel ();
-  iter = dee_model_get_first_iter (groups);
-  last = dee_model_get_last_iter (groups);
-  while (iter != last)
-  {
-    _results_controller->CreateGroup (dee_model_get_string (groups,
-                                                            iter,
-                                                            PlaceEntry::GROUP_NAME),
-                                      dee_model_get_string (groups,
-                                                            iter,
-                                                            PlaceEntry::GROUP_ICON));
-    g_debug ("%s", dee_model_get_string (groups, iter, PlaceEntry::GROUP_ICON));
-    iter = dee_model_next (groups, iter);
-  }
-
+  _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
+  
   if (_entry != _home_entry)
-  {
-    results = _entry->GetResultsModel ();
-    iter = dee_model_get_first_iter (results);
-    last = dee_model_get_last_iter (results);
-    while (iter != last)
-    {
-      OnResultAdded (results, iter, this);
-      iter = dee_model_next (results, iter);
-    }
-  }
+    _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
 
-  _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
-                                      (GCallback)&PlacesView::OnGroupAdded, this);
-  _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
-                                        (GCallback)&PlacesView::OnGroupRemoved, this);
-  _result_added_id = g_signal_connect (_entry->GetResultsModel (), "row-added",
-                                       (GCallback)&PlacesView::OnResultAdded, this);
-  _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
-                                         (GCallback)&PlacesView::OnResultRemoved, this);
+  _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
+  _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
+  _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
 
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
@@ -230,66 +196,42 @@ PlacesView::GetResultsController ()
 // Model handlers
 //
 void
-PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+PlacesView::OnGroupAdded (PlaceEntryGroup& group)
 {
-  self->_results_controller->CreateGroup (dee_model_get_string (model,
-                                                                iter,
-                                                                PlaceEntry::GROUP_NAME),
-                                          dee_model_get_string (model,
-                                                                iter,
-                                                                PlaceEntry::GROUP_ICON));
-}
-
-
-void
-PlacesView::OnGroupRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
-{
-  g_debug ("GroupRemoved: %s", dee_model_get_string (model, iter, 1));
+  _results_controller->CreateGroup (group.GetName (), group.GetIcon ());
 }
 
 void
-PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+PlacesView::OnResultAdded (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlaceEntry       *active;
-  DeeModel         *groups;
-  DeeModelIter     *git;
-  const gchar      *group_id;
   gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
 
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
-                        "unity-install"))
+  if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
   
-  active = self->GetActiveEntry ();
-  groups = active->GetGroupsModel ();
-  git = dee_model_get_iter_at_row (groups, dee_model_get_uint32 (model,
-                                                                 iter,
-                                                                 PlaceEntry::RESULT_GROUP_ID));
-  group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
-                                      -1);
-  result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
+  result_name = g_markup_escape_text (result.GetName (), -1);
+  result_icon = result.GetIcon ();
 
   tile = new PlacesSimpleTile (result_icon, result_name, 48);
-  tile->SetURI (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
-  tile->sigClick.connect (sigc::mem_fun (self, &PlacesView::OnResultClicked));
-  self->GetResultsController ()->AddResultToGroup (group_id, tile, iter);
+  tile->SetURI (result.GetURI ());
+  tile->sigClick.connect (sigc::mem_fun (this, &PlacesView::OnResultClicked));
+  _results_controller->AddResultToGroup (group.GetName (), tile,
+                                         const_cast<void*> (result.GetId ()));
 
   g_free (result_name);
 }
 
 void
-PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+PlacesView::OnResultRemoved (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
-                        "unity-install"))
+  if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
 
-  self->GetResultsController ()->RemoveResult (iter);
+  _results_controller->RemoveResult (const_cast<void*> (result.GetId ()));
 }
 
 void

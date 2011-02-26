@@ -450,13 +450,53 @@ PlaceEntryRemote::GetGlobalGroupsModel ()
 void
 PlaceEntryRemote::ForeachGroup (GroupForeachCallback slot)
 {
+  DeeModelIter *iter, *eiter;
 
+  iter = dee_model_get_first_iter (_groups_model);
+  eiter = dee_model_get_last_iter (_groups_model);
+  while (iter != eiter)
+  {
+    PlaceEntryGroupRemote group (_groups_model, iter);
+    slot (group);
+
+    iter = dee_model_next (_groups_model, iter);
+  }
 }
 
 void
 PlaceEntryRemote::ForeachResult (ResultForeachCallback slot)
 {
+  DeeModelIter *iter, *eiter;
 
+  iter = dee_model_get_first_iter (_results_model);
+  eiter = dee_model_get_last_iter (_results_model);
+
+  while (iter != eiter)
+  {
+    guint         n_group;
+    DeeModelIter *group_iter;
+
+    n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
+    group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
+   
+    if (!group_iter)
+    {
+      g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                  G_STRFUNC,
+                  dee_model_get_string (_results_model, iter, RESULT_URI),
+                  n_group);
+
+      iter = dee_model_next (_results_model, iter);
+      continue;
+    }
+
+    PlaceEntryGroupRemote group (_groups_model, group_iter);
+    PlaceEntryResultRemote result (_results_model, iter);
+
+    slot (group, result);
+
+    iter = dee_model_next (_results_model, iter);
+  }
 }
 
 /* Other methods */
@@ -557,6 +597,9 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _groups_model = dee_shared_model_new (entry_groups_model);
     dee_model_set_schema (_groups_model, "s", "s", "s", NULL);
 
+    g_signal_connect (_groups_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGroupAdded, this);
+
     _entry_renderer_changed = true;
   }
 
@@ -569,6 +612,11 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _results_model = dee_shared_model_new (entry_results_model);
     dee_model_set_schema (_results_model, "s", "s", "u", "s", "s", "s", NULL);
 
+    g_signal_connect (_results_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnResultAdded, this);
+    g_signal_connect (_results_model, "row-removed",
+                      (GCallback)PlaceEntryRemote::OnResultRemoved, this);
+    
     _entry_renderer_changed = true;
   }
 

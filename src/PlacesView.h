@@ -81,10 +81,9 @@ protected:
 private:
   static void CloseRequest (GVariant *data, PlacesView *self);
 
-  static void OnGroupAdded    (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnGroupRemoved  (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultAdded   (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  void OnGroupAdded    (PlaceEntryGroup& group);
+  void OnResultAdded   (PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntryGroup& group, PlaceEntryResult& result);
 
   void OnResultClicked (PlacesTile *tile);
   void OnSearchChanged (const char *search_string);
@@ -97,10 +96,9 @@ private:
   PlacesHomeView     *_home_view;
   PlaceEntryHome     *_home_entry;
   PlaceEntry         *_entry;
-  gulong              _group_added_id;
-  gulong              _group_removed_id;
-  gulong              _result_added_id;
-  gulong              _result_removed_id;
+  sigc::connection    _group_added_conn;
+  sigc::connection    _result_added_conn;
+  sigc::connection    _result_removed_conn;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
