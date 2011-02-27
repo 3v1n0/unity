@@ -42,82 +42,78 @@
 
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM),
-  _idle_id (0),
-  _title_string (NULL),
-  _content (NULL)
+  _content_layout (NULL),
+  _idle_id (0)
 {
-  _icon_texture = new IconTexture ("", 24);
-  _icon_texture->SetMinimumSize (24, 24);
-
-  _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-
-  _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _header_layout->SetHorizontalInternalMargin (12);
-
-  _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-  _header_layout->AddSpace (1, 1);
-  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
-
-  _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  
+  _icon = new IconTexture ("", 24);
+  _icon->SetMinimumSize (24, 24);
+  _header_layout->AddView (_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _name = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+  _name->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _name->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _header_layout->AddView (_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  
+  _expand_label = new nux::StaticCairoText ("Expand", NUX_TRACKER_LOCATION);
+  _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
   SetLayout (_group_layout);
 }
 
 PlacesGroup::~PlacesGroup ()
 {
-  g_free (_title_string);
+
 }
 
-void PlacesGroup::SetTitle (const char *title)
+void
+PlacesGroup::SetName (const char *name)
 {
   const gchar *temp = "<big>%s</big>";
-  gchar *tmp = g_markup_escape_text (title, -1);
+  gchar *tmp, *final;
+  
+  tmp = g_markup_escape_text (name, -1);
 
-  _title_string = g_strdup_printf (temp, tmp);
-  UpdateTitle ();
+  final = g_strdup_printf (temp, tmp);
+
+  _name->SetText (final);
 
   g_free (tmp);
+  g_free (final);
 }
 
-void PlacesGroup::SetEmblem (const char *path_to_emblem)
+void
+PlacesGroup::SetIcon (const char *path_to_emblem)
 {
-  _icon_texture->SetByIconName (path_to_emblem, 24);
+  _icon->SetByIconName (path_to_emblem, 24);
 }
 
-void PlacesGroup::SetChildLayout (nux::Layout *layout)
+void
+PlacesGroup::SetChildLayout (nux::Layout *layout)
 {
-  _content = layout;
+  _content_layout = layout;
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
-  _group_layout->AddLayout (_content, 1);
+  _group_layout->AddLayout (_content_layout, 1);
   QueueDraw ();
 }
 
 nux::Layout *
 PlacesGroup::GetChildLayout ()
 {
-  return _content;
+  return _content_layout;
 }
 
 void
-PlacesGroup::UpdateTitle ()
-{
-  _title->SetText (_title_string);
-  ComputeChildLayout ();
-  QueueDraw ();
-}
-
-void
-PlacesGroup::UpdateLabel ()
+PlacesGroup::Refresh ()
 {
 #if 0
   char *result_string = NULL;
@@ -125,7 +121,7 @@ PlacesGroup::UpdateLabel ()
                                                      "See one less result",
                                                        _total_items - _visible_items));
 
-  _label->SetText (result_string);
+  _expand_label->SetText (result_string);
 
   ComputeChildLayout ();
   QueueDraw ();
@@ -134,13 +130,15 @@ PlacesGroup::UpdateLabel ()
 #endif
 }
 
-void PlacesGroup::Relayout ()
+void
+PlacesGroup::Relayout ()
 {
   if (_idle_id == 0)
     _idle_id = g_idle_add ((GSourceFunc)OnIdleRelayout, this);
 }
 
-gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
+gboolean
+PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
   self->QueueDraw ();
   self->_group_layout->QueueDraw ();
@@ -151,7 +149,8 @@ gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
   return FALSE;
 }
 
-long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long
+PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
 
@@ -172,13 +171,7 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
 
-  _group_layout->ProcessDraw (GfxContext, force_draw || IsFullRedraw ());
+  _group_layout->ProcessDraw (GfxContext, force_draw);
 
   GfxContext.PopClippingRectangle();
-}
-
-void
-PlacesGroup::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-
 }

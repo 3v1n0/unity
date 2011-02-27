@@ -31,8 +31,8 @@ PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
   _id = group.GetId ();
 
   _group = new PlacesGroup (NUX_TRACKER_LOCATION);
-  _group->SetTitle (group.GetName ());
-  _group->SetEmblem (group.GetIcon ());
+  _group->SetName(group.GetName ());
+  _group->SetIcon (group.GetIcon ());
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);

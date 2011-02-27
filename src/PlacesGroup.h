@@ -20,23 +20,15 @@
 #ifndef PLACES_GROUP_H
 #define PLACES_GROUP_H
 
-#include <sigc++/sigc++.h>
-
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
+#include <Nux/HLayout.h>
 
-#include "StaticCairoText.h"
-
-#include "Introspectable.h"
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
+#include <sigc++/sigc++.h>
 
 #include "IconTexture.h"
+#include "Introspectable.h"
+#include "StaticCairoText.h"
 
 class PlacesGroup : public nux::View
 {
@@ -45,37 +37,33 @@ public:
   PlacesGroup (NUX_FILE_LINE_PROTO);
   ~PlacesGroup ();
 
-  void SetEmblem (const char *path_to_emblem);
-  void SetTitle  (const char *title);
-
+  void SetIcon (const char *icon);
+  void SetName (const char *name);
+ 
   void          SetChildLayout (nux::Layout *layout);
   nux::Layout * GetChildLayout ();
 
   void Relayout ();
 
 private:
-  nux::StaticCairoText *_label;
-  nux::StaticCairoText *_title;
+  void Refresh ();
 
-  guint32 _idle_id;
-
-  char *_title_string;
-
-  nux::Layout *_content;
-  IconTexture  *_icon_texture;
-  nux::VLayout *_group_layout;
-  nux::HLayout *_header_layout;
+  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   static gboolean OnIdleRelayout (PlacesGroup *self);
 
-  void UpdateTitle ();
-  void UpdateLabel ();
-
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
 private:
+  nux::VLayout *_group_layout;
+  nux::HLayout *_header_layout;
+  nux::Layout  *_content_layout;
+
+  IconTexture          *_icon;
+  nux::StaticCairoText *_name;
+  nux::StaticCairoText *_expand_label;
+
+  guint32 _idle_id;
 };
 
 #endif
