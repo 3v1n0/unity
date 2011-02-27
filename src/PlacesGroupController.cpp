@@ -26,6 +26,8 @@
 PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
 : _group (NULL)
 {
+#define ROW_HEIGHT 100
+
   PlacesSettings *settings = PlacesSettings::GetDefault ();
 
   _id = group.GetId ();
@@ -33,10 +35,11 @@ PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
   _group = new PlacesGroup (NUX_TRACKER_LOCATION);
   _group->SetName(group.GetName ());
   _group->SetIcon (group.GetIcon ());
+  _group->SetChildUnexpandHeight (ROW_HEIGHT);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (settings->GetDefaultTileWidth (), 100);
+  layout->SetChildrenSize (settings->GetDefaultTileWidth (), ROW_HEIGHT);
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (4);
@@ -84,6 +87,7 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   _group->GetChildLayout ()->AddView (tile);
   _group->Relayout ();
   _group->SetVisible (true);
+  _group->SetCounts (6, _id_to_tile.size ());
 
   g_free (result_name);
 }
@@ -103,6 +107,9 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
   _group->GetChildLayout ()->RemoveChildObject (tile);
   _group->SetVisible (_id_to_tile.size ());
   _group->Relayout ();
+
+  _id_to_tile.erase (result.GetId ());
+  _group->SetCounts (6, _id_to_tile.size ());
 }
 
 void

@@ -33,7 +33,7 @@
 class PlacesGroup : public nux::View
 {
 public:
-
+  
   PlacesGroup (NUX_FILE_LINE_PROTO);
   ~PlacesGroup ();
 
@@ -44,6 +44,10 @@ public:
   nux::Layout * GetChildLayout ();
 
   void Relayout ();
+
+  void SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items);
+
+  void SetChildUnexpandHeight (guint height);
 
 private:
   void Refresh ();
@@ -58,12 +62,17 @@ private:
   nux::VLayout *_group_layout;
   nux::HLayout *_header_layout;
   nux::Layout  *_content_layout;
-
+  
   IconTexture          *_icon;
   nux::StaticCairoText *_name;
   nux::StaticCairoText *_expand_label;
 
   guint32 _idle_id;
+
+  bool  _is_expanded;
+  guint _n_visible_items_in_unexpand_mode;
+  guint _n_total_items;
+  guint _child_unexpand_height;
 };
 
 #endif

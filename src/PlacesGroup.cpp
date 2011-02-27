@@ -43,7 +43,11 @@
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM),
   _content_layout (NULL),
-  _idle_id (0)
+  _idle_id (0),
+  _is_expanded (false),
+  _n_visible_items_in_unexpand_mode (0),
+  _n_total_items (0),
+  _child_unexpand_height (0)
 {
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
@@ -63,7 +67,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label = new nux::StaticCairoText ("Expand", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
 }
@@ -115,19 +119,32 @@ PlacesGroup::GetChildLayout ()
 void
 PlacesGroup::Refresh ()
 {
-#if 0
-  char *result_string = NULL;
-  result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                                     "See one less result",
-                                                       _total_items - _visible_items));
+  char *result_string;
+
+  if (_n_visible_items_in_unexpand_mode >= _n_total_items)
+  {
+    result_string = g_strdup ("");
+  }
+  else if (_is_expanded)
+  {
+    result_string = g_strdup (_("See fewer results"));
+  }
+  else
+  {
+    result_string = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
+                                           "See one more result",
+                                           "See %d more results",
+                                           _n_total_items - _n_visible_items_in_unexpand_mode),
+                                     _n_total_items - _n_visible_items_in_unexpand_mode);
+  }
 
   _expand_label->SetText (result_string);
+  _expand_label->SetVisible (_n_visible_items_in_unexpand_mode < _n_total_items);
 
   ComputeChildLayout ();
   QueueDraw ();
   
   g_free ((result_string));
-#endif
 }
 
 void
@@ -174,4 +191,24 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   _group_layout->ProcessDraw (GfxContext, force_draw);
 
   GfxContext.PopClippingRectangle();
+}
+
+void
+PlacesGroup::SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items)
+{
+  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
+  _n_total_items = n_total_items;
+
+  Refresh ();
+}
+
+
+void
+PlacesGroup::SetChildUnexpandHeight (guint height)
+{
+  if (_child_unexpand_height == height)
+    return;
+
+  _child_unexpand_height = height;
+  Relayout ();
 }
