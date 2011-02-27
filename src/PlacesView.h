@@ -89,7 +89,7 @@ private:
 
 private:
   PlaceFactory       *_factory;
-  nux::VLayout       *_layout;
+  nux::HLayout       *_layout;
   nux::LayeredLayout *_layered_layout;
   PlacesSearchBar    *_search_bar;
   PlacesHomeView     *_home_view;

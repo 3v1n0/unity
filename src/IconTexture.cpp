@@ -152,7 +152,7 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_texture_cached)
   {
     nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _texture_width)/2),

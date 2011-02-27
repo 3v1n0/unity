@@ -29,6 +29,7 @@
 #include "UBusMessages.h"
 
 #include "PlaceFactory.h"
+#include "PlacesStyle.h"
 
 #include "PlacesView.h"
 
@@ -41,17 +42,35 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _factory (factory),
   _entry (NULL)
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
   _home_entry = new PlaceEntryHome (_factory);
 
-  _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
+
+  nux::VLayout *vlayout = new nux::VLayout (NUX_TRACKER_LOCATION);
+  _layout->AddLayout (vlayout, 1, nux::eCenter, nux::eFull);
+
+  nux::SpaceLayout *space = new nux::SpaceLayout (style->GetDashCorner ()->GetWidth (),
+                                                  style->GetDashCorner ()->GetWidth (),
+                                                  1,
+                                                  nux::AREA_MAX_HEIGHT);
+  _layout->AddLayout (space, 0, nux::eCenter, nux::eFull);
   
   _search_bar = new PlacesSearchBar ();
-  _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
+  vlayout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
+
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
 
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
-  _layout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
+  vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
+
+  space = new nux::SpaceLayout (1,
+                                nux::AREA_MAX_WIDTH,
+                                style->GetDashCorner ()->GetHeight (),
+                                style->GetDashCorner ()->GetHeight ());
+  vlayout->AddLayout (space, 0, nux::eCenter, nux::eFull);
   
   _home_view = new PlacesHomeView ();
   _layered_layout->AddLayer (_home_view);
@@ -114,12 +133,73 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 }
 
 void
-PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  PlacesStyle  *style = PlacesStyle::GetDefault ();
+  nux::Geometry geo = GetGeometry ();
 
-  gPainter.PaintBackground (GfxContext, GetGeometry ());
+  GfxContext.PushClippingRectangle (geo);
 
+  gPainter.PaintBackground (GfxContext, geo);
+
+  GfxContext.GetRenderStates ().SetBlend (true);
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  
+  if (style->GetDashCorner ())
+  {
+    nux::BaseTexture *corner = style->GetDashCorner ();
+    nux::BaseTexture *bottom = style->GetDashBottomTile ();
+    nux::BaseTexture *right = style->GetDashRightTile ();
+    nux::TexCoordXForm texxform;
+
+    {
+      texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+      GfxContext.QRP_1Tex (geo.x + (geo.width - corner->GetWidth ()),
+                           geo.y + (geo.height - corner->GetHeight ()),
+                           corner->GetWidth (),
+                           corner->GetHeight (),
+                           corner->GetDeviceTexture (),
+                           texxform,
+                           nux::Color::White);
+    }
+
+    {
+      int real_width = geo.width - corner->GetWidth ();
+      int offset = real_width % bottom->GetWidth ();
+
+      texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+      GfxContext.QRP_1Tex (geo.x - offset,
+                           geo.y + (geo.height - bottom->GetHeight ()),
+                           real_width + offset,
+                           bottom->GetHeight (),
+                           bottom->GetDeviceTexture (),
+                           texxform,
+                           nux::Color::White);
+    }
+
+    {
+      int real_height = geo.height - corner->GetHeight ();
+      int offset = real_height % right->GetHeight ();
+
+      texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+      texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+
+      GfxContext.QRP_1Tex (geo.x +(geo.width - right->GetWidth ()),
+                           geo.y - offset,
+                           right->GetWidth (),
+                           real_height + offset,
+                           right->GetDeviceTexture (),
+                           texxform,
+                           nux::Color::White);
+    }
+  }
+  
+  GfxContext.GetRenderStates ().SetBlend (false);
+  
   GfxContext.PopClippingRectangle ();
 }
 

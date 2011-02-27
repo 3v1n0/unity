@@ -32,7 +32,10 @@ PlacesStyle::PlacesStyle ()
 : _util_cg (CAIRO_FORMAT_ARGB32, 1, 1),
   _text_color (1.0f, 1.0f, 1.0f, 1.0f),
   _text_width (0),
-  _text_height (0)
+  _text_height (0),
+  _dash_bottom_texture (NULL),
+  _dash_right_texture (NULL),
+  _dash_corner_texture (NULL)
 {
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
                     G_CALLBACK (PlacesStyle::OnFontChanged), this);
@@ -44,6 +47,13 @@ PlacesStyle::PlacesStyle ()
 
 PlacesStyle::~PlacesStyle ()
 {
+  if (_dash_bottom_texture)
+    _dash_bottom_texture->UnReference ();
+  if (_dash_right_texture)
+    _dash_right_texture->UnReference ();
+  if (_dash_corner_texture)
+    _dash_corner_texture->UnReference ();
+
   if (_style == this)
     _style = NULL;
 }
@@ -73,6 +83,62 @@ int
 PlacesStyle::GetTileHeight ()
 {
   return GetTileIconSize () + (_text_height * 2.5);
+}
+
+nux::BaseTexture *
+PlacesStyle::GetDashBottomTile ()
+{
+  if (!_dash_bottom_texture)
+    _dash_bottom_texture = TextureFromFilename (PKGDATADIR"/dash_bottom_border_tile.png",
+                                                &_dash_bottom_tile_width,
+                                                &_dash_bottom_tile_height);
+  return _dash_bottom_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetDashRightTile ()
+{
+  if (!_dash_right_texture)
+    _dash_right_texture =  TextureFromFilename (PKGDATADIR"/dash_right_border_tile.png",
+                                                &_dash_right_tile_width,
+                                                &_dash_right_tile_height);
+  return _dash_right_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetDashCorner ()
+{
+  if (!_dash_corner_texture)
+    _dash_corner_texture =  TextureFromFilename (PKGDATADIR"/dash_bottom_right_corner.png",
+                                                 &_dash_corner_width,
+                                                 &_dash_corner_height);
+  return _dash_corner_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::TextureFromFilename (const char *filename, int *width, int *height)
+{
+  GdkPixbuf        *pixbuf;
+  GError           *error = NULL;
+  nux::BaseTexture *texture = NULL;
+
+  pixbuf = gdk_pixbuf_new_from_file (filename, &error);
+  if (error)
+  {
+    g_warning ("Unable to texture %s: %s", filename, error->message);
+    g_error_free (error);
+    error = NULL;
+  }
+  else
+  {
+    texture = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+    *width = gdk_pixbuf_get_width (pixbuf);
+    *height = gdk_pixbuf_get_height (pixbuf);
+
+    g_object_unref (pixbuf);
+  }
+
+  return texture;
 }
 
 void

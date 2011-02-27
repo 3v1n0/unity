@@ -38,10 +38,15 @@ public:
   int GetTileWidth    ();
   int GetTileHeight   ();
 
+  nux::BaseTexture * GetDashBottomTile ();
+  nux::BaseTexture * GetDashRightTile ();
+  nux::BaseTexture * GetDashCorner ();
+
   sigc::signal<void> changed;
 
 private:
-  void        Refresh ();
+  void               Refresh ();
+  nux::BaseTexture * TextureFromFilename (const char *filename, int *width, int *height);
 
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesStyle *self);
 
@@ -51,6 +56,17 @@ private:
 
   int _text_width;
   int _text_height;
+
+  nux::BaseTexture *_dash_bottom_texture;
+  nux::BaseTexture *_dash_right_texture;
+  nux::BaseTexture *_dash_corner_texture;
+
+  int _dash_bottom_tile_width;
+  int _dash_bottom_tile_height;
+  int _dash_right_tile_width;
+  int _dash_right_tile_height;
+  int _dash_corner_width;
+  int _dash_corner_height;
 };
 
 #endif // PLACES_STYLE_H
