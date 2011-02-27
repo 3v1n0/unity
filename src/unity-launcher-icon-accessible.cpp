@@ -120,13 +120,15 @@ unity_launcher_icon_accessible_initialize (AtkObject *accessible,
   LauncherIcon *icon = NULL;
   Launcher *launcher = NULL;
   UnityLauncherIconAccessible *self = NULL;
+  nux::Object *nux_object = NULL;
 
   ATK_OBJECT_CLASS (unity_launcher_icon_accessible_parent_class)->initialize (accessible, data);
   self = UNITY_LAUNCHER_ICON_ACCESSIBLE (accessible);
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
 
-  icon = (LauncherIcon*)data;
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  icon = dynamic_cast<LauncherIcon *>(nux_object);
   launcher = icon->GetLauncher ();
 
   if (launcher != NULL)

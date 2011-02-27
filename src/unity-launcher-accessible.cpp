@@ -126,6 +126,7 @@ unity_launcher_accessible_initialize (AtkObject *accessible,
                                       gpointer data)
 {
   Launcher *launcher = NULL;
+  nux::Object *nux_object = NULL;
   UnityLauncherAccessible *self = NULL;
 
   ATK_OBJECT_CLASS (unity_launcher_accessible_parent_class)->initialize (accessible, data);
@@ -133,7 +134,9 @@ unity_launcher_accessible_initialize (AtkObject *accessible,
   accessible->role = ATK_ROLE_TOOL_BAR;
 
   self = UNITY_LAUNCHER_ACCESSIBLE (accessible);
-  launcher = (Launcher *) data;
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
 
   self->priv->on_selection_change_connection  =
     launcher->selection_change.connect (sigc::bind (sigc::ptr_fun (on_selection_change_cb), self));
@@ -183,6 +186,8 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
     return 0;
 
   launcher = dynamic_cast<Launcher *>(nux_object);
+  g_debug ("[Launcher] ref_child Launcher = %p", launcher);
+
   launcher_model = launcher->GetModel ();
 
   it = launcher_model->begin ();
