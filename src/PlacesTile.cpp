@@ -39,7 +39,6 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
   OnMouseClick.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseClick));
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
-  _hilight_view = this;
 }
 
 PlacesTile::~PlacesTile ()

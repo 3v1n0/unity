@@ -37,8 +37,6 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
-#include "PlacesSimpleTile.h"
-#include "PlacesGroup.h"
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
 

@@ -63,7 +63,6 @@ private:
   
 private:
   nux::BaseTexture  *_hilight_background;
-  nux::View         *_hilight_view;
   nux::TextureLayer *_hilight_layer;
 
   int _last_width;

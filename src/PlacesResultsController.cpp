@@ -14,24 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/GridHLayout.h"
-
-#include "NuxGraphics/GLThread.h"
 #include <glib.h>
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include "PlacesResultsController.h"
-#include "PlacesGroup.h"
-#include "PlacesSimpleTile.h"
-
 #include "PlacesSettings.h"
+
+#include "PlacesResultsController.h"
 
 PlacesResultsController::PlacesResultsController ()
 {
@@ -62,93 +57,50 @@ PlacesResultsController::GetView ()
 void
 PlacesResultsController::AddGroup (PlaceEntryGroup& group)
 {
-  PlacesSettings *settings = PlacesSettings::GetDefault ();
+  PlacesGroupController *controller = new PlacesGroupController (group);
 
-  PlacesGroup *new_group = new PlacesGroup (NUX_TRACKER_LOCATION);
-  new_group->SetTitle (group.GetName ());
-  new_group->SetEmblem (group.GetIcon ());
-
-  nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
-  layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (settings->GetDefaultTileWidth (), 100);
-  layout->EnablePartialVisibility (false);
-
-  layout->SetVerticalExternalMargin (4);
-  layout->SetHorizontalExternalMargin (4);
-  layout->SetVerticalInternalMargin (4);
-  layout->SetHorizontalInternalMargin (4);
-  layout->SetHeightMatchContent (true);
-
-  new_group->SetChildLayout (layout);
-  new_group->SetVisible (false);
-
-  _id_to_group[group.GetId ()] = new_group;
-  _results_view->AddGroup (new_group);
+  _id_to_group[group.GetId ()] = controller;
+  _results_view->AddGroup (controller->GetGroup ());
   _results_view->QueueRelayout ();
 }
 
 void
 PlacesResultsController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesGroup      *pgroup;
-  gchar            *result_name;
-  const gchar      *result_icon;
-  PlacesSimpleTile *tile;
+  PlacesGroupController *controller = _id_to_group[group.GetId ()];
 
-  pgroup = _id_to_group[group.GetId ()];
-  if (!pgroup)
-  {
-    g_warning ("Unable find group %s for result %s", group.GetName (), result.GetName ());
+  // We don't complain here because there are some shortcuts that the PlacesView takes which
+  // mean we sometimes receive requests that we can't process
+  if (!controller)
     return;
-  }
 
-  result_name = g_markup_escape_text (result.GetName (), -1);
-  result_icon = result.GetIcon ();
-
-  tile = new PlacesSimpleTile (result_icon, result_name, 48);
-  tile->SetURI (result.GetURI ());
-
-  _id_to_tile[result.GetId ()] = tile;
-  
-  pgroup->GetChildLayout ()->AddView (tile);
-  pgroup->Relayout ();
-  tile->QueueRelayout ();
-
-  pgroup->SetVisible (pgroup->GetChildLayout ()->GetChildren ().size ());
-  g_free (result_name);
+  controller->AddResult (group, result);
 }
 
 void
 PlacesResultsController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesTile  *tile;
-  PlacesGroup *pgroup;
+  PlacesGroupController *controller = _id_to_group[group.GetId ()];
 
-  pgroup = _id_to_group[group.GetId ()];
-  if (!pgroup)
-  {
-    g_warning ("Unable find group %s for result %s", group.GetName (), result.GetName ());
+  // We don't complain here because there are some shortcuts that the PlacesView takes which
+  // mean we sometimes receive requests that we can't process
+  if (!controller)
     return;
-  }
-  
-  tile = _id_to_tile[result.GetId ()];
-  if (!tile)
-  {
-    g_warning ("Unable to find result %s for group %s", result.GetName (), group.GetName ());
-    return;
-  }
 
-  pgroup->GetChildLayout ()->RemoveChildObject (tile);
-  pgroup->SetVisible (pgroup->GetChildLayout ()->GetChildren ().size ());
-  pgroup->Relayout ();
+  controller->RemoveResult (group, result);
 }
 
 void
 PlacesResultsController::Clear ()
 {
-  _results_view->Clear ();
+  std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
+  
+  for (it = _id_to_group.begin (); it != eit; ++it)
+    (it->second)->UnReference ();
+
   _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
-  _id_to_tile.erase (_id_to_tile.begin (), _id_to_tile.end ());
+
+  _results_view->Clear ();
 }
 
 
