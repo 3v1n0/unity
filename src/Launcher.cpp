@@ -506,6 +506,7 @@ Launcher::leaveKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+  selection_change.emit ();
 }
 
 void
@@ -523,6 +524,7 @@ Launcher::exitKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+  selection_change.emit ();
 }
 
 void
@@ -2635,6 +2637,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // FIXME: switch to global-menu here still needs to be implemented 
       }
       NeedRedraw ();
+      selection_change.emit ();
     break;
 
     // down (move selection down and unfold launcher if needed)
@@ -2643,6 +2646,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       {
         _current_icon_index++;
         NeedRedraw ();
+        selection_change.emit ();
       }
     break;
 
@@ -3467,4 +3471,22 @@ Launcher::ProcessDndDrop (int x, int y)
   
   // reset our shiz
   ProcessDndLeave ();
+}
+
+
+/*
+ * Returns the current selected icon if it is in keynavmode
+ * It will return NULL if it is not on keynavmode
+ */
+LauncherIcon*
+Launcher::GetSelectedMenuIcon ()
+{
+  LauncherModel::iterator it;
+
+  if (_current_icon_index == -1)
+    return NULL;
+
+  it = _model->at (_current_icon_index);
+
+  return *it;
 }
