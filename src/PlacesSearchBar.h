@@ -33,6 +33,7 @@
 
 #include "PlaceEntry.h"
 
+class PlacesView;
 #include <gtk/gtk.h>
 
 #include "IconTexture.h"
@@ -80,6 +81,8 @@ private:
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
+
+  friend class PlacesView;
   IconTexture             *_search_icon;
 };
 

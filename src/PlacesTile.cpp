@@ -42,6 +42,7 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
   _hilight_view = this;
+
 }
 
 PlacesTile::~PlacesTile ()
@@ -258,9 +259,10 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
   nux::Geometry base = GetGeometry ();
-  gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
+
+  gfxContext.PushClippingRectangle (base);
 
   if (_state == STATE_HOVER)
   {

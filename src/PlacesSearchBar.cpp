@@ -72,11 +72,14 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
   
+  SetLayout (_layout);
+
   SetCompositionLayout (_layout);
 
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
                     G_CALLBACK (OnFontChanged), this);
   OnFontChanged (NULL, NULL, this);
+
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -383,5 +386,5 @@ PlacesSearchBar::UpdateBackground ()
 
   texture2D->UnReference ();
 
-  NeedRedraw ();
+  QueueDraw ();
 }

@@ -23,6 +23,8 @@
 #include "Nux/VScrollBar.h"
 #include "Nux/HScrollBar.h"
 #include "Nux/Panel.h"
+#include "Nux/GridHLayout.h"
+#include "Nux/GridVLayout.h"
 #include "PlacesGroup.h"
 #include "PlacesResultsView.h"
 
@@ -58,64 +60,4 @@ PlacesResultsView::RemoveGroup (PlacesGroup *group)
 {
   _groups.remove (group);
   _layout->RemoveChildObject (group);
-}
-
-void
-PlacesResultsView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-  GfxContext.PushClippingRectangle (GetGeometry() );
- 
-  GfxContext.PushClippingRectangle (nux::Rect (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight) );
-
-  if (_layout)
-  {
-    GfxContext.PushClippingRectangle (_layout->GetGeometry());
-    _layout->ProcessDraw (GfxContext, force_draw);
-    GfxContext.PopClippingRectangle();
-  }
-
-  GfxContext.PopClippingRectangle();
-  
-  if (m_vertical_scrollbar_enable)
-    vscrollbar->ProcessDraw (GfxContext, force_draw);
-
-  GfxContext.PopClippingRectangle();
-}
-
-long
-PlacesResultsView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  long ProcEvInfo = 0;
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!m_Geometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
-    {
-      ProcEvInfo = nux::eDoNotProcess;
-      //return TraverseInfo;
-    }
-  }
-
-  if (m_vertical_scrollbar_enable)
-    ret = vscrollbar->ProcessEvent (ievent, ret, ProcEvInfo);
-
-  // The child layout get the Mouse down button only if the MouseDown happened inside the client view Area
-  nux::Geometry viewGeometry = nux::Geometry (m_ViewX, m_ViewY, m_ViewWidth, m_ViewHeight);
-  bool traverse = true;
-
-  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
-  {
-    if (!viewGeometry.IsPointInside (ievent.e_x - ievent.e_x_root, ievent.e_y - ievent.e_y_root) )
-    {
-      ProcEvInfo = nux::eDoNotProcess;
-      traverse = false;
-    }
-  }
-
-  if (_layout)
-    ret = _layout->ProcessEvent (ievent, ret, ProcEvInfo);
-
-  ret = PostProcessEvent2 (ievent, ret, 0);
-  return ret;
 }

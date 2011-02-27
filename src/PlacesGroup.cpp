@@ -57,7 +57,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
 
-  _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _header_layout->SetHorizontalInternalMargin (12);
 
   _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -172,7 +172,7 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
 
-  _group_layout->ProcessDraw (GfxContext, force_draw);
+  _group_layout->ProcessDraw (GfxContext, force_draw || IsFullRedraw ());
 
   GfxContext.PopClippingRectangle();
 }

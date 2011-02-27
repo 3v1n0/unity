@@ -273,8 +273,11 @@ UnityScreen::startLauncherKeyNav ()
   // set input-focus on launcher-window and start key-nav mode
   if (newFocusedWindow != NULL)
   {
+    // Put the launcher BaseWindow at the top of the BaseWindow stack. The input focus coming
+    // from the XinputWindow will be processed by the launcher BaseWindow only. Then the Launcher
+    // BaseWindow will decide which View will get the input focus.
+    launcherWindow->PushToFront ();
     newFocusedWindow->moveInputFocusTo ();
-    launcher->startKeyNavMode ();
   }
 }
 
@@ -782,7 +785,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   UnityScreen *self = (UnityScreen*) InitData;
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
-  self->launcherWindow = new nux::BaseWindow(TEXT(""));
+  self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
@@ -801,6 +804,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
+  self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/

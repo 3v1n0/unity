@@ -46,11 +46,6 @@ public:
   void RemoveGroup (PlacesGroup *group);
 
 private:
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  void Draw (nux::GraphicsEngine &gx, bool force_draw) {};
-
-private:
   nux::Layout *_layout;
   std::list<PlacesGroup *> _groups;
 };
