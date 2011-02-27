@@ -38,6 +38,7 @@
 #include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <core/atoms.h>
 
@@ -546,6 +547,77 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+void
+UnityScreen::NeedsRelayout ()
+{
+  needsRelayout = true;
+}
+
+void
+UnityScreen::Relayout ()
+{
+  GdkScreen *scr;
+  GdkRectangle rect;
+  nux::Geometry lCurGeom, pCurGeom;
+  gint primary_monitor;
+
+  if (!needsRelayout)
+    return;
+
+  scr = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (scr);
+  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
+
+  pCurGeom = panelWindow->GetGeometry(); 
+  lCurGeom = launcherWindow->GetGeometry(); 
+
+  panelWindow->EnableInputWindow(false);
+  launcherWindow->EnableInputWindow(false);
+
+  panelView->SetMaximumWidth(rect.width);
+  launcher->SetMaximumHeight(rect.height - pCurGeom.height);
+
+  g_debug ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
+           rect.x,
+           rect.y,
+           rect.width,
+           rect.height);
+
+  panelWindow->SetGeometry(nux::Geometry(rect.x,
+					rect.y,
+					rect.width,
+					pCurGeom.height));
+  panelView->SetGeometry(nux::Geometry(rect.x,
+					rect.y,
+					rect.width,
+					pCurGeom.height));
+
+  launcherWindow->SetGeometry(nux::Geometry(rect.x,
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
+  launcher->SetGeometry(nux::Geometry(rect.x,
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
+
+  panelWindow->EnableInputWindow(true);
+  launcherWindow->EnableInputWindow(true);
+
+  needsRelayout = false;
+}
+
+gboolean
+UnityScreen::RelayoutTimeout (gpointer data)
+{
+  UnityScreen *uScr = (UnityScreen*) data;
+
+  uScr->NeedsRelayout ();
+  uScr->Relayout();
+
+  return FALSE;
+}
+
 /* Handle changes in the number of workspaces by showing the switcher
  * or not showing the switcher */
 bool
@@ -569,6 +641,22 @@ write_logger_data_to_disk (gpointer data)
 {
   LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
   return FALSE;
+}
+
+void
+OnMonitorChanged (GdkScreen* screen,
+                  gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
+}
+
+void
+OnSizeChanged (GdkScreen* screen,
+               gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -654,6 +742,16 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
+
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "monitors-changed",
+                            G_CALLBACK (OnMonitorChanged),
+                            this);
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "size-changed",
+                            G_CALLBACK (OnSizeChanged),
+                            this);
+
   END_FUNCTION ();
 }
 
@@ -753,6 +851,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+  g_timeout_add (2000, &UnityScreen::RelayoutTimeout, self);
 
   END_FUNCTION ();
 }
