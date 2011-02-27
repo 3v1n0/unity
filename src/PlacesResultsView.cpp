@@ -61,3 +61,9 @@ PlacesResultsView::RemoveGroup (PlacesGroup *group)
   _groups.remove (group);
   _layout->RemoveChildObject (group);
 }
+
+void
+PlacesResultsView::Clear ()
+{
+  _layout->Clear ();
+}

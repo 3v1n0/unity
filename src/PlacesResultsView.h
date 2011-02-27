@@ -42,8 +42,9 @@ public:
   PlacesResultsView (NUX_FILE_LINE_PROTO);
   ~PlacesResultsView ();
 
-  void AddGroup (PlacesGroup *group);
+  void AddGroup    (PlacesGroup *group);
   void RemoveGroup (PlacesGroup *group);
+  void Clear       ();
 
 private:
   nux::Layout *_layout;

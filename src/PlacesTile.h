@@ -24,84 +24,33 @@
 
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-
-#include "StaticCairoText.h"
+#include <NuxImage/CairoGraphics.h>
 
 #include "Introspectable.h"
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
 
 class PlacesTile : public nux::View
 {
 public:
-  typedef enum
-  {
-    STATE_DEFAULT,
-    STATE_HOVER,
-    STATE_PRESSED,
-    STATE_ACTIVATED,
-  } TileState;
-
   PlacesTile (NUX_FILE_LINE_PROTO);
   ~PlacesTile ();
 
-  // mainly for testing
-  virtual void SetState (TileState state);
-  virtual TileState GetState ();
-
-  sigc::signal<void, PlacesTile *> sigClick;
-  sigc::signal<void> sigToggled;
-  sigc::signal<void, bool> sigStateChanged;
-
-  sigc::signal<void, int> MouseDown;
-  sigc::signal<void, int> MouseUp;
-  sigc::signal<void>      MouseEnter;
-  sigc::signal<void>      MouseLeave;
-  sigc::signal<void, int> MouseClick;
+  sigc::signal<void, PlacesTile*> sigClick;
 
 protected:
-
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
-
   virtual nux::Geometry GetHighlightGeometry ();
   
-  void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
-  
+private:
+  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  //void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-
-  sigc::signal<void, PlacesTile*> sigMouseEnter;
-  sigc::signal<void, PlacesTile*> sigMouseLeave;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseReleased;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseClick;
-  sigc::signal<void, PlacesTile*, int, int> sigMouseDrag;
-
-  sigc::connection con_obj;
   void OnDestroyNotify (nux::Trackable *Object);
   
-  TileState _state;
-  nux::Layout *_layout;
-  nux::BaseTexture *_hilight_background;
-  nux::View *_hilight_view;
-  nux::TextureLayer *_hilight_layer;
-
   void UpdateBackground ();
   void DrawRoundedRectangle (cairo_t* cr,
                              double   aspect,
@@ -110,11 +59,17 @@ protected:
                              double   cornerRadius,
                              double   width,
                              double   height);
-
-
+  void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
+  
 private:
+  nux::BaseTexture  *_hilight_background;
+  nux::View         *_hilight_view;
+  nux::TextureLayer *_hilight_layer;
+
   int _last_width;
   int _last_height;
+
+  sigc::connection con_obj;
 };
 
 #endif // PLACE_TILE_H

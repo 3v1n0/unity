@@ -74,6 +74,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                                 (UBusCallback)&PlacesView::OnResultClicked,
+                                 this);
 
   _icon_loader = IconLoader::GetDefault ();
 
@@ -198,30 +201,17 @@ PlacesView::GetResultsController ()
 void
 PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 {
-  _results_controller->CreateGroup (group.GetName (), group.GetIcon ());
+  _results_controller->AddGroup (group);
 }
 
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  gchar            *result_name;
-  const gchar      *result_icon;
-  PlacesSimpleTile *tile;
-
   //FIXME: We can't do anything with these do just ignore
   if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
-  
-  result_name = g_markup_escape_text (result.GetName (), -1);
-  result_icon = result.GetIcon ();
 
-  tile = new PlacesSimpleTile (result_icon, result_name, 48);
-  tile->SetURI (result.GetURI ());
-  tile->sigClick.connect (sigc::mem_fun (this, &PlacesView::OnResultClicked));
-  _results_controller->AddResultToGroup (group.GetName (), tile,
-                                         const_cast<void*> (result.GetId ()));
-
-  g_free (result_name);
+  _results_controller->AddResult (group, result);
 }
 
 void
@@ -231,18 +221,19 @@ PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEnt
   if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
 
-  _results_controller->RemoveResult (const_cast<void*> (result.GetId ()));
+  _results_controller->RemoveResult (group, result);
 }
 
 void
-PlacesView::OnResultClicked (PlacesTile *tile)
+PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
 {
-  PlacesSimpleTile *simple_tile = static_cast<PlacesSimpleTile *> (tile);
   const char *uri;
 
-  if (!(uri = simple_tile->GetURI ()))
+  uri = g_variant_get_string (data, NULL);
+
+  if (!uri)
   {
-    g_warning ("Unable to launch %s: does not have a URI", simple_tile->GetLabel ());
+    g_warning ("Unable to launch tile does not have a URI");
     return;
   }
 

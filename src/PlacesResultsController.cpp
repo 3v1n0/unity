@@ -60,107 +60,13 @@ PlacesResultsController::GetView ()
 }
 
 void
-PlacesResultsController::AddResultToGroup (const char *groupname,
-                                           PlacesTile *tile,
-                                           void       *_id)
-{
-  PlacesGroup *group = _groups[groupname];
-  
-  if (!group)
-    {
-      group = CreateGroup (groupname);
-    }
-
-  group->GetChildLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
-  _tiles[_id] = tile;
-  _tile_group_relations[_id] = groupname;
-
-  // Should also catch the onclick signal here on each tile,
-  // so we can activate or do whatever it is we need to do
-
-  if (group->IsVisible () == false)
-  {
-    group->SetVisible (true);
-    group->Relayout ();
-  }
-
-  tile->QueueDraw ();
-}
-
-void
-PlacesResultsController::RemoveResultFromGroup (const char *groupname,
-                                                void       *_id)
-{
-  PlacesTile *tile = _tiles[_id];
-  PlacesGroup *group = _groups[groupname];
-
-  if (group)
-  {
-    if (tile)
-    {
-      group->GetChildLayout ()->RemoveChildObject (tile);
-
-      if (group->GetChildLayout ()->GetChildren ().empty ())
-      {
-        group->SetVisible (false);
-      }
-      else
-      {
-        group->Relayout ();
-      }
-    }
-    else
-    {
-      g_warning ("Unable to remove '%p' from group '%s': Unable to find tile",
-                 _id, groupname);
-    }
-  }
-  else
-  {
-    g_warning ("Unable to remove '%p' from group '%s': Unable to find group",
-               _id, groupname);
-  }
-
-  _tiles.erase (_id);
-  _tile_group_relations.erase (_id);
-}
-
-void
-PlacesResultsController::RemoveResult (void *_id)
-{
-  RemoveResultFromGroup (_tile_group_relations [_id].c_str (), _id);
-}
-
-void
-PlacesResultsController::Clear ()
-{
-  std::map<std::string, PlacesGroup *>::iterator it;
-
-  for (it = _groups.begin (); it != _groups.end (); ++it)
-  {
-    PlacesGroup *group = dynamic_cast <PlacesGroup *> (it->second);
-    
-    if (group)
-    {
-      _results_view->RemoveGroup (group);
-      group->UnReference ();
-    }
-  }
-
-  _groups.erase (_groups.begin (), _groups.end ());
-  _tiles.erase (_tiles.begin (), _tiles.end ());
-  _tile_group_relations.erase (_tile_group_relations.begin (), _tile_group_relations.end ());
-}
-
-PlacesGroup *
-PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
+PlacesResultsController::AddGroup (PlaceEntryGroup& group)
 {
   PlacesSettings *settings = PlacesSettings::GetDefault ();
 
-  PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
-  newgroup->SinkReference ();
-  newgroup->SetTitle (groupname);
-  newgroup->SetEmblem (icon);
+  PlacesGroup *new_group = new PlacesGroup (NUX_TRACKER_LOCATION);
+  new_group->SetTitle (group.GetName ());
+  new_group->SetEmblem (group.GetIcon ());
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
@@ -173,18 +79,83 @@ PlacesResultsController::CreateGroup (const char *groupname, const char *icon)
   layout->SetHorizontalInternalMargin (4);
   layout->SetHeightMatchContent (true);
 
-  newgroup->SetChildLayout (layout);
-  newgroup->SetVisible (false);
+  new_group->SetChildLayout (layout);
+  new_group->SetVisible (false);
 
-  _groups[groupname] = newgroup;
-  _results_view->AddGroup (newgroup);
+  _id_to_group[group.GetId ()] = new_group;
+  _results_view->AddGroup (new_group);
+  _results_view->QueueRelayout ();
+}
 
-  return newgroup;
+void
+PlacesResultsController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& result)
+{
+  PlacesGroup      *pgroup;
+  gchar            *result_name;
+  const gchar      *result_icon;
+  PlacesSimpleTile *tile;
+
+  pgroup = _id_to_group[group.GetId ()];
+  if (!pgroup)
+  {
+    g_warning ("Unable find group %s for result %s", group.GetName (), result.GetName ());
+    return;
+  }
+
+  result_name = g_markup_escape_text (result.GetName (), -1);
+  result_icon = result.GetIcon ();
+
+  tile = new PlacesSimpleTile (result_icon, result_name, 48);
+  tile->SetURI (result.GetURI ());
+
+  _id_to_tile[result.GetId ()] = tile;
+  
+  pgroup->GetChildLayout ()->AddView (tile);
+  pgroup->Relayout ();
+  tile->QueueRelayout ();
+
+  pgroup->SetVisible (pgroup->GetChildLayout ()->GetChildren ().size ());
+  g_free (result_name);
+}
+
+void
+PlacesResultsController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result)
+{
+  PlacesTile  *tile;
+  PlacesGroup *pgroup;
+
+  pgroup = _id_to_group[group.GetId ()];
+  if (!pgroup)
+  {
+    g_warning ("Unable find group %s for result %s", group.GetName (), result.GetName ());
+    return;
+  }
+  
+  tile = _id_to_tile[result.GetId ()];
+  if (!tile)
+  {
+    g_warning ("Unable to find result %s for group %s", result.GetName (), group.GetName ());
+    return;
+  }
+
+  pgroup->GetChildLayout ()->RemoveChildObject (tile);
+  pgroup->SetVisible (pgroup->GetChildLayout ()->GetChildren ().size ());
+  pgroup->Relayout ();
+}
+
+void
+PlacesResultsController::Clear ()
+{
+  _results_view->Clear ();
+  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
+  _id_to_tile.erase (_id_to_tile.begin (), _id_to_tile.end ());
 }
 
 
-/* Introspection */
-const gchar *
+//
+// Introspection
+//
+const gchar*
 PlacesResultsController::GetName ()
 {
   return "PlacesResultsController";
@@ -193,12 +164,5 @@ PlacesResultsController::GetName ()
 void
 PlacesResultsController::AddProperties (GVariantBuilder *builder)
 {
+
 }
-
-
-
-
-
-
-
-

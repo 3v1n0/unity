@@ -51,10 +51,6 @@ public:
   PlacesView (PlaceFactory *factory);
   ~PlacesView ();
 
-  // Return the TextEntry View. This is required to enable the keyboard focus on the text entry when the
-  // dahs is shown.
-  nux::TextEntry* GetTextEntryView ();
-
   // nux::View overrides
   long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -70,6 +66,7 @@ public:
   
   PlacesResultsController * GetResultsController ();
 
+  nux::TextEntry* GetTextEntryView ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
@@ -89,7 +86,7 @@ private:
   void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  void OnResultClicked (PlacesTile *tile);
+  static void OnResultClicked (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
 
 private:

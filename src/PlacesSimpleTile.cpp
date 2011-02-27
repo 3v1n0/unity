@@ -16,17 +16,15 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
-#include "Nux/Nux.h"
-#include "PlacesSimpleTile.h"
-
-#include "IconTexture.h"
-
 #include "PlacesSettings.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
-#define ICON_HEIGHT 48
+#include "PlacesSimpleTile.h"
 
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
 : PlacesTile (NUX_TRACKER_LOCATION),
@@ -34,7 +32,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _icon (NULL),
   _uri (NULL)
 {
-  _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
@@ -42,6 +40,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _icontex = new IconTexture (_icon, icon_size);
   _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
   _icontex->SinkReference ();
+  AddChild (_icontex);
 
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SinkReference ();
@@ -50,16 +49,16 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);
 
-  _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
-  _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
 
   SetMinMaxSize (160, 128);
 
-  AddChild (_icontex);
+  SetLayout (layout);
 
-  SetLayout (_layout);
+  OnMouseClick.connect (sigc::mem_fun (this, &PlacesSimpleTile::Clicked));
 }
 
 
@@ -142,3 +141,13 @@ PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
 
+void
+PlacesSimpleTile::Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_uri)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                              g_variant_new_string (_uri));
+  }
+}
