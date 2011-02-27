@@ -58,7 +58,6 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
-  _header_layout->SetHorizontalInternalMargin (12);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   
   _icon = new IconTexture ("", 24);
@@ -74,13 +73,19 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor (kExpandDefaultTextColor);
-  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _header_layout->AddView (_expand_label, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
 
+  _icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _icon->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _icon->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
   _name->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
   _name->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   _name->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
+  _expand_label->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _expand_label->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _expand_label->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup ()
@@ -91,7 +96,9 @@ PlacesGroup::~PlacesGroup ()
 void
 PlacesGroup::SetName (const char *name)
 {
-  const gchar *temp = "<big>%s</big>";
+  // Spaces are on purpose, want padding to be proportional to the size of the text
+  // Bear with me, I'm trying something different :)
+  const gchar *temp = "    <big>%s</big>    ";
   gchar *tmp, *final;
   
   tmp = g_markup_escape_text (name, -1);
@@ -131,7 +138,9 @@ PlacesGroup::GetChildLayout ()
 void
 PlacesGroup::Refresh ()
 {
-  char *result_string;
+  const char *temp = "<small>%s</small>";
+  char       *result_string;
+  char       *final;
 
   if (_n_visible_items_in_unexpand_mode >= _n_total_items)
   {
@@ -150,13 +159,16 @@ PlacesGroup::Refresh ()
                                      _n_total_items - _n_visible_items_in_unexpand_mode);
   }
 
-  _expand_label->SetText (result_string);
+  final = g_strdup_printf (temp, result_string);
+
+  _expand_label->SetText (final);
   _expand_label->SetVisible (_n_visible_items_in_unexpand_mode < _n_total_items);
 
   ComputeChildLayout ();
   QueueDraw ();
   
   g_free ((result_string));
+  g_free (final);
 }
 
 void
