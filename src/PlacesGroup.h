@@ -49,6 +49,8 @@ public:
 
   void SetChildUnexpandHeight (guint height);
 
+  void SetExpanded (bool is_expanded);
+
 private:
   void Refresh ();
 
@@ -57,6 +59,10 @@ private:
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   static gboolean OnIdleRelayout (PlacesGroup *self);
+
+  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
 private:
   nux::VLayout *_group_layout;

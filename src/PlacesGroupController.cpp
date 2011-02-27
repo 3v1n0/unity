@@ -23,6 +23,8 @@
 #include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 
+static const guint kPadding = 4;
+
 PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
 : _group (NULL)
 {
@@ -35,21 +37,22 @@ PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
   _group = new PlacesGroup (NUX_TRACKER_LOCATION);
   _group->SetName(group.GetName ());
   _group->SetIcon (group.GetIcon ());
-  _group->SetChildUnexpandHeight (ROW_HEIGHT);
+  _group->SetChildUnexpandHeight (ROW_HEIGHT + kPadding * 3);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
   layout->SetChildrenSize (settings->GetDefaultTileWidth (), ROW_HEIGHT);
   layout->EnablePartialVisibility (false);
 
-  layout->SetVerticalExternalMargin (4);
-  layout->SetHorizontalExternalMargin (4);
-  layout->SetVerticalInternalMargin (4);
-  layout->SetHorizontalInternalMargin (4);
+  layout->SetVerticalExternalMargin (kPadding);
+  layout->SetHorizontalExternalMargin (kPadding);
+  layout->SetVerticalInternalMargin (kPadding);
+  layout->SetHorizontalInternalMargin (kPadding);
   layout->SetHeightMatchContent (true);
 
   _group->SetChildLayout (layout);
   _group->SetVisible (false);
+  _group->SetExpanded (false);
 }
 
 PlacesGroupController::~PlacesGroupController ()

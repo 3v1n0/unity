@@ -220,6 +220,9 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
+    UpdateTexture ();
+    QueueDraw ();
+
     sigTextColorChanged.emit (this);
   }
 }

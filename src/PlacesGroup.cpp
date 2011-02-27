@@ -40,11 +40,17 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include <Nux/Utils.h>
+
+static const nux::Color kExpandDefaultTextColor (1.0f, 1.0f, 1.0f, 0.6f);
+static const nux::Color kExpandHoverTextColor (1.0f, 1.0f, 1.0f, 1.0f);
+  
+  
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM),
   _content_layout (NULL),
   _idle_id (0),
-  _is_expanded (false),
+  _is_expanded (true),
   _n_visible_items_in_unexpand_mode (0),
   _n_total_items (0),
   _child_unexpand_height (0)
@@ -67,9 +73,14 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label = new nux::StaticCairoText ("Expand", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _expand_label->SetTextColor (kExpandDefaultTextColor);
   _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
+
+  _name->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _name->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _name->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup ()
@@ -106,6 +117,7 @@ PlacesGroup::SetChildLayout (nux::Layout *layout)
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
+  //_group_layout->AddLayout (_content_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _group_layout->AddLayout (_content_layout, 1);
   QueueDraw ();
 }
@@ -157,6 +169,7 @@ PlacesGroup::Relayout ()
 gboolean
 PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
+  self->Refresh ();
   self->QueueDraw ();
   self->_group_layout->QueueDraw ();
   self->GetChildLayout ()->QueueDraw ();
@@ -171,7 +184,7 @@ PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessE
 {
   long ret = TraverseInfo;
 
-  if (_group_layout)
+  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
     ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
 
   return ret;
@@ -199,7 +212,7 @@ PlacesGroup::SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_it
   _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
   _n_total_items = n_total_items;
 
-  Refresh ();
+  Relayout ();
 }
 
 
@@ -210,5 +223,50 @@ PlacesGroup::SetChildUnexpandHeight (guint height)
     return;
 
   _child_unexpand_height = height;
-  Relayout ();
+
+  if (!_is_expanded)
+  {
+    _is_expanded = true;
+    SetExpanded (false);
+  }
+}
+
+void
+PlacesGroup::SetExpanded (bool is_expanded)
+{
+  if (_is_expanded == is_expanded)
+    return;
+
+  _is_expanded = is_expanded;
+
+  Refresh ();
+
+  if (_content_layout)
+  {
+    _content_layout->SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT : _child_unexpand_height);
+    SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT
+                                   : _header_layout->GetGeometry ().height + _child_unexpand_height);
+
+    ComputeChildLayout ();
+    _group_layout->ComputeChildLayout ();
+    _content_layout->ComputeChildLayout ();
+  }
+}
+
+void
+PlacesGroup::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  SetExpanded (!_is_expanded);
+}
+
+void
+PlacesGroup::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _expand_label->SetTextColor (kExpandHoverTextColor);
+}
+
+void
+PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _expand_label->SetTextColor (kExpandDefaultTextColor);
 }
