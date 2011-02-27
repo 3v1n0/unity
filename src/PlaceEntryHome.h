@@ -65,6 +65,7 @@ public:
   DeeModel * GetResultsModel ();
 
   DeeModel * GetGlobalResultsModel () { return NULL; };
+  DeeModel * GetGlobalGroupsModel () { return NULL; };
 
 private:
   void LoadExistingEntries ();
@@ -85,6 +86,7 @@ public:
   std::map<char *, gchar *> _hints;
 
   std::map<DeeModel *, int> _model_to_group;
+  std::map<DeeModel *, DeeModel *> _model_to_group_model;
   std::vector<PlaceEntry *> _entries;
 };
 
