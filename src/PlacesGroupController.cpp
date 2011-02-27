@@ -20,7 +20,7 @@
 
 #include <Nux/GridHLayout.h>
 
-#include "PlacesSettings.h"
+#include "PlacesStyle.h"
 #include "PlacesSimpleTile.h"
 
 static const guint kPadding = 4;
@@ -28,20 +28,18 @@ static const guint kPadding = 4;
 PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
 : _group (NULL)
 {
-#define ROW_HEIGHT 100
-
-  PlacesSettings *settings = PlacesSettings::GetDefault ();
+  PlacesStyle *style = PlacesStyle::GetDefault ();
 
   _id = group.GetId ();
 
   _group = new PlacesGroup (NUX_TRACKER_LOCATION);
   _group->SetName(group.GetName ());
   _group->SetIcon (group.GetIcon ());
-  _group->SetChildUnexpandHeight (ROW_HEIGHT + kPadding * 3);
+  _group->SetChildUnexpandHeight (style->GetTileHeight () + kPadding * 3);
 
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (settings->GetDefaultTileWidth (), ROW_HEIGHT);
+  layout->SetChildrenSize (style->GetTileWidth (), style->GetTileHeight ());
   layout->EnablePartialVisibility (false);
 
   layout->SetVerticalExternalMargin (kPadding);
@@ -77,11 +75,11 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
-
+  
   result_name = g_markup_escape_text (result.GetName (), -1);
   result_icon = result.GetIcon ();
 
-  tile = new PlacesSimpleTile (result_icon, result_name, 48);
+  tile = new PlacesSimpleTile (result_icon, result_name, PlacesStyle::GetDefault ()->GetTileIconSize ());
   tile->SetURI (result.GetURI ());
   tile->QueueRelayout ();
 
@@ -102,10 +100,7 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
 
   tile = _id_to_tile[result.GetId ()];
   if (!tile)
-  {
-    g_warning ("Unable to find result %s for group %s", result.GetName (), group.GetName ());
     return;
-  }
   
   _id_to_tile.erase (result.GetId ());
 

@@ -26,6 +26,7 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
+#include "PlacesStyle.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -124,6 +125,7 @@ void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
   PlacesSettings *settings = PlacesSettings::GetDefault ();
+  PlacesStyle    *style = PlacesStyle::GetDefault ();
   GdkScreen      *screen;
   gint            primary_monitor, width=0, height=0;
   GdkRectangle    rect;
@@ -133,7 +135,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
   primary_monitor = gdk_screen_get_primary_monitor (screen);
   gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
 
-  tile_width = settings->GetDefaultTileWidth (); 
+  tile_width = style->GetTileWidth ();
 
   if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
   {
