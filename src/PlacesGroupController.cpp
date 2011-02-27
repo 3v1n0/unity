@@ -106,13 +106,13 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
     g_warning ("Unable to find result %s for group %s", result.GetName (), group.GetName ());
     return;
   }
+  
+  _id_to_tile.erase (result.GetId ());
 
   _group->GetChildLayout ()->RemoveChildObject (tile);
-  _group->SetVisible (_id_to_tile.size ());
   _group->Relayout ();
-
-  _id_to_tile.erase (result.GetId ());
   _group->SetCounts (6, _id_to_tile.size ());
+  _group->SetVisible (_id_to_tile.size ());
 }
 
 void
