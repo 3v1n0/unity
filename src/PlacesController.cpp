@@ -49,7 +49,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.85));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.0));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);

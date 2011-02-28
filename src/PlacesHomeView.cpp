@@ -476,7 +476,7 @@ PlacesHomeView::UpdateBackground ()
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,
                                      nux::Color::White,
-                                     false,
+                                     true,
                                      rop);
 
   texture2D->UnReference ();

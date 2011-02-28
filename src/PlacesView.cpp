@@ -85,6 +85,12 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   SetLayout (_layout);
 
+  nux::ROPConfig rop; 
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.90f), true, rop);
+
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -140,17 +146,26 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  gPainter.PaintBackground (GfxContext, geo);
+  nux::GetPainter ().PaintBackground (GfxContext, geo);
 
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
-  
+ 
   if (style->GetDashCorner ())
   {
     nux::BaseTexture *corner = style->GetDashCorner ();
     nux::BaseTexture *bottom = style->GetDashBottomTile ();
     nux::BaseTexture *right = style->GetDashRightTile ();
     nux::TexCoordXForm texxform;
+
+    {
+      nux::Geometry bg = geo;
+      bg.width -= corner->GetWidth ();
+      bg.height -= corner->GetHeight ();
+
+      _bg_layer->SetGeometry (bg);
+      nux::GetPainter ().RenderSinglePaintLayer (GfxContext, bg, _bg_layer);
+    }
 
     {
       texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
@@ -210,9 +225,13 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle (GetGeometry() );
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+
+  nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
   
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
+
+  nux::GetPainter ().PopBackground ();
   
   GfxContext.GetRenderStates ().SetBlend (false);
 

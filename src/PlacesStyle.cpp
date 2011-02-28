@@ -82,7 +82,7 @@ PlacesStyle::GetTileWidth ()
 int
 PlacesStyle::GetTileHeight ()
 {
-  return GetTileIconSize () + (_text_height * 2.5);
+  return GetTileIconSize () + (_text_height * 5);
 }
 
 nux::BaseTexture *

@@ -102,7 +102,8 @@ private:
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
 
-  IconLoader     *_icon_loader;
+  IconLoader      *_icon_loader;
+  nux::ColorLayer *_bg_layer;
 };
 
 #endif // PANEL_HOME_BUTTON_H
