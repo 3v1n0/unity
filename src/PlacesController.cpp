@@ -33,7 +33,8 @@
 #include "PlacesController.h"
 
 PlacesController::PlacesController ()
-: _visible (false)
+: _visible (false),
+  _fullscren_request (false)
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
@@ -68,6 +69,7 @@ PlacesController::PlacesController ()
   _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
+  _view->fullscreen_request.connect (sigc::mem_fun (this, &PlacesController::OnDashFullscreenRequest));
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
 }
@@ -109,6 +111,7 @@ void PlacesController::Hide ()
   _window->ShowWindow (false, false);
  
   _visible = false;
+  _fullscren_request = false;
 
   _view->SetActiveEntry (NULL, 0, "");
 
@@ -120,9 +123,8 @@ void PlacesController::ToggleShowHide ()
   _visible ? Hide () : Show ();
 }
 
-/* Configure callback for the window */
 void
-PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
+PlacesController::GetWindowSize (int *out_width, int *out_height)
 {
   PlacesSettings *settings = PlacesSettings::GetDefault ();
   PlacesStyle    *style = PlacesStyle::GetDefault ();
@@ -137,7 +139,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 
   tile_width = style->GetTileWidth ();
 
-  if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
+  if (settings->GetFormFactor () == PlacesSettings::DESKTOP && !_fullscren_request)
   {
     gint half = rect.width / 2;
 
@@ -146,14 +148,37 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
     
     width = MAX (width, tile_width * 7);
     height = ((width/tile_width) - 3) * tile_width;
+
+    _view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
   }
   else
   {
     width = rect.width - 66;
     height = rect.height - 24;
+
+    _view->SetSizeMode (PlacesView::SIZE_MODE_FULLSCREEN);
   }
 
+  *out_width = width;
+  *out_height = height;
+}
+
+/* Configure callback for the window */
+void
+PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
+{
+  int width = 0, height = 0;
+  static_cast<PlacesController *> (user_data)->GetWindowSize (&width, &height);
   geo = nux::Geometry (66, 24, width, height);
+}
+
+void
+PlacesController::OnDashFullscreenRequest ()
+{
+  int width = 0, height = 0;
+  _fullscren_request = true;
+  GetWindowSize (&width, &height);
+  _window->SetGeometry (nux::Geometry (66, 24, width, height));
 }
 
 void

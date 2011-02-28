@@ -46,6 +46,7 @@ protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
+private:
   static void ExternalActivation (GVariant *data, void *val);
   static void CloseRequest (GVariant *data, void *val);
   static void WindowConfigureCallback(int WindowWidth, int WindowHeight,
@@ -54,6 +55,8 @@ protected:
   void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnActivePlaceEntryChanged (PlaceEntry *entry);
   void OnSettingsChanged (PlacesSettings *settings);
+  void OnDashFullscreenRequest ();
+  void GetWindowSize (int *width, int *height);
 
 private:
   nux::BaseWindow  *_window;
@@ -61,6 +64,7 @@ private:
   PlacesView       *_view;
   PlaceFactoryFile *_factory;
   bool              _visible;
+  bool              _fullscren_request;
 };
 
 #endif // PLACES_CONTROLLER_H

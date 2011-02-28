@@ -40,10 +40,9 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 PlacesView::PlacesView (PlaceFactory *factory)
 : nux::View (NUX_TRACKER_LOCATION),
   _factory (factory),
-  _entry (NULL)
+  _entry (NULL),
+  _size_mode (SIZE_MODE_FULLSCREEN)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
-
   _home_entry = new PlaceEntryHome (_factory);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
@@ -51,11 +50,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   nux::VLayout *vlayout = new nux::VLayout (NUX_TRACKER_LOCATION);
   _layout->AddLayout (vlayout, 1, nux::eCenter, nux::eFull);
 
-  nux::SpaceLayout *space = new nux::SpaceLayout (style->GetDashCorner ()->GetWidth (),
-                                                  style->GetDashCorner ()->GetWidth (),
-                                                  1,
-                                                  nux::AREA_MAX_HEIGHT);
-  _layout->AddLayout (space, 0, nux::eCenter, nux::eFull);
+  _h_spacer= new nux::SpaceLayout (1, 1, 1, nux::AREA_MAX_HEIGHT);
+  _layout->AddLayout (_h_spacer, 0, nux::eCenter, nux::eFull);
   
   _search_bar = new PlacesSearchBar ();
   vlayout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
@@ -66,11 +62,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
   vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
 
-  space = new nux::SpaceLayout (1,
-                                nux::AREA_MAX_WIDTH,
-                                style->GetDashCorner ()->GetHeight (),
-                                style->GetDashCorner ()->GetHeight ());
-  vlayout->AddLayout (space, 0, nux::eCenter, nux::eFull);
+  _v_spacer = new nux::SpaceLayout (1, nux::AREA_MAX_WIDTH, 1, 1);
+  vlayout->AddLayout (_v_spacer, 0, nux::eCenter, nux::eFull);
   
   _home_view = new PlacesHomeView ();
   _layered_layout->AddLayer (_home_view);
@@ -130,13 +123,20 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     return TraverseInfo;
   }
 
-  if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
   {
-    if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+    PlacesStyle      *style = PlacesStyle::GetDefault ();
+    nux::BaseTexture *corner = style->GetDashCorner ();
+    nux::Geometry     geo = GetGeometry ();
+    nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth () + 66,
+                                  geo.y + geo.height - corner->GetHeight () + 24,
+                                  corner->GetWidth (),
+                                  corner->GetHeight ());
+    if (fullscreen.IsPointInside (ievent.e_x, ievent.e_y))
     {
-      SetActiveEntry (NULL, 0, "");
+      fullscreen_request.emit ();
+      return TraverseInfo |= nux::eMouseEventSolved;
     }
-    return TraverseInfo;
   }
 
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
@@ -156,7 +156,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
  
-  if (style->GetDashCorner ())
+  if (_size_mode == SIZE_MODE_HOVER)
   {
     nux::BaseTexture *corner = style->GetDashCorner ();
     nux::BaseTexture *bottom = style->GetDashBottomTile ();
@@ -227,6 +227,11 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            texxform,
                            nux::Color::White);
     }
+  }
+  else
+  {
+    _bg_layer->SetGeometry (geo);
+    nux::GetPainter ().RenderSinglePaintLayer (GfxContext, geo, _bg_layer);
   }
   
   GfxContext.GetRenderStates ().SetBlend (false);
@@ -320,6 +325,41 @@ PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_g
   {
     ;
   }
+}
+
+PlacesView::SizeMode
+PlacesView::GetSizeMode ()
+{
+  return _size_mode;
+}
+
+void
+PlacesView::SetSizeMode (SizeMode size_mode)
+{
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
+  if (_size_mode == size_mode)
+    return;
+
+  _size_mode = size_mode;
+
+  if (_size_mode == SIZE_MODE_FULLSCREEN)
+  {
+    _h_spacer->SetMinimumWidth (1);
+    _h_spacer->SetMaximumWidth (1);
+    _v_spacer->SetMinimumHeight (1);
+    _v_spacer->SetMaximumHeight (1);
+  }
+  else
+  {
+    nux::BaseTexture *corner = style->GetDashCorner ();
+    _h_spacer->SetMinimumWidth (corner->GetWidth ());
+    _h_spacer->SetMaximumWidth (corner->GetWidth ());
+    _v_spacer->SetMinimumHeight (corner->GetHeight ());
+    _v_spacer->SetMaximumHeight (corner->GetHeight ());
+  }
+
+  QueueDraw ();
 }
 
 //
