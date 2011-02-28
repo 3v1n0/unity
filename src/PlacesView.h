@@ -86,6 +86,7 @@ private:
 
   static void OnResultClicked (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
+  void OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo);
 
 private:
   PlaceFactory       *_factory;

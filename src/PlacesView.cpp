@@ -80,16 +80,19 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _results_view = new PlacesResultsView ();
   _results_controller->SetView (_results_view);
   _layered_layout->AddLayer (_results_view);
+  _results_view->GetLayout ()->OnGeometryChanged.connect (sigc::mem_fun (this, &PlacesView::OnResultsViewGeometryChanged));
 
   _layered_layout->SetActiveLayer (_home_view);
 
   SetLayout (_layout);
 
-  nux::ROPConfig rop; 
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.90f), true, rop);
+  {
+    nux::ROPConfig rop; 
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.90f), true, rop);
+  }
 
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
@@ -295,6 +298,18 @@ PlacesView::GetResultsController ()
   return _results_controller;
 }
 
+void
+PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo)
+{
+  if (view_geo.height >= _results_view->GetGeometry ().height)
+  {
+    ;
+  }
+  else
+  {
+    ;
+  }
+}
 
 //
 // Model handlers
