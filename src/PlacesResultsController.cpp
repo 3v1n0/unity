@@ -14,23 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "Nux/GridHLayout.h"
-
-#include "NuxGraphics/GLThread.h"
 #include <glib.h>
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include "PlacesResultsController.h"
-#include "PlacesGroup.h"
-#include "PlacesSimpleTile.h"
+#include "PlacesSettings.h"
 
+#include "PlacesResultsController.h"
 
 PlacesResultsController::PlacesResultsController ()
 {
@@ -59,134 +55,59 @@ PlacesResultsController::GetView ()
 }
 
 void
-PlacesResultsController::AddResultToGroup (const char *groupname,
-                                           PlacesTile *tile,
-                                           void       *_id)
+PlacesResultsController::AddGroup (PlaceEntryGroup& group)
 {
-  PlacesGroup *group = _groups[groupname];
+  PlacesGroupController *controller = new PlacesGroupController (group);
 
-  if (!group)
-    {
-      group = CreateGroup (groupname);
-    }
-
-  group->GetLayout ()->AddView (tile, 1, nux::eLeft, nux::eFull);
-  _tiles[_id] = tile;
-  _tile_group_relations[_id] = groupname;
-
-  // Should also catch the onclick signal here on each tile,
-  // so we can activate or do whatever it is we need to do
-
-  if (group->IsVisible () == false)
-  {
-    group->SetVisible (true);
-    _results_view->ReJiggyGroups ();
-
-    group->QueueDraw ();
-    group->ComputeChildLayout ();
-    group->GetLayout ()->QueueDraw ();
-  }
+  _id_to_group[group.GetId ()] = controller;
+  _results_view->AddGroup (controller->GetGroup ());
+  _results_view->QueueRelayout ();
 }
 
 void
-PlacesResultsController::RemoveResultFromGroup (const char *groupname,
-                                                void       *_id)
+PlacesResultsController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesTile *tile = _tiles[_id];
-  PlacesGroup *group = _groups[groupname];
+  PlacesGroupController *controller = _id_to_group[group.GetId ()];
 
-  if (group)
-  {
-    if (tile)
-    {
-      group->GetLayout ()->RemoveChildObject (tile);
+  // We don't complain here because there are some shortcuts that the PlacesView takes which
+  // mean we sometimes receive requests that we can't process
+  if (!controller)
+    return;
 
-      if (group->GetLayout ()->GetChildren ().empty ())
-      {
-        group->SetVisible (false);
-        _results_view->ReJiggyGroups ();
-      }
-      else
-      {
-        group->QueueDraw ();
-        group->GetLayout ()->QueueDraw ();
-        group->ComputeChildLayout ();
-      }
-    }
-    else
-    {
-      g_warning ("Unable to remove '%p' from group '%s': Unable to find tile",
-                 _id, groupname);
-    }
-  }
-  else
-  {
-    g_warning ("Unable to remove '%p' from group '%s': Unable to find group",
-               _id, groupname);
-  }
-
-  _tiles.erase (_id);
-  _tile_group_relations.erase (_id);
+  controller->AddResult (group, result);
 }
 
 void
-PlacesResultsController::RemoveResult (void *_id)
+PlacesResultsController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  RemoveResultFromGroup (_tile_group_relations [_id].c_str (), _id);
+  PlacesGroupController *controller = _id_to_group[group.GetId ()];
+
+  // We don't complain here because there are some shortcuts that the PlacesView takes which
+  // mean we sometimes receive requests that we can't process
+  if (!controller)
+    return;
+
+  controller->RemoveResult (group, result);
 }
 
 void
 PlacesResultsController::Clear ()
 {
-  std::map<std::string, PlacesGroup *>::iterator it;
+  std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
+  
+  for (it = _id_to_group.begin (); it != eit; ++it)
+    (it->second)->UnReference ();
 
-  for (it = _groups.begin (); it != _groups.end (); ++it)
-  {
-    PlacesGroup *group = static_cast <PlacesGroup *> (it->second);
+  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
 
-    _results_view->RemoveGroup (group);
-    group->UnReference ();
-  }
-
-  _groups.erase (_groups.begin (), _groups.end ());
-  _tiles.erase (_tiles.begin (), _tiles.end ());
-  _tile_group_relations.erase (_tile_group_relations.begin (), _tile_group_relations.end ());
-}
-
-PlacesGroup *
-PlacesResultsController::CreateGroup (const char *groupname)
-{
-  PlacesGroup *newgroup = new PlacesGroup (NUX_TRACKER_LOCATION);
-  newgroup->SinkReference ();
-  newgroup->SetTitle (groupname);
-  newgroup->SetRowHeight (92);
-  newgroup->SetItemDetail (1, 100);
-  newgroup->SetExpanded (true);
-
-  nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
-  layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (140, 100);
-  layout->EnablePartialVisibility (false);
-
-  layout->SetVerticalExternalMargin (4);
-  layout->SetHorizontalExternalMargin (4);
-  layout->SetVerticalInternalMargin (4);
-  layout->SetHorizontalInternalMargin (4);
-  layout->SetHeightMatchContent (true);
-
-  newgroup->AddLayout (layout);
-  newgroup->SetVisible (false);
-
-  _groups[groupname] = newgroup;
-  _results_view->AddGroup (newgroup);
-  _results_view->ReJiggyGroups ();
-
-  return newgroup;
+  _results_view->Clear ();
 }
 
 
-/* Introspection */
-const gchar *
+//
+// Introspection
+//
+const gchar*
 PlacesResultsController::GetName ()
 {
   return "PlacesResultsController";
@@ -195,12 +116,5 @@ PlacesResultsController::GetName ()
 void
 PlacesResultsController::AddProperties (GVariantBuilder *builder)
 {
+
 }
-
-
-
-
-
-
-
-

@@ -25,6 +25,7 @@
 #include <Nux/TextureArea.h>
 
 #include "NuxGraphics/GLThread.h"
+#include "NuxGraphics/XInputWindow.h"
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
@@ -347,17 +348,18 @@ PanelMenuView::GetActiveViewName ()
   gchar         *label = NULL;
   BamfWindow    *window;
 
-  // There's probably a better way to do this, but we really only want to ignore our own windows
-  // as there could be cases where windows like ours have menus and we don't want them to fall
-  // into this statement. Still, will investigate better ways to do this.
+  _is_own_window = false;
+  
   window = bamf_matcher_get_active_window (_matcher);
-  if (BAMF_IS_WINDOW (window) 
-      && g_str_has_prefix (bamf_view_get_name (BAMF_VIEW (window)), "nux input"))
+  if (BAMF_IS_WINDOW (window))
   {
-    _is_own_window = true;
+    std::list<Window> our_xids = nux::XInputWindow::NativeHandleList ();
+    std::list<Window>::iterator it;
+
+    it = std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window)));
+    if (it != our_xids.end ())
+      _is_own_window = true;
   }
-  else
-    _is_own_window = false;
 
   if (_is_maximized)
   {
@@ -553,7 +555,7 @@ PanelMenuView::Refresh ()
 void
 PanelMenuView::OnEntryRefreshed (PanelIndicatorObjectEntryView *view)
 {
-  ComputeChildLayout ();
+  QueueRelayout ();
 }
 
 void
@@ -587,8 +589,8 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   AddChild (view);
 
-  this->ComputeChildLayout ();
-  NeedRedraw ();  
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void
@@ -615,8 +617,8 @@ PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
       }
   }
 
-  this->ComputeChildLayout (); 
-  NeedRedraw ();
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 void

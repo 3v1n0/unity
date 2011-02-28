@@ -27,8 +27,6 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include <dee.h>
-
 #include "PlaceFactory.h"
 #include "PlaceEntry.h"
 
@@ -43,6 +41,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
@@ -59,11 +58,11 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  DeeModel * GetSectionsModel ();
-  DeeModel * GetGroupsModel ();
-  DeeModel * GetResultsModel ();
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
 
-  DeeModel * GetGlobalResultsModel () { return NULL; };
+  void ForeachGlobalGroup  (GroupForeachCallback slot) { } ;
+  void ForeachGlobalResult (ResultForeachCallback slot) { };
 
 private:
   void LoadExistingEntries ();
@@ -71,19 +70,14 @@ private:
   void OnPlaceEntryAdded (PlaceEntry *entry);
   void RefreshEntry (PlaceEntry *entry);
 
-  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
-  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
+  void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
   // FIXME: I know this is horrible but I can't fix it this week, have a much better plan for next
 public:
   PlaceFactory *_factory;
-  DeeModel     *_sections_model;
-  DeeModel     *_groups_model;
-  DeeModel     *_results_model;
 
   std::map<char *, gchar *> _hints;
-
-  std::map<DeeModel *, int> _model_to_group;
   std::vector<PlaceEntry *> _entries;
 };
 

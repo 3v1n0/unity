@@ -16,13 +16,15 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
-#include "Nux/Nux.h"
-#include "PlacesSimpleTile.h"
+#include "PlacesSettings.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
-#include "IconTexture.h"
+#include "PlacesSimpleTile.h"
 
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
 : PlacesTile (NUX_TRACKER_LOCATION),
@@ -30,13 +32,15 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _icon (NULL),
   _uri (NULL)
 {
-  _layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
 
   _icontex = new IconTexture (_icon, icon_size);
+  _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
   _icontex->SinkReference ();
+  AddChild (_icontex);
 
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SinkReference ();
@@ -45,17 +49,16 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);
 
-  _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
-  _layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  _layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
 
-  SetMinimumSize (160, 128);
-  SetMaximumSize (160, 128);
+  SetMinMaxSize (160, 128);
 
-  AddChild (_icontex);
+  SetLayout (layout);
 
-  SetCompositionLayout (_layout);
+  OnMouseClick.connect (sigc::mem_fun (this, &PlacesSimpleTile::Clicked));
 }
 
 
@@ -73,12 +76,14 @@ nux::Geometry
 PlacesSimpleTile::GetHighlightGeometry ()
 {
   nux::Geometry base = GetGeometry ();
-  nux::Geometry icontex_base = _icontex->GetGeometry ();
+  int width = 0, height = 0;
+
+  _icontex->GetTextureSize (&width, &height);
   
-  _highlight_geometry.x = (base.width - icontex_base.width) / 2;
+  _highlight_geometry.x = (base.width - width) / 2;
   _highlight_geometry.y = 12;
-  _highlight_geometry.width = icontex_base.width;
-  _highlight_geometry.height = icontex_base.height;
+  _highlight_geometry.width = width;
+  _highlight_geometry.height = height;
 
   return _highlight_geometry;
 }
@@ -136,3 +141,13 @@ PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
 
+void
+PlacesSimpleTile::Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_uri)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                              g_variant_new_string (_uri));
+  }
+}

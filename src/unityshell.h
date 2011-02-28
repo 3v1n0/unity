@@ -128,6 +128,8 @@ class UnityScreen :
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
 
+  void NeedsRelayout ();
+
     protected:
 
 	const gchar* GetName ();
@@ -148,6 +150,11 @@ class UnityScreen :
 	void
 	onRedrawRequested ();
 
+	void Relayout ();
+
+	static gboolean
+	RelayoutTimeout (gpointer data);
+
 	static void
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
@@ -161,8 +168,26 @@ class UnityScreen :
 	strutHackTimeout (gpointer data);
 
   static void
+  OnStartKeyNav (GVariant* data, void* value);
+
+  static void
   OnExitKeyNav (GVariant* data, void* value);
-            
+
+  void
+  startLauncherKeyNav ();
+
+  void
+  restartLauncherKeyNav ();
+
+  static void
+  OnQuicklistEndKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherStartKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherEndKeyNav (GVariant* data, void* value);
+
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
@@ -172,6 +197,7 @@ class UnityScreen :
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
+  bool                   needsRelayout;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

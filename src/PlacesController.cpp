@@ -36,7 +36,7 @@ PlacesController::PlacesController ()
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_ACTIVATED,
+  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION,
                                  (UBusCallback)&PlacesController::ExternalActivation,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
@@ -57,14 +57,18 @@ PlacesController::PlacesController ()
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
   _view = new PlacesView (_factory);
-  _window_layout->AddView(_view, 1);
+  _window_layout->AddView (_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
   _window_layout->SetHorizontalExternalMargin(0);
 
   _window->SetLayout (_window_layout);
+  // Set a InputArea to get the keyboard focus when window receives the enter focus event.
+  _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
+
+  PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
 }
 
 PlacesController::~PlacesController ()
@@ -78,10 +82,12 @@ void PlacesController::Show ()
     return;
 
   _window->ShowWindow (true, false);
-  _window->EnableInputWindow (true, "places", true);
+  // Raise this window on top of all other BaseWindows
+  _window->PushToFront ();
+  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
   _window->GrabKeyboard ();
-  _window->NeedRedraw ();
+  _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
 
   _visible = true;
@@ -100,10 +106,10 @@ void PlacesController::Hide ()
   _window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
   _window->ShowWindow (false, false);
-  
+ 
   _visible = false;
 
-  _view->SetActiveEntry (NULL, 0, "", false);
+  _view->SetActiveEntry (NULL, 0, "");
 
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
@@ -117,8 +123,35 @@ void PlacesController::ToggleShowHide ()
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  // FIXME: This will be a ratio
-  geo = nux::Geometry (66, 24, 938, 500);
+  PlacesSettings *settings = PlacesSettings::GetDefault ();
+  GdkScreen      *screen;
+  gint            primary_monitor, width=0, height=0;
+  GdkRectangle    rect;
+  gint            tile_width;
+
+  screen = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (screen);
+  gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
+
+  tile_width = settings->GetDefaultTileWidth (); 
+
+  if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
+  {
+    gint half = rect.width / 2;
+
+    while ((width + tile_width) <= half)
+      width += tile_width;
+    
+    width = MAX (width, tile_width * 7);
+    height = ((width/tile_width) - 3) * tile_width;
+  }
+  else
+  {
+    width = rect.width - 66;
+    height = rect.height - 24;
+  }
+
+  geo = nux::Geometry (66, 24, width, height);
 }
 
 void
@@ -161,3 +194,8 @@ PlacesController::AddProperties (GVariantBuilder *builder)
 {
 }
 
+void
+PlacesController::OnSettingsChanged (PlacesSettings *settings)
+{
+  // We don't need to do anything just yet over here, it's a placeholder for when we do
+}

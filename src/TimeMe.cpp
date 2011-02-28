@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,25 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alejandro Piñeiro Iglesias <apinheiro@igalia.com>
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_A11Y_H
-#define UNITY_A11Y_H
+#include "TimeMe.h"
 
-#include <atk/atk.h>
-
-#include "Nux/Nux.h"
-#include "NuxCore/Object.h"
-
-void unity_a11y_preset_environment (void);
-void unity_a11y_init (void);
-void unity_a11y_finalize (void);
-
-AtkObject *unity_a11y_get_accessible (nux::Object *object);
-
-gboolean unity_a11y_initialized (void);
-
-void unity_run_a11y_unit_tests (void);
-
-#endif /* UNITY_A11Y_H */
+gint64 _____last_time_____ = 0;
+gint64 _____start_time_____ = 0;

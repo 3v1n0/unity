@@ -45,6 +45,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
@@ -61,11 +62,11 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  DeeModel * GetSectionsModel ();
-  DeeModel * GetGroupsModel ();
-  DeeModel * GetResultsModel ();
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
 
-  DeeModel * GetGlobalResultsModel ();
+  void ForeachGlobalGroup  (GroupForeachCallback slot);
+  void ForeachGlobalResult (ResultForeachCallback slot);
 
   /* Other methods */
   bool          IsValid ();
@@ -91,6 +92,14 @@ public:
                const gchar  *global_results_model,
                GVariantIter *global_hints);
 
+  static void OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
+  static void OnGlobalGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
 public:
   // For our parents use, we don't touch it
   bool dirty;
@@ -101,6 +110,7 @@ private:
   gchar   *_name;
   gchar   *_icon;
   gchar   *_description;
+  guint64  _shortcut;
   guint32  _position;
   gchar  **_mimetypes;
   std::map<gchar *, gchar *> _hints;
@@ -117,6 +127,7 @@ private:
   DeeModel *_results_model;
 
   DeeModel *_global_results_model;
+  DeeModel *_global_groups_model;
 
   gchar    *_previous_search;
   guint32   _previous_section;

@@ -113,6 +113,8 @@ public:
 
         if (g_strcmp0 (txt, entry->GetName ()) == 0)
         {
+          //FIXME : Update when we have sections support
+#if 0
           DeeModel *sections = entry->GetSectionsModel ();
           DeeModelIter *iter;
 
@@ -133,6 +135,7 @@ public:
           }
 
           gtk_combo_box_set_active (GTK_COMBO_BOX (_seccombo), 0);
+#endif
         }
       }
     }
