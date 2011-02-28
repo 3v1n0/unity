@@ -34,6 +34,9 @@ public:
 
   nux::Color& GetTextColor ();
 
+  int  GetDefaultNColumns ();
+  void SetDefaultNColumns (int n_cols);
+
   int GetTileIconSize ();
   int GetTileWidth    ();
   int GetTileHeight   ();
@@ -54,6 +57,7 @@ public:
   nux::BaseTexture * GetGroupExpandIcon ();
 
   sigc::signal<void> changed;
+  sigc::signal<void> columns_changed;
 
 private:
   void               Refresh ();
@@ -67,6 +71,7 @@ private:
 
   int _text_width;
   int _text_height;
+  int _n_cols;
 
   nux::BaseTexture *_dash_bottom_texture;
   nux::BaseTexture *_dash_right_texture;

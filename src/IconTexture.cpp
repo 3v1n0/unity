@@ -31,17 +31,18 @@
 
 #define DEFAULT_ICON "text-x-preview"
 
-IconTexture::IconTexture (const char *icon_name, unsigned int size)
+IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL),
   _size (size),
   _texture_cached (NULL),
   _texture_width (0),
-  _texture_height (0)
+  _texture_height (0),
+  _loading (false)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
-  if (!g_strcmp0 (_icon_name, "") == 0)
+  if (!g_strcmp0 (_icon_name, "") == 0 && !defer_icon_loading)
     LoadIcon ();
 }
 
@@ -76,6 +77,10 @@ void
 IconTexture::LoadIcon ()
 {
   GIcon  *icon;
+
+  if (_loading)
+    return;
+  _loading = true;
 
   icon = g_icon_new_for_string (_icon_name, NULL);
 
@@ -138,6 +143,7 @@ IconTexture::IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf)
   }
   else
   {
+    _loading = false;
     SetByIconName (DEFAULT_ICON, _size);
   }
 }

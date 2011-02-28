@@ -150,6 +150,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
     height = ((width/tile_width) - 3) * tile_width;
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
+    style->SetDefaultNColumns (6);
   }
   else
   {
@@ -157,6 +158,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
     height = rect.height - 24;
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_FULLSCREEN);
+    style->SetDefaultNColumns (width / tile_width);
   }
 
   *out_width = width;

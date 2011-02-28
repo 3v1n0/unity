@@ -26,7 +26,8 @@
 static const guint kPadding = 4;
 
 PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
-: _group (NULL)
+: _group (NULL),
+  _load_icons_id (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
@@ -51,10 +52,15 @@ PlacesGroupController::PlacesGroupController (PlaceEntryGroup& group)
   _group->SetChildLayout (layout);
   _group->SetVisible (false);
   _group->SetExpanded (false);
+
+  _group->expanded.connect (sigc::mem_fun (this, &PlacesGroupController::LoadIcons));
+  style->columns_changed.connect (sigc::mem_fun (this, &PlacesGroupController::LoadIcons));
 }
 
 PlacesGroupController::~PlacesGroupController ()
 {
+  if (_load_icons_id)
+    g_source_remove (_load_icons_id);
 }
 
 const void *
@@ -75,11 +81,15 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   gchar            *result_name;
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
+  PlacesStyle      *style = PlacesStyle::GetDefault ();
   
   result_name = g_markup_escape_text (result.GetName (), -1);
   result_icon = result.GetIcon ();
 
-  tile = new PlacesSimpleTile (result_icon, result_name, PlacesStyle::GetDefault ()->GetTileIconSize ());
+  tile = new PlacesSimpleTile (result_icon,
+                               result_name,
+                               style->GetTileIconSize (),
+                               (_id_to_tile.size () + 1) > style->GetDefaultNColumns ());
   tile->SetURI (result.GetURI ());
   tile->QueueRelayout ();
 
@@ -108,12 +118,46 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
   _group->Relayout ();
   _group->SetCounts (6, _id_to_tile.size ());
   _group->SetVisible (_id_to_tile.size ());
+
+  if (!_load_icons_id)
+    _load_icons_id = g_timeout_add (0, (GSourceFunc)LoadIconsTimeout, this);
 }
 
 void
 PlacesGroupController::Clear ()
 {
 
+}
+
+void
+PlacesGroupController::LoadIcons ()
+{
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  int          n_to_show, i = 0;
+  std::map<const void *, PlacesTile *>::iterator it, eit = _id_to_tile.end ();
+
+  if (_group->GetExpanded ())
+    n_to_show = _id_to_tile.size ();
+  else
+    n_to_show = style->GetDefaultNColumns ();
+
+  for (it = _id_to_tile.begin (); it != eit; ++it)
+  {
+    static_cast<PlacesSimpleTile *> (it->second)->LoadIcon ();
+
+    i++;
+    if (i > n_to_show)
+      break;
+  }
+}
+
+gboolean
+PlacesGroupController::LoadIconsTimeout (PlacesGroupController *self)
+{
+  self->_load_icons_id = 0;
+  self->LoadIcons ();
+
+  return FALSE;
 }
 
 //
@@ -128,5 +172,4 @@ PlacesGroupController::GetName ()
 void
 PlacesGroupController::AddProperties (GVariantBuilder *builder)
 {
-
 }

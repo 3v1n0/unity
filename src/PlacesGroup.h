@@ -51,6 +51,9 @@ public:
   void SetChildUnexpandHeight (guint height);
 
   void SetExpanded (bool is_expanded);
+  bool GetExpanded ();
+
+  sigc::signal<void> expanded;
 
 private:
   void Refresh ();

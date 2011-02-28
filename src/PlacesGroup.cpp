@@ -261,6 +261,12 @@ PlacesGroup::SetChildUnexpandHeight (guint height)
   }
 }
 
+bool
+PlacesGroup::GetExpanded ()
+{
+  return _is_expanded;
+}
+
 void
 PlacesGroup::SetExpanded (bool is_expanded)
 {
@@ -289,6 +295,8 @@ PlacesGroup::SetExpanded (bool is_expanded)
 
   _expand_icon->SetTexture (_is_expanded ? style->GetGroupUnexpandIcon () 
                                          : style->GetGroupExpandIcon ());
+
+  expanded.emit ();
 }
 
 void

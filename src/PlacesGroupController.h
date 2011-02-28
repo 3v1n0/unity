@@ -46,9 +46,14 @@ protected:
   void         AddProperties (GVariantBuilder *builder);
 
 private:
+  void LoadIcons ();
+  static gboolean LoadIconsTimeout (PlacesGroupController *self);
+
+private:
   PlacesGroup *_group;
   const void  *_id;
   std::map<const void *, PlacesTile *>  _id_to_tile;
+  guint _load_icons_id;
 };
 
 #endif // PLACES_GROUP_CONTROLLER_H

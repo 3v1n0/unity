@@ -33,6 +33,7 @@ PlacesStyle::PlacesStyle ()
   _text_color (1.0f, 1.0f, 1.0f, 1.0f),
   _text_width (0),
   _text_height (0),
+  _n_cols (6),
   _dash_bottom_texture (NULL),
   _dash_right_texture (NULL),
   _dash_corner_texture (NULL),
@@ -80,6 +81,23 @@ PlacesStyle::GetDefault ()
     _style = new PlacesStyle ();
 
   return _style;
+}
+
+int
+PlacesStyle::GetDefaultNColumns ()
+{
+  return _n_cols;
+}
+
+void
+PlacesStyle::SetDefaultNColumns (int n_cols)
+{
+  if (_n_cols == n_cols)
+    return;
+
+  _n_cols = n_cols;
+
+  columns_changed.emit ();
 }
 
 int

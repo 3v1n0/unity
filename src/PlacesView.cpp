@@ -135,6 +135,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     if (fullscreen.IsPointInside (ievent.e_x, ievent.e_y))
     {
       fullscreen_request.emit ();
+
       return TraverseInfo |= nux::eMouseEventSolved;
     }
   }
