@@ -213,12 +213,6 @@ panel_indicator_entry_accessible_ref_state_set  (AtkObject *accessible)
       atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
       atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
     }
-  else
-    {
-      atk_state_set_remove_state (state_set, ATK_STATE_ACTIVE);
-      atk_state_set_remove_state (state_set, ATK_STATE_FOCUSED);
-      atk_state_set_remove_state (state_set, ATK_STATE_SHOWING);
-    }
 
   return state_set;
 }
