@@ -52,7 +52,6 @@ TestFinished (void *arg)
    ubus_server_send_message (_ubus,
                              UBUS_AUTOPILOT_TEST_FINISHED,
                              result);
-   g_variant_unref (result);                             
 
    g_free (args->name);
    g_free (args);
