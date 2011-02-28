@@ -26,6 +26,16 @@
 
 #include <glib.h>
 
+class PlaceEntrySection
+{
+public:
+  // As this class is to hide the implementation of the PlaceEntry, and will often be
+  // hiding a more C-like API, the decision taken is to make all these stack allocated
+  // and to discourage the views or controllers from saving references to these.
+  virtual const char * GetName () const = 0;
+  virtual const char * GetIcon () const = 0;
+};
+
 class PlaceEntryGroup
 {
 public:
@@ -60,6 +70,7 @@ class PlaceEntry : public sigc::trackable
 {
 public:
 
+  typedef sigc::slot<void, PlaceEntry *, PlaceEntrySection&> SectionForeachCallback;
   typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&>  GroupForeachCallback;
   typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> ResultForeachCallback;
 
@@ -97,6 +108,8 @@ public:
   virtual void SetActiveSection (guint32 section_id) = 0;
   virtual void SetGlobalSearch  (const char *search, std::map<char*, char*>& hints) = 0;
 
+  virtual void ForeachSection (SectionForeachCallback slot) = 0;
+
   virtual void ForeachGroup  (GroupForeachCallback slot) = 0;
   virtual void ForeachResult (ResultForeachCallback slot) = 0;
 
@@ -126,7 +139,7 @@ public:
   // Definitely connect to this, as your setting sections the places might want
   // to update it's views accordingly
   sigc::signal<void>                          entry_renderer_changed;
-  
+
   // This is not important outside of a global search aggregator
   sigc::signal<void, PlaceEntry *>            global_renderer_changed;
 

@@ -38,6 +38,12 @@ static void on_proxy_signal_received (GDBusProxy *proxy,
 
 enum
 {
+  SECTION_NAME,
+  SECTION_ICON
+};
+
+enum
+{
   GROUP_RENDERER,
   GROUP_NAME,
   GROUP_ICON
@@ -51,6 +57,36 @@ enum
   RESULT_MIMETYPE,
   RESULT_NAME,
   RESULT_COMMENT
+};
+
+class PlaceEntrySectionRemote : public PlaceEntrySection
+{
+public:
+  PlaceEntrySectionRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntrySectionRemote (const PlaceEntrySectionRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, SECTION_NAME);
+  }
+
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, SECTION_ICON);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
 };
 
 class PlaceEntryGroupRemote : public PlaceEntryGroup
@@ -418,6 +454,22 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
                      NULL,
                      NULL);
   g_variant_builder_unref (builder);
+}
+
+void
+PlaceEntryRemote::ForeachSection (SectionForeachCallback slot)
+{
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_sections_model);
+  eiter = dee_model_get_last_iter (_sections_model);
+  while (iter != eiter)
+  {
+    PlaceEntrySectionRemote section (_sections_model, iter);
+    slot (this, section);
+
+    iter = dee_model_next (_sections_model, iter);
+  }
 }
 
 void

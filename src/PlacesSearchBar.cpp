@@ -77,7 +77,8 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   
   _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
-  _combo->AddItem ("Hello Unity Team");
+  _combo->SetMaximumWidth (style->GetHomeTileWidth ());
+  _combo->SetVisible (false);
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -177,6 +178,9 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
    _entry = entry;
 
+   _combo->RemoveAllItem ();
+   _combo->SetVisible (false);
+
   if (_entry)
   {
     // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
@@ -197,6 +201,9 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
     _pango_entry->SetText (search_string ? search_string : "");
 
+    _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
+    _combo->SetSelectionIndex (section_id);
+
     g_free (res);
     g_free (tmp);
   }
@@ -204,6 +211,13 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
   {
     _pango_entry->SetText ("");
   }
+}
+
+void
+PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
+{
+  _combo->AddItem (section.GetName ());
+  _combo->SetVisible (true);
 }
 
 void
