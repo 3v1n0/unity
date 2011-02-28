@@ -24,7 +24,7 @@
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
-
+#include <Nux/ComboBoxSimple.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
@@ -87,6 +87,7 @@ private:
 
   friend class PlacesView;
   nux::TextureArea        *_search_icon;
+  nux::ComboBoxSimple     *_combo;
 };
 
 #endif

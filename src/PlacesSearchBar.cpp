@@ -75,6 +75,10 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layered_layout->SetActiveLayerN (1);
 
   _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  
+  _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
+  _combo->AddItem ("Hello Unity Team");
+  _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
@@ -134,13 +138,16 @@ PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void
 PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry ();
+
   UpdateBackground ();
 
-  GfxContext.PushClippingRectangle (GetGeometry() );
+ GfxContext.PushClippingRectangle (geo);
 
-  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
-
-  gPainter.PopBackground ();
+  _bg_layer->SetGeometry (nux::Geometry (geo.x, geo.y, _last_width, geo.height));
+  nux::GetPainter ().RenderSinglePaintLayer (GfxContext,
+                                             _bg_layer->GetGeometry (),
+                                             _bg_layer);
 
   GfxContext.PopClippingRectangle ();
 }
@@ -148,9 +155,11 @@ PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry geo = GetGeometry ();
 
-  gPainter.PushLayer (GfxContext, GetGeometry (), _bg_layer);
+  GfxContext.PushClippingRectangle (geo);
+
+  gPainter.PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
 
   _layout->ProcessDraw (GfxContext, force_draw);
 
@@ -348,6 +357,10 @@ PlacesSearchBar::UpdateBackground ()
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
+  nux::Geometry cgeo = _combo->GetGeometry ();
+
+  if (_combo->IsVisible ())
+    geo.width = cgeo.x;
 
   if (geo.width == _last_width && geo.height == _last_height)
     return;
@@ -366,7 +379,7 @@ PlacesSearchBar::UpdateBackground ()
 
   draw_rounded_rect (cr, 1.0f, x, y, RADIUS, width, height);
 
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.8f);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.75f);
   cairo_fill_preserve (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.8f);
