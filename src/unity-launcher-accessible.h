@@ -34,10 +34,14 @@ G_BEGIN_DECLS
 
 typedef struct _UnityLauncherAccessible        UnityLauncherAccessible;
 typedef struct _UnityLauncherAccessibleClass   UnityLauncherAccessibleClass;
+typedef struct _UnityLauncherAccessiblePrivate   UnityLauncherAccessiblePrivate;
 
 struct _UnityLauncherAccessible
 {
   NuxViewAccessible parent;
+
+  /*< private >*/
+  UnityLauncherAccessiblePrivate *priv;
 };
 
 struct _UnityLauncherAccessibleClass
