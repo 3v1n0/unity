@@ -266,7 +266,7 @@ PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
   gfxContext.PushClippingRectangle (base);
 
-  if (GetFocused ())
+  if (GetFocused () || IsMouseInside ())
   {
     UpdateBackground ();
     nux::Geometry hl_geo = GetHighlightGeometry ();
@@ -289,7 +289,7 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (base);
 
-  if (GetFocused ())
+  if (GetFocused () || IsMouseInside ())
   {
     UpdateBackground ();
 
@@ -305,7 +305,7 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   if (GetCompositionLayout ())
     GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
 
-  if (IsMouseInside ())
+  if (IsMouseInside () || GetFocused ())
     nux::GetPainter ().PopBackground ();
 
   GfxContext.PopClippingRectangle();
