@@ -173,8 +173,10 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  //FIXME: Lots of things to detect here still
-  Hide ();
+  //FIXME: We need a way to get the real position/size of the homebutton
+  nux::Geometry geo (0, 0, 66, 24);
+  if (!geo.IsPointInside (x, y))
+    Hide ();
 }
 
 void
