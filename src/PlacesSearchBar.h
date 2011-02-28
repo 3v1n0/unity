@@ -23,6 +23,7 @@
 #include <Nux/LayeredLayout.h>
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
+#include <Nux/TextureArea.h>
 
 #include <NuxGraphics/GraphicsEngine.h>
 
@@ -36,7 +37,6 @@
 class PlacesView;
 #include <gtk/gtk.h>
 
-#include "IconTexture.h"
 #include "StaticCairoText.h"
 
 class PlacesSearchBar : public Introspectable, public nux::View
@@ -67,6 +67,7 @@ private:
   void UpdateBackground ();
   void OnSearchChanged (nux::TextEntry *text_entry);
   void EmitLiveSearch ();
+  void OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
@@ -83,7 +84,7 @@ private:
   guint                    _live_search_timeout;
 
   friend class PlacesView;
-  IconTexture             *_search_icon;
+  nux::TextureArea        *_search_icon;
 };
 
 #endif

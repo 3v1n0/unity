@@ -35,7 +35,9 @@ PlacesStyle::PlacesStyle ()
   _text_height (0),
   _dash_bottom_texture (NULL),
   _dash_right_texture (NULL),
-  _dash_corner_texture (NULL)
+  _dash_corner_texture (NULL),
+  _search_ready_texture (NULL),
+  _search_clear_texture (NULL)
 {
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
                     G_CALLBACK (PlacesStyle::OnFontChanged), this);
@@ -89,9 +91,7 @@ nux::BaseTexture *
 PlacesStyle::GetDashBottomTile ()
 {
   if (!_dash_bottom_texture)
-    _dash_bottom_texture = TextureFromFilename (PKGDATADIR"/dash_bottom_border_tile.png",
-                                                &_dash_bottom_tile_width,
-                                                &_dash_bottom_tile_height);
+    _dash_bottom_texture = TextureFromFilename (PKGDATADIR"/dash_bottom_border_tile.png");
   return _dash_bottom_texture;
 }
 
@@ -99,9 +99,7 @@ nux::BaseTexture *
 PlacesStyle::GetDashRightTile ()
 {
   if (!_dash_right_texture)
-    _dash_right_texture =  TextureFromFilename (PKGDATADIR"/dash_right_border_tile.png",
-                                                &_dash_right_tile_width,
-                                                &_dash_right_tile_height);
+    _dash_right_texture =  TextureFromFilename (PKGDATADIR"/dash_right_border_tile.png");
   return _dash_right_texture;
 }
 
@@ -109,14 +107,28 @@ nux::BaseTexture *
 PlacesStyle::GetDashCorner ()
 {
   if (!_dash_corner_texture)
-    _dash_corner_texture =  TextureFromFilename (PKGDATADIR"/dash_bottom_right_corner.png",
-                                                 &_dash_corner_width,
-                                                 &_dash_corner_height);
+    _dash_corner_texture =  TextureFromFilename (PKGDATADIR"/dash_bottom_right_corner.png");
   return _dash_corner_texture;
 }
 
 nux::BaseTexture *
-PlacesStyle::TextureFromFilename (const char *filename, int *width, int *height)
+PlacesStyle::GetSearchReadyIcon ()
+{
+  if (!_search_ready_texture)
+    _search_ready_texture = TextureFromFilename (PKGDATADIR"/search_ready_icon.png");
+  return _search_ready_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetSearchClearIcon ()
+{
+  if (!_search_clear_texture)
+    _search_clear_texture = TextureFromFilename (PKGDATADIR"/search_clear_icon.png");
+  return _search_clear_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::TextureFromFilename (const char *filename)
 {
   GdkPixbuf        *pixbuf;
   GError           *error = NULL;
@@ -132,9 +144,6 @@ PlacesStyle::TextureFromFilename (const char *filename, int *width, int *height)
   else
   {
     texture = nux::CreateTexture2DFromPixbuf (pixbuf, true);
-    *width = gdk_pixbuf_get_width (pixbuf);
-    *height = gdk_pixbuf_get_height (pixbuf);
-
     g_object_unref (pixbuf);
   }
 

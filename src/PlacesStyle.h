@@ -42,11 +42,14 @@ public:
   nux::BaseTexture * GetDashRightTile ();
   nux::BaseTexture * GetDashCorner ();
 
+  nux::BaseTexture * GetSearchReadyIcon ();
+  nux::BaseTexture * GetSearchClearIcon ();
+
   sigc::signal<void> changed;
 
 private:
   void               Refresh ();
-  nux::BaseTexture * TextureFromFilename (const char *filename, int *width, int *height);
+  nux::BaseTexture * TextureFromFilename (const char *filename);
 
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesStyle *self);
 
@@ -61,12 +64,8 @@ private:
   nux::BaseTexture *_dash_right_texture;
   nux::BaseTexture *_dash_corner_texture;
 
-  int _dash_bottom_tile_width;
-  int _dash_bottom_tile_height;
-  int _dash_right_tile_width;
-  int _dash_right_tile_height;
-  int _dash_corner_width;
-  int _dash_corner_height;
+  nux::BaseTexture *_search_ready_texture;
+  nux::BaseTexture *_search_clear_texture;
 };
 
 #endif // PLACES_STYLE_H
