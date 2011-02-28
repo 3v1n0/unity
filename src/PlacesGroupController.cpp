@@ -82,6 +82,12 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   const gchar      *result_icon;
   PlacesSimpleTile *tile;
   PlacesStyle      *style = PlacesStyle::GetDefault ();
+  bool              defer_load;
+
+  if (_group->GetExpanded ())
+    defer_load = false;
+  else
+    defer_load = (_id_to_tile.size () + 1) > style->GetDefaultNColumns ();
   
   result_name = g_markup_escape_text (result.GetName (), -1);
   result_icon = result.GetIcon ();
@@ -89,7 +95,7 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   tile = new PlacesSimpleTile (result_icon,
                                result_name,
                                style->GetTileIconSize (),
-                               (_id_to_tile.size () + 1) > style->GetDefaultNColumns ());
+                               defer_load);
   tile->SetURI (result.GetURI ());
   tile->QueueRelayout ();
 
@@ -134,16 +140,19 @@ PlacesGroupController::LoadIcons ()
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   int          n_to_show, i = 0;
-  std::map<const void *, PlacesTile *>::iterator it, eit = _id_to_tile.end ();
+//  std::map<const void *, PlacesTile *>::iterator it, eit = _id_to_tile.end ();
+  nux::GridHLayout *layout = static_cast<nux::GridHLayout *> (_group->GetChildLayout ());
+  std::list<nux::Area *>::iterator it, eit = layout->GetChildren ().end ();
 
   if (_group->GetExpanded ())
     n_to_show = _id_to_tile.size ();
   else
     n_to_show = style->GetDefaultNColumns ();
 
-  for (it = _id_to_tile.begin (); it != eit; ++it)
+  for (it = layout->GetChildren ().begin (); it != eit; ++it)
   {
-    static_cast<PlacesSimpleTile *> (it->second)->LoadIcon ();
+    //static_cast<PlacesSimpleTile *> (it->second)->LoadIcon ();
+    static_cast<PlacesSimpleTile *> (*it)->LoadIcon ();
 
     i++;
     if (i > n_to_show)
