@@ -55,6 +55,10 @@ static const gchar introspection_xml[] =
   "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
   "    </method>"
   ""
+  "    <method name='SyncGeometries'>"
+  "      <arg type='a(ssiiii)' name='geometries' direction='in'/>"
+  "    </method>"
+	""
   "    <method name='ShowEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='u' name='timestamp' direction='in'/>"
@@ -140,6 +144,27 @@ handle_method_call (GDBusConnection       *connection,
                                                                      id));
       g_free (id);
     }
+	else if (g_strcmp0 (method_name, "SyncGeometries") == 0)
+	  {
+      GVariantIter *iter;
+			gchar *indicator_id, *entry_id;
+			gint x, y, width, height;
+
+			g_variant_get (parameters, "(a(ssiiii))", &iter);
+			while (g_variant_iter_loop (iter, "(ssiiii)",
+																	&indicator_id,
+																	&entry_id,
+																	&x,
+																	&y,
+																	&width,
+																	&height))
+			  {
+          panel_service_sync_geomtry (service, indicator_id,
+																			entry_id, x, y, width, height);
+				}
+
+			g_variant_iter_free (iter);
+		}
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {
       gchar  *entry_id;

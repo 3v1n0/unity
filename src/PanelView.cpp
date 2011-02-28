@@ -37,6 +37,10 @@
 #include "IndicatorObjectFactoryRemote.h"
 #include "PanelIndicatorObjectView.h"
 
+#define S_NAME  "com.canonical.Unity.Panel.Service"
+#define S_PATH  "/com/canonical/Unity/Panel/Service"
+#define S_IFACE "com.canonical.Unity.Panel.Service"
+
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
 PanelView::PanelView (NUX_FILE_LINE_DECL)
@@ -70,6 +74,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
   _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
   _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
+  _remote->IndicatorObjectFactory::OnEntriesSynced.connect (sigc::mem_fun (this, &PanelView::OnEntriesSynced));
 }
 
 PanelView::~PanelView ()
@@ -331,6 +336,117 @@ PanelView::OnEntryActivated (const char *entry_id)
 {
   if (g_strcmp0 (entry_id, "") == 0)
     _menu_view->AllMenusClosed ();
+}
+
+static void
+on_sync_geometries_done_cb (GObject      *source,
+                            GAsyncResult *res,
+                            gpointer      data)
+{
+  GVariant *args;
+  GError *error = NULL;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy*)source, res, &error);
+  if (error != NULL)
+  {
+    g_warning ("Error when calling SyncGeometries: %s", error->message);
+    g_error_free (error);
+  }
+}
+
+void
+PanelView::OnEntriesSynced (GVariant *args)
+{
+  GVariantBuilder b;
+  GVariant *method_args;
+  GDBusProxy *proxy;
+  GVariantIter *iter;
+  gchar *indicator_id;
+  gchar *entry_id;
+  gchar *label;
+  gboolean label_sensitive;
+  gboolean label_visible;
+  guint32 image_type;
+  gchar *image_data;
+  gboolean image_sensitive;
+  gboolean image_visible;
+
+  // Build variant to send geometries to the panel service
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii)"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
+
+  g_variant_get (args, "(a(sssbbusbb))", &iter);
+  while (g_variant_iter_loop (iter, "(sssbbusbb)",
+                              &indicator_id,
+                              &entry_id,
+                              &label,
+                              &label_sensitive,
+                              &label_visible,
+                              &image_type,
+                              &image_data,
+                              &image_sensitive,
+                              &image_visible))
+  {
+    std::list<Area *>::iterator it;
+    std::list<Area *> my_children = _layout->GetChildren ();
+    for (it = my_children.begin(); it != my_children.end(); it++)
+    {
+      PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+      if (view->_layout == NULL)
+        continue;
+
+      if (g_str_equal (indicator_id, view->GetName ()))
+      {
+        std::list<Area *>::iterator it2;
+
+        std::list<Area *> its_children = view->_layout->GetChildren ();
+        for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+        {
+           PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+           if (g_str_equal (entry_id, entry->GetName ()))
+           {
+             nux::Geometry geo = entry->GetGeometry ();
+
+             g_variant_builder_add (&b, "(ssiiii)",
+                                    indicator_id,
+                                    entry_id,
+                                    geo.x,
+                                    geo.y,
+                                    geo.width,
+                                    geo.height);
+           }
+        }
+      }
+    }
+  }
+
+  g_variant_iter_free (iter);
+  g_variant_builder_close (&b);
+  method_args = g_variant_builder_end (&b);
+
+  // Send geometries to the panel service
+  proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
+                                         G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                                         NULL,
+                                         S_NAME,
+                                         S_PATH,
+                                         S_IFACE,
+                                         NULL,
+                                         NULL);
+  if (proxy != NULL)
+  {
+    g_dbus_proxy_call (proxy, "SyncGeometries", method_args,
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1,
+                       NULL,
+                       on_sync_geometries_done_cb,
+                       this);
+    g_object_unref (proxy);
+  }
+
+  g_variant_unref (method_args);
 }
 
 //

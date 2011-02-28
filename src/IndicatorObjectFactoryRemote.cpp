@@ -542,6 +542,7 @@ on_sync_ready_cb (GObject      *source,
     }
 
   remote->Sync (args);
+  remote->OnEntriesSynced.emit (args);
 
   g_variant_unref (args);
 }
