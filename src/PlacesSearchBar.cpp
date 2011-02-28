@@ -79,6 +79,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
   _combo->SetMaximumWidth (style->GetHomeTileWidth ());
   _combo->SetVisible (false);
+  _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -202,7 +203,8 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     _pango_entry->SetText (search_string ? search_string : "");
 
     _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
-    _combo->SetSelectionIndex (section_id);
+    if (_combo->IsVisible ())
+      _combo->SetSelectionIndex (section_id);
 
     g_free (res);
     g_free (tmp);
@@ -216,8 +218,18 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 void
 PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
 {
-  _combo->AddItem (section.GetName ());
+  char *tmp = g_markup_escape_text (section.GetName (), -1);
+
+  _combo->AddItem (tmp);
   _combo->SetVisible (true);
+
+  g_free (tmp);
+}
+
+void
+PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
+{
+  _entry->SetActiveSection (_combo->GetSelectionIndex());
 }
 
 void

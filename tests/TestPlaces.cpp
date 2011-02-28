@@ -46,7 +46,7 @@ public:
     _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
     _combo->SetMinimumWidth (150);
     _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
-    //layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
+    layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
     _factory = PlaceFactory::GetDefault ();
     PopulateEntries ();
