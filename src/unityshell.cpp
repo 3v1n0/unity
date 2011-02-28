@@ -868,6 +868,11 @@ UnityWindow::UnityWindow (CompWindow *window) :
 
 UnityWindow::~UnityWindow ()
 {
+  UnityScreen *us = UnityScreen::get (screen);
+  if (us->newFocusedWindow && (UnityWindow::get (us->newFocusedWindow) == this))
+    us->newFocusedWindow = NULL;
+  if (us->lastFocusedWindow && (UnityWindow::get (us->lastFocusedWindow) == this))
+    us->lastFocusedWindow = NULL;
 }
 
 /* vtable init */
