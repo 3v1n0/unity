@@ -23,7 +23,7 @@
 		<option name="toggle_handles_key" type="key">
 			<_short>Toggle Handles</_short>
 			<_long>Show/Hide the handles</_long>
-			<default>&lt;Control&gt;&lt;Alt&gt;h</default>
+			<!--<default>&lt;Control&gt;&lt;Alt&gt;h</default>-->
 		</option>
 		<option name="fade_duration" type="int">
 			<_short>Fade Duration</_short>
