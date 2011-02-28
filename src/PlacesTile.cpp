@@ -42,6 +42,7 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
   _hilight_view = this;
+
 }
 
 PlacesTile::~PlacesTile ()
@@ -258,9 +259,10 @@ void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
   nux::Geometry base = GetGeometry ();
-  gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
+
+  gfxContext.PushClippingRectangle (base);
 
   if (_state == STATE_HOVER)
   {
@@ -315,7 +317,7 @@ PlacesTile::PostLayoutManagement (long LayoutResult)
 void PlacesTile::SetState (TileState state)
 {
   _state = state;
-  NeedRedraw ();
+  QueueDraw ();
 }
 
 PlacesTile::TileState PlacesTile::GetState ()
@@ -327,21 +329,21 @@ void PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsig
 {
   sigClick.emit(this);
 
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  QueueDraw ();
+  _layout->QueueDraw ();
 }
 
 void PlacesTile::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  QueueDraw ();
+  _layout->QueueDraw ();
 }
 
 void PlacesTile::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _state = STATE_PRESSED;
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  QueueDraw ();
+  _layout->QueueDraw ();
 }
 
 void PlacesTile::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -352,15 +354,15 @@ void PlacesTile::RecvMouseMove (int x, int y, int dx, int dy, unsigned long butt
 void PlacesTile::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetState (STATE_HOVER);
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  QueueDraw ();
+  _layout->QueueDraw ();
 }
 
 void PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetState (STATE_DEFAULT);
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  QueueDraw ();
+  _layout->QueueDraw ();
 }
 
 

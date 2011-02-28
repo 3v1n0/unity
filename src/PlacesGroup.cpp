@@ -62,7 +62,7 @@ _idle_id (0)
   _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
 
-  _header_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _header_layout->SetHorizontalInternalMargin (12);
 
   _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -72,7 +72,7 @@ _idle_id (0)
   // FIXME: We don't want to show this as it does nothing right now
   // _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
-  _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  _group_layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
@@ -83,7 +83,7 @@ _idle_id (0)
   _total_items = 0;
   _visible_items = 0;
 
-  SetCompositionLayout (_group_layout);
+  SetLayout (_group_layout);
 
 }
 
@@ -217,7 +217,7 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
 
-  _group_layout->ProcessDraw (GfxContext, force_draw);
+  _group_layout->ProcessDraw (GfxContext, force_draw || IsFullRedraw ());
 
   GfxContext.PopClippingRectangle();
 }

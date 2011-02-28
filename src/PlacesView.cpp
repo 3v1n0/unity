@@ -64,7 +64,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   _layered_layout->SetActiveLayer (_home_view);
 
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
@@ -92,8 +92,8 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
 
-  if (ievent.e_event == nux::NUX_KEYDOWN
-      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  if ((ievent.e_event == nux::NUX_KEYDOWN) &&
+   (ievent.GetKeySym () == NUX_VK_ESCAPE))
   {
     SetActiveEntry (NULL, 0, "");
     return TraverseInfo;
@@ -102,7 +102,9 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
   {
     if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+    {
       SetActiveEntry (NULL, 0, "");
+    }
     return TraverseInfo;
   }
 
@@ -411,6 +413,12 @@ PlacesView::CloseRequest (GVariant *data, PlacesView *self)
   self->SetActiveEntry (NULL, 0, "");
 }
 
+nux::TextEntry*
+PlacesView::GetTextEntryView ()
+{
+  return _search_bar->_pango_entry;
+}
+
 //
 // Introspection
 //
@@ -450,3 +458,4 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
   g_free (id);
   g_free (search_string);
 }
+

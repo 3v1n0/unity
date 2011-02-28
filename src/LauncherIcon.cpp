@@ -422,7 +422,7 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
   int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
-  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+  //nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
 }
 
 void LauncherIcon::RecvMouseDown (int button)
