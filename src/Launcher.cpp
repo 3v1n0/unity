@@ -492,10 +492,14 @@ Launcher::startKeyNavMode ()
   EnsureHiddenState ();
 
   if (_last_icon_index == -1)
-    _current_icon_index = 0;
-  else
-    _current_icon_index = _last_icon_index;
-  NeedRedraw ();
+     _current_icon_index = 0;
+   else
+     _current_icon_index = _last_icon_index;
+   NeedRedraw ();
+
+   ubus_server_send_message (ubus_server_get_default (),
+                             UBUS_LAUNCHER_START_KEY_NAV,
+                             NULL);
 }
 
 void
@@ -1387,6 +1391,7 @@ void Launcher::OnActionDone (GVariant *data, void *val)
     Launcher *self = (Launcher*)val;
     self->_mouseover_launcher_locked = false;
     self->SetupAutohideTimer ();
+
 }
 
 void Launcher::ForceHiddenState (bool hidden)

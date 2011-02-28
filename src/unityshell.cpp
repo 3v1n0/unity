@@ -286,7 +286,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  startLauncherKeyNav ();
+  launcher->startKeyNavMode ();
 
   return false;
 }
