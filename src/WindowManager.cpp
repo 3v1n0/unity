@@ -172,7 +172,7 @@ gdk_window_set_mwm_hints (Window        xid,
 {
   GdkDisplay *display = gdk_display_get_default();
   Atom hints_atom = None;
-  guchar *data = NULL;
+  MotifWmHints *data = NULL;
   MotifWmHints *hints = NULL;
   Atom type = None;
   gint format;
@@ -189,7 +189,7 @@ gdk_window_set_mwm_hints (Window        xid,
                       xid,
 		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
 		                  False, AnyPropertyType, &type, &format, &nitems,
-		                  &bytes_after, &data);
+		                  &bytes_after, (guchar **)&data);
   gdk_flush ();
   if (gdk_error_trap_pop ())
     {
@@ -201,7 +201,7 @@ gdk_window_set_mwm_hints (Window        xid,
     hints = new_hints;
   else
   {
-    hints = (MotifWmHints *)data;
+    hints = data;
 	
     if (new_hints->flags & MWM_HINTS_FUNCTIONS)
     {
