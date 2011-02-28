@@ -36,9 +36,11 @@ public:
 
   sigc::signal<void, PlacesTile*> sigClick;
 
+  virtual void ActivateFocus ();
+
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-  
+
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -50,7 +52,7 @@ private:
   void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnDestroyNotify (nux::Trackable *Object);
-  
+
   void UpdateBackground ();
   void DrawRoundedRectangle (cairo_t* cr,
                              double   aspect,
@@ -60,10 +62,12 @@ private:
                              double   width,
                              double   height);
   void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
-  
+
 private:
   nux::BaseTexture  *_hilight_background;
   nux::TextureLayer *_hilight_layer;
+
+  void OnFocusChanged (nux::Area *area);
 
   int _last_width;
   int _last_height;

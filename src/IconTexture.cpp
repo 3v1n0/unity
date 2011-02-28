@@ -44,12 +44,14 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_i
 
   if (!g_strcmp0 (_icon_name, "") == 0 && !defer_icon_loading)
     LoadIcon ();
+
+  _can_pass_focus_to_composite_layout = false;
 }
 
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
-  
+
   if (_texture_cached)
     _texture_cached->UnReference ();
 }
@@ -154,7 +156,7 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry geo = GetGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
-  
+
   if (_texture_cached)
   {
     nux::TexCoordXForm texxform;
@@ -180,6 +182,12 @@ IconTexture::GetTextureSize (int *width, int *height)
     *width = _texture_width;
   if (height)
     *height = _texture_height;
+}
+
+bool
+IconTexture::CanFocus ()
+{
+  return false;
 }
 
 const gchar*
