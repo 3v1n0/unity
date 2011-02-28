@@ -148,7 +148,6 @@ public:
   void startKeyNavMode ();
   void leaveKeyNavMode ();
 
-  void enterKeyNavMode ();  // Connected to signal OnStartFocus
   void exitKeyNavMode ();   // Connected to signal OnEndFocus
 
 
@@ -217,6 +216,7 @@ private:
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
+  static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   
   void SetMousePosition (int x, int y);
   
@@ -450,6 +450,7 @@ private:
 
   guint _autohide_handle;
   guint _autoscroll_handle;
+  guint _focus_keynav_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
