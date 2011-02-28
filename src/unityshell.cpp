@@ -192,8 +192,8 @@ UnityScreen::handleEvent (XEvent *event)
       break;
     case KeyPress:
       KeySym key_sym;
-      if (XLookupString(&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-          launcher->CheckSuperShortcutPressed (key_sym, 0, 0);
+      if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
+          launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
       break;
   }
 

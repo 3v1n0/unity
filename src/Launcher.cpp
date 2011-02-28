@@ -2706,14 +2706,19 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       leaveKeyNavMode ();
     break;
       
-    // Shortcut to start launcher icons
+    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
     {
         int i;
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
         {
-          if ((*it)->GetShortcut () == key_sym)
-            (*it)->Activate ();
+          if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+          {
+            if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+              (*it)->OpenInstance ();
+            else
+              (*it)->Activate ();
+          }
         }
       
       
