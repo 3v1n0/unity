@@ -515,7 +515,9 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
    ubus_server_send_message (ubus_server_get_default (),
                              UBUS_LAUNCHER_START_KEY_NAV,
                              NULL);
-   
+
+   self->selection_change.emit ();
+
    return false;
 }
 
