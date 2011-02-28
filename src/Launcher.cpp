@@ -293,8 +293,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
     for (int i = 0; i < MAX_SUPERKEY_LABELS - 1; i++)
-      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
-    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
+      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), _icon_size, _icon_size);
+    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), _icon_size, _icon_size);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -1841,7 +1841,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
    guint64 shortcut = icon->GetShortcut ();
     if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
-      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE));
+      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
     AddChild (icon);
 }

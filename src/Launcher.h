@@ -41,7 +41,6 @@
 #define SUPER_TAP_DURATION  250
 
 #define MAX_SUPERKEY_LABELS 10
-#define LAUNCHER_ICON_SIZE  54
 
 class LauncherModel;
 class QuicklistView;
