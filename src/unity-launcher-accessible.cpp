@@ -37,6 +37,7 @@
 /* GObject */
 static void unity_launcher_accessible_class_init (UnityLauncherAccessibleClass *klass);
 static void unity_launcher_accessible_init       (UnityLauncherAccessible *self);
+static void unity_launcher_accessible_finalize   (GObject *object);
 
 /* AtkObject.h */
 static void       unity_launcher_accessible_initialize     (AtkObject *accessible,
@@ -45,22 +46,64 @@ static gint       unity_launcher_accessible_get_n_children (AtkObject *obj);
 static AtkObject *unity_launcher_accessible_ref_child      (AtkObject *obj,
                                                             gint i);
 
-G_DEFINE_TYPE (UnityLauncherAccessible, unity_launcher_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+/* AtkSelection */
+static void       atk_selection_interface_init                  (AtkSelectionIface *iface);
+static AtkObject* unity_launcher_accessible_ref_selection       (AtkSelection *selection,
+                                                                 gint i);
+static gint       unity_launcher_accessible_get_selection_count (AtkSelection *selection);
+static gboolean   unity_launcher_accessible_is_child_selected   (AtkSelection *selection,
+                                                                 gint i);
+
+/* private */
+static void on_selection_change_cb (UnityLauncherAccessible *launcher_accessible);
+
+
+G_DEFINE_TYPE_WITH_CODE (UnityLauncherAccessible, unity_launcher_accessible,  NUX_TYPE_VIEW_ACCESSIBLE,
+                         G_IMPLEMENT_INTERFACE (ATK_TYPE_SELECTION, atk_selection_interface_init))
+
+#define UNITY_LAUNCHER_ACCESSIBLE_GET_PRIVATE(obj)                      \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_LAUNCHER_ACCESSIBLE,  \
+                                UnityLauncherAccessiblePrivate))
+
+struct _UnityLauncherAccessiblePrivate
+{
+  sigc::connection on_selection_change_connection;
+};
+
 
 static void
 unity_launcher_accessible_class_init (UnityLauncherAccessibleClass *klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+
+  gobject_class->finalize = unity_launcher_accessible_finalize;
 
   /* AtkObject */
   atk_class->get_n_children = unity_launcher_accessible_get_n_children;
   atk_class->ref_child = unity_launcher_accessible_ref_child;
   atk_class->initialize = unity_launcher_accessible_initialize;
+
+  g_type_class_add_private (gobject_class, sizeof (UnityLauncherAccessiblePrivate));
 }
 
 static void
 unity_launcher_accessible_init (UnityLauncherAccessible *self)
 {
+  UnityLauncherAccessiblePrivate *priv =
+    UNITY_LAUNCHER_ACCESSIBLE_GET_PRIVATE (self);
+
+  self->priv = priv;
+}
+
+static void
+unity_launcher_accessible_finalize (GObject *object)
+{
+  UnityLauncherAccessible *self = UNITY_LAUNCHER_ACCESSIBLE (object);
+
+  self->priv->on_selection_change_connection.disconnect ();
+
+  G_OBJECT_CLASS (unity_launcher_accessible_parent_class)->finalize (object);
 }
 
 AtkObject*
@@ -82,9 +125,21 @@ static void
 unity_launcher_accessible_initialize (AtkObject *accessible,
                                       gpointer data)
 {
+  Launcher *launcher = NULL;
+  nux::Object *nux_object = NULL;
+  UnityLauncherAccessible *self = NULL;
+
   ATK_OBJECT_CLASS (unity_launcher_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_TOOL_BAR;
+
+  self = UNITY_LAUNCHER_ACCESSIBLE (accessible);
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
+
+  self->priv->on_selection_change_connection  =
+    launcher->selection_change.connect (sigc::bind (sigc::ptr_fun (on_selection_change_cb), self));
 }
 
 static gint
@@ -122,6 +177,7 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
   nux::Object *child = NULL;
   AtkObject *child_accessible = NULL;
 
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (obj), NULL);
   num = atk_object_get_n_accessible_children (obj);
   g_return_val_if_fail ((i < num)&&(i >= 0), NULL);
 
@@ -130,6 +186,8 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
     return 0;
 
   launcher = dynamic_cast<Launcher *>(nux_object);
+  g_debug ("[Launcher] ref_child Launcher = %p", launcher);
+
   launcher_model = launcher->GetModel ();
 
   it = launcher_model->begin ();
@@ -142,3 +200,115 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
 
   return child_accessible;
 }
+
+/* AtkSelection */
+static void
+atk_selection_interface_init (AtkSelectionIface *iface)
+{
+  iface->ref_selection = unity_launcher_accessible_ref_selection;
+  iface->get_selection_count = unity_launcher_accessible_get_selection_count;
+  iface->is_child_selected = unity_launcher_accessible_is_child_selected;
+
+  /* NOTE: for the moment we don't provide the implementation for the
+     "interactable" methods, it is, the methods that allow to change
+     the selected icon. The Launcher doesn't provide that API, and
+     right now  we are focusing on a normal user input.*/
+  /* iface->add_selection = unity_launcher_accessible_add_selection; */
+  /* iface->clear_selection = unity_launcher_accessible_clear_selection; */
+  /* iface->remove_selection = unity_launcher_accessible_remove_selection; */
+
+  /* This method will never be implemented, as select all the launcher
+     icons makes no sense */
+  /* iface->select_all = unity_launcher_accessible_select_all_selection; */
+}
+
+static AtkObject*
+unity_launcher_accessible_ref_selection (AtkSelection *selection,
+                                         gint i)
+{
+  Launcher *launcher = NULL;
+  LauncherIcon *selected_icon = NULL;
+  nux::Object *nux_object = NULL;
+  AtkObject *accessible_selected = NULL;
+
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (selection), 0);
+  /* there can be only just item selected */
+  g_return_val_if_fail (i == 0, NULL);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (selection));
+  if (!nux_object) /* state is defunct */
+    return 0;
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
+  selected_icon = launcher->GetSelectedMenuIcon ();
+
+  if (selected_icon != 0)
+    {
+      accessible_selected = unity_a11y_get_accessible (selected_icon);
+      g_object_ref (accessible_selected);
+    }
+
+  return accessible_selected;
+}
+
+static gint
+unity_launcher_accessible_get_selection_count (AtkSelection *selection)
+{
+  Launcher *launcher = NULL;
+  LauncherIcon *selected_icon = NULL;
+  nux::Object *nux_object = NULL;
+
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (selection), 0);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (selection));
+  if (!nux_object) /* state is defunct */
+    return 0;
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
+  selected_icon = launcher->GetSelectedMenuIcon ();
+
+  if (selected_icon == 0)
+    return 0;
+  else
+    return 1;
+}
+
+static gboolean
+unity_launcher_accessible_is_child_selected (AtkSelection *selection,
+                                             gint i)
+{
+  Launcher *launcher = NULL;
+  LauncherIcon *icon = NULL;
+  LauncherIcon *selected_icon = NULL;
+  LauncherModel *launcher_model = NULL;
+  LauncherModel::iterator it;
+  nux::Object *nux_object = NULL;
+
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (selection), FALSE);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (selection));
+  if (!nux_object) /* state is defunct */
+    return 0;
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
+  launcher_model = launcher->GetModel ();
+  it = launcher_model->begin ();
+  std::advance (it, i);
+  icon = dynamic_cast<LauncherIcon *>(*it);
+
+  selected_icon = launcher->GetSelectedMenuIcon ();
+
+  if (selected_icon == icon)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+/* private */
+static void on_selection_change_cb (UnityLauncherAccessible *launcher_accessible)
+{
+  g_debug ("[LAUNCHER]: selection changed");
+
+  g_signal_emit_by_name (ATK_OBJECT (launcher_accessible), "selection-changed");
+}
+
