@@ -19,11 +19,9 @@
 #include "panel-indicator-entry-accessible.h"
 #include "panel-service.h"
 
-G_DEFINE_TYPE(PanelIndicatorEntryAccessible, panel_indicator_entry_accessible, ATK_TYPE_OBJECT)
-
-#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
-
 /* AtkObject methods */
+static void       piea_component_interface_init                   (AtkComponentIface *iface);
+
 static void       panel_indicator_entry_accessible_initialize     (AtkObject *accessible, gpointer data);
 static gint       panel_indicator_entry_accessible_get_n_children (AtkObject *accessible);
 static AtkObject *panel_indicator_entry_accessible_ref_child      (AtkObject *accessible, gint i);
@@ -37,6 +35,13 @@ struct _PanelIndicatorEntryAccessiblePrivate
   gint width;
   gint height;
 };
+
+G_DEFINE_TYPE_WITH_CODE(PanelIndicatorEntryAccessible,
+			panel_indicator_entry_accessible,
+			ATK_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT, piea_component_interface_init))
+
+#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
 
 static void
 panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass *klass)
@@ -105,6 +110,33 @@ panel_indicator_entry_accessible_get_entry (PanelIndicatorEntryAccessible *piea)
 }
 
 /* Implementation of AtkObject methods */
+
+static void
+panel_indicator_entry_accessible_get_extents (AtkComponent *component,
+					      gint *x,
+					      gint *y,
+					      gint *width,
+					      gint *height,
+					      AtkCoordType coord_type)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  *x = piea->priv->x;
+  *y = piea->priv->y;
+  *width = piea->priv->width;
+  *height = piea->priv->height;
+}
+
+static void
+piea_component_interface_init (AtkComponentIface *iface)
+{
+  g_return_if_fail (iface != NULL);
+
+  iface->get_extents = panel_indicator_entry_accessible_get_extents;
+}
 
 static void
 panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer data)
