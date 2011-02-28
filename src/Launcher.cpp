@@ -203,7 +203,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
-    OnStartFocus.connect (sigc::mem_fun (this, &Launcher::enterKeyNavMode));
     OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
     
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -293,9 +292,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
-    for (int i = 0; i < MAX_SUPERKEY_LABELS - 1; i++)
-      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
-    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
+    for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+      _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -304,6 +302,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _dnd_delta_x            = 0;
     _autohide_handle        = 0;
     _autoscroll_handle      = 0;
+    _focus_keynav_handle    = 0;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -490,12 +489,34 @@ Launcher::startKeyNavMode ()
 {
   _navmod_show_launcher = true;
   EnsureHiddenState ();
+  
+  // FIXME: long term solution is to rewrite the keynav handle
+  if (_focus_keynav_handle > 0)
+    g_source_remove (_focus_keynav_handle);
+  _focus_keynav_handle = g_timeout_add (ANIM_DURATION_SHORT, &Launcher::MoveFocusToKeyNavModeTimeout, this);
 
-  if (_last_icon_index == -1)
-    _current_icon_index = 0;
-  else
-    _current_icon_index = _last_icon_index;
-  NeedRedraw ();
+}
+
+gboolean
+Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
+{
+  Launcher *self = (Launcher*) data;
+      
+  // move focus to key nav mode when activated
+  if (!(self->_navmod_show_launcher))
+    return false;
+  
+  if (self->_last_icon_index == -1)
+     self->_current_icon_index = 0;
+   else
+     self->_current_icon_index = self->_last_icon_index;
+   self->NeedRedraw ();
+
+   ubus_server_send_message (ubus_server_get_default (),
+                             UBUS_LAUNCHER_START_KEY_NAV,
+                             NULL);
+   
+   return false;
 }
 
 void
@@ -508,12 +529,6 @@ Launcher::leaveKeyNavMode ()
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
   selection_change.emit ();
-}
-
-void 
-Launcher::enterKeyNavMode ()
-{
-  startKeyNavMode ();
 }
 
 void
@@ -1827,7 +1842,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
    guint64 shortcut = icon->GetShortcut ();
     if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
-      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE));
+      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
     AddChild (icon);
 }
@@ -2710,14 +2725,19 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       leaveKeyNavMode ();
     break;
       
-    // Shortcut to start launcher icons
+    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
     {
         int i;
         for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
         {
-          if ((*it)->GetShortcut () == key_sym)
-            (*it)->Activate ();
+          if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+          {
+            if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+              (*it)->OpenInstance ();
+            else
+              (*it)->Activate ();
+          }
         }
       
       
