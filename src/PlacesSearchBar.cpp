@@ -27,6 +27,8 @@
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
+#include <Nux/StaticText.h>
+#include <Nux/MenuPage.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
@@ -77,7 +79,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   
   _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
-  _combo->SetMaximumWidth (style->GetHomeTileWidth ());
+  _combo->SetMaximumWidth (style->GetTileWidth ());
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -302,6 +304,9 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
   settings = gtk_settings_get_default ();
   g_object_get (settings, "gtk-font-name", &font_name, NULL);
 
+  self->_combo->GetStaticText ()->SetFontName (font_name);
+  self->_combo->GetMenuPage ()->SetFontName (font_name);
+
   desc = pango_font_description_from_string (font_name);
   self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
 
@@ -383,10 +388,6 @@ PlacesSearchBar::UpdateBackground ()
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry ();
-  nux::Geometry cgeo = _combo->GetGeometry ();
-
-  if (_combo->IsVisible ())
-    geo.width = cgeo.x;
 
   if (geo.width == _last_width && geo.height == _last_height)
     return;
