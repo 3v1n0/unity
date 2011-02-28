@@ -43,6 +43,8 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
   gboolean adding = FALSE;
   PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
 
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea));
+
   /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
   s = g_strdup_printf ("%p", piea->priv->entry);
   if (g_str_equal (s, entry_id))
