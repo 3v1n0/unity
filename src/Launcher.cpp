@@ -203,6 +203,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnStartFocus.connect (sigc::mem_fun (this, &Launcher::enterKeyNavMode));
     OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
     
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -316,6 +317,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hide_on_drag_hover     = false;
     _render_drag_window     = false;
     _dnd_window_is_mapped   = false;
+    _drag_edge_touching     = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
@@ -505,6 +507,13 @@ Launcher::leaveKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+  selection_change.emit ();
+}
+
+void 
+Launcher::enterKeyNavMode ()
+{
+  startKeyNavMode ();
 }
 
 void
@@ -522,6 +531,7 @@ Launcher::exitKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+  selection_change.emit ();
 }
 
 void
@@ -585,7 +595,10 @@ float Launcher::AutohideProgress (struct timespec const &current)
     // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
-        
+        // all this code should only be triggered when _hidden is true
+        if (!_hidden)
+          return 0.0f;
+          
         // "dead" zone
         if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
             return GetAutohidePositionMin ();
@@ -605,7 +618,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
             position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
-        // only triggered on _hidden = false, no need for check
+        
         float _position_min = GetAutohidePositionMin ();
         return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
@@ -1393,7 +1406,13 @@ void Launcher::SetHidden (bool hidden)
 
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
+    {
         _mouseover_launcher_locked = false;
+        // RecvMouseLeave isn't receive if the launcher is hiding while we have the mouse on it
+        // (like, click on a icon, wait the timeout time without moving the mouse, then the launcher hide)
+        if (_mouse_inside_launcher)
+          RecvMouseLeave(-1, -1, 0, 0);
+    }
     else
         _mouseover_launcher_locked = true;
 
@@ -2030,7 +2049,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetOpenGLModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -2553,8 +2572,8 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   if (GetActionState () == ACTION_NONE)
       EnsureHoverState ();
 
-  // exit immediatly on action and mouse leaving the launcher
-  if (!_mouseover_launcher_locked)
+  // exit immediatly on action and mouse leaving the launcher (avoid loop when called manually)
+  if (!_mouseover_launcher_locked && (x != -1) && (y != -1))
   {
     if (_autohide_handle > 0)
       g_source_remove (_autohide_handle);
@@ -2625,6 +2644,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // FIXME: switch to global-menu here still needs to be implemented 
       }
       NeedRedraw ();
+      selection_change.emit ();
     break;
 
     // down (move selection down and unfold launcher if needed)
@@ -2633,6 +2653,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       {
         _current_icon_index++;
         NeedRedraw ();
+        selection_change.emit ();
       }
     break;
 
@@ -3457,4 +3478,22 @@ Launcher::ProcessDndDrop (int x, int y)
   
   // reset our shiz
   ProcessDndLeave ();
+}
+
+
+/*
+ * Returns the current selected icon if it is in keynavmode
+ * It will return NULL if it is not on keynavmode
+ */
+LauncherIcon*
+Launcher::GetSelectedMenuIcon ()
+{
+  LauncherModel::iterator it;
+
+  if (_current_icon_index == -1)
+    return NULL;
+
+  it = _model->at (_current_icon_index);
+
+  return *it;
 }

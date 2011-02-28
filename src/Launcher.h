@@ -101,6 +101,8 @@ public:
   LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
   void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
 
+  LauncherIcon* GetSelectedMenuIcon ();
+
   void SetIconSize(int tile_size, int icon_size);
 
   void SetModel (LauncherModel *model);
@@ -146,10 +148,14 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void exitKeyNavMode ();
   void leaveKeyNavMode ();
 
+  void enterKeyNavMode ();  // Connected to signal OnStartFocus
+  void exitKeyNavMode ();   // Connected to signal OnEndFocus
+
+
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
+  sigc::signal<void> selection_change;
 protected:
   // Introspectable methods
   const gchar* GetName ();

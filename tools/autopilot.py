@@ -128,10 +128,12 @@ class UnityUtil(object):
                         
 class UnityTests(object):
     '''Runs a series of unity actions, triggering GL calls'''
-    
+
     # this is totally lame. This should not be hard coded, but until I can get
     # unity to run in gdb and debug why introspection is crashing and hardlocking
     # this is the best I can do.
+    _bfb_x = 0
+    _bfb_y = 0
     _dest_x = 32
     _dest_y = 57
         

@@ -57,12 +57,14 @@ PlacesController::PlacesController ()
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
   _view = new PlacesView (_factory);
-  _window_layout->AddView(_view, 1);
+  _window_layout->AddView (_view, 1);
   _window_layout->SetContentDistribution(nux::eStackLeft);
   _window_layout->SetVerticalExternalMargin(0);
   _window_layout->SetHorizontalExternalMargin(0);
 
   _window->SetLayout (_window_layout);
+  // Set a InputArea to get the keyboard focus when window receives the enter focus event.
+  _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
 
@@ -80,10 +82,12 @@ void PlacesController::Show ()
     return;
 
   _window->ShowWindow (true, false);
+  // Raise this window on top of all other BaseWindows
+  _window->PushToFront ();
   _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
   _window->GrabKeyboard ();
-  _window->NeedRedraw ();
+  _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
 
   _visible = true;

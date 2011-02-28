@@ -22,27 +22,10 @@
 
 #include <sigc++/sigc++.h>
 
-#include <Nux/Nux.h>
-#include <Nux/VLayout.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
-#include <NuxImage/CairoGraphics.h>
-#include <NuxGraphics/GraphicsEngine.h>
-
-#include "PlacesTile.h"
-
+#include "IconTexture.h"
 #include "Introspectable.h"
-
-#include <sigc++/trackable.h>
-#include <sigc++/signal.h>
-#include <sigc++/functors/ptr_fun.h>
-#include <sigc++/functors/mem_fun.h>
-
-class IconTexture;
-namespace nux
-{
-  class StaticCairoText;
-}
+#include "PlacesTile.h"
+#include "StaticCairoText.h"
 
 class PlacesSimpleTile : public Introspectable, public PlacesTile
 {
@@ -52,25 +35,27 @@ public:
   ~PlacesSimpleTile ();
 
   const char * GetLabel ();
-  const char * GetIcon ();
-  const char * GetURI ();
-
-  void SetURI (const char *uri);
+  const char * GetIcon  ();
+  const char * GetURI   ();
+  void         SetURI   (const char *uri);
 
 protected:
   nux::Geometry GetHighlightGeometry ();
-  nux::Geometry _highlight_geometry;
-  const gchar* GetName ();
-  const gchar *GetChildsName ();
-  void AddProperties (GVariantBuilder *builder);
+
+  const gchar * GetName ();
+  const gchar * GetChildsName ();
+  void          AddProperties (GVariantBuilder *builder);
 
 private:
+  void Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
+
+private:
+  nux::Geometry _highlight_geometry;
   char* _label;
   char* _icon;
   char* _uri;
   IconTexture *_icontex;
   nux::StaticCairoText *_cairotext;
-
 };
 
 

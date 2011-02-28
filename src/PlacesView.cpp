@@ -64,7 +64,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   _layered_layout->SetActiveLayer (_home_view);
 
-  SetCompositionLayout (_layout);
+  SetLayout (_layout);
 
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
@@ -73,6 +73,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
                                  (UBusCallback)&PlacesView::CloseRequest,
+                                 this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                                 (UBusCallback)&PlacesView::OnResultClicked,
                                  this);
 
   _icon_loader = IconLoader::GetDefault ();
@@ -92,8 +95,8 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
 
-  if (ievent.e_event == nux::NUX_KEYDOWN
-      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  if ((ievent.e_event == nux::NUX_KEYDOWN) &&
+   (ievent.GetKeySym () == NUX_VK_ESCAPE))
   {
     SetActiveEntry (NULL, 0, "");
     return TraverseInfo;
@@ -102,7 +105,9 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
   {
     if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+    {
       SetActiveEntry (NULL, 0, "");
+    }
     return TraverseInfo;
   }
 
@@ -152,60 +157,26 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   {
     _entry->SetActive (false);
 
-    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_added_id);
-    g_signal_handler_disconnect (_entry->GetGroupsModel (), _group_removed_id);
-    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_added_id);
-    g_signal_handler_disconnect (_entry->GetResultsModel (), _result_removed_id);
-
-    _group_added_id = _group_removed_id = _result_added_id = _result_removed_id = 0;
+    _group_added_conn.disconnect ();
+    _result_added_conn.disconnect ();
+    _result_removed_conn.disconnect ();
 
     _results_controller->Clear ();
   }
   
   _entry = entry;
 
-  std::map <gchar*, gchar*> hints;
-  DeeModel     *groups, *results;
-  DeeModelIter *iter, *last;
-
   _entry->SetActive (true);
   _search_bar->SetActiveEntry (_entry, section_id, search_string, (_entry == _home_entry));
 
-  groups = _entry->GetGroupsModel ();
-  iter = dee_model_get_first_iter (groups);
-  last = dee_model_get_last_iter (groups);
-  while (iter != last)
-  {
-    _results_controller->CreateGroup (dee_model_get_string (groups,
-                                                            iter,
-                                                            PlaceEntry::GROUP_NAME),
-                                      dee_model_get_string (groups,
-                                                            iter,
-                                                            PlaceEntry::GROUP_ICON));
-    g_debug ("%s", dee_model_get_string (groups, iter, PlaceEntry::GROUP_ICON));
-    iter = dee_model_next (groups, iter);
-  }
-
+  _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
+  
   if (_entry != _home_entry)
-  {
-    results = _entry->GetResultsModel ();
-    iter = dee_model_get_first_iter (results);
-    last = dee_model_get_last_iter (results);
-    while (iter != last)
-    {
-      OnResultAdded (results, iter, this);
-      iter = dee_model_next (results, iter);
-    }
-  }
+    _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
 
-  _group_added_id = g_signal_connect (_entry->GetGroupsModel (), "row-added",
-                                      (GCallback)&PlacesView::OnGroupAdded, this);
-  _group_removed_id = g_signal_connect (_entry->GetGroupsModel (), "row-removed",
-                                        (GCallback)&PlacesView::OnGroupRemoved, this);
-  _result_added_id = g_signal_connect (_entry->GetResultsModel (), "row-added",
-                                       (GCallback)&PlacesView::OnResultAdded, this);
-  _result_removed_id = g_signal_connect (_entry->GetResultsModel (), "row-removed",
-                                         (GCallback)&PlacesView::OnResultRemoved, this);
+  _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
+  _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
+  _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
 
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
@@ -230,77 +201,41 @@ PlacesView::GetResultsController ()
 // Model handlers
 //
 void
-PlacesView::OnGroupAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 {
-  self->_results_controller->CreateGroup (dee_model_get_string (model,
-                                                                iter,
-                                                                PlaceEntry::GROUP_NAME),
-                                          dee_model_get_string (model,
-                                                                iter,
-                                                                PlaceEntry::GROUP_ICON));
-}
-
-
-void
-PlacesView::OnGroupRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
-{
-  g_debug ("GroupRemoved: %s", dee_model_get_string (model, iter, 1));
+  _results_controller->AddGroup (group);
 }
 
 void
-PlacesView::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlacesView *self)
-{
-  PlaceEntry       *active;
-  DeeModel         *groups;
-  DeeModelIter     *git;
-  const gchar      *group_id;
-  gchar            *result_name;
-  const gchar      *result_icon;
-  PlacesSimpleTile *tile;
-
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
-                        "unity-install"))
-    return;
-  
-  active = self->GetActiveEntry ();
-  groups = active->GetGroupsModel ();
-  git = dee_model_get_iter_at_row (groups, dee_model_get_uint32 (model,
-                                                                 iter,
-                                                                 PlaceEntry::RESULT_GROUP_ID));
-  group_id = dee_model_get_string (groups, git, PlaceEntry::GROUP_NAME);
-  result_name = g_markup_escape_text (dee_model_get_string (model, iter, PlaceEntry::RESULT_NAME),
-                                      -1);
-  result_icon = dee_model_get_string (model, iter, PlaceEntry::RESULT_ICON);
-
-  tile = new PlacesSimpleTile (result_icon, result_name, 48);
-  tile->SetURI (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI));
-  tile->sigClick.connect (sigc::mem_fun (self, &PlacesView::OnResultClicked));
-  self->GetResultsController ()->AddResultToGroup (group_id, tile, iter);
-
-  g_free (result_name);
-}
-
-void
-PlacesView::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self)
+PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (dee_model_get_string (model, iter, PlaceEntry::RESULT_URI),
-                        "unity-install"))
+  if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
 
-  self->GetResultsController ()->RemoveResult (iter);
+  _results_controller->AddResult (group, result);
 }
 
 void
-PlacesView::OnResultClicked (PlacesTile *tile)
+PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesSimpleTile *simple_tile = static_cast<PlacesSimpleTile *> (tile);
+  //FIXME: We can't do anything with these do just ignore
+  if (g_str_has_prefix (result.GetURI (), "unity-install"))
+    return;
+
+  _results_controller->RemoveResult (group, result);
+}
+
+void
+PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
+{
   const char *uri;
 
-  if (!(uri = simple_tile->GetURI ()))
+  uri = g_variant_get_string (data, NULL);
+
+  if (!uri || g_strcmp0 (uri, "") == 0)
   {
-    g_warning ("Unable to launch %s: does not have a URI", simple_tile->GetLabel ());
+    g_warning ("Unable to launch tile does not have a URI");
     return;
   }
 
@@ -411,6 +346,12 @@ PlacesView::CloseRequest (GVariant *data, PlacesView *self)
   self->SetActiveEntry (NULL, 0, "");
 }
 
+nux::TextEntry*
+PlacesView::GetTextEntryView ()
+{
+  return _search_bar->_pango_entry;
+}
+
 //
 // Introspection
 //
@@ -450,3 +391,4 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
   g_free (id);
   g_free (search_string);
 }
+

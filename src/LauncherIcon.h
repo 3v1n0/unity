@@ -80,6 +80,8 @@ public:
     LauncherIcon(Launcher* launcher);
     virtual ~LauncherIcon();
 
+    Launcher* GetLauncher () {return _launcher;};
+
     void SetTooltipText (const TCHAR* text);
     
     nux::NString GetTooltipText ();

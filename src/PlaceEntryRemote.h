@@ -62,12 +62,11 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  DeeModel * GetSectionsModel ();
-  DeeModel * GetGroupsModel ();
-  DeeModel * GetResultsModel ();
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
 
-  DeeModel * GetGlobalResultsModel ();
-  DeeModel * GetGlobalGroupsModel ();
+  void ForeachGlobalGroup  (GroupForeachCallback slot);
+  void ForeachGlobalResult (ResultForeachCallback slot);
 
   /* Other methods */
   bool          IsValid ();
@@ -92,6 +91,14 @@ public:
                const gchar  *global_groups_model,
                const gchar  *global_results_model,
                GVariantIter *global_hints);
+
+  static void OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
+  static void OnGlobalGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
 
 public:
   // For our parents use, we don't touch it

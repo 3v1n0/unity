@@ -153,6 +153,8 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
 
   gfxContext.PushClippingRectangle (base);
 
+  gPainter.PaintBackground (gfxContext, base);
+
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
