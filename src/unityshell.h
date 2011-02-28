@@ -209,6 +209,8 @@ class UnityScreen :
 	bool    damaged;
 	CompWindowList _withRemovedNuxWindows;
 
+  GdkRectangle _primary_monitor;
+
 	friend class UnityWindow;
 };
 

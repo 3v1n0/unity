@@ -31,13 +31,15 @@ class PlacesSimpleTile : public Introspectable, public PlacesTile
 {
 public:
 
-  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64);
+  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64, bool defer_icon_loading=false);
   ~PlacesSimpleTile ();
 
   const char * GetLabel ();
   const char * GetIcon  ();
   const char * GetURI   ();
   void         SetURI   (const char *uri);
+
+  void LoadIcon ();
 
 protected:
   nux::Geometry GetHighlightGeometry ();

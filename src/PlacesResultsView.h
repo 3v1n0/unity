@@ -46,6 +46,11 @@ public:
   void RemoveGroup (PlacesGroup *group);
   void Clear       ();
 
+  nux::Layout * GetLayout ()
+  {
+    return _layout;
+  }
+
 private:
   nux::Layout *_layout;
   std::list<PlacesGroup *> _groups;

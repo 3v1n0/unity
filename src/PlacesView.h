@@ -46,6 +46,13 @@ class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
+
+  enum SizeMode
+  {
+    SIZE_MODE_FULLSCREEN,
+    SIZE_MODE_HOVER
+  };
+
   PlacesView (PlaceFactory *factory);
   ~PlacesView ();
 
@@ -69,8 +76,12 @@ public:
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
 
+  SizeMode GetSizeMode ();
+  void     SetSizeMode (SizeMode size_mode);
+
   // Signals
   sigc::signal<void, PlaceEntry *> entry_changed;
+  sigc::signal<void> fullscreen_request;
  
 protected:
 
@@ -86,10 +97,11 @@ private:
 
   static void OnResultClicked (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
+  void OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo);
 
 private:
   PlaceFactory       *_factory;
-  nux::VLayout       *_layout;
+  nux::HLayout       *_layout;
   nux::LayeredLayout *_layered_layout;
   PlacesSearchBar    *_search_bar;
   PlacesHomeView     *_home_view;
@@ -102,7 +114,12 @@ private:
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
 
-  IconLoader     *_icon_loader;
+  IconLoader       *_icon_loader;
+  nux::ColorLayer  *_bg_layer;
+  nux::SpaceLayout *_h_spacer;
+  nux::SpaceLayout *_v_spacer;
+
+  SizeMode _size_mode;
 };
 
 #endif // PANEL_HOME_BUTTON_H

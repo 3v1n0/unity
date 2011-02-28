@@ -26,7 +26,7 @@
 
 #include "PlacesSimpleTile.h"
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size)
+PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size, bool defer_icon_loading)
 : PlacesTile (NUX_TRACKER_LOCATION),
   _label (NULL),
   _icon (NULL),
@@ -37,7 +37,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
 
-  _icontex = new IconTexture (_icon, icon_size);
+  _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
   _icontex->SinkReference ();
   AddChild (_icontex);
@@ -150,4 +150,12 @@ PlacesSimpleTile::Clicked (int x, int y, unsigned long button_flags, unsigned lo
                               UBUS_PLACE_TILE_ACTIVATE_REQUEST,
                               g_variant_new_string (_uri));
   }
+}
+
+void
+PlacesSimpleTile::LoadIcon ()
+{
+  _icontex->LoadIcon ();
+
+  QueueDraw ();
 }

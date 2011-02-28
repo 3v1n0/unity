@@ -30,18 +30,15 @@
 #include <Nux/GridHLayout.h>
 
 #include "PlacesTile.h"
+#include "PlacesGroup.h"
 
 #include <gconf/gconf-client.h>
 
-class PlacesHomeView : public Introspectable, public nux::View
+class PlacesHomeView : public Introspectable, public PlacesGroup
 {
 public:
-  PlacesHomeView (NUX_FILE_LINE_PROTO);
+  PlacesHomeView ();
   ~PlacesHomeView ();
-
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   void Refresh ();
   
@@ -52,14 +49,6 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  void UpdateBackground ();
-  void DrawRoundedRectangle (cairo_t* cr,
-                             double   aspect,
-                             double   x,
-                             double   y,
-                             double   cornerRadius,
-                             double   width,
-                             double   height);
   void OnShortcutClicked (PlacesTile *_tile);
   static void OnKeyChanged (GConfClient    *client,
                             guint           cnxn_id,
@@ -70,10 +59,7 @@ private:
                                const char *icon_hint);
 
 private:
-  nux::AbstractPaintLayer *_bg_layer;
   nux::GridHLayout        *_layout;
-  int          _last_width;
-  int          _last_height;
   GConfClient *_client;
 };
 

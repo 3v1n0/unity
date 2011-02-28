@@ -26,13 +26,15 @@
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 
+#include "PlacesStyle.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesController.h"
 
 PlacesController::PlacesController ()
-: _visible (false)
+: _visible (false),
+  _fullscren_request (false)
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
@@ -48,7 +50,7 @@ PlacesController::PlacesController ()
   _window_layout = new nux::HLayout ();
   
   _window = new nux::BaseWindow ("Dash");
-  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.85));
+  _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.0));
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
@@ -67,6 +69,7 @@ PlacesController::PlacesController ()
   _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
+  _view->fullscreen_request.connect (sigc::mem_fun (this, &PlacesController::OnDashFullscreenRequest));
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
 }
@@ -86,7 +89,7 @@ void PlacesController::Show ()
   _window->PushToFront ();
   _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
-  _window->GrabKeyboard ();
+  //_window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
 
@@ -103,11 +106,12 @@ void PlacesController::Hide ()
   _window->CaptureMouseDownAnyWhereElse (false);
   _window->ForceStopFocus (1, 1);
   _window->UnGrabPointer ();
-  _window->UnGrabKeyboard ();
+  //_window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
   _window->ShowWindow (false, false);
  
   _visible = false;
+  _fullscren_request = false;
 
   _view->SetActiveEntry (NULL, 0, "");
 
@@ -119,11 +123,11 @@ void PlacesController::ToggleShowHide ()
   _visible ? Hide () : Show ();
 }
 
-/* Configure callback for the window */
 void
-PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
+PlacesController::GetWindowSize (int *out_width, int *out_height)
 {
   PlacesSettings *settings = PlacesSettings::GetDefault ();
+  PlacesStyle    *style = PlacesStyle::GetDefault ();
   GdkScreen      *screen;
   gint            primary_monitor, width=0, height=0;
   GdkRectangle    rect;
@@ -133,9 +137,9 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
   primary_monitor = gdk_screen_get_primary_monitor (screen);
   gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
 
-  tile_width = settings->GetDefaultTileWidth (); 
+  tile_width = style->GetTileWidth ();
 
-  if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
+  if (settings->GetFormFactor () == PlacesSettings::DESKTOP && !_fullscren_request)
   {
     gint half = rect.width / 2;
 
@@ -144,14 +148,39 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
     
     width = MAX (width, tile_width * 7);
     height = ((width/tile_width) - 3) * tile_width;
+
+    _view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
+    style->SetDefaultNColumns (6);
   }
   else
   {
     width = rect.width - 66;
     height = rect.height - 24;
+
+    _view->SetSizeMode (PlacesView::SIZE_MODE_FULLSCREEN);
+    style->SetDefaultNColumns (width / tile_width);
   }
 
+  *out_width = width;
+  *out_height = height;
+}
+
+/* Configure callback for the window */
+void
+PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
+{
+  int width = 0, height = 0;
+  static_cast<PlacesController *> (user_data)->GetWindowSize (&width, &height);
   geo = nux::Geometry (66, 24, width, height);
+}
+
+void
+PlacesController::OnDashFullscreenRequest ()
+{
+  int width = 0, height = 0;
+  _fullscren_request = true;
+  GetWindowSize (&width, &height);
+  _window->SetGeometry (nux::Geometry (66, 24, width, height));
 }
 
 void
@@ -171,8 +200,10 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  //FIXME: Lots of things to detect here still
-  Hide ();
+  //FIXME: We need a way to get the real position/size of the homebutton
+  nux::Geometry geo (0, 0, 66, 24);
+  if (!geo.IsPointInside (x, y))
+    Hide ();
 }
 
 void

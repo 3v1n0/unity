@@ -366,6 +366,9 @@ PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hint
   g_free (_previous_search);
   _previous_search = g_strdup (search);
   
+  // To make kamstrup's evil little mind happy
+  SetActive (true);
+  
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
   /* FIXME: I'm ignoring hints because we don't use them currently */
