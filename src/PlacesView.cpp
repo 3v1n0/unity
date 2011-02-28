@@ -120,8 +120,8 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
 
-  if (ievent.e_event == nux::NUX_KEYDOWN
-      && ievent.GetKeySym () == NUX_VK_ESCAPE)
+  if ((ievent.e_event == nux::NUX_KEYDOWN) &&
+   (ievent.GetKeySym () == NUX_VK_ESCAPE))
   {
     SetActiveEntry (NULL, 0, "");
     return TraverseInfo;
@@ -130,7 +130,9 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   if (ievent.e_event == nux::NUX_MOUSE_RELEASED)
   {
     if (homebutton.IsPointInside (ievent.e_x, ievent.e_y))
+    {
       SetActiveEntry (NULL, 0, "");
+    }
     return TraverseInfo;
   }
 
@@ -330,7 +332,7 @@ PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
 
   uri = g_variant_get_string (data, NULL);
 
-  if (!uri)
+  if (!uri || g_strcmp0 (uri, "") == 0)
   {
     g_warning ("Unable to launch tile does not have a URI");
     return;
