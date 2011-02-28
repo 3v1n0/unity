@@ -161,6 +161,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::BaseTexture *corner = style->GetDashCorner ();
     nux::BaseTexture *bottom = style->GetDashBottomTile ();
     nux::BaseTexture *right = style->GetDashRightTile ();
+    nux::BaseTexture *icon = style->GetDashFullscreenIcon ();
     nux::TexCoordXForm texxform;
 
     {
@@ -181,6 +182,16 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            corner->GetWidth (),
                            corner->GetHeight (),
                            corner->GetDeviceTexture (),
+                           texxform,
+                           nux::Color::White);
+    }
+
+    {
+      GfxContext.QRP_1Tex (geo.x + geo.width - corner->GetWidth (),
+                           geo.y + geo.height - corner->GetHeight (),
+                           icon->GetWidth (),
+                           icon->GetHeight (),
+                           icon->GetDeviceTexture (),
                            texxform,
                            nux::Color::White);
     }

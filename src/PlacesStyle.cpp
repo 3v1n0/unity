@@ -36,6 +36,7 @@ PlacesStyle::PlacesStyle ()
   _dash_bottom_texture (NULL),
   _dash_right_texture (NULL),
   _dash_corner_texture (NULL),
+  _dash_fullscreen_icon (NULL),
   _search_ready_texture (NULL),
   _search_clear_texture (NULL),
   _group_unexpand_texture (NULL),
@@ -57,6 +58,8 @@ PlacesStyle::~PlacesStyle ()
     _dash_right_texture->UnReference ();
   if (_dash_corner_texture)
     _dash_corner_texture->UnReference ();
+  if (_dash_fullscreen_icon)
+    _dash_fullscreen_icon->UnReference ();
   if (_search_ready_texture)
     _search_ready_texture->UnReference ();
   if (_search_clear_texture)
@@ -138,6 +141,14 @@ PlacesStyle::GetDashCorner ()
   if (!_dash_corner_texture)
     _dash_corner_texture =  TextureFromFilename (PKGDATADIR"/dash_bottom_right_corner.png");
   return _dash_corner_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetDashFullscreenIcon ()
+{
+  if (!_dash_fullscreen_icon)
+    _dash_fullscreen_icon = TextureFromFilename (PKGDATADIR"/dash_fullscreen_icon.png");
+  return _dash_fullscreen_icon;
 }
 
 nux::BaseTexture *

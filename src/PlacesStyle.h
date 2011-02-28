@@ -45,6 +45,7 @@ public:
   nux::BaseTexture * GetDashBottomTile ();
   nux::BaseTexture * GetDashRightTile ();
   nux::BaseTexture * GetDashCorner ();
+  nux::BaseTexture * GetDashFullscreenIcon ();
 
   nux::BaseTexture * GetSearchReadyIcon ();
   nux::BaseTexture * GetSearchClearIcon ();
@@ -70,6 +71,7 @@ private:
   nux::BaseTexture *_dash_bottom_texture;
   nux::BaseTexture *_dash_right_texture;
   nux::BaseTexture *_dash_corner_texture;
+  nux::BaseTexture *_dash_fullscreen_icon;
 
   nux::BaseTexture *_search_ready_texture;
   nux::BaseTexture *_search_clear_texture;
