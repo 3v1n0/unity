@@ -119,6 +119,9 @@ private:
                        unsigned long key_code,
                        unsigned long key_state);
 
+  void RecvStartFocus ();
+  void RecvEndFocus ();
+
   void PreLayoutManagement ();
 
   long PostLayoutManagement (long layoutResult);

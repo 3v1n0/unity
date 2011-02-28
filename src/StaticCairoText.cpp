@@ -153,6 +153,8 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
 
   gfxContext.PushClippingRectangle (base);
 
+  gPainter.PaintBackground (gfxContext, base);
+
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
@@ -162,13 +164,21 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
   gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
+  Color col = Color::Black;
+  col.SetAlpha (0.0f);
+  gfxContext.QRP_Color (base.x,
+      base.y,
+      base.width,
+      base.height,
+      col);
+
   gfxContext.QRP_1Tex (base.x,
-                        base.y,
-                        base.width,
-                        base.height,
-                        _texture2D->GetDeviceTexture(),
-                        texxform,
-                        _textColor);
+                       base.y + ((base.height - _cached_extent_height)/2),
+                       base.width,
+                       base.height,
+                       _texture2D->GetDeviceTexture(),
+                       texxform,
+                       _textColor);
   
   gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
   
@@ -223,6 +233,7 @@ StaticCairoText::SetFont (const char *fontstring)
   int width = 0;
   int height = 0;
   GetTextExtents (width, height);
+  SetMinimumHeight (height);
   NeedRedraw ();
   sigFontChanged.emit (this);
 }

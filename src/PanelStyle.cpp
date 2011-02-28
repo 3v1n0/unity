@@ -81,10 +81,15 @@ PanelStyle::Refresh ()
   _text.SetBlue ((float) style->text[0].blue / (float) 0xffff);
   _text.SetAlpha (1.0f);
 
-  _text_shadow.SetRed ((float) style->dark[0].red / (float) 0xffff);
-  _text_shadow.SetGreen ((float) style->dark[0].green / (float) 0xffff);
-  _text_shadow.SetBlue ((float) style->dark[0].blue / (float) 0xffff);
+  _text_shadow.SetRed ((float) style->text[3].red / (float) 0xffff);
+  _text_shadow.SetGreen ((float) style->text[3].green / (float) 0xffff);
+  _text_shadow.SetBlue ((float) style->text[3].blue / (float) 0xffff);
   _text_shadow.SetAlpha (1.0f);
+
+  _line.SetRed ((float) style->dark[0].red / (float) 0xffff);
+  _line.SetGreen ((float) style->dark[0].green / (float) 0xffff);
+  _line.SetBlue ((float) style->dark[0].blue / (float) 0xffff);
+  _line.SetAlpha (1.0f);
 
   _bg_top.SetRed ((float) style->bg[1].red / (float) 0xffff);
   _bg_top.SetGreen ((float) style->bg[1].green / (float) 0xffff);
@@ -121,6 +126,12 @@ nux::Color&
 PanelStyle::GetTextShadow ()
 {
   return _text_shadow;
+}
+
+nux::Color&
+PanelStyle::GetLineColor ()
+{
+  return _line;
 }
 
 void
