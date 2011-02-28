@@ -112,7 +112,9 @@ LauncherController::SortAndSave ()
     }
     // reset shortcut
     else
+    {
       (*it)->SetShortcut (0);
+    }
     
 
     if (!icon->IsSticky ())

@@ -503,7 +503,7 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
       
   // move focus to key nav mode when activated
-  if(! (self->_navmod_show_launcher))
+  if (!(self->_navmod_show_launcher))
     return false;
   
   if (self->_last_icon_index == -1)
