@@ -17,6 +17,7 @@
  */
 
 #include "panel-indicator-entry-accessible.h"
+#include "panel-service.h"
 
 G_DEFINE_TYPE(PanelIndicatorEntryAccessible, panel_indicator_entry_accessible, ATK_TYPE_OBJECT)
 
@@ -30,6 +31,11 @@ static AtkObject *panel_indicator_entry_accessible_ref_child      (AtkObject *ac
 struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
+  PanelService *service;
+  gint x;
+  gint y;
+  gint width;
+  gint height;
 };
 
 static void
@@ -51,9 +57,32 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
 }
 
 static void
+on_geometries_changed (PanelService *service, gint x, gint y, gint width, gint height, gpointer user_data)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  piea->priv->x = x;
+  piea->priv->y = y;
+  piea->priv->width = width;
+  piea->priv->height = height;
+
+  GtkWidget *dialog = gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE,
+					      "Got geometries: %d, %d (%d-%d)", x, y, width, height);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+}
+
+static void
 panel_indicator_entry_accessible_init (PanelIndicatorEntryAccessible *piea)
 {
   piea->priv = GET_PRIVATE (piea);
+  piea->priv->x = piea->priv->y = piea->priv->width = piea->priv->height = 0;
+
+  /* Connect to PanelService signals */
+  piea->priv->service = panel_service_get_default ();
+  g_signal_connect (piea->priv->service, "geometries-changed",
+		    G_CALLBACK (on_geometries_changed_cb), piea);
 }
 
 AtkObject *

@@ -396,27 +396,25 @@ PanelView::OnEntriesSynced (GVariant *args)
       if (view->_layout == NULL)
         continue;
 
-      if (g_str_equal (indicator_id, view->GetName ()))
+      std::list<Area *>::iterator it2;
+
+      std::list<Area *> its_children = view->_layout->GetChildren ();
+      for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
       {
-        std::list<Area *>::iterator it2;
+        PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-        std::list<Area *> its_children = view->_layout->GetChildren ();
-        for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
+        if (g_str_equal (indicator_id, entry->_proxy->GetId ()) &&
+            g_str_equal (entry_id, entry->GetName ()))
         {
-           PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+          nux::Geometry geo = entry->GetGeometry ();
 
-           if (g_str_equal (entry_id, entry->GetName ()))
-           {
-             nux::Geometry geo = entry->GetGeometry ();
-
-             g_variant_builder_add (&b, "(ssiiii)",
-                                    indicator_id,
-                                    entry_id,
-                                    geo.x,
-                                    geo.y,
-                                    geo.width,
-                                    geo.height);
-           }
+          g_variant_builder_add (&b, "(ssiiii)",
+                                 indicator_id,
+                                 entry_id,
+                                 geo.x,
+                                 geo.y,
+                                 geo.width,
+                                 geo.height);
         }
       }
     }
