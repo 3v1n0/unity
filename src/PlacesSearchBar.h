@@ -56,11 +56,13 @@ public:
                        bool        ignore=false);
 
   sigc::signal<void, const char *> search_changed;
-  
+
+  bool CanFocus ();
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
-  const gchar * GetChildsName (); 
+  const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:

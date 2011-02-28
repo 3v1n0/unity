@@ -52,6 +52,8 @@ private:
   char *_icon_name;
   unsigned int _size;
 
+  virtual bool CanFocus ();
+
   GdkPixbuf        *_pixbuf_cached;
   nux::BaseTexture *_texture_cached;
   int               _texture_width;

@@ -33,13 +33,13 @@
 class PlacesGroup : public nux::View
 {
 public:
-  
+
   PlacesGroup (NUX_FILE_LINE_PROTO);
   ~PlacesGroup ();
 
   void SetIcon (const char *icon);
   void SetName (const char *name);
- 
+
   void          SetChildLayout (nux::Layout *layout);
   nux::Layout * GetChildLayout ();
 
@@ -68,7 +68,7 @@ private:
   nux::VLayout *_group_layout;
   nux::HLayout *_header_layout;
   nux::Layout  *_content_layout;
-  
+
   IconTexture          *_icon;
   nux::StaticCairoText *_name;
   nux::StaticCairoText *_expand_label;

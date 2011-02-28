@@ -46,7 +46,7 @@ PlacesController::PlacesController ()
   _factory = new PlaceFactoryFile ();
 
   _window_layout = new nux::HLayout ();
-  
+
   _window = new nux::BaseWindow ("Dash");
   _window->SetBackgroundColor (nux::Color (0.0, 0.0, 0.0, 0.85));
   _window->SinkReference ();
@@ -64,11 +64,13 @@ PlacesController::PlacesController ()
 
   _window->SetLayout (_window_layout);
   // Set a InputArea to get the keyboard focus when window receives the enter focus event.
-  _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
+  //_window->SetEnterFocusInputArea (_view->GetTextEntryView ());
+  _window->SetFocused (true);
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
+  _view->SetFocused (true);
 }
 
 PlacesController::~PlacesController ()
@@ -106,7 +108,7 @@ void PlacesController::Hide ()
   _window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
   _window->ShowWindow (false, false);
- 
+
   _visible = false;
 
   _view->SetActiveEntry (NULL, 0, "");
@@ -133,7 +135,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
   primary_monitor = gdk_screen_get_primary_monitor (screen);
   gdk_screen_get_monitor_geometry (screen, primary_monitor, &rect);
 
-  tile_width = settings->GetDefaultTileWidth (); 
+  tile_width = settings->GetDefaultTileWidth ();
 
   if (settings->GetFormFactor () == PlacesSettings::DESKTOP)
   {
@@ -141,7 +143,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 
     while ((width + tile_width) <= half)
       width += tile_width;
-    
+
     width = MAX (width, tile_width * 7);
     height = ((width/tile_width) - 3) * tile_width;
   }

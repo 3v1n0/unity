@@ -71,7 +71,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
-  
+
   SetLayout (_layout);
 
   SetCompositionLayout (_layout);
@@ -97,6 +97,12 @@ const gchar *
 PlacesSearchBar::GetChildsName ()
 {
   return "";
+}
+
+bool
+PlacesSearchBar::CanFocus ()
+{
+  return false;
 }
 
 void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
@@ -138,7 +144,7 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   gPainter.PushLayer (GfxContext, GetGeometry (), _bg_layer);
-  
+
   _layout->ProcessDraw (GfxContext, force_draw);
 
   gPainter.PopBackground ();
@@ -172,9 +178,9 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
       _entry->SetActiveSection (section_id);
       _entry->SetSearch (search_string ? search_string : "", hints);
     }
-    
+
     _pango_entry->SetText (search_string ? search_string : "");
-    
+
     g_free (res);
     g_free (tmp);
   }
@@ -191,7 +197,7 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
-  
+
   _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
                                         (GSourceFunc)&OnLiveSearchTimeout,
                                         this);
@@ -324,7 +330,7 @@ PlacesSearchBar::UpdateBackground ()
 
   if (geo.width == _last_width && geo.height == _last_height)
     return;
-   
+
   _last_width = geo.width;
   _last_height = geo.height;
 
@@ -376,7 +382,7 @@ PlacesSearchBar::UpdateBackground ()
   rop.Blend = true;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
-  
+
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.

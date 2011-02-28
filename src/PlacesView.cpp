@@ -44,7 +44,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _home_entry = new PlaceEntryHome (_factory);
 
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  
+
   _search_bar = new PlacesSearchBar ();
   _layout->AddView (_search_bar, 0, nux::eCenter, nux::eFull);
   AddChild (_search_bar);
@@ -52,7 +52,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
   _layout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
-  
+
   _home_view = new PlacesHomeView ();
   _layered_layout->AddLayer (_home_view);
   AddChild (_home_view);
@@ -81,6 +81,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _icon_loader = IconLoader::GetDefault ();
 
   SetActiveEntry (_home_entry, 0, "");
+
+  //_layout->SetFocused (true);
 }
 
 PlacesView::~PlacesView ()
@@ -130,10 +132,10 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PushClippingRectangle (GetGeometry() );
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
-  
+
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
-  
+
   GfxContext.GetRenderStates ().SetBlend (false);
 
   GfxContext.PopClippingRectangle ();
@@ -161,14 +163,14 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 
     _results_controller->Clear ();
   }
-  
+
   _entry = entry;
 
   _entry->SetActive (true);
   _search_bar->SetActiveEntry (_entry, section_id, search_string, (_entry == _home_entry));
 
   _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
-  
+
   if (_entry != _home_entry)
     _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
 
@@ -312,7 +314,7 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
     SetActiveEntry (_home_entry, section_id, search_string);
     return;
   }
-  
+
   for (it = places.begin (); it != places.end (); ++it)
   {
     Place *place = static_cast<Place *> (*it);
@@ -367,7 +369,7 @@ PlacesView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height)); 
+  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
 
 //

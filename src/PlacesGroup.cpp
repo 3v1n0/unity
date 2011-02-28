@@ -44,8 +44,8 @@
 
 static const nux::Color kExpandDefaultTextColor (1.0f, 1.0f, 1.0f, 0.6f);
 static const nux::Color kExpandHoverTextColor (1.0f, 1.0f, 1.0f, 1.0f);
-  
-  
+
+
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM),
   _content_layout (NULL),
@@ -59,7 +59,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
-  
+
   _icon = new IconTexture ("", 24);
   _icon->SetMinimumSize (24, 24);
   _header_layout->AddView (_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
@@ -68,7 +68,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _name->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _name->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _header_layout->AddView (_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-  
+
   _expand_label = new nux::StaticCairoText ("Expand", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
@@ -100,7 +100,7 @@ PlacesGroup::SetName (const char *name)
   // Bear with me, I'm trying something different :)
   const gchar *temp = "    <big>%s</big>    ";
   gchar *tmp, *final;
-  
+
   tmp = g_markup_escape_text (name, -1);
 
   final = g_strdup_printf (temp, tmp);
@@ -166,7 +166,7 @@ PlacesGroup::Refresh ()
 
   ComputeChildLayout ();
   QueueDraw ();
-  
+
   g_free ((result_string));
   g_free (final);
 }
@@ -195,10 +195,8 @@ long
 PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-
   if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
     ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
-
   return ret;
 }
 

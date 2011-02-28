@@ -67,3 +67,9 @@ PlacesResultsView::Clear ()
 {
   _layout->Clear ();
 }
+
+//~ void
+//~ SetFocused (bool focused)
+//~ {
+  //~ g_debug ("results view got focused");
+//~ }
