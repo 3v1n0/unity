@@ -292,9 +292,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
-    for (int i = 0; i < MAX_SUPERKEY_LABELS - 1; i++)
-      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), _icon_size, _icon_size);
-    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), _icon_size, _icon_size);
+    for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+      _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
 
     _enter_y                = 0;
     _dnd_security           = 15;
