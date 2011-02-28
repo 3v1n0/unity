@@ -53,7 +53,7 @@ public:
     _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
 
     PlacesView *view = new PlacesView (_factory);
-    view->SetMinMaxSize(938, 500);
+    view->SetMinMaxSize(1024, 500);
     layout->AddView(view, 1, nux::eCenter, nux::eFix);
 
     layout->SetContentDistribution(nux::eStackCenter);
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
-                                                938, 500, 0, &ThreadWidgetInit, 0);
+                                                1024, 500, 0, &ThreadWidgetInit, 0);
   app = new TestApp ();
 
   wt->Run(NULL);

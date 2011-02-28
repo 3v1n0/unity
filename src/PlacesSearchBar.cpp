@@ -36,6 +36,8 @@
 
 #include "PlacesSearchBar.h"
 
+#include "PlacesStyle.h"
+
 #define LIVE_SEARCH_TIMEOUT 250
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
@@ -45,13 +47,19 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
     _entry (NULL),
     _live_search_timeout (0)
 {
+  PlacesStyle      *style = PlacesStyle::GetDefault ();
+  nux::BaseTexture *icon = style->GetSearchReadyIcon ();
+
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _layout->SetHorizontalInternalMargin (12);
 
-  _search_icon = new IconTexture ("find", 32);
-  _layout->AddView (_search_icon, 0);
+  _search_icon = new nux::TextureArea (NUX_TRACKER_LOCATION);
+  _search_icon->SetTexture (icon);
+  _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
+  _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
 
   _layered_layout = new nux::LayeredLayout ();
 
@@ -61,13 +69,12 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
-  _pango_entry->SetMinimumHeight (30);
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
   _layered_layout->SetActiveLayerN (1);
 
-  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
@@ -193,7 +200,8 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 void
 PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
-  bool is_empty;
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  bool         is_empty;
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
@@ -205,8 +213,10 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
   search_changed.emit (_pango_entry->GetText ().c_str ());
 
 
+
   is_empty = g_strcmp0 (_pango_entry->GetText ().c_str (), "") == 0;
   _hint->SetVisible (is_empty);
+  _search_icon->SetTexture (is_empty ? style->GetSearchReadyIcon () : style->GetSearchClearIcon ());
 
   _hint->QueueDraw ();
   _pango_entry->QueueDraw ();
@@ -234,9 +244,20 @@ PlacesSearchBar::EmitLiveSearch ()
 }
 
 void
+PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_pango_entry->GetText () != "")
+  {
+    _pango_entry->SetText ("");
+    _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
+    EmitLiveSearch ();
+  }
+}
+
+void
 PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self)
 {
-#define HOW_LARGE 10
+#define HOW_LARGE 8
   GtkSettings          *settings;
   gchar                *font_name = NULL;
   PangoFontDescription *desc;
