@@ -42,6 +42,8 @@
 
 #include <Nux/Utils.h>
 
+#include "PlacesStyle.h"
+
 static const nux::Color kExpandDefaultTextColor (1.0f, 1.0f, 1.0f, 0.6f);
 static const nux::Color kExpandHoverTextColor (1.0f, 1.0f, 1.0f, 1.0f);
   
@@ -55,13 +57,16 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _n_total_items (0),
   _child_unexpand_height (0)
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
+
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   
   _icon = new IconTexture ("", 24);
-  _icon->SetMinimumSize (24, 24);
+  _icon->SetMinMaxSize (24, 24);
   _header_layout->AddView (_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _name = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
@@ -69,11 +74,16 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _name->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _header_layout->AddView (_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   
-  _expand_label = new nux::StaticCairoText ("Expand", NUX_TRACKER_LOCATION);
+  _expand_label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor (kExpandDefaultTextColor);
-  _header_layout->AddView (_expand_label, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _expand_icon = new nux::TextureArea ();
+  _expand_icon->SetTexture (arrow);
+  _expand_icon->SetMinimumSize (arrow->GetWidth (), arrow->GetHeight ());
+  _header_layout->AddView (_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
 
@@ -86,6 +96,9 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
   _expand_label->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   _expand_label->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
+  _expand_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _expand_icon->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _expand_icon->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup ()
@@ -159,6 +172,8 @@ PlacesGroup::Refresh ()
                                      _n_total_items - _n_visible_items_in_unexpand_mode);
   }
 
+  _expand_icon->SetVisible (!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
+
   final = g_strdup_printf (temp, result_string);
 
   _expand_label->SetText (final);
@@ -196,8 +211,11 @@ PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessE
 {
   long ret = TraverseInfo;
 
-  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y))
+  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)
+      || !_child_unexpand_height)
+  {
     ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+  }
 
   return ret;
 }
@@ -246,6 +264,8 @@ PlacesGroup::SetChildUnexpandHeight (guint height)
 void
 PlacesGroup::SetExpanded (bool is_expanded)
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
   if (_is_expanded == is_expanded)
     return;
 
@@ -262,7 +282,13 @@ PlacesGroup::SetExpanded (bool is_expanded)
     ComputeChildLayout ();
     _group_layout->ComputeChildLayout ();
     _content_layout->ComputeChildLayout ();
+    _content_layout->QueueDraw ();
+    _group_layout->QueueDraw ();
+    QueueDraw ();
   }
+
+  _expand_icon->SetTexture (_is_expanded ? style->GetGroupUnexpandIcon () 
+                                         : style->GetGroupExpandIcon ());
 }
 
 void

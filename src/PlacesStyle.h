@@ -38,12 +38,19 @@ public:
   int GetTileWidth    ();
   int GetTileHeight   ();
 
+  int GetHomeTileIconSize ();
+  int GetHomeTileWidth ();
+  int GetHomeTileHeight ();
+
   nux::BaseTexture * GetDashBottomTile ();
   nux::BaseTexture * GetDashRightTile ();
   nux::BaseTexture * GetDashCorner ();
 
   nux::BaseTexture * GetSearchReadyIcon ();
   nux::BaseTexture * GetSearchClearIcon ();
+
+  nux::BaseTexture * GetGroupUnexpandIcon ();
+  nux::BaseTexture * GetGroupExpandIcon ();
 
   sigc::signal<void> changed;
 
@@ -66,6 +73,9 @@ private:
 
   nux::BaseTexture *_search_ready_texture;
   nux::BaseTexture *_search_clear_texture;
+
+  nux::BaseTexture *_group_unexpand_texture;
+  nux::BaseTexture *_group_expand_texture;
 };
 
 #endif // PLACES_STYLE_H

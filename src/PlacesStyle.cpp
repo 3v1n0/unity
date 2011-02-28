@@ -37,7 +37,9 @@ PlacesStyle::PlacesStyle ()
   _dash_right_texture (NULL),
   _dash_corner_texture (NULL),
   _search_ready_texture (NULL),
-  _search_clear_texture (NULL)
+  _search_clear_texture (NULL),
+  _group_unexpand_texture (NULL),
+  _group_expand_texture (NULL)
 {
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
                     G_CALLBACK (PlacesStyle::OnFontChanged), this);
@@ -55,6 +57,14 @@ PlacesStyle::~PlacesStyle ()
     _dash_right_texture->UnReference ();
   if (_dash_corner_texture)
     _dash_corner_texture->UnReference ();
+  if (_search_ready_texture)
+    _search_ready_texture->UnReference ();
+  if (_search_clear_texture)
+    _search_clear_texture->UnReference ();
+  if (_group_unexpand_texture)
+    _group_unexpand_texture->UnReference ();
+  if (_group_expand_texture)
+    _group_expand_texture->UnReference ();
 
   if (_style == this)
     _style = NULL;
@@ -86,6 +96,25 @@ PlacesStyle::GetTileHeight ()
 {
   return GetTileIconSize () + (_text_height * 4);
 }
+
+int
+PlacesStyle::GetHomeTileIconSize ()
+{
+  return 104;
+}
+
+int
+PlacesStyle::GetHomeTileWidth ()
+{
+  return _text_width * 1.2;
+}
+
+int
+PlacesStyle::GetHomeTileHeight ()
+{
+  return GetHomeTileIconSize () + (_text_height * 4);
+}
+
 
 nux::BaseTexture *
 PlacesStyle::GetDashBottomTile ()
@@ -125,6 +154,22 @@ PlacesStyle::GetSearchClearIcon ()
   if (!_search_clear_texture)
     _search_clear_texture = TextureFromFilename (PKGDATADIR"/search_clear_icon.png");
   return _search_clear_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetGroupUnexpandIcon ()
+{
+  if (!_group_unexpand_texture)
+    _group_unexpand_texture = TextureFromFilename (PKGDATADIR"/dash_group_unexpand.png");
+  return _group_unexpand_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetGroupExpandIcon ()
+{
+  if (!_group_expand_texture)
+    _group_expand_texture = TextureFromFilename (PKGDATADIR"/dash_group_expand.png");
+  return _group_expand_texture;
 }
 
 nux::BaseTexture *

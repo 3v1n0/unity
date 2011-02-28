@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
+#include <Nux/TextureArea.h>
 
 #include <sigc++/sigc++.h>
 
@@ -72,6 +73,7 @@ private:
   IconTexture          *_icon;
   nux::StaticCairoText *_name;
   nux::StaticCairoText *_expand_label;
+  nux::TextureArea     *_expand_icon;
 
   guint32 _idle_id;
 
