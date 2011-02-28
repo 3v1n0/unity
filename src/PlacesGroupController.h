@@ -13,35 +13,32 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
- *              Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACES_RESULTS_CONTROLLER_H
-#define PLACES_RESULTS_CONTROLLER_H
+#ifndef PLACES_GROUP_CONTROLLER_H
+#define PLACES_GROUP_CONTROLLER_H
 
 #include <Nux/Nux.h>
 
 #include "Introspectable.h"
 #include "PlaceEntry.h"
-#include "PlacesResultsView.h"
 
-#include "PlacesGroupController.h"
+#include "PlacesGroup.h"
+#include "PlacesTile.h"
 
-class PlacesResultsController : public nux::Object, public Introspectable
+class PlacesGroupController : public nux::Object, public Introspectable
 {
 public:
-  PlacesResultsController  ();
-  ~PlacesResultsController ();
+  PlacesGroupController (PlaceEntryGroup& group);
+  ~PlacesGroupController ();
 
-  void                SetView (PlacesResultsView *view);
-  PlacesResultsView * GetView ();
+  const void  * GetId ();
+  PlacesGroup * GetGroup ();
 
-  void AddGroup     (PlaceEntryGroup& group);
   void AddResult    (PlaceEntryGroup& group, PlaceEntryResult& result);
   void RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  // Clears all the current groups and results
   void Clear ();
 
 protected:
@@ -49,8 +46,9 @@ protected:
   void         AddProperties (GVariantBuilder *builder);
 
 private:
-  PlacesResultsView *_results_view;
-  std::map<const void *, PlacesGroupController *> _id_to_group;
+  PlacesGroup *_group;
+  const void  *_id;
+  std::map<const void *, PlacesTile *>  _id_to_tile;
 };
 
-#endif // PLACES_RESULTS_CONTROLLER_H
+#endif // PLACES_GROUP_CONTROLLER_H

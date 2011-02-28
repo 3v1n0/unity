@@ -229,16 +229,27 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   GtkIconInfo *info;
   nux::BaseTexture *result;
   GError *error = NULL;
-  
-  theme = gtk_icon_theme_get_default ();
-      
+  GIcon *icon;
+
   if (!icon_name)
     icon_name = g_strdup (DEFAULT_ICON);
    
-  info = gtk_icon_theme_lookup_icon (theme,
-                                     icon_name,
-                                     size,
-                                     (GtkIconLookupFlags) 0);            
+  theme = gtk_icon_theme_get_default ();
+  icon = g_icon_new_for_string (icon_name, NULL);
+
+  if (G_IS_ICON (icon))
+  {
+    info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref (icon);
+  }
+  else
+  {   
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       icon_name,
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
   if (!info)
   {
     info = gtk_icon_theme_lookup_icon (theme,
@@ -249,13 +260,16 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
         
   if (gtk_icon_info_get_filename (info) == NULL)
   {
+    gtk_icon_info_free (info);
+
     info = gtk_icon_theme_lookup_icon (theme,
                                        DEFAULT_ICON,
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-  
+
   pbuf = gtk_icon_info_load_icon (info, &error);
+  gtk_icon_info_free (info);
 
   if (GDK_IS_PIXBUF (pbuf))
   {
@@ -408,7 +422,7 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
   int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
-  nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
+  //nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
 }
 
 void LauncherIcon::RecvMouseDown (int button)
