@@ -31,9 +31,6 @@
 PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   :   ScrollView (NUX_FILE_LINE_PARAM)
 {
-  EnableVerticalScrollBar (true);
-  EnableHorizontalScrollBar (false);
-
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
@@ -42,6 +39,8 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   SetLayout (_layout);
 
+  EnableVerticalScrollBar (true);
+  EnableHorizontalScrollBar (false);
 }
 
 PlacesResultsView::~PlacesResultsView ()
@@ -65,5 +64,11 @@ PlacesResultsView::RemoveGroup (PlacesGroup *group)
   ResetScrollToUp ();
   _groups.remove (group);
   _layout->RemoveChildObject (group);
+}
+
+void
+PlacesResultsView::Clear ()
+{
+  _layout->Clear ();
 }
 

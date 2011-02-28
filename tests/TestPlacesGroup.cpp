@@ -60,8 +60,7 @@ void TestRunner::Init ()
   layout = new nux::VLayout ();
   PlacesGroup *group1 = new PlacesGroup ();
   group1->SetTitle ("Hello World!");
-  group1->SetItemDetail (100, 5);
-
+  
   nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   for (int i = 0; i < 60; i++)
   {
@@ -111,7 +110,7 @@ void TestRunner::Init ()
   group_content->SetHorizontalInternalMargin (4);
   group_content->SetHeightMatchContent (true);
 
-  group1->AddLayout (group_content);
+  group1->SetChildLayout (group_content);
   group1->SetVisible (false);
 
 

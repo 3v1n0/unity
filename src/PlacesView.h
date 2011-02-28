@@ -37,8 +37,6 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
-#include "PlacesSimpleTile.h"
-#include "PlacesGroup.h"
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
 
@@ -50,10 +48,6 @@ class PlacesView : public nux::View, public Introspectable
 public:
   PlacesView (PlaceFactory *factory);
   ~PlacesView ();
-
-  // Return the TextEntry View. This is required to enable the keyboard focus on the text entry when the
-  // dahs is shown.
-  nux::TextEntry* GetTextEntryView ();
 
   // nux::View overrides
   long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -70,6 +64,7 @@ public:
   
   PlacesResultsController * GetResultsController ();
 
+  nux::TextEntry* GetTextEntryView ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
@@ -85,12 +80,11 @@ protected:
 private:
   static void CloseRequest (GVariant *data, PlacesView *self);
 
-  static void OnGroupAdded    (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnGroupRemoved  (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultAdded   (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  void OnGroupAdded    (PlaceEntry *entry, PlaceEntryGroup& group);
+  void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  void OnResultClicked (PlacesTile *tile);
+  static void OnResultClicked (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
 
 private:
@@ -101,10 +95,9 @@ private:
   PlacesHomeView     *_home_view;
   PlaceEntryHome     *_home_entry;
   PlaceEntry         *_entry;
-  gulong              _group_added_id;
-  gulong              _group_removed_id;
-  gulong              _result_added_id;
-  gulong              _result_removed_id;
+  sigc::connection    _group_added_conn;
+  sigc::connection    _result_added_conn;
+  sigc::connection    _result_removed_conn;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;

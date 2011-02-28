@@ -45,35 +45,29 @@ public:
   PlacesGroup (NUX_FILE_LINE_PROTO);
   ~PlacesGroup ();
 
-  void SetTitle (const char *title);
   void SetEmblem (const char *path_to_emblem);
+  void SetTitle  (const char *title);
 
-  void AddLayout (nux::Layout *layout);
-  nux::Layout *GetLayout ();
-  void SetRowHeight (unsigned int row_height);
-  void SetItemDetail (unsigned int total_items, unsigned int visible_items);
-  void SetExpanded (bool expanded);
+  void          SetChildLayout (nux::Layout *layout);
+  nux::Layout * GetChildLayout ();
+
   void Relayout ();
 
-protected:
+private:
   nux::StaticCairoText *_label;
   nux::StaticCairoText *_title;
 
+  guint32 _idle_id;
+
   char *_title_string;
-  unsigned int _row_height;
-  unsigned int _total_items;
-  unsigned int _visible_items;
 
   nux::Layout *_content;
   IconTexture  *_icon_texture;
   nux::VLayout *_group_layout;
   nux::HLayout *_header_layout;
 
-  bool _expanded;
-
-  guint32 _idle_id;
-
   static gboolean OnIdleRelayout (PlacesGroup *self);
+
   void UpdateTitle ();
   void UpdateLabel ();
 
@@ -81,22 +75,7 @@ protected:
   virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
-
-  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-
-  sigc::signal<void, PlacesGroup*> sigMouseEnter;
-  sigc::signal<void, PlacesGroup*> sigMouseLeave;
-  sigc::signal<void, PlacesGroup*, int, int> sigMouseReleased;
-  sigc::signal<void, PlacesGroup*, int, int> sigMouseClick;
-  sigc::signal<void, PlacesGroup*, int, int> sigMouseDrag;
+private:
 };
 
 #endif
