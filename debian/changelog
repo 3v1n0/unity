@@ -1,6 +1,47 @@
 unity (3.6.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Menu bar becomes blank periodically (LP: #683065)
+    - Unity does not update when screen resolution changes (LP: #684539)
+    - [dash] Keyboard navigation not implemented as specified (LP: #608132)
+    - Dash - build the Desktop Dash (LP: #683719)
+    - Quicklists not working (LP: #719780)
+    - Launcher auto hide animation has a life of it's own / Unity launcher
+      constantly sliding in and out without user interaction (LP: #717364)
+    - compiz crashed with SIGSEGV in PrivateWindow::getModalTransient()
+      (LP: #726235)
+    - Don't show launcher number overlays on tap of super (LP: #726630)
+    - Optimize texture memory usage for unexposed view icons (LP: #609994)
+    - Unity should handle video-out keycodes that correspond to Super + P +
+      Enter (LP: #632632)
+    - dash - wrong count of remaining items to see (LP: #662605)
+    - dash - x search box button visibility (LP: #662614)
+    - Touch window management gesture previews (LP: #683688)
+    - unity not working on rotated displays (LP: #694596)
+    - unity main top bar in displays in wrong area (multi-head issue)
+      (LP: #707209)
+    - unity place group visual improvements (LP: #714528)
+    - Implement ref_state_set for toplevel ATK objects in the panel service
+      (LP: #715299)
+    - Alt + F1 doesn't show the launcher if hidden (LP: #717125)
+    - Keyboard navigation: Choosing a window from launcher doesn't change
+      input focus. (LP: #721811)
+    - Quicklists not closing when losing focus (LP: #724739)
+    - wrong animation in the launcher (LP: #724956)
+    - Window management - windows go below launcher and panel (LP: #725463)
+    - Media and PrintScreen keys don't work (LP: #621887)
+    - super-shortcuts should be "serializable" (LP: #638936)
+    - Chromium icon in Unity is distorted / some scaled distored in the unity
+      place applications (LP: #670169)
+    - launcher stays on screen when it shouldn't | false show/hide positives
+      on the launcher (LP: #711176)
+    - Keyboard navigation: no public API to know the current Laucher Icon
+      selected when key nav is activated (LP: #722660)
+    - Require to implement AtkSelection on the Launcher (LP: #723804)
+    - LauncherIcon accessibility support requires to expose the selection
+      state (LP: #723806)
+  * debian/control:
+    - dep on latest nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 01 Mar 2011 13:41:40 +0100
 
