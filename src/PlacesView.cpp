@@ -84,7 +84,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.8f), true, rop);
+    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.9f), true, rop);
   }
 
   // Register for all the events
