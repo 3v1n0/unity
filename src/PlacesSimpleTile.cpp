@@ -59,6 +59,8 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
   SetLayout (layout);
 
   OnMouseClick.connect (sigc::mem_fun (this, &PlacesSimpleTile::Clicked));
+  
+  SetDndEnabled (true, false);
 }
 
 
@@ -70,6 +72,52 @@ PlacesSimpleTile::~PlacesSimpleTile ()
   g_free (_label);
   g_free (_icon);
   g_free (_uri);
+}
+
+void
+PlacesSimpleTile::DndSourceDragBegin ()
+{
+  Reference ();
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                            NULL);
+}
+
+nux::NBitmapData * 
+PlacesSimpleTile::DndSourceGetDragImage ()
+{
+  return 0;
+}
+
+std::list<const char *> 
+PlacesSimpleTile::DndSourceGetDragTypes ()
+{
+  std::list<const char*> result;
+  result.push_back ("text/uri-list");
+  return result;
+}
+
+const char *
+PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *format)
+{
+  *format = 8;
+
+  if (_uri)
+  {
+    *size = strlen (_uri);
+    return _uri;
+  }
+  else
+  {
+    *size = 0;
+    return 0;
+  }
+}
+
+void
+PlacesSimpleTile::DndSourceDragFinished (nux::DndAction result)
+{
+  UnReference ();
 }
 
 nux::Geometry
