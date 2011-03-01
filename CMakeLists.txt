@@ -11,8 +11,8 @@ subdirs (services tests tools doc)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
-set (UNITY_MINOR 4)
-set (UNITY_MICRO 6)
+set (UNITY_MINOR 6)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -103,7 +103,13 @@ compiz_plugin (unityshell
                PLUGINDEPS composite opengl
                CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
                )
- 
+
+#
+# UTouch things
+#
+
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
+
 #
 # GSettings Schema
 #

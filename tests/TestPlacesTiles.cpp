@@ -65,6 +65,7 @@ void TestRunner::Init ()
   layout->AddView (tile2, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->AddView (tile3, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+  layout->SetFocused (true);
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }
@@ -84,7 +85,7 @@ ControlThread (nux::NThread* thread,
   printf ("ControlThread successfully started\n");
 
   nux::WindowThread* mainWindowThread;
-  
+
   mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 

@@ -125,6 +125,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/Introspectable.h
                           ../src/PlacesSettings.cpp
                           ../src/PlacesSettings.h
+                          ../src/PlacesStyle.cpp
+                          ../src/PlacesStyle.h
                           ../src/PlacesTile.cpp
                           ../src/PlacesTile.h
                           ../src/PlacesSimpleTile.cpp
@@ -150,6 +152,8 @@ add_executable (test-places
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h
                 ../src/PlacesResultsView.cpp
+                ../src/PlacesGroupController.cpp
+                ../src/PlacesResultsController.h
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
@@ -188,6 +192,8 @@ add_executable (test-places-results
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h
                 ../src/PlacesResultsView.cpp
+                ../src/PlacesGroupController.cpp
+                ../src/PlacesGroupController.h
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
                 )

@@ -118,7 +118,7 @@ unity_root_accessible_initialize (AtkObject *accessible,
   // FIXME: compiz doesn't set the program name using g_set_prgname,
   // and AFAIK, there isn't a way to get it. Requires further investigation.
   // accessible->name = g_get_prgname();
-  atk_object_set_name (accessible, "Unity");
+  atk_object_set_name (accessible, "unity");
   atk_object_set_parent (accessible, NULL);
 
   ATK_OBJECT_CLASS (unity_root_accessible_parent_class)->initialize (accessible, data);

@@ -1,3 +1,9 @@
+unity (3.6.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 01 Mar 2011 13:41:40 +0100
+
 unity (3.4.6-0ubuntu2) natty; urgency=low
 
   * Cherry-pick some fixes from trunk to ensure at least having those in
