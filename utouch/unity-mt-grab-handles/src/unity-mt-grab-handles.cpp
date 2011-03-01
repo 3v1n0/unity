@@ -363,7 +363,8 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 
 		foreach (CompWindow *w, invalidated)
 		{
-		    UnityMTGrabHandlesWindow::get (w)->restackHandles ();
+		    if (UnityMTGrabHandlesWindow::get (w))
+		      UnityMTGrabHandlesWindow::get (w)->restackHandles ();
 		}
 
 		mLastClientListStacking = screen->clientList (true);
@@ -379,8 +380,8 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 	    if (it != mInputHandles.end ())
 	    {
 		handle = it->second;
-
-		handle->handleButtonPress ((XButtonEvent *) event);
+		if (handle)
+			handle->handleButtonPress ((XButtonEvent *) event);
 	    }
 
 	    break;
@@ -399,7 +400,10 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 	    it = mInputHandles.find (event->xmap.window);
 
 	    if (it != mInputHandles.end ())
+	    {
+	      if (it->second)
 		it->second->reposition (NULL, true);
+	    }
 
 	    break;
         default:
