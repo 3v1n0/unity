@@ -1,4 +1,4 @@
-unity (3.6.0-0ubuntu1) UNRELEASED; urgency=low
+unity (3.6.0-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - Menu bar becomes blank periodically (LP: #683065)
@@ -45,7 +45,7 @@ unity (3.6.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - dep on latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 01 Mar 2011 13:41:40 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 01 Mar 2011 14:27:16 +0100
 
 unity (3.4.6-0ubuntu2) natty; urgency=low
 
