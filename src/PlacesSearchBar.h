@@ -23,7 +23,8 @@
 #include <Nux/LayeredLayout.h>
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
-
+#include <Nux/TextureArea.h>
+#include <Nux/ComboBoxSimple.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
@@ -36,7 +37,6 @@
 class PlacesView;
 #include <gtk/gtk.h>
 
-#include "IconTexture.h"
 #include "StaticCairoText.h"
 
 class PlacesSearchBar : public Introspectable, public nux::View
@@ -56,17 +56,23 @@ public:
                        bool        ignore=false);
 
   sigc::signal<void, const char *> search_changed;
-  
+
+  bool CanFocus ();
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
-  const gchar * GetChildsName (); 
+  const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:
   void UpdateBackground ();
   void OnSearchChanged (nux::TextEntry *text_entry);
   void EmitLiveSearch ();
+  void OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section);
+  void OnComboChanged (nux::ComboBoxSimple *simple);
+  void OnMenuClosing (nux::MenuPage *menu, int x, int y);
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
@@ -83,7 +89,8 @@ private:
   guint                    _live_search_timeout;
 
   friend class PlacesView;
-  IconTexture             *_search_icon;
+  nux::TextureArea        *_search_icon;
+  nux::ComboBoxSimple     *_combo;
 };
 
 #endif

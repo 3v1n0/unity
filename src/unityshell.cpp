@@ -192,8 +192,8 @@ UnityScreen::handleEvent (XEvent *event)
       break;
     case KeyPress:
       KeySym key_sym;
-      if (XLookupString(&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-          launcher->CheckSuperShortcutPressed (key_sym, 0, 0);
+      if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
+          launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
       break;
   }
 
@@ -286,7 +286,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  startLauncherKeyNav ();
+  launcher->startKeyNavMode ();
 
   return false;
 }
@@ -302,12 +302,21 @@ UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
 void
 UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
 {
-  UnityScreen *self = (UnityScreen*) value;
+  UnityScreen* self           = (UnityScreen*) value;
+  bool         preserve_focus = false;
+
+  if (data)
+  {
+    preserve_focus = g_variant_get_boolean (data);
+  }
 
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (self->lastFocusedWindow != NULL)
-    self->lastFocusedWindow->moveInputFocusTo ();
+  if (preserve_focus)
+  {
+    if (self->lastFocusedWindow != NULL)
+      self->lastFocusedWindow->moveInputFocusTo ();
+  }
 }
 
 void
@@ -489,15 +498,18 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
 void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  int OurWindowHeight = WindowHeight - 24;
-  geo = nux::Geometry(0, 24, geo.width, OurWindowHeight);
+  UnityScreen *self = static_cast<UnityScreen *> (user_data);
+  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y + 24,
+                      geo.width, self->_primary_monitor.height - 24);
 }
 
 /* Configure callback for the panel window */
 void
 UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  geo = nux::Geometry(0, 0, WindowWidth, 24);
+  UnityScreen *self = static_cast<UnityScreen *> (user_data);
+  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y,
+                      self->_primary_monitor.width, 24);
 }
 
 /* Start up nux after OpenGL is initialized */
@@ -567,12 +579,15 @@ UnityScreen::Relayout ()
   scr = gdk_screen_get_default ();
   primary_monitor = gdk_screen_get_primary_monitor (scr);
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
+  _primary_monitor = rect;
 
   pCurGeom = panelWindow->GetGeometry(); 
   lCurGeom = launcherWindow->GetGeometry(); 
 
   panelWindow->EnableInputWindow(false);
   launcherWindow->EnableInputWindow(false);
+  launcherWindow->InputWindowEnableStruts(false);
+  panelWindow->InputWindowEnableStruts(false);
 
   panelView->SetMaximumWidth(rect.width);
   launcher->SetMaximumHeight(rect.height - pCurGeom.height);
@@ -603,6 +618,8 @@ UnityScreen::Relayout ()
 
   panelWindow->EnableInputWindow(true);
   launcherWindow->EnableInputWindow(true);
+  launcherWindow->InputWindowEnableStruts(true);
+  panelWindow->InputWindowEnableStruts(true);
 
   needsRelayout = false;
 }
@@ -868,6 +885,11 @@ UnityWindow::UnityWindow (CompWindow *window) :
 
 UnityWindow::~UnityWindow ()
 {
+  UnityScreen *us = UnityScreen::get (screen);
+  if (us->newFocusedWindow && (UnityWindow::get (us->newFocusedWindow) == this))
+    us->newFocusedWindow = NULL;
+  if (us->lastFocusedWindow && (UnityWindow::get (us->lastFocusedWindow) == this))
+    us->lastFocusedWindow = NULL;
 }
 
 /* vtable init */

@@ -126,6 +126,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/Introspectable.h
                           ../src/PlacesSettings.cpp
                           ../src/PlacesSettings.h
+                          ../src/PlacesStyle.cpp
+                          ../src/PlacesStyle.h
                           ../src/PlacesTile.cpp
                           ../src/PlacesTile.h
                           ../src/PlacesSimpleTile.cpp
