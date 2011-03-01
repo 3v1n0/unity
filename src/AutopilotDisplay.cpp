@@ -58,11 +58,21 @@ AutopilotDisplay::AutopilotDisplay (CompScreen *screen) :
   CompositeScreenInterface::setHandler (_cscreen, false);
 
   _ubus = ubus_server_get_default ();
-  _tab_view = new nux::TabView (NUX_TRACKER_LOCATION);
-  _window = new nux::FloatingWindow (TEXT (_("Autopilot Statistics")), NUX_TRACKER_LOCATION);
 
-  nux::VLayout *layout = new nux::VLayout (NUX_TRACKER_LOCATION);
-  layout->AddView (_tab_view);
+  _window_layout = new nux::HLayout ();
+
+  _window = new nux::FloatingWindow (_("Autopilot Statistics"));
+  _window->SinkReference ();
+  _window->ShowWindow (false);
+  _window->EnableInputWindow (false);
+
+  _tab_view = new nux::TabView (NUX_TRACKER_LOCATION);
+  _window_layout->AddView (_tab_view, 1);
+  _window_layout->SetContentDistribution (nux::eStackLeft);
+  _window_layout->SetVerticalExternalMargin (0);
+  _window_layout->SetHorizontalExternalMargin (0);
+
+  _window->SetLayout (_window_layout);
 
   /* set up our initial window tab for the overall stats, then tabs will be added when StartTest is called */
   SetupTab (_("Overview"));

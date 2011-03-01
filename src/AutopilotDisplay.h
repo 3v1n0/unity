@@ -61,6 +61,7 @@ public:
 private:
   nux::TabView *_tab_view;
   nux::FloatingWindow *_window;
+  nux::HLayout *_window_layout;
 
   CompositeScreen *_cscreen;
 
