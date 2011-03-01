@@ -524,14 +524,16 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
 }
 
 void
-Launcher::leaveKeyNavMode ()
+Launcher::leaveKeyNavMode (bool preserve_focus)
 {
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
   QueueDraw ();
+
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
-                            NULL);
+                            g_variant_new_boolean  (preserve_focus));
+
   selection_change.emit ();
 }
 
@@ -1333,6 +1335,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
+gboolean Launcher::TapOnSuper ()
+{
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);  
+        
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+}
+
 /* Launcher Show/Hide logic */
 
 void Launcher::StartKeyShowLauncher ()
@@ -1345,14 +1355,12 @@ void Launcher::StartKeyShowLauncher ()
 
 void Launcher::EndKeyShowLauncher ()
 {
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);  
 
     _super_show_launcher = false;
     QueueDraw ();
 
     // it's a tap on super
-    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+    if (TapOnSuper ())
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
       
     SetupAutohideTimer ();
@@ -2258,7 +2266,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg.icon->_xform_coords["Glow"]);
 
   /* draw superkey-shortcut label */ 
-  if (_super_show_launcher)
+  if (_super_show_launcher && !TapOnSuper ())
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2726,7 +2734,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         if (it != (LauncherModel::iterator)NULL)
           (*it)->Activate ();
       }
-      leaveKeyNavMode ();
+      leaveKeyNavMode (false);
     break;
       
     // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier

@@ -147,7 +147,7 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void leaveKeyNavMode ();
+  void leaveKeyNavMode (bool preserve_focus = true);
 
   void exitKeyNavMode ();   // Connected to signal OnEndFocus
 
@@ -351,6 +351,8 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
+  
+  gboolean TapOnSuper ();
 
   void
   DrawRoundedRectangle (cairo_t* cr,
