@@ -40,6 +40,8 @@ unity (3.6.0-0ubuntu1) UNRELEASED; urgency=low
     - Require to implement AtkSelection on the Launcher (LP: #723804)
     - LauncherIcon accessibility support requires to expose the selection
       state (LP: #723806)
+    - Add keyboard shortcuts for launching separate instances of applications 
+      (LP: #724865)
   * debian/control:
     - dep on latest nux
 
@@ -273,7 +275,7 @@ unity (3.2.12-0ubuntu2) natty; urgency=low
 
     * No changes rebuild for new libindicator2
 
- -- Jonathan Riddell <jriddell@ubuntu.com> Sat, 15 Jan 2011 02:56:13 +0000 
+ -- Jonathan Riddell <jriddell@ubuntu.com> Sat, 15 Jan 2011 02:56:13 +0000
 
 unity (3.2.12-0ubuntu1) natty; urgency=low
 
