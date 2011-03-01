@@ -217,6 +217,7 @@ private:
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
+  static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   
@@ -455,6 +456,7 @@ private:
   guint _autohide_handle;
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
+  guint _redraw_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;

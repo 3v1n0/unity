@@ -302,6 +302,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _dnd_delta_x            = 0;
     _autohide_handle        = 0;
     _autoscroll_handle      = 0;
+    _redraw_handle          = 0;
     _focus_keynav_handle    = 0;
     _floating               = false;
     _hovered                = false;
@@ -1349,7 +1350,10 @@ void Launcher::StartKeyShowLauncher ()
 {
     _super_show_launcher = true;
     QueueDraw ();
-    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, ANIM_DURATION_SHORT);
+    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
+    if (_redraw_handle > 0)
+      g_source_remove (_redraw_handle);
+    _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
     EnsureHiddenState ();
 }
 
@@ -1461,6 +1465,14 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
     self->_autohide_handle = 0;
     self->EnsureHiddenState ();
     return false;
+}
+
+gboolean Launcher::DrawLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->QueueDraw ();
+    return false;    
 }
 
 void
@@ -2740,16 +2752,19 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
     {
-        int i;
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+        if (_super_show_launcher && !TapOnSuper ())
         {
-          if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-          {
-            if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
-              (*it)->OpenInstance ();
-            else
-              (*it)->Activate ();
-          }
+            int i;
+            for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+            {
+              if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+              {
+                if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+                  (*it)->OpenInstance ();
+                else
+                  (*it)->Activate ();
+              }
+            }
         }
       
       
