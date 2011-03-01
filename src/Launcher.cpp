@@ -352,6 +352,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
                                    (UBusCallback)&Launcher::OnActionDone,
                                    this);
+
+    SetDndEnabled (false, true);
 }
 
 Launcher::~Launcher()
@@ -3360,6 +3362,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   if (!_data_checked)
   {
     _data_checked = true;
+    _drag_data.clear ();
     
     // get the data
     for (it = mimes.begin (); it != mimes.end (); it++)
@@ -3381,6 +3384,21 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
         break;
       }
     }
+
+    // only set hover once we know our first x/y
+    SetActionState (ACTION_DRAG_EXTERNAL);
+    _mouse_inside_launcher = true;
+    
+    LauncherModel::iterator it;
+    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
+    {
+      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
+  
+    EnsureHoverState ();
   }
   
   g_free (uri_list_const);
@@ -3400,24 +3418,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     EnsureAnimation ();
   }
 
-  if (!_mouse_inside_launcher)
-  {
-    // only set hover once we know our first x/y
-    SetActionState (ACTION_DRAG_EXTERNAL);
-    _mouse_inside_launcher = true;
-    
-    LauncherModel::iterator it;
-    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
-    {
-      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
-        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
-      else
-        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
-    }
-  
-    EnsureHoverState ();
-  }
-  
   EventLogic ();
   LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
@@ -3473,20 +3473,34 @@ Launcher::ProcessDndDrop (int x, int y)
 {
   if (_steal_drag)
   {
-    char *path;
+    char *path = 0;
     std::list<char *>::iterator it;
     
     for (it = _drag_data.begin (); it != _drag_data.end (); it++)
     {
       if (g_str_has_suffix (*it, ".desktop"))
       {
-        path = g_filename_from_uri (*it, NULL, NULL);
-        break;
+        if (g_str_has_prefix (*it, "application://"))
+        {
+          const char *tmp = *it + strlen ("application://");
+          char *tmp2 = g_strdup_printf ("file:///usr/share/applications/%s", tmp);
+          path = g_filename_from_uri (tmp2, NULL, NULL);
+          g_free (tmp2);
+          break;
+        }
+        else if (g_str_has_prefix (*it, "file://"))
+        {
+          path = g_filename_from_uri (*it, NULL, NULL);
+          break;
+        }
       }
     }
-    launcher_dropped.emit (path, _dnd_hovered_icon);
     
-    g_free (path);
+    if (path)
+    {
+      launcher_dropped.emit (path, _dnd_hovered_icon);
+      g_free (path);
+    }
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {

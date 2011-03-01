@@ -47,7 +47,11 @@ protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
-
+  
+  virtual nux::NBitmapData *      DndSourceGetDragImage   ();
+  virtual std::list<const char *> DndSourceGetDragTypes   ();
+  virtual const char *            DndSourceGetDataForType (const char *type, int *size, int *format);
+  virtual void                    DndSourceDragFinished   (nux::DndAction result);
 private:
   void Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
