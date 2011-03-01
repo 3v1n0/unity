@@ -1340,7 +1340,7 @@ gboolean Launcher::TapOnSuper ()
     struct timespec current;
     clock_gettime (CLOCK_MONOTONIC, &current);  
         
-    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
 }
 
 /* Launcher Show/Hide logic */
