@@ -40,108 +40,163 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include <Nux/Utils.h>
+
+#include "PlacesStyle.h"
+
+static const nux::Color kExpandDefaultTextColor (1.0f, 1.0f, 1.0f, 0.6f);
+static const nux::Color kExpandHoverTextColor (1.0f, 1.0f, 1.0f, 1.0f);
+
+
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM),
+  _content_layout (NULL),
   _idle_id (0),
-  _title_string (NULL),
-  _content (NULL)
+  _is_expanded (true),
+  _n_visible_items_in_unexpand_mode (0),
+  _n_total_items (0),
+  _child_unexpand_height (0)
 {
-  _icon_texture = new IconTexture ("", 24);
-  _icon_texture->SetMinimumSize (24, 24);
-
-  _label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-
-  _title = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
-  _title->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _title->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-
-  _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
-  _header_layout->SetHorizontalInternalMargin (12);
-
-  _header_layout->AddView (_icon_texture, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-  _header_layout->AddView (_title, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-  _header_layout->AddSpace (1, 1);
-  _header_layout->AddView (_label, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
 
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+
+  _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
 
+  _icon = new IconTexture ("", 24);
+  _icon->SetMinMaxSize (24, 24);
+  _header_layout->AddView (_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _name = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+  _name->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _name->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _header_layout->AddView (_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _expand_label = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
+  _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _expand_label->SetTextColor (kExpandDefaultTextColor);
+  _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
+  _expand_icon = new nux::TextureArea ();
+  _expand_icon->SetTexture (arrow);
+  _expand_icon->SetMinimumSize (arrow->GetWidth (), arrow->GetHeight ());
+  _header_layout->AddView (_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+
   SetLayout (_group_layout);
+
+  _icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _icon->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _icon->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
+  _name->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _name->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _name->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
+  _expand_label->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _expand_label->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _expand_label->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
+  _expand_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
+  _expand_icon->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
+  _expand_icon->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
 }
 
 PlacesGroup::~PlacesGroup ()
 {
-  g_free (_title_string);
+
 }
 
-void PlacesGroup::SetTitle (const char *title)
+void
+PlacesGroup::SetName (const char *name)
 {
-  const gchar *temp = "<big>%s</big>";
-  gchar *tmp = g_markup_escape_text (title, -1);
+  // Spaces are on purpose, want padding to be proportional to the size of the text
+  // Bear with me, I'm trying something different :)
+  const gchar *temp = "    <big>%s</big>    ";
+  gchar *tmp, *final;
 
-  _title_string = g_strdup_printf (temp, tmp);
-  UpdateTitle ();
+  tmp = g_markup_escape_text (name, -1);
+
+  final = g_strdup_printf (temp, tmp);
+
+  _name->SetText (final);
 
   g_free (tmp);
+  g_free (final);
 }
 
-void PlacesGroup::SetEmblem (const char *path_to_emblem)
+void
+PlacesGroup::SetIcon (const char *path_to_emblem)
 {
-  _icon_texture->SetByIconName (path_to_emblem, 24);
+  _icon->SetByIconName (path_to_emblem, 24);
 }
 
-void PlacesGroup::SetChildLayout (nux::Layout *layout)
+void
+PlacesGroup::SetChildLayout (nux::Layout *layout)
 {
-  _content = layout;
+  _content_layout = layout;
 
   // By setting the stretch factor of the GridHLayout to 0, the height of the grid
   // will be forced to the height that is necessary to include all its elements.
-  _group_layout->AddLayout (_content, 1);
+  //_group_layout->AddLayout (_content_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _group_layout->AddLayout (_content_layout, 1);
   QueueDraw ();
 }
 
 nux::Layout *
 PlacesGroup::GetChildLayout ()
 {
-  return _content;
+  return _content_layout;
 }
 
 void
-PlacesGroup::UpdateTitle ()
+PlacesGroup::Refresh ()
 {
-  _title->SetText (_title_string);
+  const char *temp = "<small>%s</small>";
+  char       *result_string;
+  char       *final;
+
+  if (_n_visible_items_in_unexpand_mode >= _n_total_items)
+  {
+    result_string = g_strdup ("");
+  }
+  else if (_is_expanded)
+  {
+    result_string = g_strdup (_("See fewer results"));
+  }
+  else
+  {
+    result_string = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
+                                           "See one more result",
+                                           "See %d more results",
+                                           _n_total_items - _n_visible_items_in_unexpand_mode),
+                                     _n_total_items - _n_visible_items_in_unexpand_mode);
+  }
+
+  _expand_icon->SetVisible (!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
+
+  final = g_strdup_printf (temp, result_string);
+
+  _expand_label->SetText (final);
+  _expand_label->SetVisible (_n_visible_items_in_unexpand_mode < _n_total_items);
+
   ComputeChildLayout ();
   QueueDraw ();
-}
 
-void
-PlacesGroup::UpdateLabel ()
-{
-#if 0
-  char *result_string = NULL;
-  result_string = g_strdup_printf (g_dngettext(NULL, "See %s less results",
-                                                     "See one less result",
-                                                       _total_items - _visible_items));
-
-  _label->SetText (result_string);
-
-  ComputeChildLayout ();
-  QueueDraw ();
-  
   g_free ((result_string));
-#endif
+  g_free (final);
 }
 
-void PlacesGroup::Relayout ()
+void
+PlacesGroup::Relayout ()
 {
   if (_idle_id == 0)
     _idle_id = g_idle_add ((GSourceFunc)OnIdleRelayout, this);
 }
 
-gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
+gboolean
+PlacesGroup::OnIdleRelayout (PlacesGroup *self)
 {
+  self->Refresh ();
   self->QueueDraw ();
   self->_group_layout->QueueDraw ();
   self->GetChildLayout ()->QueueDraw ();
@@ -151,13 +206,15 @@ gboolean PlacesGroup::OnIdleRelayout (PlacesGroup *self)
   return FALSE;
 }
 
-long PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long
+PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-
-  if (_group_layout)
+  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)
+      || !_child_unexpand_height)
+  {
     ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
-
+  }
   return ret;
 }
 
@@ -172,13 +229,88 @@ PlacesGroup::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::Geometry base = GetGeometry ();
   GfxContext.PushClippingRectangle (base);
 
-  _group_layout->ProcessDraw (GfxContext, force_draw || IsFullRedraw ());
+  _group_layout->ProcessDraw (GfxContext, force_draw);
 
   GfxContext.PopClippingRectangle();
 }
 
 void
-PlacesGroup::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
+PlacesGroup::SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items)
 {
+  _n_visible_items_in_unexpand_mode = n_visible_items_in_unexpand_mode;
+  _n_total_items = n_total_items;
 
+  Relayout ();
+}
+
+
+void
+PlacesGroup::SetChildUnexpandHeight (guint height)
+{
+  if (_child_unexpand_height == height)
+    return;
+
+  _child_unexpand_height = height;
+
+  if (!_is_expanded)
+  {
+    _is_expanded = true;
+    SetExpanded (false);
+  }
+}
+
+bool
+PlacesGroup::GetExpanded ()
+{
+  return _is_expanded;
+}
+
+void
+PlacesGroup::SetExpanded (bool is_expanded)
+{
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
+  if (_is_expanded == is_expanded)
+    return;
+
+  _is_expanded = is_expanded;
+
+  Refresh ();
+
+  if (_content_layout)
+  {
+    _content_layout->SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT : _child_unexpand_height);
+    SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT
+                                   : _header_layout->GetGeometry ().height + _child_unexpand_height);
+
+    ComputeChildLayout ();
+    _group_layout->ComputeChildLayout ();
+    _content_layout->ComputeChildLayout ();
+    _content_layout->QueueDraw ();
+    _group_layout->QueueDraw ();
+    QueueDraw ();
+  }
+
+  _expand_icon->SetTexture (_is_expanded ? style->GetGroupUnexpandIcon ()
+                                         : style->GetGroupExpandIcon ());
+
+  expanded.emit ();
+}
+
+void
+PlacesGroup::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  SetExpanded (!_is_expanded);
+}
+
+void
+PlacesGroup::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _expand_label->SetTextColor (kExpandHoverTextColor);
+}
+
+void
+PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  _expand_label->SetTextColor (kExpandDefaultTextColor);
 }

@@ -31,24 +31,27 @@
 
 #define DEFAULT_ICON "text-x-preview"
 
-IconTexture::IconTexture (const char *icon_name, unsigned int size)
+IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL),
   _size (size),
   _texture_cached (NULL),
   _texture_width (0),
-  _texture_height (0)
+  _texture_height (0),
+  _loading (false)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
-  if (!g_strcmp0 (_icon_name, "") == 0)
+  if (!g_strcmp0 (_icon_name, "") == 0 && !defer_icon_loading)
     LoadIcon ();
+
+  _can_pass_focus_to_composite_layout = false;
 }
 
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
-  
+
   if (_texture_cached)
     _texture_cached->UnReference ();
 }
@@ -76,6 +79,10 @@ void
 IconTexture::LoadIcon ()
 {
   GIcon  *icon;
+
+  if (_loading)
+    return;
+  _loading = true;
 
   icon = g_icon_new_for_string (_icon_name, NULL);
 
@@ -138,6 +145,7 @@ IconTexture::IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf)
   }
   else
   {
+    _loading = false;
     SetByIconName (DEFAULT_ICON, _size);
   }
 }
@@ -148,11 +156,13 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry geo = GetGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
-  
+
+  nux::GetPainter ().PaintBackground (GfxContext, geo);
+
   if (_texture_cached)
   {
     nux::TexCoordXForm texxform;
-    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
+    texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _texture_width)/2),
@@ -174,6 +184,12 @@ IconTexture::GetTextureSize (int *width, int *height)
     *width = _texture_width;
   if (height)
     *height = _texture_height;
+}
+
+bool
+IconTexture::CanFocus ()
+{
+  return false;
 }
 
 const gchar*

@@ -36,7 +36,7 @@ namespace nux
   _fontstring (NULL),
   _cairoGraphics (NULL),
   _texture2D (NULL)
-  
+
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
   _text       = TEXT (text);
@@ -44,6 +44,7 @@ namespace nux
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
   _pre_layout_height = 0;
+  _can_pass_focus_to_composite_layout = false;
 
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
@@ -56,7 +57,7 @@ StaticCairoText::~StaticCairoText ()
   GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
   g_signal_handlers_disconnect_by_func (settings,
                                         (void *) &StaticCairoText::OnFontChanged,
-                                        this);  
+                                        this);
   if (_texture2D)
     _texture2D->UnReference ();
 
@@ -82,7 +83,7 @@ void StaticCairoText::PreLayoutManagement ()
 {
   int textWidth  = 0;
   int textHeight = 0;
-  
+
   textWidth = _cached_extent_width;
   textHeight = _cached_extent_height;
 
@@ -158,7 +159,7 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   TexCoordXForm texxform;
   texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
   texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
-  
+
   t_u32 alpha = 0, src = 0, dest = 0;
 
   gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
@@ -179,9 +180,9 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
                        _texture2D->GetDeviceTexture(),
                        texxform,
                        _textColor);
-  
+
   gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
-  
+
   gfxContext.PopClippingRectangle ();
 }
 
@@ -220,6 +221,9 @@ StaticCairoText::SetTextColor (Color textColor)
   if (_textColor != textColor)
   {
     _textColor = textColor;
+    UpdateTexture ();
+    QueueDraw ();
+
     sigTextColorChanged.emit (this);
   }
 }
@@ -281,8 +285,8 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
     height = _cached_extent_height;
     return;
   }
-  
-  
+
+
   int maxwidth = GetMaximumWidth ();
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
@@ -452,7 +456,7 @@ void StaticCairoText::UpdateTexture ()
     _texture2D->UnReference ();
     _texture2D = NULL;
   }
-  
+
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 
@@ -471,6 +475,11 @@ void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
   self->GetTextExtents (width, height);
   self->UpdateTexture ();
   self->sigFontChanged.emit (self);
+}
+
+bool StaticCairoText::CanFocus ()
+{
+  return false;
 }
 
 }

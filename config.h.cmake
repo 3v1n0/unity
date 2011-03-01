@@ -9,5 +9,6 @@
 #cmakedefine BUILDDIR "@BUILDDIR@"
 #cmakedefine TESTVALADIR "@TESTVALADIR@"
 #cmakedefine TESTDATADIR "@TESTDIRDIR@"
+#cmakedefine GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
 
 #endif // CONFIG_H

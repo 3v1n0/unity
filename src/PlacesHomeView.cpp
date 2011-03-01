@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
@@ -38,6 +40,7 @@
 #include "PlacesHomeView.h"
 
 #include "PlacesSimpleTile.h"
+#include "PlacesStyle.h"
 
 #define DESKTOP_DIR  "/desktop/gnome/applications"
 #define BROWSER_DIR  DESKTOP_DIR"/browser"
@@ -74,20 +77,22 @@ public:
   char    *_exec;
 };
 
-PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+PlacesHomeView::PlacesHomeView ()
 {
-  _bg_layer = new nux::ColorLayer (nux::Color (0xff999893), true);
+  PlacesStyle *style = PlacesStyle::GetDefault ();
 
+  SetName (_("Shortcuts"));
+  SetIcon (PKGDATADIR"/shortcuts_group_icon.png");
+  
   _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
+  SetChildLayout (_layout);
  
   _layout->ForceChildrenSize (true);
-  _layout->SetChildrenSize (186, 186);
+  _layout->SetChildrenSize (style->GetHomeTileWidth (), style->GetHomeTileHeight ());
   _layout->EnablePartialVisibility (false);
-
-  _layout->SetVerticalExternalMargin (48);
-  _layout->SetHorizontalExternalMargin (48);
+  _layout->SetHeightMatchContent (true);
+  _layout->SetVerticalExternalMargin (16);
+  _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
 
@@ -126,7 +131,6 @@ PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
 PlacesHomeView::~PlacesHomeView ()
 {
   g_object_unref (_client);
-  delete _bg_layer;
 }
 
 void
@@ -141,17 +145,22 @@ PlacesHomeView::OnKeyChanged (GConfClient    *client,
 void
 PlacesHomeView::Refresh ()
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
   Shortcut   *shortcut = NULL;
   gchar      *markup = NULL;
   const char *temp = "<big><b>%s</b></big>";
-  
+  int         icon_size = style->GetHomeTileIconSize ();
+
+  GetCompositionLayout ()->SetVerticalExternalMargin (4);
+  GetCompositionLayout ()->SetHorizontalExternalMargin (18);
+
   _layout->Clear ();
 
   // Find Media Apps
   markup = g_strdup_printf (temp, _("Find Media Apps"));
-  shortcut = new Shortcut ("applications-multimedia",
+  shortcut = new Shortcut (PKGDATADIR"/find_media_apps.png",
                            markup,
-                           96);
+                           icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
   shortcut->_place_section = 4;
@@ -161,9 +170,9 @@ PlacesHomeView::Refresh ()
 
   // Find Internet Apps
   markup = g_strdup_printf (temp, _("Find Internet Apps"));
-  shortcut = new Shortcut ("applications-internet",
+  shortcut = new Shortcut (PKGDATADIR"/find_internet_apps.png",
                            markup,
-                           96);
+                           icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
   shortcut->_place_section = 3;
@@ -173,9 +182,9 @@ PlacesHomeView::Refresh ()
 
   // Find More Apps
   markup = g_strdup_printf (temp, _("Find More Apps"));
-  shortcut = new Shortcut ("find",
+  shortcut = new Shortcut (PKGDATADIR"/find_more_apps.png",
                            markup,
-                           96);
+                           icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
   shortcut->_place_section = 0;
@@ -185,9 +194,9 @@ PlacesHomeView::Refresh ()
 
   // Find Files
   markup = g_strdup_printf (temp, _("Find Files"));
-  shortcut = new Shortcut ("folder-saved-search",
+  shortcut = new Shortcut (PKGDATADIR"/find_files.png",
                            markup,
-                           96);
+                           icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/filesplace/files");
   shortcut->_place_section = 0;
@@ -224,6 +233,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
                                         const char *name,
                                         const char *icon_hint)
 {
+  PlacesStyle     *style = PlacesStyle::GetDefault ();
   Shortcut        *shortcut = NULL;
   gchar           *id;
   gchar           *markup;
@@ -268,7 +278,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
     real_exec = g_strdup ("firefox");
   }
 
-  shortcut = new Shortcut (icon, markup, 96);
+  shortcut = new Shortcut (icon, markup, style->GetHomeTileIconSize ());
   shortcut->_id = TYPE_EXEC;
   shortcut->_exec = real_exec; //shorcut will free
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
@@ -332,154 +342,4 @@ void PlacesHomeView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-}
-
-long
-PlacesHomeView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  nux::Geometry geo = GetGeometry ();
-
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
-void
-PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  UpdateBackground ();
-
-  _bg_layer->SetGeometry (GetGeometry ());
-  nux::GetPainter().PushDrawLayer (GfxContext, GetGeometry(), _bg_layer);
-  nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-  nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
-  _layout->ProcessDraw (GfxContext, force_draw);
-  nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::DrawRoundedRectangle (cairo_t* cr,
-                                      double   aspect,
-                                      double   x,
-                                      double   y,
-                                      double   cornerRadius,
-                                      double   width,
-                                      double   height)
-{
-    double radius = cornerRadius / aspect;
-
-    // top-left, right of the corner
-    cairo_move_to (cr, x + radius, y);
-
-    // top-right, left of the corner
-    cairo_line_to (cr, x + width - radius, y);
-
-    // top-right, below the corner
-    cairo_arc (cr,
-               x + width - radius,
-               y + radius,
-               radius,
-               -90.0f * G_PI / 180.0f,
-               0.0f * G_PI / 180.0f);
-
-    // bottom-right, above the corner
-    cairo_line_to (cr, x + width, y + height - radius);
-
-    // bottom-right, left of the corner
-    cairo_arc (cr,
-               x + width - radius,
-               y + height - radius,
-               radius,
-               0.0f * G_PI / 180.0f,
-               90.0f * G_PI / 180.0f);
-
-    // bottom-left, right of the corner
-    cairo_line_to (cr, x + radius, y + height);
-
-    // bottom-left, above the corner
-    cairo_arc (cr,
-               x + radius,
-               y + height - radius,
-               radius,
-               90.0f * G_PI / 180.0f,
-               180.0f * G_PI / 180.0f);
-
-    // top-left, right of the corner
-    cairo_arc (cr,
-               x + radius,
-               y + radius,
-               radius,
-               180.0f * G_PI / 180.0f,
-               270.0f * G_PI / 180.0f);
-}
-
-void
-PlacesHomeView::UpdateBackground ()
-{
-#define PADDING 24
-#define RADIUS  6
-  int x, y, width, height;
-  nux::Geometry geo = GetGeometry ();
-
-  if (geo.width == _last_width && geo.height == _last_height)
-    return;
-
-  _last_width = geo.width;
-  _last_height = geo.height;
-
-  x = y = PADDING;
-  width = _last_width - (2*PADDING);
-  height = _last_height - (2*PADDING);
-
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
-  cairo_t *cr = cairo_graphics.GetContext();
-
-  cairo_translate (cr, 0.5, 0.5);
-  cairo_set_line_width (cr, 1.0);
-
-  cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.2f);
-
-  DrawRoundedRectangle (cr, 1.0f, x, y, RADIUS, width, height);
-
-  cairo_close_path (cr);
-
-  cairo_fill_preserve (cr);
-
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.2f);
-  cairo_stroke (cr);
-
-  cairo_destroy (cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
-  texture2D->Update(bitmap);
-  delete bitmap;
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  if (_bg_layer)
-    delete _bg_layer;
-
-  nux::ROPConfig rop; 
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  
-  _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                     texxform,
-                                     nux::Color::White,
-                                     false,
-                                     rop);
-
-  texture2D->UnReference ();
-
-  NeedRedraw ();
 }

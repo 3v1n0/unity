@@ -59,7 +59,7 @@ void TestRunner::Init ()
 {
   layout = new nux::VLayout ();
   PlacesGroup *group1 = new PlacesGroup ();
-  group1->SetTitle ("Hello World!");
+  group1->SetName ("Hello World!");
   
   nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   for (int i = 0; i < 60; i++)
