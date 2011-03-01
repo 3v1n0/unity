@@ -74,6 +74,15 @@ PlacesSimpleTile::~PlacesSimpleTile ()
   g_free (_uri);
 }
 
+void
+PlacesSimpleTile::DndSourceDragBegin ()
+{
+  Reference ();
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                            NULL);
+}
+
 nux::NBitmapData * 
 PlacesSimpleTile::DndSourceGetDragImage ()
 {
@@ -108,7 +117,7 @@ PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *for
 void
 PlacesSimpleTile::DndSourceDragFinished (nux::DndAction result)
 {
-  return;
+  UnReference ();
 }
 
 nux::Geometry
