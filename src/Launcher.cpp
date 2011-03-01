@@ -1333,6 +1333,14 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
+gboolean Launcher::TapOnSuper ()
+{
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);  
+        
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+}
+
 /* Launcher Show/Hide logic */
 
 void Launcher::StartKeyShowLauncher ()
@@ -1345,14 +1353,12 @@ void Launcher::StartKeyShowLauncher ()
 
 void Launcher::EndKeyShowLauncher ()
 {
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);  
 
     _super_show_launcher = false;
     QueueDraw ();
 
     // it's a tap on super
-    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+    if (TapOnSuper ())
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
       
     SetupAutohideTimer ();
@@ -2258,7 +2264,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg.icon->_xform_coords["Glow"]);
 
   /* draw superkey-shortcut label */ 
-  if (_super_show_launcher)
+  if (_super_show_launcher && !TapOnSuper ())
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
