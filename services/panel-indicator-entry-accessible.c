@@ -115,12 +115,13 @@ panel_indicator_entry_accessible_finalize (GObject *object)
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (object);
 
-  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_DEFUNCT, TRUE);
-
   if (piea->priv != NULL)
     {
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
+      g_signal_handlers_disconnect_by_func (piea->priv->service, on_geometries_changed_cb, piea);
     }
+
+  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_DEFUNCT, TRUE);
 
   G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
 }
