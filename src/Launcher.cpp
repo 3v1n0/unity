@@ -524,14 +524,16 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
 }
 
 void
-Launcher::leaveKeyNavMode ()
+Launcher::leaveKeyNavMode (bool preserve_focus)
 {
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
   QueueDraw ();
+
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
-                            NULL);
+                            g_variant_new_boolean  (preserve_focus));
+
   selection_change.emit ();
 }
 
@@ -2732,7 +2734,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         if (it != (LauncherModel::iterator)NULL)
           (*it)->Activate ();
       }
-      leaveKeyNavMode ();
+      leaveKeyNavMode (false);
     break;
       
     // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier

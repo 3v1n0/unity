@@ -302,12 +302,21 @@ UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
 void
 UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
 {
-  UnityScreen *self = (UnityScreen*) value;
+  UnityScreen* self           = (UnityScreen*) value;
+  bool         preserve_focus = false;
+
+  if (data)
+  {
+    preserve_focus = g_variant_get_boolean (data);
+  }
 
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (self->lastFocusedWindow != NULL)
-    self->lastFocusedWindow->moveInputFocusTo ();
+  if (preserve_focus)
+  {
+    if (self->lastFocusedWindow != NULL)
+      self->lastFocusedWindow->moveInputFocusTo ();
+  }
 }
 
 void

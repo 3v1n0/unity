@@ -147,7 +147,7 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void leaveKeyNavMode ();
+  void leaveKeyNavMode (bool preserve_focus = true);
 
   void exitKeyNavMode ();   // Connected to signal OnEndFocus
 
