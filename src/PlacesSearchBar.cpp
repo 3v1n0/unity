@@ -27,12 +27,17 @@
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
+#include <Nux/StaticText.h>
+#include <Nux/MenuPage.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
+
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 #include "PlacesSearchBar.h"
 
@@ -75,6 +80,13 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layered_layout->SetActiveLayerN (1);
 
   _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  
+  _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
+  _combo->SetMaximumWidth (style->GetTileWidth ());
+  _combo->SetVisible (false);
+  _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
+  _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
+  _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
@@ -134,13 +146,16 @@ PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void
 PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry ();
+
   UpdateBackground ();
 
-  GfxContext.PushClippingRectangle (GetGeometry() );
+ GfxContext.PushClippingRectangle (geo);
 
-  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
-
-  gPainter.PopBackground ();
+  _bg_layer->SetGeometry (nux::Geometry (geo.x, geo.y, _last_width, geo.height));
+  nux::GetPainter ().RenderSinglePaintLayer (GfxContext,
+                                             _bg_layer->GetGeometry (),
+                                             _bg_layer);
 
   GfxContext.PopClippingRectangle ();
 }
@@ -148,9 +163,11 @@ PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry geo = GetGeometry ();
 
-  gPainter.PushLayer (GfxContext, GetGeometry (), _bg_layer);
+  GfxContext.PushClippingRectangle (geo);
+
+  gPainter.PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
 
   _layout->ProcessDraw (GfxContext, force_draw);
 
@@ -167,6 +184,9 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
    std::map<gchar *, gchar *> hints;
 
    _entry = entry;
+
+   _combo->RemoveAllItem ();
+   _combo->SetVisible (false);
 
   if (_entry)
   {
@@ -188,6 +208,10 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
     _pango_entry->SetText (search_string ? search_string : "");
 
+    _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
+    if (_combo->IsVisible ())
+      _combo->SetSelectionIndex (section_id);
+
     g_free (res);
     g_free (tmp);
   }
@@ -195,6 +219,32 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
   {
     _pango_entry->SetText ("");
   }
+}
+
+void
+PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
+{
+  char *tmp = g_markup_escape_text (section.GetName (), -1);
+
+  _combo->AddItem (tmp);
+  _combo->SetVisible (true);
+
+  g_free (tmp);
+}
+
+void
+PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
+{
+  _entry->SetActiveSection (_combo->GetSelectionIndex());
+  OnMenuClosing (NULL, 0, 0);
+}
+
+void
+PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_QUEUE_DRAW,
+                            NULL);
 }
 
 void
@@ -266,6 +316,9 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
 
   settings = gtk_settings_get_default ();
   g_object_get (settings, "gtk-font-name", &font_name, NULL);
+
+  self->_combo->GetStaticText ()->SetFontName (font_name);
+  self->_combo->GetMenuPage ()->SetFontName (font_name);
 
   desc = pango_font_description_from_string (font_name);
   self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
@@ -366,7 +419,7 @@ PlacesSearchBar::UpdateBackground ()
 
   draw_rounded_rect (cr, 1.0f, x, y, RADIUS, width, height);
 
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.8f);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.75f);
   cairo_fill_preserve (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.8f);

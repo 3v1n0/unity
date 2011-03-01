@@ -98,6 +98,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
                                  (UBusCallback)&PlacesView::OnResultClicked,
                                  this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
+                                 (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
+                                 this);
 
   _icon_loader = IconLoader::GetDefault ();
 
@@ -518,6 +521,12 @@ nux::TextEntry*
 PlacesView::GetTextEntryView ()
 {
   return _search_bar->_pango_entry;
+}
+
+void
+PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
+{
+  self->QueueDraw ();
 }
 
 //

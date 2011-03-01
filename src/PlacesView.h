@@ -99,6 +99,8 @@ private:
   void OnSearchChanged (const char *search_string);
   void OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo);
 
+  static void OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self);
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;

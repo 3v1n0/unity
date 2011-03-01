@@ -62,6 +62,8 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
+  void ForeachSection (SectionForeachCallback slot);
+
   void ForeachGroup  (GroupForeachCallback slot);
   void ForeachResult (ResultForeachCallback slot);
 

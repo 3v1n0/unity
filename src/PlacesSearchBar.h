@@ -24,7 +24,7 @@
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
-
+#include <Nux/ComboBoxSimple.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
@@ -70,6 +70,9 @@ private:
   void OnSearchChanged (nux::TextEntry *text_entry);
   void EmitLiveSearch ();
   void OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section);
+  void OnComboChanged (nux::ComboBoxSimple *simple);
+  void OnMenuClosing (nux::MenuPage *menu, int x, int y);
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
@@ -87,6 +90,7 @@ private:
 
   friend class PlacesView;
   nux::TextureArea        *_search_icon;
+  nux::ComboBoxSimple     *_combo;
 };
 
 #endif
