@@ -2264,7 +2264,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg.icon->_xform_coords["Glow"]);
 
   /* draw superkey-shortcut label */ 
-  if (!TapOnSuper ())
+  if (_super_show_launcher && !TapOnSuper ())
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
