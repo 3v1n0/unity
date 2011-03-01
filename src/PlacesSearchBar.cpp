@@ -36,6 +36,9 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlacesSearchBar.h"
 
 #include "PlacesStyle.h"
@@ -82,6 +85,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo->SetMaximumWidth (style->GetTileWidth ());
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
+  _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -232,6 +236,15 @@ void
 PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
 {
   _entry->SetActiveSection (_combo->GetSelectionIndex());
+  OnMenuClosing (NULL, 0, 0);
+}
+
+void
+PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_QUEUE_DRAW,
+                            NULL);
 }
 
 void

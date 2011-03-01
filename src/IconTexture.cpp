@@ -157,6 +157,8 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
+  nux::GetPainter ().PaintBackground (GfxContext, geo);
+
   if (_texture_cached)
   {
     nux::TexCoordXForm texxform;
