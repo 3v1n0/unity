@@ -292,9 +292,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
     _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
-    for (int i = 0; i < MAX_SUPERKEY_LABELS - 1; i++)
-      _superkey_labels[i] = cairoToTexture2D ((char) ('1' + i), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
-    _superkey_labels[9] = cairoToTexture2D ((char) ('0'), LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE);
+    for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+      _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
 
     _enter_y                = 0;
     _dnd_security           = 15;
@@ -303,6 +302,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _dnd_delta_x            = 0;
     _autohide_handle        = 0;
     _autoscroll_handle      = 0;
+    _redraw_handle          = 0;
+    _focus_keynav_handle    = 0;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -316,6 +317,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hide_on_drag_hover     = false;
     _render_drag_window     = false;
     _dnd_window_is_mapped   = false;
+    _drag_edge_touching     = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
@@ -351,6 +353,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
                                    (UBusCallback)&Launcher::OnActionDone,
                                    this);
+
+    SetDndEnabled (false, true);
 }
 
 Launcher::~Launcher()
@@ -488,23 +492,50 @@ Launcher::startKeyNavMode ()
 {
   _navmod_show_launcher = true;
   EnsureHiddenState ();
+  
+  // FIXME: long term solution is to rewrite the keynav handle
+  if (_focus_keynav_handle > 0)
+    g_source_remove (_focus_keynav_handle);
+  _focus_keynav_handle = g_timeout_add (ANIM_DURATION_SHORT, &Launcher::MoveFocusToKeyNavModeTimeout, this);
 
-  if (_last_icon_index == -1)
-    _current_icon_index = 0;
-  else
-    _current_icon_index = _last_icon_index;
-  NeedRedraw ();
+}
+
+gboolean
+Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
+{
+  Launcher *self = (Launcher*) data;
+      
+  // move focus to key nav mode when activated
+  if (!(self->_navmod_show_launcher))
+    return false;
+  
+  if (self->_last_icon_index == -1)
+     self->_current_icon_index = 0;
+   else
+     self->_current_icon_index = self->_last_icon_index;
+   self->NeedRedraw ();
+
+   ubus_server_send_message (ubus_server_get_default (),
+                             UBUS_LAUNCHER_START_KEY_NAV,
+                             NULL);
+
+   self->selection_change.emit ();
+
+   return false;
 }
 
 void
-Launcher::leaveKeyNavMode ()
+Launcher::leaveKeyNavMode (bool preserve_focus)
 {
   _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
   QueueDraw ();
+
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
-                            NULL);
+                            g_variant_new_boolean  (preserve_focus));
+
+  selection_change.emit ();
 }
 
 void
@@ -522,6 +553,7 @@ Launcher::exitKeyNavMode ()
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
+  selection_change.emit ();
 }
 
 void
@@ -585,7 +617,10 @@ float Launcher::AutohideProgress (struct timespec const &current)
     // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
     if (_mouse_inside_trigger && !_mouseover_launcher_locked)
     {
-        
+        // all this code should only be triggered when _hidden is true
+        if (!_hidden)
+          return 0.0f;
+          
         // "dead" zone
         if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
             return GetAutohidePositionMin ();
@@ -605,7 +640,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
             position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
             _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
         }
-        // only triggered on _hidden = false, no need for check
+        
         float _position_min = GetAutohidePositionMin ();
         return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
@@ -1301,26 +1336,35 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
 /* End Render Layout Logic */
 
+gboolean Launcher::TapOnSuper ()
+{
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);  
+        
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
+}
+
 /* Launcher Show/Hide logic */
 
 void Launcher::StartKeyShowLauncher ()
 {
     _super_show_launcher = true;
     QueueDraw ();
-    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, ANIM_DURATION_SHORT);
+    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
+    if (_redraw_handle > 0)
+      g_source_remove (_redraw_handle);
+    _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
     EnsureHiddenState ();
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
-    struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);  
 
     _super_show_launcher = false;
     QueueDraw ();
 
     // it's a tap on super
-    if (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION)
+    if (TapOnSuper ())
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
       
     SetupAutohideTimer ();
@@ -1393,7 +1437,13 @@ void Launcher::SetHidden (bool hidden)
 
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
+    {
         _mouseover_launcher_locked = false;
+        // RecvMouseLeave isn't receive if the launcher is hiding while we have the mouse on it
+        // (like, click on a icon, wait the timeout time without moving the mouse, then the launcher hide)
+        if (_mouse_inside_launcher)
+          RecvMouseLeave(-1, -1, 0, 0);
+    }
     else
         _mouseover_launcher_locked = true;
 
@@ -1415,6 +1465,14 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
     self->_autohide_handle = 0;
     self->EnsureHiddenState ();
     return false;
+}
+
+gboolean Launcher::DrawLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->QueueDraw ();
+    return false;    
 }
 
 void
@@ -1808,7 +1866,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
    guint64 shortcut = icon->GetShortcut ();
     if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
-      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, LAUNCHER_ICON_SIZE, LAUNCHER_ICON_SIZE));
+      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
     AddChild (icon);
 }
@@ -2030,7 +2088,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     int VPMatrixLocation = _shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if(VPMatrixLocation != -1)
     {
-      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetModelViewProjectionMatrix ();
+      nux::Matrix4 mat = nux::GetGraphicsEngine ().GetOpenGLModelViewProjectionMatrix ();
       _shader_program_uv_persp_correction->SetUniformLocMatrix4fv ((GLint)VPMatrixLocation, 1, false, (GLfloat*)&(mat.m));
     }
   }
@@ -2220,7 +2278,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 arg.icon->_xform_coords["Glow"]);
 
   /* draw superkey-shortcut label */ 
-  if (_super_show_launcher)
+  if (_super_show_launcher && !TapOnSuper ())
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2553,8 +2611,8 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
   if (GetActionState () == ACTION_NONE)
       EnsureHoverState ();
 
-  // exit immediatly on action and mouse leaving the launcher
-  if (!_mouseover_launcher_locked)
+  // exit immediatly on action and mouse leaving the launcher (avoid loop when called manually)
+  if (!_mouseover_launcher_locked && (x != -1) && (y != -1))
   {
     if (_autohide_handle > 0)
       g_source_remove (_autohide_handle);
@@ -2625,6 +2683,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // FIXME: switch to global-menu here still needs to be implemented 
       }
       NeedRedraw ();
+      selection_change.emit ();
     break;
 
     // down (move selection down and unfold launcher if needed)
@@ -2633,6 +2692,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       {
         _current_icon_index++;
         NeedRedraw ();
+        selection_change.emit ();
       }
     break;
 
@@ -2686,17 +2746,25 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         if (it != (LauncherModel::iterator)NULL)
           (*it)->Activate ();
       }
-      leaveKeyNavMode ();
+      leaveKeyNavMode (false);
     break;
       
-    // Shortcut to start launcher icons
+    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
     {
-        int i;
-        for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+        if (_super_show_launcher && !TapOnSuper ())
         {
-          if ((*it)->GetShortcut () == key_sym)
-            (*it)->Activate ();
+            int i;
+            for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+            {
+              if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+              {
+                if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+                  (*it)->OpenInstance ();
+                else
+                  (*it)->Activate ();
+              }
+            }
         }
       
       
@@ -3317,6 +3385,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   if (!_data_checked)
   {
     _data_checked = true;
+    _drag_data.clear ();
     
     // get the data
     for (it = mimes.begin (); it != mimes.end (); it++)
@@ -3338,6 +3407,21 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
         break;
       }
     }
+
+    // only set hover once we know our first x/y
+    SetActionState (ACTION_DRAG_EXTERNAL);
+    _mouse_inside_launcher = true;
+    
+    LauncherModel::iterator it;
+    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
+    {
+      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
+      else
+        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
+  
+    EnsureHoverState ();
   }
   
   g_free (uri_list_const);
@@ -3357,24 +3441,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     EnsureAnimation ();
   }
 
-  if (!_mouse_inside_launcher)
-  {
-    // only set hover once we know our first x/y
-    SetActionState (ACTION_DRAG_EXTERNAL);
-    _mouse_inside_launcher = true;
-    
-    LauncherModel::iterator it;
-    for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
-    {
-      if ((*it)->QueryAcceptDrop (_drag_data) != nux::DNDACTION_NONE && !_steal_drag)
-        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_PRELIGHT, true);
-      else
-        (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
-    }
-  
-    EnsureHoverState ();
-  }
-  
   EventLogic ();
   LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
@@ -3430,20 +3496,34 @@ Launcher::ProcessDndDrop (int x, int y)
 {
   if (_steal_drag)
   {
-    char *path;
+    char *path = 0;
     std::list<char *>::iterator it;
     
     for (it = _drag_data.begin (); it != _drag_data.end (); it++)
     {
       if (g_str_has_suffix (*it, ".desktop"))
       {
-        path = g_filename_from_uri (*it, NULL, NULL);
-        break;
+        if (g_str_has_prefix (*it, "application://"))
+        {
+          const char *tmp = *it + strlen ("application://");
+          char *tmp2 = g_strdup_printf ("file:///usr/share/applications/%s", tmp);
+          path = g_filename_from_uri (tmp2, NULL, NULL);
+          g_free (tmp2);
+          break;
+        }
+        else if (g_str_has_prefix (*it, "file://"))
+        {
+          path = g_filename_from_uri (*it, NULL, NULL);
+          break;
+        }
       }
     }
-    launcher_dropped.emit (path, _dnd_hovered_icon);
     
-    g_free (path);
+    if (path)
+    {
+      launcher_dropped.emit (path, _dnd_hovered_icon);
+      g_free (path);
+    }
   }
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
@@ -3457,4 +3537,22 @@ Launcher::ProcessDndDrop (int x, int y)
   
   // reset our shiz
   ProcessDndLeave ();
+}
+
+
+/*
+ * Returns the current selected icon if it is in keynavmode
+ * It will return NULL if it is not on keynavmode
+ */
+LauncherIcon*
+Launcher::GetSelectedMenuIcon ()
+{
+  LauncherModel::iterator it;
+
+  if (_current_icon_index == -1)
+    return NULL;
+
+  it = _model->at (_current_icon_index);
+
+  return *it;
 }

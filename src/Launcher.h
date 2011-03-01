@@ -41,7 +41,6 @@
 #define SUPER_TAP_DURATION  250
 
 #define MAX_SUPERKEY_LABELS 10
-#define LAUNCHER_ICON_SIZE  54
 
 class LauncherModel;
 class QuicklistView;
@@ -101,6 +100,8 @@ public:
   LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
   void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
 
+  LauncherIcon* GetSelectedMenuIcon ();
+
   void SetIconSize(int tile_size, int icon_size);
 
   void SetModel (LauncherModel *model);
@@ -146,10 +147,13 @@ public:
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);
 
   void startKeyNavMode ();
-  void exitKeyNavMode ();
-  void leaveKeyNavMode ();
+  void leaveKeyNavMode (bool preserve_focus = true);
+
+  void exitKeyNavMode ();   // Connected to signal OnEndFocus
+
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
+  sigc::signal<void> selection_change;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -213,7 +217,9 @@ private:
 
   static gboolean AnimationTimeout (gpointer data);
   static gboolean OnAutohideTimeout (gpointer data);
+  static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
+  static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   
   void SetMousePosition (int x, int y);
   
@@ -346,6 +352,8 @@ private:
 
   void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RestoreSystemRenderTarget ();
+  
+  gboolean TapOnSuper ();
 
   void
   DrawRoundedRectangle (cairo_t* cr,
@@ -447,6 +455,8 @@ private:
 
   guint _autohide_handle;
   guint _autoscroll_handle;
+  guint _focus_keynav_handle;
+  guint _redraw_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;

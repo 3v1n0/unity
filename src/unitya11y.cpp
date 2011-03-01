@@ -33,6 +33,7 @@
 /* unity accessible objects */
 #include "Launcher.h"
 #include "LauncherIcon.h"
+#include "SimpleLauncherIcon.h"
 #include "PanelView.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
@@ -310,6 +311,53 @@ a11y_unit_test_hash_table_destroy_management (void)
   return TRUE;
 }
 
+/**
+ * This unit test checks if the launcher connection process works
+ */
+static gboolean
+a11y_unit_test_launcher_connection (void)
+{
+  Launcher *launcher = NULL;
+  nux::BaseWindow *window = NULL;
+  AtkObject *launcher_accessible = NULL;
+  LauncherIcon *launcher_icon = NULL;
+  AtkObject *launcher_icon_accessible = NULL;
+
+  window = new nux::BaseWindow (TEXT(""));
+  launcher = new Launcher (window, NULL);
+  launcher->SinkReference ();
+  launcher_accessible = unity_a11y_get_accessible (launcher);
+
+  if (!UNITY_IS_LAUNCHER_ACCESSIBLE (launcher_accessible))
+    {
+      g_debug ("[a11y] wrong launcher accessible type");
+      return FALSE;
+    }
+  else
+    {
+      g_debug ("[a11y] Launcher accessible created correctly");
+    }
+
+  launcher_icon = new SimpleLauncherIcon (launcher);
+  launcher_icon->SinkReference ();
+  launcher_icon_accessible = unity_a11y_get_accessible (launcher_icon);
+
+  if (!UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (launcher_icon_accessible))
+    {
+      g_debug ("[a11y] wrong launcher icon accessible type");
+      return FALSE;
+    }
+  else
+    {
+      g_debug ("[a11y] LauncherIcon accessible created correctly");
+    }
+
+  launcher->UnReference ();
+  launcher_icon->UnReference ();
+
+  return TRUE;
+}
+
 void
 unity_run_a11y_unit_tests (void)
 {
@@ -322,6 +370,12 @@ unity_run_a11y_unit_tests (void)
     g_debug ("[a11y] hash table destroy management unit test: SUCCESS");
   else
     g_debug ("[a11y] hash table destroy management unit test: FAIL");
+
+  if (a11y_unit_test_launcher_connection ())
+    g_debug ("[a11y] launcher connection: SUCCESS");
+  else
+    g_debug ("[a11y] launcher connection: FAIL");
+
 }
 
 
@@ -370,6 +424,8 @@ unity_a11y_init (void)
     }
 
   g_free (bridge_path);
+
+  // unity_run_a11y_unit_tests ();
 }
 
 /*

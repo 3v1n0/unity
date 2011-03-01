@@ -33,9 +33,15 @@
 // id = entry->GetId(), search_string can be ""
 #define UBUS_PLACE_ENTRY_ACTIVATE_REQUEST "PLACE_ENTRY_ACTIVATE_REQUEST"
 
+// When a result wants to activate in a place
+// Payload should be: (s) = (uri)
+#define UBUS_PLACE_TILE_ACTIVATE_REQUEST "PLACE_TILE_ACTIVATE_REQUEST"
+
 // Signal send when places are shown or hidden
 #define UBUS_PLACE_VIEW_HIDDEN "PLACE_VIEW_HIDDEN"
 #define UBUS_PLACE_VIEW_SHOWN "PLACE_VIEW_SHOWN"
+
+#define UBUS_PLACE_VIEW_QUEUE_DRAW "PLACE_VIEW_QUEUE_DRAW"
 
 // Signal send by Launcher/Quicklist when it wants to exit key-nav and wants to
 // get rid of keyboard-input-focus

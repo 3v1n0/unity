@@ -37,8 +37,6 @@
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
 
-#include "PlacesSimpleTile.h"
-#include "PlacesGroup.h"
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
 
@@ -48,6 +46,13 @@ class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
+
+  enum SizeMode
+  {
+    SIZE_MODE_FULLSCREEN,
+    SIZE_MODE_HOVER
+  };
+
   PlacesView (PlaceFactory *factory);
   ~PlacesView ();
 
@@ -66,12 +71,17 @@ public:
   
   PlacesResultsController * GetResultsController ();
 
+  nux::TextEntry* GetTextEntryView ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);
 
+  SizeMode GetSizeMode ();
+  void     SetSizeMode (SizeMode size_mode);
+
   // Signals
   sigc::signal<void, PlaceEntry *> entry_changed;
+  sigc::signal<void> fullscreen_request;
  
 protected:
 
@@ -81,31 +91,37 @@ protected:
 private:
   static void CloseRequest (GVariant *data, PlacesView *self);
 
-  static void OnGroupAdded    (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnGroupRemoved  (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultAdded   (DeeModel *model, DeeModelIter *iter, PlacesView *self);
-  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlacesView *self);
+  void OnGroupAdded    (PlaceEntry *entry, PlaceEntryGroup& group);
+  void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  void OnResultClicked (PlacesTile *tile);
+  static void OnResultClicked (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
+  void OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo);
+
+  static void OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self);
 
 private:
   PlaceFactory       *_factory;
-  nux::VLayout       *_layout;
+  nux::HLayout       *_layout;
   nux::LayeredLayout *_layered_layout;
   PlacesSearchBar    *_search_bar;
   PlacesHomeView     *_home_view;
   PlaceEntryHome     *_home_entry;
   PlaceEntry         *_entry;
-  gulong              _group_added_id;
-  gulong              _group_removed_id;
-  gulong              _result_added_id;
-  gulong              _result_removed_id;
+  sigc::connection    _group_added_conn;
+  sigc::connection    _result_added_conn;
+  sigc::connection    _result_removed_conn;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
 
-  IconLoader     *_icon_loader;
+  IconLoader       *_icon_loader;
+  nux::ColorLayer  *_bg_layer;
+  nux::SpaceLayout *_h_spacer;
+  nux::SpaceLayout *_v_spacer;
+
+  SizeMode _size_mode;
 };
 
 #endif // PANEL_HOME_BUTTON_H

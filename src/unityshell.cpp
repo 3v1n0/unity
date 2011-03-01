@@ -38,6 +38,7 @@
 #include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <core/atoms.h>
 
@@ -191,8 +192,8 @@ UnityScreen::handleEvent (XEvent *event)
       break;
     case KeyPress:
       KeySym key_sym;
-      if (XLookupString(&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-          launcher->CheckSuperShortcutPressed (key_sym, 0, 0);
+      if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
+          launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
       break;
   }
 
@@ -272,8 +273,11 @@ UnityScreen::startLauncherKeyNav ()
   // set input-focus on launcher-window and start key-nav mode
   if (newFocusedWindow != NULL)
   {
+    // Put the launcher BaseWindow at the top of the BaseWindow stack. The input focus coming
+    // from the XinputWindow will be processed by the launcher BaseWindow only. Then the Launcher
+    // BaseWindow will decide which View will get the input focus.
+    launcherWindow->PushToFront ();
     newFocusedWindow->moveInputFocusTo ();
-    launcher->startKeyNavMode ();
   }
 }
 
@@ -282,7 +286,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  startLauncherKeyNav ();
+  launcher->startKeyNavMode ();
 
   return false;
 }
@@ -298,12 +302,21 @@ UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
 void
 UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
 {
-  UnityScreen *self = (UnityScreen*) value;
+  UnityScreen* self           = (UnityScreen*) value;
+  bool         preserve_focus = false;
+
+  if (data)
+  {
+    preserve_focus = g_variant_get_boolean (data);
+  }
 
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (self->lastFocusedWindow != NULL)
-    self->lastFocusedWindow->moveInputFocusTo ();
+  if (preserve_focus)
+  {
+    if (self->lastFocusedWindow != NULL)
+      self->lastFocusedWindow->moveInputFocusTo ();
+  }
 }
 
 void
@@ -485,15 +498,18 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
 void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  int OurWindowHeight = WindowHeight - 24;
-  geo = nux::Geometry(0, 24, geo.width, OurWindowHeight);
+  UnityScreen *self = static_cast<UnityScreen *> (user_data);
+  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y + 24,
+                      geo.width, self->_primary_monitor.height - 24);
 }
 
 /* Configure callback for the panel window */
 void
 UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  geo = nux::Geometry(0, 0, WindowWidth, 24);
+  UnityScreen *self = static_cast<UnityScreen *> (user_data);
+  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y,
+                      self->_primary_monitor.width, 24);
 }
 
 /* Start up nux after OpenGL is initialized */
@@ -543,6 +559,82 @@ UnityScreen::optionChanged (CompOption            *opt,
   }
 }
 
+void
+UnityScreen::NeedsRelayout ()
+{
+  needsRelayout = true;
+}
+
+void
+UnityScreen::Relayout ()
+{
+  GdkScreen *scr;
+  GdkRectangle rect;
+  nux::Geometry lCurGeom, pCurGeom;
+  gint primary_monitor;
+
+  if (!needsRelayout)
+    return;
+
+  scr = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (scr);
+  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
+  _primary_monitor = rect;
+
+  pCurGeom = panelWindow->GetGeometry(); 
+  lCurGeom = launcherWindow->GetGeometry(); 
+
+  panelWindow->EnableInputWindow(false);
+  launcherWindow->EnableInputWindow(false);
+  launcherWindow->InputWindowEnableStruts(false);
+  panelWindow->InputWindowEnableStruts(false);
+
+  panelView->SetMaximumWidth(rect.width);
+  launcher->SetMaximumHeight(rect.height - pCurGeom.height);
+
+  g_debug ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
+           rect.x,
+           rect.y,
+           rect.width,
+           rect.height);
+
+  panelWindow->SetGeometry(nux::Geometry(rect.x,
+					rect.y,
+					rect.width,
+					pCurGeom.height));
+  panelView->SetGeometry(nux::Geometry(rect.x,
+					rect.y,
+					rect.width,
+					pCurGeom.height));
+
+  launcherWindow->SetGeometry(nux::Geometry(rect.x,
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
+  launcher->SetGeometry(nux::Geometry(rect.x,
+					rect.y + pCurGeom.height,
+					lCurGeom.width,
+					rect.height - pCurGeom.height));
+
+  panelWindow->EnableInputWindow(true);
+  launcherWindow->EnableInputWindow(true);
+  launcherWindow->InputWindowEnableStruts(true);
+  panelWindow->InputWindowEnableStruts(true);
+
+  needsRelayout = false;
+}
+
+gboolean
+UnityScreen::RelayoutTimeout (gpointer data)
+{
+  UnityScreen *uScr = (UnityScreen*) data;
+
+  uScr->NeedsRelayout ();
+  uScr->Relayout();
+
+  return FALSE;
+}
+
 /* Handle changes in the number of workspaces by showing the switcher
  * or not showing the switcher */
 bool
@@ -566,6 +658,22 @@ write_logger_data_to_disk (gpointer data)
 {
   LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
   return FALSE;
+}
+
+void
+OnMonitorChanged (GdkScreen* screen,
+                  gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
+}
+
+void
+OnSizeChanged (GdkScreen* screen,
+               gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->NeedsRelayout ();
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -651,6 +759,16 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
+
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "monitors-changed",
+                            G_CALLBACK (OnMonitorChanged),
+                            this);
+  g_signal_connect_swapped (gdk_screen_get_default (),
+                            "size-changed",
+                            G_CALLBACK (OnSizeChanged),
+                            this);
+
   END_FUNCTION ();
 }
 
@@ -684,7 +802,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   UnityScreen *self = (UnityScreen*) InitData;
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
-  self->launcherWindow = new nux::BaseWindow(TEXT(""));
+  self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
@@ -703,6 +821,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
+  self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
@@ -748,6 +867,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
+  g_timeout_add (2000, &UnityScreen::RelayoutTimeout, self);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();
@@ -765,6 +885,11 @@ UnityWindow::UnityWindow (CompWindow *window) :
 
 UnityWindow::~UnityWindow ()
 {
+  UnityScreen *us = UnityScreen::get (screen);
+  if (us->newFocusedWindow && (UnityWindow::get (us->newFocusedWindow) == this))
+    us->newFocusedWindow = NULL;
+  if (us->lastFocusedWindow && (UnityWindow::get (us->lastFocusedWindow) == this))
+    us->lastFocusedWindow = NULL;
 }
 
 /* vtable init */

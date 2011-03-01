@@ -27,6 +27,8 @@
 
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
+#include <Nux/StaticText.h>
+#include <Nux/MenuPage.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
@@ -34,7 +36,12 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlacesSearchBar.h"
+
+#include "PlacesStyle.h"
 
 #define LIVE_SEARCH_TIMEOUT 250
 
@@ -45,13 +52,19 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
     _entry (NULL),
     _live_search_timeout (0)
 {
+  PlacesStyle      *style = PlacesStyle::GetDefault ();
+  nux::BaseTexture *icon = style->GetSearchReadyIcon ();
+
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _layout->SetHorizontalInternalMargin (12);
 
-  _search_icon = new IconTexture ("find", 32);
-  _layout->AddView (_search_icon, 0);
+  _search_icon = new nux::TextureArea (NUX_TRACKER_LOCATION);
+  _search_icon->SetTexture (icon);
+  _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
+  _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
 
   _layered_layout = new nux::LayeredLayout ();
 
@@ -61,22 +74,31 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
-  _pango_entry->SetMinimumHeight (30);
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
   _layered_layout->SetActiveLayerN (1);
 
-  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _layout->AddView (_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  
+  _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
+  _combo->SetMaximumWidth (style->GetTileWidth ());
+  _combo->SetVisible (false);
+  _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
+  _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
+  _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
-  
+
+  SetLayout (_layout);
+
   SetCompositionLayout (_layout);
 
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
                     G_CALLBACK (OnFontChanged), this);
   OnFontChanged (NULL, NULL, this);
+
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -94,6 +116,12 @@ const gchar *
 PlacesSearchBar::GetChildsName ()
 {
   return "";
+}
+
+bool
+PlacesSearchBar::CanFocus ()
+{
+  return false;
 }
 
 void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
@@ -118,13 +146,16 @@ PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
 void
 PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  nux::Geometry geo = GetGeometry ();
+
   UpdateBackground ();
 
-  GfxContext.PushClippingRectangle (GetGeometry() );
+ GfxContext.PushClippingRectangle (geo);
 
-  gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
-
-  gPainter.PopBackground ();
+  _bg_layer->SetGeometry (nux::Geometry (geo.x, geo.y, _last_width, geo.height));
+  nux::GetPainter ().RenderSinglePaintLayer (GfxContext,
+                                             _bg_layer->GetGeometry (),
+                                             _bg_layer);
 
   GfxContext.PopClippingRectangle ();
 }
@@ -132,10 +163,12 @@ PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry geo = GetGeometry ();
 
-  gPainter.PushLayer (GfxContext, GetGeometry (), _bg_layer);
-  
+  GfxContext.PushClippingRectangle (geo);
+
+  gPainter.PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
+
   _layout->ProcessDraw (GfxContext, force_draw);
 
   gPainter.PopBackground ();
@@ -151,6 +184,9 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
    std::map<gchar *, gchar *> hints;
 
    _entry = entry;
+
+   _combo->RemoveAllItem ();
+   _combo->SetVisible (false);
 
   if (_entry)
   {
@@ -169,9 +205,13 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
       _entry->SetActiveSection (section_id);
       _entry->SetSearch (search_string ? search_string : "", hints);
     }
-    
+
     _pango_entry->SetText (search_string ? search_string : "");
-    
+
+    _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
+    if (_combo->IsVisible ())
+      _combo->SetSelectionIndex (section_id);
+
     g_free (res);
     g_free (tmp);
   }
@@ -182,13 +222,40 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 }
 
 void
+PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
+{
+  char *tmp = g_markup_escape_text (section.GetName (), -1);
+
+  _combo->AddItem (tmp);
+  _combo->SetVisible (true);
+
+  g_free (tmp);
+}
+
+void
+PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
+{
+  _entry->SetActiveSection (_combo->GetSelectionIndex());
+  OnMenuClosing (NULL, 0, 0);
+}
+
+void
+PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_VIEW_QUEUE_DRAW,
+                            NULL);
+}
+
+void
 PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
-  bool is_empty;
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  bool         is_empty;
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
-  
+
   _live_search_timeout = g_timeout_add (LIVE_SEARCH_TIMEOUT,
                                         (GSourceFunc)&OnLiveSearchTimeout,
                                         this);
@@ -196,8 +263,10 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
   search_changed.emit (_pango_entry->GetText ().c_str ());
 
 
+
   is_empty = g_strcmp0 (_pango_entry->GetText ().c_str (), "") == 0;
   _hint->SetVisible (is_empty);
+  _search_icon->SetTexture (is_empty ? style->GetSearchReadyIcon () : style->GetSearchClearIcon ());
 
   _hint->QueueDraw ();
   _pango_entry->QueueDraw ();
@@ -225,9 +294,20 @@ PlacesSearchBar::EmitLiveSearch ()
 }
 
 void
+PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_pango_entry->GetText () != "")
+  {
+    _pango_entry->SetText ("");
+    _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
+    EmitLiveSearch ();
+  }
+}
+
+void
 PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self)
 {
-#define HOW_LARGE 10
+#define HOW_LARGE 8
   GtkSettings          *settings;
   gchar                *font_name = NULL;
   PangoFontDescription *desc;
@@ -236,6 +316,9 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
 
   settings = gtk_settings_get_default ();
   g_object_get (settings, "gtk-font-name", &font_name, NULL);
+
+  self->_combo->GetStaticText ()->SetFontName (font_name);
+  self->_combo->GetMenuPage ()->SetFontName (font_name);
 
   desc = pango_font_description_from_string (font_name);
   self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
@@ -321,7 +404,7 @@ PlacesSearchBar::UpdateBackground ()
 
   if (geo.width == _last_width && geo.height == _last_height)
     return;
-   
+
   _last_width = geo.width;
   _last_height = geo.height;
 
@@ -336,7 +419,7 @@ PlacesSearchBar::UpdateBackground ()
 
   draw_rounded_rect (cr, 1.0f, x, y, RADIUS, width, height);
 
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.8f);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.75f);
   cairo_fill_preserve (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.8f);
@@ -373,7 +456,7 @@ PlacesSearchBar::UpdateBackground ()
   rop.Blend = true;                      // Disable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
-  
+
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
                                      nux::Color::White, // The color used to modulate the texture.
@@ -383,5 +466,5 @@ PlacesSearchBar::UpdateBackground ()
 
   texture2D->UnReference ();
 
-  NeedRedraw ();
+  QueueDraw ();
 }

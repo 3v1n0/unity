@@ -103,16 +103,17 @@ LauncherController::SortAndSave ()
   {
     BamfLauncherIcon *icon = *it;
     
-    if (shortcut != 0 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
+    if (shortcut < 11 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
     {
-      buff = NULL;
-      if (shortcut == 10)
-        shortcut = 0;
-      buff = g_strdup_printf ("%d", shortcut);  
+      buff = g_strdup_printf ("%d", shortcut % 10);  
       (*it)->SetShortcut (buff[0]);
-      g_free (buff); 
-      if (shortcut != 0) 
-        shortcut++;
+      g_free (buff);
+      shortcut++;
+    }
+    // reset shortcut
+    else
+    {
+      (*it)->SetShortcut (0);
     }
     
 

@@ -267,14 +267,11 @@ PanelStyle::GetHomeButton ()
 {
   GdkPixbuf *pixbuf = NULL;
 
-  if (g_str_has_prefix (_theme_name, "Ambiance"))
-    pixbuf = gdk_pixbuf_new_from_file (PKGDATADIR"/bfb.png", NULL);
-  else
-    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                       "start-here",
-                                       24,
-                                       (GtkIconLookupFlags)0,
-                                       NULL); 
+  pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
+                                     "start-here",
+                                     24,
+                                     (GtkIconLookupFlags)0,
+                                     NULL); 
   if (pixbuf == NULL)
     pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
                                        "distributor-logo",

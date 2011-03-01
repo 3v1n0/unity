@@ -14,49 +14,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #ifndef PLACES_RESULTS_CONTROLLER_H
 #define PLACES_RESULTS_CONTROLLER_H
 
-#include <Nux/TextureArea.h>
-#include <Nux/View.h>
-#include "Nux/Layout.h"
-#include <NuxImage/CairoGraphics.h>
-#include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/Nux.h>
 
-#include "PlacesResultsView.h"
-#include "PlacesTile.h"
 #include "Introspectable.h"
+#include "PlaceEntry.h"
+#include "PlacesResultsView.h"
+
+#include "PlacesGroupController.h"
 
 class PlacesResultsController : public nux::Object, public Introspectable
 {
 public:
-  PlacesResultsController ();
+  PlacesResultsController  ();
   ~PlacesResultsController ();
 
-  void SetView (PlacesResultsView *_results_view);
-  PlacesResultsView *GetView ();
+  void                SetView (PlacesResultsView *view);
+  PlacesResultsView * GetView ();
 
+  void AddGroup     (PlaceEntryGroup& group);
+  void AddResult    (PlaceEntryGroup& group, PlaceEntryResult& result);
+  void RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  void AddResultToGroup      (const char *groupname,
-                              PlacesTile *tile,
-                              void       *id);
-  void RemoveResult          (void       *id);
-  void RemoveResultFromGroup (const char *groupname,
-                              void       *_id);
-  void Clear                 ();
-  PlacesGroup  *CreateGroup  (const char *groupname,
-                              const char *icon="");
+  // Clears all the current groups and results
+  void Clear ();
+
 protected:
   const gchar* GetName ();
-  void AddProperties (GVariantBuilder *builder);
+  void         AddProperties (GVariantBuilder *builder);
 
 private:
   PlacesResultsView *_results_view;
-  std::map<std::string, PlacesGroup *>   _groups;
-  std::map<void *, PlacesTile *>    _tiles;
-  std::map<void *, std::string>     _tile_group_relations;
+  std::map<const void *, PlacesGroupController *> _id_to_group;
 };
 
 #endif // PLACES_RESULTS_CONTROLLER_H
