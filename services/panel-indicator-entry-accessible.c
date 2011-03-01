@@ -50,9 +50,11 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
 {
   gchar *s;
   gboolean adding = FALSE;
-  PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+  PanelIndicatorEntryAccessible *piea;
 
-  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea));
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (user_data));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
 
   /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
   s = g_strdup_printf ("%p", piea->priv->entry);
@@ -72,6 +74,36 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
   atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_SHOWING, adding);
 
   g_free (s);
+}
+
+static void
+on_geometries_changed_cb (PanelService *service,
+			  IndicatorObject *object,
+			  IndicatorObjectEntry *entry,
+			  gint x,
+			  gint y,
+			  gint width,
+			  gint height,
+			  gpointer user_data)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea));
+
+  if (entry != piea->priv->entry)
+    return;
+
+  piea->priv->x = x;
+  piea->priv->y = y;
+  piea->priv->width = width;
+  piea->priv->height = height;
+
+  GtkWidget *dialog = gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE,
+					      "Got geometries: %d, %d (%d-%d)", x, y, width, height);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
 }
 
 static void
@@ -111,23 +143,6 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
   atk_class->ref_state_set = panel_indicator_entry_accessible_ref_state_set;
 
   g_type_class_add_private (object_class, sizeof (PanelIndicatorEntryAccessiblePrivate));
-}
-
-static void
-on_geometries_changed (PanelService *service, gint x, gint y, gint width, gint height, gpointer user_data)
-{
-  PanelIndicatorEntryAccessible *piea;
-
-  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
-  piea->priv->x = x;
-  piea->priv->y = y;
-  piea->priv->width = width;
-  piea->priv->height = height;
-
-  GtkWidget *dialog = gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE,
-					      "Got geometries: %d, %d (%d-%d)", x, y, width, height);
-  gtk_dialog_run (GTK_DIALOG (dialog));
-  gtk_widget_destroy (dialog);
 }
 
 static void
@@ -176,9 +191,10 @@ panel_indicator_entry_accessible_get_extents (AtkComponent *component,
 {
   PanelIndicatorEntryAccessible *piea;
 
-  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (accessible));
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (component));
 
-  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (component);
+
   *x = piea->priv->x;
   *y = piea->priv->y;
   *width = piea->priv->width;

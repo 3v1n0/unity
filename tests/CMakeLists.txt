@@ -44,6 +44,7 @@ add_executable (test-unit
                 ../src/ubus-server.h
                 ../services/panel-service.c
                 ../services/panel-service.h
+                ../services/panel-marshal.c
                 ../src/FavoriteStore.cpp
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp

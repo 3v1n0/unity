@@ -159,8 +159,8 @@ handle_method_call (GDBusConnection       *connection,
 																	&width,
 																	&height))
 			  {
-          panel_service_sync_geomtry (service, indicator_id,
-																			entry_id, x, y, width, height);
+          panel_service_sync_geometry (service, indicator_id,
+																			 entry_id, x, y, width, height);
 				}
 
 			g_variant_iter_free (iter);

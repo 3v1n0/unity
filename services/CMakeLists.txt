@@ -6,6 +6,8 @@ pkg_check_modules(SERVICE_DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0
 
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable indicatordir OUTPUT_VARIABLE _indicatordir OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable iconsdir OUTPUT_VARIABLE _iconsdir OUTPUT_STRIP_TRAILING_WHITESPACE)
+#execute_process (COMMAND glib-genmarshal panel-marshal.list --body --prefix=panel_marshal >> panel-marshal.c)
+#execute_process (COMMAND glib-genmarshal panel-marshal.list --header --prefix=panel_marshal >> panel-marshal.h)
 
 set(CFLAGS
     ${SERVICE_DEPS_CFLAGS}
@@ -32,6 +34,8 @@ add_executable(unity-panel-service
                panel-indicator-entry-accessible.c
                panel-indicator-entry-accessible.h
                panel-main.c
+	       panel-marshal.c
+	       panel-marshal.h
                panel-root-accessible.c
                panel-root-accessible.h
                panel-service.c

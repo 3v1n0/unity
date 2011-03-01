@@ -80,7 +80,7 @@ GVariant        * panel_service_sync          (PanelService *self);
 
 GVariant        * panel_service_sync_one      (PanelService *self,
 					       const gchar  *indicator_id);
-void              panel_service_sync_geomtry  (PanelService *self,
+void              panel_service_sync_geometry (PanelService *self,
 					       const gchar  *indicator_id,
 					       const gchar  *entry_id,
 					       gint          x,
