@@ -144,29 +144,29 @@ handle_method_call (GDBusConnection       *connection,
                                                                      id));
       g_free (id);
     }
-	else if (g_strcmp0 (method_name, "SyncGeometries") == 0)
-	  {
+  else if (g_strcmp0 (method_name, "SyncGeometries") == 0)
+    {
       GVariantIter *iter;
-			gchar *indicator_id, *entry_id;
-			gint x, y, width, height;
+      gchar *indicator_id, *entry_id;
+      gint x, y, width, height;
 
-			g_variant_get (parameters, "(a(ssiiii))", &iter);
-			while (g_variant_iter_loop (iter, "(ssiiii)",
-																	&indicator_id,
-																	&entry_id,
-																	&x,
-																	&y,
-																	&width,
-																	&height))
-			  {
+      g_variant_get (parameters, "(a(ssiiii))", &iter);
+      while (g_variant_iter_loop (iter, "(ssiiii)",
+                                  &indicator_id,
+                                  &entry_id,
+                                  &x,
+                                  &y,
+                                  &width,
+                                  &height))
+        {
           panel_service_sync_geometry (service, indicator_id,
-																			 entry_id, x, y, width, height);
-				}
+                                       entry_id, x, y, width, height);
+        }
 
-			g_variant_iter_free (iter);
+      g_variant_iter_free (iter);
 
-			g_dbus_method_invocation_return_value (invocation, NULL);
-		}
+      g_dbus_method_invocation_return_value (invocation, NULL);
+    }
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {
       gchar  *entry_id;
