@@ -1,3 +1,11 @@
+unity (3.6.0-0ubuntu2) natty; urgency=low
+
+  * services/panel-indicator-entry-accessible.c:
+    - Use dispose function, not finalize function, to notify ATK that an
+      entry is removed.  Fixes continual panel crashes.  LP: #727788
+
+ -- Michael Terry <mterry@ubuntu.com>  Wed, 02 Mar 2011 09:24:07 -0500
+
 unity (3.6.0-0ubuntu1) natty; urgency=low
 
   * New upstream release.

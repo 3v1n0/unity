@@ -66,7 +66,7 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
 }
 
 static void
-panel_indicator_entry_accessible_finalize (GObject *object)
+panel_indicator_entry_accessible_dispose (GObject *object)
 {
   PanelIndicatorEntryAccessible *piea;
 
@@ -81,7 +81,7 @@ panel_indicator_entry_accessible_finalize (GObject *object)
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
     }
 
-  G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
+  G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->dispose (object);
 }
 
 static void
@@ -92,7 +92,7 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
 
   /* GObject */
   object_class = G_OBJECT_CLASS (klass);
-  object_class->finalize = panel_indicator_entry_accessible_finalize;
+  object_class->dispose = panel_indicator_entry_accessible_dispose;
 
   /* AtkObject */
   atk_class = ATK_OBJECT_CLASS (klass);
