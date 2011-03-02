@@ -6,8 +6,19 @@ pkg_check_modules(SERVICE_DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0
 
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable indicatordir OUTPUT_VARIABLE _indicatordir OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable iconsdir OUTPUT_VARIABLE _iconsdir OUTPUT_STRIP_TRAILING_WHITESPACE)
-#execute_process (COMMAND glib-genmarshal panel-marshal.list --body --prefix=panel_marshal >> panel-marshal.c)
-#execute_process (COMMAND glib-genmarshal panel-marshal.list --header --prefix=panel_marshal >> panel-marshal.h)
+
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+macro(add_glib_marshal outfiles name prefix otherinclude)
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.c
+    COMMAND ${GLIB_GENMARSHAL} ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.list --body --prefix=panel_marshal >> ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.c
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating marshallers")
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.h
+    COMMAND ${GLIB_GENMARSHAL} ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.list --header --prefix=panel_marshal >> ${CMAKE_CURRENT_SOURCE_DIR}/panel-marshal.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating marshallers")
+#  list(APPEND ${outfiles} "${CMAKE_CURRENT_BINARY_DIR}/${name}.c")
+endmacro(add_glib_marshal)
 
 set(CFLAGS
     ${SERVICE_DEPS_CFLAGS}
