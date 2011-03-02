@@ -189,6 +189,7 @@ panel_indicator_accessible_get_extents (AtkComponent *component,
 					AtkCoordType coord_type)
 {
   PanelIndicatorAccessible *pia;
+  GSList *l;
 
   g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (component));
 
@@ -199,6 +200,16 @@ panel_indicator_accessible_get_extents (AtkComponent *component,
 
   /* Iterate over all children to get width and height */
   *width = *height = 0;
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next)
+    {
+      gint e_x, e_y, e_width, e_height;
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      atk_component_get_extents (ATK_COMPONENT (accessible), &e_x, &e_y, &e_width, &e_height, coord_type);
+      *width += e_width;
+      if (e_height > *height)
+	*height = e_height;
+    }
 }
 
 static void
