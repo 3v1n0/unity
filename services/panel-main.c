@@ -164,6 +164,8 @@ handle_method_call (GDBusConnection       *connection,
 				}
 
 			g_variant_iter_free (iter);
+
+			g_dbus_method_invocation_return_value (invocation, NULL);
 		}
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {

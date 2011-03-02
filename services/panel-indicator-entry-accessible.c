@@ -100,10 +100,7 @@ on_geometries_changed_cb (PanelService *service,
   piea->priv->width = width;
   piea->priv->height = height;
 
-  GtkWidget *dialog = gtk_message_dialog_new (NULL, 0, GTK_MESSAGE_WARNING, GTK_BUTTONS_CLOSE,
-					      "Got geometries: %d, %d (%d-%d)", x, y, width, height);
-  gtk_dialog_run (GTK_DIALOG (dialog));
-  gtk_widget_destroy (dialog);
+  g_debug ("Got geometries: %d, %d (%d-%d)", x, y, width, height);
 }
 
 static void
@@ -120,8 +117,6 @@ panel_indicator_entry_accessible_finalize (GObject *object)
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_geometries_changed_cb, piea);
     }
-
-  atk_object_notify_state_change (ATK_OBJECT (piea), ATK_STATE_DEFUNCT, TRUE);
 
   G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
 }

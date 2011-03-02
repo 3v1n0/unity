@@ -372,7 +372,7 @@ PanelView::OnEntriesSynced (GVariant *args)
   gboolean image_visible;
 
   // Build variant to send geometries to the panel service
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
   g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
 
   g_variant_get (args, "(a(sssbbusbb))", &iter);
@@ -403,8 +403,10 @@ PanelView::OnEntriesSynced (GVariant *args)
       {
         PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-        if (g_str_equal (indicator_id, entry->_proxy->GetId ()) &&
-            g_str_equal (entry_id, entry->GetName ()))
+        if (entry == NULL)
+          continue;
+
+        if (g_str_equal (entry_id, entry->_proxy->GetId ()))
         {
           nux::Geometry geo = entry->GetGeometry ();
 
@@ -413,8 +415,8 @@ PanelView::OnEntriesSynced (GVariant *args)
                                  entry_id,
                                  geo.x,
                                  geo.y,
-                                 geo.width,
-                                 geo.height);
+                                 geo.GetWidth (),
+                                 geo.GetHeight ());
         }
       }
     }
