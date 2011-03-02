@@ -28,6 +28,7 @@
 #include "Nux/FloatingWindow.h"
 #include "Nux/Nux.h"
 #include "Nux/TabView.h"
+#include "Nux/ScrollView.h"
 #include "Nux/TimeGraph.h"
 #include "Nux/TimerProc.h"
 #include "Nux/VLayout.h"
@@ -59,7 +60,7 @@ public:
   void donePaint ();
 
 private:
-  nux::TabView *_tab_view;
+  nux::ScrollView *_tab_view;
   nux::FloatingWindow *_window;
   nux::HLayout *_window_layout;
 

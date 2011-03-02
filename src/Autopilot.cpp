@@ -53,8 +53,9 @@ TestFinished (void *arg)
                              UBUS_AUTOPILOT_TEST_FINISHED,
                              result);
 
-   g_free (args->name);
-   g_free (args);
+   // FIXME this is causing a segfault
+   //g_free (args->name);
+   //g_free (args);
  }
 
 void
