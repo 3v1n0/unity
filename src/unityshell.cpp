@@ -566,6 +566,12 @@ UnityScreen::NeedsRelayout ()
 }
 
 void
+UnityScreen::ScheduleRelayout (guint timeout)
+{
+  g_timeout_add (timeout, &UnityScreen::RelayoutTimeout, this);
+}
+
+void
 UnityScreen::Relayout ()
 {
   GdkScreen *scr;
@@ -867,7 +873,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
-  g_timeout_add (2000, &UnityScreen::RelayoutTimeout, self);
+  self->ScheduleRelayout (2000);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();

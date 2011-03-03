@@ -130,6 +130,8 @@ class UnityScreen :
 
   void NeedsRelayout ();
 
+  void ScheduleRelayout (guint timeout);
+
     protected:
 
 	const gchar* GetName ();
