@@ -191,6 +191,8 @@ panel_indicator_entry_accessible_get_extents (AtkComponent *component,
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (component);
 
+  /* We ignore AtkCoordType for now, as the panel is always at the top left
+     corner and so relative and absolute coordinates are the same */
   *x = piea->priv->x;
   *y = piea->priv->y;
   *width = piea->priv->width;
