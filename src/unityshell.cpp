@@ -766,14 +766,14 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
 
-  g_signal_connect_swapped (gdk_screen_get_default (),
-                            "monitors-changed",
-                            G_CALLBACK (OnMonitorChanged),
-                            this);
-  g_signal_connect_swapped (gdk_screen_get_default (),
-                            "size-changed",
-                            G_CALLBACK (OnSizeChanged),
-                            this);
+  g_signal_connect (gdk_screen_get_default (),
+                    "monitors-changed",
+                     G_CALLBACK (OnMonitorChanged),
+                     this);
+  g_signal_connect (gdk_screen_get_default (),
+                    "size-changed",
+                    G_CALLBACK (OnSizeChanged),
+                    this);
 
   END_FUNCTION ();
 }
