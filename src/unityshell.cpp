@@ -671,7 +671,7 @@ OnMonitorChanged (GdkScreen* screen,
                   gpointer   data)
 {
   UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->NeedsRelayout ();
+  uscreen->ScheduleRelayout (500);
 }
 
 void
@@ -679,7 +679,7 @@ OnSizeChanged (GdkScreen* screen,
                gpointer   data)
 {
   UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->NeedsRelayout ();
+  uscreen->ScheduleRelayout (500);
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
