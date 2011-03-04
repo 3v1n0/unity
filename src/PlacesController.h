@@ -65,6 +65,9 @@ private:
   PlaceFactoryFile *_factory;
   bool              _visible;
   bool              _fullscren_request;
+
+public:
+  nux::BaseWindow* GetWindow () {return _window;}
 };
 
 #endif // PLACES_CONTROLLER_H

@@ -864,6 +864,11 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized () == TRUE)
+    unity_util_accessible_add_window (self->placesController->GetWindow ());
+
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);

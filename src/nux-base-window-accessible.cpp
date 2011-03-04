@@ -30,7 +30,6 @@
  */
 
 #include "nux-base-window-accessible.h"
-#include "unitya11y.h"
 
 #include "Nux/Area.h"
 #include "Nux/Layout.h"
@@ -42,9 +41,6 @@ static void nux_base_window_accessible_init       (NuxBaseWindowAccessible *base
 /* AtkObject.h */
 static void       nux_base_window_accessible_initialize     (AtkObject *accessible,
                                                              gpointer   data);
-static gint       nux_base_window_accessible_get_n_children (AtkObject *obj);
-static AtkObject *nux_base_window_accessible_ref_child      (AtkObject *obj,
-                                                             gint i);
 static AtkObject *nux_base_window_accessible_get_parent     (AtkObject *obj);
 
 
@@ -57,8 +53,6 @@ nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
 
   /* AtkObject */
   atk_class->initialize = nux_base_window_accessible_initialize;
-  atk_class->get_n_children = nux_base_window_accessible_get_n_children;
-  atk_class->ref_child = nux_base_window_accessible_ref_child;
   atk_class->get_parent = nux_base_window_accessible_get_parent;
 }
 
@@ -91,59 +85,8 @@ nux_base_window_accessible_initialize (AtkObject *accessible,
   accessible->role = ATK_ROLE_WINDOW;
 }
 
-static gint
-nux_base_window_accessible_get_n_children (AtkObject *obj)
+static AtkObject*
+nux_base_window_accessible_get_parent (AtkObject *obj)
 {
-  nux::Object *nux_object = NULL;
-  nux::BaseWindow *base_window = NULL;
-  nux::Layout *layout = NULL;
-
-  g_return_val_if_fail (NUX_IS_BASE_WINDOW_ACCESSIBLE (obj), 0);
-
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
-  if (nux_object == NULL) /* state is defunct */
-    return 0;
-  base_window = dynamic_cast<nux::BaseWindow *>(nux_object);
-
-  layout = base_window->GetLayout ();
-
-  if (layout == NULL)
-    return 0;
-  else
-    return 1;
-}
-
-static AtkObject *
-nux_base_window_accessible_ref_child (AtkObject *obj,
-                                      gint i)
-{
-  nux::Object *nux_object = NULL;
-  nux::BaseWindow *base_window = NULL;
-  nux::Layout *layout = NULL;
-  AtkObject *layout_accessible = NULL;
-  gint num = 0;
-
-  g_return_val_if_fail (NUX_IS_BASE_WINDOW_ACCESSIBLE (obj), 0);
-  num = atk_object_get_n_accessible_children (obj);
-  g_return_val_if_fail ((i < num)&&(i >= 0), NULL);
-
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
-  if (nux_object == NULL) /* state is defunct */
-    return 0;
-
-  base_window = dynamic_cast<nux::BaseWindow *>(nux_object);
-
-  layout = base_window->GetLayout ();
-
-  layout_accessible = unity_a11y_get_accessible (layout);
-
-  g_object_ref (layout_accessible);
-
-  return layout_accessible;
-}
-
-static AtkObject
-*nux_base_window_accessible_get_parent (AtkObject *obj)
-{
-  return NULL;
+  return atk_get_root ();
 }

@@ -28,6 +28,9 @@
  */
 
 #include "nux-view-accessible.h"
+#include "unitya11y.h"
+
+#include "Nux/Layout.h"
 
 /* GObject */
 static void nux_view_accessible_class_init (NuxViewAccessibleClass *klass);
@@ -38,6 +41,9 @@ static void       nux_view_accessible_initialize     (AtkObject *accessible,
                                                       gpointer   data);
 
 static AtkStateSet* nux_view_accessible_ref_state_set       (AtkObject *obj);
+static gint         nux_view_accessible_get_n_children      (AtkObject *obj);
+static AtkObject*   nux_view_accessible_ref_child           (AtkObject *obj,
+                                                             gint i);
 
 /* AtkComponent.h */
 static void     atk_component_interface_init             (AtkComponentIface *iface);
@@ -67,6 +73,8 @@ nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
   /* AtkObject */
   atk_class->initialize = nux_view_accessible_initialize;
   atk_class->ref_state_set = nux_view_accessible_ref_state_set;
+  atk_class->ref_child = nux_view_accessible_ref_child;
+  atk_class->get_n_children = nux_view_accessible_get_n_children;
 }
 
 static void
@@ -136,6 +144,60 @@ nux_view_accessible_ref_state_set (AtkObject *obj)
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
   return state_set;
+}
+
+static gint
+nux_view_accessible_get_n_children (AtkObject *obj)
+{
+  nux::Object *nux_object = NULL;
+  nux::View *view = NULL;
+  nux::Layout *layout = NULL;
+
+  g_return_val_if_fail (NUX_IS_VIEW_ACCESSIBLE (obj), 0);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  if (nux_object == NULL) /* state is defunct */
+    return 0;
+
+  view = dynamic_cast<nux::View *>(nux_object);
+
+  layout = view->GetLayout ();
+
+  if (layout == NULL)
+    return 0;
+  else
+    return 1;
+}
+
+static AtkObject *
+nux_view_accessible_ref_child (AtkObject *obj,
+                               gint i)
+{
+  nux::Object *nux_object = NULL;
+  nux::View *view = NULL;
+  nux::Layout *layout = NULL;
+  AtkObject *layout_accessible = NULL;
+  gint num = 0;
+
+  g_return_val_if_fail (NUX_IS_VIEW_ACCESSIBLE (obj), 0);
+
+  num = atk_object_get_n_accessible_children (obj);
+  g_return_val_if_fail ((i < num)&&(i >= 0), NULL);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  if (nux_object == NULL) /* state is defunct */
+    return 0;
+
+  view = dynamic_cast<nux::View *>(nux_object);
+
+  layout = view->GetLayout ();
+
+  layout_accessible = unity_a11y_get_accessible (layout);
+
+  if (layout_accessible != NULL)
+    g_object_ref (layout_accessible);
+
+  return layout_accessible;
 }
 
 static void
