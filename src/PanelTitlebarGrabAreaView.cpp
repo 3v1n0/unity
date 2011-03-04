@@ -48,7 +48,7 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea ()
   // right now and we need jay to focus on other things
   /*InputArea::EnableDoubleClick (true);
   InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
-  InputArea::OnMouseClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseClick));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseUp));
   _last_click_time.tv_sec = 0;
   _last_click_time.tv_nsec = 0;
   
@@ -78,7 +78,7 @@ void PanelTitlebarGrabArea::RecvMouseDoubleClick (int x, int y, unsigned long bu
 }
 
 // TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
-void PanelTitlebarGrabArea::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+void PanelTitlebarGrabArea::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   struct timespec event_time, delta;
   clock_gettime(CLOCK_MONOTONIC, &event_time);
