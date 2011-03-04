@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-02-21 19:06+0100\n"
+"POT-Creation-Date: 2011-03-03 19:02+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Finnish\n"
@@ -35,15 +35,19 @@ msgstr ""
 msgid "Empty all items from Trash?"
 msgstr ""
 
+#. Find Files
 msgid "Find Files"
 msgstr ""
 
+#. Find Internet Apps
 msgid "Find Internet Apps"
 msgstr ""
 
+#. Find Media Apps
 msgid "Find Media Apps"
 msgstr ""
 
+#. Find More Apps
 msgid "Find More Apps"
 msgstr ""
 
@@ -60,9 +64,14 @@ msgstr ""
 msgid "Quit"
 msgstr "Lopeta"
 
+msgid "Shortcuts"
+msgstr ""
+
 msgid "Trash"
 msgstr ""
 
+#. Photos
+#. FIXME: Need to figure out the default
 msgid "View Photos"
 msgstr ""
 

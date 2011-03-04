@@ -87,7 +87,7 @@ PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& resu
   if (_group->GetExpanded ())
     defer_load = false;
   else
-    defer_load = (_id_to_tile.size () + 1) > style->GetDefaultNColumns ();
+    defer_load = ((int) _id_to_tile.size () + 1) > (int) style->GetDefaultNColumns ();
   
   result_name = g_markup_escape_text (result.GetName (), -1);
   result_icon = result.GetIcon ();

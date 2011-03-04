@@ -869,9 +869,15 @@ panel_service_sync_geometry (PanelService *self,
 			     gint width,
 			     gint height)
 {
-  PanelServicePrivate  *priv = self->priv;
+  AtkObject *root;
+  PanelServicePrivate *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  /* There might be cases when we start signalling about change of geometries but the
+     accessible objects are not yet created, so to avoid that, instantiate here the
+     A11Y root object, which will create them all */
+  root = atk_get_root ();
 
   g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
 }
