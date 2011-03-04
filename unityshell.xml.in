@@ -144,6 +144,14 @@
               		<max>1.0</max>
               		<precision>0.01</precision>
                 </option>
+		<option name="icon_size" type="int">
+                    <_short>Launcher icon size</_short>
+                    <_long>The size of the launcher icons</_long>
+                    <default>48</default>
+                    <min>32</min>
+                    <max>64</max>
+                    <precision>1</precision>
+                </option>
                 <option name="autohide_animation" type="int">
                     <_short>Hide Animation</_short>
                     <_long>Animation played when the launcher is showing or hiding</_long>
