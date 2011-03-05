@@ -74,13 +74,15 @@ private:
 
   void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  // FIXME: I know this is horrible but I can't fix it this week, have a much better plan for next
 public:
   PlaceFactory *_factory;
 
   std::map<char *, gchar *> _hints;
   std::vector<PlaceEntry *> _entries;
+
+  ResultForeachCallback _foreach_callback;
 };
 
 #endif // PLACE_ENTRY_HOME_H

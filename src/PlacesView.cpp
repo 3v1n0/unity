@@ -291,12 +291,10 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   _entry = entry;
 
   _entry->SetActive (true);
-  _search_bar->SetActiveEntry (_entry, section_id, search_string, (_entry == _home_entry));
+  _search_bar->SetActiveEntry (_entry, section_id, search_string);
 
   _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
-
-  if (_entry != _home_entry)
-    _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
+  _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
 
   _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));

@@ -247,4 +247,21 @@ PlaceEntryHome::ForeachGroup (GroupForeachCallback slot)
 void
 PlaceEntryHome::ForeachResult (ResultForeachCallback slot)
 {
+  std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  _foreach_callback = slot;
+
+  for (it = _entries.begin (); it != eit; ++it)
+  {
+    (*it)->ForeachGlobalResult (sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
+  }
 }
+
+void
+PlaceEntryHome::OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
+{
+  PlaceEntryGroupHome our_group (entry);
+
+  _foreach_callback (this, our_group, result);
+}
+
