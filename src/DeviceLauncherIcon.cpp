@@ -30,10 +30,18 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 : SimpleLauncherIcon(launcher),
   _volume (volume)
 {
+
+  DevicesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &DeviceLauncherIcon::OnSettingsChanged));
+
   g_signal_connect (_volume, "removed",
                     G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
 
+  g_signal_connect (_volume, "changed",
+                    G_CALLBACK (&DeviceLauncherIcon::OnChanged), this);
+
   UpdateDeviceIcon ();
+
+  UpdateVisibility ();
 
 }
 
@@ -261,4 +269,49 @@ void
 DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
 {
   self->Remove ();
+}
+
+void
+DeviceLauncherIcon::OnChanged (GVolume *volume, DeviceLauncherIcon *self)
+{
+  if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
+      && g_volume_get_mount (volume) == NULL)
+  {
+    self->SetQuirk (QUIRK_VISIBLE, false); 
+  } 
+}
+
+void
+DeviceLauncherIcon::UpdateVisibility ()
+{
+  switch (DevicesSettings::GetDefault ()->GetDevicesOption ())
+  {
+    case DevicesSettings::NEVER:
+      SetQuirk (QUIRK_VISIBLE, false);
+      break;
+    case DevicesSettings::ONLY_MOUNTED:
+    {
+      GMount *mount =  g_volume_get_mount (_volume);
+
+      if (mount == NULL)
+      {
+        SetQuirk (QUIRK_VISIBLE, false); 
+      }
+      else
+      {
+        SetQuirk (QUIRK_VISIBLE, true); 
+        g_object_unref (mount);
+      }
+      break;
+    }
+    case DevicesSettings::ALWAYS:
+      SetQuirk (QUIRK_VISIBLE, true);
+      break;
+  }
+}
+
+void
+DeviceLauncherIcon::OnSettingsChanged (DevicesSettings     *settings)
+{
+  UpdateVisibility ();
 }

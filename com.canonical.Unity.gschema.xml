@@ -5,6 +5,12 @@
     <value nick="Netbook" value="2" />
   </enum>
 
+  <enum id="devices-option-enum">
+    <value nick="Never" value="0" />
+    <value nick="OnlyMounted" value="1" />
+    <value nick="Always" value="2" />
+  </enum>
+
   <schema path="/desktop/unity/" id="com.canonical.Unity" gettext-domain="unity">
     <key enum="form-factor-enum" name="form-factor">
       <default>"Automatic"</default>
@@ -31,4 +37,11 @@
       <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
     </key>
   </schema>
+  <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
+    <key enum="devices-option-enum" name="devices-option">
+        <default>"OnlyMounted"</default>
+        <summary>Summary</summary>
+        <description>Description</description>
+    </key>
+    </schema>
 </schemalist>

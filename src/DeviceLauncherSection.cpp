@@ -24,8 +24,16 @@ DeviceLauncherSection::DeviceLauncherSection (Launcher *launcher)
 : _launcher (launcher)
 {
   _monitor = g_volume_monitor_get ();
+  _ht = g_hash_table_new (g_direct_hash , g_direct_equal);
+
    g_signal_connect (_monitor, "volume-added",
                      G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded), this);
+
+   g_signal_connect (_monitor, "volume-removed",
+                     G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved), this);
+    
+   g_signal_connect (_monitor, "mount-added",
+                     G_CALLBACK (&DeviceLauncherSection::OnMountAdded), this);
 
    g_idle_add ((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
@@ -33,6 +41,7 @@ DeviceLauncherSection::DeviceLauncherSection (Launcher *launcher)
 DeviceLauncherSection::~DeviceLauncherSection ()
 {
   g_object_unref (_monitor);
+  g_hash_table_unref (_ht);
 }
 
 bool
@@ -48,6 +57,8 @@ DeviceLauncherSection::PopulateEntries (DeviceLauncherSection *self)
 
     self->IconAdded.emit (icon);
 
+    g_hash_table_insert (self->_ht, (gpointer) volume, (gpointer) icon);
+
     g_object_unref (volume);
   }
 
@@ -62,5 +73,28 @@ DeviceLauncherSection::OnVolumeAdded (GVolumeMonitor        *monitor,
                                       DeviceLauncherSection *self)
 {
   DeviceLauncherIcon *icon = new DeviceLauncherIcon (self->_launcher, volume);
+  
+  g_hash_table_insert (self->_ht, (gpointer) volume, (gpointer) icon);  
+
   self->IconAdded.emit (icon);
+}
+
+void
+DeviceLauncherSection::OnVolumeRemoved (GVolumeMonitor        *monitor,
+                                        GVolume               *volume,
+                                        DeviceLauncherSection *self)
+{
+    g_hash_table_remove (self->_ht, volume);  
+}
+
+#include "SimpleLauncherIcon.h"
+void 
+DeviceLauncherSection::OnMountAdded (GVolumeMonitor        *monitor,
+                                     GMount                *mount,
+                                     DeviceLauncherSection *self)
+{
+    GVolume *volume = g_mount_get_volume (mount);
+    DeviceLauncherIcon *icon = (DeviceLauncherIcon *) g_hash_table_lookup (self->_ht, volume);
+
+    icon->UpdateVisibility ();
 }
