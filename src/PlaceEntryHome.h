@@ -66,6 +66,9 @@ public:
   void ForeachGlobalGroup  (GroupForeachCallback slot) { };
   void ForeachGlobalResult (ResultForeachCallback slot) { };
 
+  void GetResult (const void *id, ResultForeachCallback slot) {};
+  void GetGlobalResult (const void *id, ResultForeachCallback slot) {};
+
 private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);

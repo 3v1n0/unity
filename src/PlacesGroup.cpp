@@ -54,8 +54,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _idle_id (0),
   _is_expanded (true),
   _n_visible_items_in_unexpand_mode (0),
-  _n_total_items (0),
-  _child_unexpand_height (0)
+  _n_total_items (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
@@ -210,11 +209,7 @@ long
 PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)
-      || !_child_unexpand_height)
-  {
-    ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
-  }
+  ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
   return ret;
 }
 
@@ -243,22 +238,6 @@ PlacesGroup::SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_it
   Relayout ();
 }
 
-
-void
-PlacesGroup::SetChildUnexpandHeight (guint height)
-{
-  if (_child_unexpand_height == height)
-    return;
-
-  _child_unexpand_height = height;
-
-  if (!_is_expanded)
-  {
-    _is_expanded = true;
-    SetExpanded (false);
-  }
-}
-
 bool
 PlacesGroup::GetExpanded ()
 {
@@ -277,23 +256,8 @@ PlacesGroup::SetExpanded (bool is_expanded)
 
   Refresh ();
 
-  if (_content_layout)
-  {
-    _content_layout->SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT : _child_unexpand_height);
-    SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT
-                                   : _header_layout->GetGeometry ().height + _child_unexpand_height);
-
-    ComputeChildLayout ();
-    _group_layout->ComputeChildLayout ();
-    _content_layout->ComputeChildLayout ();
-    _content_layout->QueueDraw ();
-    _group_layout->QueueDraw ();
-    QueueDraw ();
-  }
-
   _expand_icon->SetTexture (_is_expanded ? style->GetGroupUnexpandIcon ()
                                          : style->GetGroupExpandIcon ());
-
   expanded.emit ();
 }
 

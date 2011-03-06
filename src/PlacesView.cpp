@@ -170,7 +170,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::BaseTexture *icon = style->GetDashFullscreenIcon ();
     nux::TexCoordXForm texxform;
 
-    {
+    { // Background
       nux::Geometry bg = geo;
       bg.width -= corner->GetWidth ();
       bg.height -= corner->GetHeight ();
@@ -179,7 +179,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::GetPainter ().RenderSinglePaintLayer (GfxContext, bg, _bg_layer);
     }
 
-    {
+    { // Corner
       texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
 
@@ -192,7 +192,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            nux::Color::White);
     }
 
-    {
+    { // Fullscreen toggle
       GfxContext.QRP_1Tex (geo.x + geo.width - corner->GetWidth (),
                            geo.y + geo.height - corner->GetHeight (),
                            icon->GetWidth (),
@@ -202,7 +202,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            nux::Color::White);
     }
 
-    {
+    { // Bottom repeated texture
       int real_width = geo.width - corner->GetWidth ();
       int offset = real_width % bottom->GetWidth ();
 
@@ -218,7 +218,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            nux::Color::White);
     }
 
-    {
+    { // Right repeated texture
       int real_height = geo.height - corner->GetHeight ();
       int offset = real_height % right->GetHeight ();
 
@@ -372,7 +372,7 @@ PlacesView::SetSizeMode (SizeMode size_mode)
 void
 PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 {
-  _results_controller->AddGroup (group);
+  _results_controller->AddGroup (entry, group);
 }
 
 void
@@ -382,7 +382,7 @@ PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntry
   if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
 
-  _results_controller->AddResult (group, result);
+  _results_controller->AddResult (entry, group, result);
 }
 
 void
@@ -392,7 +392,7 @@ PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEnt
   if (g_str_has_prefix (result.GetURI (), "unity-install"))
     return;
 
-  _results_controller->RemoveResult (group, result);
+  _results_controller->RemoveResult (entry, group, result);
 }
 
 void
