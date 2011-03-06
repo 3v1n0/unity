@@ -66,7 +66,7 @@ public:
   void ForeachGlobalGroup  (GroupForeachCallback slot) { };
   void ForeachGlobalResult (ResultForeachCallback slot) { };
 
-  void GetResult (const void *id, ResultForeachCallback slot) {};
+  void GetResult (const void *id, ResultForeachCallback slot);
   void GetGlobalResult (const void *id, ResultForeachCallback slot) {};
 
 private:
@@ -84,6 +84,7 @@ public:
 
   std::map<char *, gchar *> _hints;
   std::vector<PlaceEntry *> _entries;
+  std::map<const void *, PlaceEntry *> _id_to_entry;
 
   ResultForeachCallback _foreach_callback;
 };
