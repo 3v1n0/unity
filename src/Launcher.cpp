@@ -304,6 +304,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _autoscroll_handle      = 0;
     _redraw_handle          = 0;
     _focus_keynav_handle    = 0;
+    _single_finger_hold_handle = 0;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -321,7 +322,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
-    
+
     // set them to 1 instead of 0 to avoid :0 in case something is racy
     _trigger_width = 1;
     _trigger_height = 1;
@@ -1471,6 +1472,31 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
     self->_autohide_handle = 0;
     self->EnsureHiddenState ();
     return false;
+}
+
+int
+Launcher::GetMouseX ()
+{
+  return _mouse_position.x;
+}
+
+int
+Launcher::GetMouseY ()
+{
+  return _mouse_position.y;
+}
+
+gboolean
+Launcher::SingleFingerHoldTimeout (gpointer data)
+{
+  Launcher* self = (Launcher*) data;
+
+  LauncherIcon* launcher_icon = 0;
+  launcher_icon = self->MouseIconIntersection (self->GetMouseX (),
+                                               self->GetMouseY ());
+  launcher_icon->OpenQuicklist ();
+
+  return false;
 }
 
 gboolean Launcher::DrawLauncherTimeout (gpointer data)
@@ -2835,6 +2861,14 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
+  // this takes care of the one-finger-hold "event" on a launcher-icon
+  if (_single_finger_hold_handle == 0)
+  {
+    _single_finger_hold_handle = g_timeout_add (SINGLE_FINGER_HOLD_DURATION,
+                                                &Launcher::SingleFingerHoldTimeout,
+                                                this);
+  }
+
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
@@ -2846,6 +2880,14 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+
+  // this takes care of the one-finger-hold "event" on a launcher-icon
+  if (_single_finger_hold_handle > 0)
+  {
+    g_source_remove (_single_finger_hold_handle);
+    _single_finger_hold_handle = 0;
+    return;
+  }
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {

@@ -39,6 +39,7 @@
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
+#define SINGLE_FINGER_HOLD_DURATION 1000
 
 #define MAX_SUPERKEY_LABELS 10
 
@@ -151,6 +152,8 @@ public:
 
   void exitKeyNavMode ();   // Connected to signal OnEndFocus
 
+  int GetMouseX ();
+  int GetMouseY ();
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
   sigc::signal<void> selection_change;
@@ -220,7 +223,8 @@ private:
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
-  
+  static gboolean SingleFingerHoldTimeout (gpointer data);
+
   void SetMousePosition (int x, int y);
   
   bool MouseBeyondDragThreshold ();
@@ -457,6 +461,7 @@ private:
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _redraw_handle;
+  guint _single_finger_hold_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
