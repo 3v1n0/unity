@@ -135,8 +135,8 @@ class UnityMTGrabHandlesScreen :
 	std::vector <Unity::MT::TextureSize> mHandleTextures;
 
 	std::map <Window, Unity::MT::GrabHandle *> mInputHandles;
-	CompWindowVector				   mLastClientListStacking;
-	Atom					mCompResizeWindowAtom;
+	CompWindowVector			   mLastClientListStacking;
+	Atom					   mCompResizeWindowAtom;
 
 	bool					mMoreAnimate;
 };
@@ -160,6 +160,8 @@ class UnityMTGrabHandlesWindow :
 	GLWindow	*gWindow;
 
     public:
+
+	bool allowHandles ();
 
 	void grabNotify (int, int, unsigned int, unsigned int);
 	void ungrabNotify ();
