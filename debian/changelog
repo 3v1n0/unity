@@ -1,4 +1,4 @@
-unity (3.6.2-0ubuntu1) UNRELEASED; urgency=low
+unity (3.6.2-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - unity-window-decorator crashed with SIGSEGV in
@@ -40,7 +40,7 @@ unity (3.6.2-0ubuntu1) UNRELEASED; urgency=low
       Permission denied: '/home/aquarius/.local/share/unity' (LP: #723656)
     - No feedback when unmounting busy device in Unity (LP: #730638)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Mar 2011 18:40:15 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Mar 2011 19:10:27 +0100
 
 unity (3.6.0-0ubuntu2) natty; urgency=low
 
