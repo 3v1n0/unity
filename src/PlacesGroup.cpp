@@ -102,7 +102,8 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 
 PlacesGroup::~PlacesGroup ()
 {
-
+  if (_idle_id)
+  g_source_remove (_idle_id);
 }
 
 void
