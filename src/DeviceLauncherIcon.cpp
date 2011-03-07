@@ -233,13 +233,19 @@ DeviceLauncherIcon::OnEjectReady (GObject            *object,
 void
 DeviceLauncherIcon::Eject ()
 {
+  GMountOperation *mount_op;
+
   g_debug ("%s", G_STRLOC);
+  mount_op = gtk_mount_operation_new(NULL);
+
   g_volume_eject_with_operation (_volume,
                                  (GMountUnmountFlags)0,
-                                 NULL,
+                                 mount_op,
                                  NULL,
                                  (GAsyncReadyCallback)OnEjectReady,
                                  this);
+
+  g_object_unref(mount_op);
   g_debug ("%s", G_STRLOC);
 }
 
