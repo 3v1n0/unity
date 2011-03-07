@@ -21,12 +21,13 @@ LAST_MIGRATION = '3.2.10'
 def get_log_file():
     ''' open the log file and return it '''
 
-    data_path = "%s/unity" % BaseDirectory.xdg_data_home
+    data_path = "%s/unity" % BaseDirectory.xdg_cache_home
     if not os.path.isdir(data_path):
         os.makedirs(data_path)
     try:
         return open("%s/migration_script.log" % data_path, "a")
-    except IOError:
+    except (IOError, OSError), e:
+        print "Can't put log in %s, will print those manually. Error is: %s" % (data_path, e)
         return None
 
 def migrating_chapter_log(name, apps_list, migration_list, log_file):
@@ -39,6 +40,8 @@ def log(message, log_file):
     ''' log if log_file present'''
     if log_file:
         log_file.write("%s\n" % message)
+    else:
+        print message
 
 def get_desktop_dir():
     ''' no python binding from xdg to get the desktop directory? '''
