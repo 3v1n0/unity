@@ -462,6 +462,7 @@ private:
   guint _focus_keynav_handle;
   guint _redraw_handle;
   guint _single_finger_hold_handle;
+  GTimer* _single_finger_hold_timer;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;

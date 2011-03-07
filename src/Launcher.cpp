@@ -305,6 +305,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _redraw_handle          = 0;
     _focus_keynav_handle    = 0;
     _single_finger_hold_handle = 0;
+    _single_finger_hold_timer  = NULL;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -2867,6 +2868,10 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
     _single_finger_hold_handle = g_timeout_add (SINGLE_FINGER_HOLD_DURATION,
                                                 &Launcher::SingleFingerHoldTimeout,
                                                 this);
+    if (_single_finger_hold_timer)
+      g_timer_destroy (_single_finger_hold_timer);
+
+    _single_finger_hold_timer = g_timer_new ();
   }
 
   if (launcher_icon)
@@ -2882,11 +2887,48 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
   // this takes care of the one-finger-hold "event" on a launcher-icon
-  if (_single_finger_hold_handle > 0)
+  if (_single_finger_hold_timer)
   {
-    g_source_remove (_single_finger_hold_handle);
-    _single_finger_hold_handle = 0;
-    return;
+    // user "released" before single-finger-hold threshold
+    if (g_timer_elapsed (_single_finger_hold_timer, NULL) < (float) SINGLE_FINGER_HOLD_DURATION / 1000.0)
+    {
+
+      // remove callback
+      if (_single_finger_hold_handle > 0)
+      {
+        g_source_remove (_single_finger_hold_handle);
+        _single_finger_hold_handle = 0;
+      }
+    }
+    // user "released" after single-finger-hold threshold...
+    else
+    {
+      // remove timer
+      g_timer_destroy (_single_finger_hold_timer);
+      _single_finger_hold_timer = NULL;
+
+      // remove callback
+      if (_single_finger_hold_handle > 0)
+      {
+        g_source_remove (_single_finger_hold_handle);
+        _single_finger_hold_handle = 0;
+      }
+
+      // ... don't start app, just return
+      _icon_mouse_down = 0;
+      return;
+    }
+
+    // remove timer
+    g_timer_destroy (_single_finger_hold_timer);
+    _single_finger_hold_timer = NULL;
+
+    // remove callback
+    if (_single_finger_hold_handle > 0)
+    {
+      g_source_remove (_single_finger_hold_handle);
+      _single_finger_hold_handle = 0;
+    }
   }
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
