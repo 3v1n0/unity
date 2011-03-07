@@ -52,8 +52,7 @@ public:
 
   void SetActiveEntry (PlaceEntry *entry,
                        guint       section_id,
-                       const char *search_string,
-                       bool        ignore=false);
+                       const char *search_string);
 
   sigc::signal<void, const char *> search_changed;
 

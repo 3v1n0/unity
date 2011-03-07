@@ -1348,6 +1348,8 @@ gboolean Launcher::TapOnSuper ()
 
 void Launcher::StartKeyShowLauncher ()
 {
+    bool was_hidden = _hidden;
+    
     _super_show_launcher = true;
     QueueDraw ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
@@ -1355,6 +1357,10 @@ void Launcher::StartKeyShowLauncher ()
       g_source_remove (_redraw_handle);
     _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
     EnsureHiddenState ();
+    
+    // don't lock on mouseover state to avoid locking it the pointer was already there but not moved
+    if (was_hidden)
+      _mouseover_launcher_locked = false;
 }
 
 void Launcher::EndKeyShowLauncher ()
@@ -1434,7 +1440,7 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-
+    
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
     {
@@ -1507,7 +1513,7 @@ Launcher::CheckIntersectWindow (CompWindow *window)
   if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
     return false;
 
-  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+  if (CompRegion (window->serverInputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     return true;
 
   return false;
@@ -2651,16 +2657,34 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
-void
+gboolean
 Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
                                      unsigned long key_state)
 {
-  if (_super_show_launcher)
+  if (!_super_show_launcher)
+    return false;
+
+  LauncherModel::iterator it;
+  int i;
+  
+  // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
+  for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
   {
-    RecvKeyPressed (key_sym, key_code, key_state);
-    QueueDraw ();
+    if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+    {
+      if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+        (*it)->OpenInstance ();
+      else
+        (*it)->Activate ();
+      // disable the "tap on super" check
+      _times[TIME_TAP_SUPER].tv_sec = 0;
+      _times[TIME_TAP_SUPER].tv_nsec = 0;
+      return true;
+    }
   }
+  
+  return false;
 }
 
 void
@@ -2749,26 +2773,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       leaveKeyNavMode (false);
     break;
       
-    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
-    {
-        if (_super_show_launcher && !TapOnSuper ())
-        {
-            int i;
-            for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-            {
-              if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-              {
-                if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
-                  (*it)->OpenInstance ();
-                else
-                  (*it)->Activate ();
-              }
-            }
-        }
-      
-      
-    }
     break;
   }
 }
@@ -2796,9 +2801,16 @@ void Launcher::EventLogic ()
     return;
 
   LauncherIcon* launcher_icon = 0;
+  bool should_lock_launcher = false;
 
-  if (_mouse_inside_launcher)
+  if (_mouse_inside_launcher) {
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+    // indicate if the mouse should relock the launcher or not (it doesn't explicitely lock the launcher
+    // when it's entering the launcher. This is for the case: Super reveals the launcher, mouse doesn't move)
+    if (_icon_under_mouse && !_hidden)
+      should_lock_launcher = true;
+  }  
+  
 
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
@@ -2812,8 +2824,8 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
-    // reset trigger has the mouse moved to another item (only if the launcher is supposed to be seen)
-    if (!_hidden)
+    // reset trigger only when in right context
+    if (should_lock_launcher)
       _mouseover_launcher_locked = true;
   }
 }

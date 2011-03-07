@@ -70,6 +70,9 @@ public:
   void ForeachGlobalGroup  (GroupForeachCallback slot);
   void ForeachGlobalResult (ResultForeachCallback slot);
 
+  void GetResult (const void *id, ResultForeachCallback slot);
+  void GetGlobalResult (const void *id, ResultForeachCallback slot);
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();

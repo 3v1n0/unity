@@ -181,6 +181,8 @@ UnityScreen::damageNuxRegions ()
 void
 UnityScreen::handleEvent (XEvent *event)
 {
+  bool skip_other_plugins = false;
+  
   switch (event->type)
   {
     case FocusIn:
@@ -193,13 +195,15 @@ UnityScreen::handleEvent (XEvent *event)
     case KeyPress:
       KeySym key_sym;
       if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-          launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
+        skip_other_plugins = launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
       break;
   }
 
-  screen->handleEvent (event);
+  // avoid further propagation (key conflict for instance)
+  if (!skip_other_plugins)
+    screen->handleEvent (event);
 
-  if (screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }

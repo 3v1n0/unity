@@ -55,9 +55,9 @@ PlacesResultsController::GetView ()
 }
 
 void
-PlacesResultsController::AddGroup (PlaceEntryGroup& group)
+PlacesResultsController::AddGroup (PlaceEntry *entry, PlaceEntryGroup& group)
 {
-  PlacesGroupController *controller = new PlacesGroupController (group);
+  PlacesGroupController *controller = new PlacesGroupController (entry, group);
 
   _id_to_group[group.GetId ()] = controller;
   _results_view->AddGroup (controller->GetGroup ());
@@ -65,7 +65,7 @@ PlacesResultsController::AddGroup (PlaceEntryGroup& group)
 }
 
 void
-PlacesResultsController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesResultsController::AddResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   PlacesGroupController *controller = _id_to_group[group.GetId ()];
 
@@ -78,7 +78,7 @@ PlacesResultsController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& re
 }
 
 void
-PlacesResultsController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesResultsController::RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   PlacesGroupController *controller = _id_to_group[group.GetId ()];
 
