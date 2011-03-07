@@ -121,6 +121,8 @@ PlaceEntryHome::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceE
 {
   PlaceEntryGroupHome our_group (entry);
 
+  _id_to_entry[result.GetId ()] = entry;
+
   result_added.emit (this, our_group, result);
 }
  
@@ -129,6 +131,8 @@ void
 PlaceEntryHome::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult &result)
 {
   PlaceEntryGroupHome our_group (entry);
+
+  _id_to_entry.erase (result.GetId ());
 
   result_removed (this, our_group, result);
 }
@@ -247,4 +251,33 @@ PlaceEntryHome::ForeachGroup (GroupForeachCallback slot)
 void
 PlaceEntryHome::ForeachResult (ResultForeachCallback slot)
 {
+  std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  _foreach_callback = slot;
+
+  for (it = _entries.begin (); it != eit; ++it)
+  {
+    (*it)->ForeachGlobalResult (sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
+  }
+}
+
+void
+PlaceEntryHome::OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
+{
+  PlaceEntryGroupHome our_group (entry);
+
+  _foreach_callback (this, our_group, result);
+}
+
+void
+PlaceEntryHome::GetResult (const void *id, ResultForeachCallback slot)
+{
+  PlaceEntry *entry = _id_to_entry[id];
+  
+  _foreach_callback = slot;
+
+  if (entry)
+  {
+    entry->GetGlobalResult (id, sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
+  }
 }

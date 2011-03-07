@@ -577,6 +577,56 @@ PlaceEntryRemote::ForeachGlobalResult (ResultForeachCallback slot)
   }
 }
 
+void
+PlaceEntryRemote::GetResult (const void *id, ResultForeachCallback slot)
+{
+  guint         n_group;
+  DeeModelIter *iter = (DeeModelIter *)id;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (_results_model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (_groups_model, group_iter);
+  PlaceEntryResultRemote result (_results_model, iter);
+
+  slot (this, group, result);
+}
+
+void
+PlaceEntryRemote::GetGlobalResult (const void *id, ResultForeachCallback slot)
+{
+  guint         n_group;
+  DeeModelIter *iter = (DeeModelIter *)id;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (_global_results_model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (_global_results_model, iter);
+
+  slot (this, group, result);
+}
+
 /* Other methods */
 bool
 PlaceEntryRemote::IsValid ()
