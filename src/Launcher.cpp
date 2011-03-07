@@ -2665,16 +2665,34 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
-void
+gboolean
 Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
                                      unsigned long key_state)
 {
-  if (_super_show_launcher)
+  if (!_super_show_launcher)
+    return false;
+
+  LauncherModel::iterator it;
+  int i;
+  
+  // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
+  for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
   {
-    RecvKeyPressed (key_sym, key_code, key_state);
-    QueueDraw ();
+    if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+    {
+      if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+        (*it)->OpenInstance ();
+      else
+        (*it)->Activate ();
+      // disable the "tap on super" check
+      _times[TIME_TAP_SUPER].tv_sec = 0;
+      _times[TIME_TAP_SUPER].tv_nsec = 0;
+      return true;
+    }
   }
+  
+  return false;
 }
 
 void
@@ -2763,26 +2781,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       leaveKeyNavMode (false);
     break;
       
-    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
-    {
-        if (_super_show_launcher && !TapOnSuper ())
-        {
-            int i;
-            for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-            {
-              if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-              {
-                if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
-                  (*it)->OpenInstance ();
-                else
-                  (*it)->Activate ();
-              }
-            }
-        }
-      
-      
-    }
     break;
   }
 }

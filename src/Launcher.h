@@ -127,7 +127,7 @@ public:
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
   
-  void CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  gboolean CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
   
   nux::BaseWindow* GetParent () { return _parent; };
 
