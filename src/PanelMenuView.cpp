@@ -59,7 +59,9 @@ PanelMenuView::PanelMenuView (int padding)
   _is_inside (false),
   _is_maximized (false),
   _is_own_window (false),
-  _last_active_view (NULL)
+  _last_active_view (NULL),
+  _last_width (0),
+  _last_height (0)
 {
   WindowManager *win_manager;
 
@@ -201,8 +203,6 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
 
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
-  Refresh ();
-
   if (_is_inside)
     NeedRedraw ();
   
@@ -216,6 +216,13 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   int button_width = _padding + _window_buttons->GetContentWidth () + _padding;
   float factor = 4;
   button_width /= factor;
+
+  if (geo.width != _last_width || geo.height != _last_height)
+  {
+    _last_width = geo.width;
+    _last_height = geo.height;
+    Refresh ();
+  }
     
   GfxContext.PushClippingRectangle (geo);
 

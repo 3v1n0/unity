@@ -14,7 +14,7 @@
   </schema>
 	<schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
-      <default>[ 'ubiquity-gtkui.desktop', 'nautilus.desktop', 'firefox.desktop', 'ubuntuone-control-panel-gtk.desktop', 'tomboy.desktop' ]</default>
+      <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'ubuntuone-control-panel-gtk.desktop', 'tomboy.desktop' ]</default>
       <summary>List of desktop file ids for favorites on the launcher.</summary>
       <description>These applications are shown in the Launcher by default.</description>
     </key>

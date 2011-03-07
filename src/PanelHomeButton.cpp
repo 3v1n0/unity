@@ -61,6 +61,20 @@ PanelHomeButton::~PanelHomeButton ()
 }
 
 void
+PanelHomeButton::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry geo = GetGeometry ();
+
+  GfxContext.PushClippingRectangle (geo);
+
+  nux::GetPainter ().PaintBackground (GfxContext, geo);
+
+  nux::TextureArea::Draw (GfxContext, force_draw);
+
+  GfxContext.PopClippingRectangle ();
+}
+
+void
 PanelHomeButton::Refresh ()
 {
   int width = BUTTON_WIDTH;
