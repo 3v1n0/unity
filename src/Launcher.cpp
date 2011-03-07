@@ -1348,6 +1348,8 @@ gboolean Launcher::TapOnSuper ()
 
 void Launcher::StartKeyShowLauncher ()
 {
+    bool was_hidden = _hidden;
+    
     _super_show_launcher = true;
     QueueDraw ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
@@ -1355,6 +1357,10 @@ void Launcher::StartKeyShowLauncher ()
       g_source_remove (_redraw_handle);
     _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
     EnsureHiddenState ();
+    
+    // don't lock on mouseover state to avoid locking it the pointer was already there but not moved
+    if (was_hidden)
+      _mouseover_launcher_locked = false;
 }
 
 void Launcher::EndKeyShowLauncher ()
@@ -2804,9 +2810,16 @@ void Launcher::EventLogic ()
     return;
 
   LauncherIcon* launcher_icon = 0;
+  bool should_lock_launcher = false;
 
-  if (_mouse_inside_launcher)
+  if (_mouse_inside_launcher) {
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+    // indicate if the mouse should relock the launcher or not (it doesn't explicitely lock the launcher
+    // when it's entering the launcher. This is for the case: Super reveals the launcher, mouse doesn't move)
+    if (_icon_under_mouse && !_hidden)
+      should_lock_launcher = true;
+  }  
+  
 
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
@@ -2820,8 +2833,8 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
-    // reset trigger has the mouse moved to another item (only if the launcher is supposed to be seen)
-    if (!_hidden)
+    // reset trigger only when in right context
+    if (should_lock_launcher)
       _mouseover_launcher_locked = true;
   }
 }
