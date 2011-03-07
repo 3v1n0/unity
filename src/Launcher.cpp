@@ -2688,7 +2688,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
-      if (_current_icon_index < _model->Size ())
+      if (_current_icon_index < _model->Size () - 1)
       {
         _current_icon_index++;
         NeedRedraw ();
