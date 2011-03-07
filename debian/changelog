@@ -1,3 +1,47 @@
+unity (3.6.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release:
+    - unity-window-decorator crashed with SIGSEGV in
+      g_cclosure_marshal_VOID__OBJECT() (LP: #724874)
+    - blinking screen at searching "gn" (LP: #674022)
+    - Top panel isn't multimonitor aware (LP: #675862)
+    - Leaving fullscreen causes the launcher to rapidly appear and then
+      disappear (LP: #718054)
+    - migrate_favorites.py crashed with GError in __main__: Bad key or
+      directory name: "/desktop/unity/launcher/favorites/app-Watch TV
+      Shows.desktop/type": ` ' is an invalid character in key/directory names
+      (LP: #722403)
+    - does not display icons until hovered (LP: #726033)
+    - Unintuative Application Matching (LP: #726711)
+    - icons missing in the dash recent files and directory search returns
+      (LP: #727824)
+    - some result cache broke the dash search (LP: #728961)
+    - Protect against conflicts with unity super keys (LP: #729166)
+    - not installed apps sorting in global search (LP: #636996)
+    - No 'safely remove' option is present in the unity menu when a usb disk
+      is inserted (LP: #660010)
+    - Dash - Implement new Dash design! (LP: #683762)
+    - Expose or add missing nux functions for a11y support (LP: #701672)
+    - Launcher - A single finger 'hold' on a Launcher app icon should open the
+      quicklist (LP: #702486)
+    - No "Search" default entry (LP: #710794)
+    - Icon in Launcher should be home folder icon (LP: #721121)
+    - Launcher bindings require Super to be held down to work (LP: #727580)
+    - compiz crashed with SIGSEGV in nux::CairoGraphics::GetBitmap()
+      (LP: #727636)
+    - Unity "Lens" do not scroll to bottom (LP: #719616)
+    - Double-click on panel to unmaximize only works in right half
+      (LP: #725529)
+    - clicking multiple time on the bfb makes the logo darker and darker
+      (LP: #727146)
+    - the launcher should go away if it has been open using the keyboard and
+      the mouse is not moved while the cursor is on it (LP: #727746)
+    - migrate_favorites.py crashed with OSError in makedirs(): [Errno 13]
+      Permission denied: '/home/aquarius/.local/share/unity' (LP: #723656)
+    - No feedback when unmounting busy device in Unity (LP: #730638)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Mar 2011 18:40:15 +0100
+
 unity (3.6.0-0ubuntu2) natty; urgency=low
 
   * services/panel-indicator-entry-accessible.c:

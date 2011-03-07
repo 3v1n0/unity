@@ -46,7 +46,7 @@ protected:
   void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDoubleClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
   // TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
   struct timespec time_diff (struct timespec start, struct timespec end);
   
   struct timespec _last_click_time;

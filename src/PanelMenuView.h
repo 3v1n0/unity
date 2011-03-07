@@ -116,5 +116,8 @@ private:
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;
+
+  int _last_width;
+  int _last_height;
 };
 #endif

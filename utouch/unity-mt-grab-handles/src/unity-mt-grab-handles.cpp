@@ -298,6 +298,13 @@ Unity::MT::GrabHandleGroup::layout ()
     return layout;
 }
 
+/* Super speed hack */
+static bool
+sortPointers (const CompWindow *p1, const CompWindow *p2)
+{
+    return (void *) p1 < (void *) p2;
+}
+
 void
 UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 {
@@ -341,15 +348,26 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 	    if (event->xproperty.atom == Atoms::clientListStacking)
 	    {
 		CompWindowVector	     invalidated (0);
-		/* Window removed or added, update all windows */
-		if (screen->clientList (true).size () != mLastClientListStacking.size ())
-		    invalidated = mLastClientListStacking;
+		CompWindowVector	     clients = screen->clientList (true);
+		CompWindowVector	     oldClients = mLastClientListStacking;
+		CompWindowVector	     clientListStacking = screen->clientList (true);
+		/* Windows can be removed and added from the client list
+		 * here at the same time (eg hide/unhide launcher ... racy)
+		 * so we need to check if the client list contains the same
+		 * windows as it used to. Sort both lists and compare ... */
+
+		std::sort (clients.begin (), clients.end (), sortPointers);
+		std::sort (oldClients.begin (),
+			   oldClients.end (), sortPointers);
+
+		if (clients != mLastClientListStacking)
+		    invalidated = clients;
 		else
 		{
-		    CompWindowVector::const_iterator cit = screen->clientList (true).begin ();
+		    CompWindowVector::const_iterator cit = clientListStacking.begin ();
 		    CompWindowVector::const_iterator oit = mLastClientListStacking.begin ();
 
-		    for (; cit != screen->clientList (true).end (); cit++, oit++)
+		    for (; cit != clientListStacking.end (); cit++, oit++)
 		    {
 			/* All clients from this point onwards in cit are invalidated
 			 * so splice the list to the end of the new client list
@@ -362,13 +380,12 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 		}
 
 		foreach (CompWindow *w, invalidated)
-		{
-		    if (UnityMTGrabHandlesWindow::get (w))
-		      UnityMTGrabHandlesWindow::get (w)->restackHandles ();
-		}
+		    UnityMTGrabHandlesWindow::get (w)->restackHandles ();
 
-		mLastClientListStacking = screen->clientList (true);
+		mLastClientListStacking = clients;
 	    }
+
+	    break;
 
 	case ButtonPress:
 
@@ -446,6 +463,23 @@ UnityMTGrabHandlesScreen::preparePaint (int msec)
     }
 
     cScreen->preparePaint (msec);
+}
+
+bool
+UnityMTGrabHandlesWindow::allowHandles ()
+{
+    /* Not on windows we can't move or resize */
+    if (!(window->actions () & CompWindowActionResizeMask))
+	return false;
+
+    if (!(window->actions () & CompWindowActionMoveMask))
+	return false;
+
+    /* Not on override redirect windows */
+    if (window->overrideRedirect ())
+	return false;
+
+    return true;
 }
 
 void
@@ -688,9 +722,16 @@ UnityMTGrabHandlesScreen::showHandles (CompAction         *action,
 								       0));
 
     if (w)
-	UnityMTGrabHandlesWindow::get (w)->showHandles ();
+    {
+	UMTGH_WINDOW (w);
 
-    mMoreAnimate = true;
+	if (!uw->allowHandles ())
+	    return false;
+
+	uw->showHandles ();
+
+    	mMoreAnimate = true;
+    }
 
     return true;
 }
@@ -769,5 +810,5 @@ UnityMTGrabHandlesPluginVTable::init ()
 	!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
 	return false;
 
-    return false;
+    return true;
 }

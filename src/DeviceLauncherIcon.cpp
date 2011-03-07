@@ -104,6 +104,7 @@ DeviceLauncherIcon::GetMenus ()
 {
   std::list<DbusmenuMenuitem *>  result;
   DbusmenuMenuitem              *menu_item;
+  GDrive                        *drive;
 
   menu_item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
@@ -122,6 +123,19 @@ DeviceLauncherIcon::GetMenus ()
     g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                       G_CALLBACK (&DeviceLauncherIcon::OnEject), this);
     result.push_back (menu_item);
+  }
+
+  drive = g_volume_get_drive (_volume);
+  if (drive && g_drive_can_stop (drive))
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely Remove"));
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                      G_CALLBACK (&DeviceLauncherIcon::OnDriveStop), this);
+    result.push_back (menu_item);
+    g_object_unref (drive);
   }
 
   return result;
@@ -233,14 +247,18 @@ DeviceLauncherIcon::OnEjectReady (GObject            *object,
 void
 DeviceLauncherIcon::Eject ()
 {
-  g_debug ("%s", G_STRLOC);
+  GMountOperation *mount_op;
+
+  mount_op = gtk_mount_operation_new(NULL);
+
   g_volume_eject_with_operation (_volume,
                                  (GMountUnmountFlags)0,
-                                 NULL,
+                                 mount_op,
                                  NULL,
                                  (GAsyncReadyCallback)OnEjectReady,
                                  this);
-  g_debug ("%s", G_STRLOC);
+
+  g_object_unref(mount_op);
 }
 
 void
@@ -252,13 +270,44 @@ DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon
 void
 DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
-  g_debug ("%s", G_STRLOC);
   self->Eject ();
-  g_debug ("%s", G_STRLOC);
 }
 
 void
 DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
 {
   self->Remove ();
+}
+
+void
+DeviceLauncherIcon::OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+{
+  self->StopDrive ();
+}
+
+void
+DeviceLauncherIcon::StopDrive ()
+{
+  GDrive *drive;
+
+  drive = g_volume_get_drive (_volume);
+  g_drive_stop (drive,
+                (GMountUnmountFlags)0,
+                NULL,
+                NULL,
+                (GAsyncReadyCallback)OnStopDriveReady,
+                this);
+  g_object_unref (drive);
+}
+
+void
+DeviceLauncherIcon::OnStopDriveReady (GObject *object,
+                                      GAsyncResult *result,
+                                      DeviceLauncherIcon *self)
+{
+  GDrive *drive;
+
+  drive = g_volume_get_drive (self->_volume);
+  g_drive_stop_finish (drive, result, NULL);
+  g_object_unref (drive);
 }
