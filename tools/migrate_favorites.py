@@ -190,8 +190,12 @@ if migration_level < '3.2.0':
     for candidate in lucid_favorites_list:
         candidate_path = '/apps/netbook-launcher/favorites/%s' % candidate
         if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
-            launcher_location = client.get_string('%s/desktop_file' % candidate_path)
-            if launcher_location:     
+            try:
+                launcher_location = client.get_string('%s/desktop_file' % candidate_path)
+            except GError, e:
+                log("Dont migrate %s: %s" % (candidate_path, e), log_file)
+                continue
+            if launcher_location:
                 apps_list = register_new_app(launcher_location, apps_list, log_file)
 
     # get GNOME panel favorites and convert them
@@ -200,13 +204,17 @@ if migration_level < '3.2.0':
     migrating_chapter_log("gnome-panel items", apps_list, candidate_objects, log_file)
     for candidate in candidate_objects:
         candidate_path = '/apps/panel/objects/%s' % candidate
-        if (candidate and client.get_string('%s/object_type' % candidate_path) == 'launcher-object'
-           and client.get_string('%s/toplevel_id' % candidate_path) in panel_list):
-            launcher_location = client.get_string('%s/launcher_location' % candidate_path)
-            if launcher_location:
-                if not launcher_location.startswith('/'):
-                    launcher_location = os.path.expanduser('~/.gnome2/panel2.d/default/launchers/%s' % launcher_location)
-                apps_list = register_new_app(launcher_location, apps_list, log_file)
+        try:
+            if (candidate and client.get_string('%s/object_type' % candidate_path) == 'launcher-object'
+               and client.get_string('%s/toplevel_id' % candidate_path) in panel_list):
+                launcher_location = client.get_string('%s/launcher_location' % candidate_path)
+                if launcher_location:
+                    if not launcher_location.startswith('/'):
+                        launcher_location = os.path.expanduser('~/.gnome2/panel2.d/default/launchers/%s' % launcher_location)
+                    apps_list = register_new_app(launcher_location, apps_list, log_file)
+        except GError, e:
+            log("Dont migrate %s: %s" % (candidate_path, e), log_file)
+            continue
                 
     # get GNOME desktop launchers
     desktop_dir = get_desktop_dir()
