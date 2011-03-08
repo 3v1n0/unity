@@ -26,6 +26,9 @@
 
 #include <gio/gio.h>
 #include <glib/gi18n-lib.h>
+#include <gconf/gconf-client.h>
+
+#define ASK_CONFIRMATION_KEY "/apps/nautilus/preferences/confirm_trash"
 
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
@@ -125,24 +128,37 @@ TrashLauncherIcon::ActivateLauncherIcon ()
 void 
 TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem *item, int time, TrashLauncherIcon *self)
 {
-  GtkWidget *dialog;
-  dialog = gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL,
-                                   GTK_MESSAGE_WARNING,
-                                   GTK_BUTTONS_CANCEL,
-                                   NULL);
+  GConfClient *client;
+  GtkWidget   *dialog;
+  bool        ask_confirmation;
 
-  g_object_set (GTK_DIALOG (dialog),
-		"text", _("Empty all items from Trash?"),
-		"secondary-text", _("All items in the Trash will be permanently deleted."),
-		NULL);
-  gtk_dialog_add_button (GTK_DIALOG (dialog), _("Empty Trash"), GTK_RESPONSE_OK );
+  client = gconf_client_get_default ();
+  ask_confirmation = gconf_client_get_bool (client, ASK_CONFIRMATION_KEY, NULL);
+  g_object_unref (client);
+
+  if (ask_confirmation)
+  {
+    dialog = gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL,
+                                     GTK_MESSAGE_WARNING,
+                                     GTK_BUTTONS_CANCEL,
+                                     NULL);
+
+    g_object_set (GTK_DIALOG (dialog),
+		  "text", _("Empty all items from Trash?"),
+		  "secondary-text", _("All items in the Trash will be permanently deleted."),
+		  NULL);
+    gtk_dialog_add_button (GTK_DIALOG (dialog), _("Empty Trash"), GTK_RESPONSE_OK );
+  }
 
   QuicklistManager::Default ()->HideQuicklist (self->_quicklist);
 
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) 
+  if (!ask_confirmation || gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) 
+  {
     g_thread_create ((GThreadFunc)&TrashLauncherIcon::EmptyTrashAction, NULL, FALSE, NULL);
+  }
 
-  gtk_widget_destroy (dialog);
+  if (ask_confirmation)
+    gtk_widget_destroy (dialog);
 
 }
 
