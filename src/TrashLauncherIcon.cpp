@@ -73,21 +73,18 @@ TrashLauncherIcon::EnsureMenuItemsReady ()
   DbusmenuMenuitem *menu_item;
 
   /* Empty Trash */
-  if (_menu_items.find ("Empty") == _menu_items.end ())
-  {
-    menu_item = dbusmenu_menuitem_new ();
-    g_object_ref (menu_item);
+  menu_item = dbusmenu_menuitem_new ();
+  g_object_ref (menu_item);
 
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash"));
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !_empty);
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    g_signal_connect (menu_item,
-                      DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
-                      (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);
+  g_signal_connect (menu_item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
+                    (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);
 
-    _menu_items["Empty"] = menu_item;
-  }
+  _menu_items["Empty"] = menu_item;
 }
 
 void
@@ -98,7 +95,7 @@ TrashLauncherIcon::OnMouseClick (int button)
   if (button == 1)
     ActivateLauncherIcon ();
 
-  else if (button == 3 && _empty == FALSE)
+  else if (button == 3)
   {
     EnsureMenuItemsReady ();
 
