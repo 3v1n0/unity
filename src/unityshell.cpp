@@ -555,6 +555,13 @@ UnityScreen::optionChanged (CompOption            *opt,
       break;
     case UnityshellOptions::PanelOpacity:
       panelView->SetOpacity (optionGetPanelOpacity ());
+      break;
+    case UnityshellOptions::IconSize:
+      panelHomeButton->SetButtonWidth (optionGetIconSize()+18);
+      launcher->SetIconSize (optionGetIconSize()+6, optionGetIconSize());
+      PlacesController::SetLauncherSize (optionGetIconSize()+18);
+      
+      break;
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation ((Launcher::AutoHideAnimation) optionGetAutohideAnimation ());
       break;
@@ -743,6 +750,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
@@ -846,6 +854,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   LOGGER_START_PROCESS ("initLauncher-Panel");
   self->panelView = new PanelView ();
   self->AddChild (self->panelView);
+
+  self->panelHomeButton = self->panelView->HomeButton ();
 
   layout = new nux::HLayout();
 

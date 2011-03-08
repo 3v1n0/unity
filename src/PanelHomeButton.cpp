@@ -35,15 +35,14 @@
 #include "PanelStyle.h"
 
 #define PANEL_HEIGHT 24
-#define BUTTON_WIDTH 66
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
-: TextureArea (NUX_TRACKER_LOCATION),
-  _util_cg (CAIRO_FORMAT_ARGB32, BUTTON_WIDTH, PANEL_HEIGHT)
+: TextureArea (NUX_TRACKER_LOCATION)
 {
-  SetMinMaxSize (BUTTON_WIDTH, PANEL_HEIGHT);
+  _button_width = 66;
+  SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
   OnMouseClick.connect (sigc::mem_fun (this, &PanelHomeButton::RecvMouseClick));
   
@@ -77,9 +76,11 @@ PanelHomeButton::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelHomeButton::Refresh ()
 {
-  int width = BUTTON_WIDTH;
+  int width = _button_width;
   int height = PANEL_HEIGHT;
   GdkPixbuf *pixbuf;
+
+  SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
   cairo_t *cr = cairo_graphics.GetContext();
@@ -87,7 +88,7 @@ PanelHomeButton::Refresh ()
 
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
   gdk_cairo_set_source_pixbuf (cr, pixbuf,
-                               (BUTTON_WIDTH-gdk_pixbuf_get_width (pixbuf))/2,
+                               (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
                                (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
   g_object_unref (pixbuf);
 
@@ -158,7 +159,7 @@ PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsig
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
-  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", _button_width);
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
       
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
@@ -178,7 +179,7 @@ PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsig
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
-  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", _button_width);
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
@@ -198,7 +199,7 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
   g_variant_builder_init (&builder, G_VARIANT_TYPE ("(iiiia{sv})"));
   g_variant_builder_add (&builder, "i", x);
   g_variant_builder_add (&builder, "i", y);
-  g_variant_builder_add (&builder, "i", BUTTON_WIDTH);
+  g_variant_builder_add (&builder, "i", _button_width);
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
@@ -207,6 +208,17 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
 
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+}
+
+void
+PanelHomeButton::SetButtonWidth (int button_width)
+{
+  if (_button_width ==  button_width)
+    return;
+
+  _button_width =  button_width;
+
+  Refresh();
 }
 
 const gchar*

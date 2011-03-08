@@ -41,6 +41,7 @@ public:
   void Show ();
   void Hide ();
   void ToggleShowHide ();
+  static void SetLauncherSize (int launcher_size);
 
 protected:
   const gchar* GetName ();
@@ -65,6 +66,7 @@ private:
   PlaceFactoryFile *_factory;
   bool              _visible;
   bool              _fullscren_request;
+  static int        _launcher_size;
 };
 
 #endif // PLACES_CONTROLLER_H

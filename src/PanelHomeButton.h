@@ -41,6 +41,8 @@ public:
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
+  void SetButtonWidth (int button_width);
+
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
@@ -49,7 +51,7 @@ private:
   void Refresh ();
 
 private:
-  nux::CairoGraphics _util_cg;
+  int _button_width;
 };
 
 #endif // PANEL_HOME_BUTTON_H

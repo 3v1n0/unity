@@ -1877,6 +1877,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _icon_size = tile_size;
     _icon_image_size = icon_size;
     _icon_image_size_delta = tile_size - icon_size;
+    _icon_glow_size = icon_size + 14;
 
     // recreate tile textures
 
