@@ -58,6 +58,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   AddChild (_search_bar);
 
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
+  _search_bar->activated.connect (sigc::mem_fun (this, &PlacesView::OnEntryActivated));
 
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
   vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
@@ -525,6 +526,13 @@ void
 PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 {
   self->QueueDraw ();
+}
+
+void
+PlacesView::OnEntryActivated ()
+{
+  if (!_results_controller->ActivateFirst ())
+    g_debug ("Cannot activate anything");
 }
 
 //

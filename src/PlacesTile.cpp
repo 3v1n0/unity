@@ -341,9 +341,3 @@ PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned l
 {
   QueueDraw ();
 }
-
-void
-PlacesTile::ActivateFocus ()
-{
-  sigClick.emit (this);
-}

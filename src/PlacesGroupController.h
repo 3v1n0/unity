@@ -41,6 +41,8 @@ public:
 
   void Clear ();
 
+  bool ActivateFirst ();
+
 protected:
   const gchar* GetName ();
   void         AddProperties (GVariantBuilder *builder);

@@ -74,6 +74,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->activated.connect (sigc::mem_fun (this, &PlacesSearchBar::OnEntryActivated));
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
@@ -297,6 +298,12 @@ PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsig
     _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
     EmitLiveSearch ();
   }
+}
+
+void
+PlacesSearchBar::OnEntryActivated ()
+{
+  activated.emit ();
 }
 
 void

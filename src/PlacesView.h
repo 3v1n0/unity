@@ -101,6 +101,8 @@ private:
 
   static void OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self);
 
+  void OnEntryActivated ();
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
