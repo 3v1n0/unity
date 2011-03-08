@@ -1490,12 +1490,17 @@ Launcher::GetMouseY ()
 gboolean
 Launcher::SingleFingerHoldTimeout (gpointer data)
 {
-  Launcher* self = (Launcher*) data;
+  Launcher*     self          = NULL;
+  LauncherIcon* launcher_icon = NULL;
 
-  LauncherIcon* launcher_icon = 0;
+  if (data == NULL)
+    return false;
+
+  self = (Launcher*) data;
   launcher_icon = self->MouseIconIntersection (self->GetMouseX (),
                                                self->GetMouseY ());
-  launcher_icon->OpenQuicklist ();
+  if (launcher_icon)
+    launcher_icon->OpenQuicklist ();
 
   return false;
 }
