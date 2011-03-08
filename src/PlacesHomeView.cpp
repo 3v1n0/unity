@@ -157,7 +157,7 @@ PlacesHomeView::Refresh ()
   _layout->Clear ();
 
   // Find Media Apps
-  markup = g_strdup_printf (temp, _("Find Media Apps"));
+  markup = g_strdup_printf (temp, _("Find Media Apps..."));
   shortcut = new Shortcut (PKGDATADIR"/find_media_apps.png",
                            markup,
                            icon_size);
@@ -169,7 +169,7 @@ PlacesHomeView::Refresh ()
   g_free (markup);
 
   // Find Internet Apps
-  markup = g_strdup_printf (temp, _("Find Internet Apps"));
+  markup = g_strdup_printf (temp, _("Find Internet Apps..."));
   shortcut = new Shortcut (PKGDATADIR"/find_internet_apps.png",
                            markup,
                            icon_size);
@@ -181,7 +181,7 @@ PlacesHomeView::Refresh ()
   g_free (markup);
 
   // Find More Apps
-  markup = g_strdup_printf (temp, _("Find More Apps"));
+  markup = g_strdup_printf (temp, _("Find More Apps..."));
   shortcut = new Shortcut (PKGDATADIR"/find_more_apps.png",
                            markup,
                            icon_size);
@@ -193,7 +193,7 @@ PlacesHomeView::Refresh ()
   g_free (markup);
 
   // Find Files
-  markup = g_strdup_printf (temp, _("Find Files"));
+  markup = g_strdup_printf (temp, _("Find Files..."));
   shortcut = new Shortcut (PKGDATADIR"/find_files.png",
                            markup,
                            icon_size);
