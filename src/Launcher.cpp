@@ -3443,11 +3443,16 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 
   EventLogic ();
   LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
-
+  
   bool hovered_icon_is_appropriate = false;
   if(hovered_icon)
-    if(hovered_icon->Type () == LauncherIcon::TYPE_APPLICATION || hovered_icon->Type () == LauncherIcon::TYPE_EXPO)
-      hovered_icon_is_appropriate = true;
+    {
+      if(hovered_icon->Type () == LauncherIcon::TYPE_TRASH)
+        _steal_drag = false;
+      
+      if(hovered_icon->Type () == LauncherIcon::TYPE_APPLICATION || hovered_icon->Type () == LauncherIcon::TYPE_EXPO)
+        hovered_icon_is_appropriate = true;
+    }
 
   if (_steal_drag)
   {
@@ -3461,15 +3466,18 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     }
     else if(_dnd_hovered_icon)
     {
-      if(hovered_icon_is_appropriate)
-      {
-        _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
-      }
-      else if(hovered_icon)
-      {
-        _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
-        _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
-        _dnd_hovered_icon = 0;
+      if(hovered_icon)
+      {  
+        if(hovered_icon_is_appropriate)
+        {
+         _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
+        }
+        else
+        {
+          _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
+          _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
+          _dnd_hovered_icon = 0;
+        }
       }
     }
   }
