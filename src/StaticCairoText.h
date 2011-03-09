@@ -89,9 +89,9 @@ namespace nux
       sigc::signal<void, StaticCairoText*> sigTextChanged;
       sigc::signal<void, StaticCairoText*> sigTextColorChanged;
       sigc::signal<void, StaticCairoText*> sigFontChanged;
-      virtual bool CanFocus ();
 
     private:
+      virtual bool DoCanFocus ();
       int            _cached_extent_width;
       int            _cached_extent_height;
       bool           _need_new_extent_cache;

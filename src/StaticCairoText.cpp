@@ -477,7 +477,7 @@ void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
   self->sigFontChanged.emit (self);
 }
 
-bool StaticCairoText::CanFocus ()
+bool StaticCairoText::DoCanFocus ()
 {
   return false;
 }

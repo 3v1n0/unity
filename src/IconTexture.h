@@ -42,7 +42,8 @@ public:
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
-
+  virtual bool DoCanFocus ();
+  
 private:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
 
@@ -52,8 +53,6 @@ private:
 
   char *_icon_name;
   unsigned int _size;
-
-  virtual bool CanFocus ();
 
   GdkPixbuf        *_pixbuf_cached;
   nux::BaseTexture *_texture_cached;

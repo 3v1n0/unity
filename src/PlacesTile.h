@@ -36,11 +36,10 @@ public:
 
   sigc::signal<void, PlacesTile*> sigClick;
 
-  virtual void ActivateFocus ();
-
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-
+  virtual void DoActivateFocus ();
+  
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);

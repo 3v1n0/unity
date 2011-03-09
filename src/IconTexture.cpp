@@ -187,8 +187,9 @@ IconTexture::GetTextureSize (int *width, int *height)
 }
 
 bool
-IconTexture::CanFocus ()
+IconTexture::DoCanFocus ()
 {
+  g_debug ("do can focus called");
   return false;
 }
 

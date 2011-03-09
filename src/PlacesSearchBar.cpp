@@ -119,7 +119,7 @@ PlacesSearchBar::GetChildsName ()
 }
 
 bool
-PlacesSearchBar::CanFocus ()
+PlacesSearchBar::DoCanFocus ()
 {
   return false;
 }
