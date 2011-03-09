@@ -496,7 +496,8 @@ on_entry_removed (IndicatorObject      *object,
 
   id = g_strdup_printf ("%p", entry);
   g_hash_table_remove (priv->entry2indicator_hash, entry);
-  g_hash_table_remove (priv->id2entry_hash, id);  
+  g_hash_table_remove (priv->id2entry_hash, id);
+  g_free (id);
 
   notify_object (object);
 }
