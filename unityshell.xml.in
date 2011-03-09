@@ -72,6 +72,11 @@
             		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
             		    <default>&lt;Alt&gt;F1</default>
                   </option>
+                  <option name="execute_command" type="key">
+            		    <_short>Key to execute a command</_short>
+            		    <_long>Key to open a folder or execute a command</_long>
+            		    <default>&lt;Alt&gt;F2</default>
+                  </option>
                   <option name="panel_first_menu" type="key">
             		    <_short>Key to open the first panel menu</_short>
             		    <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>

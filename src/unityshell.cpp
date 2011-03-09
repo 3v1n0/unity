@@ -253,6 +253,20 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
   return false;
 }
 
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new ("(sus)",
+                                           "/com/canonical/unity/applicationsplace/runner",
+                                           0,
+                                           ""));
+  return false;
+}
+
 void
 UnityScreen::restartLauncherKeyNav ()
 {
@@ -756,6 +770,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
