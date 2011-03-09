@@ -47,7 +47,7 @@ public:
   // Signals
   sigc::signal<void, PlaceEntry *> entry_added;
   sigc::signal<void, PlaceEntry *> entry_removed;
-  sigc::signal<void, Place *, const char *, ActivationResult> result_activated;
+  sigc::signal<void, const char *, ActivationResult> result_activated;
 
 protected:
   std::vector<PlaceEntry *> _entries;

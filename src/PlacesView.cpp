@@ -548,7 +548,7 @@ PlacesView::OnPlaceAdded (Place *place)
 }
 
 void
-PlacesView::OnPlaceResultActivated (Place *place, const char *uri, ActivationResult res)
+PlacesView::OnPlaceResultActivated (const char *uri, ActivationResult res)
 {
   switch (res)
   {

@@ -61,7 +61,6 @@ PlaceRemote::PlaceRemote (const char *path)
   GKeyFile *key_file;
   GError   *error = NULL;
 
-  g_debug ("Loading Place: %s", path);
   _path = g_strdup (path);
 
   // A .place file is a keyfile, so we create on representing the .place file to
@@ -531,6 +530,7 @@ PlaceRemote::OnActivationResultReceived (GObject      *source,
 {
   GVariant    *args;
   GError      *error = NULL;
+  guint        ret = 0;
 
   args = g_dbus_proxy_call_finish ((GDBusProxy *)source, result, &error);
   if (error)
@@ -541,7 +541,7 @@ PlaceRemote::OnActivationResultReceived (GObject      *source,
     return;
   }
 
-  self->result_activated.emit (self, self->_active_uri.c_str (), FALLBACK);
+  self->result_activated.emit (self->_active_uri.c_str (), (ActivationResult)ret);
 
   g_variant_unref (args);
 }
@@ -565,7 +565,7 @@ PlaceRemote::ActivateResult (const char *uri, const char *mimetype)
   }
   else
   {
-    result_activated.emit (this, uri, FALLBACK);
+    result_activated.emit (uri, FALLBACK);
   }
 }
 
