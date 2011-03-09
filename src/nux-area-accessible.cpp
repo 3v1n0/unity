@@ -30,6 +30,8 @@
 
 #include "nux-area-accessible.h"
 
+#include "unitya11y.h"
+
 /* GObject */
 static void nux_area_accessible_class_init (NuxAreaAccessibleClass *klass);
 static void nux_area_accessible_init       (NuxAreaAccessible *area_accessible);
@@ -37,6 +39,7 @@ static void nux_area_accessible_init       (NuxAreaAccessible *area_accessible);
 /* AtkObject.h */
 static void       nux_area_accessible_initialize     (AtkObject *accessible,
                                                       gpointer   data);
+static AtkObject *nux_area_accessible_get_parent     (AtkObject *obj);
 
 /* AtkComponent.h */
 static void atk_component_interface_init     (AtkComponentIface *iface);
@@ -59,6 +62,7 @@ nux_area_accessible_class_init (NuxAreaAccessibleClass *klass)
 
   /* AtkObject */
   atk_class->initialize = nux_area_accessible_initialize;
+  atk_class->get_parent = nux_area_accessible_get_parent;
 }
 
 static void
@@ -89,6 +93,31 @@ nux_area_accessible_initialize (AtkObject *accessible,
 
   accessible->role = ATK_ROLE_UNKNOWN;
 }
+
+static AtkObject *
+nux_area_accessible_get_parent (AtkObject *obj)
+{
+  nux::Object *nux_object = NULL;
+  nux::Area *area = NULL;
+  nux::Area *parent = NULL;
+
+  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (obj), NULL);
+
+  if (obj->accessible_parent)
+    return obj->accessible_parent;
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+
+  if (nux_object == NULL) /* actor is defunct */
+    return NULL;
+
+  area = dynamic_cast<nux::Area *>(nux_object);
+
+  parent = area->GetParentObject ();
+
+  return unity_a11y_get_accessible (parent);
+}
+
 
 /* AtkComponent implementation */
 static void

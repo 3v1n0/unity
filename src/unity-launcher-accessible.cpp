@@ -28,6 +28,8 @@
  *
  */
 
+#include <glib/gi18n.h>
+
 #include "unity-launcher-accessible.h"
 
 #include "unitya11y.h"
@@ -116,6 +118,7 @@ unity_launcher_accessible_new (nux::Object *object)
   accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_LAUNCHER_ACCESSIBLE, NULL));
 
   atk_object_initialize (accessible, object);
+  atk_object_set_name (accessible, _("Launcher"));
 
   return accessible;
 }
