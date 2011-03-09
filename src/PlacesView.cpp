@@ -166,6 +166,49 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
+  if (!bkg_blur_texture.IsValid ())
+  {
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    
+    GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+    GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+    GfxContext.GetRenderStates ().EnableScissor (false);
+
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = GfxContext.CreateTextureFromBackBuffer (geo.x, geo.y, geo.width, geo.height);
+
+    nux::TexCoordXForm texxform_bkg;
+    bkg_blur_texture = GfxContext.QRP_GetBlurTexture (-58, 24, geo.width, geo.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 5);
+
+    if (current_fbo.IsValid ())
+    { 
+      current_fbo->Activate (true);
+      GfxContext.Push2DWindow (current_fbo->GetWidth (), current_fbo->GetHeight ());
+    }
+    else
+    {
+      GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+      GfxContext.Push2DWindow (GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+      GfxContext.ApplyClippingRectangle ();
+    }
+  }
+
+  if (bkg_blur_texture.IsValid ())
+  {
+    nux::TexCoordXForm texxform_blur_bkg;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushDrawTextureLayer (GfxContext, GetGeometry (),
+                                   bkg_blur_texture,
+                                   texxform_blur_bkg,
+                                   nux::Color::White,
+                                   true,
+                                   rop);
+  }
+
   if (_size_mode == SIZE_MODE_HOVER)
   {
     nux::BaseTexture *corner = style->GetDashCorner ();
@@ -244,6 +287,9 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter ().RenderSinglePaintLayer (GfxContext, geo, _bg_layer);
   }
 
+  if (bkg_blur_texture.IsValid ())
+    gPainter.PopBackground ();
+
   GfxContext.GetRenderStates ().SetBlend (false);
 
   GfxContext.PopClippingRectangle ();
@@ -257,12 +303,29 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
+  if (bkg_blur_texture.IsValid ())
+  {
+
+    nux::TexCoordXForm texxform_blur_bkg;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushTextureLayer (GfxContext, GetGeometry (),
+                               bkg_blur_texture,
+                               texxform_blur_bkg,
+                               nux::Color::White,
+                               true,
+                               rop);
+  }
+ 
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
 
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
 
-  nux::GetPainter ().PopBackground ();
+  nux::GetPainter ().PopBackground (bkg_blur_texture.IsValid () ? 2 : 1);
 
   GfxContext.GetRenderStates ().SetBlend (false);
 
@@ -272,6 +335,12 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 //
 // PlacesView Methods
 //
+void
+PlacesView::AboutToShow ()
+{
+  bkg_blur_texture.Release ();
+}
+
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {

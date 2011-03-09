@@ -90,6 +90,7 @@ void PlacesController::Show ()
   if (_visible)
     return;
 
+  _view->AboutToShow ();
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
   _window->PushToFront ();
