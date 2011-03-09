@@ -31,6 +31,7 @@
 #include "Introspectable.h"
 
 #include <Nux/BaseWindow.h>
+#include <Nux/TimelineEasings.h>
 
 class PlacesController : public Introspectable
 {
@@ -58,6 +59,8 @@ private:
   void OnSettingsChanged (PlacesSettings *settings);
   void OnDashFullscreenRequest ();
   void GetWindowSize (int *width, int *height);
+  void StartShowHideTimeline ();
+  static gboolean OnViewShowHideFrame (PlacesController *self);
 
 private:
   nux::BaseWindow  *_window;
@@ -67,6 +70,9 @@ private:
   bool              _visible;
   bool              _fullscren_request;
   static int        _launcher_size;
+  guint             _timeline_id;
+  float             _last_opacity;
+  gint64            _start_time;
 
 public:
   nux::BaseWindow* GetWindow () {return _window;}

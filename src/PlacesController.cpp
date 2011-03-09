@@ -36,7 +36,8 @@ int PlacesController::_launcher_size = 66;
 
 PlacesController::PlacesController ()
 : _visible (false),
-  _fullscren_request (false)
+  _fullscren_request (false),
+  _timeline_id (0)
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
@@ -57,6 +58,7 @@ PlacesController::PlacesController ()
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
   _window->InputWindowEnableStruts(false);
+  _window->SetOpacity (0.0f);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
@@ -96,12 +98,13 @@ void PlacesController::Show ()
   //_window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
+  
+  StartShowHideTimeline ();
 
   _visible = true;
 
   ubus_server_send_message (ubus_server_get_default (), UBUS_PLACE_VIEW_SHOWN, NULL);
 }
-
 void PlacesController::Hide ()
 {
   if (!_visible)
@@ -112,13 +115,13 @@ void PlacesController::Hide ()
   _window->UnGrabPointer ();
   //_window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
-  _window->ShowWindow (false, false);
-
   _visible = false;
   _fullscren_request = false;
 
   _view->SetActiveEntry (NULL, 0, "");
 
+  StartShowHideTimeline ();
+  
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
@@ -126,6 +129,56 @@ void PlacesController::ToggleShowHide ()
 {
   _visible ? Hide () : Show ();
 }
+
+void
+PlacesController::StartShowHideTimeline ()
+{
+  if (_timeline_id)
+    g_source_remove (_timeline_id);
+
+  _timeline_id = g_timeout_add (15, (GSourceFunc)PlacesController::OnViewShowHideFrame, this);
+  _last_opacity = _window->GetOpacity ();
+  _start_time = g_get_monotonic_time ();
+}
+
+gboolean
+PlacesController::OnViewShowHideFrame (PlacesController *self)
+{
+#define _LENGTH_ 90000
+  gint64 diff;
+  float  progress;
+  float  last_opacity;
+
+  diff = g_get_monotonic_time () - self->_start_time;
+
+  progress = diff/(float)_LENGTH_;
+  progress *= progress;
+
+  last_opacity = self->_last_opacity;
+
+  if (self->_visible)
+  {
+    self->_window->SetOpacity (last_opacity + ((1.0f - last_opacity) * progress));
+  }
+  else
+  {
+    self->_window->SetOpacity (last_opacity - (last_opacity * progress));
+  }
+ 
+  if (diff > _LENGTH_)
+  {
+    self->_timeline_id = 0;
+
+    // Make sure the state is right
+    self->_window->SetOpacity (self->_visible ? 1.0f : 0.0f);
+    if (!self->_visible)
+      self->_window->ShowWindow (false, false);
+
+    return FALSE;
+  }
+  return TRUE;
+}
+
 
 void
 PlacesController::GetWindowSize (int *out_width, int *out_height)
