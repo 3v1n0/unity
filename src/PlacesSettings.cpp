@@ -54,7 +54,7 @@ PlacesSettings::Refresh ()
     primary_monitor = gdk_screen_get_primary_monitor (screen);
     gdk_screen_get_monitor_geometry (screen, primary_monitor, &geo);
 
-    _form_factor = geo.height > 800 ? DESKTOP : NETBOOK;
+    _form_factor = geo.height > 799 ? DESKTOP : NETBOOK;
   }
   else
   {
