@@ -48,8 +48,6 @@ public:
 
   void SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items);
 
-  void SetChildUnexpandHeight (guint height);
-
   void SetExpanded (bool is_expanded);
   bool GetExpanded ();
 
@@ -83,7 +81,6 @@ private:
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
-  guint _child_unexpand_height;
 };
 
 #endif

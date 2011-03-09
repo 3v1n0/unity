@@ -32,6 +32,8 @@
 
 #include "PlacesController.h"
 
+int PlacesController::_launcher_size = 66;
+
 PlacesController::PlacesController ()
 : _visible (false),
   _fullscren_request (false)
@@ -156,7 +158,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
   }
   else
   {
-    width = rect.width - 66;
+    width = rect.width - _launcher_size;
     height = rect.height - 24;
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_FULLSCREEN);
@@ -173,7 +175,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 {
   int width = 0, height = 0;
   static_cast<PlacesController *> (user_data)->GetWindowSize (&width, &height);
-  geo = nux::Geometry (66, 24, width, height);
+  geo = nux::Geometry (_launcher_size, 24, width, height);
 }
 
 void
@@ -182,7 +184,7 @@ PlacesController::OnDashFullscreenRequest ()
   int width = 0, height = 0;
   _fullscren_request = true;
   GetWindowSize (&width, &height);
-  _window->SetGeometry (nux::Geometry (66, 24, width, height));
+  _window->SetGeometry (nux::Geometry (_launcher_size, 24, width, height));
 }
 
 void
@@ -203,7 +205,7 @@ void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   //FIXME: We need a way to get the real position/size of the homebutton
-  nux::Geometry geo (0, 0, 66, 24);
+  nux::Geometry geo (0, 0, _launcher_size, 24);
   if (!geo.IsPointInside (x, y))
     Hide ();
 }
@@ -212,6 +214,12 @@ void
 PlacesController::OnActivePlaceEntryChanged (PlaceEntry *entry)
 {
   entry ? Show () : Hide ();
+}
+
+void
+PlacesController::SetLauncherSize (int launcher_size)
+{
+    _launcher_size = launcher_size;
 }
 
 

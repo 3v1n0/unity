@@ -34,6 +34,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
+#include "PanelHomeButton.h"
 #include "PlacesController.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
@@ -130,6 +131,8 @@ class UnityScreen :
 
   void NeedsRelayout ();
 
+  void ScheduleRelayout (guint timeout);
+
     protected:
 
 	const gchar* GetName ();
@@ -191,6 +194,7 @@ class UnityScreen :
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
+  PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;

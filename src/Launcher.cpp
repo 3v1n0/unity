@@ -304,6 +304,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _autoscroll_handle      = 0;
     _redraw_handle          = 0;
     _focus_keynav_handle    = 0;
+    _single_finger_hold_handle = 0;
+    _single_finger_hold_timer  = NULL;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -321,7 +323,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
-    
+
     // set them to 1 instead of 0 to avoid :0 in case something is racy
     _trigger_width = 1;
     _trigger_height = 1;
@@ -1348,6 +1350,8 @@ gboolean Launcher::TapOnSuper ()
 
 void Launcher::StartKeyShowLauncher ()
 {
+    bool was_hidden = _hidden;
+    
     _super_show_launcher = true;
     QueueDraw ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
@@ -1355,6 +1359,10 @@ void Launcher::StartKeyShowLauncher ()
       g_source_remove (_redraw_handle);
     _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
     EnsureHiddenState ();
+    
+    // don't lock on mouseover state to avoid locking it the pointer was already there but not moved
+    if (was_hidden)
+      _mouseover_launcher_locked = false;
 }
 
 void Launcher::EndKeyShowLauncher ()
@@ -1434,7 +1442,7 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-
+    
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
     {
@@ -1465,6 +1473,31 @@ gboolean Launcher::OnAutohideTimeout (gpointer data)
     self->_autohide_handle = 0;
     self->EnsureHiddenState ();
     return false;
+}
+
+int
+Launcher::GetMouseX ()
+{
+  return _mouse_position.x;
+}
+
+int
+Launcher::GetMouseY ()
+{
+  return _mouse_position.y;
+}
+
+gboolean
+Launcher::SingleFingerHoldTimeout (gpointer data)
+{
+  Launcher* self = (Launcher*) data;
+
+  LauncherIcon* launcher_icon = 0;
+  launcher_icon = self->MouseIconIntersection (self->GetMouseX (),
+                                               self->GetMouseY ());
+  launcher_icon->OpenQuicklist ();
+
+  return false;
 }
 
 gboolean Launcher::DrawLauncherTimeout (gpointer data)
@@ -1507,7 +1540,7 @@ Launcher::CheckIntersectWindow (CompWindow *window)
   if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
     return false;
 
-  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+  if (CompRegion (window->serverInputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     return true;
 
   return false;
@@ -1844,6 +1877,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _icon_size = tile_size;
     _icon_image_size = icon_size;
     _icon_image_size_delta = tile_size - icon_size;
+    _icon_glow_size = icon_size + 14;
 
     // recreate tile textures
 
@@ -2651,16 +2685,34 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
-void
+gboolean
 Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
                                      unsigned long key_state)
 {
-  if (_super_show_launcher)
+  if (!_super_show_launcher)
+    return false;
+
+  LauncherModel::iterator it;
+  int i;
+  
+  // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
+  for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
   {
-    RecvKeyPressed (key_sym, key_code, key_state);
-    QueueDraw ();
+    if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
+    {
+      if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
+        (*it)->OpenInstance ();
+      else
+        (*it)->Activate ();
+      // disable the "tap on super" check
+      _times[TIME_TAP_SUPER].tv_sec = 0;
+      _times[TIME_TAP_SUPER].tv_nsec = 0;
+      return true;
+    }
   }
+  
+  return false;
 }
 
 void
@@ -2688,7 +2740,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
-      if (_current_icon_index < _model->Size ())
+      if (_current_icon_index < _model->Size () - 1)
       {
         _current_icon_index++;
         NeedRedraw ();
@@ -2749,26 +2801,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       leaveKeyNavMode (false);
     break;
       
-    // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
     default:
-    {
-        if (_super_show_launcher && !TapOnSuper ())
-        {
-            int i;
-            for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-            {
-              if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-              {
-                if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
-                  (*it)->OpenInstance ();
-                else
-                  (*it)->Activate ();
-              }
-            }
-        }
-      
-      
-    }
     break;
   }
 }
@@ -2796,9 +2829,16 @@ void Launcher::EventLogic ()
     return;
 
   LauncherIcon* launcher_icon = 0;
+  bool should_lock_launcher = false;
 
-  if (_mouse_inside_launcher)
+  if (_mouse_inside_launcher) {
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+    // indicate if the mouse should relock the launcher or not (it doesn't explicitely lock the launcher
+    // when it's entering the launcher. This is for the case: Super reveals the launcher, mouse doesn't move)
+    if (_icon_under_mouse && !_hidden)
+      should_lock_launcher = true;
+  }  
+  
 
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
@@ -2812,8 +2852,8 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
-    // reset trigger has the mouse moved to another item (only if the launcher is supposed to be seen)
-    if (!_hidden)
+    // reset trigger only when in right context
+    if (should_lock_launcher)
       _mouseover_launcher_locked = true;
   }
 }
@@ -2822,6 +2862,18 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+
+  // this takes care of the one-finger-hold "event" on a launcher-icon
+  if (_single_finger_hold_handle == 0)
+  {
+    _single_finger_hold_handle = g_timeout_add (SINGLE_FINGER_HOLD_DURATION,
+                                                &Launcher::SingleFingerHoldTimeout,
+                                                this);
+    if (_single_finger_hold_timer)
+      g_timer_destroy (_single_finger_hold_timer);
+
+    _single_finger_hold_timer = g_timer_new ();
+  }
 
   if (launcher_icon)
   {
@@ -2834,6 +2886,51 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+
+  // this takes care of the one-finger-hold "event" on a launcher-icon
+  if (_single_finger_hold_timer)
+  {
+    // user "released" before single-finger-hold threshold
+    if (g_timer_elapsed (_single_finger_hold_timer, NULL) < (float) SINGLE_FINGER_HOLD_DURATION / 1000.0)
+    {
+
+      // remove callback
+      if (_single_finger_hold_handle > 0)
+      {
+        g_source_remove (_single_finger_hold_handle);
+        _single_finger_hold_handle = 0;
+      }
+    }
+    // user "released" after single-finger-hold threshold...
+    else
+    {
+      // remove timer
+      g_timer_destroy (_single_finger_hold_timer);
+      _single_finger_hold_timer = NULL;
+
+      // remove callback
+      if (_single_finger_hold_handle > 0)
+      {
+        g_source_remove (_single_finger_hold_handle);
+        _single_finger_hold_handle = 0;
+      }
+
+      // ... don't start app, just return
+      _icon_mouse_down = 0;
+      return;
+    }
+
+    // remove timer
+    g_timer_destroy (_single_finger_hold_timer);
+    _single_finger_hold_timer = NULL;
+
+    // remove callback
+    if (_single_finger_hold_handle > 0)
+    {
+      g_source_remove (_single_finger_hold_handle);
+      _single_finger_hold_handle = 0;
+    }
+  }
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {

@@ -116,6 +116,9 @@ public:
   virtual void ForeachGlobalGroup  (GroupForeachCallback slot) = 0;
   virtual void ForeachGlobalResult (ResultForeachCallback slot) = 0;
 
+  virtual void GetResult (const void *id, ResultForeachCallback slot) = 0;
+  virtual void GetGlobalResult (const void *id, ResultForeachCallback slot) = 0;
+
   // Signals
 
   sigc::signal<void, bool>                    active_changed;

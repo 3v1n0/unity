@@ -178,8 +178,7 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
                                  guint       section_id,
-                                 const char *search_string,
-                                 bool        ignore_search)
+                                 const char *search_string)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -199,14 +198,10 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     res = g_strdup_printf (search_template, tmp);
 
     _hint->SetText (res);
-
-    if (!ignore_search)
-    {
-      _entry->SetActiveSection (section_id);
-      _entry->SetSearch (search_string ? search_string : "", hints);
-    }
-
     _pango_entry->SetText (search_string ? search_string : "");
+
+    _entry->SetActiveSection (section_id);
+    _entry->SetSearch (search_string ? search_string : "", hints);
 
     _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
     if (_combo->IsVisible ())
