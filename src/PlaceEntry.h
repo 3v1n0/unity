@@ -124,6 +124,9 @@ public:
   virtual void GetResult (const void *id, ResultForeachCallback slot) = 0;
   virtual void GetGlobalResult (const void *id, ResultForeachCallback slot) = 0;
 
+  virtual void ActivateResult (const void *id) = 0;
+  virtual void ActivateGlobalResult (const void *id) = 0;
+
   // Signals
 
   sigc::signal<void, bool>                    active_changed;

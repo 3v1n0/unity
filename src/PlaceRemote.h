@@ -49,6 +49,8 @@ public:
 
   const gchar * GetDBusName ();
 
+  void ActivateResult (const char *uri, const char *mimetype);
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
   void Connect ();

@@ -27,8 +27,9 @@
 
 #define PADDING 8
 
-PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
+PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   View (NUX_FILE_LINE_PARAM),
+  _id (id),
   _hilight_background (NULL),
   _hilight_layer (NULL),
   _last_width (0),
@@ -55,7 +56,14 @@ PlacesTile::~PlacesTile ()
     delete _hilight_layer;
 }
 
-void PlacesTile::OnFocusChanged (nux::Area *area)
+const void *
+PlacesTile::GetId ()
+{
+  return _id;
+}
+
+void
+PlacesTile::OnFocusChanged (nux::Area *area)
 {
   QueueDraw ();
 }

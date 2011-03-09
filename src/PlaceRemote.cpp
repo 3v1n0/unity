@@ -512,6 +512,12 @@ PlaceRemote::OnEntryRemoved (const gchar *dbus_path)
   }
 }
 
+void
+PlaceRemote::ActivateResult (const char *uri, const char *mimetype)
+{
+  result_activated.emit (this, uri, mimetype);
+}
+
 /*
  * C callbacks
  */

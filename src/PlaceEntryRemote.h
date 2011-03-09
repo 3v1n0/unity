@@ -75,6 +75,9 @@ public:
   void GetResult (const void *id, ResultForeachCallback slot);
   void GetGlobalResult (const void *id, ResultForeachCallback slot);
 
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id);
+
   /* Other methods */
   bool          IsValid ();
   const gchar * GetPath ();

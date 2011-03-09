@@ -51,6 +51,7 @@ private:
   void AddTile (PlaceEntry *ignore, PlaceEntryGroup& group, PlaceEntryResult& result);
   void CheckTiles ();
   static gboolean CheckTilesTimeout (PlacesGroupController *self);
+  void TileClicked (PlacesTile *tile);
 
 private:
   PlaceEntry  *_entry;

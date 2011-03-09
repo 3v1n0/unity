@@ -634,6 +634,24 @@ PlaceEntryRemote::GetGlobalResult (const void *id, ResultForeachCallback slot)
   slot (this, group, result);
 }
 
+void
+PlaceEntryRemote::ActivateResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_results_model, iter, RESULT_MIMETYPE));
+}
+
+void
+PlaceEntryRemote::ActivateGlobalResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_global_results_model, iter, RESULT_MIMETYPE));
+}
+
 /* Other methods */
 bool
 PlaceEntryRemote::IsValid ()

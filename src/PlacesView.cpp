@@ -43,6 +43,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _entry (NULL),
   _size_mode (SIZE_MODE_FULLSCREEN)
 {
+  LoadPlaces ();
+  _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
+
   _home_entry = new PlaceEntryHome (_factory);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
@@ -97,7 +100,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                                 (UBusCallback)&PlacesView::OnResultClicked,
+                                 (UBusCallback)&PlacesView::OnResultActivated,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
                                  (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
@@ -397,7 +400,7 @@ PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEnt
 }
 
 void
-PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
+PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 {
   const char *uri;
 
@@ -534,6 +537,30 @@ PlacesView::OnEntryActivated ()
   if (!_results_controller->ActivateFirst ())
     g_debug ("Cannot activate anything");
 }
+
+void
+PlacesView::LoadPlaces ()
+{
+  std::vector<Place *>::iterator it, eit = _factory->GetPlaces ().end ();
+
+  for (it = _factory->GetPlaces ().begin (); it != eit; ++it)
+  {
+    OnPlaceAdded (*it);
+  }
+}
+
+void
+PlacesView::OnPlaceAdded (Place *place)
+{
+  place->result_activated.connect (sigc::mem_fun (this, &PlacesView::OnPlaceResultActivated));
+}
+
+void
+PlacesView::OnPlaceResultActivated (Place *place, const char *uri, const char *mimetype)
+{
+  OnResultActivated (g_variant_new_string (uri), this);
+}
+
 
 //
 // Introspection

@@ -34,9 +34,12 @@ public:
   virtual std::vector<PlaceEntry *>& GetEntries  () = 0;
   virtual guint32                    GetNEntries () = 0;
 
+  virtual void ActivateResult (const char *uri, const char *mimetype) = 0;
+
   // Signals
   sigc::signal<void, PlaceEntry *> entry_added;
   sigc::signal<void, PlaceEntry *> entry_removed;
+  sigc::signal<void, Place *, const char *, const char *> result_activated;
 
 protected:
   std::vector<PlaceEntry *> _entries;

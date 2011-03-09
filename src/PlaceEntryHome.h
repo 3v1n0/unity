@@ -60,16 +60,19 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  void ForeachSection (SectionForeachCallback slot) { };
+  void ForeachSection (SectionForeachCallback slot) {};
 
   void ForeachGroup  (GroupForeachCallback slot);
   void ForeachResult (ResultForeachCallback slot);
 
-  void ForeachGlobalGroup  (GroupForeachCallback slot) { };
-  void ForeachGlobalResult (ResultForeachCallback slot) { };
+  void ForeachGlobalGroup  (GroupForeachCallback slot) {};
+  void ForeachGlobalResult (ResultForeachCallback slot) {};
 
   void GetResult (const void *id, ResultForeachCallback slot);
   void GetGlobalResult (const void *id, ResultForeachCallback slot) {};
+
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id) {};
 
 private:
   void LoadExistingEntries ();

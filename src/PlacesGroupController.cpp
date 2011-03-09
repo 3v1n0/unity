@@ -91,9 +91,12 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
 
   tile = new PlacesSimpleTile (result_icon,
                                result_name,
-                               style->GetTileIconSize ());
+                               style->GetTileIconSize (),
+                               false,
+                               result.GetId ());
   tile->SetURI (result.GetURI ());
   tile->QueueRelayout ();
+  tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::TileClicked));
 
   _id_to_tile[result.GetId ()] = tile;
   
@@ -102,6 +105,15 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
   _group->SetVisible (true);
 
   g_free (result_name);
+}
+
+void
+PlacesGroupController::TileClicked (PlacesTile *tile)
+{
+  if (_entry)
+  {
+    _entry->ActivateResult (tile->GetId ());
+  }
 }
 
 void
