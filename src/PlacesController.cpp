@@ -152,8 +152,7 @@ PlacesController::OnViewShowHideFrame (PlacesController *self)
   diff = g_get_monotonic_time () - self->_start_time;
 
   progress = diff/(float)_LENGTH_;
-  progress *= progress;
-
+  
   last_opacity = self->_last_opacity;
 
   if (self->_visible)
