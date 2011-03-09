@@ -239,7 +239,7 @@ PanelIndicatorObjectEntryView::Refresh ()
                            textcol.GetRed (),
                            textcol.GetGreen (),
                            textcol.GetBlue (),
-                           _proxy->label_sensitive ? 1.0f : 0.0f);
+                           _proxy->label_sensitive ? 1.0f : 0.5f);
     cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
