@@ -106,7 +106,7 @@ private:
 
   void LoadPlaces ();
   void OnPlaceAdded (Place *place);
-  void OnPlaceResultActivated (Place *place, const char *uri, const char *mimetype);
+  void OnPlaceResultActivated (Place *place, const char *uri, ActivationResult res);
 
 private:
   PlaceFactory       *_factory;

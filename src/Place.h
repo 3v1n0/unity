@@ -23,8 +23,16 @@
 #include <vector>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
+#include <glib.h>
 
 #include "PlaceEntry.h"
+
+enum ActivationResult
+{
+  FALLBACK = 0,
+  SHOW_DASH,
+  HIDE_DASH
+};
 
 class Place : public sigc::trackable
 {
@@ -39,7 +47,7 @@ public:
   // Signals
   sigc::signal<void, PlaceEntry *> entry_added;
   sigc::signal<void, PlaceEntry *> entry_removed;
-  sigc::signal<void, Place *, const char *, const char *> result_activated;
+  sigc::signal<void, Place *, const char *, ActivationResult> result_activated;
 
 protected:
   std::vector<PlaceEntry *> _entries;

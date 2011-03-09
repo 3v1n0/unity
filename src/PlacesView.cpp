@@ -382,20 +382,12 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->AddResult (entry, group, result);
 }
 
 void
 PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->RemoveResult (entry, group, result);
 }
 
@@ -556,9 +548,24 @@ PlacesView::OnPlaceAdded (Place *place)
 }
 
 void
-PlacesView::OnPlaceResultActivated (Place *place, const char *uri, const char *mimetype)
+PlacesView::OnPlaceResultActivated (Place *place, const char *uri, ActivationResult res)
 {
-  OnResultActivated (g_variant_new_string (uri), this);
+  switch (res)
+  {
+    case FALLBACK:
+      OnResultActivated (g_variant_new_string (uri), this);
+      break;
+    case SHOW_DASH:
+      break;
+    case HIDE_DASH:
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                NULL);
+      break;
+    default:
+      g_warning ("Activation result %d not supported", res);
+      break;
+  };
 }
 
 

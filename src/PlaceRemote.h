@@ -55,6 +55,13 @@ private:
   void LoadKeyFileEntries (GKeyFile *key_file);
   void Connect ();
 
+  static void OnActivationProxyReady (GObject      *source,
+                                      GAsyncResult *result,
+                                      PlaceRemote  *self);
+  static void OnActivationResultReceived (GObject      *source,
+                                         GAsyncResult *result,
+                                         PlaceRemote  *self);
+
 private:
   char   *_path;
   char   *_dbus_name;
@@ -65,6 +72,8 @@ private:
 
   GDBusProxy *_service_proxy;
   GDBusProxy *_activation_proxy;
+
+  std::string _active_uri;
 };
 
 #endif // PLACE_REMOTE_H
