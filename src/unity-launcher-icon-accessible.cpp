@@ -31,6 +31,8 @@
 #include "unity-launcher-icon-accessible.h"
 #include "LauncherIcon.h"
 
+#include "unitya11y.h"
+
 /* GObject */
 static void unity_launcher_icon_accessible_class_init (UnityLauncherIconAccessibleClass *klass);
 static void unity_launcher_icon_accessible_init       (UnityLauncherIconAccessible *launcher_icon_accessible);
@@ -38,10 +40,11 @@ static void unity_launcher_icon_accessible_finalize   (GObject *object);
 
 
 /* AtkObject.h */
-static void          unity_launcher_icon_accessible_initialize (AtkObject *accessible,
-                                                                gpointer   data);
+static void          unity_launcher_icon_accessible_initialize    (AtkObject *accessible,
+                                                                   gpointer   data);
 static AtkStateSet*  unity_launcher_icon_accessible_ref_state_set (AtkObject *obj);
-static const gchar * unity_launcher_icon_accessible_get_name   (AtkObject *obj);
+static const gchar * unity_launcher_icon_accessible_get_name      (AtkObject *obj);
+static AtkObject *   unity_launcher_icon_accessible_get_parent    (AtkObject *obj);
 
 /* private/utility methods*/
 static void check_selected (UnityLauncherIconAccessible *self);
@@ -74,6 +77,7 @@ unity_launcher_icon_accessible_class_init (UnityLauncherIconAccessibleClass *kla
   atk_class->initialize = unity_launcher_icon_accessible_initialize;
   atk_class->get_name = unity_launcher_icon_accessible_get_name;
   atk_class->ref_state_set = unity_launcher_icon_accessible_ref_state_set;
+  atk_class->get_parent = unity_launcher_icon_accessible_get_parent;
 
   g_type_class_add_private (gobject_class, sizeof (UnityLauncherIconAccessiblePrivate));
 }
@@ -188,6 +192,31 @@ unity_launcher_icon_accessible_ref_state_set (AtkObject *obj)
     atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
 
   return state_set;
+}
+
+static AtkObject *
+unity_launcher_icon_accessible_get_parent (AtkObject *obj)
+{
+  nux::Object *nux_object = NULL;
+  LauncherIcon *icon = NULL;
+  Launcher *launcher = NULL;
+
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (obj), NULL);
+
+  if (obj->accessible_parent)
+    return obj->accessible_parent;
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+
+  if (nux_object == NULL) /* actor is defunct */
+    return NULL;
+
+  icon = dynamic_cast<LauncherIcon *>(nux_object);
+  launcher = icon->GetLauncher ();
+
+  g_return_val_if_fail (dynamic_cast<Launcher *>(launcher), NULL);
+
+  return unity_a11y_get_accessible (launcher);
 }
 
 /* private methods */
