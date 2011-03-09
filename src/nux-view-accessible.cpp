@@ -203,6 +203,8 @@ nux_view_accessible_ref_child (AtkObject *obj,
 static void
 on_start_focus_cb (AtkObject *accessible)
 {
+  g_debug ("[a11y] on start_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
+
   g_signal_emit_by_name (accessible, "focus_event", TRUE);
   atk_focus_tracker_notify (accessible);
 }
@@ -210,6 +212,8 @@ on_start_focus_cb (AtkObject *accessible)
 static void
 on_end_focus_cb (AtkObject *accessible)
 {
+  g_debug ("[a11y] on end_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
+
   g_signal_emit_by_name (accessible, "focus_event", FALSE);
   atk_focus_tracker_notify (accessible);
 }
@@ -296,6 +300,9 @@ nux_view_accessible_focus_handler (AtkObject *accessible,
                                    gboolean focus_in)
 {
   g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
+
+  g_debug ("[a11y] view_focus_handler (%p:%s:%i)",
+           accessible, atk_object_get_name (accessible), focus_in);
 
   atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);
 }
