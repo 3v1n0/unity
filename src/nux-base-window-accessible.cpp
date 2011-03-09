@@ -72,6 +72,8 @@ nux_base_window_accessible_new (nux::Object *object)
 
   atk_object_initialize (accessible, object);
 
+  atk_object_set_name (accessible, "BaseWindow");
+
   return accessible;
 }
 

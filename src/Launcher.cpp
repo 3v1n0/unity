@@ -3554,5 +3554,8 @@ Launcher::GetSelectedMenuIcon ()
 
   it = _model->at (_current_icon_index);
 
-  return *it;
+  if (it != (LauncherModel::iterator)NULL)
+    return *it;
+  else
+    return NULL;
 }
