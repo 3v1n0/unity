@@ -37,6 +37,8 @@ public:
   ~PlaceEntryHome ();
 
    /* Overrides */
+  Place * GetParent () { return NULL; }
+
   const gchar * GetId          ();
   const gchar * GetName        ();
   const gchar * GetIcon        ();

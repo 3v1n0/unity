@@ -180,8 +180,9 @@ private:
 };
 
 
-PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
+PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
 : dirty (false),
+  _parent (parent),
   _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
@@ -303,6 +304,12 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 }
 
 /* Overrides */
+Place *
+PlaceEntryRemote::GetParent ()
+{
+  return _parent;
+}
+  
 const gchar *
 PlaceEntryRemote::GetId ()
 {

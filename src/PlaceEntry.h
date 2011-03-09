@@ -15,6 +15,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
+
 #ifndef PLACE_ENTRY_H
 #define PLACE_ENTRY_H
 
@@ -25,6 +26,8 @@
 #include <sigc++/trackable.h>
 
 #include <glib.h>
+
+class Place;
 
 class PlaceEntrySection
 {
@@ -73,6 +76,8 @@ public:
   typedef sigc::slot<void, PlaceEntry *, PlaceEntrySection&> SectionForeachCallback;
   typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&>  GroupForeachCallback;
   typedef sigc::slot<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> ResultForeachCallback;
+
+  virtual Place * GetParent () = 0;
 
   virtual const char * GetId          () = 0;
   virtual const char * GetName        () = 0;

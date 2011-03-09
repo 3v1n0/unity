@@ -137,14 +137,14 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
   {
     _group->GetChildLayout ()->RemoveChildObject (tile);
     _group->Relayout ();
-    _group->SetVisible (_queue.size ());
   }
-
+  
   _id_to_tile.erase (result.GetId ());
 
   if (!_check_tiles_id)
     _check_tiles_id = g_timeout_add (0, (GSourceFunc)CheckTilesTimeout, this);
-  
+
+  _group->SetVisible (_queue.size ());
   _group->SetCounts (PlacesStyle::GetDefault ()->GetDefaultNColumns (),
                      _queue.size ());
 }

@@ -244,7 +244,7 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
 
     if (g_str_has_prefix (group, ENTRY_PREFIX))
     {
-      PlaceEntryRemote *entry = new PlaceEntryRemote (_dbus_name);
+      PlaceEntryRemote *entry = new PlaceEntryRemote (this, _dbus_name);
       entry->InitFromKeyFile (key_file, group);
       
       if (entry->IsValid ())
@@ -369,7 +369,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
 
     if (!existing)
     {
-      existing = new PlaceEntryRemote (_dbus_name);
+      existing = new PlaceEntryRemote (this, _dbus_name);
 
       _entries.push_back (existing);
       entry_added.emit (existing);
@@ -456,7 +456,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
                  &global_results_model,
                  &global_hints);
 
-  entry = new PlaceEntryRemote (_dbus_name);
+  entry = new PlaceEntryRemote (this, _dbus_name);
   entry->Update (dbus_path,
                  name,
                  icon,
