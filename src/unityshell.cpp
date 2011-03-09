@@ -591,6 +591,8 @@ UnityScreen::Relayout ()
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
 
+  wt->SetWindowSize (rect.width, rect.height);
+
   pCurGeom = panelWindow->GetGeometry(); 
   lCurGeom = launcherWindow->GetGeometry(); 
 
