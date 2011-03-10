@@ -203,7 +203,17 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushDrawTextureLayer (GfxContext, GetGeometry (),
+    nux::Geometry geo_blur = GetGeometry ();
+
+    if ((_size_mode == SIZE_MODE_HOVER) && style)
+    {
+      nux::BaseTexture *bottom = style->GetDashBottomTile ();
+      nux::BaseTexture *right = style->GetDashRightTile ();
+
+      geo_blur.OffsetSize (-right->GetWidth (), -bottom->GetHeight ());
+    }
+
+    gPainter.PushDrawTextureLayer (GfxContext, geo_blur, //GetGeometry (),
                                    bkg_blur_texture,
                                    texxform_blur_bkg,
                                    nux::Color::White,
