@@ -30,7 +30,7 @@
 
 #include "PlaceFactory.h"
 #include "PlacesStyle.h"
-
+#include "PlacesSettings.h"
 #include "PlacesView.h"
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
@@ -43,6 +43,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _entry (NULL),
   _size_mode (SIZE_MODE_FULLSCREEN)
 {
+  LoadPlaces ();
+  _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
+
   _home_entry = new PlaceEntryHome (_factory);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
@@ -58,6 +61,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   AddChild (_search_bar);
 
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
+  _search_bar->activated.connect (sigc::mem_fun (this, &PlacesView::OnEntryActivated));
 
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
   vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
@@ -96,7 +100,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                                 (UBusCallback)&PlacesView::OnResultClicked,
+                                 (UBusCallback)&PlacesView::OnResultActivated,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
                                  (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
@@ -132,13 +136,15 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   {
     PlacesStyle      *style = PlacesStyle::GetDefault ();
     nux::BaseTexture *corner = style->GetDashCorner ();
-    nux::Geometry     geo = GetGeometry ();
-    nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth () + 66,
-                                  geo.y + geo.height - corner->GetHeight () + 24,
+    nux::Geometry     geo = GetAbsoluteGeometry ();
+    nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth (),
+                                  geo.y + geo.height - corner->GetHeight (),
                                   corner->GetWidth (),
                                   corner->GetHeight ());
+
     if (fullscreen.IsPointInside (ievent.e_x, ievent.e_y))
     {
+      _bg_blur_texture.Release ();
       fullscreen_request.emit ();
 
       return TraverseInfo |= nux::eMouseEventSolved;
@@ -154,6 +160,9 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   PlacesStyle  *style = PlacesStyle::GetDefault ();
   nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
 
   GfxContext.PushClippingRectangle (geo);
 
@@ -161,6 +170,60 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+
+  nux::Geometry _bg_blur_geo = GetGeometry ();
+
+  if ((_size_mode == SIZE_MODE_HOVER))
+  {
+    nux::BaseTexture *bottom = style->GetDashBottomTile ();
+    nux::BaseTexture *right = style->GetDashRightTile ();
+
+    _bg_blur_geo.OffsetSize (-right->GetWidth (), -bottom->GetHeight ());
+  }
+
+  if (!_bg_blur_texture.IsValid () && paint_blur)
+  {
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    
+    GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+    GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+    GfxContext.GetRenderStates ().EnableScissor (false);
+
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_texture = GfxContext.CreateTextureFromBackBuffer (
+    geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
+
+    nux::TexCoordXForm texxform__bg;
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Color::White, 1.0f, 2);
+
+    if (current_fbo.IsValid ())
+    { 
+      current_fbo->Activate (true);
+      GfxContext.Push2DWindow (current_fbo->GetWidth (), current_fbo->GetHeight ());
+    }
+    else
+    {
+      GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+      GfxContext.Push2DWindow (GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+      GfxContext.ApplyClippingRectangle ();
+    }
+  }
+
+  if (_bg_blur_texture.IsValid ()  && paint_blur)
+  {
+    nux::TexCoordXForm texxform_blur__bg;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
+                                   _bg_blur_texture,
+                                   texxform_blur__bg,
+                                   nux::Color::White,
+                                   true,
+                                   rop);
+  }
 
   if (_size_mode == SIZE_MODE_HOVER)
   {
@@ -240,6 +303,9 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter ().RenderSinglePaintLayer (GfxContext, geo, _bg_layer);
   }
 
+  if (_bg_blur_texture.IsValid () && paint_blur)
+    gPainter.PopBackground ();
+
   GfxContext.GetRenderStates ().SetBlend (false);
 
   GfxContext.PopClippingRectangle ();
@@ -249,16 +315,38 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
+  int bgs = 1;
+
   GfxContext.PushClippingRectangle (GetGeometry() );
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
+  if (_bg_blur_texture.IsValid () && paint_blur)
+  {
+
+    nux::TexCoordXForm texxform_blur__bg;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+    gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
+                               _bg_blur_texture,
+                               texxform_blur__bg,
+                               nux::Color::White,
+                               true,
+                               rop);
+    bgs++;
+  }
+ 
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
 
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
 
-  nux::GetPainter ().PopBackground ();
+  nux::GetPainter ().PopBackground (bgs);
 
   GfxContext.GetRenderStates ().SetBlend (false);
 
@@ -268,6 +356,12 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 //
 // PlacesView Methods
 //
+void
+PlacesView::AboutToShow ()
+{
+  _bg_blur_texture.Release ();
+}
+
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
@@ -299,11 +393,13 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
   _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
-
+  
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
   else
     _layered_layout->SetActiveLayer (_results_view);
+
+  
 }
 
 PlaceEntry *
@@ -378,25 +474,17 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->AddResult (entry, group, result);
 }
 
 void
 PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->RemoveResult (entry, group, result);
 }
 
 void
-PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
+PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 {
   const char *uri;
 
@@ -527,6 +615,52 @@ PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
   self->QueueDraw ();
 }
 
+void
+PlacesView::OnEntryActivated ()
+{
+  if (!_results_controller->ActivateFirst ())
+    g_debug ("Cannot activate anything");
+}
+
+void
+PlacesView::LoadPlaces ()
+{
+  std::vector<Place *>::iterator it, eit = _factory->GetPlaces ().end ();
+
+  for (it = _factory->GetPlaces ().begin (); it != eit; ++it)
+  {
+    OnPlaceAdded (*it);
+  }
+}
+
+void
+PlacesView::OnPlaceAdded (Place *place)
+{
+  place->result_activated.connect (sigc::mem_fun (this, &PlacesView::OnPlaceResultActivated));
+}
+
+void
+PlacesView::OnPlaceResultActivated (const char *uri, ActivationResult res)
+{
+  switch (res)
+  {
+    case FALLBACK:
+      OnResultActivated (g_variant_new_string (uri), this);
+      break;
+    case SHOW_DASH:
+      break;
+    case HIDE_DASH:
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                NULL);
+      break;
+    default:
+      g_warning ("Activation result %d not supported", res);
+      break;
+  };
+}
+
+
 //
 // Introspection
 //
@@ -562,6 +696,18 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
   g_variant_get (payload, "(sus)", &id, &section, &search_string);
 
   self->PlaceEntryActivateRequest (id, section, search_string);
+
+  if (self->GetFocused ())
+  {
+    // reset the focus
+    self->SetFocused (false);
+    self->SetFocused (true);
+  }
+  else
+  {
+    // Not focused but we really should be
+    self->SetFocused (true);
+  }
 
   g_free (id);
   g_free (search_string);

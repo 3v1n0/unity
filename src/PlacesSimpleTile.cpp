@@ -26,8 +26,12 @@
 
 #include "PlacesSimpleTile.h"
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, int icon_size, bool defer_icon_loading)
-: PlacesTile (NUX_TRACKER_LOCATION),
+PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
+                                    const char *label,
+                                    int         icon_size,
+                                    bool defer_icon_loading,
+                                    const void *id)
+: PlacesTile (NUX_TRACKER_LOCATION, id),
   _label (NULL),
   _icon (NULL),
   _uri (NULL)
@@ -58,8 +62,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name, const char *label, in
 
   SetLayout (layout);
 
-  OnMouseClick.connect (sigc::mem_fun (this, &PlacesSimpleTile::Clicked));
-  
   SetDndEnabled (true, false);
 }
 
@@ -187,17 +189,6 @@ PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-}
-
-void
-PlacesSimpleTile::Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  if (_uri)
-  {
-    ubus_server_send_message (ubus_server_get_default (),
-                              UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                              g_variant_new_string (_uri));
-  }
 }
 
 void

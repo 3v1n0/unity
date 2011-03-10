@@ -34,6 +34,7 @@
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelView.h"
+#include "PanelHomeButton.h"
 #include "PlacesController.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
@@ -103,14 +104,19 @@ class UnityScreen :
 	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
                               CompOption::Vector &options);
 
-  bool
-  showPanelFirstMenuKeyInitiate (CompAction         *action,
-                                 CompAction::State   state,
-                                 CompOption::Vector &options);
+    bool
+    showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                   CompAction::State   state,
+                                   CompOption::Vector &options);
   bool
   showPanelFirstMenuKeyTerminate (CompAction         *action,
                                   CompAction::State   state,
                                   CompOption::Vector &options);
+                                  
+  bool
+  executeCommand (CompAction*         action,
+                  CompAction::State   state,
+                  CompOption::Vector& options);
   bool
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
@@ -193,6 +199,7 @@ class UnityScreen :
 	Launcher               *launcher;
 	LauncherController     *controller;
 	PanelView              *panelView;
+  PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
