@@ -31,6 +31,7 @@
 #include "Introspectable.h"
 
 #include <Nux/BaseWindow.h>
+#include <Nux/TimelineEasings.h>
 
 class PlacesController : public Introspectable
 {
@@ -42,6 +43,8 @@ public:
   void Hide ();
   void ToggleShowHide ();
   static void SetLauncherSize (int launcher_size);
+
+  nux::BaseWindow* GetWindow () {return _window;}
 
 protected:
   const gchar* GetName ();
@@ -58,6 +61,9 @@ private:
   void OnSettingsChanged (PlacesSettings *settings);
   void OnDashFullscreenRequest ();
   void GetWindowSize (int *width, int *height);
+  void StartShowHideTimeline ();
+  static gboolean OnViewShowHideFrame (PlacesController *self);
+  static void Relayout (GdkScreen *screen, PlacesController *self);
 
 private:
   nux::BaseWindow  *_window;
@@ -67,9 +73,10 @@ private:
   bool              _visible;
   bool              _fullscren_request;
   static int        _launcher_size;
-
-public:
-  nux::BaseWindow* GetWindow () {return _window;}
+  guint             _timeline_id;
+  float             _last_opacity;
+  gint64            _start_time;
+  GdkRectangle      _monitor_rect;
 };
 
 #endif // PLACES_CONTROLLER_H

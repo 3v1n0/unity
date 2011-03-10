@@ -79,6 +79,8 @@ public:
   SizeMode GetSizeMode ();
   void     SetSizeMode (SizeMode size_mode);
 
+  void AboutToShow ();
+
   // Signals
   sigc::signal<void, PlaceEntry *> entry_changed;
   sigc::signal<void> fullscreen_request;
@@ -129,6 +131,9 @@ private:
   nux::SpaceLayout *_v_spacer;
 
   SizeMode _size_mode;
+
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_blur_texture;
+  nux::Geometry _bg_blur_geo;
 };
 
 #endif // PANEL_HOME_BUTTON_H

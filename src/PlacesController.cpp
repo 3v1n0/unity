@@ -36,7 +36,8 @@ int PlacesController::_launcher_size = 66;
 
 PlacesController::PlacesController ()
 : _visible (false),
-  _fullscren_request (false)
+  _fullscren_request (false),
+  _timeline_id (0)
 {
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
@@ -57,6 +58,7 @@ PlacesController::PlacesController ()
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
   _window->InputWindowEnableStruts(false);
+  _window->SetOpacity (0.0f);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
@@ -76,6 +78,12 @@ PlacesController::PlacesController ()
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
   _view->SetFocused (true);
+
+  Relayout (gdk_screen_get_default (), this);
+  g_signal_connect (gdk_screen_get_default (), "monitors-changed",
+                    G_CALLBACK (PlacesController::Relayout), this);
+  g_signal_connect (gdk_screen_get_default (), "size-changed",
+                    G_CALLBACK (PlacesController::Relayout), this);
 }
 
 PlacesController::~PlacesController ()
@@ -83,11 +91,28 @@ PlacesController::~PlacesController ()
   _window->UnReference ();
 }
 
+void
+PlacesController::Relayout (GdkScreen *screen, PlacesController *self)
+{
+  int width = 0, height = 0;
+ 
+  gdk_screen_get_monitor_geometry (screen,
+                                   gdk_screen_get_primary_monitor (screen),
+                                   &self->_monitor_rect);
+
+  self->GetWindowSize (&width, &height);
+  self->_window->SetGeometry (nux::Geometry (self->_monitor_rect.x + _launcher_size, 
+                                             self->_monitor_rect.y + 24,
+                                             width,
+                                             height));
+}
+
 void PlacesController::Show ()
 {
   if (_visible)
     return;
 
+  _view->AboutToShow ();
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
   _window->PushToFront ();
@@ -96,12 +121,13 @@ void PlacesController::Show ()
   //_window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
+  
+  StartShowHideTimeline ();
 
   _visible = true;
 
   ubus_server_send_message (ubus_server_get_default (), UBUS_PLACE_VIEW_SHOWN, NULL);
 }
-
 void PlacesController::Hide ()
 {
   if (!_visible)
@@ -112,13 +138,13 @@ void PlacesController::Hide ()
   _window->UnGrabPointer ();
   //_window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
-  _window->ShowWindow (false, false);
-
   _visible = false;
   _fullscren_request = false;
 
   _view->SetActiveEntry (NULL, 0, "");
 
+  StartShowHideTimeline ();
+  
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
 }
 
@@ -126,6 +152,55 @@ void PlacesController::ToggleShowHide ()
 {
   _visible ? Hide () : Show ();
 }
+
+void
+PlacesController::StartShowHideTimeline ()
+{
+  if (_timeline_id)
+    g_source_remove (_timeline_id);
+
+  _timeline_id = g_timeout_add (15, (GSourceFunc)PlacesController::OnViewShowHideFrame, this);
+  _last_opacity = _window->GetOpacity ();
+  _start_time = g_get_monotonic_time ();
+}
+
+gboolean
+PlacesController::OnViewShowHideFrame (PlacesController *self)
+{
+#define _LENGTH_ 90000
+  gint64 diff;
+  float  progress;
+  float  last_opacity;
+
+  diff = g_get_monotonic_time () - self->_start_time;
+
+  progress = diff/(float)_LENGTH_;
+  
+  last_opacity = self->_last_opacity;
+
+  if (self->_visible)
+  {
+    self->_window->SetOpacity (last_opacity + ((1.0f - last_opacity) * progress));
+  }
+  else
+  {
+    self->_window->SetOpacity (last_opacity - (last_opacity * progress));
+  }
+ 
+  if (diff > _LENGTH_)
+  {
+    self->_timeline_id = 0;
+
+    // Make sure the state is right
+    self->_window->SetOpacity (self->_visible ? 1.0f : 0.0f);
+    if (!self->_visible)
+      self->_window->ShowWindow (false, false);
+
+    return FALSE;
+  }
+  return TRUE;
+}
+
 
 void
 PlacesController::GetWindowSize (int *out_width, int *out_height)
@@ -173,9 +248,14 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
+  PlacesController *self = static_cast<PlacesController *> (user_data);
   int width = 0, height = 0;
-  static_cast<PlacesController *> (user_data)->GetWindowSize (&width, &height);
-  geo = nux::Geometry (_launcher_size, 24, width, height);
+
+  self->GetWindowSize (&width, &height);
+  geo = nux::Geometry (self->_monitor_rect.x + self->_launcher_size, 
+                       self->_monitor_rect.y + 24,
+                       width,
+                       height);
 }
 
 void
@@ -184,7 +264,10 @@ PlacesController::OnDashFullscreenRequest ()
   int width = 0, height = 0;
   _fullscren_request = true;
   GetWindowSize (&width, &height);
-  _window->SetGeometry (nux::Geometry (_launcher_size, 24, width, height));
+  _window->SetGeometry (nux::Geometry (_monitor_rect.x + _launcher_size, 
+                                       _monitor_rect.y + 24,
+                                       width,
+                                       height));
 }
 
 void
@@ -204,8 +287,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  //FIXME: We need a way to get the real position/size of the homebutton
-  nux::Geometry geo (0, 0, _launcher_size, 24);
+  nux::Geometry geo (_monitor_rect.x, _monitor_rect.y, _launcher_size, 24);
   if (!geo.IsPointInside (x, y))
     Hide ();
 }
