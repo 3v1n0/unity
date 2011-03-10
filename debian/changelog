@@ -1,6 +1,55 @@
 unity (3.6.4-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Unity: Alt-F2 not working (LP: #580295)
+    - When running with dual monitors, Unity will use the height of the larger
+      one for calculating when to fold (LP: #696388)
+    - Unity app launcher is filled up with doublettes (LP: #690537)
+    - Unity interface not resized properly when external monitor is used
+      (LP: #691772)
+    - Dash needs keyboard navigation (LP: #727714)
+    - It is possible to focus Unity itself and Close it from the global menu
+      (LP: #728790)
+    - Systray icons showing on top of everything (LP: #728719)
+    - Pressing ENTER in the dash during a search should open the first
+      displayed item (LP: #729699)
+    - compiz crashed with SIGSEGV in LauncherIcon::OpenQuicklist()
+      (LP: #731096)
+    - inactive menus are not shown (LP: #732162)
+    - Icon-only menu titles don't have accessible names (LP: #691677)
+    - unity not working on rotated displays (LP: #694596)
+    - unity_support_test crashed with SIGSEGV in
+      nux::IOpenGLAsmVertexShader::IOpenGLAsmVertexShader() (LP: #709649)
+    - Dragging .desktop file to launcher's trash creates space for new
+      launcher icon (LP: #717250)
+    - Unable to scroll in Applications/Files and Folders Place using mouse
+      wheel (LP: #721447)
+    - The applications place is empty (LP: #724259)
+    - compiz crashed with SIGSEGV in
+      nux::GpuRenderStates::SubmitChangeStates() (LP: #719156)
+    - Quicklists are difficult to dismiss (LP: #726890)
+    - Apps in Available group not rendered in Dash (LP: #729710)
+    - Clicking on Shortcuts header doesn't do anything. (LP: #730774)
+    - Zeitgeist FTS Extension doesn't filter on subject URIs (LP: #731208)
+    - dual monitor,,,upper panel turns white  / nvidia (LP: #685179)
+    - Dash file Lens – Rename “Favourite Folders” category header to “Folders”
+      (LP: #723866)
+    - looking for 'places' icons in the wrong location (LP: #727672)
+    - Empty trash quicklist item is missing an ellipsis  (LP: #731472)
+    - Wastebasket quicklist is missing “Empty Wastebasket” option when the
+      wastebasket is empty (LP: #723880)
+    - Emptying the trash from the unity sidebar should respect nautilus' "Ask
+      before emptying" setting (LP: #730003)
+    - start-here icon updated at wrong time (LP: #726267)
+    - Unity overlay unhide issue (LP: #726926)
+    - Orca doesn't report that the Launcher receives the focus (LP: #727133)
+    - Accessibility object parent-child hierarchy on unity is broken
+      (LP: #727908)
+    - Regression: Orca doesn't speech out the selection changes on the
+      Launcher (LP: #729165)
+    - quicklist must respect enabled state (LP: #731533)
+    - unity-panel-service crashed with SIGSEGV in
+      dbusmenu_menuitem_send_about_to_show() (LP: #725631)
   * debian/control:
     - build-dep on latest nux
 
