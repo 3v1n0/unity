@@ -68,7 +68,6 @@ PlacesResultsView::OnIdleFocus (PlacesResultsView *self)
   
   if (self->GetFocused ())
   {
-    g_debug ("IDLE RE FOCUS WOOHOOO");
     self->SetFocused (false); // unset focus on all children
     self->SetFocused (true); // set focus on first child
   }

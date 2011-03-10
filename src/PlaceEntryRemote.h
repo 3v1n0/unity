@@ -35,12 +35,14 @@
 class PlaceEntryRemote : public PlaceEntry
 {
 public:
-  PlaceEntryRemote (const gchar *dbus_name);
+  PlaceEntryRemote (Place *parent, const gchar *dbus_name);
   ~PlaceEntryRemote ();
 
   void InitFromKeyFile (GKeyFile *key_file, const gchar *group);
   
   /* Overrides */
+  Place * GetParent ();
+
   const gchar * GetId          ();
   const gchar * GetName        ();
   const gchar * GetIcon        ();
@@ -72,6 +74,9 @@ public:
 
   void GetResult (const void *id, ResultForeachCallback slot);
   void GetGlobalResult (const void *id, ResultForeachCallback slot);
+
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id);
 
   /* Other methods */
   bool          IsValid ();
@@ -110,6 +115,7 @@ public:
   bool dirty;
 
 private:
+  Place   *_parent;
   gchar   *_dbus_name;
   gchar   *_dbus_path;
   gchar   *_name;

@@ -116,14 +116,12 @@ PlacesGroup::~PlacesGroup ()
 void
 PlacesGroup::OnLabelActivated (nux::Area *label)
 {
-  g_debug ("LABEL WAS ACTIVATED");
   SetExpanded (!_is_expanded);
 }
 
 void
 PlacesGroup::OnLabelFocusChanged (nux::Area *label)
 {
-  g_debug ("LABEL WAS FOCUSED? %s", label->GetFocused () ? "yes": "no");
   RefreshLabel ();
 }
 void

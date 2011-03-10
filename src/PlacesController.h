@@ -63,10 +63,13 @@ private:
   nux::BaseWindow  *_window;
   nux::HLayout     *_window_layout;
   PlacesView       *_view;
-  PlaceFactoryFile *_factory;
+  PlaceFactory     *_factory;
   bool              _visible;
   bool              _fullscren_request;
   static int        _launcher_size;
+
+public:
+  nux::BaseWindow* GetWindow () {return _window;}
 };
 
 #endif // PLACES_CONTROLLER_H

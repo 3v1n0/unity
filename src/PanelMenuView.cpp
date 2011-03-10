@@ -170,7 +170,8 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
   }
 
-  ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (!_is_own_window)
+    ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
 }
