@@ -1533,7 +1533,7 @@ Launcher::EnsureHiddenState ()
 bool
 Launcher::CheckIntersectWindow (CompWindow *window)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetAbsoluteGeometry ();
   int intersect_types = CompWindowTypeNormalMask | CompWindowTypeDialogMask |
                         CompWindowTypeModalDialogMask | CompWindowTypeUtilMask;
 
