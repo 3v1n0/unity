@@ -607,6 +607,18 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
 
   self->PlaceEntryActivateRequest (id, section, search_string);
 
+  if (self->GetFocused ())
+  {
+    // reset the focus
+    self->SetFocused (false);
+    self->SetFocused (true);
+  }
+  else
+  {
+    // Not focused but we really should be
+    self->SetFocused (true);
+  }
+
   g_free (id);
   g_free (search_string);
 }
