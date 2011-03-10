@@ -40,7 +40,7 @@ public:
 
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-
+  
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -69,7 +69,7 @@ private:
   nux::TextureLayer *_hilight_layer;
 
   void OnFocusChanged (nux::Area *area);
-
+  void OnFocusActivated (nux::Area *area);
   int _last_width;
   int _last_height;
 

@@ -41,6 +41,7 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
   FocusChanged.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
+  FocusActivated.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;
 }
 
@@ -348,4 +349,10 @@ void
 PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   QueueDraw ();
+}
+
+void
+PlacesTile::OnFocusActivated (nux::Area *area)
+{
+  sigClick.emit (this);
 }

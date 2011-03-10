@@ -65,15 +65,18 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
   _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
+  _search_icon->SetCanFocus (false);
 
   _layered_layout = new nux::LayeredLayout ();
 
   _hint = new nux::StaticCairoText (" ");
   _hint->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.5f));
+  _hint->SetCanFocus (false);
   _layered_layout->AddLayer (_hint);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->SetCanFocus (true);
   _pango_entry->activated.connect (sigc::mem_fun (this, &PlacesSearchBar::OnEntryActivated));
   _layered_layout->AddLayer (_pango_entry);
 
@@ -87,6 +90,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
+  _combo->SetCanFocus (false); // NOT SUPPORTING THIS QUITE YET
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -117,12 +121,6 @@ const gchar *
 PlacesSearchBar::GetChildsName ()
 {
   return "";
-}
-
-bool
-PlacesSearchBar::CanFocus ()
-{
-  return false;
 }
 
 void PlacesSearchBar::AddProperties (GVariantBuilder *builder)

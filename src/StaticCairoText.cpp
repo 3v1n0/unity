@@ -50,6 +50,7 @@ namespace nux
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
   _fontstring = NULL;
+  SetCanFocus (false);
 }
 
 StaticCairoText::~StaticCairoText ()
@@ -475,11 +476,6 @@ void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
   self->GetTextExtents (width, height);
   self->UpdateTexture ();
   self->sigFontChanged.emit (self);
-}
-
-bool StaticCairoText::CanFocus ()
-{
-  return false;
 }
 
 }

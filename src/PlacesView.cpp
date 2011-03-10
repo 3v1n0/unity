@@ -393,11 +393,13 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
   _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
-
+  
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
   else
     _layered_layout->SetActiveLayer (_results_view);
+
+  
 }
 
 PlaceEntry *
@@ -694,6 +696,18 @@ place_entry_activate_request (GVariant *payload, PlacesView *self)
   g_variant_get (payload, "(sus)", &id, &section, &search_string);
 
   self->PlaceEntryActivateRequest (id, section, search_string);
+
+  if (self->GetFocused ())
+  {
+    // reset the focus
+    self->SetFocused (false);
+    self->SetFocused (true);
+  }
+  else
+  {
+    // Not focused but we really should be
+    self->SetFocused (true);
+  }
 
   g_free (id);
   g_free (search_string);

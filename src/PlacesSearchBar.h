@@ -57,8 +57,6 @@ public:
   sigc::signal<void, const char *> search_changed;
   sigc::signal<void> activated;
 
-  bool CanFocus ();
-
 protected:
   // Introspectable methods
   const gchar * GetName ();
