@@ -78,11 +78,33 @@ PlacesController::PlacesController ()
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
   _view->SetFocused (true);
+
+  Relayout (gdk_screen_get_default (), this);
+  g_signal_connect (gdk_screen_get_default (), "monitors-changed",
+                    G_CALLBACK (PlacesController::Relayout), this);
+  g_signal_connect (gdk_screen_get_default (), "size-changed",
+                    G_CALLBACK (PlacesController::Relayout), this);
 }
 
 PlacesController::~PlacesController ()
 {
   _window->UnReference ();
+}
+
+void
+PlacesController::Relayout (GdkScreen *screen, PlacesController *self)
+{
+  int width = 0, height = 0;
+ 
+  gdk_screen_get_monitor_geometry (screen,
+                                   gdk_screen_get_primary_monitor (screen),
+                                   &self->_monitor_rect);
+
+  self->GetWindowSize (&width, &height);
+  self->_window->SetGeometry (nux::Geometry (self->_monitor_rect.x + _launcher_size, 
+                                             self->_monitor_rect.y + 24,
+                                             width,
+                                             height));
 }
 
 void PlacesController::Show ()
@@ -226,9 +248,14 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
 void
 PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
+  PlacesController *self = static_cast<PlacesController *> (user_data);
   int width = 0, height = 0;
-  static_cast<PlacesController *> (user_data)->GetWindowSize (&width, &height);
-  geo = nux::Geometry (_launcher_size, 24, width, height);
+
+  self->GetWindowSize (&width, &height);
+  geo = nux::Geometry (self->_monitor_rect.x + self->_launcher_size, 
+                       self->_monitor_rect.y + 24,
+                       width,
+                       height);
 }
 
 void
@@ -237,7 +264,10 @@ PlacesController::OnDashFullscreenRequest ()
   int width = 0, height = 0;
   _fullscren_request = true;
   GetWindowSize (&width, &height);
-  _window->SetGeometry (nux::Geometry (_launcher_size, 24, width, height));
+  _window->SetGeometry (nux::Geometry (_monitor_rect.x + _launcher_size, 
+                                       _monitor_rect.y + 24,
+                                       width,
+                                       height));
 }
 
 void
@@ -257,8 +287,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  //FIXME: We need a way to get the real position/size of the homebutton
-  nux::Geometry geo (0, 0, _launcher_size, 24);
+  nux::Geometry geo (_monitor_rect.x, _monitor_rect.y, _launcher_size, 24);
   if (!geo.IsPointInside (x, y))
     Hide ();
 }

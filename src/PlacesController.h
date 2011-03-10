@@ -44,6 +44,8 @@ public:
   void ToggleShowHide ();
   static void SetLauncherSize (int launcher_size);
 
+  nux::BaseWindow* GetWindow () {return _window;}
+
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
@@ -61,6 +63,7 @@ private:
   void GetWindowSize (int *width, int *height);
   void StartShowHideTimeline ();
   static gboolean OnViewShowHideFrame (PlacesController *self);
+  static void Relayout (GdkScreen *screen, PlacesController *self);
 
 private:
   nux::BaseWindow  *_window;
@@ -73,9 +76,7 @@ private:
   guint             _timeline_id;
   float             _last_opacity;
   gint64            _start_time;
-
-public:
-  nux::BaseWindow* GetWindow () {return _window;}
+  GdkRectangle      _monitor_rect;
 };
 
 #endif // PLACES_CONTROLLER_H
