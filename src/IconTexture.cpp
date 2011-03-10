@@ -46,6 +46,7 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_i
     LoadIcon ();
 
   _can_pass_focus_to_composite_layout = false;
+  SetCanFocus (false);
 }
 
 IconTexture::~IconTexture ()

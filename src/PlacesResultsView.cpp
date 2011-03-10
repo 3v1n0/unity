@@ -41,6 +41,7 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   EnableVerticalScrollBar (true);
   EnableHorizontalScrollBar (false);
+  _idle_id = 0;
 }
 
 PlacesResultsView::~PlacesResultsView ()
@@ -55,8 +56,25 @@ PlacesResultsView::AddGroup (PlacesGroup *group)
   ResetScrollToUp ();
   _groups.push_back (group);
   _layout->AddView (group, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  
+  if (_idle_id == 0)
+    _idle_id = g_idle_add ((GSourceFunc)OnIdleFocus, this);
 }
 
+gboolean
+PlacesResultsView::OnIdleFocus (PlacesResultsView *self)
+{
+  self->_idle_id = 0;
+  
+  if (self->GetFocused ())
+  {
+    g_debug ("IDLE RE FOCUS WOOHOOO");
+    self->SetFocused (false); // unset focus on all children
+    self->SetFocused (true); // set focus on first child
+  }
+  
+  return FALSE;
+}
 void
 PlacesResultsView::RemoveGroup (PlacesGroup *group)
 {
@@ -64,6 +82,8 @@ PlacesResultsView::RemoveGroup (PlacesGroup *group)
   ResetScrollToUp ();
   _groups.remove (group);
   _layout->RemoveChildObject (group);
+  if (_idle_id == 0)
+    _idle_id = g_idle_add ((GSourceFunc)OnIdleFocus, this);
 }
 
 void

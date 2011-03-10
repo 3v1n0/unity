@@ -54,6 +54,8 @@ public:
 private:
   nux::Layout *_layout;
   std::list<PlacesGroup *> _groups;
+  uint _idle_id;
+  static gboolean OnIdleFocus (PlacesResultsView *self);
 };
 
 #endif // PLACE_RESULTS_VIEW_H

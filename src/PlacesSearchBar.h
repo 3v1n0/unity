@@ -57,7 +57,6 @@ public:
   sigc::signal<void, const char *> search_changed;
 
 protected:
-  virtual bool DoCanFocus ();
   // Introspectable methods
   const gchar * GetName ();
   const gchar * GetChildsName ();
