@@ -26,7 +26,8 @@ static PlacesSettings *_places_settings = NULL;
 PlacesSettings::PlacesSettings ()
 : _settings (NULL),
   _raw_from_factor (0),
-  _form_factor (DESKTOP)
+  _form_factor (DESKTOP),
+  _dash_blur_type (NO_BLUR)
 {
   _settings = g_settings_new ("com.canonical.Unity");
   g_signal_connect (_settings, "changed",
@@ -54,7 +55,7 @@ PlacesSettings::Refresh ()
     primary_monitor = gdk_screen_get_primary_monitor (screen);
     gdk_screen_get_monitor_geometry (screen, primary_monitor, &geo);
 
-    _form_factor = geo.height > 800 ? DESKTOP : NETBOOK;
+    _form_factor = geo.height > 799 ? DESKTOP : NETBOOK;
   }
   else
   {
@@ -91,3 +92,16 @@ PlacesSettings::GetDefaultTileWidth ()
   //FIXME: We want to calculate this from DPI
   return 140;
 }
+
+PlacesSettings::DashBlurType
+PlacesSettings::GetDashBlurType ()
+{
+  return _dash_blur_type;
+}
+
+void
+PlacesSettings::SetDashBlurType (PlacesSettings::DashBlurType type)
+{
+  _dash_blur_type = type;
+}
+

@@ -55,8 +55,7 @@ public:
                        const char *search_string);
 
   sigc::signal<void, const char *> search_changed;
-
-  bool CanFocus ();
+  sigc::signal<void> activated;
 
 protected:
   // Introspectable methods
@@ -72,6 +71,7 @@ private:
   void OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section);
   void OnComboChanged (nux::ComboBoxSimple *simple);
   void OnMenuClosing (nux::MenuPage *menu, int x, int y);
+  void OnEntryActivated ();
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);

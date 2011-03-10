@@ -252,8 +252,8 @@ PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
 void
 PanelView::OnMenuPointerMoved (int x, int y)
 {
-  nux::Geometry geo = GetGeometry ();
-  nux::Geometry hgeo = _home_button->GetGeometry ();
+  nux::Geometry geo = GetAbsoluteGeometry ();
+  nux::Geometry hgeo = _home_button->GetAbsoluteGeometry ();
 
   if (x <= (hgeo.x + hgeo.width))
     return; 
@@ -271,7 +271,7 @@ PanelView::OnMenuPointerMoved (int x, int y)
       if (view->_layout == NULL)
         continue;
 
-      geo = view->GetGeometry ();
+      geo = view->GetAbsoluteGeometry ();
       if (x >= geo.x && x <= (geo.x + geo.width)
           && y >= geo.y && y <= (geo.y + geo.height))
       {
@@ -282,7 +282,7 @@ PanelView::OnMenuPointerMoved (int x, int y)
         {
           PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-          geo = entry->GetGeometry ();
+          geo = entry->GetAbsoluteGeometry ();
           if (x >= geo.x && x <= (geo.x + geo.width)
               && y >= geo.y && y <= (geo.y + geo.height))
           {

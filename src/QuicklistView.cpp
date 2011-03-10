@@ -170,7 +170,8 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     // <SPACE>, <RETURN> (activate selected menu-item)          
     case NUX_VK_SPACE:
     case NUX_VK_ENTER:
-      if (_current_item_index >= 0 && _current_item_index < GetNumItems ())
+      if (_current_item_index >= 0 && _current_item_index < GetNumItems () &&
+          GetNthItems (_current_item_index)->GetEnabled ())
       {
 
         dbusmenu_menuitem_handle_event (GetNthItems (_current_item_index)->_menuItem,
@@ -606,7 +607,7 @@ void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
 void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
-  if (IsVisible ())
+  if (IsVisible () && item->GetEnabled ())
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
@@ -661,7 +662,7 @@ void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
   _mouse_down = false;
   
   
-  if (IsVisible ())
+  if (IsVisible () && item->GetEnabled ())
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());

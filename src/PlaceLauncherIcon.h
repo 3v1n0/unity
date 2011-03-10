@@ -44,10 +44,13 @@ private:
   void ActivateLauncherIcon ();
   void ActivatePlace (guint section_id, const char *search_string);
   void OnActiveChanged (bool is_active);
+  void ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section);
+
   static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
 
 private:
   PlaceEntry *_entry;
+  std::list<DbusmenuMenuitem *>  _current_menu;
 };
 
 #endif // _PLACE_LAUNCHER_ICON_H__H
