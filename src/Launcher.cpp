@@ -3542,22 +3542,42 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 
   EventLogic ();
   LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+  
+  bool hovered_icon_is_appropriate = false;
+  if(hovered_icon)
+    {
+      if(hovered_icon->Type () == LauncherIcon::TYPE_TRASH)
+        _steal_drag = false;
+      
+      if(hovered_icon->Type () == LauncherIcon::TYPE_APPLICATION || hovered_icon->Type () == LauncherIcon::TYPE_EXPO)
+        hovered_icon_is_appropriate = true;
+    }
 
   if (_steal_drag)
   {
     _drag_action = nux::DNDACTION_COPY;
-    if (!_dnd_hovered_icon)
+    if (!_dnd_hovered_icon && hovered_icon_is_appropriate)
     {
       _dnd_hovered_icon = new SpacerLauncherIcon (this);
       _dnd_hovered_icon->SetSortPriority (G_MAXINT);
       _model->AddIcon (_dnd_hovered_icon);
-      
-      if (hovered_icon)
-        _model->ReorderBefore (_dnd_hovered_icon, hovered_icon, true);
+      _model->ReorderBefore (_dnd_hovered_icon, hovered_icon, true);
     }
-    else if (hovered_icon)
+    else if(_dnd_hovered_icon)
     {
-      _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
+      if(hovered_icon)
+      {  
+        if(hovered_icon_is_appropriate)
+        {
+         _model->ReorderSmart (_dnd_hovered_icon, hovered_icon, true);
+        }
+        else
+        {
+          _dnd_hovered_icon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, false);
+          _dnd_hovered_icon->remove.emit (_dnd_hovered_icon);
+          _dnd_hovered_icon = 0;
+        }
+      }
     }
   }
   else
