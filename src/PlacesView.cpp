@@ -158,6 +158,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   PlacesStyle  *style = PlacesStyle::GetDefault ();
   nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo_absolute = GetAbsoluteGeometry ();
 
   GfxContext.PushClippingRectangle (geo);
 
@@ -175,10 +176,11 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
     GfxContext.GetRenderStates ().EnableScissor (false);
 
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = GfxContext.CreateTextureFromBackBuffer (geo.x, geo.y, geo.width, geo.height);
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = GfxContext.CreateTextureFromBackBuffer (
+    geo_absolute.x, geo_absolute.y, geo_absolute.width, geo_absolute.height);
 
     nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = GfxContext.QRP_GetBlurTexture (-58, 24, geo.width, geo.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 5);
+    bkg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, geo.width, geo.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 5);
 
     if (current_fbo.IsValid ())
     { 
