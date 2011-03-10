@@ -30,7 +30,7 @@
 
 #include "PlaceFactory.h"
 #include "PlacesStyle.h"
-
+#include "PlacesSettings.h"
 #include "PlacesView.h"
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
@@ -143,6 +143,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
                                   corner->GetHeight ());
     if (fullscreen.IsPointInside (ievent.e_x, ievent.e_y))
     {
+      _bg_blur_texture.Release ();
       fullscreen_request.emit ();
 
       return TraverseInfo |= nux::eMouseEventSolved;
@@ -159,6 +160,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   PlacesStyle  *style = PlacesStyle::GetDefault ();
   nux::Geometry geo = GetGeometry ();
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
 
   GfxContext.PushClippingRectangle (geo);
 
@@ -167,7 +170,17 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  if (!bkg_blur_texture.IsValid ())
+  nux::Geometry _bg_blur_geo = GetGeometry ();
+
+  if ((_size_mode == SIZE_MODE_HOVER))
+  {
+    nux::BaseTexture *bottom = style->GetDashBottomTile ();
+    nux::BaseTexture *right = style->GetDashRightTile ();
+
+    _bg_blur_geo.OffsetSize (-right->GetWidth (), -bottom->GetHeight ());
+  }
+
+  if (!_bg_blur_texture.IsValid () && paint_blur)
   {
     nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
     nux::GetGpuDevice ()->DeactivateFrameBuffer ();
@@ -176,11 +189,11 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
     GfxContext.GetRenderStates ().EnableScissor (false);
 
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = GfxContext.CreateTextureFromBackBuffer (
-    geo_absolute.x, geo_absolute.y, geo_absolute.width, geo_absolute.height);
+    nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_texture = GfxContext.CreateTextureFromBackBuffer (
+    geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
-    nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, geo.width, geo.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 5);
+    nux::TexCoordXForm texxform__bg;
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Color::White, 1.0f, 2);
 
     if (current_fbo.IsValid ())
     { 
@@ -195,27 +208,17 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     }
   }
 
-  if (bkg_blur_texture.IsValid ())
+  if (_bg_blur_texture.IsValid ()  && paint_blur)
   {
-    nux::TexCoordXForm texxform_blur_bkg;
+    nux::TexCoordXForm texxform_blur__bg;
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    nux::Geometry geo_blur = GetGeometry ();
-
-    if ((_size_mode == SIZE_MODE_HOVER) && style)
-    {
-      nux::BaseTexture *bottom = style->GetDashBottomTile ();
-      nux::BaseTexture *right = style->GetDashRightTile ();
-
-      geo_blur.OffsetSize (-right->GetWidth (), -bottom->GetHeight ());
-    }
-
-    gPainter.PushDrawTextureLayer (GfxContext, geo_blur, //GetGeometry (),
-                                   bkg_blur_texture,
-                                   texxform_blur_bkg,
+    gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
+                                   _bg_blur_texture,
+                                   texxform_blur__bg,
                                    nux::Color::White,
                                    true,
                                    rop);
@@ -299,7 +302,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::GetPainter ().RenderSinglePaintLayer (GfxContext, geo, _bg_layer);
   }
 
-  if (bkg_blur_texture.IsValid ())
+  if (_bg_blur_texture.IsValid () && paint_blur)
     gPainter.PopBackground ();
 
   GfxContext.GetRenderStates ().SetBlend (false);
@@ -311,25 +314,30 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
+  bool paint_blur = type != PlacesSettings::NO_BLUR;
+  int bgs = 1;
+
   GfxContext.PushClippingRectangle (GetGeometry() );
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  if (bkg_blur_texture.IsValid ())
+  if (_bg_blur_texture.IsValid () && paint_blur)
   {
 
-    nux::TexCoordXForm texxform_blur_bkg;
+    nux::TexCoordXForm texxform_blur__bg;
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushTextureLayer (GfxContext, GetGeometry (),
-                               bkg_blur_texture,
-                               texxform_blur_bkg,
+    gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
+                               _bg_blur_texture,
+                               texxform_blur__bg,
                                nux::Color::White,
                                true,
                                rop);
+    bgs++;
   }
  
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
@@ -337,7 +345,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   if (_layout)
     _layout->ProcessDraw (GfxContext, force_draw);
 
-  nux::GetPainter ().PopBackground (bkg_blur_texture.IsValid () ? 2 : 1);
+  nux::GetPainter ().PopBackground (bgs);
 
   GfxContext.GetRenderStates ().SetBlend (false);
 
@@ -350,7 +358,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::AboutToShow ()
 {
-  bkg_blur_texture.Release ();
+  _bg_blur_texture.Release ();
 }
 
 void

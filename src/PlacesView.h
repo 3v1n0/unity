@@ -132,7 +132,8 @@ private:
 
   SizeMode _size_mode;
 
-  nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;
+  nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_blur_texture;
+  nux::Geometry _bg_blur_geo;
 };
 
 #endif // PANEL_HOME_BUTTON_H
