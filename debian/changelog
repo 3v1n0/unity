@@ -1,4 +1,4 @@
-unity (3.6.4-0ubuntu1) UNRELEASED; urgency=low
+unity (3.6.4-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - Unity: Alt-F2 not working (LP: #580295)
@@ -53,7 +53,7 @@ unity (3.6.4-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - build-dep on latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Mar 2011 18:16:52 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Mar 2011 19:52:53 +0100
 
 unity (3.6.2-0ubuntu1) natty; urgency=low
 
