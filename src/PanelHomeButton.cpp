@@ -51,7 +51,9 @@ PanelHomeButton::PanelHomeButton ()
   OnMouseLeave.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
   OnMouseMove.connect  (sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
-  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelHomeButton::Refresh));
+  g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                    G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
+
   Refresh ();
 }
 
@@ -236,4 +238,12 @@ PanelHomeButton::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+}
+
+void
+PanelHomeButton::OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data)
+{
+  PanelHomeButton* self = (PanelHomeButton*) data;
+
+  self->Refresh ();
 }

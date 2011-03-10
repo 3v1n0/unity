@@ -20,6 +20,8 @@
 #ifndef PANEL_HOME_BUTTON_H
 #define PANEL_HOME_BUTTON_H
 
+#include <gtk/gtk.h>
+
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <NuxImage/CairoGraphics.h>
@@ -49,6 +51,7 @@ protected:
 
 private:
   void Refresh ();
+  static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
 
 private:
   int _button_width;
