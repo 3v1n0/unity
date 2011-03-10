@@ -136,11 +136,12 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   {
     PlacesStyle      *style = PlacesStyle::GetDefault ();
     nux::BaseTexture *corner = style->GetDashCorner ();
-    nux::Geometry     geo = GetGeometry ();
-    nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth () + 66,
-                                  geo.y + geo.height - corner->GetHeight () + 24,
+    nux::Geometry     geo = GetAbsoluteGeometry ();
+    nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth (),
+                                  geo.y + geo.height - corner->GetHeight (),
                                   corner->GetWidth (),
                                   corner->GetHeight ());
+
     if (fullscreen.IsPointInside (ievent.e_x, ievent.e_y))
     {
       _bg_blur_texture.Release ();
