@@ -224,6 +224,7 @@ static gboolean
 a11y_unit_test_hash_table_destroy_management (void)
 {
   QuicklistView *quicklist = NULL;
+  nux::Layout *layout = NULL;
   AtkObject *accessible = NULL;
   guint prev_hash_size = 0;
   guint hash_size = 0;
@@ -232,9 +233,9 @@ a11y_unit_test_hash_table_destroy_management (void)
 
   prev_hash_size = g_hash_table_size (accessible_table);
 
-  quicklist = new QuicklistView ();
-  quicklist->SinkReference ();
-  accessible = unity_a11y_get_accessible (quicklist);
+  layout = new nux::Layout ();
+  layout->SinkReference ();
+  accessible = unity_a11y_get_accessible (layout);
 
   if (accessible == NULL)
     {
@@ -265,7 +266,7 @@ a11y_unit_test_hash_table_destroy_management (void)
       return FALSE;
     }
 
-  quicklist->UnReference ();
+  layout->UnReference ();
 
   /* Test the hash table management after the object destroy */
 
@@ -425,7 +426,7 @@ unity_a11y_init (void)
 
   g_free (bridge_path);
 
-  // unity_run_a11y_unit_tests ();
+  unity_run_a11y_unit_tests ();
 }
 
 /*
