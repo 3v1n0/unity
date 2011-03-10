@@ -31,12 +31,12 @@
 class PlacesTile : public nux::View
 {
 public:
-  PlacesTile (NUX_FILE_LINE_PROTO);
+  PlacesTile (NUX_FILE_LINE_PROTO, const void *id=NULL);
   ~PlacesTile ();
 
-  sigc::signal<void, PlacesTile*> sigClick;
+  const void * GetId ();
 
-  virtual void ActivateFocus ();
+  sigc::signal<void, PlacesTile*> sigClick;
 
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
@@ -64,6 +64,7 @@ private:
   void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
 
 private:
+  const void *_id;
   nux::BaseTexture  *_hilight_background;
   nux::TextureLayer *_hilight_layer;
 

@@ -126,6 +126,8 @@ PlacesHomeView::PlacesHomeView ()
                           NULL, NULL);
 
   Refresh ();
+
+  expanded.connect (sigc::mem_fun (this, &PlacesHomeView::Refresh));
 }
 
 PlacesHomeView::~PlacesHomeView ()
@@ -155,6 +157,9 @@ PlacesHomeView::Refresh ()
   GetCompositionLayout ()->SetHorizontalExternalMargin (18);
 
   _layout->Clear ();
+
+  if (!GetExpanded ())
+    return;
 
   // Find Media Apps
   markup = g_strdup_printf (temp, _("Find Media Apps"));

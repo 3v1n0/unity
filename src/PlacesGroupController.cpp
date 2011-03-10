@@ -91,9 +91,12 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
 
   tile = new PlacesSimpleTile (result_icon,
                                result_name,
-                               style->GetTileIconSize ());
+                               style->GetTileIconSize (),
+                               false,
+                               result.GetId ());
   tile->SetURI (result.GetURI ());
   tile->QueueRelayout ();
+  tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::TileClicked));
 
   _id_to_tile[result.GetId ()] = tile;
   
@@ -105,21 +108,28 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
 }
 
 void
+PlacesGroupController::TileClicked (PlacesTile *tile)
+{
+  if (_entry)
+  {
+    _entry->ActivateResult (tile->GetId ());
+  }
+}
+
+void
 PlacesGroupController::AddResult (PlaceEntryGroup& group, PlaceEntryResult& result)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
-  if (!_group->GetExpanded ()
-      && _id_to_tile.size () >= (guint)style->GetDefaultNColumns ())
-  {
-    _queue.push_back (result.GetId ());
-  }
-  else
+  _queue.push_back (result.GetId ());
+  
+  if (_group->GetExpanded ()
+      || _id_to_tile.size () != (guint)style->GetDefaultNColumns ())
   {
     AddTile (_entry, group, result);
   }
 
-  _group->SetCounts (style->GetDefaultNColumns (), _id_to_tile.size () + _queue.size ());
+  _group->SetCounts (style->GetDefaultNColumns (), _queue.size ());
 }
 
 void
@@ -134,19 +144,21 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
   {
     _queue.erase (it);
   }
-  else if ((tile = _id_to_tile[result.GetId ()]))
-  {
-    _id_to_tile.erase (result.GetId ());
 
+  if ((tile = _id_to_tile[result.GetId ()]))
+  {
     _group->GetChildLayout ()->RemoveChildObject (tile);
     _group->Relayout ();
-    _group->SetVisible (_id_to_tile.size ());
   }
+  
+  _id_to_tile.erase (result.GetId ());
 
   if (!_check_tiles_id)
     _check_tiles_id = g_timeout_add (0, (GSourceFunc)CheckTilesTimeout, this);
-  
-  _group->SetCounts (PlacesStyle::GetDefault ()->GetDefaultNColumns (), _id_to_tile.size () + _queue.size ());
+
+  _group->SetVisible (_queue.size ());
+  _group->SetCounts (PlacesStyle::GetDefault ()->GetDefaultNColumns (),
+                     _queue.size ());
 }
 
 void
@@ -162,7 +174,7 @@ PlacesGroupController::CheckTiles ()
   guint          n_to_show;
 
   if (_group->GetExpanded ())
-    n_to_show = _id_to_tile.size () + _queue.size ();
+    n_to_show = _queue.size ();
   else
     n_to_show = style->GetDefaultNColumns ();
 
@@ -172,30 +184,34 @@ PlacesGroupController::CheckTiles ()
   }
   else if (_id_to_tile.size () < n_to_show)
   {
-    while (_id_to_tile.size () < n_to_show && _queue.size ())
+    std::vector<const void *>::iterator it = _queue.begin ();
+
+    if (_queue.size () >= n_to_show)
     {
-      _entry->GetResult ((*_queue.begin ()), sigc::mem_fun (this, &PlacesGroupController::AddTile));
-      _queue.erase (_queue.begin ());
+      it += _id_to_tile.size ();
+
+      while (_id_to_tile.size () < n_to_show && it != _queue.end ())
+      {
+        _entry->GetResult ((*it), sigc::mem_fun (this, &PlacesGroupController::AddTile));
+        it++;
+      }
     }
   }
   else // Remove some
   {
-    while (_id_to_tile.size () != n_to_show)
+    std::vector<const void *>::iterator it, eit = _queue.end ();
+
+    for (it = _queue.begin () + n_to_show; it != eit; ++it)
     {
-      std::map<const void *, PlacesTile *>::reverse_iterator it;
+      PlacesTile *tile = _id_to_tile[*it];
 
-      it = _id_to_tile.rbegin ();
+      if (tile)
+        _group->GetChildLayout ()->RemoveChildObject (tile);
 
-      if (it != _id_to_tile.rend ())
-      {
-        _group->GetChildLayout ()->RemoveChildObject ((*it).second);
-      }
-
-      _queue.insert (_queue.begin (), (*it).first);
-      _id_to_tile.erase ((*it).first);
+      _id_to_tile.erase (*it);
     }
-  }
 
+  }
   _group->Relayout ();
 }
 
@@ -206,6 +222,26 @@ PlacesGroupController::CheckTilesTimeout (PlacesGroupController *self)
   self->CheckTiles ();
 
   return FALSE;
+}
+
+bool
+PlacesGroupController::ActivateFirst ()
+{
+  std::vector<const void *>::iterator it = _queue.begin ();
+
+  if (it != _queue.end ())
+  {
+    PlacesTile *tile = _id_to_tile[*it];
+
+    if (tile)
+    {
+      nux::Geometry geo = tile->GetGeometry ();
+      tile->OnMouseClick.emit (geo.x, geo.y, 0, 0);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 //

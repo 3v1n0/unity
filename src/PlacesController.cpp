@@ -47,7 +47,7 @@ PlacesController::PlacesController ()
                                  (UBusCallback)&PlacesController::CloseRequest,
                                  this);
 
-  _factory = new PlaceFactoryFile ();
+  _factory = PlaceFactory::GetDefault ();
 
   _window_layout = new nux::HLayout ();
 

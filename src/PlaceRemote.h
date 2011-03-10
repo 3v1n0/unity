@@ -49,9 +49,18 @@ public:
 
   const gchar * GetDBusName ();
 
+  void ActivateResult (const char *uri, const char *mimetype);
+
 private:
   void LoadKeyFileEntries (GKeyFile *key_file);
   void Connect ();
+
+  static void OnActivationProxyReady (GObject      *source,
+                                      GAsyncResult *result,
+                                      PlaceRemote  *self);
+  static void OnActivationResultReceived (GObject      *source,
+                                         GAsyncResult *result,
+                                         PlaceRemote  *self);
 
 private:
   char   *_path;
@@ -63,6 +72,8 @@ private:
 
   GDBusProxy *_service_proxy;
   GDBusProxy *_activation_proxy;
+
+  std::string _active_uri;
 };
 
 #endif // PLACE_REMOTE_H

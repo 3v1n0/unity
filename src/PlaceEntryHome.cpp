@@ -281,3 +281,14 @@ PlaceEntryHome::GetResult (const void *id, ResultForeachCallback slot)
     entry->GetGlobalResult (id, sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
   }
 }
+
+void
+PlaceEntryHome::ActivateResult (const void *id)
+{
+  PlaceEntry *entry = _id_to_entry[id];
+  
+  if (entry)
+  {
+    entry->ActivateGlobalResult (id);
+  }
+}

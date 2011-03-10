@@ -32,6 +32,7 @@
 #define MIME_PATTERN     "MimetypePattern"
 
 #define PLACE_IFACE "com.canonical.Unity.Place"
+#define ACTIVE_IFACE "com.canonical.Unity.Activation"
 
 static void on_service_proxy_ready (GObject      *source,
                                     GAsyncResult *result,
@@ -60,7 +61,6 @@ PlaceRemote::PlaceRemote (const char *path)
   GKeyFile *key_file;
   GError   *error = NULL;
 
-  g_debug ("Loading Place: %s", path);
   _path = g_strdup (path);
 
   // A .place file is a keyfile, so we create on representing the .place file to
@@ -216,6 +216,17 @@ PlaceRemote::Connect ()
                             NULL,
                             on_service_proxy_ready,
                             this);
+
+  if (_uri_regex || _mime_regex)
+    g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                              G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                              NULL,
+                              _dbus_name,
+                              _dbus_path,
+                              ACTIVE_IFACE,
+                              NULL,
+                              (GAsyncReadyCallback)PlaceRemote::OnActivationProxyReady,
+                              this);
 }
 
 std::vector<PlaceEntry *>&
@@ -244,7 +255,7 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
 
     if (g_str_has_prefix (group, ENTRY_PREFIX))
     {
-      PlaceEntryRemote *entry = new PlaceEntryRemote (_dbus_name);
+      PlaceEntryRemote *entry = new PlaceEntryRemote (this, _dbus_name);
       entry->InitFromKeyFile (key_file, group);
       
       if (entry->IsValid ())
@@ -369,7 +380,7 @@ PlaceRemote::OnEntriesReceived (GVariant *args)
 
     if (!existing)
     {
-      existing = new PlaceEntryRemote (_dbus_name);
+      existing = new PlaceEntryRemote (this, _dbus_name);
 
       _entries.push_back (existing);
       entry_added.emit (existing);
@@ -456,7 +467,7 @@ PlaceRemote::OnEntryAdded (GVariant *args)
                  &global_results_model,
                  &global_hints);
 
-  entry = new PlaceEntryRemote (_dbus_name);
+  entry = new PlaceEntryRemote (this, _dbus_name);
   entry->Update (dbus_path,
                  name,
                  icon,
@@ -511,6 +522,76 @@ PlaceRemote::OnEntryRemoved (const gchar *dbus_path)
     }
   }
 }
+
+void
+PlaceRemote::OnActivationResultReceived (GObject      *source,
+                                         GAsyncResult *result,
+                                         PlaceRemote  *self)
+{
+  GVariant    *args;
+  GError      *error = NULL;
+  guint        ret = 0;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy *)source, result, &error);
+  if (error)
+  {
+    g_warning ("Unable to call Activate() on: %s",
+               error->message);
+    g_error_free (error);
+    return;
+  }
+
+  self->result_activated.emit (self->_active_uri.c_str (), (ActivationResult)ret);
+
+  g_variant_unref (args);
+}
+
+void
+PlaceRemote::ActivateResult (const char *uri, const char *mimetype)
+{
+  if (G_IS_DBUS_PROXY (_activation_proxy)
+      && ((_uri_regex && g_regex_match (_uri_regex, uri, (GRegexMatchFlags)0, NULL))
+          || (_mime_regex && g_regex_match (_mime_regex, mimetype, (GRegexMatchFlags)0, NULL))))
+  {
+    _active_uri = uri;
+    g_dbus_proxy_call (_activation_proxy,
+                       "Activate",
+                       g_variant_new ("(s)", uri),
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1, 
+                       NULL,
+                       (GAsyncReadyCallback)OnActivationResultReceived,
+                       this);
+  }
+  else
+  {
+    result_activated.emit (uri, FALLBACK);
+  }
+}
+
+void
+PlaceRemote::OnActivationProxyReady (GObject      *source,
+                                     GAsyncResult *result,
+                                     PlaceRemote  *self)
+{
+  GError *error = NULL;
+  gchar  *name_owner = NULL;
+
+  self->_activation_proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
+  name_owner = g_dbus_proxy_get_name_owner (self->_activation_proxy);
+
+  if (error || !name_owner)
+  {
+    g_warning ("Unable to connect to PlaceRemote Activation %s: %s",
+               self->_dbus_name,
+               error ? error->message : "No name owner");
+    if (error)
+      g_error_free (error);
+  }
+
+  g_free (name_owner);
+}
+
 
 /*
  * C callbacks

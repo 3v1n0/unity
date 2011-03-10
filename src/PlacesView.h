@@ -95,11 +95,18 @@ private:
   void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  static void OnResultClicked (GVariant *data, PlacesView *self);
+  bool TryPlaceActivation (const char *uri);
+  static void OnResultActivated (GVariant *data, PlacesView *self);
   void OnSearchChanged (const char *search_string);
   void OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo);
 
   static void OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self);
+
+  void OnEntryActivated ();
+
+  void LoadPlaces ();
+  void OnPlaceAdded (Place *place);
+  void OnPlaceResultActivated (const char *uri, ActivationResult res);
 
 private:
   PlaceFactory       *_factory;

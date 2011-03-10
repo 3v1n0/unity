@@ -43,6 +43,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _entry (NULL),
   _size_mode (SIZE_MODE_FULLSCREEN)
 {
+  LoadPlaces ();
+  _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
+
   _home_entry = new PlaceEntryHome (_factory);
 
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
@@ -58,6 +61,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   AddChild (_search_bar);
 
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
+  _search_bar->activated.connect (sigc::mem_fun (this, &PlacesView::OnEntryActivated));
 
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
   vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
@@ -96,7 +100,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
                                  (UBusCallback)&PlacesView::CloseRequest,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                                 (UBusCallback)&PlacesView::OnResultClicked,
+                                 (UBusCallback)&PlacesView::OnResultActivated,
                                  this);
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
                                  (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
@@ -378,25 +382,17 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->AddResult (entry, group, result);
 }
 
 void
 PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  //FIXME: We can't do anything with these do just ignore
-  if (g_str_has_prefix (result.GetURI (), "unity-install"))
-    return;
-
   _results_controller->RemoveResult (entry, group, result);
 }
 
 void
-PlacesView::OnResultClicked (GVariant *data, PlacesView *self)
+PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 {
   const char *uri;
 
@@ -526,6 +522,52 @@ PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 {
   self->QueueDraw ();
 }
+
+void
+PlacesView::OnEntryActivated ()
+{
+  if (!_results_controller->ActivateFirst ())
+    g_debug ("Cannot activate anything");
+}
+
+void
+PlacesView::LoadPlaces ()
+{
+  std::vector<Place *>::iterator it, eit = _factory->GetPlaces ().end ();
+
+  for (it = _factory->GetPlaces ().begin (); it != eit; ++it)
+  {
+    OnPlaceAdded (*it);
+  }
+}
+
+void
+PlacesView::OnPlaceAdded (Place *place)
+{
+  place->result_activated.connect (sigc::mem_fun (this, &PlacesView::OnPlaceResultActivated));
+}
+
+void
+PlacesView::OnPlaceResultActivated (const char *uri, ActivationResult res)
+{
+  switch (res)
+  {
+    case FALLBACK:
+      OnResultActivated (g_variant_new_string (uri), this);
+      break;
+    case SHOW_DASH:
+      break;
+    case HIDE_DASH:
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                NULL);
+      break;
+    default:
+      g_warning ("Activation result %d not supported", res);
+      break;
+  };
+}
+
 
 //
 // Introspection

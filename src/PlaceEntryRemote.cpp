@@ -180,8 +180,9 @@ private:
 };
 
 
-PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
+PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
 : dirty (false),
+  _parent (parent),
   _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
@@ -303,6 +304,12 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 }
 
 /* Overrides */
+Place *
+PlaceEntryRemote::GetParent ()
+{
+  return _parent;
+}
+  
 const gchar *
 PlaceEntryRemote::GetId ()
 {
@@ -625,6 +632,24 @@ PlaceEntryRemote::GetGlobalResult (const void *id, ResultForeachCallback slot)
   PlaceEntryResultRemote result (_global_results_model, iter);
 
   slot (this, group, result);
+}
+
+void
+PlaceEntryRemote::ActivateResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_results_model, iter, RESULT_MIMETYPE));
+}
+
+void
+PlaceEntryRemote::ActivateGlobalResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_global_results_model, iter, RESULT_MIMETYPE));
 }
 
 /* Other methods */

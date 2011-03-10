@@ -103,6 +103,17 @@ PlacesResultsController::Clear ()
   _results_view->Clear ();
 }
 
+bool
+PlacesResultsController::ActivateFirst ()
+{
+  std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
+  
+  for (it = _id_to_group.begin (); it != eit; ++it)
+    if ((it->second)->ActivateFirst ())
+      return true;
+
+  return false;
+}
 
 //
 // Introspection
