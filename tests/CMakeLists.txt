@@ -220,6 +220,28 @@ add_executable (test-quicklist
                 ../src/ubus-server.h
                 )
 
+add_executable (test-quicklist-visuals
+                ui/TestQuicklistVisuals.cpp
+                ui/EventFaker.cpp
+                ui/EventFaker.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/QuicklistMenuItem.cpp
+                ../src/QuicklistMenuItem.h
+                ../src/QuicklistMenuItemCheckmark.cpp
+                ../src/QuicklistMenuItemCheckmark.h
+                ../src/QuicklistMenuItemLabel.cpp
+                ../src/QuicklistMenuItemLabel.h
+                ../src/QuicklistMenuItemRadio.cpp
+                ../src/QuicklistMenuItemRadio.h
+                ../src/QuicklistMenuItemSeparator.cpp
+                ../src/QuicklistMenuItemSeparator.h
+                ../src/QuicklistView.cpp
+                ../src/QuicklistView.h
+                ../src/ubus-server.cpp
+                ../src/ubus-server.h
+                )
+
 add_executable (test-places-backend
                 TestPlacesBackend.cpp
                 ../src/PlaceEntryRemote.cpp
