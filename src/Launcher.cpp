@@ -2724,16 +2724,27 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 {
 
   LauncherModel::iterator it;
-  
+
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
     case NUX_VK_UP:
       if (_current_icon_index > 0)
-        _current_icon_index--;
+      {
+        int temp_current_icon_index = _current_icon_index;
+
+        do
+        {
+          temp_current_icon_index --;
+          it = _model->at (temp_current_icon_index );
+        }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
+      
+        if (it != (LauncherModel::iterator)NULL)
+          _current_icon_index = temp_current_icon_index;      
+      }
       else
       {
-        _current_icon_index = -1;
+        //_current_icon_index = -1;
         // FIXME: switch to global-menu here still needs to be implemented 
       }
       NeedRedraw ();
@@ -2744,7 +2755,17 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
     case NUX_VK_DOWN:
       if (_current_icon_index < _model->Size () - 1)
       {
-        _current_icon_index++;
+        int temp_current_icon_index = _current_icon_index;
+
+        do
+        {
+          temp_current_icon_index ++;
+          it = _model->at (temp_current_icon_index );
+        }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
+      
+        if (it != (LauncherModel::iterator)NULL)
+          _current_icon_index = temp_current_icon_index;     
+
         NeedRedraw ();
         selection_change.emit ();
       }
