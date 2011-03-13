@@ -79,17 +79,18 @@ IconTexture::SetByFilePath (const char *file_path, unsigned int size)
 void
 IconTexture::LoadIcon ()
 {
+#define DEFAULT_GICON ". GThemedIcon text-x-preview"
   GIcon  *icon;
 
   if (_loading)
     return;
   _loading = true;
 
-  icon = g_icon_new_for_string (_icon_name, NULL);
+  icon = g_icon_new_for_string (_icon_name ? _icon_name : DEFAULT_GICON, NULL);
 
   if (G_IS_ICON (icon))
   {
-    IconLoader::GetDefault ()->LoadFromGIconString (_icon_name,
+    IconLoader::GetDefault ()->LoadFromGIconString (_icon_name ? _icon_name : DEFAULT_GICON,
                                                     _size,
                                                     sigc::mem_fun (this, &IconTexture::IconLoaded));
     g_object_unref (icon);
