@@ -155,7 +155,8 @@ PlacesResultsController::MakeThingsLookNice (PlacesResultsController *self)
       last_active_group->SetDrawSeparator (true);
     }
   }
-  last_active_group->SetDrawSeparator (false);
+  if (last_active_group)
+    last_active_group->SetDrawSeparator (false);
 
   self->_make_things_look_nice_id = 0;
 
