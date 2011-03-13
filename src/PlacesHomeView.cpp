@@ -96,6 +96,8 @@ PlacesHomeView::PlacesHomeView ()
   _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+  _layout->SetMinMaxSize ((style->GetHomeTileWidth () * 4) + (32 * 5),
+                          (style->GetHomeTileHeight () * 2) + (32 *3));
 
   _client = gconf_client_get_default ();
   gconf_client_add_dir (_client,
@@ -153,7 +155,7 @@ PlacesHomeView::Refresh ()
   PlacesStyle *style = PlacesStyle::GetDefault ();
   Shortcut   *shortcut = NULL;
   gchar      *markup = NULL;
-  const char *temp = "<big><b>%s</b></big>";
+  const char *temp = "<big>%s</big>";
   int         icon_size = style->GetHomeTileIconSize ();
 
   GetCompositionLayout ()->SetVerticalExternalMargin (4);
@@ -251,7 +253,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   gchar           *real_exec;
   GDesktopAppInfo *info;
 
-  markup = g_strdup_printf ("<big><b>%s</b></big>", name);
+  markup = g_strdup_printf ("<big>%s</big>", name);
 
   // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
   // best of times but the following is the closest best-guess without having to do D-Bus
