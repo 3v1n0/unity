@@ -31,6 +31,23 @@
 
 #define DEFAULT_ICON "text-x-preview"
 
+IconTexture::IconTexture (nux::BaseTexture *texture, guint width, guint height)
+: TextureArea (NUX_TRACKER_LOCATION),
+  _icon_name (NULL),
+  _size (height),
+  _texture_cached (texture),
+  _texture_width (width),
+  _texture_height (height),
+  _loading (false),
+  _opacity (1.0f)
+{
+  _texture_cached->Reference ();
+
+  SetMinMaxSize (width, height);
+  SetCanFocus (false);
+  _can_pass_focus_to_composite_layout = false;
+}
+  
 IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading)
 : TextureArea (NUX_TRACKER_LOCATION),
   _icon_name (NULL),
@@ -38,7 +55,8 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_i
   _texture_cached (NULL),
   _texture_width (0),
   _texture_height (0),
-  _loading (false)
+  _loading (false),
+  _opacity (1.0f)
 {
   _icon_name = g_strdup (icon_name ? icon_name : DEFAULT_ICON);
 
@@ -163,6 +181,7 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (_texture_cached)
   {
+    nux::Color col (1.0f * _opacity, 1.0f * _opacity, 1.0f * _opacity, _opacity);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
@@ -173,7 +192,7 @@ IconTexture::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _texture_height,
                          _texture_cached->GetDeviceTexture (),
                          texxform,
-                         nux::Color::White);
+                         col);
   }
 
   GfxContext.PopClippingRectangle ();
@@ -186,6 +205,23 @@ IconTexture::GetTextureSize (int *width, int *height)
     *width = _texture_width;
   if (height)
     *height = _texture_height;
+}
+
+void
+IconTexture::SetOpacity (float opacity)
+{
+  _opacity = opacity;
+
+  QueueDraw ();
+}
+
+void
+IconTexture::SetTexture (nux::BaseTexture *texture)
+{
+  if (_texture_cached)
+    _texture_cached->UnReference ();
+  _texture_cached = texture;
+  _texture_cached->Reference ();
 }
 
 bool

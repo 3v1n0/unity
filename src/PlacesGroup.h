@@ -79,7 +79,7 @@ private:
   IconTexture          *_icon;
   nux::StaticCairoText *_name;
   nux::StaticCairoText *_expand_label;
-  nux::TextureArea     *_expand_icon;
+  IconTexture          *_expand_icon;
 
   guint32 _idle_id;
 
