@@ -35,7 +35,7 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
   _layout->SetHorizontalExternalMargin (14);
-  _layout->SetVerticalInternalMargin (14);
+  _layout->SetVerticalInternalMargin (0);
 
   SetLayout (_layout);
 

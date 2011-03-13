@@ -332,7 +332,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   bool paint_blur = type != PlacesSettings::NO_BLUR;
   int bgs = 1;
 
-  clip_geo.height = _bg_layer->GetGeometry ().height;
+  clip_geo.height = _bg_layer->GetGeometry ().height -1;
   GfxContext.PushClippingRectangle (clip_geo);
 
   GfxContext.GetRenderStates ().SetBlend (true);
@@ -359,7 +359,9 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
 
   if (_layout)
+  {    
     _layout->ProcessDraw (GfxContext, force_draw);
+  }
 
   nux::GetPainter ().PopBackground (bgs);
 

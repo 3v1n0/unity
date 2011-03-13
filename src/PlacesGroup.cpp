@@ -61,6 +61,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   
   _cached_name = NULL;
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  _group_layout->SetVerticalExternalMargin (12);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
@@ -264,6 +265,18 @@ PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessE
 void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
+  nux::Geometry geo = GetGeometry ();
+  nux::Color col (0.2f, 0.2f, 0.2f, 0.2f);
+
+  GfxContext.PushClippingRectangle (geo);
+
+  nux::GetPainter ().Draw2DLine (GfxContext,
+                                 geo.x, geo.y + geo.height - 1,
+                                 geo.x + geo.width, geo.y + geo.height - 1,
+                                 col,
+                                 col); 
+
+  GfxContext.PopClippingRectangle ();
 }
 
 void
