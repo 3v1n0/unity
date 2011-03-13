@@ -158,7 +158,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
     {
       SetActiveEntry (NULL, 0, "");
-      TraverseInfo |= nux::eMouseEventSolved;
+      return TraverseInfo |= nux::eMouseEventSolved;
     }
   }
 
