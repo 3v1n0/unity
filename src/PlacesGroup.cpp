@@ -326,3 +326,9 @@ PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned 
 {
   _expand_label->SetTextColor (kExpandDefaultTextColor);
 }
+
+int
+PlacesGroup::GetHeaderHeight ()
+{
+  return _header_layout->GetGeometry ().height;
+}

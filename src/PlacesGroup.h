@@ -51,6 +51,8 @@ public:
   void SetExpanded (bool is_expanded);
   bool GetExpanded ();
 
+  int  GetHeaderHeight ();
+
   sigc::signal<void> expanded;
 
 private:

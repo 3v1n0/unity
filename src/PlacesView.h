@@ -47,10 +47,18 @@ class PlacesView : public nux::View, public Introspectable
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
 
+  // Current size of the Dash
   enum SizeMode
   {
     SIZE_MODE_FULLSCREEN,
     SIZE_MODE_HOVER
+  };
+
+  // This controls how the Dash resizes to it's contents
+  enum ShrinkMode
+  {
+    SHRINK_MODE_NONE,
+    SHRINK_MODE_CONTENTS
   };
 
   PlacesView (PlaceFactory *factory);
@@ -109,6 +117,7 @@ private:
   void LoadPlaces ();
   void OnPlaceAdded (Place *place);
   void OnPlaceResultActivated (const char *uri, ActivationResult res);
+  void ReEvaluateShrinkMode ();
 
 private:
   PlaceFactory       *_factory;
@@ -130,10 +139,14 @@ private:
   nux::SpaceLayout *_h_spacer;
   nux::SpaceLayout *_v_spacer;
 
-  SizeMode _size_mode;
+  SizeMode   _size_mode;
+  ShrinkMode _shrink_mode;
 
   nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_blur_texture;
   nux::Geometry _bg_blur_geo;
+
+  guint _target_height;
+  guint _actual_height;
 };
 
 #endif // PANEL_HOME_BUTTON_H
