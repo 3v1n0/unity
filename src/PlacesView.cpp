@@ -45,7 +45,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _shrink_mode (SHRINK_MODE_NONE),
   _target_height (1),
   _actual_height (1),
-  _resize_id (0)
+  _resize_id (0),
+  _alt_f2_entry (NULL)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -126,8 +127,6 @@ PlacesView::~PlacesView ()
 long
 PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  // FIXME: This breaks with multi-monitor
-  nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
 
   if ((ievent.e_event == nux::NUX_KEYDOWN) &&
@@ -143,7 +142,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     nux::BaseTexture *corner = style->GetDashCorner ();
     nux::Geometry     geo = GetAbsoluteGeometry ();
     nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth (),
-                                  geo.y + geo.height - corner->GetHeight (),
+                                  geo.y + _actual_height - corner->GetHeight (),
                                   corner->GetWidth (),
                                   corner->GetHeight ());
 
@@ -153,6 +152,13 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
       fullscreen_request.emit ();
 
       return TraverseInfo |= nux::eMouseEventSolved;
+    }
+
+    geo.height = _actual_height;
+    if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
+    {
+      SetActiveEntry (NULL, 0, "");
+      TraverseInfo |= nux::eMouseEventSolved;
     }
   }
 
@@ -369,6 +375,10 @@ void
 PlacesView::AboutToShow ()
 {
   _bg_blur_texture.Release ();
+  if (_resize_id)
+    g_source_remove (_resize_id);
+  _resize_id = 0;
+  _actual_height = _last_height = _target_height;
 }
 
 void
@@ -379,6 +389,9 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 
   if (entry == NULL)
     entry = _home_entry;
+  else if (!_alt_f2_entry
+           && g_strcmp0 (entry->GetId (), "/com/canonical/unity/applicationsplace/runner") ==0)
+    _alt_f2_entry = entry;
 
   if (_entry)
   {
@@ -408,7 +421,10 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   else
     _layered_layout->SetActiveLayer (_results_view);
 
-  ReEvaluateShrinkMode ();  
+  if (_entry == _alt_f2_entry)
+  _actual_height = _target_height = _last_height = _search_bar->GetGeometry ().height;
+
+  ReEvaluateShrinkMode ();
 }
 
 PlaceEntry *
@@ -467,7 +483,7 @@ PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_g
 #define UNEXPANDED_HOME_PADDING 12
   nux::BaseTexture *corner = PlacesStyle::GetDefault ()->GetDashCorner ();
 
-  if (_shrink_mode == SHRINK_MODE_NONE)
+  if (_shrink_mode == SHRINK_MODE_NONE || _size_mode == SIZE_MODE_FULLSCREEN)
   {
     _target_height = GetGeometry ().height;
     _actual_height = _target_height;
@@ -538,7 +554,8 @@ PlacesView::SetSizeMode (SizeMode size_mode)
     _v_spacer->SetMinimumHeight (corner->GetHeight ());
     _v_spacer->SetMaximumHeight (corner->GetHeight ());
   }
-
+  
+  ReEvaluateShrinkMode ();
   QueueDraw ();
 }
 
@@ -746,10 +763,15 @@ PlacesView::ReEvaluateShrinkMode ()
   if (_size_mode == SIZE_MODE_FULLSCREEN)
     _shrink_mode = SHRINK_MODE_NONE;
 
-  if (_entry == _home_entry)
+  if (_entry == _home_entry || _entry == _alt_f2_entry)
+  {
     _shrink_mode = SHRINK_MODE_CONTENTS;
+  }
   else
     _shrink_mode = SHRINK_MODE_NONE;
+
+  nux::Geometry geo = _results_view->GetGeometry ();
+  OnResultsViewGeometryChanged (_results_view, geo);
 }
 
 //

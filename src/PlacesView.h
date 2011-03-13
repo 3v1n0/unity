@@ -152,6 +152,8 @@ private:
   guint  _resize_id;
   gint   _last_height;
   gint64 _resize_start_time;
+
+  PlaceEntry *_alt_f2_entry;
 };
 
 #endif // PANEL_HOME_BUTTON_H
