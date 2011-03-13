@@ -119,6 +119,8 @@ private:
   void OnPlaceResultActivated (const char *uri, ActivationResult res);
   void ReEvaluateShrinkMode ();
 
+  static gboolean OnResizeFrame (PlacesView *self);
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
@@ -145,8 +147,11 @@ private:
   nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_blur_texture;
   nux::Geometry _bg_blur_geo;
 
-  guint _target_height;
-  guint _actual_height;
+  gint   _target_height;
+  gint   _actual_height;
+  guint  _resize_id;
+  gint   _last_height;
+  gint64 _resize_start_time;
 };
 
 #endif // PANEL_HOME_BUTTON_H

@@ -44,7 +44,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _size_mode (SIZE_MODE_FULLSCREEN),
   _shrink_mode (SHRINK_MODE_NONE),
   _target_height (1),
-  _actual_height (1)
+  _actual_height (1),
+  _resize_id (0)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -422,6 +423,44 @@ PlacesView::GetResultsController ()
   return _results_controller;
 }
 
+gboolean
+PlacesView::OnResizeFrame (PlacesView *self)
+{
+#define _LENGTH_ 200000
+  gint64 diff;
+  float  progress;
+  float  last_height;
+
+  diff = g_get_monotonic_time () - self->_resize_start_time;
+
+  progress = diff/(float)_LENGTH_;
+  
+  last_height = self->_last_height;
+
+  if (self->_target_height > self->_last_height)
+  {
+    self->_actual_height = last_height + ((self->_target_height - last_height) * progress);
+  }
+  else
+  {
+    self->_actual_height = last_height - ((last_height - self->_target_height) * progress);
+  }
+
+  if (diff > _LENGTH_)
+  {
+    self->_resize_id = 0;
+
+    // Make sure the state is right
+    self->_actual_height = self->_target_height;
+  
+    self->QueueDraw ();
+    return FALSE;
+  }
+
+  self->QueueDraw ();
+  return TRUE;
+}
+
 void
 PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo)
 {
@@ -435,28 +474,35 @@ PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_g
   }
   else
   {
-    _target_height = _search_bar->GetGeometry ().height;
+    gint target_height = _search_bar->GetGeometry ().height;
 
     if (_layered_layout->GetActiveLayer () == _home_view)
     {
       if (_home_view->GetExpanded ())
-        _target_height += _home_view->GetLayout ()->GetContentHeight ();
+        target_height += _home_view->GetLayout ()->GetContentHeight ();
       else
-        _target_height += _home_view->GetHeaderHeight () + UNEXPANDED_HOME_PADDING;
+        target_height += _home_view->GetHeaderHeight () + UNEXPANDED_HOME_PADDING;
     }
     else
     {
-      _target_height += _results_view->GetLayout ()->GetContentHeight ();
+      target_height += _results_view->GetLayout ()->GetContentHeight ();
     }
 
-    _target_height += corner->GetHeight ();
-    if (_target_height >= (guint32)GetGeometry ().height)
-      _target_height = GetGeometry ().height;
+    target_height += corner->GetHeight ();
+    if (target_height >= GetGeometry ().height)
+      target_height = GetGeometry ().height;
 
-    _actual_height = _target_height;
+    if (_target_height != target_height)
+    {
+      _target_height = target_height;
+      _last_height = _actual_height;
+      _resize_start_time = g_get_monotonic_time ();
 
-    g_debug ("%d", _target_height);
-    
+      if (_resize_id)
+        g_source_remove (_resize_id);
+      _resize_id = g_timeout_add (15, (GSourceFunc)PlacesView::OnResizeFrame, this);
+    }
+   
     QueueDraw ();
   }
 }
