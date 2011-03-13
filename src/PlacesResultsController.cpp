@@ -29,6 +29,7 @@
 #include "PlacesResultsController.h"
 
 PlacesResultsController::PlacesResultsController ()
+: _make_things_look_nice_id (0)
 {
   _results_view = NULL;
 }
@@ -60,6 +61,7 @@ PlacesResultsController::AddGroup (PlaceEntry *entry, PlaceEntryGroup& group)
   PlacesGroupController *controller = new PlacesGroupController (entry, group);
 
   _id_to_group[group.GetId ()] = controller;
+  _groups.push_back (controller);
   _results_view->AddGroup (controller->GetGroup ());
   _results_view->QueueRelayout ();
 }
@@ -75,6 +77,9 @@ PlacesResultsController::AddResult (PlaceEntry *entry, PlaceEntryGroup& group, P
     return;
 
   controller->AddResult (group, result);
+  
+  if (!_make_things_look_nice_id)
+    _make_things_look_nice_id = g_idle_add ((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
 }
 
 void
@@ -88,6 +93,9 @@ PlacesResultsController::RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group
     return;
 
   controller->RemoveResult (group, result);
+
+  if (!_make_things_look_nice_id)
+    _make_things_look_nice_id = g_idle_add ((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
 }
 
 void
@@ -99,6 +107,7 @@ PlacesResultsController::Clear ()
     (it->second)->UnReference ();
 
   _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
+  _groups.erase (_groups.begin (), _groups.end ());
 
   _results_view->Clear ();
 }
@@ -106,10 +115,10 @@ PlacesResultsController::Clear ()
 bool
 PlacesResultsController::ActivateFirst ()
 {
-  std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
+  std::vector<PlacesGroupController *>::iterator it, eit = _groups.end ();
   
-  for (it = _id_to_group.begin (); it != eit; ++it)
-    if ((it->second)->ActivateFirst ())
+  for (it = _groups.begin (); it != eit; ++it)
+    if ((*it)->ActivateFirst ())
       return true;
 
   return false;
@@ -128,4 +137,27 @@ void
 PlacesResultsController::AddProperties (GVariantBuilder *builder)
 {
 
+}
+
+gboolean
+PlacesResultsController::MakeThingsLookNice (PlacesResultsController *self)
+{
+  PlacesGroup *last_active_group = NULL;
+  std::vector<PlacesGroupController *>::iterator it, eit = self->_groups.end ();
+  
+  for (it = self->_groups.begin (); it != eit; ++it)
+  {
+    PlacesGroupController *controller = *it;
+
+    if (controller && controller->GetTotalResults ())
+    {
+      last_active_group = controller->GetGroup ();
+      last_active_group->SetDrawSeparator (true);
+    }
+  }
+  last_active_group->SetDrawSeparator (false);
+
+  self->_make_things_look_nice_id = 0;
+
+  return FALSE;
 }

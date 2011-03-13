@@ -56,7 +56,8 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _idle_id (0),
   _is_expanded (true),
   _n_visible_items_in_unexpand_mode (0),
-  _n_total_items (0)
+  _n_total_items (0),
+  _draw_sep (true)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
@@ -276,11 +277,12 @@ void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
 
   GfxContext.PushClippingRectangle (geo);
 
-  nux::GetPainter ().Draw2DLine (GfxContext,
-                                 geo.x, geo.y + geo.height - 1,
-                                 geo.x + geo.width, geo.y + geo.height - 1,
-                                 col,
-                                 col); 
+  if (_draw_sep)
+    nux::GetPainter ().Draw2DLine (GfxContext,
+                                   geo.x, geo.y + geo.height - 1,
+                                   geo.x + geo.width, geo.y + geo.height - 1,
+                                   col,
+                                   col); 
 
   GfxContext.PopClippingRectangle ();
 }
@@ -355,4 +357,12 @@ int
 PlacesGroup::GetHeaderHeight ()
 {
   return _header_layout->GetGeometry ().height;
+}
+
+void
+PlacesGroup::SetDrawSeparator (bool draw_it)
+{
+  _draw_sep = draw_it;
+
+  QueueDraw ();
 }

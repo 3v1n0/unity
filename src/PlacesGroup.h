@@ -53,6 +53,8 @@ public:
 
   int  GetHeaderHeight ();
 
+  void SetDrawSeparator (bool draw_it);
+
   sigc::signal<void> expanded;
 
 private:
