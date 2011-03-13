@@ -173,7 +173,7 @@ PlacesHomeView::Refresh ()
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 4;
+  shortcut->_place_section = 9;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
@@ -185,7 +185,7 @@ PlacesHomeView::Refresh ()
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 3;
+  shortcut->_place_section = 8;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
