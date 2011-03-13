@@ -188,12 +188,21 @@ PlacesGroupController::CheckTiles ()
 
     if (_queue.size () >= n_to_show)
     {
+      int n_added = 0;
       it += _id_to_tile.size ();
 
       while (_id_to_tile.size () < n_to_show && it != _queue.end ())
       {
         _entry->GetResult ((*it), sigc::mem_fun (this, &PlacesGroupController::AddTile));
+        n_added++;
         it++;
+
+        if (n_added == style->GetDefaultNColumns () * 2)
+        {
+          // Give some time for Compiz to redraw
+          if (!_check_tiles_id)
+            _check_tiles_id = g_timeout_add (250, (GSourceFunc)CheckTilesTimeout, this);
+        }
       }
     }
   }
