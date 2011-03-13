@@ -21,6 +21,8 @@
 
 #include "PlacesSettings.h"
 
+#define HOME_EXPANDED "home-expanded"
+
 static PlacesSettings *_places_settings = NULL;
 
 PlacesSettings::PlacesSettings ()
@@ -105,3 +107,14 @@ PlacesSettings::SetDashBlurType (PlacesSettings::DashBlurType type)
   _dash_blur_type = type;
 }
 
+bool
+PlacesSettings::GetHomeExpanded ()
+{
+  return g_settings_get_enum (_settings, HOME_EXPANDED) == 1 ? true : false;
+}
+
+void
+PlacesSettings::SetHomeExpanded (bool expanded)
+{
+  g_settings_set_enum (_settings, HOME_EXPANDED, expanded ? 1 : 0);
+}

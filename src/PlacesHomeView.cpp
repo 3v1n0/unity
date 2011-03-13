@@ -39,6 +39,7 @@
 
 #include "PlacesHomeView.h"
 
+#include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
 
@@ -125,9 +126,11 @@ PlacesHomeView::PlacesHomeView ()
                           this,
                           NULL, NULL);
 
-  Refresh ();
-
   expanded.connect (sigc::mem_fun (this, &PlacesHomeView::Refresh));
+
+  SetExpanded (PlacesSettings::GetDefault ()->GetHomeExpanded ());
+  if (GetExpanded ())
+    Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
@@ -157,6 +160,8 @@ PlacesHomeView::Refresh ()
   GetCompositionLayout ()->SetHorizontalExternalMargin (18);
 
   _layout->Clear ();
+
+  PlacesSettings::GetDefault ()->SetHomeExpanded (GetExpanded ());
 
   if (!GetExpanded ())
     return;
