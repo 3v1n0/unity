@@ -151,8 +151,6 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
     {
       atk_object_set_role (accessible, ATK_ROLE_LABEL);
       atk_object_set_name (accessible,
-			   piea->priv->entry->accessible_desc ? 
-			   piea->priv->entry->accessible_desc :
 			   gtk_label_get_text (piea->priv->entry->label));
     }
   if (GTK_IS_IMAGE (piea->priv->entry->image))
@@ -164,7 +162,7 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
 	}
     }
 
-  atk_object_set_description (accessible, atk_object_get_name (accessible));
+  atk_object_set_description (accessible, piea->priv->entry->accessible_desc);
 }
 
 static gint
