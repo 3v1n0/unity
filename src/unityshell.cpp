@@ -108,9 +108,6 @@ UnityScreen::nuxEpilogue ()
   glPopAttrib ();
 }
 
-#define CLIP_PLANE_MASK (PAINT_SCREEN_TRANSFORMED_MASK | \
-			 PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK)
-
 void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
