@@ -154,6 +154,8 @@ public:
 
   int GetMouseX ();
   int GetMouseY ();
+  
+  void CheckWindowOverLauncher ();
 
   sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
   sigc::signal<void> selection_change;
@@ -252,7 +254,6 @@ private:
   static gboolean OnScrollTimeout (gpointer data);
   static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
-  void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress             (struct timespec const &current);

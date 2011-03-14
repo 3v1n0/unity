@@ -1443,6 +1443,8 @@ void Launcher::SetHidden (bool hidden)
     if (hidden == _hidden)
         return;
     
+    printf ("Hidden state changed. Now: %i\n***********************************\n", hidden);
+    
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
     {
@@ -1525,6 +1527,12 @@ Launcher::EnsureHiddenState ()
   
   bool autohide_handle_hold = _autohide_handle && !_hidden;
   
+  printf ("_hidden: %i\n must_be_hidden: %i (%i && %i), mouse_over_launcher: %i (%i && (%i || %i))\n required_for_external_purpose: %i (%i || %i || %i || %i || %i)\n in_must_be_open_mode: %i (%i || %i)\n _window_over_launcher: %i, autohide_handle_hold: %i (%i && %i)\n",
+    _hidden, must_be_hidden, _hide_on_drag_hover, _hidemode != LAUNCHER_HIDE_NEVER, mouse_over_launcher, _mouseover_launcher_locked, _mouse_inside_trigger, _mouse_inside_launcher, required_for_external_purpose,
+    _super_show_launcher, _placeview_show_launcher, _navmod_show_launcher, QuicklistManager::Default ()->Current() != NULL, PluginAdapter::Default ()->IsScaleActive (), in_must_be_open_mode, _launcher_action_state != ACTION_NONE,
+    _dnd_window_is_mapped, _window_over_launcher, autohide_handle_hold, _autohide_handle, !_hidden
+  );
+  
   if (must_be_hidden || (!mouse_over_launcher && !required_for_external_purpose && 
                          !in_must_be_open_mode && _window_over_launcher && !autohide_handle_hold))
     SetHidden (true);
@@ -1542,7 +1550,7 @@ Launcher::CheckIntersectWindow (CompWindow *window)
   if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
     return false;
 
-  if (CompRegion (window->serverInputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     return true;
 
   return false;
