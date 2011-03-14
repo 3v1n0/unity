@@ -2319,42 +2319,31 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     guint64 shortcut = arg.icon->GetShortcut ();
 
     /* deal with dynamic labels for places, which can be set via the locale */
-    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
+    if (shortcut != 0)
     {
-      RenderIcon (GfxContext,
-                  arg,
-                  arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
-                  nux::Color (0xFFFFFFFF),
-                  arg.alpha,
-                  arg.icon->_xform_coords["Tile"]);
-    }
-    else
-    {
-      /* deal with the hardcoded labels used for the first 10 icons on the launcher */
-      gchar key   = (gchar) shortcut;
-      int   index = -1;
-
-      switch (key)
+      if (!g_ascii_isdigit ((gchar) shortcut))
       {
-        case '1': index = 0; break;
-        case '2': index = 1; break;
-        case '3': index = 2; break;
-        case '4': index = 3; break;
-        case '5': index = 4; break;
-        case '6': index = 5; break;
-        case '7': index = 6; break;
-        case '8': index = 7; break;
-        case '9': index = 8; break;
-        case '0': index = 9; break;
+        RenderIcon (GfxContext,
+                    arg,
+                    arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
+                    nux::Color (0xFFFFFFFF),
+                    arg.alpha,
+                    arg.icon->_xform_coords["Tile"]);
       }
-
-      if (index != -1)
+      else
+      {
+        /* deal with the hardcoded labels used for the first 10 icons on the launcher */
+        gchar *shortcut_str = g_strdup_printf ("%c", (gchar)shortcut);
+        int index = (atoi (shortcut_str) + 9) % 10; // Not -1 as -1 % 10 = -1…
+        g_free (shortcut_str);
+        
         RenderIcon (GfxContext,
                     arg,
                     _superkey_labels[index]->GetDeviceTexture (),
                     nux::Color (0xFFFFFFFF),
                     arg.alpha,
                     arg.icon->_xform_coords["Tile"]);
+      }
     }
   }
 }
