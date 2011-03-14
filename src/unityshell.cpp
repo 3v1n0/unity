@@ -30,6 +30,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
+#include "PlacesSettings.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
 #include "unityshell.h"
@@ -181,6 +182,8 @@ UnityScreen::damageNuxRegions ()
 void
 UnityScreen::handleEvent (XEvent *event)
 {
+  bool skip_other_plugins = false;
+  
   switch (event->type)
   {
     case FocusIn:
@@ -193,13 +196,15 @@ UnityScreen::handleEvent (XEvent *event)
     case KeyPress:
       KeySym key_sym;
       if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-          launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
+        skip_other_plugins = launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
       break;
   }
 
-  screen->handleEvent (event);
+  // avoid further propagation (key conflict for instance)
+  if (!skip_other_plugins)
+    screen->handleEvent (event);
 
-  if (screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
@@ -246,6 +251,20 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
                                              CompOption::Vector &options)
 {
   panelView->EndFirstMenuShow ();
+  return false;
+}
+
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new ("(sus)",
+                                           "/com/canonical/unity/applicationsplace/runner",
+                                           0,
+                                           ""));
   return false;
 }
 
@@ -551,8 +570,19 @@ UnityScreen::optionChanged (CompOption            *opt,
       break;
     case UnityshellOptions::PanelOpacity:
       panelView->SetOpacity (optionGetPanelOpacity ());
+      break;
+    case UnityshellOptions::IconSize:
+      panelHomeButton->SetButtonWidth (optionGetIconSize()+18);
+      launcher->SetIconSize (optionGetIconSize()+6, optionGetIconSize());
+      PlacesController::SetLauncherSize (optionGetIconSize()+18);
+      
+      break;
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation ((Launcher::AutoHideAnimation) optionGetAutohideAnimation ());
+      break;
+
+    case UnityshellOptions::DashBlurExperimental:
+      PlacesSettings::GetDefault ()->SetDashBlurType ((PlacesSettings::DashBlurType)optionGetDashBlurExperimental ());
       break;
     default:
       break;
@@ -563,6 +593,12 @@ void
 UnityScreen::NeedsRelayout ()
 {
   needsRelayout = true;
+}
+
+void
+UnityScreen::ScheduleRelayout (guint timeout)
+{
+  g_timeout_add (timeout, &UnityScreen::RelayoutTimeout, this);
 }
 
 void
@@ -580,6 +616,8 @@ UnityScreen::Relayout ()
   primary_monitor = gdk_screen_get_primary_monitor (scr);
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
+
+  wt->SetWindowSize (rect.width, rect.height);
 
   pCurGeom = panelWindow->GetGeometry(); 
   lCurGeom = launcherWindow->GetGeometry(); 
@@ -665,7 +703,7 @@ OnMonitorChanged (GdkScreen* screen,
                   gpointer   data)
 {
   UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->NeedsRelayout ();
+  uscreen->ScheduleRelayout (500);
 }
 
 void
@@ -673,7 +711,7 @@ OnSizeChanged (GdkScreen* screen,
                gpointer   data)
 {
   UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->NeedsRelayout ();
+  uscreen->ScheduleRelayout (500);
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -733,11 +771,14 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
 
@@ -760,14 +801,14 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
 
-  g_signal_connect_swapped (gdk_screen_get_default (),
-                            "monitors-changed",
-                            G_CALLBACK (OnMonitorChanged),
-                            this);
-  g_signal_connect_swapped (gdk_screen_get_default (),
-                            "size-changed",
-                            G_CALLBACK (OnSizeChanged),
-                            this);
+  g_signal_connect (gdk_screen_get_default (),
+                    "monitors-changed",
+                     G_CALLBACK (OnMonitorChanged),
+                     this);
+  g_signal_connect (gdk_screen_get_default (),
+                    "size-changed",
+                    G_CALLBACK (OnSizeChanged),
+                    this);
 
   END_FUNCTION ();
 }
@@ -837,6 +878,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelView = new PanelView ();
   self->AddChild (self->panelView);
 
+  self->panelHomeButton = self->panelView->HomeButton ();
+
   layout = new nux::HLayout();
 
   self->panelView->SetMaximumHeight(24);
@@ -864,10 +907,15 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* Setup Places */
   self->placesController = new PlacesController ();
 
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized () == TRUE)
+    unity_util_accessible_add_window (self->placesController->GetWindow ());
+
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
-  g_timeout_add (2000, &UnityScreen::RelayoutTimeout, self);
+  self->ScheduleRelayout (2000);
   g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();

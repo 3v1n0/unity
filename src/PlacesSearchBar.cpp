@@ -65,15 +65,19 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
   _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
+  _search_icon->SetCanFocus (false);
 
   _layered_layout = new nux::LayeredLayout ();
 
   _hint = new nux::StaticCairoText (" ");
   _hint->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.5f));
+  _hint->SetCanFocus (false);
   _layered_layout->AddLayer (_hint);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->SetCanFocus (true);
+  _pango_entry->activated.connect (sigc::mem_fun (this, &PlacesSearchBar::OnEntryActivated));
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
@@ -86,6 +90,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
+  _combo->SetCanFocus (false); // NOT SUPPORTING THIS QUITE YET
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -116,12 +121,6 @@ const gchar *
 PlacesSearchBar::GetChildsName ()
 {
   return "";
-}
-
-bool
-PlacesSearchBar::CanFocus ()
-{
-  return false;
 }
 
 void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
@@ -178,8 +177,7 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
                                  guint       section_id,
-                                 const char *search_string,
-                                 bool        ignore_search)
+                                 const char *search_string)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -199,14 +197,10 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     res = g_strdup_printf (search_template, tmp);
 
     _hint->SetText (res);
-
-    if (!ignore_search)
-    {
-      _entry->SetActiveSection (section_id);
-      _entry->SetSearch (search_string ? search_string : "", hints);
-    }
-
     _pango_entry->SetText (search_string ? search_string : "");
+
+    _entry->SetActiveSection (section_id);
+    _entry->SetSearch (search_string ? search_string : "", hints);
 
     _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
     if (_combo->IsVisible ())
@@ -302,6 +296,12 @@ PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsig
     _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
     EmitLiveSearch ();
   }
+}
+
+void
+PlacesSearchBar::OnEntryActivated ()
+{
+  activated.emit ();
 }
 
 void

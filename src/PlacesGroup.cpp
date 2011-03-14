@@ -54,12 +54,12 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _idle_id (0),
   _is_expanded (true),
   _n_visible_items_in_unexpand_mode (0),
-  _n_total_items (0),
-  _child_unexpand_height (0)
+  _n_total_items (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
-
+  
+  _cached_name = NULL;
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
@@ -78,11 +78,17 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor (kExpandDefaultTextColor);
+  _expand_label->SetCanFocus (true);
+  _expand_label->FocusActivated.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelActivated));
+  _expand_label->FocusChanged.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
+  
+  
   _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new nux::TextureArea ();
   _expand_icon->SetTexture (arrow);
   _expand_icon->SetMinimumSize (arrow->GetWidth (), arrow->GetHeight ());
+  _expand_icon->SetCanFocus (false);
   _header_layout->AddView (_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
@@ -103,21 +109,44 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 
 PlacesGroup::~PlacesGroup ()
 {
-
+  if (_idle_id)
+  g_source_remove (_idle_id);
 }
 
+void
+PlacesGroup::OnLabelActivated (nux::Area *label)
+{
+  SetExpanded (!_is_expanded);
+}
+
+void
+PlacesGroup::OnLabelFocusChanged (nux::Area *label)
+{
+  RefreshLabel ();
+}
 void
 PlacesGroup::SetName (const char *name)
 {
   // Spaces are on purpose, want padding to be proportional to the size of the text
   // Bear with me, I'm trying something different :)
   const gchar *temp = "    <big>%s</big>    ";
-  gchar *tmp, *final;
+  const gchar *temp_focused = "    <big><b>%s</b></big>    ";
+  gchar *tmp = NULL;
+  gchar *final = NULL; 
+  if (_cached_name != NULL)
+  {
+    g_free (_cached_name);
+  }
+  
+  _cached_name = g_strdup (name);
 
   tmp = g_markup_escape_text (name, -1);
 
-  final = g_strdup_printf (temp, tmp);
-
+  if (_expand_label->GetFocused ())
+    final = g_strdup_printf (temp_focused, tmp);
+  else
+    final = g_strdup_printf (temp, tmp);
+  
   _name->SetText (final);
 
   g_free (tmp);
@@ -149,7 +178,7 @@ PlacesGroup::GetChildLayout ()
 }
 
 void
-PlacesGroup::Refresh ()
+PlacesGroup::RefreshLabel ()
 {
   const char *temp = "<small>%s</small>";
   char       *result_string;
@@ -166,25 +195,37 @@ PlacesGroup::Refresh ()
   else
   {
     result_string = g_strdup_printf (g_dngettext (GETTEXT_PACKAGE,
-                                           "See one more result",
-                                           "See %d more results",
-                                           _n_total_items - _n_visible_items_in_unexpand_mode),
+                                                  "See one more result",
+                                                  "See %d more results",
+                                                  _n_total_items - _n_visible_items_in_unexpand_mode),
                                      _n_total_items - _n_visible_items_in_unexpand_mode);
   }
-
+  
   _expand_icon->SetVisible (!(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0));
 
-  final = g_strdup_printf (temp, result_string);
+  char *tmpname = g_strdup (_cached_name);
+  SetName (tmpname);
+  g_free (tmpname);
 
+  final = g_strdup_printf (temp, result_string);
+  
   _expand_label->SetText (final);
   _expand_label->SetVisible (_n_visible_items_in_unexpand_mode < _n_total_items);
 
-  ComputeChildLayout ();
   QueueDraw ();
 
   g_free ((result_string));
   g_free (final);
 }
+
+void
+PlacesGroup::Refresh ()
+{
+  RefreshLabel ();
+  ComputeChildLayout ();
+  QueueDraw ();
+}
+
 
 void
 PlacesGroup::Relayout ()
@@ -203,6 +244,12 @@ PlacesGroup::OnIdleRelayout (PlacesGroup *self)
   self->ComputeChildLayout ();
   self->_idle_id = 0;
 
+  if (self->GetFocused ())
+  {
+    self->SetFocused (false); // unset focus on all children
+    self->SetFocused (true); // set focus on first child
+  }
+
   return FALSE;
 }
 
@@ -210,11 +257,7 @@ long
 PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  if (GetGeometry ().IsPointInside (ievent.e_x, ievent.e_y)
-      || !_child_unexpand_height)
-  {
-    ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
-  }
+  ret = _group_layout->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
   return ret;
 }
 
@@ -243,22 +286,6 @@ PlacesGroup::SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_it
   Relayout ();
 }
 
-
-void
-PlacesGroup::SetChildUnexpandHeight (guint height)
-{
-  if (_child_unexpand_height == height)
-    return;
-
-  _child_unexpand_height = height;
-
-  if (!_is_expanded)
-  {
-    _is_expanded = true;
-    SetExpanded (false);
-  }
-}
-
 bool
 PlacesGroup::GetExpanded ()
 {
@@ -277,23 +304,8 @@ PlacesGroup::SetExpanded (bool is_expanded)
 
   Refresh ();
 
-  if (_content_layout)
-  {
-    _content_layout->SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT : _child_unexpand_height);
-    SetMaximumHeight (_is_expanded ? nux::AREA_MAX_HEIGHT
-                                   : _header_layout->GetGeometry ().height + _child_unexpand_height);
-
-    ComputeChildLayout ();
-    _group_layout->ComputeChildLayout ();
-    _content_layout->ComputeChildLayout ();
-    _content_layout->QueueDraw ();
-    _group_layout->QueueDraw ();
-    QueueDraw ();
-  }
-
   _expand_icon->SetTexture (_is_expanded ? style->GetGroupUnexpandIcon ()
                                          : style->GetGroupExpandIcon ());
-
   expanded.emit ();
 }
 

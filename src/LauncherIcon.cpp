@@ -361,8 +361,9 @@ LauncherIcon::RecvMouseEnter ()
     return;
   }
   
-  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + _center.y;
           
   _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
   
@@ -419,10 +420,10 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   if (default_to_first_item)
     _quicklist->DefaultToFirstItem ();
 
-  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + _center.y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
-  //nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
 }
 
 void LauncherIcon::RecvMouseDown (int button)
@@ -465,8 +466,9 @@ LauncherIcon::SetCenter (nux::Point3 center)
 {
   _center = center;
   
-  int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-  int tip_y = _center.y + _launcher->GetParent ()->GetGeometry ().y;
+  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + _center.y;
     
   if (_quicklist->IsVisible ())
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);

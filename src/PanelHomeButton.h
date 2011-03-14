@@ -20,6 +20,8 @@
 #ifndef PANEL_HOME_BUTTON_H
 #define PANEL_HOME_BUTTON_H
 
+#include <gtk/gtk.h>
+
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <NuxImage/CairoGraphics.h>
@@ -34,13 +36,14 @@ public:
   PanelHomeButton ();
   ~PanelHomeButton ();
 
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags); 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  void SetButtonWidth (int button_width);
 
 protected:
   const gchar* GetName ();
@@ -48,9 +51,10 @@ protected:
 
 private:
   void Refresh ();
+  static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
 
 private:
-  nux::CairoGraphics _util_cg;
+  int _button_width;
 };
 
 #endif // PANEL_HOME_BUTTON_H

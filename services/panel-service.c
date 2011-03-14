@@ -498,6 +498,19 @@ on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
                   PanelService         *self)
 {
+  PanelServicePrivate *priv;
+  gchar *id;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (entry != NULL);
+
+  priv = self->priv;
+
+  id = g_strdup_printf ("%p", entry);
+  g_hash_table_remove (priv->entry2indicator_hash, entry);
+  g_hash_table_remove (priv->id2entry_hash, id);
+  g_free (id);
+
   notify_object (object);
 }
 
