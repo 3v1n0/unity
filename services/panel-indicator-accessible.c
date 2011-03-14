@@ -88,7 +88,8 @@ on_accessible_desc_updated (IndicatorObject *io, IndicatorObjectEntry *entry, gp
 
       if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
         {
-          atk_object_set_description (accessible, entry->accessible_desc);
+          atk_object_set_name (accessible, entry->accessible_desc);
+	  atk_object_set_description (accessible, entry->accessible_desc);
 	  break;
 	}
     }
