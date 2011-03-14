@@ -487,6 +487,7 @@ void
 PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 {
   const char *uri;
+  int         i;
 
   uri = g_variant_get_string (data, NULL);
 
@@ -498,22 +499,50 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 
   if (g_str_has_prefix (uri, "application://"))
   {
-    const char      *id = &uri[14];
+    char            *id = g_strdup (&uri[14]);
     GDesktopAppInfo *info;
 
-    info = g_desktop_app_info_new (id);
-    if (G_IS_DESKTOP_APP_INFO (info))
+    /* The docs for g_desktop_app_info_new() says it respects "-" to "/"
+     * substitution as per XDG Menu Spec, but it only seems to work for
+     * exactly 1 substitution where as Wine programs often require many.
+     * Bottom line: We must do some manual trial and error to find desktop
+     * files in deeply nested directories */
+    while (id != NULL)
     {
-      GError *error = NULL;
-
-      g_app_info_launch (G_APP_INFO (info), NULL, NULL, &error);
-      if (error)
+      info = g_desktop_app_info_new (id);
+      if (info != NULL)
       {
-        g_warning ("Unable to launch %s: %s", id,  error->message);
-        g_error_free (error);
+        GError *error = NULL;
+
+        g_app_info_launch (G_APP_INFO (info), NULL, NULL, &error);
+        if (error)
+        {
+          g_warning ("Unable to launch %s: %s", id,  error->message);
+          g_error_free (error);
+        }
+        g_object_unref (info);
+        break;
       }
-      g_object_unref (info);
+     
+     /* Try to replace the next - with a / and do the lookup again.
+      * If we set id=NULL we'll exit the outer loop */
+     for (i = 0; ; i++)
+     {
+       if (id[i] == '-')
+       {
+         id[i] = '/';
+         break;
+       }
+       else if (id[i] == '\0')
+       {
+         g_free (id);
+         id = NULL;
+         break;
+       }
+     }
    }
+   
+   g_free (id);
   }
   else
   {
