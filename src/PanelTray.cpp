@@ -29,9 +29,10 @@ PanelTray::PanelTray ()
   _settings = g_settings_new (SETTINGS_NAME);
   _whitelist = g_settings_get_strv (_settings, "systray-whitelist");
 
-  _window = gtk_window_new (GTK_WINDOW_POPUP);
+  _window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_type_hint (GTK_WINDOW (_window), GDK_WINDOW_TYPE_HINT_DOCK);
-  //gtk_window_set_keep_above (GTK_WINDOW (_window), TRUE);
+  gtk_window_set_has_resize_grip (GTK_WINDOW (_window), FALSE);
+  gtk_window_set_keep_above (GTK_WINDOW (_window), TRUE);
   gtk_window_set_skip_pager_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_set_skip_taskbar_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_resize (GTK_WINDOW (_window), 1, 24);
@@ -138,7 +139,11 @@ PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
     g_idle_add ((GSourceFunc)IdleSync, self);
   }
 
-  g_debug ("TrayChild %s: %s %s", na_tray_child_get_title (icon), res_name, res_class);
+  g_debug ("TrayChild %s: %s %s %s",
+           accept ? "Accepted" : "Rejected",
+           na_tray_child_get_title (icon),
+           res_name,
+           res_class);
   
   g_free (res_name);
   g_free (res_class);

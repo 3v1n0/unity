@@ -37,12 +37,14 @@ public:
   void                SetView (PlacesResultsView *view);
   PlacesResultsView * GetView ();
 
-  void AddGroup     (PlaceEntryGroup& group);
-  void AddResult    (PlaceEntryGroup& group, PlaceEntryResult& result);
-  void RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& result);
+  void AddGroup     (PlaceEntry *entry, PlaceEntryGroup& group);
+  void AddResult    (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
   // Clears all the current groups and results
   void Clear ();
+
+  bool ActivateFirst ();
 
 protected:
   const gchar* GetName ();

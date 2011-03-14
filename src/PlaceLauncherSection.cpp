@@ -43,9 +43,12 @@ PlaceLauncherSection::OnPlaceAdded (Place *place)
   for (i = entries.begin (); i != entries.end (); ++i)
   {
     PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-    PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
-
-    IconAdded.emit (icon);
+    
+    if (entry->ShowInLauncher ())
+    {
+      PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
+      IconAdded.emit (icon);
+    }
   }
 }
 
@@ -64,9 +67,12 @@ PlaceLauncherSection::PopulateEntries ()
     for (i = entries.begin (); i != entries.end (); ++i)
     {
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-      PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
 
-      IconAdded.emit (icon);
+      if (entry->ShowInLauncher ())
+      {
+        PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
+        IconAdded.emit (icon);
+      }
     }
   }
 }

@@ -28,7 +28,10 @@
  *
  */
 
+#include <glib/gi18n.h>
+
 #include "unity-launcher-accessible.h"
+#include "unity-launcher-icon-accessible.h"
 
 #include "unitya11y.h"
 #include "Launcher.h"
@@ -56,6 +59,10 @@ static gboolean   unity_launcher_accessible_is_child_selected   (AtkSelection *s
 
 /* private */
 static void on_selection_change_cb (UnityLauncherAccessible *launcher_accessible);
+static void on_icon_added_cb       (LauncherIcon *icon, UnityLauncherAccessible *self);
+static void on_icon_removed_cb     (LauncherIcon *icon, UnityLauncherAccessible *self);
+static void on_order_change_cb     (UnityLauncherAccessible *self);
+static void update_children_index  (UnityLauncherAccessible *self);
 
 
 G_DEFINE_TYPE_WITH_CODE (UnityLauncherAccessible, unity_launcher_accessible,  NUX_TYPE_VIEW_ACCESSIBLE,
@@ -68,6 +75,9 @@ G_DEFINE_TYPE_WITH_CODE (UnityLauncherAccessible, unity_launcher_accessible,  NU
 struct _UnityLauncherAccessiblePrivate
 {
   sigc::connection on_selection_change_connection;
+  sigc::connection on_icon_added_connection;
+  sigc::connection on_icon_removed_connection;
+  sigc::connection on_order_changed_connection;
 };
 
 
@@ -102,6 +112,9 @@ unity_launcher_accessible_finalize (GObject *object)
   UnityLauncherAccessible *self = UNITY_LAUNCHER_ACCESSIBLE (object);
 
   self->priv->on_selection_change_connection.disconnect ();
+  self->priv->on_icon_added_connection.disconnect ();
+  self->priv->on_icon_removed_connection.disconnect ();
+  self->priv->on_order_changed_connection.disconnect ();
 
   G_OBJECT_CLASS (unity_launcher_accessible_parent_class)->finalize (object);
 }
@@ -116,6 +129,7 @@ unity_launcher_accessible_new (nux::Object *object)
   accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_LAUNCHER_ACCESSIBLE, NULL));
 
   atk_object_initialize (accessible, object);
+  atk_object_set_name (accessible, _("Launcher"));
 
   return accessible;
 }
@@ -128,6 +142,7 @@ unity_launcher_accessible_initialize (AtkObject *accessible,
   Launcher *launcher = NULL;
   nux::Object *nux_object = NULL;
   UnityLauncherAccessible *self = NULL;
+  LauncherModel *model = NULL;
 
   ATK_OBJECT_CLASS (unity_launcher_accessible_parent_class)->initialize (accessible, data);
 
@@ -140,6 +155,20 @@ unity_launcher_accessible_initialize (AtkObject *accessible,
 
   self->priv->on_selection_change_connection  =
     launcher->selection_change.connect (sigc::bind (sigc::ptr_fun (on_selection_change_cb), self));
+
+  model = launcher->GetModel ();
+
+  if (model)
+    {
+      self->priv->on_icon_added_connection =
+        model->icon_added.connect (sigc::bind (sigc::ptr_fun (on_icon_added_cb), self));
+
+      self->priv->on_icon_removed_connection =
+        model->icon_removed.connect (sigc::bind (sigc::ptr_fun (on_icon_removed_cb), self));
+
+      self->priv->on_order_changed_connection =
+        model->order_changed.connect (sigc::bind (sigc::ptr_fun (on_order_change_cb), self));
+    }
 }
 
 static gint
@@ -312,3 +341,100 @@ static void on_selection_change_cb (UnityLauncherAccessible *launcher_accessible
   g_signal_emit_by_name (ATK_OBJECT (launcher_accessible), "selection-changed");
 }
 
+
+static void
+on_icon_added_cb (LauncherIcon *icon,
+                  UnityLauncherAccessible *self)
+{
+  AtkObject *icon_accessible = NULL;
+  nux::Object *nux_object = NULL;
+  gint index = 0;
+
+  g_return_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (self));
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  if (nux_object == NULL) /* state is defunct */
+    return;
+
+  icon_accessible = unity_a11y_get_accessible (icon);
+
+  update_children_index (self);
+
+  index = atk_object_get_index_in_parent (icon_accessible);
+
+  g_debug ("[a11y] icon (%p, %s) added on container (%p,%s) at index %i",
+           icon_accessible, atk_object_get_name (icon_accessible),
+           self, atk_object_get_name ( ATK_OBJECT (self)),
+           index);
+
+  g_signal_emit_by_name (self, "children-changed::add",
+                         index, icon_accessible, NULL);
+}
+
+static void
+on_icon_removed_cb (LauncherIcon *icon,
+                    UnityLauncherAccessible *self)
+{
+  AtkObject *icon_accessible = NULL;
+  nux::Object *nux_object = NULL;
+  gint index = 0;
+
+  g_return_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (self));
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  if (nux_object == NULL) /* state is defunct */
+    return;
+
+  icon_accessible = unity_a11y_get_accessible (icon);
+
+  index = atk_object_get_index_in_parent (icon_accessible);
+
+  g_debug ("[a11y] icon (%p, %s) removed on container (%p,%s) at index %i",
+           icon_accessible, atk_object_get_name (icon_accessible),
+           self, atk_object_get_name (ATK_OBJECT (self)),
+           index);
+
+  g_signal_emit_by_name (self, "children-changed::remove",
+                         index, icon_accessible, NULL);
+
+  update_children_index (self);
+}
+
+static void
+update_children_index  (UnityLauncherAccessible *self)
+{
+  gint index = 0;
+  nux::Object *nux_object = NULL;
+  Launcher *launcher = NULL;
+  LauncherModel *launcher_model = NULL;
+  LauncherModel::iterator it;
+  nux::Object *child = NULL;
+  AtkObject *child_accessible = NULL;
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  if (!nux_object) /* state is defunct */
+    return;
+
+  launcher = dynamic_cast<Launcher *>(nux_object);
+  launcher_model = launcher->GetModel ();
+
+  if (launcher_model == NULL)
+    return;
+
+  for (it = launcher_model->begin (); it != launcher_model->end (); it++)
+    {
+      child =  dynamic_cast<nux::Object *>(*it);
+      child_accessible = unity_a11y_get_accessible (child);
+
+      unity_launcher_icon_accessible_set_index (UNITY_LAUNCHER_ICON_ACCESSIBLE (child_accessible),
+                                                index++);
+    }
+}
+
+static void
+on_order_change_cb (UnityLauncherAccessible *self)
+{
+  g_return_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (self));
+
+  update_children_index (self);
+}

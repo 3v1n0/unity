@@ -41,7 +41,10 @@ well_known_local_path = ("%s/share/unity" % supported_prefix,
                          "%s/lib/*unity*"  % supported_prefix,
                          "%s/share/dbus-1/services/*Unity*"  % supported_prefix,
                          "%s/bin/*unity*"  % supported_prefix,
-                         "%s/share/man/man1/*unity*"  % supported_prefix
+                         "%s/share/man/man1/*unity*"  % supported_prefix,
+                         "%s/lib/*nux*"  % supported_prefix,
+                         "%s/pkgconfig/nux*"  % supported_prefix,
+                         "%s/include/Nux*"  % supported_prefix
                          )
 
 def set_unity_env ():

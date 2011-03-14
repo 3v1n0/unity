@@ -31,7 +31,7 @@ class PlacesSimpleTile : public Introspectable, public PlacesTile
 {
 public:
 
-  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64, bool defer_icon_loading=false);
+  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64, bool defer_icon_loading=false, const void *id=NULL);
   ~PlacesSimpleTile ();
 
   const char * GetLabel ();
@@ -53,8 +53,6 @@ protected:
   virtual std::list<const char *> DndSourceGetDragTypes   ();
   virtual const char *            DndSourceGetDataForType (const char *type, int *size, int *format);
   virtual void                    DndSourceDragFinished   (nux::DndAction result);
-private:
-  void Clicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
 private:
   nux::Geometry _highlight_geometry;

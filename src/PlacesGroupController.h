@@ -30,7 +30,7 @@
 class PlacesGroupController : public nux::Object, public Introspectable
 {
 public:
-  PlacesGroupController (PlaceEntryGroup& group);
+  PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup& group);
   ~PlacesGroupController ();
 
   const void  * GetId ();
@@ -41,19 +41,25 @@ public:
 
   void Clear ();
 
+  bool ActivateFirst ();
+
 protected:
   const gchar* GetName ();
   void         AddProperties (GVariantBuilder *builder);
 
 private:
-  void LoadIcons ();
-  static gboolean LoadIconsTimeout (PlacesGroupController *self);
+  void AddTile (PlaceEntry *ignore, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void CheckTiles ();
+  static gboolean CheckTilesTimeout (PlacesGroupController *self);
+  void TileClicked (PlacesTile *tile);
 
 private:
+  PlaceEntry  *_entry;
   PlacesGroup *_group;
   const void  *_id;
   std::map<const void *, PlacesTile *>  _id_to_tile;
-  guint _load_icons_id;
+  guint _check_tiles_id;
+  std::vector<const void *> _queue;
 };
 
 #endif // PLACES_GROUP_CONTROLLER_H

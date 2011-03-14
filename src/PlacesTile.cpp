@@ -27,8 +27,9 @@
 
 #define PADDING 8
 
-PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
+PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   View (NUX_FILE_LINE_PARAM),
+  _id (id),
   _hilight_background (NULL),
   _hilight_layer (NULL),
   _last_width (0),
@@ -40,6 +41,7 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
   FocusChanged.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
+  FocusActivated.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;
 }
 
@@ -55,7 +57,14 @@ PlacesTile::~PlacesTile ()
     delete _hilight_layer;
 }
 
-void PlacesTile::OnFocusChanged (nux::Area *area)
+const void *
+PlacesTile::GetId ()
+{
+  return _id;
+}
+
+void
+PlacesTile::OnFocusChanged (nux::Area *area)
 {
   QueueDraw ();
 }
@@ -343,7 +352,7 @@ PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned l
 }
 
 void
-PlacesTile::ActivateFocus ()
+PlacesTile::OnFocusActivated (nux::Area *area)
 {
   sigClick.emit (this);
 }

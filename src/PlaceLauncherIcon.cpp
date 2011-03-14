@@ -26,6 +26,8 @@
 
 #include <glib/gi18n-lib.h>
 
+#define SECTION_NUMBER "ted-loves-strings"
+
 PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
   _entry (entry)
@@ -87,24 +89,52 @@ PlaceLauncherIcon::UpdatePlaceIcon ()
 
 }
 
+void
+PlaceLauncherIcon::ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section)
+{
+  DbusmenuMenuitem              *menu_item;
+  char *temp;
+
+  temp = g_markup_escape_text (section.GetName (), -1);
+  menu_item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, section.GetName ());
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  dbusmenu_menuitem_property_set_int (menu_item, SECTION_NUMBER, _current_menu.size ());
+  _current_menu.push_back (menu_item);
+  g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (&PlaceLauncherIcon::OnOpen), this);
+  g_free (temp);
+}
+
 std::list<DbusmenuMenuitem *>
 PlaceLauncherIcon::GetMenus ()
 {
-  std::list<DbusmenuMenuitem *>  result;
   DbusmenuMenuitem              *menu_item;
+  char * temp;
+  
+  _current_menu.erase (_current_menu.begin (), _current_menu.end ());
 
+  _entry->ForeachSection (sigc::mem_fun (this, &PlaceLauncherIcon::ForeachSectionCallback));
+  
   menu_item = dbusmenu_menuitem_new ();
-
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  _current_menu.push_back (menu_item);
 
+  temp = g_markup_escape_text (_entry->GetName (), -1);
+  menu_item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, temp);
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  dbusmenu_menuitem_property_set_int (menu_item, SECTION_NUMBER, 0);
+  _current_menu.push_back (menu_item);
   g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                     G_CALLBACK (&PlaceLauncherIcon::OnOpen), this);
+  g_free (temp);
 
-  result.push_back (menu_item);
-
-  return result;
+  return _current_menu;
 }
 
 void
@@ -121,7 +151,7 @@ PlaceLauncherIcon::ActivatePlace (guint section_id, const char *search_string)
 void
 PlaceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self)
 {
-  self->ActivateLauncherIcon ();
+  self->ActivatePlace (dbusmenu_menuitem_property_get_int (item, SECTION_NUMBER), "");
 }
 
 void

@@ -31,16 +31,16 @@
 class PlacesTile : public nux::View
 {
 public:
-  PlacesTile (NUX_FILE_LINE_PROTO);
+  PlacesTile (NUX_FILE_LINE_PROTO, const void *id=NULL);
   ~PlacesTile ();
+
+  const void * GetId ();
 
   sigc::signal<void, PlacesTile*> sigClick;
 
-  virtual void ActivateFocus ();
-
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-
+  
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -64,11 +64,12 @@ private:
   void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
 
 private:
+  const void *_id;
   nux::BaseTexture  *_hilight_background;
   nux::TextureLayer *_hilight_layer;
 
   void OnFocusChanged (nux::Area *area);
-
+  void OnFocusActivated (nux::Area *area);
   int _last_width;
   int _last_height;
 

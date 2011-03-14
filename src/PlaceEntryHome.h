@@ -37,6 +37,8 @@ public:
   ~PlaceEntryHome ();
 
    /* Overrides */
+  Place * GetParent () { return NULL; }
+
   const gchar * GetId          ();
   const gchar * GetName        ();
   const gchar * GetIcon        ();
@@ -58,13 +60,19 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  void ForeachSection (SectionForeachCallback slot) { };
+  void ForeachSection (SectionForeachCallback slot) {};
 
   void ForeachGroup  (GroupForeachCallback slot);
   void ForeachResult (ResultForeachCallback slot);
 
-  void ForeachGlobalGroup  (GroupForeachCallback slot) { };
-  void ForeachGlobalResult (ResultForeachCallback slot) { };
+  void ForeachGlobalGroup  (GroupForeachCallback slot) {};
+  void ForeachGlobalResult (ResultForeachCallback slot) {};
+
+  void GetResult (const void *id, ResultForeachCallback slot);
+  void GetGlobalResult (const void *id, ResultForeachCallback slot) {};
+
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id) {};
 
 private:
   void LoadExistingEntries ();
@@ -74,13 +82,16 @@ private:
 
   void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
-  // FIXME: I know this is horrible but I can't fix it this week, have a much better plan for next
 public:
   PlaceFactory *_factory;
 
   std::map<char *, gchar *> _hints;
   std::vector<PlaceEntry *> _entries;
+  std::map<const void *, PlaceEntry *> _id_to_entry;
+
+  ResultForeachCallback _foreach_callback;
 };
 
 #endif // PLACE_ENTRY_HOME_H

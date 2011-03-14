@@ -48,8 +48,6 @@ public:
 
   void SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items);
 
-  void SetChildUnexpandHeight (guint height);
-
   void SetExpanded (bool is_expanded);
   bool GetExpanded ();
 
@@ -67,6 +65,9 @@ private:
   void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnLabelActivated (nux::Area *label);
+  void OnLabelFocusChanged (nux::Area *label);
+  void RefreshLabel ();
 
 private:
   nux::VLayout *_group_layout;
@@ -83,7 +84,7 @@ private:
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
-  guint _child_unexpand_height;
+  char *_cached_name;
 };
 
 #endif

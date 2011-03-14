@@ -59,7 +59,9 @@ PanelMenuView::PanelMenuView (int padding)
   _is_inside (false),
   _is_maximized (false),
   _is_own_window (false),
-  _last_active_view (NULL)
+  _last_active_view (NULL),
+  _last_width (0),
+  _last_height (0)
 {
   WindowManager *win_manager;
 
@@ -68,6 +70,7 @@ PanelMenuView::PanelMenuView (int padding)
                     G_CALLBACK (on_active_window_changed), this);
 
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  _menu_layout->SetParentObject (this);
 
   /* This is for our parent and for PanelView to read indicator entries, we
    * shouldn't touch this again
@@ -140,7 +143,7 @@ long
 PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetAbsoluteGeometry ();
 
   if (geo.IsPointInside (ievent.e_x, ievent.e_y))
   {
@@ -168,7 +171,8 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
   }
 
-  ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (!_is_own_window)
+    ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
 }
@@ -186,7 +190,6 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
   _window_buttons->ComputeLayout2 ();
   new_window_buttons_w = _window_buttons->GetContentWidth ();
 
-  
   /* Explicitly set the size and position of the widgets */
   geo.x += _padding + new_window_buttons_w + _padding;
   geo.width -= _padding + new_window_buttons_w + _padding;
@@ -201,8 +204,6 @@ long PanelMenuView::PostLayoutManagement (long LayoutResult)
 
   _panel_titlebar_grab_area->SetGeometry (geo.x, geo.y, geo.width, geo.height);
   
-  Refresh ();
-
   if (_is_inside)
     NeedRedraw ();
   
@@ -216,6 +217,13 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   int button_width = _padding + _window_buttons->GetContentWidth () + _padding;
   float factor = 4;
   button_width /= factor;
+
+  if (geo.width != _last_width || geo.height != _last_height)
+  {
+    _last_width = geo.width;
+    _last_height = geo.height;
+    Refresh ();
+  }
     
   GfxContext.PushClippingRectangle (geo);
 

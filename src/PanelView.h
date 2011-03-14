@@ -40,12 +40,12 @@ public:
   PanelView (NUX_FILE_LINE_PROTO);
   ~PanelView ();
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
+  void PreLayoutManagement ();
+  long PostLayoutManagement (long LayoutResult);
   
   void OnObjectAdded (IndicatorObjectProxy *proxy);
   void OnMenuPointerMoved (int x, int y);
