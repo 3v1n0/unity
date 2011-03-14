@@ -192,7 +192,10 @@ panel_indicator_entry_accessible_ref_child (AtkObject *accessible, gint i)
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
   if (GTK_IS_MENU (piea->priv->entry->menu))
-    child = gtk_widget_get_accessible (GTK_WIDGET (piea->priv->entry->menu));
+    {
+      child = gtk_widget_get_accessible (GTK_WIDGET (piea->priv->entry->menu));
+      atk_object_set_parent (child, accessible);
+    }
 
   return child;
 }
