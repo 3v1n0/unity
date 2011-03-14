@@ -102,7 +102,13 @@ panel_indicator_accessible_finalize (GObject *object)
   if (pia->priv != NULL)
     {
       if (pia->priv->indicator != NULL)
-        g_object_unref (G_OBJECT (pia->priv->indicator));
+        {
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_indicator_entry_added, pia);
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_indicator_entry_removed, pia);
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_accessible_desc_updated, pia);
+
+          g_object_unref (G_OBJECT (pia->priv->indicator));
+        }
 
       while (pia->priv->a11y_children != NULL)
         {
@@ -111,7 +117,6 @@ panel_indicator_accessible_finalize (GObject *object)
 	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
 	  g_object_unref (accessible);
 	}
-
     }
 
   G_OBJECT_CLASS (panel_indicator_accessible_parent_class)->finalize (object);
