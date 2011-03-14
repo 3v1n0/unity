@@ -47,6 +47,7 @@ on_indicator_entry_added (IndicatorObject *io, IndicatorObjectEntry *entry, gpoi
   accessible = panel_indicator_entry_accessible_new (entry);
   if (accessible != NULL)
     {
+      atk_object_set_parent (accessible, ATK_OBJECT (pia));
       pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
       g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::add",
 			     g_slist_length (pia->priv->a11y_children) - 1,
