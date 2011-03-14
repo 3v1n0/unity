@@ -108,11 +108,18 @@ UnityScreen::nuxEpilogue ()
   glPopAttrib ();
 }
 
+#define CLIP_PLANE_MASK (PAINT_SCREEN_TRANSFORMED_MASK | \
+			 PAINT_SCREEN_WITH_TRANSFORMED_WINDOWS_MASK)
+
 void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
-  wt->RenderInterfaceFromForeignCmd ();
+  
+  CompOutput output = screen->currentOutputDev ();
+  nux::Geometry geo = nux::Geometry (output.x (), output.y (), output.width (), output.height ());
+  
+  wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
 
   doShellRepaint = false;
