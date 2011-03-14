@@ -87,6 +87,7 @@ on_geometries_changed_cb (PanelService *service,
 			  gpointer user_data)
 {
   PanelIndicatorEntryAccessible *piea;
+  AtkRectangle rect;
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
 
@@ -100,7 +101,12 @@ on_geometries_changed_cb (PanelService *service,
   piea->priv->width = width;
   piea->priv->height = height;
 
-  g_debug ("Got geometries: %d, %d (%d-%d)", x, y, width, height);
+  /* Notify ATK objects of change of coordinates */
+  rect.x = piea->priv->x;
+  rect.y = piea->priv->y;
+  rect.width = piea->priv->width;
+  rect.height = piea->priv->height;
+  g_signal_emit_by_name (ATK_COMPONENT (piea), "bounds-changed", &rect);
 }
 
 static void

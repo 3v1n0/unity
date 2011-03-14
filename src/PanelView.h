@@ -51,7 +51,6 @@ public:
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
-  void OnEntriesSynced (GVariant *args);
   
   PanelHomeButton * HomeButton ();
 

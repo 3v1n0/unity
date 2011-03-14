@@ -36,6 +36,8 @@ struct _PanelIndicatorAccessiblePrivate
   GSList *a11y_children;
   gint x;
   gint y;
+  gint width;
+  gint height;
 };
 
 G_DEFINE_TYPE_WITH_CODE(PanelIndicatorAccessible,
@@ -56,6 +58,9 @@ on_geometries_changed_cb (PanelService *service,
 			  gpointer user_data)
 {
   PanelIndicatorAccessible *pia;
+  AtkRectangle rect;
+  GSList *l;
+  gboolean minimum_set = FALSE;
 
   pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
 
@@ -64,10 +69,39 @@ on_geometries_changed_cb (PanelService *service,
   if (object != pia->priv->indicator)
     return;
 
-  if (x < pia->priv->x)
-    pia->priv->x = x;
-  if (y < pia->priv->y)
-    pia->priv->y = y;
+  /* Iterate over all children to get width and height */
+  pia->priv->width = pia->priv->height = 0;
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next)
+    {
+      gint e_x, e_y, e_width, e_height;
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      atk_component_get_extents (ATK_COMPONENT (accessible), &e_x, &e_y, &e_width, &e_height, ATK_XY_SCREEN);
+      if (minimum_set)
+        {
+          if (e_x < pia->priv->x)
+            pia->priv->x = e_x;
+          if (e_y < pia->priv->y)
+            pia->priv->y = e_y;
+	}
+      else
+        {
+	  pia->priv->x = e_x;
+	  pia->priv->y = e_y;
+	  minimum_set = TRUE;
+	}
+
+      pia->priv->width += e_width;
+      if (e_height > pia->priv->height)
+	pia->priv->height = e_height;
+    }
+
+  /* Notify ATK objects of change of coordinates */
+  rect.x = pia->priv->x;
+  rect.y = pia->priv->y;
+  rect.width = pia->priv->width;
+  rect.height = pia->priv->height;
+  g_signal_emit_by_name (ATK_COMPONENT (pia), "bounds-changed", &rect);
 }
 
 static void
@@ -119,7 +153,7 @@ panel_indicator_accessible_init (PanelIndicatorAccessible *pia)
 {
   pia->priv = GET_PRIVATE (pia);
   pia->priv->a11y_children = NULL;
-  pia->priv->x = pia->priv->y = 0;
+  pia->priv->x = pia->priv->y = pia->priv->width = pia->priv->height = 0;
 
   /* Set up signals for listening to service changes */
   pia->priv->service = panel_service_get_default ();
@@ -189,7 +223,6 @@ panel_indicator_accessible_get_extents (AtkComponent *component,
 					AtkCoordType coord_type)
 {
   PanelIndicatorAccessible *pia;
-  GSList *l;
 
   g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (component));
 
@@ -199,19 +232,8 @@ panel_indicator_accessible_get_extents (AtkComponent *component,
      corner and so relative and absolute coordinates are the same */
   *x = pia->priv->x;
   *y = pia->priv->y;
-
-  /* Iterate over all children to get width and height */
-  *width = *height = 0;
-  for (l = pia->priv->a11y_children; l != NULL; l = l->next)
-    {
-      gint e_x, e_y, e_width, e_height;
-      AtkObject *accessible = ATK_OBJECT (l->data);
-
-      atk_component_get_extents (ATK_COMPONENT (accessible), &e_x, &e_y, &e_width, &e_height, coord_type);
-      *width += e_width;
-      if (e_height > *height)
-	*height = e_height;
-    }
+  *width = pia->priv->width;
+  *height = pia->priv->height;
 }
 
 static void

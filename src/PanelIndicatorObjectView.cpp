@@ -18,6 +18,7 @@
  */
 
 #include "Nux/Nux.h"
+#include "Nux/Area.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 
@@ -30,6 +31,10 @@
 #include "IndicatorObjectEntryProxy.h"
 
 #include <glib.h>
+
+#define S_NAME  "com.canonical.Unity.Panel.Service"
+#define S_PATH  "/com/canonical/Unity/Panel/Service"
+#define S_IFACE "com.canonical.Unity.Panel.Service"
 
 PanelIndicatorObjectView::PanelIndicatorObjectView ()
 : View (NUX_TRACKER_LOCATION),
@@ -152,4 +157,76 @@ PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+}
+
+static void
+on_sync_geometries_done_cb (GObject      *source,
+                            GAsyncResult *res,
+                            gpointer      data)
+{
+  GVariant *args;
+  GError *error = NULL;
+
+  args = g_dbus_proxy_call_finish ((GDBusProxy*)source, res, &error);
+  if (error != NULL)
+  {
+    g_warning ("Error when calling SyncGeometries: %s", error->message);
+    g_error_free (error);
+  }
+}
+
+void
+PanelIndicatorObjectView::SyncGeometries ()
+{
+  GVariantBuilder b;
+  GDBusProxy *bus_proxy;
+  GVariant *method_args;
+  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
+
+  /* Notify change of geometries */
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
+
+  for (it = _entries.begin (); it != _entries.end (); it++)
+    {
+      nux::Geometry geo;
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it);
+
+      if (entry == NULL)
+        continue;
+
+      geo = entry->GetGeometry ();
+      g_variant_builder_add (&b, "(ssiiii)",
+			     GetName (),
+			     entry->_proxy->GetId (),
+			     geo.x,
+			     geo.y,
+			     geo.GetWidth (),
+			     geo.GetHeight ());
+    }
+
+  g_variant_builder_close (&b);
+  method_args = g_variant_builder_end (&b);
+
+  // Send geometries to the panel service
+  bus_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
+					     G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+					     NULL,
+					     S_NAME,
+					     S_PATH,
+					     S_IFACE,
+					     NULL,
+					     NULL);
+  if (bus_proxy != NULL)
+  {
+    g_dbus_proxy_call (bus_proxy, "SyncGeometries", method_args,
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1,
+                       NULL,
+                       on_sync_geometries_done_cb,
+                       this);
+    g_object_unref (bus_proxy);
+  }
+
+  g_variant_unref (method_args);
 }

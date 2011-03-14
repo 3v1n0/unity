@@ -327,6 +327,7 @@ main (gint argc, gchar **argv)
 {
   PanelService *service;
   guint         owner_id;
+	AtkObject    *root;
 
   g_unsetenv("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
@@ -342,7 +343,12 @@ main (gint argc, gchar **argv)
   g_assert (introspection_data != NULL);
 
   service = panel_service_get_default ();
-  
+
+	/* There might be cases when we start signalling about change of geometries but the
+     accessible objects are not yet created, so to avoid that, instantiate here the
+     A11Y root object, which will create them all */
+	root = atk_get_root ();
+
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                              S_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
