@@ -78,8 +78,7 @@ RegisterUBusInterest (const gchar *signal, TestArgs *args)
   
 }
 
-Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection) :
-  display (screen)
+Autopilot::Autopilot (CompScreen *screen, GDBusConnection *connection)
 {
   _dbus = connection;
   _ubus = ubus_server_get_default ();
@@ -111,8 +110,6 @@ Autopilot::StartTest (const gchar *name)
   args->passed = FALSE;
   args->expiration_handle = nux::GetTimer ().AddTimerHandler (TEST_TIMEOUT, test_expiration_functor, args);  
   
-  display.StartTest (name);
-  
   if (g_strcmp0 (name, "show_tooltip") == 0) 
   {
     RegisterUBusInterest (UBUS_TOOLTIP_SHOWN, args);
@@ -123,15 +120,19 @@ Autopilot::StartTest (const gchar *name)
   }
   else if (g_strcmp0 (name, "drag_launcher") == 0)
   {
+    RegisterUBusInterest (UBUS_LAUNCHER_END_DND, args);
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_along_edge_drop") == 0)
   {
+    RegisterUBusInterest (UBUS_LAUNCHER_ICON_END_DND, args);
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_out_and_drop") == 0)
   {
+    RegisterUBusInterest (UBUS_LAUNCHER_ICON_END_DND, args);
   }
   else if (g_strcmp0 (name, "drag_launcher_icon_out_and_move") == 0)
   {
+    RegisterUBusInterest (UBUS_LAUNCHER_ICON_END_DND, args);
   }
   else
   {

@@ -55,6 +55,12 @@
 #define UBUS_QUICKLIST_START_KEY_NAV "QUICKLIST_START_KEY_NAV"
 #define UBUS_QUICKLIST_END_KEY_NAV   "QUICKLIST_END_KEY_NAV"
 
+// Signals that fired on various launcher dnd tasks
+#define UBUS_LAUNCHER_START_DND      "LAUNCHER_START_DRAG"
+#define UBUS_LAUNCHER_END_DND        "LAUNCHER_END_DRAG"
+#define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
+#define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
+
 // Signal to send on icon action and that you want to request hiding the launcher
 #define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
 

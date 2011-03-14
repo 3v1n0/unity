@@ -29,7 +29,6 @@
 #include "Nux/Nux.h"
 #include "Nux/TimerProc.h"
 
-#include "AutopilotDisplay.h"
 #include "ubus-server.h"
 
 #define TEST_TIMEOUT 6000
@@ -54,9 +53,6 @@ public:
 
   UBusServer *GetUBusConnection ();
   GDBusConnection *GetDBusConnection ();
-
-private:
-  AutopilotDisplay display;
 };
 
 #endif /* _AUTOPILOT_H */
