@@ -436,7 +436,5 @@ on_order_change_cb (UnityLauncherAccessible *self)
 {
   g_return_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (self));
 
-  g_debug ("[a11y] on_order_change_cb");
-
   update_children_index (self);
 }
