@@ -116,8 +116,8 @@ UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
   
-  CompOutput output = screen->currentOutputDev ();
-  nux::Geometry geo = nux::Geometry (output.x (), output.y (), output.width (), output.height ());
+  CompOutput *output = _last_output;
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
@@ -137,7 +137,8 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
   doShellRepaint = true;
   allowWindowPaint = true;
-
+  _last_output = output;
+  
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
 
