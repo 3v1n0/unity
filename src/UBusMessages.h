@@ -23,6 +23,7 @@
 // keep ordered
 
 #define UBUS_DASH_EXTERNAL_ACTIVATION   "DASH_EXTERNAL_ACTIVATION"
+#define UBUS_DASH_VISIBLE               "DASH_VISIBLE"
 #define UBUS_HOME_BUTTON_TRIGGER_UPDATE "PANEL_HOME_BUTTON_TRIGGER_UPDATE"
 
 // When other parts of Unity want to close the place view
