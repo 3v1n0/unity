@@ -48,7 +48,7 @@ on_indicator_entry_added (IndicatorObject *io, IndicatorObjectEntry *entry, gpoi
   if (accessible != NULL)
     {
       pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
-      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
+      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::add",
 			     g_slist_length (pia->priv->a11y_children) - 1,
 			     accessible);
     }
@@ -68,7 +68,7 @@ on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gp
       if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
         {
 	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
-	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
+	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::remove",
 				 count, accessible);
 
 	  g_object_unref (accessible);
@@ -192,11 +192,12 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
   entries = indicator_object_get_entries (pia->priv->indicator);
   for (l = entries; l != NULL; l = l->next)
     {
-      AtkObject *accessible;
+      AtkObject *child;
       IndicatorObjectEntry *entry = (IndicatorObjectEntry *) l->data;
 
-      accessible = panel_indicator_entry_accessible_new (entry);
-      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+      child = panel_indicator_entry_accessible_new (entry);
+      atk_object_set_parent (child, accessible);
+      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, child);
     }
 
   g_list_free (entries);
