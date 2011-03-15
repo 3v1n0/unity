@@ -97,7 +97,6 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout->SetHorizontalExternalMargin (18);
 
   SetLayout (_layout);
-
   SetCompositionLayout (_layout);
 
   g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
@@ -192,14 +191,16 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
   if (_entry)
   {
     // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
-    const gchar *search_template = _("<span font_size='x-small' font_style='italic'>Search %s</span>");
+    const gchar *search_template = _("Search %s");
+    gchar       *markup;
     gchar       *res;
     gchar       *tmp;
 
     tmp = g_markup_escape_text (entry->GetName (), -1);
     res = g_strdup_printf (search_template, tmp);
+    markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", res);
 
-    _hint->SetText (res);
+    _hint->SetText (markup);
     _pango_entry->SetText (search_string ? search_string : "");
 
     _entry->SetActiveSection (section_id);
@@ -211,6 +212,7 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
     g_free (res);
     g_free (tmp);
+    g_free (markup);
   }
   else
   {
