@@ -104,6 +104,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
                     G_CALLBACK (OnFontChanged), this);
   OnFontChanged (NULL, NULL, this);
 
+  _pango_entry->cursor_moved.connect (sigc::mem_fun (this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -149,7 +150,9 @@ PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   UpdateBackground ();
 
- GfxContext.PushClippingRectangle (geo);
+  GfxContext.PushClippingRectangle (geo);
+
+  nux::GetPainter ().PaintBackground (GfxContext, geo);
 
   _bg_layer->SetGeometry (nux::Geometry (geo.x, geo.y, _last_width, geo.height));
   nux::GetPainter ().RenderSinglePaintLayer (GfxContext,
@@ -302,6 +305,12 @@ void
 PlacesSearchBar::OnEntryActivated ()
 {
   activated.emit ();
+}
+
+void
+PlacesSearchBar::OnLayeredLayoutQueueDraw (int i)
+{
+  QueueDraw ();
 }
 
 void
@@ -465,6 +474,4 @@ PlacesSearchBar::UpdateBackground ()
   );
 
   texture2D->UnReference ();
-
-  QueueDraw ();
 }
