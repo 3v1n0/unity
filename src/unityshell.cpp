@@ -940,16 +940,86 @@ UnityWindow::~UnityWindow ()
     us->lastFocusedWindow = NULL;
 }
 
+namespace {
+
+/* Checks whether an extension is supported by the GLX or OpenGL implementation
+ * given the extension name and the list of supported extensions. */
+gboolean
+is_extension_supported (const gchar *extensions, const gchar *extension)
+{
+  if (extensions != NULL && extension != NULL)
+  {
+    const gsize len = strlen (extension);
+    gchar* p = (gchar*) extensions;
+    gchar* end = p + strlen (p);
+
+    while (p < end)
+    {
+      const gsize size = strcspn (p, " ");
+      if (len == size && strncmp (extension, p, size) == 0)
+        return TRUE;
+      p += size + 1;
+    }
+  }
+
+  return FALSE;
+}
+
+} /* anonymous namespace */
+
 /* vtable init */
 bool
 UnityPluginVTable::init ()
 {
+  gchar* extensions;
+
   if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
     return false;
   if (!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI))
     return false;
   if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /* Ensure OpenGL extensions required by the Unity plugin are available. */
+  extensions = (gchar*) glGetString (GL_EXTENSIONS);
+  if (!is_extension_supported (extensions, "GL_ARBB_vertex_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_fragment_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_fragment_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_buffer_object"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_buffer_object not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_framebuffer_object"))
+  {
+    if (!is_extension_supported (extensions, "GL_EXT_framebuffer_object"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_framebuffer_object or GL_EXT_framebuffer_object "
+                      "not supported\n");
+      return false;
+    }
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_texture_non_power_of_two"))
+  {
+    if (!is_extension_supported (extensions, "GL_ARB_texture_rectangle"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_texture_non_power_of_two or "
+                      "GL_ARB_texture_rectangle not supported\n");
+      return false;
+    }
+  }
 
   return true;
 }
