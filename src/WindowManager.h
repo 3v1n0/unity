@@ -49,7 +49,8 @@ public:
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
   virtual bool IsWindowDecorated (guint32 xid) = 0;
-  virtual bool IsWindowVisible   (guint32 xid) = 0;
+  virtual bool IsWindowOnCurrentDesktop (guint32 xid) = 0;
+  virtual bool IsWindowObscured (guint32 xid) = 0;
 
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;

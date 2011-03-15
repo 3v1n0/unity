@@ -319,7 +319,7 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowVisible (guint32 xid)
+PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
 {
   Window win = (Window)xid;
   CompWindow *window;
@@ -328,16 +328,28 @@ PluginAdapter::IsWindowVisible (guint32 xid)
   if (window)
   {
     CompPoint window_vp = window->defaultViewport ();
-    if (window->onCurrentDesktop () && window_vp == m_Screen->vp ())
+    return (window->onCurrentDesktop () && window_vp == m_Screen->vp ());
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowObscured (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    CompPoint window_vp = window->defaultViewport ();
+    // Check if any windows above this one are blocking it
+    for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
-      // Check if any windows above this one are blocking it
-      bool blocked = false;
-      for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
-      {
-        if (sibling->desktop () == window->desktop () && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
-          blocked = true;
-      }
-      return !blocked;
+      if (sibling->desktop () == window->desktop () && sibling->defaultViewport () == window_vp
+          && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+        return true;
     }
   }
 

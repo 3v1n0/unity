@@ -75,6 +75,8 @@ public:
   void OnWindowUnmapped (guint32 xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
+  
+  guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
   void OnMouseMiddleClicked ();

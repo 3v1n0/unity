@@ -341,7 +341,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
       _layout->ProcessDraw (GfxContext, force_draw);
     }
 
-    if (_is_maximized)
+    if (_is_maximized) /* FIXME: IF ANYTHING IS MAXIMIZED IN THE CURRENT VIEWPORT */
     {
       _window_buttons->ProcessDraw (GfxContext, true);
     }
@@ -819,30 +819,31 @@ PanelMenuView::OnWindowButtonsRedraw ()
   FullRedraw ();
 }
 
-void
-PanelMenuView::OnMaximizedGrab (int x, int y)
+guint32
+PanelMenuView::GetMaximizedWindow ()
 {
   guint32 window_xid = 0;
-  
-  g_debug ("OnMaximizedGrab");
-  
   // Find the front-most of the maximized windows we are controlling
   foreach (guint32 xid, _maximized_set)
   {
-    assert (WindowManager::Default ()->IsWindowMaximized (xid)); /* Temporary; just so I notice if this fails */
-    g_debug ("OnMaximizedGrab: looking at window %d", xid);
-    // We can safely assume that the visible maximized window is front-most
-    if (WindowManager::Default ()->IsWindowVisible (xid))
+    // We can safely assume only the front-most is visible
+    if (WindowManager::Default ()->IsWindowOnCurrentDesktop (xid)
+        && !WindowManager::Default ()->IsWindowObscured (xid))
     {
       window_xid = xid;
-      g_debug ("OnMaximizedGrab: breaking on window %d", xid);
       break;
     }
   }
+  return window_xid;
+}
+
+void
+PanelMenuView::OnMaximizedGrab (int x, int y)
+{
+  guint32 window_xid = GetMaximizedWindow ();
   
   if (window_xid != 0)
   {
-    g_debug ("OnMaximizedGrab: raising window %d", window_xid);
     WindowManager::Default ()->Activate (window_xid);
     _is_inside = false;
     _is_grabbed = true;
@@ -855,13 +856,11 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
 void
 PanelMenuView::OnMouseMiddleClicked ()
 {
-  if (_is_maximized)
+  guint32 window_xid = GetMaximizedWindow ();
+  
+  if (window_xid != 0)
   {
-    BamfWindow *window;
-
-    window = bamf_matcher_get_active_window (_matcher);
-    if (BAMF_IS_WINDOW (window))
-      WindowManager::Default ()->Lower (bamf_window_get_xid (window));
+    WindowManager::Default ()->Lower (window_xid);
   } 
 }
 

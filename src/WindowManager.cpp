@@ -48,7 +48,12 @@ class WindowManagerDummy : public WindowManager
     return true;
   }
   
-  bool IsWindowVisible (guint32 xid)
+  bool IsWindowOnCurrentDesktop (guint32 xid)
+  {
+    return true;
+  }
+  
+  bool IsWindowObscured (guint32 xid)
   {
     return false;
   }
