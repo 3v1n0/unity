@@ -27,6 +27,7 @@
 #include "Nux/GridVLayout.h"
 #include "PlacesGroup.h"
 #include "PlacesResultsView.h"
+#include "PlacesVScrollBar.h"
 
 PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   :   ScrollView (NUX_FILE_LINE_PARAM)
@@ -39,6 +40,8 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 
   SetLayout (_layout);
 
+  PlacesVScrollBar* vscrollbar = new PlacesVScrollBar ();
+  SetVScrollBar (vscrollbar);
   EnableVerticalScrollBar (true);
   EnableHorizontalScrollBar (false);
   _idle_id = 0;
