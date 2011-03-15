@@ -826,12 +826,12 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
   
   g_debug ("OnMaximizedGrab");
   
-  // Find the front-most maximized window
+  // Find the front-most of the maximized windows we are controlling
   foreach (guint32 xid, _maximized_set)
   {
     assert (WindowManager::Default ()->IsWindowMaximized (xid)); /* Temporary; just so I notice if this fails */
     g_debug ("OnMaximizedGrab: looking at window %d", xid);
-    /* FIXME: IsWindowVisible does not do what we want. Detect top-most (visible) window in current viewport */
+    // We can safely assume that the visible maximized window is front-most
     if (WindowManager::Default ()->IsWindowVisible (xid))
     {
       window_xid = xid;

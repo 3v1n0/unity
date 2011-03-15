@@ -327,7 +327,18 @@ PluginAdapter::IsWindowVisible (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
   {
-    return (!window->invisible ());
+    CompPoint window_vp = window->defaultViewport ();
+    if (window->onCurrentDesktop () && window_vp == m_Screen->vp ())
+    {
+      // Check if any windows above this one are blocking it
+      bool blocked = false;
+      for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
+      {
+        if (sibling->desktop () == window->desktop () && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+          blocked = true;
+      }
+      return !blocked;
+    }
   }
 
   return false;
