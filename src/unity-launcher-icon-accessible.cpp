@@ -46,6 +46,7 @@ static void          unity_launcher_icon_accessible_initialize    (AtkObject *ac
 static AtkStateSet*  unity_launcher_icon_accessible_ref_state_set (AtkObject *obj);
 static const gchar * unity_launcher_icon_accessible_get_name      (AtkObject *obj);
 static AtkObject *   unity_launcher_icon_accessible_get_parent    (AtkObject *obj);
+static gint          unity_launcher_icon_accessible_get_index_in_parent (AtkObject *obj);
 
 /* AtkComponent.h */
 static void     atk_component_interface_init                        (AtkComponentIface *iface);
@@ -79,6 +80,7 @@ struct _UnityLauncherIconAccessiblePrivate
   /* Cached values (used to avoid extra notifications) */
   gboolean selected;
   gboolean parent_focused;
+  gboolean index_in_parent;
 
   guint on_parent_selection_change_id;
   guint on_parent_focus_event_id;
@@ -97,6 +99,7 @@ unity_launcher_icon_accessible_class_init (UnityLauncherIconAccessibleClass *kla
   atk_class->get_name = unity_launcher_icon_accessible_get_name;
   atk_class->ref_state_set = unity_launcher_icon_accessible_ref_state_set;
   atk_class->get_parent = unity_launcher_icon_accessible_get_parent;
+  atk_class->get_index_in_parent = unity_launcher_icon_accessible_get_index_in_parent;
 
   g_type_class_add_private (gobject_class, sizeof (UnityLauncherIconAccessiblePrivate));
 }
@@ -281,6 +284,10 @@ check_selected (UnityLauncherIconAccessible *self)
   gboolean found = FALSE;
 
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+
+  if (nux_object == NULL) /* state is defunct */
+    return;
+
   icon = dynamic_cast<LauncherIcon *>(nux_object);
   launcher = icon->GetLauncher ();
 
@@ -411,4 +418,22 @@ unity_launcher_icon_accessible_focus_handler (AtkObject *accessible,
            accessible, atk_object_get_name (accessible), focus_in);
 
   atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);
+}
+
+/* Public */
+static gint
+unity_launcher_icon_accessible_get_index_in_parent (AtkObject *obj)
+{
+  g_return_val_if_fail (UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (obj), -1);
+
+  return UNITY_LAUNCHER_ICON_ACCESSIBLE (obj)->priv->index_in_parent;
+}
+
+void
+unity_launcher_icon_accessible_set_index (UnityLauncherIconAccessible *self,
+                                          gint index)
+{
+  g_return_if_fail (UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (self));
+
+  self->priv->index_in_parent = index;
 }
