@@ -61,8 +61,13 @@ Recommends: unity-place-applications,
             ubuntuone-control-panel-gtk,
 Breaks: compiz-core (<< 1:0.9.2.1+glibmainloop3),
         bamf (<< 0.2.76),
-Description: Interface for Ubuntu Desktop Edition
- Unity is a graphical interface designed for Ubuntu Desktop Edition
+Description: Interface designed for efficiency of space and interaction.
+ Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
+ community, Unity is all about the combination of familiarity and the future. We
+ bring together visual design, analysis of user experience testing, modern
+ graphics technologies and a deep understanding of the free software landscape
+ to produce what we hope will be the lightest, most elegant and most delightful
+ way to use your PC.
 
 Package: unity-common
 Architecture: all
@@ -70,8 +75,13 @@ Depends: ${misc:Depends},
          python,
 Replaces: unity (<< 3.2.2-0ubuntu3)
 Conflicts: unity (<< 3.2.2-0ubuntu3)
-Description: Common files for the interface for Ubuntu Desktop Edition
- Unity is a graphical interface designed for Ubuntu Desktop Edition
+Description: Common files for the Unity interface.
+ Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
+ community, Unity is all about the combination of familiarity and the future. We
+ bring together visual design, analysis of user experience testing, modern
+ graphics technologies and a deep understanding of the free software landscape
+ to produce what we hope will be the lightest, most elegant and most delightful
+ way to use your PC.
  .
  This package contains commons file that are architecture independent.
 

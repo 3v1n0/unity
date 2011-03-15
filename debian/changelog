@@ -1,3 +1,11 @@
+unity (3.6.4-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - change the description of the package (remove desktop edition)
+      (LP: #735557)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 15 Mar 2011 18:12:16 +0100
+
 unity (3.6.4-0ubuntu1) natty; urgency=low
 
   * New upstream release.
