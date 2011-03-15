@@ -34,8 +34,10 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
-  _layout->SetHorizontalExternalMargin (14);
+  _layout->SetHorizontalExternalMargin (0);
   _layout->SetVerticalInternalMargin (0);
+  setBorder (0);
+  setTopBorder (0);
 
   SetLayout (_layout);
 

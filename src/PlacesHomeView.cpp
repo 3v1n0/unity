@@ -92,7 +92,7 @@ PlacesHomeView::PlacesHomeView ()
   _layout->SetChildrenSize (style->GetHomeTileWidth (), style->GetHomeTileHeight ());
   _layout->EnablePartialVisibility (false);
   _layout->SetHeightMatchContent (true);
-  _layout->SetVerticalExternalMargin (16);
+  _layout->SetVerticalExternalMargin (32);
   _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
@@ -157,9 +157,6 @@ PlacesHomeView::Refresh ()
   gchar      *markup = NULL;
   const char *temp = "<big>%s</big>";
   int         icon_size = style->GetHomeTileIconSize ();
-
-  GetCompositionLayout ()->SetVerticalExternalMargin (4);
-  GetCompositionLayout ()->SetHorizontalExternalMargin (18);
 
   _layout->Clear ();
 

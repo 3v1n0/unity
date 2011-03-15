@@ -59,6 +59,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layout->AddLayout (vlayout, 1, nux::eCenter, nux::eFull);
 
   _h_spacer= new nux::SpaceLayout (1, 1, 1, nux::AREA_MAX_HEIGHT);
+  _h_spacer->SetVisible (false);
   _layout->AddLayout (_h_spacer, 0, nux::eCenter, nux::eFull);
 
   _search_bar = new PlacesSearchBar ();
@@ -68,10 +69,17 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
   _search_bar->activated.connect (sigc::mem_fun (this, &PlacesView::OnEntryActivated));
 
+  nux::HLayout *hlayout = new nux::HLayout (NUX_TRACKER_LOCATION);
+  vlayout->AddLayout (hlayout, 1, nux::eCenter, nux::eFull);
+
+  nux::SpaceLayout *slayout = new nux::SpaceLayout (24, 24, 1, nux::AREA_MAX_HEIGHT);
+  hlayout->AddLayout (slayout, 1, nux::eCenter, nux::eFull);
+
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
-  vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
+  hlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
 
   _v_spacer = new nux::SpaceLayout (1, nux::AREA_MAX_WIDTH, 1, 1);
+  _v_spacer->SetVisible (false);
   vlayout->AddLayout (_v_spacer, 0, nux::eCenter, nux::eFull);
 
   _home_view = new PlacesHomeView ();
@@ -556,6 +564,9 @@ PlacesView::SetSizeMode (SizeMode size_mode)
     _v_spacer->SetMinimumHeight (corner->GetHeight ());
     _v_spacer->SetMaximumHeight (corner->GetHeight ());
   }
+
+  _h_spacer->SetVisible (size_mode == SIZE_MODE_HOVER);
+  _v_spacer->SetVisible (size_mode == SIZE_MODE_HOVER);
   
   ReEvaluateShrinkMode ();
   QueueDraw ();

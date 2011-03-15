@@ -85,8 +85,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->SetCanFocus (true);
   _expand_label->FocusActivated.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelActivated));
   _expand_label->FocusChanged.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
-  
-  
+    
   _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _expand_icon = new IconTexture (arrow, arrow->GetWidth (), arrow->GetHeight ());
