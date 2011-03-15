@@ -389,6 +389,8 @@ PlacesView::AboutToShow ()
     g_source_remove (_resize_id);
   _resize_id = 0;
   _actual_height = _last_height = _target_height;
+
+ _search_bar->_pango_entry->SetFocused (true);
 }
 
 void
