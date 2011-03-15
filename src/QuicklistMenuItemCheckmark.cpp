@@ -191,7 +191,7 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[0]->GetDeviceTexture ();
     }
 
-    _color = nux::Color::DarkGray;
+    _color = nux::Color::Gray;
   }
   
   gfxContext.QRP_1Tex (base.x,

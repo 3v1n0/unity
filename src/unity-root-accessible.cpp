@@ -175,6 +175,7 @@ unity_root_accessible_add_window (UnityRootAccessible *self,
                                   nux::BaseWindow *window)
 {
   AtkObject *window_accessible = NULL;
+  gint index = 0;
 
   g_return_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self));
 
@@ -183,4 +184,9 @@ unity_root_accessible_add_window (UnityRootAccessible *self,
 
   self->priv->window_list =
     g_slist_append (self->priv->window_list, window_accessible);
+
+  index = g_slist_index (self->priv->window_list, window_accessible);
+
+  g_signal_emit_by_name (self, "children-changed::add",
+                         index, window_accessible, NULL);
 }

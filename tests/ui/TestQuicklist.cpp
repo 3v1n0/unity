@@ -108,7 +108,7 @@ createRadioItem ()
 
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
+                                       false);
 
   dbusmenu_menuitem_property_set_int (item,
                                       DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
