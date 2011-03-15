@@ -484,6 +484,23 @@ private:
   LauncherIcon     *_dnd_hovered_icon;
   
   Atom              _selection_atom;
+
+  /* gdbus */
+  guint                       _dbus_owner;
+  static const gchar          introspection_xml[];
+  static GDBusInterfaceVTable interface_vtable;
+  
+  static void OnBusAcquired  (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameLost    (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void handle_dbus_method_call (GDBusConnection       *connection,
+                                       const gchar           *sender,
+                                       const gchar           *object_path,
+                                       const gchar           *interface_name,
+                                       const gchar           *method_name,
+                                       GVariant              *parameters,
+                                       GDBusMethodInvocation *invocation,
+                                       gpointer               user_data);
   
   struct timespec  _times[TIME_LAST];
 };

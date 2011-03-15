@@ -51,6 +51,10 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+#define S_DBUS_NAME  "com.canonical.Unity.Launcher"
+#define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
+#define S_DBUS_IFACE "com.canonical.Unity.Launcher"
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -71,6 +75,30 @@ void SetTimeBack (struct timespec *timeref, int remove)
   }
   timeref->tv_nsec -= remove * 1000000;
 }
+
+const gchar Launcher::introspection_xml[] =
+  "<node>"
+  "  <interface name='com.canonical.Unity.Launcher'>"
+  ""
+  "    <method name='AddLauncherItemFromPosition'>"
+  "      <arg type='s' name='icon' direction='in'/>"
+  "      <arg type='s' name='title' direction='in'/>"
+  "      <arg type='i' name='icon_x' direction='in'/>"
+  "      <arg type='i' name='icon_y' direction='in'/>"
+  "      <arg type='i' name='icon_size' direction='in'/>"
+  "      <arg type='s' name='desktop_file' direction='in'/>"
+  "      <arg type='s' name='aptdaemon_task' direction='in'/>"
+  "    </method>"
+  ""
+  "  </interface>"
+  "</node>";
+  
+GDBusInterfaceVTable Launcher::interface_vtable =
+{
+  Launcher::handle_dbus_method_call,
+  NULL,
+  NULL
+};
 
 
 /*
@@ -355,6 +383,15 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
                                    (UBusCallback)&Launcher::OnActionDone,
                                    this);
+    
+    _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
+                                  S_DBUS_NAME,
+                                  (GBusNameOwnerFlags) (G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
+                                  OnBusAcquired,
+                                  OnNameAcquired,
+                                  OnNameLost,
+                                  this,
+                                  NULL);
 
     SetDndEnabled (false, true);
 }
@@ -366,6 +403,7 @@ Launcher::~Launcher()
     if (_superkey_labels[i])
       _superkey_labels[i]->UnReference ();
   }
+  g_bus_unown_name (_dbus_owner);
 }
 
 /* Introspection */
@@ -3674,4 +3712,80 @@ Launcher::GetSelectedMenuIcon ()
     return *it;
   else
     return NULL;
+}
+
+/* dbus handlers */
+
+void
+Launcher::handle_dbus_method_call (GDBusConnection       *connection,
+                                   const gchar           *sender,
+                                   const gchar           *object_path,
+                                   const gchar           *interface_name,
+                                   const gchar           *method_name,
+                                   GVariant              *parameters,
+                                   GDBusMethodInvocation *invocation,
+                                   gpointer               user_data)
+{
+
+  if (g_strcmp0 (method_name, "AddLauncherItemFromPosition") == 0)
+  {
+    gchar  *icon;
+    gchar  *title;
+    gint32  icon_x;
+    gint32  icon_y;
+    gint32  icon_size;
+    gchar  *desktop_file;   
+    gchar  *aptdaemon_task;
+    
+    g_variant_get (parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
+    
+    Launcher *self = (Launcher*)user_data;
+    
+    g_dbus_method_invocation_return_value (invocation, NULL);
+    //g_free (icon, title, desktop_file, aptdaemon_task);
+  }
+  
+}
+
+void
+Launcher::OnBusAcquired (GDBusConnection *connection,
+                         const gchar     *name,
+                         gpointer         user_data)
+{
+  GDBusNodeInfo *introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
+  guint registration_id;
+  
+  if (!introspection_data) {
+    g_warning ("No introspection data loaded. Won't get dynamic launcher addition.");
+    return;
+  }
+  
+  
+  
+  registration_id = g_dbus_connection_register_object (connection,
+                                                       S_DBUS_PATH,
+                                                       introspection_data->interfaces[0],
+                                                       &interface_vtable,
+                                                       user_data,
+                                                       NULL,
+                                                       NULL);
+  if (!registration_id)
+    g_warning ("Object registration failed. Won't get dynamic launcher addition.");
+  
+}
+
+void
+Launcher::OnNameAcquired (GDBusConnection *connection,
+                          const gchar     *name,
+                          gpointer         user_data)
+{
+  g_debug ("Acquired the name %s on the session bus\n", name);
+}
+
+void
+Launcher::OnNameLost (GDBusConnection *connection,
+                       const gchar     *name,
+                       gpointer         user_data)
+{
+  g_debug ("Lost the name %s on the session bus\n", name);
 }
