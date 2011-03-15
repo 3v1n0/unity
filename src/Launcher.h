@@ -157,7 +157,7 @@ public:
   
   void CheckWindowOverLauncher ();
 
-  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
+  sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
 protected:
   // Introspectable methods

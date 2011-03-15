@@ -3675,7 +3675,7 @@ Launcher::ProcessDndDrop (int x, int y)
     
     if (path)
     {
-      launcher_dropped.emit (path, _dnd_hovered_icon);
+      launcher_addrequest.emit (path, _dnd_hovered_icon);
       g_free (path);
     }
   }
@@ -3740,9 +3740,13 @@ Launcher::handle_dbus_method_call (GDBusConnection       *connection,
     g_variant_get (parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
     
     Launcher *self = (Launcher*)user_data;
+    self->launcher_addrequest.emit (desktop_file, NULL);
     
     g_dbus_method_invocation_return_value (invocation, NULL);
-    //g_free (icon, title, desktop_file, aptdaemon_task);
+    g_free (icon);
+    g_free (title);
+    g_free (desktop_file);
+    g_free (aptdaemon_task);
   }
   
 }
