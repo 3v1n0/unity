@@ -47,6 +47,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
   guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
@@ -121,6 +122,7 @@ private:
   gchar   *_name;
   gchar   *_icon;
   gchar   *_description;
+  gchar   *_searchhint;
   guint64  _shortcut;
   guint32  _position;
   gchar  **_mimetypes;

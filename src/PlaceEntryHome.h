@@ -43,6 +43,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
   guint64       GetShortcut    ();
 
   guint32        GetPosition  ();

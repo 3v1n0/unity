@@ -2,5 +2,7 @@ src/BamfLauncherIcon.cpp
 src/DeviceLauncherIcon.cpp
 src/LauncherController.cpp
 src/PlaceLauncherIcon.cpp
+src/PlacesEntryHome.cpp
+src/PlacesEntryRemote.cpp
 src/PlacesHomeView.cpp
 src/TrashLauncherIcon.cpp
