@@ -164,12 +164,12 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
       FullRedraw ();
     }
   }
-
+  
   if (_is_maximized)
   {
     ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
-    ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
   }
+  ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
 
   if (!_is_own_window)
     ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
@@ -666,7 +666,10 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
       // make sure it's undecorated just in case it slipped by us earlier 
       // (I'm looking at you, Chromium!)
       if (_is_maximized)
+      {
         WindowManager::Default ()->Undecorate (xid);
+        _maximized_set.insert (xid);
+      }
     }
 
     // first see if we need to remove and old callback
@@ -711,7 +714,10 @@ PanelMenuView::OnWindowMinimized (guint32 xid)
 {
   
   if (WindowManager::Default ()->IsWindowMaximized (xid))
+  {
     WindowManager::Default ()->Decorate (xid);
+    _maximized_set.erase (xid);
+  }
 }
 
 void
@@ -720,6 +726,7 @@ PanelMenuView::OnWindowUnminimized (guint32 xid)
   if (WindowManager::Default ()->IsWindowMaximized (xid))
   {
     WindowManager::Default ()->Undecorate (xid);
+    _maximized_set.insert (xid);
   }
 }
 
@@ -727,6 +734,7 @@ void
 PanelMenuView::OnWindowUnmapped (guint32 xid)
 {
   _decor_map.erase (xid);
+  _maximized_set.erase (xid);
 }
 
 void
@@ -747,6 +755,7 @@ PanelMenuView::OnWindowMaximized (guint xid)
     }
 
     _is_maximized = true;
+    _maximized_set.insert (xid);
 
     Refresh ();
     FullRedraw ();
@@ -762,6 +771,7 @@ PanelMenuView::OnWindowRestored (guint xid)
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     _is_maximized = false;
+    _maximized_set.erase (xid);
 
     if (_decor_map[xid])
     {
@@ -812,19 +822,33 @@ PanelMenuView::OnWindowButtonsRedraw ()
 void
 PanelMenuView::OnMaximizedGrab (int x, int y)
 {
-  if (_is_maximized)
+  guint32 window_xid = 0;
+  
+  g_debug ("OnMaximizedGrab");
+  
+  // Find the front-most maximized window
+  foreach (guint32 xid, _maximized_set)
   {
-    BamfWindow *window;
-
-    window = bamf_matcher_get_active_window (_matcher);
-    if (BAMF_IS_WINDOW (window))
+    assert (WindowManager::Default ()->IsWindowMaximized (xid)); /* Temporary; just so I notice if this fails */
+    g_debug ("OnMaximizedGrab: looking at window %d", xid);
+    /* FIXME: IsWindowVisible does not do what we want. Detect top-most (visible) window in current viewport */
+    if (WindowManager::Default ()->IsWindowVisible (xid))
     {
-      _is_inside = false;
-      _is_grabbed = true;
-      Refresh ();
-      FullRedraw ();
-      WindowManager::Default ()->StartMove (bamf_window_get_xid (window), x, y);
+      window_xid = xid;
+      g_debug ("OnMaximizedGrab: breaking on window %d", xid);
+      break;
     }
+  }
+  
+  if (window_xid != 0)
+  {
+    g_debug ("OnMaximizedGrab: raising window %d", window_xid);
+    WindowManager::Default ()->Activate (window_xid);
+    _is_inside = false;
+    _is_grabbed = true;
+    Refresh ();
+    FullRedraw ();
+    WindowManager::Default ()->StartMove (window_xid, x, y);
   }
 }
 

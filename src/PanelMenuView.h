@@ -21,6 +21,7 @@
 
 #include <Nux/View.h>
 #include <map>
+#include <set>
 
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
@@ -113,6 +114,7 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  std::set<guint32> _maximized_set;
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;

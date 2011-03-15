@@ -47,6 +47,11 @@ class WindowManagerDummy : public WindowManager
   {
     return true;
   }
+  
+  bool IsWindowVisible (guint32 xid)
+  {
+    return false;
+  }
 
   void Restore (guint32 xid)
   {
@@ -62,7 +67,17 @@ class WindowManagerDummy : public WindowManager
   {
     g_debug ("%s", G_STRFUNC);
   }
-  
+
+ void Activate (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
+ void Raise (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
  void Lower (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);

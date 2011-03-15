@@ -318,6 +318,21 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowVisible (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    return (!window->invisible ());
+  }
+
+  return false;
+}
+
 void
 PluginAdapter::Restore (guint32 xid)
 {
@@ -349,6 +364,28 @@ PluginAdapter::Close (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->close (CurrentTime);
+}
+
+void
+PluginAdapter::Activate (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->activate ();
+}
+
+void
+PluginAdapter::Raise (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->raise ();
 }
 
 void

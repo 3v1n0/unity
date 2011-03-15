@@ -49,11 +49,14 @@ public:
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
   virtual bool IsWindowDecorated (guint32 xid) = 0;
+  virtual bool IsWindowVisible   (guint32 xid) = 0;
 
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;
   virtual void Close (guint32 xid) = 0;
-  
+
+  virtual void Activate (guint32 xid) = 0;
+  virtual void Raise (guint32 xid) = 0;
   virtual void Lower (guint32 xid) = 0;
 
   virtual void Decorate   (guint32 xid);
