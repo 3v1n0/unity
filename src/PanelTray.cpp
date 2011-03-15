@@ -21,13 +21,14 @@
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3
 
-PanelTray::PanelTray ()
+PanelTray::PanelTray (Window panelwin)
 : _n_children (0),
   _last_x (0),
   _last_y (0)
 {
   _settings = g_settings_new (SETTINGS_NAME);
   _whitelist = g_settings_get_strv (_settings, "systray-whitelist");
+  _panelwin = panelwin;
 
   _window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_type_hint (GTK_WINDOW (_window), GDK_WINDOW_TYPE_HINT_DOCK);
@@ -78,6 +79,7 @@ PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
 
     gtk_window_move (GTK_WINDOW (_window), geo.x + PADDING, geo.y);
   }
+
 }
 
 Window
@@ -89,7 +91,25 @@ PanelTray::GetTrayWindow ()
 void
 PanelTray::Sync ()
 {
+  
+  gint res;
+  XWindowChanges changes;
+  
   SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
+  
+  // restack the tray above the panel
+  //changes.sibling = _panelwin;
+  changes.stack_mode = Above;
+    
+  gdk_error_trap_push ();
+  XConfigureWindow (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
+                    GDK_WINDOW_XID(_window->window),
+                    CWSibling | CWStackMode, &changes);
+  gdk_flush ();
+  if ((res = gdk_error_trap_pop ()))
+  {
+    g_warning ("Received X error: %d. Window XID is: 0x%lx\n", res, GDK_WINDOW_XID(_window->window));       
+  }
   QueueRelayout ();
   QueueDraw ();
 }

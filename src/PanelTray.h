@@ -36,7 +36,7 @@ class PanelTray : public PanelIndicatorObjectView
 {
 public:
 
-  PanelTray ();
+  PanelTray (Window panelwin);
   ~PanelTray ();
 
   void Draw (nux::GraphicsEngine& gfx_content, bool force_draw);
@@ -67,6 +67,7 @@ private:
   GSettings *_settings;
   GtkWidget *_window;
   NaTray    *_tray;
+  Window     _panelwin;
   int        _last_x;
   int        _last_y;
 };
