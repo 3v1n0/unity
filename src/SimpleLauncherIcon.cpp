@@ -35,6 +35,9 @@ SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
   LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
   LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
   LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+
+  g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                    G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
@@ -109,4 +112,21 @@ SimpleLauncherIcon::SetIconName (const char *name)
   }
   
   needs_redraw.emit (this);
+}
+
+void
+SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
+{
+  SimpleLauncherIcon *self = (SimpleLauncherIcon*) data;
+  
+  /*
+   * Unreference the previous icon and redraw
+   * (forcing the new icon to be loaded)
+   */
+  if (self->m_Icon)
+  {
+    self->m_Icon->UnReference ();
+    self->m_Icon = 0;
+  }
+  self->needs_redraw.emit (self);
 }
