@@ -965,12 +965,32 @@ is_extension_supported (const gchar *extensions, const gchar *extension)
   return FALSE;
 }
 
+/* Gets the OpenGL version as a floating-point number given the string. */
+gfloat
+get_opengl_version_f32 (const gchar *version_string)
+{
+  gfloat version = 0.0f;
+  gint32 i;
+
+  for (i = 0; isdigit (version_string[i]); i++)
+    version = version * 10.0f + (version_string[i] - 48);
+
+  if (version_string[i++] == '.')
+  {
+    version = version * 10.0f + (version_string[i] - 48);
+    return (version + 0.1f) * 0.1f;
+  }
+  else
+    return 0.0f;
+}
+
 } /* anonymous namespace */
 
 /* vtable init */
 bool
 UnityPluginVTable::init ()
 {
+  gfloat version;
   gchar* extensions;
 
   if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
@@ -979,6 +999,15 @@ UnityPluginVTable::init ()
     return false;
   if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /* Ensure OpenGL version is 1.4+. */
+  version = get_opengl_version_f32 ((const gchar*) glGetString (GL_VERSION));
+  if (version < 1.4f)
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "OpenGL 1.4+ not supported\n");
+    return false;
+  }
 
   /* Ensure OpenGL extensions required by the Unity plugin are available. */
   extensions = (gchar*) glGetString (GL_EXTENSIONS);
