@@ -46,6 +46,8 @@
 
 static const nux::Color kExpandDefaultTextColor (1.0f, 1.0f, 1.0f, 0.6f);
 static const nux::Color kExpandHoverTextColor (1.0f, 1.0f, 1.0f, 1.0f);
+static const float kExpandDefaultIconOpacity = 0.6f;
+static const float kExpandHoverIconOpacity = 1.0f;
 
 
 PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
@@ -54,13 +56,15 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _idle_id (0),
   _is_expanded (true),
   _n_visible_items_in_unexpand_mode (0),
-  _n_total_items (0)
+  _n_total_items (0),
+  _draw_sep (true)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::BaseTexture *arrow = style->GetGroupUnexpandIcon ();
   
   _cached_name = NULL;
   _group_layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  _group_layout->SetVerticalExternalMargin (12);
 
   _header_layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _group_layout->AddLayout (_header_layout, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
@@ -81,14 +85,12 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->SetCanFocus (true);
   _expand_label->FocusActivated.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelActivated));
   _expand_label->FocusChanged.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
-  
-  
+    
   _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
-  _expand_icon = new nux::TextureArea ();
-  _expand_icon->SetTexture (arrow);
+  _expand_icon = new IconTexture (arrow, arrow->GetWidth (), arrow->GetHeight ());
+  _expand_icon->SetOpacity (kExpandDefaultIconOpacity);
   _expand_icon->SetMinimumSize (arrow->GetWidth (), arrow->GetHeight ());
-  _expand_icon->SetCanFocus (false);
   _header_layout->AddView (_expand_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   SetLayout (_group_layout);
@@ -122,7 +124,16 @@ PlacesGroup::OnLabelActivated (nux::Area *label)
 void
 PlacesGroup::OnLabelFocusChanged (nux::Area *label)
 {
-  RefreshLabel ();
+  if (_expand_label->GetFocused ())
+  {
+    _expand_label->SetTextColor (kExpandHoverTextColor);
+    _expand_icon->SetOpacity (kExpandHoverIconOpacity);
+  }
+  else if (!IsMouseInside ())
+  {
+    _expand_label->SetTextColor (kExpandDefaultTextColor);
+    _expand_icon->SetOpacity (kExpandDefaultIconOpacity);
+  }
 }
 void
 PlacesGroup::SetName (const char *name)
@@ -130,7 +141,6 @@ PlacesGroup::SetName (const char *name)
   // Spaces are on purpose, want padding to be proportional to the size of the text
   // Bear with me, I'm trying something different :)
   const gchar *temp = "    <big>%s</big>    ";
-  const gchar *temp_focused = "    <big><b>%s</b></big>    ";
   gchar *tmp = NULL;
   gchar *final = NULL; 
   if (_cached_name != NULL)
@@ -142,10 +152,7 @@ PlacesGroup::SetName (const char *name)
 
   tmp = g_markup_escape_text (name, -1);
 
-  if (_expand_label->GetFocused ())
-    final = g_strdup_printf (temp_focused, tmp);
-  else
-    final = g_strdup_printf (temp, tmp);
+  final = g_strdup_printf (temp, tmp);
   
   _name->SetText (final);
 
@@ -264,6 +271,19 @@ PlacesGroup::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessE
 void PlacesGroup::Draw (nux::GraphicsEngine& GfxContext,
                        bool                 forceDraw)
 {
+  nux::Geometry geo = GetGeometry ();
+  nux::Color col (0.2f, 0.2f, 0.2f, 0.2f);
+
+  GfxContext.PushClippingRectangle (geo);
+
+  if (_draw_sep)
+    nux::GetPainter ().Draw2DLine (GfxContext,
+                                   geo.x, geo.y + geo.height - 1,
+                                   geo.x + geo.width, geo.y + geo.height - 1,
+                                   col,
+                                   col); 
+
+  GfxContext.PopClippingRectangle ();
 }
 
 void
@@ -319,10 +339,29 @@ void
 PlacesGroup::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   _expand_label->SetTextColor (kExpandHoverTextColor);
+  _expand_icon->SetOpacity (kExpandHoverIconOpacity);
 }
 
 void
 PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _expand_label->SetTextColor (kExpandDefaultTextColor);
+  if (!_expand_label->GetFocused ())
+  {
+    _expand_label->SetTextColor (kExpandDefaultTextColor);
+    _expand_icon->SetOpacity (kExpandDefaultIconOpacity);
+  }
+}
+
+int
+PlacesGroup::GetHeaderHeight ()
+{
+  return _header_layout->GetGeometry ().height;
+}
+
+void
+PlacesGroup::SetDrawSeparator (bool draw_it)
+{
+  _draw_sep = draw_it;
+
+  QueueDraw ();
 }

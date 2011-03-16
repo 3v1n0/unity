@@ -257,3 +257,9 @@ void
 PlacesGroupController::AddProperties (GVariantBuilder *builder)
 {
 }
+
+int
+PlacesGroupController::GetTotalResults ()
+{
+  return _queue.size ();
+}

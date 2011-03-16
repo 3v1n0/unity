@@ -38,6 +38,9 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
@@ -61,7 +64,8 @@ PanelMenuView::PanelMenuView (int padding)
   _is_own_window (false),
   _last_active_view (NULL),
   _last_width (0),
-  _last_height (0)
+  _last_height (0),
+  _places_showing (false)
 {
   WindowManager *win_manager;
 
@@ -105,6 +109,15 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
 
   PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+
+  // Register for all the interesting events
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                 this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                 this);
 
   Refresh ();
 }
@@ -236,7 +249,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_own_window)
+  if (_is_own_window || _places_showing)
   {
 
   }
@@ -334,7 +347,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (!_is_own_window)
+  if (!_is_own_window && !_places_showing)
   {
     if (_is_inside || _last_active_view)
     {
@@ -886,3 +899,18 @@ on_name_changed (BamfView*      bamf_view,
 {
   self->OnNameChanged (new_name, old_name);
 }
+
+void
+PanelMenuView::OnPlaceViewShown (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = true;
+  self->QueueDraw ();
+}
+
+void
+PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = false;
+  self->QueueDraw ();
+}
+
