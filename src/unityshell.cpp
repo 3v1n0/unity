@@ -752,7 +752,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
 
-  unity_a11y_init ();
+  unity_a11y_init (wt);
 
   newFocusedWindow  = NULL;
   lastFocusedWindow = NULL;
