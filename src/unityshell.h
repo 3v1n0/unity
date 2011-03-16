@@ -219,6 +219,7 @@ class UnityScreen :
 	bool	  doShellRepaint;
 	bool    allowWindowPaint;
 	bool    damaged;
+	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;
