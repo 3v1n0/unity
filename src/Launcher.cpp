@@ -331,9 +331,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _autohide_handle        = 0;
     _autoscroll_handle      = 0;
     _redraw_handle          = 0;
+    _start_dragicon_handle  = 0;
     _focus_keynav_handle    = 0;
-    _single_finger_hold_handle = 0;
-    _single_finger_hold_timer  = NULL;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -646,11 +645,6 @@ float Launcher::DnDExitProgress (struct timespec const &current)
     return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
-float Launcher::DnDStartProgress (struct timespec const &current)
-{
-  return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_START])) / (float) ANIM_DURATION, 0.0f, 1.0f);
-}
-
 float Launcher::AutohideProgress (struct timespec const &current)
 {
     
@@ -786,10 +780,6 @@ bool Launcher::AnimationInProgress ()
 
     // hover out animation
     if (TimeDelta (&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
-        return true;
-  
-    // drag start animation
-    if (TimeDelta (&current, &_times[TIME_DRAG_START]) < ANIM_DURATION)
         return true;
     
     // drag end animation
@@ -1525,21 +1515,6 @@ int
 Launcher::GetMouseY ()
 {
   return _mouse_position.y;
-}
-
-gboolean
-Launcher::SingleFingerHoldTimeout (gpointer data)
-{
-  Launcher*     self          = NULL;
-  LauncherIcon* launcher_icon = NULL;
-
-  self = (Launcher*) data;
-  launcher_icon = self->MouseIconIntersection (self->GetMouseX (),
-                                               self->GetMouseY ());
-  if (launcher_icon)
-    launcher_icon->OpenQuicklist ();
-
-  return false;
 }
 
 gboolean Launcher::DrawLauncherTimeout (gpointer data)
@@ -2516,6 +2491,31 @@ void Launcher::OnDragWindowAnimCompleted ()
   EnsureAnimation ();
 }
 
+
+gboolean Launcher::StartIconDragTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    // if we are still waiting…
+    if (self->GetActionState () == ACTION_NONE)
+      self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
+    return false;    
+}
+
+void Launcher::StartIconDragRequest (int x, int y)
+{
+  LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
+  
+  // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+  // on an internal Launcher property then
+  if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
+  {
+    StartIconDrag (drag_icon);
+    SetActionState (ACTION_DRAG_ICON);
+    UpdateDragWindowPosition (x, y);
+  } 
+}
+
 void Launcher::StartIconDrag (LauncherIcon *icon)
 {
   if (!icon)
@@ -2629,8 +2629,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (GetActionState () == ACTION_NONE)
   {
-    SetTimeStruct (&_times[TIME_DRAG_START]);
-    
     if (nux::Abs (_dnd_delta_y) >= nux::Abs (_dnd_delta_x))
     {
       _launcher_drag_delta += _dnd_delta_y;
@@ -2638,17 +2636,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     }
     else
     {
-      LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
-      
-      // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
-      // on an internal Launcher property then
-      if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
-      {
-        StartIconDrag (drag_icon);
-        SetActionState (ACTION_DRAG_ICON);
-        UpdateDragWindowPosition (x, y);
-      }
-
+      StartIconDragRequest (x, y);
     }
   }
   else if (GetActionState () == ACTION_DRAG_LAUNCHER)
@@ -2900,21 +2888,14 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
-  // this takes care of the one-finger-hold "event" on a launcher-icon
-  if (_single_finger_hold_handle == 0)
-  {
-    _single_finger_hold_handle = g_timeout_add (SINGLE_FINGER_HOLD_DURATION,
-                                                &Launcher::SingleFingerHoldTimeout,
-                                                this);
-    if (_single_finger_hold_timer)
-      g_timer_destroy (_single_finger_hold_timer);
-
-    _single_finger_hold_timer = g_timer_new ();
-  }
-
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
+    // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
+    if (_start_dragicon_handle > 0)
+      g_source_remove (_start_dragicon_handle);
+    _start_dragicon_handle = g_timeout_add (START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
+    
     launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
   }
 }
@@ -2922,59 +2903,20 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
 void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
+  
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
-
-  // this takes care of the one-finger-hold "event" on a launcher-icon
-  if (_single_finger_hold_timer)
-  {
-    // user "released" before single-finger-hold threshold
-    if (g_timer_elapsed (_single_finger_hold_timer, NULL) < (float) SINGLE_FINGER_HOLD_DURATION / 1000.0)
-    {
-
-      // remove callback
-      if (_single_finger_hold_handle > 0)
-      {
-        g_source_remove (_single_finger_hold_handle);
-        _single_finger_hold_handle = 0;
-      }
-    }
-    // user "released" after single-finger-hold threshold...
-    else
-    {
-      // remove timer
-      g_timer_destroy (_single_finger_hold_timer);
-      _single_finger_hold_timer = NULL;
-
-      // remove callback
-      if (_single_finger_hold_handle > 0)
-      {
-        g_source_remove (_single_finger_hold_handle);
-        _single_finger_hold_handle = 0;
-      }
-
-      // ... don't start app, just return
-      _icon_mouse_down = 0;
-      return;
-    }
-
-    // remove timer
-    g_timer_destroy (_single_finger_hold_timer);
-    _single_finger_hold_timer = NULL;
-
-    // remove callback
-    if (_single_finger_hold_handle > 0)
-    {
-      g_source_remove (_single_finger_hold_handle);
-      _single_finger_hold_handle = 0;
-    }
-  }
+  
+  if (_start_dragicon_handle > 0)
+      g_source_remove (_start_dragicon_handle);
+  _start_dragicon_handle = 0;
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
     _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
 
-    if (GetActionState () == ACTION_NONE)
+    if (GetActionState () == ACTION_NONE) {
       _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
+    }
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))

@@ -39,7 +39,7 @@
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
-#define SINGLE_FINGER_HOLD_DURATION 1000
+#define START_DRAGICON_DURATION 500
 
 #define MAX_SUPERKEY_LABELS 10
 
@@ -181,7 +181,6 @@ private:
   {
     TIME_ENTER,
     TIME_LEAVE,
-    TIME_DRAG_START,
     TIME_DRAG_END,
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
@@ -225,7 +224,7 @@ private:
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
-  static gboolean SingleFingerHoldTimeout (gpointer data);
+  static gboolean StartIconDragTimeout (gpointer data);
 
   void SetMousePosition (int x, int y);
   
@@ -344,6 +343,7 @@ private:
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
+  void StartIconDragRequest (int x, int y);
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
@@ -462,8 +462,7 @@ private:
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _redraw_handle;
-  guint _single_finger_hold_handle;
-  GTimer* _single_finger_hold_timer;
+  guint _start_dragicon_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
