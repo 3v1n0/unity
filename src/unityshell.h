@@ -95,6 +95,9 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+    void handleCompizEvent (const char          *plugin,
+                            const char          *event,
+                            CompOption::Vector  &option);
 	
 	bool
 	showLauncherKeyInitiate (CompAction *action, CompAction::State state,

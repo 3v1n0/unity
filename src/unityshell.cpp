@@ -210,6 +210,23 @@ UnityScreen::handleEvent (XEvent *event)
   }
 }
 
+void
+UnityScreen::handleCompizEvent (const char          *plugin,
+                                const char          *event,
+                                CompOption::Vector  &option)
+{
+  if (strcmp (event, "end_viewport_switch") == 0)
+  {
+    // compute again the list of all window on the new viewport
+    // to decide if we should or not hide the launcher
+    launcher->CheckWindowOverLauncher ();
+  }
+
+    
+  screen->handleCompizEvent (plugin, event, option);
+  
+}
+
 bool
 UnityScreen::showLauncherKeyInitiate (CompAction         *action,
                                       CompAction::State   state,

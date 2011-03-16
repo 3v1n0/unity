@@ -51,6 +51,10 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+#define S_DBUS_NAME  "com.canonical.Unity.Launcher"
+#define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
+#define S_DBUS_IFACE "com.canonical.Unity.Launcher"
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -71,6 +75,30 @@ void SetTimeBack (struct timespec *timeref, int remove)
   }
   timeref->tv_nsec -= remove * 1000000;
 }
+
+const gchar Launcher::introspection_xml[] =
+  "<node>"
+  "  <interface name='com.canonical.Unity.Launcher'>"
+  ""
+  "    <method name='AddLauncherItemFromPosition'>"
+  "      <arg type='s' name='icon' direction='in'/>"
+  "      <arg type='s' name='title' direction='in'/>"
+  "      <arg type='i' name='icon_x' direction='in'/>"
+  "      <arg type='i' name='icon_y' direction='in'/>"
+  "      <arg type='i' name='icon_size' direction='in'/>"
+  "      <arg type='s' name='desktop_file' direction='in'/>"
+  "      <arg type='s' name='aptdaemon_task' direction='in'/>"
+  "    </method>"
+  ""
+  "  </interface>"
+  "</node>";
+  
+GDBusInterfaceVTable Launcher::interface_vtable =
+{
+  Launcher::handle_dbus_method_call,
+  NULL,
+  NULL
+};
 
 
 /*
@@ -303,9 +331,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _autohide_handle        = 0;
     _autoscroll_handle      = 0;
     _redraw_handle          = 0;
+    _start_dragicon_handle  = 0;
     _focus_keynav_handle    = 0;
-    _single_finger_hold_handle = 0;
-    _single_finger_hold_timer  = NULL;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -355,6 +382,15 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
                                    (UBusCallback)&Launcher::OnActionDone,
                                    this);
+    
+    _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
+                                  S_DBUS_NAME,
+                                  (GBusNameOwnerFlags) (G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
+                                  OnBusAcquired,
+                                  OnNameAcquired,
+                                  OnNameLost,
+                                  this,
+                                  NULL);
 
     SetDndEnabled (false, true);
 }
@@ -366,6 +402,7 @@ Launcher::~Launcher()
     if (_superkey_labels[i])
       _superkey_labels[i]->UnReference ();
   }
+  g_bus_unown_name (_dbus_owner);
 }
 
 /* Introspection */
@@ -608,11 +645,6 @@ float Launcher::DnDExitProgress (struct timespec const &current)
     return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
 }
 
-float Launcher::DnDStartProgress (struct timespec const &current)
-{
-  return CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_START])) / (float) ANIM_DURATION, 0.0f, 1.0f);
-}
-
 float Launcher::AutohideProgress (struct timespec const &current)
 {
     
@@ -624,7 +656,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
           return 0.0f;
           
         // "dead" zone
-        if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
+        if ((_trigger_mouse_position.x < 3) && (_trigger_mouse_position.y < 3))
             return GetAutohidePositionMin ();
         
        /* 
@@ -748,10 +780,6 @@ bool Launcher::AnimationInProgress ()
 
     // hover out animation
     if (TimeDelta (&current, &_times[TIME_LEAVE]) < ANIM_DURATION)
-        return true;
-  
-    // drag start animation
-    if (TimeDelta (&current, &_times[TIME_DRAG_START]) < ANIM_DURATION)
         return true;
     
     // drag end animation
@@ -1442,7 +1470,7 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-    
+        
     // auto lock/unlock the launcher depending on the state switch
     if (hidden)
     {
@@ -1487,21 +1515,6 @@ Launcher::GetMouseY ()
   return _mouse_position.y;
 }
 
-gboolean
-Launcher::SingleFingerHoldTimeout (gpointer data)
-{
-  Launcher*     self          = NULL;
-  LauncherIcon* launcher_icon = NULL;
-
-  self = (Launcher*) data;
-  launcher_icon = self->MouseIconIntersection (self->GetMouseX (),
-                                               self->GetMouseY ());
-  if (launcher_icon)
-    launcher_icon->OpenQuicklist ();
-
-  return false;
-}
-
 gboolean Launcher::DrawLauncherTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
@@ -1542,7 +1555,7 @@ Launcher::CheckIntersectWindow (CompWindow *window)
   if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
     return false;
 
-  if (CompRegion (window->serverInputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     return true;
 
   return false;
@@ -2337,42 +2350,31 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     guint64 shortcut = arg.icon->GetShortcut ();
 
     /* deal with dynamic labels for places, which can be set via the locale */
-    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
+    if (shortcut != 0)
     {
-      RenderIcon (GfxContext,
-                  arg,
-                  arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
-                  nux::Color (0xFFFFFFFF),
-                  arg.alpha,
-                  arg.icon->_xform_coords["Tile"]);
-    }
-    else
-    {
-      /* deal with the hardcoded labels used for the first 10 icons on the launcher */
-      gchar key   = (gchar) shortcut;
-      int   index = -1;
-
-      switch (key)
+      if (!g_ascii_isdigit ((gchar) shortcut))
       {
-        case '1': index = 0; break;
-        case '2': index = 1; break;
-        case '3': index = 2; break;
-        case '4': index = 3; break;
-        case '5': index = 4; break;
-        case '6': index = 5; break;
-        case '7': index = 6; break;
-        case '8': index = 7; break;
-        case '9': index = 8; break;
-        case '0': index = 9; break;
+        RenderIcon (GfxContext,
+                    arg,
+                    arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
+                    nux::Color (0xFFFFFFFF),
+                    arg.alpha,
+                    arg.icon->_xform_coords["Tile"]);
       }
-
-      if (index != -1)
+      else
+      {
+        /* deal with the hardcoded labels used for the first 10 icons on the launcher */
+        gchar *shortcut_str = g_strdup_printf ("%c", (gchar)shortcut);
+        int index = (atoi (shortcut_str) + 9) % 10; // Not -1 as -1 % 10 = -1…
+        g_free (shortcut_str);
+        
         RenderIcon (GfxContext,
                     arg,
                     _superkey_labels[index]->GetDeviceTexture (),
                     nux::Color (0xFFFFFFFF),
                     arg.alpha,
                     arg.icon->_xform_coords["Tile"]);
+      }
     }
   }
 }
@@ -2499,6 +2501,31 @@ void Launcher::OnDragWindowAnimCompleted ()
   EnsureAnimation ();
 }
 
+
+gboolean Launcher::StartIconDragTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    // if we are still waiting…
+    if (self->GetActionState () == ACTION_NONE)
+      self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
+    return false;    
+}
+
+void Launcher::StartIconDragRequest (int x, int y)
+{
+  LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
+  
+  // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+  // on an internal Launcher property then
+  if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
+  {
+    StartIconDrag (drag_icon);
+    SetActionState (ACTION_DRAG_ICON);
+    UpdateDragWindowPosition (x, y);
+  } 
+}
+
 void Launcher::StartIconDrag (LauncherIcon *icon)
 {
   if (!icon)
@@ -2612,8 +2639,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (GetActionState () == ACTION_NONE)
   {
-    SetTimeStruct (&_times[TIME_DRAG_START]);
-    
     if (nux::Abs (_dnd_delta_y) >= nux::Abs (_dnd_delta_x))
     {
       _launcher_drag_delta += _dnd_delta_y;
@@ -2621,17 +2646,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     }
     else
     {
-      LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
-      
-      // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
-      // on an internal Launcher property then
-      if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
-      {
-        StartIconDrag (drag_icon);
-        SetActionState (ACTION_DRAG_ICON);
-        UpdateDragWindowPosition (x, y);
-      }
-
+      StartIconDragRequest (x, y);
     }
   }
   else if (GetActionState () == ACTION_DRAG_LAUNCHER)
@@ -2899,21 +2914,14 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
 
-  // this takes care of the one-finger-hold "event" on a launcher-icon
-  if (_single_finger_hold_handle == 0)
-  {
-    _single_finger_hold_handle = g_timeout_add (SINGLE_FINGER_HOLD_DURATION,
-                                                &Launcher::SingleFingerHoldTimeout,
-                                                this);
-    if (_single_finger_hold_timer)
-      g_timer_destroy (_single_finger_hold_timer);
-
-    _single_finger_hold_timer = g_timer_new ();
-  }
-
   if (launcher_icon)
   {
     _icon_mouse_down = launcher_icon;
+    // if MouseUp after the time ended -> it's an icon drag, otherwise, it's starting an app
+    if (_start_dragicon_handle > 0)
+      g_source_remove (_start_dragicon_handle);
+    _start_dragicon_handle = g_timeout_add (START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
+    
     launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
   }
 }
@@ -2921,59 +2929,20 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
 void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   LauncherIcon* launcher_icon = 0;
+  
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
-
-  // this takes care of the one-finger-hold "event" on a launcher-icon
-  if (_single_finger_hold_timer)
-  {
-    // user "released" before single-finger-hold threshold
-    if (g_timer_elapsed (_single_finger_hold_timer, NULL) < (float) SINGLE_FINGER_HOLD_DURATION / 1000.0)
-    {
-
-      // remove callback
-      if (_single_finger_hold_handle > 0)
-      {
-        g_source_remove (_single_finger_hold_handle);
-        _single_finger_hold_handle = 0;
-      }
-    }
-    // user "released" after single-finger-hold threshold...
-    else
-    {
-      // remove timer
-      g_timer_destroy (_single_finger_hold_timer);
-      _single_finger_hold_timer = NULL;
-
-      // remove callback
-      if (_single_finger_hold_handle > 0)
-      {
-        g_source_remove (_single_finger_hold_handle);
-        _single_finger_hold_handle = 0;
-      }
-
-      // ... don't start app, just return
-      _icon_mouse_down = 0;
-      return;
-    }
-
-    // remove timer
-    g_timer_destroy (_single_finger_hold_timer);
-    _single_finger_hold_timer = NULL;
-
-    // remove callback
-    if (_single_finger_hold_handle > 0)
-    {
-      g_source_remove (_single_finger_hold_handle);
-      _single_finger_hold_handle = 0;
-    }
-  }
+  
+  if (_start_dragicon_handle > 0)
+      g_source_remove (_start_dragicon_handle);
+  _start_dragicon_handle = 0;
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
     _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
 
-    if (GetActionState () == ACTION_NONE)
+    if (GetActionState () == ACTION_NONE) {
       _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
+    }
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
@@ -3674,7 +3643,7 @@ Launcher::ProcessDndDrop (int x, int y)
     
     if (path)
     {
-      launcher_dropped.emit (path, _dnd_hovered_icon);
+      launcher_addrequest.emit (path, _dnd_hovered_icon);
       g_free (path);
     }
   }
@@ -3711,4 +3680,84 @@ Launcher::GetSelectedMenuIcon ()
     return *it;
   else
     return NULL;
+}
+
+/* dbus handlers */
+
+void
+Launcher::handle_dbus_method_call (GDBusConnection       *connection,
+                                   const gchar           *sender,
+                                   const gchar           *object_path,
+                                   const gchar           *interface_name,
+                                   const gchar           *method_name,
+                                   GVariant              *parameters,
+                                   GDBusMethodInvocation *invocation,
+                                   gpointer               user_data)
+{
+
+  if (g_strcmp0 (method_name, "AddLauncherItemFromPosition") == 0)
+  {
+    gchar  *icon;
+    gchar  *title;
+    gint32  icon_x;
+    gint32  icon_y;
+    gint32  icon_size;
+    gchar  *desktop_file;   
+    gchar  *aptdaemon_task;
+    
+    g_variant_get (parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
+    
+    Launcher *self = (Launcher*)user_data;
+    self->launcher_addrequest.emit (desktop_file, NULL);
+    
+    g_dbus_method_invocation_return_value (invocation, NULL);
+    g_free (icon);
+    g_free (title);
+    g_free (desktop_file);
+    g_free (aptdaemon_task);
+  }
+  
+}
+
+void
+Launcher::OnBusAcquired (GDBusConnection *connection,
+                         const gchar     *name,
+                         gpointer         user_data)
+{
+  GDBusNodeInfo *introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
+  guint registration_id;
+  
+  if (!introspection_data) {
+    g_warning ("No introspection data loaded. Won't get dynamic launcher addition.");
+    return;
+  }
+  
+  
+  
+  registration_id = g_dbus_connection_register_object (connection,
+                                                       S_DBUS_PATH,
+                                                       introspection_data->interfaces[0],
+                                                       &interface_vtable,
+                                                       user_data,
+                                                       NULL,
+                                                       NULL);
+  if (!registration_id)
+    g_warning ("Object registration failed. Won't get dynamic launcher addition.");
+  
+}
+
+void
+Launcher::OnNameAcquired (GDBusConnection *connection,
+                          const gchar     *name,
+                          gpointer         user_data)
+{
+  g_debug ("Acquired the name %s on the session bus\n", name);
+}
+
+void
+Launcher::OnNameLost (GDBusConnection *connection,
+                       const gchar     *name,
+                       gpointer         user_data)
+{
+  g_debug ("Lost the name %s on the session bus\n", name);
 }
