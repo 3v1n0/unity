@@ -204,7 +204,7 @@ LauncherController::InsertExpoAction ()
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
   _expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
-  _expoIcon->SetShortcut('w');
+  _expoIcon->SetShortcut('s');
   
   _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   
