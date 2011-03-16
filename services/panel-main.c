@@ -344,11 +344,6 @@ main (gint argc, gchar **argv)
 
   service = panel_service_get_default ();
 
-	/* There might be cases when we start signalling about change of geometries but the
-     accessible objects are not yet created, so to avoid that, instantiate here the
-     A11Y root object, which will create them all */
-	root = atk_get_root ();
-
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                              S_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -357,6 +352,12 @@ main (gint argc, gchar **argv)
                              on_name_lost,
                              service,
                              NULL);
+
+  /* There might be cases when we start signalling about change of geometries but the
+     accessible objects are not yet created, so to avoid that, instantiate here the
+     A11Y root object, which will create them all */
+  root = atk_get_root ();
+
   gtk_main ();
 
   g_bus_unown_name (owner_id);
