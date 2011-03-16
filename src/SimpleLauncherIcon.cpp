@@ -117,7 +117,11 @@ SimpleLauncherIcon::SetIconName (const char *name)
 void
 SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
 {
-  SimpleLauncherIcon *self = (SimpleLauncherIcon*) data;
+  SimpleLauncherIcon *self;
+
+  if (!data) return;
+
+  self = (SimpleLauncherIcon*) data;
   
   /*
    * Unreference the previous icon and redraw
