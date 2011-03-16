@@ -982,7 +982,7 @@ UnityPluginVTable::init ()
 
   /* Ensure OpenGL extensions required by the Unity plugin are available. */
   extensions = (gchar*) glGetString (GL_EXTENSIONS);
-  if (!is_extension_supported (extensions, "GL_ARBB_vertex_program"))
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_program"))
   {
     compLogMessage ("unityshell", CompLogLevelError,
                     "GL_ARB_vertex_program not supported\n");
