@@ -2197,27 +2197,54 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
-  /* draw tile */
-  if (arg.backlight_intensity < 1.0f)
+    /* draw keyboard-navigation "highlight" if any */
+  if (arg.keyboard_nav_hl)
   {
-    RenderIcon(GfxContext,
-               arg,
-               _icon_outline_texture->GetDeviceTexture (),
-               nux::Color(0xAAAAAAAA),
-               (1.0f - arg.backlight_intensity) * arg.alpha,
-               arg.icon->_xform_coords["Tile"]);
-  }
+    RenderIcon (GfxContext,
+                arg,
+                _icon_glow_hl_texture->GetDeviceTexture (),
+                nux::Color (0xFFFFFFFF),
+                arg.alpha,
+                arg.icon->_xform_coords["Glow"]);
 
-  if (arg.backlight_intensity > 0.0f)
-  {
-    RenderIcon(GfxContext,
-               arg,
-               _icon_bkg_texture->GetDeviceTexture (),
-               arg.icon->BackgroundColor (),
-               arg.backlight_intensity * arg.alpha,
-               arg.icon->_xform_coords["Tile"]);
+    RenderIcon (GfxContext,
+                arg,
+                _icon_outline_texture->GetDeviceTexture (),
+                nux::Color(0xFFFFFFFF),
+                0.95f * arg.alpha,
+                arg.icon->_xform_coords["Tile"]);
+
+    RenderIcon (GfxContext,
+                arg,
+                _icon_bkg_texture->GetDeviceTexture (),
+                nux::Color(0xFFFFFFFF),
+                0.9f * arg.alpha,
+                arg.icon->_xform_coords["Tile"]);
   }
-  /* end tile draw */
+  else
+  {
+    /* draw tile */
+    if (arg.backlight_intensity < 1.0f)
+    {
+      RenderIcon(GfxContext,
+                 arg,
+                 _icon_outline_texture->GetDeviceTexture (),
+                 nux::Color(0xAAAAAAAA),
+                 (1.0f - arg.backlight_intensity) * arg.alpha,
+                 arg.icon->_xform_coords["Tile"]);
+    }
+
+    if (arg.backlight_intensity > 0.0f)
+    {
+      RenderIcon(GfxContext,
+                 arg,
+                 _icon_bkg_texture->GetDeviceTexture (),
+                 arg.icon->BackgroundColor (),
+                 arg.backlight_intensity * arg.alpha,
+                 arg.icon->_xform_coords["Tile"]);
+    }
+    /* end tile draw */
+  }
 
   /* draw icon */
   RenderIcon (GfxContext,
@@ -2303,15 +2330,6 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg.running_arrow ? arg.window_indicators : 0,
                     arg.active_arrow ? 1 : 0,
                     geo);
-
-  /* draw keyboard-navigation "highlight" if any */
-  if (arg.keyboard_nav_hl)
-    RenderIcon (GfxContext,
-                arg,
-                _icon_glow_hl_texture->GetDeviceTexture (),
-                nux::Color (0xFFFFFFFF),
-                arg.alpha,
-                arg.icon->_xform_coords["Glow"]);
 
   /* draw superkey-shortcut label */ 
   if (_super_show_launcher && !TapOnSuper ())
