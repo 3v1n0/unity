@@ -40,8 +40,8 @@
   <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
     <key enum="devices-option-enum" name="devices-option">
         <default>"OnlyMounted"</default>
-        <summary>Summary</summary>
-        <description>Description</description>
+        <summary>The devices that will be shown on launcher</summary>
+        <description>Key for setting the devices that will be shown on launcher. </description>
     </key>
     </schema>
 </schemalist>
