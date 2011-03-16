@@ -189,11 +189,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
   if (_entry)
   {
     // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
-    const gchar *search_template = _("<span font_size='x-small' font_style='italic'>Search %s</span>");
+    const gchar *search_template = _("<span font_size='x-small' font_style='italic'>%s</span>");
     gchar       *res;
     gchar       *tmp;
 
-    tmp = g_markup_escape_text (entry->GetName (), -1);
+    tmp = g_markup_escape_text (entry->GetSearchHint (), -1);
     res = g_strdup_printf (search_template, tmp);
 
     _hint->SetText (res);

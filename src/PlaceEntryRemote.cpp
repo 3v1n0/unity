@@ -187,6 +187,7 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
   _name (NULL),
   _icon (NULL),
   _description (NULL),
+  _searchhint (_("Search")),
   _shortcut (10), // impossible shortcut
   _position (0),
   _mimetypes (NULL),
@@ -234,6 +235,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   gchar  *name;
   gchar  *description;
   gchar  *shortcut_entry;
+  gchar  *searchhint;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
   if (_dbus_path == NULL
@@ -264,16 +266,22 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   name = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_NAME, NULL);
   _icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
   description = g_key_file_get_string (key_file, group, "Description", NULL);
+  searchhint = g_key_file_get_string (key_file, group, "SearchHint", NULL);
 
+  
   if (domain)
   {
     _name = g_strdup (dgettext (domain, name));
     _description = g_strdup (dgettext (domain, description));
+    if (searchhint)
+      _searchhint = g_strdup (dgettext (domain, searchhint));
   }
   else
   {
     _name = g_strdup (name);
     _description = g_strdup (description);
+    if (searchhint)
+      _searchhint = g_strdup (searchhint);
   }
   
   if (g_key_file_has_key (key_file, group, "Shortcut", NULL))
@@ -332,6 +340,12 @@ const gchar *
 PlaceEntryRemote::GetDescription ()
 {
   return _description;
+}
+
+const gchar *
+PlaceEntryRemote::GetSearchHint ()
+{
+  return _searchhint;
 }
 
 guint64
