@@ -656,7 +656,7 @@ float Launcher::AutohideProgress (struct timespec const &current)
           return 0.0f;
           
         // "dead" zone
-        if ((_trigger_mouse_position.x < 2) && (_trigger_mouse_position.y < 2))
+        if ((_trigger_mouse_position.x < 3) && (_trigger_mouse_position.y < 3))
             return GetAutohidePositionMin ();
         
        /* 
