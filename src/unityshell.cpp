@@ -875,10 +875,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   LOGGER_START_PROCESS ("initLauncher-Panel");
-  
-  self->panelWindow = new nux::BaseWindow("");
-  
-  self->panelView = new PanelView (self->panelWindow->GetInputWindowId ());
+  self->panelView = new PanelView ();
   self->AddChild (self->panelView);
 
   self->panelHomeButton = self->panelView->HomeButton ();
@@ -890,6 +887,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   layout->SetContentDistribution(nux::eStackLeft);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
+
+  self->panelWindow = new nux::BaseWindow("");
 
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);

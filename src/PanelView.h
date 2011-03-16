@@ -37,7 +37,7 @@ class PanelView : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PanelView, nux::View);
 public:
-  PanelView (Window windowid, NUX_FILE_LINE_PROTO);
+  PanelView (NUX_FILE_LINE_PROTO);
   ~PanelView ();
 
   long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);

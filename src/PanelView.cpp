@@ -39,7 +39,7 @@
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
-PanelView::PanelView (Window windowid, NUX_FILE_LINE_DECL)
+PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
   _is_dirty (true),
   _opacity (1.0f)
@@ -61,7 +61,7 @@ PanelView::PanelView (Window windowid, NUX_FILE_LINE_DECL)
    _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
    AddChild (_menu_view);
 
-   _tray = new PanelTray (windowid);
+   _tray = new PanelTray ();
    _layout->AddView (_tray, 0, nux::eCenter, nux::eFull);
    AddChild (_tray);
 
