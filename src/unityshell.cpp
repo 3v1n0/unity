@@ -832,6 +832,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
+  launcherWindow->UnReference ();
+  panelWindow->UnReference ();
   unity_a11y_finalize ();
 }
 
@@ -861,6 +863,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
@@ -906,6 +909,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   layout->SetHorizontalExternalMargin(0);
 
   self->panelWindow = new nux::BaseWindow("");
+  self->panelWindow->SinkReference ();
 
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
