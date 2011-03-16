@@ -90,7 +90,7 @@ PanelMenuView::PanelMenuView (int padding)
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
-  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
   _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
@@ -850,6 +850,17 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
     Refresh ();
     FullRedraw ();
     WindowManager::Default ()->StartMove (window_xid, x, y);
+  }
+}
+
+void
+PanelMenuView::OnMouseDoubleClicked ()
+{
+  guint32 window_xid = GetMaximizedWindow ();
+  
+  if (window_xid != 0)
+  {
+    WindowManager::Default ()->Restore (window_xid);
   }
 }
 

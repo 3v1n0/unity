@@ -79,6 +79,7 @@ public:
   guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseDoubleClicked ();
   void OnMouseMiddleClicked ();
 
   void Refresh ();
