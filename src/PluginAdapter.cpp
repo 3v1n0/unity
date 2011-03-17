@@ -327,8 +327,8 @@ PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
   {
-    CompPoint window_vp = window->defaultViewport ();
-    return (window->onCurrentDesktop () && window_vp == m_Screen->vp ());
+    // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
+    return (window->defaultViewport () == m_Screen->vp ());
   }
 
   return false;
@@ -347,7 +347,7 @@ PluginAdapter::IsWindowObscured (guint32 xid)
     // Check if any windows above this one are blocking it
     for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
-      if (sibling->desktop () == window->desktop () && sibling->defaultViewport () == window_vp
+      if (sibling->defaultViewport () == window_vp
           && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
