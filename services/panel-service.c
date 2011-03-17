@@ -27,6 +27,8 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
+#include "panel-marshal.h"
+
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define GET_PRIVATE(o) \
@@ -67,6 +69,7 @@ enum
   RE_SYNC,
   ACTIVE_MENU_POINTER_MOTION,
   ENTRY_ACTIVATE_REQUEST,
+  ENTRY_SHOW_NOW_CHANGED,
 
   LAST_SIGNAL
 };
@@ -179,6 +182,15 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+
+ _service_signals[ENTRY_SHOW_NOW_CHANGED] =
+    g_signal_new ("entry-show-now-changed",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  panel_service_VOID__STRING_BOOLEAN,
+                  G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
@@ -528,6 +540,23 @@ on_indicator_menu_show (IndicatorObject      *object,
 }
 
 static void
+on_indicator_menu_show_now_changed (IndicatorObject      *object,
+                                    IndicatorObjectEntry *entry,
+                                    gboolean              show_now_changed,
+                                    PanelService         *self)
+{
+  gchar *entry_id;
+  
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  entry_id = g_strdup_printf ("%p", entry);
+
+  g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
+
+  g_free (entry_id);
+}
+
+static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
@@ -551,6 +580,8 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_moved), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
                     G_CALLBACK (on_indicator_menu_show), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_SHOW_NOW_CHANGED,
+                    G_CALLBACK (on_indicator_menu_show_now_changed), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)

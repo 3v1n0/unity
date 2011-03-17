@@ -32,6 +32,8 @@ add_executable(unity-panel-service
                panel-indicator-entry-accessible.c
                panel-indicator-entry-accessible.h
                panel-main.c
+               panel-marshal.c
+               panel-marshal.h
                panel-root-accessible.c
                panel-root-accessible.h
                panel-service.c

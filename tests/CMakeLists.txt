@@ -42,6 +42,8 @@ add_executable (test-unit
                 unit/TestUBus.cpp
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../services/panel-marshal.c
+                ../services/panel-marshal.h
                 ../services/panel-service.c
                 ../services/panel-service.h
                 ../src/FavoriteStore.cpp
