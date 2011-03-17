@@ -190,15 +190,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
   if (_entry)
   {
-    // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
-    const gchar *search_template = _("Search %s");
     gchar       *markup;
-    gchar       *res;
     gchar       *tmp;
 
     tmp = g_markup_escape_text (entry->GetSearchHint (), -1);
-    res = g_strdup_printf (search_template, tmp);
-    markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", res);
+    markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", tmp);
 
     _hint->SetText (markup);
     _pango_entry->SetText (search_string ? search_string : "");
@@ -210,7 +206,6 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     if (_combo->IsVisible ())
       _combo->SetSelectionIndex (section_id);
 
-    g_free (res);
     g_free (tmp);
     g_free (markup);
   }
