@@ -141,6 +141,7 @@ public:
   virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 

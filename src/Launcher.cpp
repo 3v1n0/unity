@@ -231,7 +231,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
-    OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
+    OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &Launcher::RecvMouseDownOutsideArea));
+    //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
+    
+    CaptureMouseDownAnyWhereElse (true);
     
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -532,6 +535,9 @@ Launcher::startKeyNavMode ()
   _navmod_show_launcher = true;
   EnsureHiddenState ();
   
+  GrabKeyboard ();
+  GrabPointer ();
+  
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
     g_source_remove (_focus_keynav_handle);
@@ -583,6 +589,8 @@ Launcher::exitKeyNavMode ()
   if (!_navmod_show_launcher)
     return;
     
+  UnGrabKeyboard ();
+  UnGrabPointer ();
   _navmod_show_launcher = false;
   EnsureHiddenState ();
 
@@ -1766,6 +1774,9 @@ Launcher::GetUrgentAnimation ()
 void
 Launcher::SetActionState (LauncherActionState actionstate)
 {
+  if (_launcher_action_state == actionstate)
+    return;
+    
   _launcher_action_state = actionstate;
 
   if (_navmod_show_launcher)
@@ -2594,6 +2605,12 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   EnsureAnimation ();
 }
 
+void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_navmod_show_launcher)
+    exitKeyNavMode ();
+}
+
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
@@ -2609,7 +2626,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
   if (GetActionState () == ACTION_DRAG_ICON)
     EndIconDrag ();
-
+    
   SetActionState (ACTION_NONE);
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
@@ -2808,37 +2825,27 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // right/shift-f10 (open quicklist of currently selected icon)      
     case XK_F10:
-      if (key_state & NUX_STATE_SHIFT)
+      if (!(key_state & NUX_STATE_SHIFT))
+        break;
+    case NUX_VK_RIGHT:
+      // open quicklist of currently selected icon
+      it = _model->at (_current_icon_index);
+      if (it != (LauncherModel::iterator)NULL)
       {
-        {
-          // open quicklist of currently selected icon
-          it = _model->at (_current_icon_index);
-          if (it != (LauncherModel::iterator)NULL)
-            (*it)->OpenQuicklist (true);
-        }
+        (*it)->OpenQuicklist (true);
         leaveKeyNavMode ();
       }
     break;
 
-    case NUX_VK_RIGHT:
-      {
-        // open quicklist of currently selected icon
-        it = _model->at (_current_icon_index);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->OpenQuicklist (true);
-      }
-      leaveKeyNavMode ();
-    break;
-
     // <SPACE> (open a new instance)
     case NUX_VK_SPACE:
+      // start currently selected icon
+      it = _model->at (_current_icon_index);
+      if (it != (LauncherModel::iterator)NULL)
       {
-        // start currently selected icon
-        it = _model->at (_current_icon_index);
-        if (it != (LauncherModel::iterator)NULL)
-          (*it)->OpenInstance ();
+        (*it)->OpenInstance ();
       }
-      leaveKeyNavMode ();
+      exitKeyNavMode ();
       break;
 
     // <RETURN> (start/activate currently selected icon)
@@ -2849,7 +2856,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         if (it != (LauncherModel::iterator)NULL)
           (*it)->Activate ();
       }
-      leaveKeyNavMode (false);
+      exitKeyNavMode ();
     break;
       
     default:
