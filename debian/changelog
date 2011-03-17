@@ -1,4 +1,4 @@
-unity (3.6.6-0ubuntu1) UNRELEASED; urgency=low
+unity (3.6.6-0ubuntu1) natty; urgency=low
 
   * New upstream release:
     - drag and drop from dash to launcher issues (LP: #727675)
@@ -89,7 +89,7 @@ unity (3.6.6-0ubuntu1) UNRELEASED; urgency=low
       (LP: #735557)
     - build-dep on latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Mar 2011 16:55:20 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Mar 2011 17:56:48 +0100
 
 unity (3.6.4-0ubuntu1) natty; urgency=low
 
