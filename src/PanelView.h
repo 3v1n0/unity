@@ -51,6 +51,7 @@ public:
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
+  void OnSynced ();
   
   PanelHomeButton * HomeButton ();
 
@@ -70,6 +71,7 @@ protected:
 private:
   void UpdateBackground ();
   void ForceUpdateBackground ();
+  void SyncGeometries ();
 
 private:
   IndicatorObjectFactoryRemote *_remote;
@@ -86,6 +88,7 @@ private:
   PanelStyle *_style;
   bool        _is_dirty;
   float       _opacity;
+  bool        _needs_geo_sync;
 };
 
 #endif // PANEL_VIEW_H

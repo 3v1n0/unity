@@ -55,6 +55,10 @@ static const gchar introspection_xml[] =
   "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
   "    </method>"
   ""
+  "    <method name='SyncGeometries'>"
+  "      <arg type='a(ssiiii)' name='geometries' direction='in'/>"
+  "    </method>"
+	""
   "    <method name='ShowEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='u' name='timestamp' direction='in'/>"
@@ -144,6 +148,29 @@ handle_method_call (GDBusConnection       *connection,
                                              panel_service_sync_one (service,
                                                                      id));
       g_free (id);
+    }
+  else if (g_strcmp0 (method_name, "SyncGeometries") == 0)
+    {
+      GVariantIter *iter;
+      gchar *indicator_id, *entry_id;
+      gint x, y, width, height;
+
+      g_variant_get (parameters, "(a(ssiiii))", &iter);
+      while (g_variant_iter_loop (iter, "(ssiiii)",
+                                  &indicator_id,
+                                  &entry_id,
+                                  &x,
+                                  &y,
+                                  &width,
+                                  &height))
+        {
+          panel_service_sync_geometry (service, indicator_id,
+                                       entry_id, x, y, width, height);
+        }
+
+      g_variant_iter_free (iter);
+
+      g_dbus_method_invocation_return_value (invocation, NULL);
     }
   else if (g_strcmp0 (method_name, "ShowEntry") == 0)
     {
@@ -338,13 +365,11 @@ main (gint argc, gchar **argv)
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
 
-  panel_a11y_init ();
-
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);
 
   service = panel_service_get_default ();
-  
+
   owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
                              S_NAME,
                              G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -353,6 +378,9 @@ main (gint argc, gchar **argv)
                              on_name_lost,
                              service,
                              NULL);
+
+  panel_a11y_init ();
+
   gtk_main ();
 
   g_bus_unown_name (owner_id);

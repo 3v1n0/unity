@@ -19,11 +19,9 @@
 #include "panel-indicator-entry-accessible.h"
 #include "panel-service.h"
 
-G_DEFINE_TYPE(PanelIndicatorEntryAccessible, panel_indicator_entry_accessible, ATK_TYPE_OBJECT)
-
-#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
-
 /* AtkObject methods */
+static void         piea_component_interface_init                   (AtkComponentIface *iface);
+
 static void         panel_indicator_entry_accessible_initialize     (AtkObject *accessible, gpointer data);
 static gint         panel_indicator_entry_accessible_get_n_children (AtkObject *accessible);
 static AtkObject   *panel_indicator_entry_accessible_ref_child      (AtkObject *accessible, gint i);
@@ -33,17 +31,30 @@ struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
   PanelService         *service;
+  gint                  x;
+  gint                  y;
+  gint                  width;
+  gint                  height;
   gboolean              active;
 };
+
+G_DEFINE_TYPE_WITH_CODE(PanelIndicatorEntryAccessible,
+			panel_indicator_entry_accessible,
+			ATK_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT, piea_component_interface_init))
+
+#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ENTRY_ACCESSIBLE, PanelIndicatorEntryAccessiblePrivate))
 
 static void
 on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer user_data)
 {
   gchar *s;
   gboolean adding = FALSE;
-  PanelIndicatorEntryAccessible *piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+  PanelIndicatorEntryAccessible *piea;
 
-  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea));
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (user_data));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
 
   /* The PanelService sends us a string containing the pointer to the IndicatorObjectEntry */
   s = g_strdup_printf ("%p", piea->priv->entry);
@@ -66,6 +77,39 @@ on_entry_activated_cb (PanelService *service, const gchar *entry_id, gpointer us
 }
 
 static void
+on_geometries_changed_cb (PanelService *service,
+			  IndicatorObject *object,
+			  IndicatorObjectEntry *entry,
+			  gint x,
+			  gint y,
+			  gint width,
+			  gint height,
+			  gpointer user_data)
+{
+  PanelIndicatorEntryAccessible *piea;
+  AtkRectangle rect;
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (user_data);
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (piea));
+
+  if (entry != piea->priv->entry)
+    return;
+
+  piea->priv->x = x;
+  piea->priv->y = y;
+  piea->priv->width = width;
+  piea->priv->height = height;
+
+  /* Notify ATK objects of change of coordinates */
+  rect.x = piea->priv->x;
+  rect.y = piea->priv->y;
+  rect.width = piea->priv->width;
+  rect.height = piea->priv->height;
+  g_signal_emit_by_name (ATK_COMPONENT (piea), "bounds-changed", &rect);
+}
+
+static void
 panel_indicator_entry_accessible_finalize (GObject *object)
 {
   PanelIndicatorEntryAccessible *piea;
@@ -77,6 +121,7 @@ panel_indicator_entry_accessible_finalize (GObject *object)
   if (piea->priv != NULL)
     {
       g_signal_handlers_disconnect_by_func (piea->priv->service, on_entry_activated_cb, piea);
+      g_signal_handlers_disconnect_by_func (piea->priv->service, on_geometries_changed_cb, piea);
     }
 
   G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->finalize (object);
@@ -106,10 +151,13 @@ static void
 panel_indicator_entry_accessible_init (PanelIndicatorEntryAccessible *piea)
 {
   piea->priv = GET_PRIVATE (piea);
+  piea->priv->x = piea->priv->y = piea->priv->width = piea->priv->height = 0;
 
   /* Set up signals for listening to service changes */
   piea->priv->active = FALSE;
   piea->priv->service = panel_service_get_default ();
+  g_signal_connect (piea->priv->service, "geometries-changed",
+		    G_CALLBACK (on_geometries_changed_cb), piea);
   g_signal_connect (piea->priv->service, "entry-activated",
 		    G_CALLBACK (on_entry_activated_cb), piea);
 }
@@ -134,6 +182,36 @@ panel_indicator_entry_accessible_get_entry (PanelIndicatorEntryAccessible *piea)
 }
 
 /* Implementation of AtkObject methods */
+
+static void
+panel_indicator_entry_accessible_get_extents (AtkComponent *component,
+					      gint *x,
+					      gint *y,
+					      gint *width,
+					      gint *height,
+					      AtkCoordType coord_type)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (component));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (component);
+
+  /* We ignore AtkCoordType for now, as the panel is always at the top left
+     corner and so relative and absolute coordinates are the same */
+  *x = piea->priv->x;
+  *y = piea->priv->y;
+  *width = piea->priv->width;
+  *height = piea->priv->height;
+}
+
+static void
+piea_component_interface_init (AtkComponentIface *iface)
+{
+  g_return_if_fail (iface != NULL);
+
+  iface->get_extents = panel_indicator_entry_accessible_get_extents;
+}
 
 static void
 panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer data)

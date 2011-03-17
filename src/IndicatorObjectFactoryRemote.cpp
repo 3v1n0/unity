@@ -381,6 +381,9 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
   
   g_free (current_proxy_id);
   g_variant_iter_free (iter);
+
+  /* Notify listeners we have new data */
+  OnSynced.emit ();
 }
 
 void

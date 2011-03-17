@@ -339,6 +339,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
+    _hidden_state_check     = true;
     _mouse_inside_launcher  = false;
     _mouse_inside_trigger   = false;
     _mouseover_launcher_locked = false;
@@ -1532,8 +1533,20 @@ gboolean Launcher::DrawLauncherTimeout (gpointer data)
 }
 
 void
+Launcher::EnableHiddenStateCheck (bool enabled)
+{
+  _hidden_state_check = enabled;
+}
+
+void
 Launcher::EnsureHiddenState ()
 {
+  
+  // Ensure that the hidden state is relevant
+  // /!\ Only use that for a transitionning state (like viewport switch)
+  if (!_hidden_state_check)
+    return;
+  
   // compiler should optimize this, we do this for readability
   bool mouse_over_launcher = _mouseover_launcher_locked && (_mouse_inside_trigger || _mouse_inside_launcher);
   

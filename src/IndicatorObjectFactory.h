@@ -47,6 +47,7 @@ public:
   sigc::signal<void, int, int>               OnMenuPointerMoved;
   sigc::signal<void, const char *>           OnEntryActivateRequest;
   sigc::signal<void, const char *>           OnEntryActivated;
+  sigc::signal<void>                         OnSynced;
 
 protected:
   std::vector<IndicatorObjectProxy *>_indicators;

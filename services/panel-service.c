@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include "panel-marshal.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
@@ -70,6 +71,7 @@ enum
   ACTIVE_MENU_POINTER_MOTION,
   ENTRY_ACTIVATE_REQUEST,
   ENTRY_SHOW_NOW_CHANGED,
+  GEOMETRIES_CHANGED,
 
   LAST_SIGNAL
 };
@@ -182,6 +184,16 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+ _service_signals[GEOMETRIES_CHANGED] =
+    g_signal_new ("geometries-changed",
+		  G_OBJECT_CLASS_TYPE (obj_class),
+		  G_SIGNAL_RUN_LAST,
+		  0,
+		  NULL, NULL,
+		  panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+		  G_TYPE_NONE, 6,
+		  G_TYPE_OBJECT, G_TYPE_POINTER,
+		  G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
  _service_signals[ENTRY_SHOW_NOW_CHANGED] =
     g_signal_new ("entry-show-now-changed",
@@ -189,7 +201,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_SIGNAL_RUN_LAST,
                   0,
                   NULL, NULL,
-                  panel_service_VOID__STRING_BOOLEAN,
+                  panel_marshal_VOID__STRING_BOOLEAN,
                   G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
 
@@ -890,6 +902,22 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
 
   g_variant_builder_close (&b);
   return g_variant_builder_end (&b);
+}
+
+void
+panel_service_sync_geometry (PanelService *self,
+			     const gchar *indicator_id,
+			     const gchar *entry_id,
+			     gint x,
+			     gint y,
+			     gint width,
+			     gint height)
+{
+  PanelServicePrivate *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
 }
 
 static void

@@ -22,10 +22,11 @@
 #include <atk/atk.h>
 
 #include "Nux/Nux.h"
+#include "Nux/WindowThread.h"
 #include "NuxCore/Object.h"
 
 void unity_a11y_preset_environment (void);
-void unity_a11y_init (void);
+void unity_a11y_init (nux::WindowThread *wt);
 void unity_a11y_finalize (void);
 
 AtkObject *unity_a11y_get_accessible (nux::Object *object);
