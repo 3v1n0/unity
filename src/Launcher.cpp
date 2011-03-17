@@ -231,7 +231,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseMove.connect  (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
     OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &Launcher::RecvMouseDownOutsideArea));
     //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
+    
+    CaptureMouseDownAnyWhereElse (true);
     
     QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
     QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
@@ -533,6 +536,7 @@ Launcher::startKeyNavMode ()
   EnsureHiddenState ();
   
   GrabKeyboard ();
+  GrabPointer ();
   
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
@@ -586,6 +590,7 @@ Launcher::exitKeyNavMode ()
     return;
     
   UnGrabKeyboard ();
+  UnGrabPointer ();
   _navmod_show_launcher = false;
   EnsureHiddenState ();
 
@@ -2600,6 +2605,12 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   EnsureAnimation ();
 }
 
+void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if (_navmod_show_launcher)
+    exitKeyNavMode ();
+}
+
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
@@ -2615,7 +2626,7 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
   if (GetActionState () == ACTION_DRAG_ICON)
     EndIconDrag ();
-
+    
   SetActionState (ACTION_NONE);
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
