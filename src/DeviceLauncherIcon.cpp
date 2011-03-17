@@ -284,6 +284,7 @@ DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIco
 void
 DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
 {
+  self->_volume = NULL;
   self->Remove ();
 }
 
@@ -314,6 +315,11 @@ DeviceLauncherIcon::OnStopDriveReady (GObject *object,
                                       DeviceLauncherIcon *self)
 {
   GDrive *drive;
+
+  if (!self || !G_IS_VOLUME (self->_volume))
+  {
+    return;
+  }
 
   drive = g_volume_get_drive (self->_volume);
   g_drive_stop_finish (drive, result, NULL);

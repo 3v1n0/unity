@@ -79,6 +79,7 @@ private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);
   void OnPlaceEntryAdded (PlaceEntry *entry);
+  void OnPlaceEntryRemoved (PlaceEntry *entry);
   void RefreshEntry (PlaceEntry *entry);
 
   void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
