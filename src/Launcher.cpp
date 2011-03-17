@@ -595,8 +595,8 @@ Launcher::exitKeyNavMode ()
   _navmod_show_launcher = false;
   EnsureHiddenState ();
 
-  _last_icon_index = _current_icon_index;
   _current_icon_index = -1;
+  _last_icon_index = _current_icon_index;
   QueueDraw ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
