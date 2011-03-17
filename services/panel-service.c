@@ -1003,8 +1003,6 @@ activate_next_prev_menu (PanelService         *self,
 	}
     }
 
-  /*  printf ("label is %svisible\n", gtk_widget_get_visible (GTK_WIDGET (new_entry->label)) ? "" : "not "); */
-
   id = g_strdup_printf ("%p", new_entry);
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
   g_free (id);
