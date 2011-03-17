@@ -327,7 +327,6 @@ main (gint argc, gchar **argv)
 {
   PanelService *service;
   guint         owner_id;
-	AtkObject    *root;
 
   g_unsetenv("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
@@ -336,8 +335,6 @@ main (gint argc, gchar **argv)
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
-
-  panel_a11y_init ();
 
   introspection_data = g_dbus_node_info_new_for_xml (introspection_xml, NULL);
   g_assert (introspection_data != NULL);
@@ -353,10 +350,7 @@ main (gint argc, gchar **argv)
                              service,
                              NULL);
 
-  /* There might be cases when we start signalling about change of geometries but the
-     accessible objects are not yet created, so to avoid that, instantiate here the
-     A11Y root object, which will create them all */
-  root = atk_get_root ();
+	panel_a11y_init ();
 
   gtk_main ();
 
