@@ -69,7 +69,7 @@ private:
 
     void OnIconAdded (LauncherIcon *icon);
     
-    void OnLauncherDropped (char *path, LauncherIcon *before);
+    void OnLauncherAddRequest (char *path, LauncherIcon *before);
 
     void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);

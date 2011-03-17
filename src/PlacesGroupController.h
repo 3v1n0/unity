@@ -43,6 +43,8 @@ public:
 
   bool ActivateFirst ();
 
+  int GetTotalResults ();
+
 protected:
   const gchar* GetName ();
   void         AddProperties (GVariantBuilder *builder);

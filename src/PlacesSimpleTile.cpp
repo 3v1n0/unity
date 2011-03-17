@@ -26,6 +26,10 @@
 
 #include "PlacesSimpleTile.h"
 
+#include <NuxImage/GdkGraphics.h>
+#include <gtk/gtk.h>
+
+
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
                                     const char *label,
                                     int         icon_size,
@@ -88,7 +92,63 @@ PlacesSimpleTile::DndSourceDragBegin ()
 nux::NBitmapData * 
 PlacesSimpleTile::DndSourceGetDragImage ()
 {
-  return 0;
+  nux::NBitmapData *result = 0;
+  GdkPixbuf *pbuf;
+  GtkIconTheme *theme;
+  GtkIconInfo *info;
+  GError *error = NULL;
+  GIcon *icon;
+  
+  const char *icon_name = _icon;
+  int size = 64;
+  
+  if (!icon_name)
+    icon_name = "application-default-icon";
+   
+  theme = gtk_icon_theme_get_default ();
+  icon = g_icon_new_for_string (icon_name, NULL);
+
+  if (G_IS_ICON (icon))
+  {
+    info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref (icon);
+  }
+  else
+  {   
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       icon_name,
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
+  if (!info)
+  {
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       "application-default-icon",
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+        
+  if (gtk_icon_info_get_filename (info) == NULL)
+  {
+    gtk_icon_info_free (info);
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       "application-default-icon",
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
+  pbuf = gtk_icon_info_load_icon (info, &error);
+  gtk_icon_info_free (info);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    nux::GdkGraphics graphics (pbuf);
+    result = graphics.GetBitmap ();
+    g_object_unref (pbuf);
+  }
+  
+  return result;
 }
 
 std::list<const char *> 

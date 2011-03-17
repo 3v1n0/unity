@@ -52,6 +52,9 @@ public:
   DashBlurType GetDashBlurType ();
   void         SetDashBlurType (DashBlurType type);
 
+  bool GetHomeExpanded ();
+  void SetHomeExpanded (bool expanded);
+  
   sigc::signal<void, PlacesSettings *> changed;
 
 private:

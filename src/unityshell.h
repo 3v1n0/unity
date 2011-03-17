@@ -95,6 +95,9 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+    void handleCompizEvent (const char          *plugin,
+                            const char          *event,
+                            CompOption::Vector  &option);
 	
 	bool
 	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
@@ -216,6 +219,8 @@ class UnityScreen :
 	bool	  doShellRepaint;
 	bool    allowWindowPaint;
 	bool    damaged;
+	bool    _key_nav_mode_requested;
+	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;

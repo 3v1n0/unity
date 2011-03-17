@@ -278,7 +278,7 @@ void QuicklistView::Show ()
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
     PushToFront ();
-    EnableInputWindow (true, "quicklist", false, true);
+    //EnableInputWindow (true, "quicklist", false, true);
     //SetInputFocus ();
     GrabPointer ();
     GrabKeyboard ();
@@ -295,7 +295,8 @@ void QuicklistView::Hide ()
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
-    EnableInputWindow (false);
+    UnGrabKeyboard ();
+    //EnableInputWindow (false);
     ShowWindow (false);
   }
 }

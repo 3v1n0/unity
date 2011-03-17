@@ -38,6 +38,9 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
@@ -61,7 +64,9 @@ PanelMenuView::PanelMenuView (int padding)
   _is_own_window (false),
   _last_active_view (NULL),
   _last_width (0),
-  _last_height (0)
+  _last_height (0),
+  _places_showing (false),
+  _show_now_activated (false)
 {
   WindowManager *win_manager;
 
@@ -105,6 +110,15 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
 
   PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+
+  // Register for all the interesting events
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                 this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                 this);
 
   Refresh ();
 }
@@ -236,18 +250,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_own_window)
+  if (_is_own_window || _places_showing)
   {
 
   }
   else if (_is_maximized)
   {
-    if (!_is_inside && !_last_active_view)
+    if (!_is_inside && !_last_active_view && !_show_now_activated)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
   {
-    if ((_is_inside || _last_active_view) && _entries.size ())
+    if ((_is_inside || _last_active_view || _show_now_activated) && _entries.size ())
     {
       if (_gradient_texture == NULL)
       {
@@ -334,9 +348,9 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (!_is_own_window)
+  if (!_is_own_window && !_places_showing)
   {
-    if (_is_inside || _last_active_view)
+    if (_is_inside || _last_active_view || _show_now_activated)
     {
       _layout->ProcessDraw (GfxContext, force_draw);
     }
@@ -590,6 +604,7 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
   view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
+  proxy->show_now_changed.connect (sigc::mem_fun (this, &PanelMenuView::UpdateShowNow));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
@@ -886,3 +901,34 @@ on_name_changed (BamfView*      bamf_view,
 {
   self->OnNameChanged (new_name, old_name);
 }
+
+void
+PanelMenuView::OnPlaceViewShown (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = true;
+  self->QueueDraw ();
+}
+
+void
+PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = false;
+  self->QueueDraw ();
+}
+
+void
+PanelMenuView::UpdateShowNow (bool ignore)
+{
+  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
+  _show_now_activated = false;
+  
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
+    if (view->GetShowNow ())
+      _show_now_activated = true;
+
+  }
+  QueueDraw ();
+}
+

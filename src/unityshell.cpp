@@ -112,7 +112,11 @@ void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
-  wt->RenderInterfaceFromForeignCmd ();
+  
+  CompOutput *output = _last_output;
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
+  
+  wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
 
   doShellRepaint = false;
@@ -130,7 +134,8 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
   doShellRepaint = true;
   allowWindowPaint = true;
-
+  _last_output = output;
+  
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
 
@@ -192,6 +197,9 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
+        if (_key_nav_mode_requested)
+          launcher->startKeyNavMode ();
+        _key_nav_mode_requested = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -208,6 +216,29 @@ UnityScreen::handleEvent (XEvent *event)
   {
     wt->ProcessForeignEvent (event, NULL);
   }
+}
+
+void
+UnityScreen::handleCompizEvent (const char          *plugin,
+                                const char          *event,
+                                CompOption::Vector  &option)
+{
+
+  if (strcmp (event, "begin_viewport_switch") == 0)
+  {
+    launcher->EnableHiddenStateCheck (false);
+  }
+  if (strcmp (event, "end_viewport_switch") == 0)
+  {
+    // compute again the list of all window on the new viewport
+    // to decide if we should or not hide the launcher
+    launcher->EnableHiddenStateCheck (true);
+    launcher->CheckWindowOverLauncher ();
+  }
+
+    
+  screen->handleCompizEvent (plugin, event, option);
+  
 }
 
 bool
@@ -305,7 +336,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  launcher->startKeyNavMode ();
+  _key_nav_mode_requested = true;
 
   return false;
 }
@@ -721,6 +752,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
+  _key_nav_mode_requested = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
@@ -752,7 +784,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
 
-  unity_a11y_init ();
+  unity_a11y_init (wt);
 
   newFocusedWindow  = NULL;
   lastFocusedWindow = NULL;
@@ -815,6 +847,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
+  launcherWindow->UnReference ();
+  panelWindow->UnReference ();
   unity_a11y_finalize ();
 }
 
@@ -844,6 +878,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
@@ -889,6 +924,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   layout->SetHorizontalExternalMargin(0);
 
   self->panelWindow = new nux::BaseWindow("");
+  self->panelWindow->SinkReference ();
 
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
@@ -940,16 +976,115 @@ UnityWindow::~UnityWindow ()
     us->lastFocusedWindow = NULL;
 }
 
+namespace {
+
+/* Checks whether an extension is supported by the GLX or OpenGL implementation
+ * given the extension name and the list of supported extensions. */
+gboolean
+is_extension_supported (const gchar *extensions, const gchar *extension)
+{
+  if (extensions != NULL && extension != NULL)
+  {
+    const gsize len = strlen (extension);
+    gchar* p = (gchar*) extensions;
+    gchar* end = p + strlen (p);
+
+    while (p < end)
+    {
+      const gsize size = strcspn (p, " ");
+      if (len == size && strncmp (extension, p, size) == 0)
+        return TRUE;
+      p += size + 1;
+    }
+  }
+
+  return FALSE;
+}
+
+/* Gets the OpenGL version as a floating-point number given the string. */
+gfloat
+get_opengl_version_f32 (const gchar *version_string)
+{
+  gfloat version = 0.0f;
+  gint32 i;
+
+  for (i = 0; isdigit (version_string[i]); i++)
+    version = version * 10.0f + (version_string[i] - 48);
+
+  if (version_string[i++] == '.')
+  {
+    version = version * 10.0f + (version_string[i] - 48);
+    return (version + 0.1f) * 0.1f;
+  }
+  else
+    return 0.0f;
+}
+
+} /* anonymous namespace */
+
 /* vtable init */
 bool
 UnityPluginVTable::init ()
 {
+  gfloat version;
+  gchar* extensions;
+
   if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
     return false;
   if (!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI))
     return false;
   if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /* Ensure OpenGL version is 1.4+. */
+  version = get_opengl_version_f32 ((const gchar*) glGetString (GL_VERSION));
+  if (version < 1.4f)
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "OpenGL 1.4+ not supported\n");
+    return false;
+  }
+
+  /* Ensure OpenGL extensions required by the Unity plugin are available. */
+  extensions = (gchar*) glGetString (GL_EXTENSIONS);
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_fragment_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_fragment_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_buffer_object"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_buffer_object not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_framebuffer_object"))
+  {
+    if (!is_extension_supported (extensions, "GL_EXT_framebuffer_object"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_framebuffer_object or GL_EXT_framebuffer_object "
+                      "not supported\n");
+      return false;
+    }
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_texture_non_power_of_two"))
+  {
+    if (!is_extension_supported (extensions, "GL_ARB_texture_rectangle"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_texture_non_power_of_two or "
+                      "GL_ARB_texture_rectangle not supported\n");
+      return false;
+    }
+  }
 
   return true;
 }

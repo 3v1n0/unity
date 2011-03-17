@@ -30,6 +30,7 @@
 class IconTexture : public nux::TextureArea, public Introspectable
 {
 public:
+  IconTexture (nux::BaseTexture *texture, guint width, guint height);
   IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading=false);
   ~IconTexture ();
 
@@ -38,6 +39,9 @@ public:
   void GetTextureSize (int *width, int *height);
   
   void LoadIcon ();
+
+  void SetOpacity (float opacity);
+  void SetTexture (nux::BaseTexture *texture);
 
 protected:
   const gchar* GetName ();
@@ -60,6 +64,8 @@ private:
   int               _texture_height;
 
   bool _loading;
+
+  float _opacity;
 };
 
 #endif // ICON_TEXTURE_H

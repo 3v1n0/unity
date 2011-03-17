@@ -49,10 +49,13 @@ public:
 protected:
   const gchar* GetName ();
   void         AddProperties (GVariantBuilder *builder);
+  static gboolean MakeThingsLookNice (PlacesResultsController *self);
 
 private:
   PlacesResultsView *_results_view;
   std::map<const void *, PlacesGroupController *> _id_to_group;
+  std::vector<PlacesGroupController *> _groups;
+  guint32 _make_things_look_nice_id;
 };
 
 #endif // PLACES_RESULTS_CONTROLLER_H
