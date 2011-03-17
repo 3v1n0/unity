@@ -93,6 +93,8 @@ protected:
 
 private:
   gchar * GetActiveViewName ();
+  static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
+  static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
   
 private:
   BamfMatcher* _matcher;
@@ -119,5 +121,7 @@ private:
 
   int _last_width;
   int _last_height;
+
+  bool _places_showing;
 };
 #endif

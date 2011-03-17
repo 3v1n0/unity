@@ -151,6 +151,12 @@ PlaceEntryHome::GetName ()
 }
 
 const gchar *
+PlaceEntryHome::GetSearchHint ()
+{
+  return _("Search"); 
+}
+
+const gchar *
 PlaceEntryHome::GetIcon ()
 {
   return "folder-home";

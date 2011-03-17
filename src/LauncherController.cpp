@@ -38,7 +38,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _sort_priority = 0;
   
   _launcher->SetModel (_model);
-  _launcher->launcher_dropped.connect (sigc::mem_fun (this, &LauncherController::OnLauncherDropped));
+  _launcher->launcher_addrequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherAddRequest));
   _favorite_store = FavoriteStore::GetDefault ();
 
   _place_section = new PlaceLauncherSection (_launcher);
@@ -69,7 +69,7 @@ LauncherController::~LauncherController()
 }
 
 void
-LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
+LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
 {
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
@@ -85,7 +85,8 @@ LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
   if (result)
   {
     RegisterIcon (result);
-    _model->ReorderBefore (result, before, false);
+    if (before)
+      _model->ReorderBefore (result, before, false);
   }
 }
 
@@ -204,7 +205,7 @@ LauncherController::InsertExpoAction ()
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
   _expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
-  _expoIcon->SetShortcut('w');
+  _expoIcon->SetShortcut('s');
   
   _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
   

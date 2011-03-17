@@ -83,7 +83,8 @@ public:
   virtual const char * GetName        () = 0;
   virtual const char * GetIcon        () = 0;
   virtual const char * GetDescription () = 0;
-  virtual       guint64 GetShortcut    () = 0;
+  virtual const char * GetSearchHint  () = 0;
+  virtual guint64      GetShortcut    () = 0;
   
   // For ordering entries within a place
   virtual guint32        GetPosition  () = 0;
