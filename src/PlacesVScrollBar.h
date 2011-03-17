@@ -68,11 +68,19 @@ class PlacesVScrollBar : public nux::VScrollBar
                         unsigned long button_flags,
                         unsigned long key_flags);
 
-    void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
+  protected:
+    void PreLayoutManagement ();
+
+    void Draw (nux::GraphicsEngine& gfxContext,
+               bool                 forceDraw);
 
   private:
-    nux::CairoGraphics* _cairoGraphics;
+    void UpdateTexture ();
+
+  private:
     State               _state;
+    nux::BaseTexture*   _slider[STATE_LAST];
+    nux::BaseTexture*   _track;
 };
 
 #endif // PLACES_VSCROLLBAR_H
