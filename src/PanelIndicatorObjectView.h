@@ -43,7 +43,7 @@ public:
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
-
+  
   nux::HLayout *_layout;
 
 protected:
