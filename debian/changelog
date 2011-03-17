@@ -1,6 +1,89 @@
 unity (3.6.6-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release:
+    - drag and drop from dash to launcher issues (LP: #727675)
+    - unity-panel-service crashed in g_type_class_meta_marshal (LP: #727788)
+    - Dash: first-use text entry does not work until Alt-F2 version is used
+      (LP: #735342)
+    - compiz crashed with SIGSEGV in g_type_check_instance_is_a()
+      (LP: #734721)
+    - drag from dash to launcher (LP: #662616)
+    - Dash - Create single widget for Dashboard (LP: #683729)
+    - [FFe] Recently installed applications should be easy to run
+      (LP: #670403)
+    - Pressing Alt key does not underline mnemonics (LP: #689179)
+    - indicator-appmenu breaks Alt accelerator keys (LP: #663030)
+    - can't pin KTouch to the launcher (LP: #693755)
+    - Unity paints multiple times with multi-screen (LP: #727116)
+    - unitymtgrabhandles crashes when no key is set (LP: #727144)
+    - SIGSEGV in PlaceEntryHome::SetSearch (LP: #731927)
+    - [launcher] New Default favorites (LP: #714707)
+    - Dash: Alt-F2 Pressing enter on the dash can start the first entry of the
+      second group from the history (LP: #734738)
+    - Dash: keyboard arrow navigation disappears off bottom (LP: #735347)
+    - Increase the size of the top left Launcher reveal area from 1px to a 3px
+      by 3px square (LP: #736034)
+    - [dash] scrollbar's clickable zone should extend to the right border of
+      the dash border (LP: #651398)
+    - Launcher - Replace Dash lens Launcher icons with updated versions
+      (LP: #676613)
+    - NuxUtilAccessible requires to implement support to key event listeners
+      (LP: #702672)
+    - launcher icons dnd doesn't behave correctly when the dash is in use
+      (LP: #708885)
+    - Keyboard-navigation: highlight stays after losing focus (LP: #713632)
+    - Implement AtkComponent for ATK objects in the panel service
+      (LP: #715297)
+    - Super shortcuts for application place and worskspace swither conflicts
+      with compiz keys (LP: #723273)
+    - Use DeeIndex instead of strcmp in PlaceEntryHome (LP: #724886)
+    - [dash] text cursor not vertically centred in the entry (LP: #724927)
+    - Moving cursor in dash text entry field causes cursor artifacts
+      (LP: #725493)
+    - Missing "children_changed" event emission from the atk support
+      (LP: #727137)
+    - Typing should immediately search; focusing the search field is fiddly
+      (LP: #727295)
+    - "Find Internet Apps", "Browse the Web", and "Check Mail" are scattered
+      in default Dash (LP: #729009)
+    - Press-holding on a icon in the Launcher should de-couple the icon and
+      enable the user to reorder the icon vertically without leaving the
+      Launcher.  (LP: #727922)
+    - "Shortcuts" heading in Dash seems pointless (LP: #729000)
+    - intellihide is incompatible with totem fullscreen / Still some false
+      positive on ws switch (LP: #730679)
+    - Launcher - provide visual design for launcher keyboard navigation
+      (LP: #702490)
+    - Dash - Update the 'Shortcuts' dash home icon (LP: #689763)
+    - The Unity panel service Does not connect to the
+      INDICATOR_OBJECT_SIGNAL_ACCESSIBLE_DESC_UPDATE signal. (LP: #731651)
+    - [dash] items reordering after first group expanding (LP: #732031)
+    - Accessibility object parent-child hierarchy on unity panel-service is
+      broken (LP: #732049)
+    - "Your search did not match any files" when I haven't searched yet
+      (LP: #732746)
+    - Keyboard navigation in quick lists not possible. (LP: #733052)
+    - Keyboard navigation should jump invisible icons (LP: #734018)
+    - Dash: Alt-F2 gives no indication it is any different to using Super
+      (LP: #734740)
+    - Dash: Alt-F2 box hint says "Search commands" not "Run a
+      command"/"Execute command" (LP: #733897)
+    - Synopsis and description refer to "Ubuntu Desktop Edition" (LP: #735557)
+    - weird launcher behaviour on non short clicks when a place is displayed
+      (LP: #727703)
+    - Launcher - Disabled item in the quicklist need to be styled semantically
+      (LP: #676928)
+    - Menubar – Menu integration issue with applications that do not support
+      menu integration (LP: #723835)
+    - unity --reset-icons is needed to restore default launcher icons
+      (LP: #731578)
+    - Whitelist mumble for systray (LP: #732682)
+    - Applications places quicklist items are blank for categories with '&'
+      (LP: #733743)
+    - delete files in the dash (LP: #662658)
+    - Scale mode doesn't cancel like it used to (LP: #724045)
+    - Appsearch shortcuts not clickable, searchfield broken (LP: #728219)
+    - Arrow keys don't work in "All Files" menu (LP: #732744)
   * debian/control:
     - change the description of the package (remove desktop edition)
       (LP: #735557)
