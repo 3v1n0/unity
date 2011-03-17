@@ -192,6 +192,9 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
+        if (_key_nav_mode_requested)
+          launcher->startKeyNavMode ();
+        _key_nav_mode_requested = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -322,7 +325,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  launcher->startKeyNavMode ();
+  _key_nav_mode_requested = true;
 
   return false;
 }
@@ -738,6 +741,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
+  _key_nav_mode_requested = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
