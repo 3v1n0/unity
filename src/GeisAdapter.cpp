@@ -98,25 +98,29 @@ GeisAdapter::GestureStart(void *cookie, GeisGestureType gesture_type, GeisGestur
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (g_str_has_prefix ((const gchar *) gesture_type, "Drag"))
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     self->drag_start.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Rotate"))
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     self->rotate_start.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Pinch"))
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     self->pinch_start.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Tap"))
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     self->tap.emit (data);
+    g_free (data);
   }
 }
 
@@ -125,25 +129,29 @@ GeisAdapter::GestureUpdate(void *cookie, GeisGestureType gesture_type, GeisGestu
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (g_str_has_prefix ((const gchar *) gesture_type, "Drag"))
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     self->drag_update.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Rotate"))
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     self->rotate_update.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Pinch"))
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     self->pinch_update.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Tap"))
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     self->tap.emit (data);
+    g_free (data);
   }
 }
 
@@ -152,25 +160,29 @@ GeisAdapter::GestureFinish(void *cookie, GeisGestureType gesture_type, GeisGestu
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (g_str_has_prefix ((const gchar *) gesture_type, "Drag"))
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     self->drag_finish.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Rotate"))
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     self->rotate_finish.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Pinch"))
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     self->pinch_finish.emit (data);
+    g_free (data);
   }
-  else if (g_str_has_prefix ((const gchar *) gesture_type, "Tap"))
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     self->tap.emit (data);
+    g_free (data);
   }
 }
 
@@ -372,7 +384,7 @@ GeisAdapter::RegisterRootInstance ()
     return;
   }
 
-  status = geis_input_devices(instance, &input_funcs, NULL);
+  status = geis_input_devices(instance, &input_funcs, this);
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to input devices\n");
@@ -383,7 +395,7 @@ GeisAdapter::RegisterRootInstance ()
                           GEIS_ALL_INPUT_DEVICES,
                           s_gestures,
                           &gesture_funcs,
-                          NULL);
+                          this);
   if (status != GEIS_STATUS_SUCCESS)
   {
     fprintf(stderr, "error subscribing to gestures\n");
