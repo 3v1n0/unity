@@ -220,6 +220,7 @@ class UnityScreen :
 	bool    allowWindowPaint;
 	bool    damaged;
 	bool    _key_nav_mode_requested;
+	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;
