@@ -605,6 +605,9 @@ PlaceEntryRemote::GetResult (const void *id, ResultForeachCallback slot)
   DeeModelIter *iter = (DeeModelIter *)id;
   DeeModelIter *group_iter;
 
+  if (iter == NULL || dee_model_is_last (_results_model, iter))
+    return;
+
   n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
   group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
  
