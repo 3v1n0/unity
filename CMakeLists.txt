@@ -12,7 +12,7 @@ subdirs (services tests tools doc)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 6)
-set (UNITY_MICRO 4)
+set (UNITY_MICRO 6)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -32,8 +32,8 @@ add_custom_target (distcheck
     && mkdir ${ARCHIVE_NAME}/build
     && cd ${ARCHIVE_NAME}/build
     && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-    && make
-    && make install
+    && make -j8
+    && make -j8 install
     && make check
     )
 add_dependencies(distcheck dist)
