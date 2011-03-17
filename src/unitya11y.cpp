@@ -59,8 +59,9 @@ unity_a11y_restore_environment (void)
 }
 
 static void
-load_unity_atk_util ()
+load_unity_atk_util (nux::WindowThread *wt)
 {
+  unity_util_accessible_set_window_thread (wt);
   g_type_class_unref (g_type_class_ref (UNITY_TYPE_UTIL_ACCESSIBLE));
 }
 
@@ -159,7 +160,6 @@ a11y_invoke_module (const char *module_path)
   return TRUE;
 }
 
-
 /********************************************************************************/
 /*
  * In order to avoid the atk-bridge loading and the GAIL
@@ -182,7 +182,7 @@ unity_a11y_preset_environment (void)
  *  * Loads the proper AtkUtil implementation
  */
 void
-unity_a11y_init (void)
+unity_a11y_init (nux::WindowThread *wt)
 {
   gchar *bridge_path = NULL;
 
@@ -193,7 +193,7 @@ unity_a11y_init (void)
   if (!should_enable_a11y ())
     return;
 
-  load_unity_atk_util ();
+  load_unity_atk_util (wt);
 
   bridge_path = get_atk_bridge_path ();
 
