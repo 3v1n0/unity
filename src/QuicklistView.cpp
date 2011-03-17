@@ -295,6 +295,7 @@ void QuicklistView::Hide ()
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
+    UnGrabKeyboard ();
     EnableInputWindow (false);
     ShowWindow (false);
   }
