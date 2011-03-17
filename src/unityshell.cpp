@@ -112,7 +112,11 @@ void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
-  wt->RenderInterfaceFromForeignCmd ();
+  
+  CompOutput *output = _last_output;
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
+  
+  wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
 
   doShellRepaint = false;
@@ -130,7 +134,8 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
   doShellRepaint = true;
   allowWindowPaint = true;
-
+  _last_output = output;
+  
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
 
@@ -192,6 +197,9 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
+        if (_key_nav_mode_requested)
+          launcher->startKeyNavMode ();
+        _key_nav_mode_requested = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -322,7 +330,7 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
                                           CompAction::State  state,
                                           CompOption::Vector &options)
 {
-  launcher->startKeyNavMode ();
+  _key_nav_mode_requested = true;
 
   return false;
 }
@@ -738,6 +746,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
+  _key_nav_mode_requested = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
@@ -832,6 +841,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
+  launcherWindow->UnReference ();
+  panelWindow->UnReference ();
   unity_a11y_finalize ();
 }
 
@@ -861,6 +872,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->AddChild (self->launcher);
 
@@ -906,6 +918,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   layout->SetHorizontalExternalMargin(0);
 
   self->panelWindow = new nux::BaseWindow("");
+  self->panelWindow->SinkReference ();
 
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
