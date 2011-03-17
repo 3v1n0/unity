@@ -350,7 +350,7 @@ main (gint argc, gchar **argv)
                              service,
                              NULL);
 
-	panel_a11y_init ();
+  panel_a11y_init ();
 
   gtk_main ();
 
