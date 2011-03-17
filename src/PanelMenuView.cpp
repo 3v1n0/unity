@@ -341,7 +341,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
       _layout->ProcessDraw (GfxContext, force_draw);
     }
 
-    if (_is_maximized) /* FIXME: IF ANYTHING IS MAXIMIZED IN THE CURRENT VIEWPORT */
+    if (_is_maximized)
     {
       _window_buttons->ProcessDraw (GfxContext, true);
     }
@@ -745,21 +745,22 @@ PanelMenuView::OnWindowMaximized (guint xid)
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
-    // We could probably just check if a key is available, but who wants to do that
-    if (_decor_map.find (xid) == _decor_map.end ())
-      _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
-  
-    if (_decor_map[xid])
-    {
-      WindowManager::Default ()->Undecorate (xid);
-    }
-
     _is_maximized = true;
-    _maximized_set.insert (xid);
-
-    Refresh ();
-    FullRedraw ();
   }
+  
+  // We could probably just check if a key is available, but who wants to do that
+  if (_decor_map.find (xid) == _decor_map.end ())
+    _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
+  
+  if (_decor_map[xid])
+  {
+    WindowManager::Default ()->Undecorate (xid);
+  }
+
+  _maximized_set.insert (xid);
+
+  Refresh ();
+  FullRedraw ();
 }
 
 void
@@ -771,16 +772,17 @@ PanelMenuView::OnWindowRestored (guint xid)
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     _is_maximized = false;
-    _maximized_set.erase (xid);
-
-    if (_decor_map[xid])
-    {
-      WindowManager::Default ()->Decorate (xid);
-    }
-
-    Refresh ();
-    FullRedraw ();
   }
+
+  if (_decor_map[xid])
+  {
+    WindowManager::Default ()->Decorate (xid);
+  }
+  
+  _maximized_set.erase (xid);
+
+  Refresh ();
+  FullRedraw ();
 }
 
 void
