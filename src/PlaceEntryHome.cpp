@@ -21,6 +21,7 @@
 #include "PlaceEntryHome.h"
 
 #include <glib/gi18n-lib.h>
+#include <algorithm>
 
 class PlaceEntryGroupHome : public PlaceEntryGroup
 {
@@ -94,6 +95,20 @@ PlaceEntryHome::OnPlaceAdded (Place *place)
   {
     PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
     OnPlaceEntryAdded (entry);
+  }
+
+  place->entry_removed.connect (sigc::mem_fun (this, &PlaceEntryHome::OnPlaceEntryRemoved));
+}
+
+void
+PlaceEntryHome::OnPlaceEntryRemoved (PlaceEntry *entry)
+{
+  std::vector<PlaceEntry *>::iterator it;
+
+  it = std::find (_entries.begin (), _entries.end (), entry);
+  if (it != _entries.end ())
+  {
+    _entries.erase (it);
   }
 }
 
