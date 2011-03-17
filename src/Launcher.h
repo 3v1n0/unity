@@ -157,6 +157,7 @@ public:
   int GetMouseY ();
   
   void CheckWindowOverLauncher ();
+  void EnableHiddenStateCheck (bool enabled);
 
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
@@ -395,6 +396,7 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
+  bool  _hidden_state_check;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
   bool  _mouseover_launcher_locked;
