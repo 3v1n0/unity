@@ -64,13 +64,14 @@ BamfLauncherIcon::ActivateLauncherIcon ()
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
   /* Behaviour:
-   * Nothing running -> launch application
-   * Running and active -> spread application
-   * Spread is active and different icon pressed -> change spread
-   * Spread is active -> Spread de-activated, and fall through
+   * 1) Nothing running -> launch application
+   * 2) Running and active -> spread application
+   * 3) Running and not active -> focus application
+   * 4) Spread is active and different icon pressed -> change spread
+   * 5) Spread is active -> Spread de-activated, and fall through
    */
 
-  if (!running)
+  if (!running) // #1 above
   {
     if (GetQuirk (QUIRK_STARTING))
       return;
@@ -80,18 +81,19 @@ BamfLauncherIcon::ActivateLauncherIcon ()
   }
   else if (scaleWasActive)
   {
-    if (!Spread (0, false))
+    if (active ||           // #5 above
+        !Spread (0, false)) // #4 above
     {
       PluginAdapter::Default ()->TerminateScale ();
       Focus ();
       _launcher->SetLastSpreadIcon (NULL);
     }
   }
-  else if (!active)
+  else if (!active) // #3 above
   {
     Focus ();
   }
-  else if (active && !scaleWasActive)
+  else if (active && !scaleWasActive) // #2 above
   {
     Spread (0, false);
   }

@@ -35,17 +35,19 @@ public:
   virtual void         SetActive (bool active) = 0;
   virtual bool         GetActive () = 0;
   virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button) = 0;
-  virtual void         Scroll (int delta) = 0; 
+  virtual void         Scroll (int delta) = 0;
 
   // Signals
   sigc::signal<void> updated;
   sigc::signal<void, bool> active_changed;
+  sigc::signal<void, bool> show_now_changed;
 
 public:
   bool label_visible;
   bool label_sensitive;
   bool icon_visible;
   bool icon_sensitive;
+  bool show_now;
 };
 
 #endif // INDICATOR_OBJECT_ENTRY_PROXY_H

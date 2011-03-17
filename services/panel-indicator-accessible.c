@@ -19,12 +19,11 @@
 #include <glib/gi18n.h>
 #include "panel-indicator-accessible.h"
 #include "panel-indicator-entry-accessible.h"
-
-G_DEFINE_TYPE(PanelIndicatorAccessible, panel_indicator_accessible, ATK_TYPE_OBJECT)
-
-#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ACCESSIBLE, PanelIndicatorAccessiblePrivate))
+#include "panel-service.h"
 
 /* AtkObject methods */
+static void         pia_component_interface_init              (AtkComponentIface *iface);
+
 static void         panel_indicator_accessible_initialize     (AtkObject *accessible, gpointer data);
 static gint         panel_indicator_accessible_get_n_children (AtkObject *accessible);
 static AtkObject   *panel_indicator_accessible_ref_child      (AtkObject *accessible, gint i);
@@ -33,8 +32,141 @@ static AtkStateSet *panel_indicator_accessible_ref_state_set  (AtkObject *access
 struct _PanelIndicatorAccessiblePrivate
 {
   IndicatorObject *indicator;
+  PanelService *service;
   GSList *a11y_children;
+  gint x;
+  gint y;
+  gint width;
+  gint height;
 };
+
+G_DEFINE_TYPE_WITH_CODE(PanelIndicatorAccessible,
+			panel_indicator_accessible,
+			ATK_TYPE_OBJECT,
+			G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT, pia_component_interface_init))
+
+#define GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), PANEL_TYPE_INDICATOR_ACCESSIBLE, PanelIndicatorAccessiblePrivate))
+
+/* Indicator callbacks */
+
+static void
+on_indicator_entry_added (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
+{
+  AtkObject *accessible;
+  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  accessible = panel_indicator_entry_accessible_new (entry);
+  if (accessible != NULL)
+    {
+      atk_object_set_parent (accessible, ATK_OBJECT (pia));
+      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::add",
+			     g_slist_length (pia->priv->a11y_children) - 1,
+			     accessible);
+    }
+}
+
+static void
+on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
+{
+  GSList *l;
+  guint count = 0;
+  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next, count++)
+    {
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
+        {
+	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
+	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed::remove",
+				 count, accessible);
+
+	  g_object_unref (accessible);
+	}
+    }
+}
+
+static void
+on_accessible_desc_updated (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
+{
+  GSList *l;
+  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next)
+    {
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
+        {
+          if (GTK_IS_LABEL (entry->label))
+            atk_object_set_name (accessible, gtk_label_get_text (GTK_LABEL (entry->label)));
+          else if (GTK_IS_IMAGE (entry->image))
+            atk_object_set_name (accessible, atk_object_get_name (ATK_OBJECT (entry->image)));
+          atk_object_set_description (accessible, entry->accessible_desc);
+          break;
+        }
+    }
+}
+
+static void
+on_geometries_changed_cb (PanelService *service,
+			  IndicatorObject *object,
+			  IndicatorObjectEntry *entry,
+			  gint x,
+			  gint y,
+			  gint width,
+			  gint height,
+			  gpointer user_data)
+{
+  PanelIndicatorAccessible *pia;
+  AtkRectangle rect;
+  GSList *l;
+  gboolean minimum_set = FALSE;
+
+  pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (pia));
+
+  if (object != pia->priv->indicator)
+    return;
+
+  /* Iterate over all children to get width and height */
+  pia->priv->width = pia->priv->height = 0;
+
+  for (l = pia->priv->a11y_children; l != NULL; l = l->next)
+    {
+      gint e_x, e_y, e_width, e_height;
+      AtkObject *accessible = ATK_OBJECT (l->data);
+
+      atk_component_get_extents (ATK_COMPONENT (accessible), &e_x, &e_y, &e_width, &e_height, ATK_XY_SCREEN);
+      if (minimum_set)
+        {
+          if (e_x < pia->priv->x)
+            pia->priv->x = e_x;
+          if (e_y < pia->priv->y)
+            pia->priv->y = e_y;
+	}
+      else
+        {
+	  pia->priv->x = e_x;
+	  pia->priv->y = e_y;
+	  minimum_set = TRUE;
+	}
+
+      pia->priv->width += e_width;
+      if (e_height > pia->priv->height)
+	pia->priv->height = e_height;
+    }
+
+  /* Notify ATK objects of change of coordinates */
+  rect.x = pia->priv->x;
+  rect.y = pia->priv->y;
+  rect.width = pia->priv->width;
+  rect.height = pia->priv->height;
+  g_signal_emit_by_name (ATK_COMPONENT (pia), "bounds-changed", &rect);
+}
 
 static void
 panel_indicator_accessible_finalize (GObject *object)
@@ -44,7 +176,13 @@ panel_indicator_accessible_finalize (GObject *object)
   if (pia->priv != NULL)
     {
       if (pia->priv->indicator != NULL)
-        g_object_unref (G_OBJECT (pia->priv->indicator));
+        {
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_indicator_entry_added, pia);
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_indicator_entry_removed, pia);
+          g_signal_handlers_disconnect_by_func (pia->priv->indicator, on_accessible_desc_updated, pia);
+
+          g_object_unref (G_OBJECT (pia->priv->indicator));
+        }
 
       while (pia->priv->a11y_children != NULL)
         {
@@ -53,6 +191,8 @@ panel_indicator_accessible_finalize (GObject *object)
 	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
 	  g_object_unref (accessible);
 	}
+
+      g_signal_handlers_disconnect_by_func (pia->priv->service, on_geometries_changed_cb, pia);
     }
 
   G_OBJECT_CLASS (panel_indicator_accessible_parent_class)->finalize (object);
@@ -83,6 +223,12 @@ panel_indicator_accessible_init (PanelIndicatorAccessible *pia)
 {
   pia->priv = GET_PRIVATE (pia);
   pia->priv->a11y_children = NULL;
+  pia->priv->x = pia->priv->y = pia->priv->width = pia->priv->height = 0;
+
+  /* Set up signals for listening to service changes */
+  pia->priv->service = panel_service_get_default ();
+  g_signal_connect (pia->priv->service, "geometries-changed",
+		    G_CALLBACK (on_geometries_changed_cb), pia);
 }
 
 AtkObject *
@@ -96,47 +242,37 @@ panel_indicator_accessible_new (IndicatorObject *indicator)
   return ATK_OBJECT (pia);
 }
 
-/* Indicator callbacks */
-
-static void
-on_indicator_entry_added (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
-{
-  AtkObject *accessible;
-  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
-
-  accessible = panel_indicator_entry_accessible_new (entry);
-  if (accessible != NULL)
-    {
-      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
-      g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
-			     g_slist_length (pia->priv->a11y_children) - 1,
-			     accessible);
-    }
-}
-
-static void
-on_indicator_entry_removed (IndicatorObject *io, IndicatorObjectEntry *entry, gpointer user_data)
-{
-  GSList *l;
-  guint count = 0;
-  PanelIndicatorAccessible *pia = PANEL_INDICATOR_ACCESSIBLE (user_data);
-
-  for (l = pia->priv->a11y_children; l != NULL; l = l->next, count++)
-    {
-      AtkObject *accessible = ATK_OBJECT (l->data);
-
-      if (entry == panel_indicator_entry_accessible_get_entry (PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible)))
-        {
-	  pia->priv->a11y_children = g_slist_remove (pia->priv->a11y_children, accessible);
-	  g_signal_emit_by_name (ATK_OBJECT (pia), "children-changed",
-				 count, accessible);
-
-	  g_object_unref (accessible);
-	}
-    }
-}
-
 /* Implementation of AtkObject methods */
+
+static void
+panel_indicator_accessible_get_extents (AtkComponent *component,
+					gint *x,
+					gint *y,
+					gint *width,
+					gint *height,
+					AtkCoordType coord_type)
+{
+  PanelIndicatorAccessible *pia;
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ACCESSIBLE (component));
+
+  pia = PANEL_INDICATOR_ACCESSIBLE (component);
+
+  /* We ignore AtkCoordType for now, as the panel is always at the top left
+     corner and so relative and absolute coordinates are the same */
+  *x = pia->priv->x;
+  *y = pia->priv->y;
+  *width = pia->priv->width;
+  *height = pia->priv->height;
+}
+
+static void
+pia_component_interface_init (AtkComponentIface *iface)
+{
+  g_return_if_fail (iface != NULL);
+
+  iface->get_extents = panel_indicator_accessible_get_extents;
+}
 
 static void
 panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
@@ -157,16 +293,19 @@ panel_indicator_accessible_initialize (AtkObject *accessible, gpointer data)
 		    G_CALLBACK (on_indicator_entry_added), pia);
   g_signal_connect (G_OBJECT (pia->priv->indicator), "entry-removed",
 		    G_CALLBACK (on_indicator_entry_removed), pia);
+  g_signal_connect (G_OBJECT (pia->priv->indicator), "accessible_desc_update",
+		    G_CALLBACK (on_accessible_desc_updated), pia);
 
   /* Retrieve all entries and create their accessible objects */
   entries = indicator_object_get_entries (pia->priv->indicator);
   for (l = entries; l != NULL; l = l->next)
     {
-      AtkObject *accessible;
+      AtkObject *child;
       IndicatorObjectEntry *entry = (IndicatorObjectEntry *) l->data;
 
-      accessible = panel_indicator_entry_accessible_new (entry);
-      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, accessible);
+      child = panel_indicator_entry_accessible_new (entry);
+      atk_object_set_parent (child, accessible);
+      pia->priv->a11y_children = g_slist_append (pia->priv->a11y_children, child);
     }
 
   g_list_free (entries);

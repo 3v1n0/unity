@@ -16,25 +16,20 @@
  * Authored by: Alejandro Piñeiro Iglesias <apinheiro@igalia.com>
  */
 
-#ifndef UNITY_A11Y_H
-#define UNITY_A11Y_H
+#ifndef UNITY_A11Y_TESTS_H
+#define UNITY_A11Y_TESTS_H
 
-#include <atk/atk.h>
+/* For the moment we can't add the a11y tests to the current unity
+   tests, as it would require to include the Launcher, that right now
+   include symbols only available to a compiz plugin (so not available
+   for a standalone app.
 
-#include "Nux/Nux.h"
-#include "Nux/WindowThread.h"
-#include "NuxCore/Object.h"
+   So right now this tests are executed by hand during the developing
+   of the accessibility support, but not executed as a standalone test.
 
-void unity_a11y_preset_environment (void);
-void unity_a11y_init (nux::WindowThread *wt);
-void unity_a11y_finalize (void);
+   When the Launcher thing became solved (as planned), this tests
+   would be moved/adapted to the unity test system */
 
-AtkObject *unity_a11y_get_accessible (nux::Object *object);
-
-gboolean unity_a11y_initialized (void);
-
-/* For unit test purposes */
-
-GHashTable *_unity_a11y_get_accessible_table ();
+void unity_run_a11y_unit_tests (void);
 
 #endif /* UNITY_A11Y_H */

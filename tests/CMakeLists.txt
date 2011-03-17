@@ -30,6 +30,14 @@ link_directories (${LIB_PATHS})
 
 include_directories (. .. ../services ${CMAKE_BINARY_DIR})
 
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS ../services/panel-marshal.list
+  COMMENT "Generating marshallers")
+
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../../src or ../../services in alphabetically after that
@@ -44,6 +52,7 @@ add_executable (test-unit
                 ../src/ubus-server.h
                 ../services/panel-service.c
                 ../services/panel-service.h
+                ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
                 ../src/FavoriteStore.cpp
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
@@ -200,6 +209,28 @@ add_executable (test-places-results
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
+                ui/EventFaker.cpp
+                ui/EventFaker.h
+                ../src/Introspectable.cpp
+                ../src/Introspectable.h
+                ../src/QuicklistMenuItem.cpp
+                ../src/QuicklistMenuItem.h
+                ../src/QuicklistMenuItemCheckmark.cpp
+                ../src/QuicklistMenuItemCheckmark.h
+                ../src/QuicklistMenuItemLabel.cpp
+                ../src/QuicklistMenuItemLabel.h
+                ../src/QuicklistMenuItemRadio.cpp
+                ../src/QuicklistMenuItemRadio.h
+                ../src/QuicklistMenuItemSeparator.cpp
+                ../src/QuicklistMenuItemSeparator.h
+                ../src/QuicklistView.cpp
+                ../src/QuicklistView.h
+                ../src/ubus-server.cpp
+                ../src/ubus-server.h
+                )
+
+add_executable (test-quicklist-visuals
+                ui/TestQuicklistVisuals.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
                 ../src/Introspectable.cpp

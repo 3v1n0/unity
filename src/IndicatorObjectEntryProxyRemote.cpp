@@ -33,6 +33,7 @@ IndicatorObjectEntryProxyRemote::IndicatorObjectEntryProxyRemote ()
   label_sensitive = true;
   icon_visible = false;
   icon_sensitive = true;
+  show_now = false;
 }
 
 
@@ -143,6 +144,14 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
   icon_sensitive = __image_sensitive;
   icon_visible = __image_visible;
 
+  updated.emit ();
+}
+
+void
+IndicatorObjectEntryProxyRemote::OnShowNowChanged (bool show_now_state)
+{
+  show_now = show_now_state;
+  show_now_changed.emit (show_now_state);
   updated.emit ();
 }
 

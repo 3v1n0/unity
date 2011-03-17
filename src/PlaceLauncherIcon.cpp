@@ -97,7 +97,7 @@ PlaceLauncherIcon::ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection&
 
   temp = g_markup_escape_text (section.GetName (), -1);
   menu_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, section.GetName ());
+  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, temp);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   dbusmenu_menuitem_property_set_int (menu_item, SECTION_NUMBER, _current_menu.size ());

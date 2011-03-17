@@ -127,6 +127,7 @@ a11y_invoke_module (const char *module_path)
 void
 panel_a11y_init (void)
 {
+  AtkObject *root;
   gchar *bridge_path = NULL;
 
   if (a11y_initialized)
@@ -149,6 +150,11 @@ panel_a11y_init (void)
     }
 
   g_free (bridge_path);
+
+  /* There might be cases when we start signalling about change of geometries but the
+     accessible objects are not yet created, so to avoid that, instantiate here the
+     A11Y root object, which will create them all */
+  root = atk_get_root ();
 
   a11y_initialized = TRUE;
 }

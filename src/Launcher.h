@@ -39,7 +39,7 @@
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
-#define SINGLE_FINGER_HOLD_DURATION 1000
+#define START_DRAGICON_DURATION 500
 
 #define MAX_SUPERKEY_LABELS 10
 
@@ -141,6 +141,7 @@ public:
   virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 
@@ -154,8 +155,11 @@ public:
 
   int GetMouseX ();
   int GetMouseY ();
+  
+  void CheckWindowOverLauncher ();
+  void EnableHiddenStateCheck (bool enabled);
 
-  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
+  sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
 protected:
   // Introspectable methods
@@ -179,7 +183,6 @@ private:
   {
     TIME_ENTER,
     TIME_LEAVE,
-    TIME_DRAG_START,
     TIME_DRAG_END,
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
@@ -223,7 +226,7 @@ private:
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
-  static gboolean SingleFingerHoldTimeout (gpointer data);
+  static gboolean StartIconDragTimeout (gpointer data);
 
   void SetMousePosition (int x, int y);
   
@@ -252,7 +255,6 @@ private:
   static gboolean OnScrollTimeout (gpointer data);
   static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
-  void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress             (struct timespec const &current);
@@ -343,6 +345,7 @@ private:
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
+  void StartIconDragRequest (int x, int y);
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
@@ -393,6 +396,7 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
+  bool  _hidden_state_check;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
   bool  _mouseover_launcher_locked;
@@ -461,8 +465,7 @@ private:
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _redraw_handle;
-  guint _single_finger_hold_handle;
-  GTimer* _single_finger_hold_timer;
+  guint _start_dragicon_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _trigger_mouse_position;
@@ -483,6 +486,23 @@ private:
   LauncherIcon     *_dnd_hovered_icon;
   
   Atom              _selection_atom;
+
+  /* gdbus */
+  guint                       _dbus_owner;
+  static const gchar          introspection_xml[];
+  static GDBusInterfaceVTable interface_vtable;
+  
+  static void OnBusAcquired  (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameLost    (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void handle_dbus_method_call (GDBusConnection       *connection,
+                                       const gchar           *sender,
+                                       const gchar           *object_path,
+                                       const gchar           *interface_name,
+                                       const gchar           *method_name,
+                                       GVariant              *parameters,
+                                       GDBusMethodInvocation *invocation,
+                                       gpointer               user_data);
   
   struct timespec  _times[TIME_LAST];
 };

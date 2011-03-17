@@ -18,6 +18,7 @@
  */
 
 #include "Nux/Nux.h"
+#include "Nux/Area.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 
@@ -75,7 +76,6 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 void
 PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-
 }
 
 void
@@ -153,3 +153,4 @@ PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
+
