@@ -95,6 +95,7 @@ private:
   gchar * GetActiveViewName ();
   static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
   static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
+  void UpdateShowNow (bool ignore);
   
 private:
   BamfMatcher* _matcher;
@@ -123,5 +124,6 @@ private:
   int _last_height;
 
   bool _places_showing;
+  bool _show_now_activated;
 };
 #endif

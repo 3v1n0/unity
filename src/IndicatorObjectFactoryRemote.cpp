@@ -246,14 +246,14 @@ IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
 {
   std::vector<IndicatorObjectProxy*>::iterator it;
   
-  for (it = _indicators.begin(); it != _indicators.end(); it++)
+  for (it = _indicators.begin(); it != _indicators.end(); ++it)
   {
     IndicatorObjectProxyRemote *object = static_cast<IndicatorObjectProxyRemote *> (*it);
-    std::vector<IndicatorObjectEntryProxy*>::iterator it;
+    std::vector<IndicatorObjectEntryProxy*>::iterator it2;
   
-    for (it = object->GetEntries ().begin(); it != object->GetEntries ().end(); it++)
+    for (it2 = object->GetEntries ().begin(); it2 != object->GetEntries ().end(); ++it2)
     {
-      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it);
+      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it2);
 
       entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
     }
@@ -266,6 +266,29 @@ void
 IndicatorObjectFactoryRemote::OnEntryActivateRequestReceived (const gchar *entry_id)
 {
   OnEntryActivateRequest.emit (entry_id);
+}
+
+void
+IndicatorObjectFactoryRemote::OnEntryShowNowChanged (const char *entry_id, bool show_now_state)
+{
+  std::vector<IndicatorObjectProxy*>::iterator it;
+  
+  for (it = _indicators.begin(); it != _indicators.end(); ++it)
+  {
+    IndicatorObjectProxyRemote *object = static_cast<IndicatorObjectProxyRemote *> (*it);
+    std::vector<IndicatorObjectEntryProxy*>::iterator it2;
+  
+    for (it2 = object->GetEntries ().begin(); it2 != object->GetEntries ().end(); ++it2)
+    {
+      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it2);
+
+      if (g_strcmp0 (entry_id, entry->GetId ()) == 0)
+      {
+        entry->OnShowNowChanged (show_now_state);
+        return;
+      }
+    }
+  }
 }
 
 IndicatorObjectProxyRemote *
@@ -495,13 +518,24 @@ on_proxy_signal_received (GDBusProxy *proxy,
                        remote);
   }
   else if (g_strcmp0 (signal_name, "ActiveMenuPointerMotion") == 0)
-    {
-      int x=0, y=0;
+  {
+    int x=0, y=0;
 
-      g_variant_get (parameters, "(ii)", &x, &y);
+    g_variant_get (parameters, "(ii)", &x, &y);
 
-      remote->OnMenuPointerMoved.emit (x, y);
-    }
+    remote->OnMenuPointerMoved.emit (x, y);
+  }
+  else if (g_strcmp0 (signal_name, "EntryShowNowChanged") == 0)
+  {
+    gchar *id = NULL;
+    bool   show_now_state;
+
+    g_variant_get (parameters, "(sb)", &id, &show_now_state);
+
+    remote->OnEntryShowNowChanged (id, show_now_state ? true : false);
+
+    g_free (id);
+  }
 }
 
 static void

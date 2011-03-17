@@ -58,6 +58,8 @@ public:
                 bool        __image_sensitive,
                 bool        __image_visible);
 
+  void OnShowNowChanged (bool show_now_state);
+
   // Signals
   sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
   sigc::signal<void, const char *, int> OnScroll;

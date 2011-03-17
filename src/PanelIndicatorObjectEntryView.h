@@ -43,6 +43,7 @@ public:
   void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void Activate ();
   void OnActiveChanged (bool is_active);
+  bool GetShowNow ();
 
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
