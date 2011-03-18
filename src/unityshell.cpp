@@ -844,6 +844,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
                     this);
 
   GeisAdapter::Default (screen)->Run ();
+  gestureEngine = new GestureEngine (screen);
 
   END_FUNCTION ();
 }
