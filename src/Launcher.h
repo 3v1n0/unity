@@ -338,7 +338,7 @@ private:
   void SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
   
-  void UpdateIconXForm (std::list<Launcher::RenderArg> &args);
+  void UpdateIconXForm (std::list<Launcher::RenderArg> &args, nux::Geometry geo);
 
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
