@@ -36,6 +36,7 @@
 #include "PanelView.h"
 #include "PanelHomeButton.h"
 #include "PlacesController.h"
+#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
@@ -160,7 +161,7 @@ class UnityScreen :
 
 	void
 	onRedrawRequested ();
-
+	
 	void Relayout ();
 
 	static gboolean
@@ -204,6 +205,7 @@ class UnityScreen :
 	PanelView              *panelView;
   PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;
+	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;

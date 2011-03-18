@@ -31,6 +31,7 @@
 #include "LauncherIcon.h"
 #include "LauncherController.h"
 #include "PlacesSettings.h"
+#include "GeisAdapter.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
 #include "unityshell.h"
@@ -841,6 +842,9 @@ UnityScreen::UnityScreen (CompScreen *screen) :
                     "size-changed",
                     G_CALLBACK (OnSizeChanged),
                     this);
+
+  GeisAdapter::Default (screen)->Run ();
+  gestureEngine = new GestureEngine (screen);
 
   END_FUNCTION ();
 }
