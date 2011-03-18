@@ -266,6 +266,7 @@ PlacesVScrollBar::UpdateTexture ()
   nux::CairoGraphics* cairoGraphics = NULL;
   cairo_t*            cr            = NULL;
   nux::NBitmapData*   bitmap        = NULL;
+  double              half_height   = 0.0f;
 
   // update texture of off-state of slider
   width  = m_SlideBar->GetBaseWidth ();
@@ -281,7 +282,7 @@ PlacesVScrollBar::UpdateTexture ()
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.5f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.75f);
   DrawRoundedRectangle (cr,
                         1.0f,
                         BLUR_SIZE + 1.5f,
@@ -294,11 +295,22 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_fill_preserve (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.5f);
+  cairo_set_source_rgba (cr, 0.125f, 0.125f, 0.125f, 0.75f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_off.png");
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  half_height = (double) (height + 2 * BLUR_SIZE) / 2.0f;
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height - 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height - 2.0f);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height + 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height + 2.0f);
+  cairo_stroke (cr);
+
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_off.png");
 
   bitmap = cairoGraphics->GetBitmap ();
 
@@ -326,7 +338,7 @@ PlacesVScrollBar::UpdateTexture ()
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
   DrawRoundedRectangle (cr,
                         1.0f,
                         BLUR_SIZE + 1.5f,
@@ -341,11 +353,45 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_fill_preserve (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
+
+  cairo_surface_t* tmp_surf = NULL;
+  cairo_t*         tmp_cr   = NULL;
+  tmp_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 6, 4);
+  tmp_cr = cairo_create (tmp_surf);
+  cairo_set_line_width (tmp_cr, 1.0f);
+  cairo_set_antialias (tmp_cr, CAIRO_ANTIALIAS_NONE);
+  cairo_set_operator (tmp_cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (tmp_cr);
+  cairo_set_operator (tmp_cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba (tmp_cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  cairo_paint (tmp_cr);
+  cairo_set_source_rgba (tmp_cr, 1.0f, 1.0f, 1.0f, 0.5f);
+  cairo_rectangle (tmp_cr, 0.f, 0.f, 1.0f, 1.0f);
+  cairo_rectangle (tmp_cr, 1.f, 1.f, 1.0f, 1.0f);
+  cairo_rectangle (tmp_cr, 2.f, 2.f, 1.0f, 1.0f);
+  cairo_rectangle (tmp_cr, 3.f, 3.f, 1.0f, 1.0f);
+  cairo_rectangle (tmp_cr, 4.f, 0.f, 1.0f, 1.0f);
+  cairo_rectangle (tmp_cr, 5.f, 1.f, 1.0f, 1.0f);
+  cairo_fill (tmp_cr);
+  cairo_destroy (tmp_cr);
+  cairo_set_source_surface (cr, tmp_surf, BLUR_SIZE + 1.5f, BLUR_SIZE + 1.5f);
+  cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
+  //cairo_surface_write_to_png (tmp_surf, "/tmp/tmp_surf.png");
+
   cairo_fill_preserve (cr);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_over.png");
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height - 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height - 2.0f);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height + 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height + 2.0f);
+  cairo_stroke (cr);
+
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_over.png");
 
   bitmap = cairoGraphics->GetBitmap ();
 
@@ -383,7 +429,18 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_fill_preserve (cr);
   cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
   cairo_fill (cr);
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_down.png");
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height - 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height - 2.0f);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height);
+  cairo_move_to (cr, BLUR_SIZE + 2.5f, half_height + 2.0f);
+  cairo_line_to (cr, BLUR_SIZE + 2.5f + 5.0f, half_height + 2.0f);
+  cairo_stroke (cr);
+
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_down.png");
 
   bitmap = cairoGraphics->GetBitmap ();
 
@@ -410,7 +467,7 @@ PlacesVScrollBar::UpdateTexture ()
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.75f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   DrawRoundedRectangle (cr,
                         1.0f,
                         BLUR_SIZE + 0.5f,
@@ -425,9 +482,9 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.35f);
   cairo_stroke (cr);
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track.png");
+  //cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track.png");
 
   bitmap = cairoGraphics->GetBitmap ();
 
