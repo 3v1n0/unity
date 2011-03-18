@@ -20,8 +20,9 @@
 #include "Nux/Nux.h"
 #include "PlacesVScrollBar.h"
 
-const int PLACES_VSCROLLBAR_WIDTH  = 5;
+const int PLACES_VSCROLLBAR_WIDTH  = 10;
 const int PLACES_VSCROLLBAR_HEIGHT = 10;
+const int BLUR_SIZE                =  5;
 
 PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
   : VScrollBar (NUX_FILE_LINE_PARAM)
@@ -41,12 +42,22 @@ PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
   m_SlideBar->OnMouseDrag.connect (sigc::mem_fun (this,
                                 &PlacesVScrollBar::RecvMouseDrag));
 
+  _drag    = false;
+  _entered = false;
+
   _slider[STATE_OFF]  = NULL;
   _slider[STATE_OVER] = NULL;
   _slider[STATE_DOWN] = NULL;
   _track              = NULL;
 
   _state = STATE_OFF;
+
+  m_SlideBar->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
+                              PLACES_VSCROLLBAR_HEIGHT);
+  m_Track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
+                           PLACES_VSCROLLBAR_HEIGHT);
+  SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
+                  PLACES_VSCROLLBAR_HEIGHT);
 }
 
 PlacesVScrollBar::~PlacesVScrollBar ()
@@ -71,8 +82,12 @@ PlacesVScrollBar::RecvMouseEnter (int           x,
                                   unsigned long key_flags)
 {
   g_debug ("PlacesVScrollBar::RecvMouseEnter() called");
-  _state = STATE_OVER;
-  QueueDraw ();
+  _entered = true;
+  if (!_drag)
+  {
+    _state = STATE_OVER;
+    NeedRedraw ();
+  }
 }
 
 void
@@ -82,8 +97,12 @@ PlacesVScrollBar::RecvMouseLeave (int           x,
                                   unsigned long key_flags)
 {
   g_debug ("PlacesVScrollBar::RecvMouseLeave() called");
-  _state = STATE_OFF;
-  QueueDraw ();
+  _entered = false;
+  if (!_drag)
+  {
+    _state = STATE_OFF;
+    NeedRedraw ();
+  }
 }
 
 void
@@ -94,7 +113,7 @@ PlacesVScrollBar::RecvMouseDown (int           x,
 {
   g_debug ("PlacesVScrollBar::RecvMouseDown() called");
   _state = STATE_DOWN;
-  QueueDraw ();
+  NeedRedraw ();
 }
 
 void
@@ -104,8 +123,12 @@ PlacesVScrollBar::RecvMouseUp (int           x,
                                unsigned long key_flags)
 {
   g_debug ("PlacesVScrollBar::RecvMouseUp() called");
-  _state = STATE_OVER;
-  QueueDraw ();
+  _drag = false;
+  if (_entered)
+    _state = STATE_OVER;
+  else
+    _state = STATE_OFF;
+  NeedRedraw ();
 }
 
 void
@@ -117,19 +140,14 @@ PlacesVScrollBar::RecvMouseDrag (int           x,
                                  unsigned long key_flags)
 {
   g_debug ("PlacesVScrollBar::RecvMouseDrag() called");
-  QueueDraw ();
+  _drag = true;
+  NeedRedraw ();
 }
 
 void
 PlacesVScrollBar::PreLayoutManagement ()
 {
-  if (!_slider[STATE_OFF]  ||
-      !_slider[STATE_OVER] ||
-      !_slider[STATE_DOWN] ||
-      !_track)
-  {
-    UpdateTexture ();
-  }
+  UpdateTexture ();
 
   nux::VScrollBar::PreLayoutManagement ();
 }
@@ -141,11 +159,9 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   nux::Geometry      base  = GetGeometry ();
   nux::TexCoordXForm texxform;
 
-  gfxContext.PushClippingRectangle (base);
+  //gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter().PaintBackground (gfxContext, base);
-
-  g_debug ("PlacesVScrollBar::Draw() - before");
 
   // check if textures have been computed... if they haven't, exit function
   if (!_slider[STATE_OFF])
@@ -157,14 +173,11 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   gfxContext.GetRenderStates ().SetBlend (true);
   gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  base.OffsetPosition (0, PLACES_VSCROLLBAR_HEIGHT);
-  base.OffsetSize (0, -2 * PLACES_VSCROLLBAR_HEIGHT);
-
-  g_debug ("PlacesVScrollBar::Draw() - almost ");
+  //base.OffsetPosition (0, PLACES_VSCROLLBAR_HEIGHT);
+  //base.OffsetSize (0, -2 * PLACES_VSCROLLBAR_HEIGHT);
 
   if (m_contentHeight > m_containerHeight)
   {
-    g_debug ("PlacesVScrollBar::Draw() - trying to paint");
     nux::Geometry track_geo = m_Track->GetGeometry ();
     gfxContext.QRP_1Tex (track_geo.x,
                          track_geo.y,
@@ -175,7 +188,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
                          color);
 
     nux::Geometry slider_geo = m_SlideBar->GetGeometry ();
-    gfxContext.QRP_1Tex (slider_geo.x,
+    gfxContext.QRP_1Tex (slider_geo.x - 2,
                          slider_geo.y,
                          slider_geo.width,
                          slider_geo.height,
@@ -185,7 +198,63 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   }
 
   gfxContext.GetRenderStates().SetBlend (false);
-  gfxContext.PopClippingRectangle ();
+  //gfxContext.PopClippingRectangle ();
+}
+
+void
+DrawRoundedRectangle (cairo_t* cr,
+                      double aspect,
+                      double x,
+                      double y,
+                      double cornerRadius,
+                      double width,
+                      double height)
+{
+  double radius = cornerRadius / aspect;
+
+  // top-left, right of the corner
+  cairo_move_to (cr, x + radius, y);
+
+  // top-right, left of the corner
+  cairo_line_to (cr, x + width - radius, y);
+
+  // top-right, below the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + radius,
+             radius,
+             -90.0f * G_PI / 180.0f,
+             0.0f * G_PI / 180.0f);
+
+  // bottom-right, above the corner
+  cairo_line_to (cr, x + width, y + height - radius);
+
+  // bottom-right, left of the corner
+  cairo_arc (cr,
+             x + width - radius,
+             y + height - radius,
+             radius,
+             0.0f * G_PI / 180.0f,
+             90.0f * G_PI / 180.0f);
+
+  // bottom-left, right of the corner
+  cairo_line_to (cr, x + radius, y + height);
+
+  // bottom-left, above the corner
+  cairo_arc (cr,
+             x + radius,
+             y + height - radius,
+             radius,
+             90.0f * G_PI / 180.0f,
+             180.0f * G_PI / 180.0f);
+
+  // top-left, right of the corner
+  cairo_arc (cr,
+             x + radius,
+             y + radius,
+             radius,
+             180.0f * G_PI / 180.0f,
+             270.0f * G_PI / 180.0f);
 }
 
 void
@@ -207,11 +276,18 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.0f, 0.5f);
-  cairo_rectangle (cr, 0.0f, 0.0f, (double) width, (double) height);
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_line_width (cr, 1.0f);
+  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.25f);
+  DrawRoundedRectangle (cr,
+                        1.0f,
+                        1.5f,
+                        1.5f,
+                        (double) (width - 1) / 2.0f,
+                        (double) width - 3.0f,
+                        (double) height - 3.0f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 0.0f, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
   cairo_stroke (cr);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_off.png");
 
@@ -236,11 +312,18 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 0.5f);
-  cairo_rectangle (cr, 0.0f, 0.0f, (double) width, (double) height);
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_line_width (cr, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  DrawRoundedRectangle (cr,
+                        1.0f,
+                        1.5f,
+                        1.5f,
+                        (double) (width - 1) / 2.0f,
+                        (double) width - 3.0f,
+                        (double) height - 3.0f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_over.png");
 
@@ -265,12 +348,17 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 0.0f, 1.0f, 0.0f, 0.5f);
-  cairo_rectangle (cr, 0.0f, 0.0f, (double) width, (double) height);
-  cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 0.0f, 1.0f, 0.0f, 1.0f);
-  cairo_stroke (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_line_width (cr, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  DrawRoundedRectangle (cr,
+                        1.0f,
+                        1.5f,
+                        1.5f,
+                        (double) (width - 1) / 2.0f,
+                        (double) width - 3.0f,
+                        (double) height - 3.0f);
+  cairo_fill (cr);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_down.png");
 
   bitmap = cairoGraphics->GetBitmap ();
@@ -294,12 +382,20 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 1.0f, 0.5f);
-  cairo_rectangle (cr, 0.0f, 0.0f, (double) width, (double) height);
+  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_line_width (cr, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  DrawRoundedRectangle (cr,
+                        1.0f,
+                        0.5f,
+                        0.5f,
+                        (double) width / 2.0f,
+                        (double) width - 1.0f,
+                        (double) height - 1.0f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 1.0f, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
+  //cairoGraphics->BlurCanvas (BLUR_SIZE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track.png");
 
   bitmap = cairoGraphics->GetBitmap ();

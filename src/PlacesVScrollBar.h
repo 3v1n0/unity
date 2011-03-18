@@ -78,6 +78,8 @@ class PlacesVScrollBar : public nux::VScrollBar
     void UpdateTexture ();
 
   private:
+    bool                _drag;
+    bool                _entered;
     State               _state;
     nux::BaseTexture*   _slider[STATE_LAST];
     nux::BaseTexture*   _track;
