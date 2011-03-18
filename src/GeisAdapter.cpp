@@ -101,24 +101,28 @@ GeisAdapter::GestureStart(void *cookie, GeisGestureType gesture_type, GeisGestur
   if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
+    data->id = gesture_id;
     self->drag_start.emit (data);
     g_free (data);
   }
   else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
+    data->id = gesture_id;
     self->rotate_start.emit (data);
     g_free (data);
   }
   else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
+    data->id = gesture_id;
     self->pinch_start.emit (data);
     g_free (data);
   }
   else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
+    data->id = gesture_id;
     self->tap.emit (data);
     g_free (data);
   }
@@ -132,24 +136,28 @@ GeisAdapter::GestureUpdate(void *cookie, GeisGestureType gesture_type, GeisGestu
   if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
+    data->id = gesture_id;
     self->drag_update.emit (data);
     g_free (data);
   }
   else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
+    data->id = gesture_id;
     self->rotate_update.emit (data);
     g_free (data);
   }
   else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
+    data->id = gesture_id;
     self->pinch_update.emit (data);
     g_free (data);
   }
   else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
+    data->id = gesture_id;
     self->tap.emit (data);
     g_free (data);
   }
@@ -163,24 +171,28 @@ GeisAdapter::GestureFinish(void *cookie, GeisGestureType gesture_type, GeisGestu
   if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
+    data->id = gesture_id;
     self->drag_finish.emit (data);
     g_free (data);
   }
   else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
+    data->id = gesture_id;
     self->rotate_finish.emit (data);
     g_free (data);
   }
   else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
+    data->id = gesture_id;
     self->pinch_finish.emit (data);
     g_free (data);
   }
   else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
+    data->id = gesture_id;
     self->tap.emit (data);
     g_free (data);
   }
@@ -306,7 +318,7 @@ GeisAdapter::GeisPinchData * GeisAdapter::ProcessPinchGesture (GeisSize count, G
 GeisAdapter::GeisRotateData * GeisAdapter::ProcessRotateGesture (GeisSize count, GeisGestureAttr *attrs)
 {
   GeisRotateData *result = (GeisRotateData*) g_malloc0 (sizeof (GeisRotateData));
-
+  
   int i;
   for (i = 0; i < (int) count; i++)
   {

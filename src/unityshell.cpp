@@ -655,8 +655,6 @@ UnityScreen::Relayout ()
   lCurGeom = launcherWindow->GetGeometry(); 
 
   panelWindow->EnableInputWindow(false);
-  launcherWindow->EnableInputWindow(false);
-  launcherWindow->InputWindowEnableStruts(false);
   panelWindow->InputWindowEnableStruts(false);
 
   panelView->SetMaximumWidth(rect.width);
@@ -687,8 +685,6 @@ UnityScreen::Relayout ()
 					rect.height - pCurGeom.height));
 
   panelWindow->EnableInputWindow(true);
-  launcherWindow->EnableInputWindow(true);
-  launcherWindow->InputWindowEnableStruts(true);
   panelWindow->InputWindowEnableStruts(true);
 
   needsRelayout = false;
@@ -860,12 +856,6 @@ UnityScreen::~UnityScreen ()
 gboolean UnityScreen::strutHackTimeout (gpointer data)
 {
   UnityScreen *self = (UnityScreen*) data;
-
-  if (self->launcher->GetHideMode () == Launcher::LAUNCHER_HIDE_NEVER)
-  {
-    self->launcherWindow->InputWindowEnableStruts(false);
-    self->launcherWindow->InputWindowEnableStruts(true);
-  }
 
   self->panelWindow->InputWindowEnableStruts(false);
   self->panelWindow->InputWindowEnableStruts(true);

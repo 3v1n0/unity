@@ -46,13 +46,16 @@ class GestureEngine : public sigc::trackable
     void OnPinchUpdate (GeisAdapter::GeisPinchData *data);
     void OnPinchFinish (GeisAdapter::GeisPinchData *data);
     
-    void RejectDrag ();
+    void EndDrag ();
   private:
     CompScreen *_screen;
     CompWindow *_drag_window;
     CompWindow *_pinch_window;
     CompScreen::GrabHandle _drag_grab;
     CompScreen::GrabHandle _pinch_grab;
+    
+    int _drag_id;
+    int _pinch_id;
     
     float _pinch_start_radius;
 };

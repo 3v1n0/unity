@@ -38,6 +38,7 @@ public:
     
     typedef struct _GeisTapData
     {
+      int id;
       int device_id;
       int touches;
       int timestamp;
@@ -54,6 +55,7 @@ public:
     
     typedef struct _GeisDragData
     {
+      int id;
       int device_id;
       int touches;
       int timestamp;
@@ -73,6 +75,7 @@ public:
     
     typedef struct _GeisRotateData
     {
+      int id;
       int device_id;
       int touches;
       int timestamp;
@@ -89,6 +92,7 @@ public:
     
     typedef struct _GeisPinchData
     {
+      int id;
       int device_id;
       int touches;
       int timestamp;

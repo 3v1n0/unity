@@ -1693,7 +1693,9 @@ gboolean Launcher::StrutHack (gpointer data)
 {
   Launcher *self = (Launcher *) data;
   self->_parent->InputWindowEnableStruts(false);
-  self->_parent->InputWindowEnableStruts(true);
+  
+  if (self->_hidemode == LAUNCHER_HIDE_NEVER)
+    self->_parent->InputWindowEnableStruts(true);
 
   return false;
 }

@@ -27,8 +27,11 @@
 GestureEngine::GestureEngine (CompScreen *screen)
 {
   _screen = screen;
-  _pinch_grab = 0;
+
+  _drag_id = 0;
+  _pinch_id = 0;
   _drag_grab = 0;
+  _pinch_grab = 0;
   
   GeisAdapter *adapter = GeisAdapter::Default (screen);
   
@@ -76,13 +79,14 @@ GestureEngine::OnDragStart (GeisAdapter::GeisDragData *data)
     
     if (_drag_grab)
       _screen->removeGrab (_drag_grab, NULL);
+    _drag_id = data->id;
     _drag_grab = _screen->pushGrab (_screen->invisibleCursor (), "unity");
   }
 }
 void
 GestureEngine::OnDragUpdate (GeisAdapter::GeisDragData *data)
 {
-  if (data->touches == 3 && _drag_window)
+  if (_drag_id == data->id && _drag_window)
   {
     _screen->warpPointer ((int) data->delta_x, (int) data->delta_y);
     _drag_window->move ((int) data->delta_x, (int) data->delta_y, false);
@@ -92,21 +96,22 @@ GestureEngine::OnDragUpdate (GeisAdapter::GeisDragData *data)
 void
 GestureEngine::OnDragFinish (GeisAdapter::GeisDragData *data)
 {
-  if (_drag_window)
+  if (_drag_id == data->id && _drag_window)
   {
     _drag_window->syncPosition ();
-    RejectDrag ();
+    EndDrag ();
   }
 }
 
 void
-GestureEngine::RejectDrag ()
+GestureEngine::EndDrag ()
 {
-  if (_drag_window)
+  if (_drag_id && _drag_window)
   {
     _screen->removeGrab (_drag_grab, NULL);
     _drag_grab = 0;
     _drag_window = 0;
+    _drag_id = 0;
   }
 }
 
@@ -136,6 +141,7 @@ GestureEngine::OnPinchStart (GeisAdapter::GeisPinchData *data)
     if (!_pinch_window)
       return;
     
+    _pinch_id = data->id;
     _pinch_start_radius = data->radius;
     
     if (_pinch_grab)
@@ -146,26 +152,30 @@ GestureEngine::OnPinchStart (GeisAdapter::GeisPinchData *data)
 void
 GestureEngine::OnPinchUpdate (GeisAdapter::GeisPinchData *data)
 {
+  if (data->id != _pinch_id)
+    return;
+    
   float delta_radius = data->radius - _pinch_start_radius;
   if (delta_radius > 150.0f)
   {
     _pinch_window->maximize (MAXIMIZE_STATE);
     _pinch_start_radius = data->radius;
-    RejectDrag ();
+    EndDrag ();
   }
   else if (delta_radius < -150.0f)
   {
     _pinch_window->maximize (0);
     _pinch_start_radius = data->radius;
-    RejectDrag ();
+    EndDrag ();
   }
 }
 void
 GestureEngine::OnPinchFinish (GeisAdapter::GeisPinchData *data)
 {
-  if (_pinch_window)
+  if (_pinch_id == data->id && _pinch_window)
   {
     _screen->removeGrab (_pinch_grab, NULL);
     _pinch_grab = 0;
+    _pinch_id = 0;
   }
 }
