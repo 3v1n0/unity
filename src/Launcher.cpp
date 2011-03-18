@@ -3133,7 +3133,8 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 
   //LauncherModel::iterator it;
   std::list<Launcher::RenderArg>::iterator it;
-  for(it = args.begin(); it != args.end(); it++)
+  int i;
+  for(it = args.begin(), i = 0; it != args.end(); it++, i++)
   {
 
     LauncherIcon* launcher_icon = (*it).icon;
@@ -3183,6 +3184,8 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
 
     w = geo.width + 2;
     h = _icon_size + _space_between_icons;
+    if (i == _model->Size () - 1)
+      h += 4;
     x = (*it).logical_center.x - w/2.0f;
     y = (*it).logical_center.y - h/2.0f;
     z = (*it).logical_center.z;
@@ -3550,7 +3553,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
   
   SetMousePosition (x - parent->GetGeometry ().x, y - parent->GetGeometry ().y);
   
-  if (_mouse_position.x == 0 && !_drag_edge_touching)
+  if (_mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry ().height - _icon_size - 2*_space_between_icons) && !_drag_edge_touching)
   {
     _drag_edge_touching = true;
     SetTimeStruct (&_times[TIME_DRAG_EDGE_TOUCH], &_times[TIME_DRAG_EDGE_TOUCH], ANIM_DURATION * 3);
