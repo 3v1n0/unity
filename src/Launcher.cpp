@@ -2174,6 +2174,16 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
     nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
+
+    // Set the model-view matrix
+    CHECKGL (glMatrixMode (GL_MODELVIEW));
+    CHECKGL (glLoadIdentity ());
+    CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLModelViewMatrix ().m));
+    
+    // Set the projection matrix
+    CHECKGL (glMatrixMode (GL_PROJECTION));
+    CHECKGL (glLoadIdentity ());
+    CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLProjectionMatrix ().m));
   }
 
   CHECKGL( glEnableVertexAttribArrayARB(VertexLocation) );
@@ -2443,7 +2453,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, nux::Color(0xAA000000));
 
-    UpdateIconXForm (args);
+    UpdateIconXForm (args, GetGeometry ());
     EventLogic ();
 
     /* draw launcher */
@@ -3121,9 +3131,11 @@ void Launcher::SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProject
 }
 
 
-void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args)
+/*
+    geo: The viewport geometry.
+*/
+void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args, nux::Geometry geo)
 {
-  nux::Geometry geo = GetGeometry ();
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
   nux::Matrix4 ProjectionMatrix;
@@ -3320,7 +3332,7 @@ Launcher::RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *ic
 
   std::list<Launcher::RenderArg> drag_args;
   drag_args.push_front (arg);
-  UpdateIconXForm (drag_args);
+  UpdateIconXForm (drag_args, nux::Geometry (0, 0, _icon_size, _icon_size));
   
   SetOffscreenRenderTarget (texture);
   DrawRenderArg (nux::GetGraphicsEngine (), arg, nux::Geometry (0, 0, _icon_size, _icon_size));
