@@ -22,7 +22,7 @@
 
 const int PLACES_VSCROLLBAR_WIDTH  = 10;
 const int PLACES_VSCROLLBAR_HEIGHT = 10;
-const int BLUR_SIZE                =  5;
+const int BLUR_SIZE                =  7;
 
 PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
   : VScrollBar (NUX_FILE_LINE_PARAM)
@@ -52,12 +52,12 @@ PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
 
   _state = STATE_OFF;
 
-  m_SlideBar->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
-                              PLACES_VSCROLLBAR_HEIGHT);
-  m_Track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
-                           PLACES_VSCROLLBAR_HEIGHT);
-  SetMinimumSize (PLACES_VSCROLLBAR_WIDTH,
-                  PLACES_VSCROLLBAR_HEIGHT);
+  m_SlideBar->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
+                              PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
+  m_Track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
+                           PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
+  SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
+                  PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
 }
 
 PlacesVScrollBar::~PlacesVScrollBar ()
@@ -167,7 +167,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   if (!_slider[STATE_OFF])
     return;
 
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  //texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
 
   gfxContext.GetRenderStates ().SetBlend (true);
@@ -188,7 +188,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
                          color);
 
     nux::Geometry slider_geo = m_SlideBar->GetGeometry ();
-    gfxContext.QRP_1Tex (slider_geo.x - 2,
+    gfxContext.QRP_1Tex (slider_geo.x - BLUR_SIZE - 2,
                          slider_geo.y,
                          slider_geo.width,
                          slider_geo.height,
@@ -271,21 +271,30 @@ PlacesVScrollBar::UpdateTexture ()
   width  = m_SlideBar->GetBaseWidth ();
   height = m_SlideBar->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  width  -= 2 * BLUR_SIZE;
+  height -= 2 * BLUR_SIZE;
+
   cr = cairoGraphics->GetContext ();
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.25f);
+  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.5f);
   DrawRoundedRectangle (cr,
                         1.0f,
-                        1.5f,
-                        1.5f,
+                        BLUR_SIZE + 1.5f,
+                        BLUR_SIZE + 1.5f,
                         (double) (width - 1) / 2.0f,
                         (double) width - 3.0f,
                         (double) height - 3.0f);
+  cairo_fill_preserve (cr);
+  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_fill_preserve (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba (cr, 0.25f, 0.25f, 0.25f, 0.5f);
   cairo_fill_preserve (cr);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
   cairo_stroke (cr);
@@ -307,21 +316,32 @@ PlacesVScrollBar::UpdateTexture ()
   width  = m_SlideBar->GetBaseWidth ();
   height = m_SlideBar->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  width  -= 2 * BLUR_SIZE;
+  height -= 2 * BLUR_SIZE;
+
   cr = cairoGraphics->GetContext ();
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   DrawRoundedRectangle (cr,
                         1.0f,
-                        1.5f,
-                        1.5f,
+                        BLUR_SIZE + 1.5f,
+                        BLUR_SIZE + 1.5f,
                         (double) (width - 1) / 2.0f,
                         (double) width - 3.0f,
                         (double) height - 3.0f);
+
+
+  cairo_fill_preserve (cr);
+  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_fill_preserve (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_fill_preserve (cr);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
@@ -343,21 +363,25 @@ PlacesVScrollBar::UpdateTexture ()
   width  = m_SlideBar->GetBaseWidth ();
   height = m_SlideBar->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  width  -= 2 * BLUR_SIZE;
+  height -= 2 * BLUR_SIZE;
   cr = cairoGraphics->GetContext ();
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   DrawRoundedRectangle (cr,
                         1.0f,
-                        1.5f,
-                        1.5f,
+                        BLUR_SIZE + 1.5f,
+                        BLUR_SIZE + 1.5f,
                         (double) (width - 1) / 2.0f,
                         (double) width - 3.0f,
                         (double) height - 3.0f);
+  cairo_fill_preserve (cr);
+  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
   cairo_fill (cr);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/slider_down.png");
 
@@ -377,25 +401,32 @@ PlacesVScrollBar::UpdateTexture ()
   width  = m_Track->GetBaseWidth ();
   height = m_Track->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+  width  -= 2 * BLUR_SIZE;
+  height -= 2 * BLUR_SIZE;
   cr = cairoGraphics->GetContext ();
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.75f);
   DrawRoundedRectangle (cr,
                         1.0f,
-                        0.5f,
-                        0.5f,
+                        BLUR_SIZE + 0.5f,
+                        BLUR_SIZE + 0.5f,
                         (double) width / 2.0f,
                         (double) width - 1.0f,
                         (double) height - 1.0f);
   cairo_fill_preserve (cr);
+  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_fill_preserve (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
+  cairo_fill_preserve (cr);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
   cairo_stroke (cr);
-  //cairoGraphics->BlurCanvas (BLUR_SIZE);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track.png");
 
   bitmap = cairoGraphics->GetBitmap ();
