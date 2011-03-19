@@ -1555,7 +1555,7 @@ Launcher::EnsureHiddenState ()
                                        
   bool in_must_be_open_mode = GetActionState () != ACTION_NONE || _dnd_window_is_mapped;
   
-  bool must_be_hidden = _hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER;
+  bool must_be_hidden = (_hide_on_drag_hover && _hidemode != LAUNCHER_HIDE_NEVER);
   
   bool autohide_handle_hold = _autohide_handle && !_hidden;
   

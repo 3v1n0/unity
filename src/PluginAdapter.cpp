@@ -55,7 +55,7 @@ PluginAdapter::~PluginAdapter()
 /* A No-op for now, but could be useful later */
 void
 PluginAdapter::OnScreenGrabbed ()
-{
+{    
 }
 
 void
