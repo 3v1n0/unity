@@ -120,7 +120,7 @@ void PlacesController::Show ()
   _window->PushToFront ();
   _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
-  //_window->GrabKeyboard ();
+  _window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
   
@@ -138,7 +138,7 @@ void PlacesController::Hide ()
   _window->CaptureMouseDownAnyWhereElse (false);
   _window->ForceStopFocus (1, 1);
   _window->UnGrabPointer ();
-  //_window->UnGrabKeyboard ();
+  _window->UnGrabKeyboard ();
   _window->EnableInputWindow (false);
   _visible = false;
   _fullscren_request = false;
