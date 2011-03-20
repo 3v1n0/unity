@@ -594,7 +594,7 @@ Launcher::exitKeyNavMode ()
 {
   if (!_navmod_show_launcher)
     return;
-    
+  
   UnGrabKeyboard ();
   UnGrabPointer ();
   _navmod_show_launcher = false;
