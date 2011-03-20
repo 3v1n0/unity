@@ -54,6 +54,7 @@ private:
   void CheckTiles ();
   static gboolean CheckTilesTimeout (PlacesGroupController *self);
   void TileClicked (PlacesTile *tile);
+  void MoreTileClicked (PlacesTile *tile);
 
 private:
   PlaceEntry  *_entry;
@@ -62,6 +63,7 @@ private:
   std::map<const void *, PlacesTile *>  _id_to_tile;
   guint _check_tiles_id;
   std::vector<const void *> _queue;
+  PlacesTile *_more_tile;
 };
 
 #endif // PLACES_GROUP_CONTROLLER_H
