@@ -49,6 +49,7 @@ namespace nux
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
+  _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
   SetCanFocus (false);
 }
@@ -78,6 +79,13 @@ StaticCairoText::SetTextAlignment (AlignState state)
 {
   _align = state;
   NeedRedraw ();
+}
+
+void
+StaticCairoText::SetTextVerticalAlignment (AlignState state)
+{
+  _valign = state;
+  QueueDraw ();
 }
 
 void StaticCairoText::PreLayoutManagement ()
@@ -169,10 +177,10 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   Color col = Color::Black;
   col.SetAlpha (0.0f);
   gfxContext.QRP_Color (base.x,
-      base.y,
-      base.width,
-      base.height,
-      col);
+                        base.y,
+                        base.width,
+                        base.height,
+                        col);
 
   gfxContext.QRP_1Tex (base.x,
                        base.y + ((base.height - _cached_extent_height)/2),

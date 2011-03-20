@@ -14,11 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
 
 #include "Nux/Nux.h"
+#include "Nux/ColorArea.h"
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
@@ -93,6 +95,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layered_layout->AddLayer (_results_view);
   _results_view->GetLayout ()->OnGeometryChanged.connect (sigc::mem_fun (this, &PlacesView::OnResultsViewGeometryChanged));
 
+  _empty_view = new PlacesEmptyView ();
+  _layered_layout->AddLayer (_empty_view);
+
   _layered_layout->SetActiveLayer (_home_view);
 
   SetLayout (_layout);
@@ -123,8 +128,6 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _icon_loader = IconLoader::GetDefault ();
 
   SetActiveEntry (_home_entry, 0, "");
-
-  //_layout->SetFocused (true);
 }
 
 PlacesView::~PlacesView ()
@@ -414,6 +417,8 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _result_removed_conn.disconnect ();
 
     _results_controller->Clear ();
+
+    _n_results = 0;
   }
 
   _entry = entry;
@@ -586,12 +591,32 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
+  _n_results++;
+
+  if (_n_results <= 2
+      && (g_strcmp0 (group.GetRenderer (), "UnityEmptySearchRenderer") == 0
+          || g_strcmp0 (group.GetRenderer (), "UnityEmptySectionRenderer") == 0))
+  {
+    if (_n_results == 1)
+      _empty_view->SetText (result.GetName ());
+    _layered_layout->SetActiveLayerN (2);
+  }
+
   _results_controller->AddResult (entry, group, result);
 }
 
 void
 PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
+  _n_results--;
+
+  if (_n_results <= 1
+      && (g_strcmp0 (group.GetRenderer (), "UnityEmptySearchRenderer") == 0
+          || g_strcmp0 (group.GetRenderer (), "UnityEmptySectionRenderer") == 0))
+  {
+    _layered_layout->SetActiveLayerN (1);
+  }
+
   _results_controller->RemoveResult (entry, group, result);
 }
 

@@ -153,6 +153,8 @@ add_executable (test-places
                 ${PLACES_COMMON_SOURCE}
                 ../src/PlacesController.cpp
                 ../src/PlacesController.h
+                ../src/PlacesEmptyView.cpp
+                ../src/PlacesEmptyView.h
                 ../src/PlacesHomeView.cpp
                 ../src/PlacesHomeView.h
                 ../src/PlacesSearchBar.cpp
