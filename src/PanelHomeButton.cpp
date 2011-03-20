@@ -205,6 +205,7 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
   g_variant_builder_close (&builder);
   
 

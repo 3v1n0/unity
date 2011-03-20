@@ -225,19 +225,7 @@ UnityScreen::handleCompizEvent (const char          *plugin,
                                 CompOption::Vector  &option)
 {
 
-  if (strcmp (event, "begin_viewport_switch") == 0)
-  {
-    launcher->EnableHiddenStateCheck (false);
-  }
-  if (strcmp (event, "end_viewport_switch") == 0)
-  {
-    // compute again the list of all window on the new viewport
-    // to decide if we should or not hide the launcher
-    launcher->EnableHiddenStateCheck (true);
-    launcher->CheckWindowOverLauncher ();
-  }
-
-    
+  launcher->CheckWindowOverLauncher ();
   screen->handleCompizEvent (plugin, event, option);
   
 }

@@ -30,6 +30,7 @@
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
+#include "LauncherHideMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
@@ -157,7 +158,6 @@ public:
   int GetMouseY ();
   
   void CheckWindowOverLauncher ();
-  void EnableHiddenStateCheck (bool enabled);
 
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
@@ -220,9 +220,10 @@ private:
   void OnWindowMaybeIntellihide (guint32 xid);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
+  
+  void OnMachineHideChanged (bool hide);
 
   static gboolean AnimationTimeout (gpointer data);
-  static gboolean OnAutohideTimeout (gpointer data);
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
@@ -241,10 +242,8 @@ private:
   LauncherActionState GetActionState(); 
 
   void EnsureHoverState ();
-  void EnsureHiddenState ();
   void EnsureAnimation    ();
   void EnsureScrollTimer ();
-  void SetupAutohideTimer ();
   
   bool MouseOverTopScrollArea ();
   bool MouseOverTopScrollExtrema ();
@@ -277,7 +276,6 @@ private:
 
   void SetHover         ();
   void UnsetHover       ();
-  void ForceHiddenState (bool hidden);
   void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
@@ -399,12 +397,8 @@ private:
   bool  _hidden_state_check;
   bool  _mouse_inside_launcher;
   bool  _mouse_inside_trigger;
-  bool  _mouseover_launcher_locked;
   bool  _super_show_launcher;
   bool  _navmod_show_launcher;
-  bool  _placeview_show_launcher;
-  bool  _window_over_launcher;
-  bool  _hide_on_drag_hover;
   bool  _render_drag_window;
   
   BacklightMode _backlight_mode;
@@ -461,7 +455,6 @@ private:
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  guint _autohide_handle;
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _redraw_handle;
@@ -475,9 +468,9 @@ private:
   nux::BaseWindow* _parent;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
+  LauncherHideMachine *_hide_machine;
   CompScreen* _screen;
   
-  bool              _dnd_window_is_mapped;
   std::list<char *> _drag_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;
