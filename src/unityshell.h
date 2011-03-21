@@ -150,6 +150,8 @@ class UnityScreen :
 
     private:
 
+  void SendExecuteCommand ();
+
 	static gboolean
 	initPluginActions (gpointer data);
 
@@ -222,6 +224,7 @@ class UnityScreen :
 	bool    allowWindowPaint;
 	bool    damaged;
 	bool    _key_nav_mode_requested;
+	bool    _need_send_execute_command;
 	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
 

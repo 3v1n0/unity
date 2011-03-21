@@ -201,6 +201,9 @@ UnityScreen::handleEvent (XEvent *event)
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
+        if (_need_send_execute_command)
+          SendExecuteCommand ();
+        _need_send_execute_command = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -274,10 +277,8 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
   return false;
 }
 
-bool
-UnityScreen::executeCommand (CompAction         *action,
-                             CompAction::State   state,
-                             CompOption::Vector &options)
+void
+UnityScreen::SendExecuteCommand ()
 {
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -285,6 +286,18 @@ UnityScreen::executeCommand (CompAction         *action,
                                            "/com/canonical/unity/applicationsplace/runner",
                                            0,
                                            ""));
+}
+
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  if (!screen->grabbed ())
+    SendExecuteCommand ();
+  else
+    _need_send_execute_command = true;
+    
   return false;
 }
 
@@ -738,6 +751,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     doShellRepaint (false)
 {
   _key_nav_mode_requested = false;
+  _need_send_execute_command = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
