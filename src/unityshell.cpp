@@ -228,7 +228,20 @@ UnityScreen::handleCompizEvent (const char          *plugin,
                                 CompOption::Vector  &option)
 {
 
-  launcher->CheckWindowOverLauncher ();
+  /*
+   *  don't take into account window over launcher state during
+   *  the ws switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  if (strcmp (event, "start_viewport_switch") == 0)
+    launcher->EnableCheckWindowOverLauncher (false);
+  else if (strcmp (event, "end_viewport_switch") == 0)
+  {
+    // compute again the list of all window on the new viewport
+    // to decide if we should or not hide the launcher
+    launcher->EnableCheckWindowOverLauncher (true);
+    launcher->CheckWindowOverLauncher ();
+  }
   screen->handleCompizEvent (plugin, event, option);
   
 }

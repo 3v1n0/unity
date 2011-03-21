@@ -160,6 +160,7 @@ public:
   int GetMouseY ();
   
   void CheckWindowOverLauncher ();
+  void EnableCheckWindowOverLauncher (gboolean enabled);
 
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
@@ -397,6 +398,7 @@ private:
   bool  _floating;
   bool  _hidden;
   bool  _render_drag_window;
+  bool  _check_window_over_launcher;
   
   BacklightMode _backlight_mode;
 

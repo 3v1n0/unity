@@ -351,6 +351,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
+    
+    _check_window_over_launcher = true;
 
     // set them to 1 instead of 0 to avoid :0 in case something is racy
     _bfb_width = 1;
@@ -1507,6 +1509,12 @@ Launcher::CheckIntersectWindow (CompWindow *window)
 }
 
 void
+Launcher::EnableCheckWindowOverLauncher (gboolean enabled)
+{
+    _check_window_over_launcher = enabled;
+}
+
+void
 Launcher::CheckWindowOverLauncher ()
 {
   CompWindowList window_list = _screen->windows ();
@@ -1515,6 +1523,10 @@ Launcher::CheckWindowOverLauncher ()
 
   bool any = false;
   bool active = false;
+  
+  // state has no mean right now, the check will be redone later
+  if (!_check_window_over_launcher)
+    return;
 
   window = _screen->findWindow (_screen->activeWindow ());
   if (CheckIntersectWindow (window))
