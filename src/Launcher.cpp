@@ -1476,8 +1476,7 @@ void Launcher::SetHidden (bool hidden)
 
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
-    if (!_hidden)
-      _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+    _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
     _parent->EnableInputWindow(!hidden, "launcher", false, false);
