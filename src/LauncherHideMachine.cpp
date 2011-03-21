@@ -102,6 +102,12 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       break;
     }
     
+    if (GetQuirk (LAST_ACTION_ACTIVATE))
+    {
+      should_hide = true;
+      break;
+    }
+    
     HideQuirk _mouse_over_quirk;
 
     if (GetQuirk (LAUNCHER_HIDDEN))
@@ -157,7 +163,8 @@ LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active
   else
     _quirks = (HideQuirk) (_quirks & ~quirk);
   
-  bool skip = quirk & SKIP_DELAY_QUIRK;
+  // no skipping when last action was activate
+  bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk (LAST_ACTION_ACTIVATE);
   EnsureHideState (skip);
 }
 

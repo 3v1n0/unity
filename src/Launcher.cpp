@@ -545,6 +545,7 @@ Launcher::startKeyNavMode ()
 {
   _navmod_show_launcher = true;
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
+  _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   GrabKeyboard ();
   GrabPointer ();
@@ -1388,6 +1389,7 @@ void Launcher::StartKeyShowLauncher ()
 {
     _super_show_launcher = true;
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
+    _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     QueueDraw ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
     if (_redraw_handle > 0)
@@ -1435,7 +1437,11 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   g_variant_get (data, "(iiiia{sv})", &x, &y, &trigger_width, &trigger_height, &prop_iter);
   self->_trigger_mouse_position = nux::Point2 (x, y);
   
-  self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, x == 0 && y == 0);
+  bool inside_trigger_area = x == 0 && y == 0;
+  self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
+  
+  if (inside_trigger_area)
+    self->_hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   self->_trigger_width = trigger_width;
   self->_trigger_height = trigger_height;
@@ -1459,8 +1465,8 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
 
 void Launcher::OnActionDone (GVariant *data, void *val)
 {
-    //Launcher *self = (Launcher*)val;
-    // fixme
+  Launcher *self = (Launcher*)val;
+  self->_hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, true);
 }
 
 void Launcher::SetHidden (bool hidden)
@@ -1470,6 +1476,8 @@ void Launcher::SetHidden (bool hidden)
 
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
+    if (!_hidden)
+      _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
     _parent->EnableInputWindow(!hidden, "launcher", false, false);
@@ -2851,6 +2859,8 @@ void Launcher::EventLogic ()
     launcher_icon->MouseEnter.emit ();
     launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
+    
+    _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   }
 }
 
@@ -2858,6 +2868,8 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
 {
   LauncherIcon* launcher_icon = 0;
   launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+  
+  _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
 
   if (launcher_icon)
   {
