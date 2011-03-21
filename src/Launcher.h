@@ -225,8 +225,6 @@ private:
   
   void OnPluginStateChanged ();
   
-  void OnMachineHideChanged (bool hide);
-
   static gboolean AnimationTimeout (gpointer data);
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);

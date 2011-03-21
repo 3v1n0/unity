@@ -222,7 +222,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _active_quicklist = 0;
     
     _hide_machine = new LauncherHideMachine ();
-    _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::OnMachineHideChanged));
+    _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -404,15 +404,6 @@ Launcher::~Launcher()
       _superkey_labels[i]->UnReference ();
   }
   g_bus_unown_name (_dbus_owner);
-}
-
-void
-Launcher::OnMachineHideChanged (bool value)
-{
-  if (!value)
-    _hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
-  
-  SetHidden (value);
 }
 
 /* Introspection */
@@ -1563,6 +1554,7 @@ Launcher::OnUpdateDragManagerTimeout (gpointer data)
   else
   {
     self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+    self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
   }
 
   return false;
