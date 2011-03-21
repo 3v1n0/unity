@@ -397,10 +397,6 @@ private:
   bool  _floating;
   bool  _hidden;
   bool  _hidden_state_check;
-  bool  _mouse_inside_launcher;
-  bool  _mouse_inside_trigger;
-  bool  _super_show_launcher;
-  bool  _navmod_show_launcher;
   bool  _render_drag_window;
   
   BacklightMode _backlight_mode;

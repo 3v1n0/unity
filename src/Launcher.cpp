@@ -346,10 +346,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
-    _mouse_inside_launcher  = false;
-    _mouse_inside_trigger   = false;
-    _super_show_launcher    = false;
-    _navmod_show_launcher   = false;
     _render_drag_window     = false;
     _drag_edge_touching     = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
@@ -543,7 +539,6 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
 void
 Launcher::startKeyNavMode ()
 {
-  _navmod_show_launcher = true;
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
   _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
@@ -563,7 +558,7 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
       
   // move focus to key nav mode when activated
-  if (!(self->_navmod_show_launcher))
+  if (!(self->_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE)))
     return false;
   
   if (self->_last_icon_index == -1)
@@ -598,12 +593,11 @@ Launcher::leaveKeyNavMode (bool preserve_focus)
 void
 Launcher::exitKeyNavMode ()
 {
-  if (!_navmod_show_launcher)
+  if (!_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
     return;
   
   UnGrabKeyboard ();
   UnGrabPointer ();
-  _navmod_show_launcher = false;
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
 
   _current_icon_index = -1;
@@ -630,7 +624,7 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "mouse-inside-launcher", g_variant_new_boolean (_mouse_inside_launcher));
+  g_variant_builder_add (builder, "{sv}", "mouse-over-launcher", g_variant_new_boolean (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)));
 }
 
 void Launcher::SetMousePosition (int x, int y)
@@ -669,10 +663,10 @@ float Launcher::AutohideProgress (struct timespec const &current)
 {
     
     // bfb position progress. Go from GetAutohidePositionMin() -> GetAutohidePositionMax() linearly
-    if (_mouse_inside_trigger && _hidden)
+    if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) && _hidden)
     {
-        // "dead" zone
-        if ((_trigger_mouse_position.x < 3) && (_trigger_mouse_position.y < 3))
+      
+        if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER))
             return GetAutohidePositionMin ();
         
        /* 
@@ -1294,22 +1288,20 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         float autohide_progress = AutohideProgress (current);
 
         if (_autohide_animation == FADE_ONLY
-            || (_autohide_animation == FADE_SLIDE && _mouse_inside_trigger))
+            || (_autohide_animation == FADE_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
             *launcher_alpha = 1.0f - autohide_progress;
         else
         {
             if (autohide_progress > 0.0f)
                 autohide_offset -= geo.width * autohide_progress;
         }
-        /* _mouse_inside_trigger is particular because we don't change _hidden state
-        * as we can go back and for. We have to lock the launcher manually changing
-        * the _hidden state then
+        /* MOUSE_OVER_TRIGGER is particular because we have to change a position-based
+         * move to a time-based one
         */
-        float _position_min = GetAutohidePositionMin ();
-        if (autohide_progress == _position_min && _mouse_inside_trigger)
+        if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER) && _hidden)
         {
             _times[TIME_AUTOHIDE] = current;
-            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * _position_min);
+            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * GetAutohidePositionMin ());
             SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT); // finish the animation 
         }
     }
@@ -1387,7 +1379,6 @@ gboolean Launcher::TapOnSuper ()
 
 void Launcher::StartKeyShowLauncher ()
 {
-    _super_show_launcher = true;
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     QueueDraw ();
@@ -1400,7 +1391,6 @@ void Launcher::StartKeyShowLauncher ()
 void Launcher::EndKeyShowLauncher ()
 {
 
-    _super_show_launcher = false;
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
     QueueDraw ();
 
@@ -1415,7 +1405,6 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
     
     // hack around issue in nux where leave events dont always come after a grab
-    self->_mouse_inside_trigger = false;
     self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, false);
 }
 
@@ -1437,7 +1426,7 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   g_variant_get (data, "(iiiia{sv})", &x, &y, &trigger_width, &trigger_height, &prop_iter);
   self->_trigger_mouse_position = nux::Point2 (x, y);
   
-  bool inside_trigger_area = x == 0 && y == 0;
+  bool inside_trigger_area = (x < 3 && y < 3);
   self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
   
   if (inside_trigger_area)
@@ -1452,8 +1441,7 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   {
     if (g_str_equal ("hovered", prop_key))
     {
-      self->_mouse_inside_trigger = g_variant_get_boolean (prop_value);
-      self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, self->_mouse_inside_trigger);
+      self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, g_variant_get_boolean (prop_value));
 
       self->EnsureHoverState ();
       self->EnsureScrollTimer ();    
@@ -1724,7 +1712,7 @@ Launcher::SetActionState (LauncherActionState actionstate)
     
   _launcher_action_state = actionstate;
   
-  if (_navmod_show_launcher)
+  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
     exitKeyNavMode ();
 }
 
@@ -1737,7 +1725,7 @@ Launcher::GetActionState ()
 void
 Launcher::EnsureHoverState ()
 {
-  if (_mouse_inside_launcher || _mouse_inside_trigger || 
+  if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER) || _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) || 
       QuicklistManager::Default ()->Current() || GetActionState () != ACTION_NONE)
   {
     SetHover ();
@@ -1773,7 +1761,7 @@ void Launcher::UnsetHover ()
 bool Launcher::MouseOverTopScrollArea ()
 {
   if (GetActionState () == ACTION_NONE)
-    return _mouse_inside_trigger;
+    return _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB);
   
   return _mouse_position.y < 0;
 }
@@ -2310,7 +2298,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_super_show_launcher && !TapOnSuper ())
+  if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) && !TapOnSuper ())
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2563,7 +2551,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 
 void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (_navmod_show_launcher)
+  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
     exitKeyNavMode ();
 }
 
@@ -2640,7 +2628,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
-  _mouse_inside_launcher = true;
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, true);
 
   EnsureHoverState ();
@@ -2652,7 +2639,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
-  _mouse_inside_launcher = false;
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
       
   if (GetActionState () == ACTION_NONE)
@@ -2694,7 +2680,7 @@ Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
                                      unsigned long key_state)
 {
-  if (!_super_show_launcher)
+  if (!_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
     return false;
 
   LauncherModel::iterator it;
@@ -2841,7 +2827,7 @@ void Launcher::EventLogic ()
 
   LauncherIcon* launcher_icon = 0;
 
-  if (_mouse_inside_launcher) {
+  if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)) {
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
   }  
   
@@ -3373,7 +3359,6 @@ Launcher::ProcessDndEnter ()
 void 
 Launcher::ProcessDndLeave ()
 {
-  _mouse_inside_launcher = false;
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
   _drag_edge_touching = false;
 
@@ -3474,7 +3459,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 
     // only set hover once we know our first x/y
     SetActionState (ACTION_DRAG_EXTERNAL);
-    _mouse_inside_launcher = true;
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, true);
     
     LauncherModel::iterator it;

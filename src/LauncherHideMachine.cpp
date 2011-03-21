@@ -163,9 +163,10 @@ LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active
   else
     _quirks = (HideQuirk) (_quirks & ~quirk);
   
-  // no skipping when last action was activate
+  // no skipping when last action was activate on general case
   bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk (LAST_ACTION_ACTIVATE);
   
+  // but skip on last action if we were out of the launcher/bfb
   if (GetQuirk (LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB)))
     skip = true;
   
