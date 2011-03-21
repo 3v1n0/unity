@@ -58,6 +58,10 @@ static void on_start_focus_cb                 (AtkObject *accessible);
 static void on_end_focus_cb                   (AtkObject *accessible);
 static void nux_view_accessible_focus_handler (AtkObject *accessible,
                                                gboolean focus_in);
+static void on_layout_changed_cb              (nux::View *view,
+                                               nux::Layout *layout,
+                                               AtkObject *accessible,
+                                               gboolean is_add);
 
 G_DEFINE_TYPE_WITH_CODE (NuxViewAccessible,
                          nux_view_accessible,
@@ -113,6 +117,11 @@ nux_view_accessible_initialize (AtkObject *accessible,
 
   view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb), accessible));
   view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb), accessible));
+
+  view->LayoutAdded.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
+                                         accessible, TRUE));
+  view->LayoutRemoved.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
+                                           accessible, FALSE));
 
   atk_component_add_focus_handler (ATK_COMPONENT (accessible),
                                    nux_view_accessible_focus_handler);
@@ -216,6 +225,33 @@ on_end_focus_cb (AtkObject *accessible)
 
   g_signal_emit_by_name (accessible, "focus_event", FALSE);
   atk_focus_tracker_notify (accessible);
+}
+
+static void
+on_layout_changed_cb (nux::View *view,
+                      nux::Layout *layout,
+                      AtkObject *accessible,
+                      gboolean is_add)
+{
+  const gchar *signal_name = NULL;
+  AtkObject *atk_child = NULL;
+
+  g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
+
+  atk_child = unity_a11y_get_accessible (layout);
+
+  g_debug ("[a11y][view] Layout change (%p:%s)(%p:%s)(%i)",
+           accessible, atk_object_get_name (accessible),
+           atk_child, atk_object_get_name (atk_child),
+           is_add);
+
+  if (is_add)
+    signal_name = "children-changed::add";
+  else
+    signal_name = "children-changed::remove";
+
+  /* index is always 0 as there is always just one layout */
+  g_signal_emit_by_name (accessible, signal_name, 0, atk_child, NULL);
 }
 
 /* AtkComponent.h */
