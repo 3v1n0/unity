@@ -2645,6 +2645,11 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  
+  // FIXME: Ugly workaround for nux sending mouse enter signal on super key release or keynav enter
+  if (x < 0)
+    return;
+  
   SetMousePosition (x, y);
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, true);
 
@@ -2656,11 +2661,13 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  SetMousePosition (x, y);
-  
+
   // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
-  if (x != -1)
-    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
+  if (x < 0)
+    return;
+
+  SetMousePosition (x, y);
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
         
   if (GetActionState () == ACTION_NONE)
       EnsureHoverState ();
