@@ -70,7 +70,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
     ANY_WINDOW_UNDER       = 1 << 8, 256
     ACTIVE_WINDOW_UNDER    = 1 << 9, 512
     DND_PUSHED_OFF         = 1 << 10, 1024
-    MOUSE_MOVE_POST_REVEAL = 1 << 10, 2k
+    MOUSE_MOVE_POST_REVEAL = 1 << 11, 2k
     VERTICAL_SLIDE_ACTIVE  = 1 << 12, 4k  #VISIBLE_REQUIRED
     KEY_NAV_ACTIVE         = 1 << 13, 8k  #VISIBLE_REQUIRED
     PLACES_VISIBLE         = 1 << 14, 16k #VISIBLE_REQUIRED

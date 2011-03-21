@@ -1380,7 +1380,7 @@ void Launcher::StartKeyShowLauncher ()
 
 void Launcher::EndKeyShowLauncher ()
 {
-
+    
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
     QueueDraw ();
 
@@ -1468,8 +1468,6 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-    
-     // FIXME: should in RecvMouseLeave() once tapping on keyboard (like super) doesn't trigger a MouseLeave event in nux
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
@@ -2659,8 +2657,11 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
-      
+  
+  // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
+  if (x != -1)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
+        
   if (GetActionState () == ACTION_NONE)
       EnsureHoverState ();
 
