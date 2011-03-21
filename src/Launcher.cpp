@@ -2865,7 +2865,8 @@ void Launcher::EventLogic ()
 
   LauncherIcon* launcher_icon = 0;
 
-  if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)) {
+  if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)
+      && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL)) {
     launcher_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
   }  
   
