@@ -44,8 +44,6 @@
 
 #define MAX_SUPERKEY_LABELS 10
 
-#define TRIGGER_SQR_RADIUS 9
-
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -426,8 +424,9 @@ private:
   int _icon_glow_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
+  int _postreveal_mousemove_delta_x;
+  int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
-  int _dnd_security;
   int _enter_y;
   int _last_button_press;
   

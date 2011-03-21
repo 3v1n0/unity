@@ -51,6 +51,10 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
+#define TRIGGER_SQR_RADIUS 9
+
+#define MOUSE_DEADZONE 15
+
 #define S_DBUS_NAME  "com.canonical.Unity.Launcher"
 #define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
 #define S_DBUS_IFACE "com.canonical.Unity.Launcher"
@@ -335,7 +339,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
       _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
 
     _enter_y                = 0;
-    _dnd_security           = 15;
     _launcher_drag_delta    = 0;
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
@@ -352,7 +355,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _last_button_press      = 0;
     _selection_atom         = 0;
     
-    _check_window_over_launcher = true;
+    _check_window_over_launcher   = true;
+    _postreveal_mousemove_delta_x = 0;
+    _postreveal_mousemove_delta_y = 0;
 
     // set them to 1 instead of 0 to avoid :0 in case something is racy
     _bfb_width = 1;
@@ -789,7 +794,7 @@ bool Launcher::AnimationInProgress ()
     if (TimeDelta (&current, &_times[TIME_DRAG_END]) < ANIM_DURATION_LONG)
         return true;
 
-    // hide animation (time or position)
+    // hide animation (time only), position is trigger manually on the bfb
     if (TimeDelta (&current, &_times[TIME_AUTOHIDE]) < ANIM_DURATION_SHORT)
         return true;
     
@@ -1426,6 +1431,7 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
       self->_times[TIME_AUTOHIDE] = current;
       SetTimeBack (&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * (1.0f - self->GetAutohidePositionMin ()));
       SetTimeStruct (&(self->_times[TIME_AUTOHIDE]), &(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT);
+      self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
   }
   self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
   
@@ -1462,6 +1468,12 @@ void Launcher::SetHidden (bool hidden)
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+    
+     // FIXME: should in RecvMouseLeave() once tapping on keyboard (like super) doesn't trigger a MouseLeave event in nux
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
+    _postreveal_mousemove_delta_x = 0;
+    _postreveal_mousemove_delta_y = 0;
+
     SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
     _parent->EnableInputWindow(!hidden, "launcher", false, false);
@@ -1524,7 +1536,7 @@ Launcher::CheckWindowOverLauncher ()
   bool any = false;
   bool active = false;
   
-  // state has no mean right now, the check will be redone later
+  // state has no mean right now, the check will be done again later
   if (!_check_window_over_launcher)
     return;
 
@@ -2596,8 +2608,8 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
   
-  if (nux::Abs (_dnd_delta_y) < 15 &&
-      nux::Abs (_dnd_delta_x) < 15 && 
+  if (nux::Abs (_dnd_delta_y) < MOUSE_DEADZONE &&
+      nux::Abs (_dnd_delta_x) < MOUSE_DEADZONE && 
       GetActionState () == ACTION_NONE)
       return;
 
@@ -2659,6 +2671,16 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
+    
+  _postreveal_mousemove_delta_x += dx;
+  _postreveal_mousemove_delta_y += dy;
+  
+  // check the state before changing it to avoid uneeded hide calls
+  if (!_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL) &&
+      (nux::Abs (_postreveal_mousemove_delta_x) > MOUSE_DEADZONE ||
+      nux::Abs (_postreveal_mousemove_delta_y) > MOUSE_DEADZONE))
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+  
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic ();

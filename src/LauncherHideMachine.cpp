@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -59,23 +59,24 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
 }
 
 /* == Quick Quirk Reference : please keep up to date ==
-    LAUNCHER_HIDDEN       = 1 << 0, 1
-    MOUSE_OVER_LAUNCHER   = 1 << 1, 2
-    MOUSE_OVER_BFB        = 1 << 2, 4
-    MOUSE_OVER_TRIGGER    = 1 << 3, 8
-    QUICKLIST_OPEN        = 1 << 4, 16  #VISIBLE_REQUIRED
-    EXTERNAL_DND_ACTIVE   = 1 << 5, 32  #VISIBLE_REQUIRED
-    INTERNAL_DND_ACTIVE   = 1 << 6, 64  #VISIBLE_REQUIRED
-    TRIGGER_BUTTON_DOWN   = 1 << 7, 128 #VISIBLE_REQUIRED
-    ANY_WINDOW_UNDER      = 1 << 8, 256
-    ACTIVE_WINDOW_UNDER   = 1 << 9, 512
-    DND_PUSHED_OFF        = 1 << 10, 1024
-    VERTICAL_SLIDE_ACTIVE = 1 << 12, 4k  #VISIBLE_REQUIRED
-    KEY_NAV_ACTIVE        = 1 << 13, 8k  #VISIBLE_REQUIRED
-    PLACES_VISIBLE        = 1 << 14, 16k #VISIBLE_REQUIRED
-    LAST_ACTION_ACTIVATE  = 1 << 15, 32k
-    SCALE_ACTIVE          = 1 << 16, 64k  #VISIBLE_REQUIRED
-    EXPO_ACTIVE           = 1 << 17, 128k #VISIBLE_REQUIRED
+    LAUNCHER_HIDDEN        = 1 << 0, 1
+    MOUSE_OVER_LAUNCHER    = 1 << 1, 2
+    MOUSE_OVER_BFB         = 1 << 2, 4
+    MOUSE_OVER_TRIGGER     = 1 << 3, 8
+    QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
+    EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
+    INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
+    TRIGGER_BUTTON_DOWN    = 1 << 7, 128 #VISIBLE_REQUIRED
+    ANY_WINDOW_UNDER       = 1 << 8, 256
+    ACTIVE_WINDOW_UNDER    = 1 << 9, 512
+    DND_PUSHED_OFF         = 1 << 10, 1024
+    MOUSE_MOVE_POST_REVEAL = 1 << 10, 2k
+    VERTICAL_SLIDE_ACTIVE  = 1 << 12, 4k  #VISIBLE_REQUIRED
+    KEY_NAV_ACTIVE         = 1 << 13, 8k  #VISIBLE_REQUIRED
+    PLACES_VISIBLE         = 1 << 14, 16k #VISIBLE_REQUIRED
+    LAST_ACTION_ACTIVATE   = 1 << 15, 32k
+    SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
+    EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -112,8 +113,12 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
 
     if (GetQuirk (LAUNCHER_HIDDEN))
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
-    else
-      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB);
+    else {
+      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB);
+      // mouse position over launcher is only taken into account if we move it after the revealing state
+      if (GetQuirk (MOUSE_MOVE_POST_REVEAL))
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER); 
+    }
 
     if (GetQuirk (_should_show_quirk))
     {
