@@ -44,6 +44,8 @@
 
 #define MAX_SUPERKEY_LABELS 10
 
+#define TRIGGER_SQR_RADIUS 9
+
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -309,7 +311,7 @@ private:
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
   
-  static void OnTriggerUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBUpdate (GVariant *data, gpointer user_data);
 
   static void OnActionDone (GVariant *data, void *val);
 
@@ -429,8 +431,8 @@ private:
   int _enter_y;
   int _last_button_press;
   
-  int _trigger_width;
-  int _trigger_height;
+  int _bfb_width;
+  int _bfb_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -458,7 +460,7 @@ private:
   guint _start_dragicon_handle;
 
   nux::Point2   _mouse_position;
-  nux::Point2   _trigger_mouse_position;
+  nux::Point2   _bfb_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;

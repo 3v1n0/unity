@@ -353,8 +353,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _selection_atom         = 0;
 
     // set them to 1 instead of 0 to avoid :0 in case something is racy
-    _trigger_width = 1;
-    _trigger_height = 1;
+    _bfb_width = 1;
+    _bfb_height = 1;
 
     // 0 out timers to avoid wonky startups
     int i;
@@ -376,8 +376,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                    (UBusCallback)&Launcher::OnPlaceViewHidden,
                                    this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE,
-                                   (UBusCallback)&Launcher::OnTriggerUpdate,
+    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
+                                   (UBusCallback)&Launcher::OnBFBUpdate,
                                    this);
                                    
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
@@ -666,8 +666,9 @@ float Launcher::AutohideProgress (struct timespec const &current)
     if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) && _hidden)
     {
       
-        if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER))
-            return GetAutohidePositionMin ();
+       // Be evil, but safe: position based == removing all existing time-based autohide
+       _times[TIME_AUTOHIDE].tv_sec = 0;
+       _times[TIME_AUTOHIDE].tv_nsec = 0;
         
        /* 
         * most of the mouse movement should be done by the inferior part
@@ -675,18 +676,18 @@ float Launcher::AutohideProgress (struct timespec const &current)
         */
                 
         float _max_size_on_position;
-        float position_on_border = _trigger_mouse_position.x * _trigger_height / _trigger_mouse_position.y;
+        float position_on_border = _bfb_mouse_position.x * _bfb_height / _bfb_mouse_position.y;
         
-        if (position_on_border < _trigger_width)
-            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_height, 2), 0.5);
+        if (position_on_border < _bfb_width)
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_bfb_height, 2), 0.5);
         else
         {
-            position_on_border = _trigger_mouse_position.y * _trigger_width / _trigger_mouse_position.x;
-            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_trigger_width, 2), 0.5);
+            position_on_border = _bfb_mouse_position.y * _bfb_width / _bfb_mouse_position.x;
+            _max_size_on_position = pow(pow(position_on_border, 2) + pow(_bfb_width, 2), 0.5);
         }
         
         float _position_min = GetAutohidePositionMin ();
-        return pow(pow(_trigger_mouse_position.x, 2) + pow(_trigger_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
+        return pow(pow(_bfb_mouse_position.x, 2) + pow(_bfb_mouse_position.y, 2), 0.5) / _max_size_on_position * (GetAutohidePositionMax () - _position_min) + _position_min;
     }
     else
     {
@@ -835,7 +836,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
     timer->tv_sec = current.tv_sec;
     timer->tv_nsec = current.tv_nsec;
 }
-/* Min is when you lock the trigger */
+/* Min is when you are on the trigger */
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY)
@@ -843,7 +844,7 @@ float Launcher::GetAutohidePositionMin ()
     else
         return 0.25f;
 }
-/* Max is the initial state */
+/* Max is the initial state over the bfb */
 float Launcher::GetAutohidePositionMax ()
 {
     if (_autohide_animation == SLIDE_ONLY)
@@ -1287,7 +1288,6 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         
         float autohide_progress = AutohideProgress (current);
-
         if (_autohide_animation == FADE_ONLY
             || (_autohide_animation == FADE_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
             *launcher_alpha = 1.0f - autohide_progress;
@@ -1406,19 +1406,19 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
 }
 
-void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
+void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
 {
   gchar        *prop_key;
   GVariant     *prop_value;
   GVariantIter *prop_iter;
-  int x, y, trigger_width, trigger_height;
+  int x, y, bfb_width, bfb_height;
 
   Launcher *self = (Launcher*)user_data;
   
-  g_variant_get (data, "(iiiia{sv})", &x, &y, &trigger_width, &trigger_height, &prop_iter);
-  self->_trigger_mouse_position = nux::Point2 (x, y);
+  g_variant_get (data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
+  self->_bfb_mouse_position = nux::Point2 (x, y);
   
-  bool inside_trigger_area = (x < 3 && y < 3);
+  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS);
   /*
    * if we are currently hidden and we are over the trigger, prepare the change
    * from a position-based move to a time-based one
@@ -1431,13 +1431,13 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
       struct timespec current;
       clock_gettime (CLOCK_MONOTONIC, &current);
       self->_times[TIME_AUTOHIDE] = current;
-      SetTimeBack (&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * self->GetAutohidePositionMin ());
+      SetTimeBack (&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * (1.0f - self->GetAutohidePositionMin ()));
       SetTimeStruct (&(self->_times[TIME_AUTOHIDE]), &(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT);
   }
   self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
   
-  self->_trigger_width = trigger_width;
-  self->_trigger_height = trigger_height;
+  self->_bfb_width = bfb_width;
+  self->_bfb_height = bfb_height;
     
   g_return_if_fail (prop_iter != NULL);
 
@@ -1772,9 +1772,9 @@ bool Launcher::MouseOverTopScrollArea ()
 
 bool Launcher::MouseOverTopScrollExtrema ()
 {
-  // since we are not dragging the trigger will pick up events
+  // since we are not dragging the bfb will pick up events
   if (GetActionState () == ACTION_NONE)
-    return _trigger_mouse_position.y == 0;
+    return _bfb_mouse_position.y == 0;
     
   return _mouse_position.y == 0 - _parent->GetGeometry ().y;
 }
