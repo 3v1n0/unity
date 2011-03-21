@@ -181,8 +181,10 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 
   if (_is_maximized)
   {
-    ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
-    ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
+    if (_window_buttons)
+      ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
+    if (_panel_titlebar_grab_area)
+      ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
   }
 
   if (!_is_own_window)
