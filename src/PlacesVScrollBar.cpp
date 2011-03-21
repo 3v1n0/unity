@@ -159,7 +159,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   nux::Geometry      base  = GetGeometry ();
   nux::TexCoordXForm texxform;
 
-  //gfxContext.PushClippingRectangle (base);
+  gfxContext.PushClippingRectangle (base);
 
   nux::GetPainter().PaintBackground (gfxContext, base);
 
@@ -198,63 +198,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   }
 
   gfxContext.GetRenderStates().SetBlend (false);
-  //gfxContext.PopClippingRectangle ();
-}
-
-void
-DrawRoundedRectangle (cairo_t* cr,
-                      double aspect,
-                      double x,
-                      double y,
-                      double cornerRadius,
-                      double width,
-                      double height)
-{
-  double radius = cornerRadius / aspect;
-
-  // top-left, right of the corner
-  cairo_move_to (cr, x + radius, y);
-
-  // top-right, left of the corner
-  cairo_line_to (cr, x + width - radius, y);
-
-  // top-right, below the corner
-  cairo_arc (cr,
-             x + width - radius,
-             y + radius,
-             radius,
-             -90.0f * G_PI / 180.0f,
-             0.0f * G_PI / 180.0f);
-
-  // bottom-right, above the corner
-  cairo_line_to (cr, x + width, y + height - radius);
-
-  // bottom-right, left of the corner
-  cairo_arc (cr,
-             x + width - radius,
-             y + height - radius,
-             radius,
-             0.0f * G_PI / 180.0f,
-             90.0f * G_PI / 180.0f);
-
-  // bottom-left, right of the corner
-  cairo_line_to (cr, x + radius, y + height);
-
-  // bottom-left, above the corner
-  cairo_arc (cr,
-             x + radius,
-             y + height - radius,
-             radius,
-             90.0f * G_PI / 180.0f,
-             180.0f * G_PI / 180.0f);
-
-  // top-left, right of the corner
-  cairo_arc (cr,
-             x + radius,
-             y + radius,
-             radius,
-             180.0f * G_PI / 180.0f,
-             270.0f * G_PI / 180.0f);
+  gfxContext.PopClippingRectangle ();
 }
 
 void
@@ -283,13 +227,13 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.75f);
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        BLUR_SIZE + 1.5f,
-                        BLUR_SIZE + 1.5f,
-                        (double) (width - 1) / 2.0f,
-                        (double) width - 3.0f,
-                        (double) height - 3.0f);
+  cairoGraphics->DrawRoundedRectangle (cr,
+                                       1.0f,
+                                       BLUR_SIZE + 1.5f,
+                                       BLUR_SIZE + 1.5f,
+                                       (double) (width - 1) / 2.0f,
+                                       (double) width - 3.0f,
+                                       (double) height - 3.0f);
   cairo_fill_preserve (cr);
   cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -339,14 +283,13 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.25f);
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        BLUR_SIZE + 1.5f,
-                        BLUR_SIZE + 1.5f,
-                        (double) (width - 1) / 2.0f,
-                        (double) width - 3.0f,
-                        (double) height - 3.0f);
-
+  cairoGraphics->DrawRoundedRectangle (cr,
+                                       1.0f,
+                                       BLUR_SIZE + 1.5f,
+                                       BLUR_SIZE + 1.5f,
+                                       (double) (width - 1) / 2.0f,
+                                       (double) width - 3.0f,
+                                       (double) height - 3.0f);
 
   cairo_fill_preserve (cr);
   cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
@@ -419,13 +362,13 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        BLUR_SIZE + 1.5f,
-                        BLUR_SIZE + 1.5f,
-                        (double) (width - 1) / 2.0f,
-                        (double) width - 3.0f,
-                        (double) height - 3.0f);
+  cairoGraphics->DrawRoundedRectangle (cr,
+                                       1.0f,
+                                       BLUR_SIZE + 1.5f,
+                                       BLUR_SIZE + 1.5f,
+                                       (double) (width - 1) / 2.0f,
+                                       (double) width - 3.0f,
+                                       (double) height - 3.0f);
   cairo_fill_preserve (cr);
   cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
   cairo_fill (cr);
@@ -468,13 +411,13 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
   cairo_set_line_width (cr, 1.0f);
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.5f);
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        BLUR_SIZE + 0.5f,
-                        BLUR_SIZE + 0.5f,
-                        (double) width / 2.0f,
-                        (double) width - 1.0f,
-                        (double) height - 1.0f);
+  cairoGraphics->DrawRoundedRectangle (cr,
+                                       1.0f,
+                                       BLUR_SIZE + 0.5f,
+                                       BLUR_SIZE + 0.5f,
+                                       (double) width / 2.0f,
+                                       (double) width - 1.0f,
+                                       (double) height - 1.0f);
   cairo_fill_preserve (cr);
   cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
