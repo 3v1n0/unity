@@ -74,8 +74,12 @@ public:
   sigc::signal<void, guint32> window_hidden;
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
-  sigc::signal<void, std::list<guint32> &> initiate_spread;
-  sigc::signal<void, std::list<guint32> &> terminate_spread;
+  
+  sigc::signal<void> initiate_spread;
+  sigc::signal<void> terminate_spread;
+
+  sigc::signal<void> initiate_expo;
+  sigc::signal<void> terminate_expo;
 
 private:
   Atom m_MoveResizeAtom;

@@ -143,6 +143,9 @@ LauncherHideMachine::GetMode ()
   return _mode;
 }
 
+#define SKIP_DELAY_QUIRK (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | ACTIVE_WINDOW_UNDER | \
+ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE)
+
 void
 LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active)
 {
@@ -154,7 +157,7 @@ LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active
   else
     _quirks = (HideQuirk) (_quirks & ~quirk);
   
-  bool skip = (quirk & (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | ACTIVE_WINDOW_UNDER | ANY_WINDOW_UNDER));
+  bool skip = quirk & SKIP_DELAY_QUIRK;
   EnsureHideState (skip);
 }
 

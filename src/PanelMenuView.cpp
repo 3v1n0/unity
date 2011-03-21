@@ -702,7 +702,7 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 }
 
 void
-PanelMenuView::OnSpreadInitiate (std::list <guint32> &windows)
+PanelMenuView::OnSpreadInitiate ()
 {
   /*foreach (guint32 &xid, windows)
   {
@@ -712,7 +712,7 @@ PanelMenuView::OnSpreadInitiate (std::list <guint32> &windows)
 }
 
 void
-PanelMenuView::OnSpreadTerminate (std::list <guint32> &windows)
+PanelMenuView::OnSpreadTerminate ()
 {
   /*foreach (guint32 &xid, windows)
   {

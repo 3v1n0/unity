@@ -221,6 +221,8 @@ private:
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
   
+  void OnPluginStateChanged ();
+  
   void OnMachineHideChanged (bool hide);
 
   static gboolean AnimationTimeout (gpointer data);

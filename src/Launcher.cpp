@@ -254,6 +254,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
     
     PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
     PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
+    
+    PluginAdapter::Default ()->initiate_spread.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
+    PluginAdapter::Default ()->initiate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
+    PluginAdapter::Default ()->terminate_spread.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
+    PluginAdapter::Default ()->terminate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
@@ -1589,6 +1594,13 @@ Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_hidemode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnPluginStateChanged ()
+{
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode ()
