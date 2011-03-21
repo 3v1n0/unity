@@ -158,6 +158,7 @@ public:
   int GetMouseY ();
   
   void CheckWindowOverLauncher ();
+  void EnableCheckWindowOverLauncher (gboolean enabled);
 
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
@@ -223,8 +224,6 @@ private:
   
   void OnPluginStateChanged ();
   
-  void OnMachineHideChanged (bool hide);
-
   static gboolean AnimationTimeout (gpointer data);
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
@@ -309,7 +308,7 @@ private:
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
   
-  static void OnTriggerUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBUpdate (GVariant *data, gpointer user_data);
 
   static void OnActionDone (GVariant *data, void *val);
 
@@ -396,12 +395,8 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _hidden_state_check;
-  bool  _mouse_inside_launcher;
-  bool  _mouse_inside_trigger;
-  bool  _super_show_launcher;
-  bool  _navmod_show_launcher;
   bool  _render_drag_window;
+  bool  _check_window_over_launcher;
   
   BacklightMode _backlight_mode;
 
@@ -429,13 +424,14 @@ private:
   int _icon_glow_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
+  int _postreveal_mousemove_delta_x;
+  int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
-  int _dnd_security;
   int _enter_y;
   int _last_button_press;
   
-  int _trigger_width;
-  int _trigger_height;
+  int _bfb_width;
+  int _bfb_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -463,7 +459,7 @@ private:
   guint _start_dragicon_handle;
 
   nux::Point2   _mouse_position;
-  nux::Point2   _trigger_mouse_position;
+  nux::Point2   _bfb_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
