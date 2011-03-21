@@ -110,8 +110,10 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
     
     HideQuirk _should_show_quirk;
 
-    if (GetQuirk (LAUNCHER_HIDDEN))
+    if (GetQuirk (LAUNCHER_HIDDEN)) {
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
+      printf ("MOUSE_OVER_TRIGGER declenche: %i, avec skip_delay: %i\n", GetQuirk (_should_show_quirk), skip_delay);
+    }
     else
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB);
 

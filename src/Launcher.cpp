@@ -1285,6 +1285,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     *launcher_alpha = 1.0f; 
     if (_hidemode != LAUNCHER_HIDE_NEVER)
     {
+        
         float autohide_progress = AutohideProgress (current);
 
         if (_autohide_animation == FADE_ONLY
@@ -1294,15 +1295,6 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         {
             if (autohide_progress > 0.0f)
                 autohide_offset -= geo.width * autohide_progress;
-        }
-        /* MOUSE_OVER_TRIGGER is particular because we have to change a position-based
-         * move to a time-based one
-        */
-        if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER) && _hidden)
-        {
-            _times[TIME_AUTOHIDE] = current;
-            SetTimeBack (&_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT * GetAutohidePositionMin ());
-            SetTimeStruct (&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT); // finish the animation 
         }
     }
     
@@ -1427,10 +1419,22 @@ void Launcher::OnTriggerUpdate (GVariant *data, gpointer user_data)
   self->_trigger_mouse_position = nux::Point2 (x, y);
   
   bool inside_trigger_area = (x < 3 && y < 3);
+  /*
+   * if we are currently hidden and we are over the trigger, prepare the change
+   * from a position-based move to a time-based one
+   * Fake that we were currently hiding with a corresponding position of GetAutohidePositionMin ()
+   * translated time-based so that we pick from the current position
+   */
+  if (inside_trigger_area && self->_hidden) {
+      self->_hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
+
+      struct timespec current;
+      clock_gettime (CLOCK_MONOTONIC, &current);
+      self->_times[TIME_AUTOHIDE] = current;
+      SetTimeBack (&(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT * self->GetAutohidePositionMin ());
+      SetTimeStruct (&(self->_times[TIME_AUTOHIDE]), &(self->_times[TIME_AUTOHIDE]), ANIM_DURATION_SHORT);
+  }
   self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, inside_trigger_area);
-  
-  if (inside_trigger_area)
-    self->_hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   self->_trigger_width = trigger_width;
   self->_trigger_height = trigger_height;

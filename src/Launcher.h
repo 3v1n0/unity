@@ -396,7 +396,6 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _hidden_state_check;
   bool  _render_drag_window;
   
   BacklightMode _backlight_mode;
