@@ -64,6 +64,7 @@ public:
     _place_section (0),
     _exec (NULL)
   {
+    SetDndEnabled (false, false);
   }
 
   ~Shortcut ()

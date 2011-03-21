@@ -201,6 +201,9 @@ UnityScreen::handleEvent (XEvent *event)
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
+        if (_need_send_execute_command)
+          SendExecuteCommand ();
+        _need_send_execute_command = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -225,19 +228,20 @@ UnityScreen::handleCompizEvent (const char          *plugin,
                                 CompOption::Vector  &option)
 {
 
-  if (strcmp (event, "begin_viewport_switch") == 0)
-  {
-    launcher->EnableHiddenStateCheck (false);
-  }
-  if (strcmp (event, "end_viewport_switch") == 0)
+  /*
+   *  don't take into account window over launcher state during
+   *  the ws switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  if (strcmp (event, "start_viewport_switch") == 0)
+    launcher->EnableCheckWindowOverLauncher (false);
+  else if (strcmp (event, "end_viewport_switch") == 0)
   {
     // compute again the list of all window on the new viewport
     // to decide if we should or not hide the launcher
-    launcher->EnableHiddenStateCheck (true);
+    launcher->EnableCheckWindowOverLauncher (true);
     launcher->CheckWindowOverLauncher ();
   }
-
-    
   screen->handleCompizEvent (plugin, event, option);
   
 }
@@ -286,10 +290,8 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
   return false;
 }
 
-bool
-UnityScreen::executeCommand (CompAction         *action,
-                             CompAction::State   state,
-                             CompOption::Vector &options)
+void
+UnityScreen::SendExecuteCommand ()
 {
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -297,6 +299,18 @@ UnityScreen::executeCommand (CompAction         *action,
                                            "/com/canonical/unity/applicationsplace/runner",
                                            0,
                                            ""));
+}
+
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  if (!screen->grabbed ())
+    SendExecuteCommand ();
+  else
+    _need_send_execute_command = true;
+    
   return false;
 }
 
@@ -750,6 +764,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     doShellRepaint (false)
 {
   _key_nav_mode_requested = false;
+  _need_send_execute_command = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
@@ -889,8 +904,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
-  self->launcherWindow->InputWindowEnableStruts(true);
   self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a

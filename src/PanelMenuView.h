@@ -67,8 +67,8 @@ public:
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
   void OnNameChanged (gchar* new_name, gchar* old_name);
 
-  void OnSpreadInitiate (std::list <guint32> &);
-  void OnSpreadTerminate (std::list <guint32> &);
+  void OnSpreadInitiate ();
+  void OnSpreadTerminate ();
   void OnWindowMinimized (guint32 xid);
   void OnWindowUnminimized (guint32 xid);
   void OnWindowUnmapped (guint32 xid);

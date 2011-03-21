@@ -46,6 +46,8 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ExpoActionList (0),
     m_ScaleActionList (0)
 {
+  _spread_state = false;
+  _expo_state = false;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -56,13 +58,33 @@ PluginAdapter::~PluginAdapter()
 void
 PluginAdapter::OnScreenGrabbed ()
 {
+  if (!_spread_state && screen->grabExist ("scale"))
+  {
+    _spread_state = true;
+    initiate_spread.emit ();
+  }
+  
+  if (!_expo_state && screen->grabExist ("expo"))
+  {
+    _expo_state = true;
+    initiate_expo.emit ();
+  }
 }
 
 void
 PluginAdapter::OnScreenUngrabbed ()
 {
-  if (m_SpreadedWindows.size () && !screen->grabExist ("scale"))
-    terminate_spread.emit (m_SpreadedWindows);
+  if (_spread_state && !screen->grabExist ("scale"))
+  {
+    _spread_state = false;
+    terminate_spread.emit ();
+  }
+  
+  if (_expo_state && !screen->grabExist ("expo"))
+  {
+    _expo_state = false;
+    terminate_expo.emit ();
+  }
 }
 
 void
@@ -258,7 +280,6 @@ PluginAdapter::InitiateScale (std::string *match, int state)
     }
   }
 
-  initiate_spread.emit (xids);
   m_ScaleActionList.InitiateAll (argument, state);
 }
 
@@ -267,7 +288,6 @@ PluginAdapter::TerminateScale ()
 {
   CompOption::Vector argument (0);
 
-  terminate_spread.emit (m_SpreadedWindows);
   m_SpreadedWindows.clear ();
   m_ScaleActionList.TerminateAll (argument);
 }
@@ -276,6 +296,12 @@ bool
 PluginAdapter::IsScaleActive ()
 {
   return m_Screen->grabExist ("scale");
+}
+
+bool
+PluginAdapter::IsExpoActive ()
+{
+  return m_Screen->grabExist ("expo");
 }
 
 void 

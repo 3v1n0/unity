@@ -69,6 +69,7 @@ public:
     bool IsScaleActive ();
     
     void InitiateExpo ();
+    bool IsExpoActive ();
 
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
@@ -93,6 +94,9 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
+    
+    bool _spread_state;
+    bool _expo_state;
     
     static PluginAdapter *_default;
 };
