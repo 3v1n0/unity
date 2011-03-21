@@ -22,7 +22,9 @@
  
  #include <X11/cursorfont.h>
  
-#include "GestureEngine.h"
+ #include "ubus-server.h"
+ #include "UBusMessages.h"
+ #include "GestureEngine.h"
 
 GestureEngine::GestureEngine (CompScreen *screen)
 {
@@ -58,7 +60,11 @@ GestureEngine::~GestureEngine ()
 void
 GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
 {
-
+  if (data->touches == 4)
+  {
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_send_message (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+  }
 }
 
 void
