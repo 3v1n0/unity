@@ -108,14 +108,14 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       break;
     }
     
-    HideQuirk _mouse_over_quirk;
+    HideQuirk _should_show_quirk;
 
     if (GetQuirk (LAUNCHER_HIDDEN))
-      _mouse_over_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
+      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
     else
-      _mouse_over_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB);
+      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB);
 
-    if (GetQuirk (_mouse_over_quirk))
+    if (GetQuirk (_should_show_quirk))
     {
       should_hide = false;
       break;
