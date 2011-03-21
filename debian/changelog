@@ -1,3 +1,10 @@
+unity (3.6.6-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - depends on libutouch-geis-dev to bring MT support to unity
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 21 Mar 2011 18:54:47 +0100
+
 unity (3.6.6-0ubuntu1) natty; urgency=low
 
   * New upstream release:
