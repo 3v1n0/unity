@@ -362,6 +362,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _last_button_press      = 0;
     _selection_atom         = 0;
     _drag_out_id            = 0;
+    _drag_out_delta_x       = 0.0f;
     
     _check_window_over_launcher   = true;
     _postreveal_mousemove_delta_x = 0;
@@ -489,6 +490,9 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
 void 
 Launcher::OnDragStart (GeisAdapter::GeisDragData *data)
 {
+  if (_drag_out_id && _drag_out_id == data->id)
+    return;
+    
   if (data->touches == 4)
   {
     _drag_out_id = data->id;
