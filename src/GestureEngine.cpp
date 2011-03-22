@@ -188,13 +188,13 @@ GestureEngine::OnPinchUpdate (GeisAdapter::GeisPinchData *data)
     return;
     
   float delta_radius = data->radius - _pinch_start_radius;
-  if (delta_radius > 150.0f)
+  if (delta_radius > 110.0f)
   {
     _pinch_window->maximize (MAXIMIZE_STATE);
     _pinch_start_radius = data->radius;
     EndDrag ();
   }
-  else if (delta_radius < -150.0f)
+  else if (delta_radius < -110.0f)
   {
     _pinch_window->maximize (0);
     _pinch_start_radius = data->radius;
