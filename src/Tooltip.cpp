@@ -507,7 +507,7 @@ namespace nux
 
     _draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
     CairoGraphics* dummy = new CairoGraphics (CAIRO_FORMAT_A1, 1, 1);
-    dummy->BlurCanvas (blur_coeff, surf);
+    dummy->BlurSurface (blur_coeff, surf);
     delete dummy;
     compute_mask (cr);
   }
