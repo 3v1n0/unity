@@ -52,6 +52,8 @@ public:
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
   void OnSynced ();
+
+  void SetPrimary (bool primary);
   
   PanelHomeButton * HomeButton ();
 
@@ -89,6 +91,7 @@ private:
   bool        _is_dirty;
   float       _opacity;
   bool        _needs_geo_sync;
+  bool        _is_primary;
 };
 
 #endif // PANEL_VIEW_H

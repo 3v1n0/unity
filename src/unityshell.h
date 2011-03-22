@@ -33,6 +33,8 @@
 #include "Introspectable.h"
 #include "Launcher.h"
 #include "LauncherController.h"
+#include "PanelController.h"
+#include "UScreen.h"
 #include "PanelView.h"
 #include "PanelHomeButton.h"
 #include "PlacesController.h"
@@ -204,6 +206,7 @@ class UnityScreen :
 
 	Launcher               *launcher;
 	LauncherController     *controller;
+  PanelController        *panelController;
 	PanelView              *panelView;
   PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;

@@ -46,7 +46,8 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
   _is_dirty (true),
-  _opacity (1.0f)
+  _opacity (1.0f),
+  _is_primary (false)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle ();
@@ -129,7 +130,7 @@ PanelView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle ();
 
-  if (_needs_geo_sync)
+  if (_needs_geo_sync && _is_primary)
   {
     SyncGeometries ();
     _needs_geo_sync = false;
@@ -371,6 +372,9 @@ PanelView::EndFirstMenuShow ()
 {
   std::list<Area *>::iterator it;
 
+  if (!_is_primary)
+    return;
+
   std::list<Area *> my_children = _layout->GetChildren ();
   for (it = my_children.begin(); it != my_children.end(); it++)
   {
@@ -423,6 +427,12 @@ on_sync_geometries_done_cb (GObject      *source,
     g_warning ("Error when calling SyncGeometries: %s", error->message);
     g_error_free (error);
   }
+}
+
+void
+PanelView::SetPrimary (bool primary)
+{
+  _is_primary = primary;
 }
 
 void

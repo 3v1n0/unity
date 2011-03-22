@@ -917,6 +917,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   LOGGER_START_PROCESS ("initLauncher-Panel");
+  self->panelController = new PanelController ();
   self->panelView = new PanelView ();
   self->AddChild (self->panelView);
 
@@ -936,7 +937,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
   self->panelWindow->SetLayout(layout);
   self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->panelWindow->ShowWindow(true);
+  //self->panelWindow->ShowWindow(true);
   self->panelWindow->EnableInputWindow(true, "panel", false, false);
   self->panelWindow->InputWindowEnableStruts(true);
 
