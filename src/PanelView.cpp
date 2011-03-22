@@ -131,7 +131,7 @@ PanelView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle ();
 
-  if (_needs_geo_sync && _is_primary)
+  if (_needs_geo_sync && _menu_view->GetControlsActive ())
   {
     SyncGeometries ();
     _needs_geo_sync = false;
