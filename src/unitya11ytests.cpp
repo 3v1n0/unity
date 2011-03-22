@@ -29,6 +29,8 @@
 #include "nux-layout-accessible.h"
 
 /* unity accessible objects */
+#include "Nux/Button.h"
+
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "SimpleLauncherIcon.h"
@@ -239,6 +241,68 @@ a11y_unit_test_launcher_connection (void)
   return TRUE;
 }
 
+/**
+ * This unit test checks if the launcher connection process works
+ */
+static gboolean
+a11y_unit_test_children_addition (void)
+{
+  nux::View * view[3];
+  AtkObject *view_accessible[3];
+  nux::Layout *layout[2];
+  AtkObject *layout_accessible[2];
+  gint i = 0;
+
+  /* Test setting a layout on a view  */
+  view[0] = new nux::Button ("Test");
+  view[0]->SinkReference ();
+  view_accessible[0] = unity_a11y_get_accessible (view[0]);
+
+  for (i = 0; i < 2; i++)
+    {
+      layout[i] = new nux::Layout ();
+      layout[i]->SinkReference ();
+      layout_accessible[i] = unity_a11y_get_accessible (layout[i]);
+    }
+
+  view[0]->SetLayout (layout[0]);
+  view[0]->SetLayout (layout[0]);
+
+  view[0]->UnReference ();
+  g_object_unref (view_accessible[0]);
+
+  for (i = 0; i < 2; i++)
+    {
+      layout[i]->UnReference ();
+      g_object_unref (layout_accessible[i]);
+    }
+
+  /* Test adding a view on a layout */
+  layout[0] = new nux::Layout ();
+  layout[0]->SinkReference ();
+  layout_accessible[0] = unity_a11y_get_accessible (layout[0]);
+
+  for (i = 0; i < 3; i ++)
+    {
+      view[i] = new nux::Button ("Test");
+      view[i]->SinkReference ();
+      view_accessible[i] = unity_a11y_get_accessible (view[i]);
+
+      layout[0]->AddView (view[i]);
+    }
+
+  /* when this is removed it should be notified the removal with index 1*/
+  layout[0]->RemoveChildObject (view[1]);
+  layout[0]->UnReference ();
+  for (i = 0; i < 3; i++)
+    {
+      view[i]->UnReference ();
+      g_object_unref (view_accessible [i]);
+    }
+
+  return TRUE;
+}
+
 /* public */
 
 void
@@ -259,4 +323,8 @@ unity_run_a11y_unit_tests (void)
   else
     g_debug ("[a11y] launcher connection: FAIL");
 
+  if (a11y_unit_test_children_addition ())
+    g_debug ("[a11y] children addition: SUCCESS");
+  else
+    g_debug ("[a11y] children addition: FAIL");
 }

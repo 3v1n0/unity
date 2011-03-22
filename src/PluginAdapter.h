@@ -79,9 +79,13 @@ public:
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
+    bool IsWindowOnCurrentDesktop (guint xid);
+    bool IsWindowObscured (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Activate (guint32 xid);
+    void Raise (guint32 xid);
     void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);

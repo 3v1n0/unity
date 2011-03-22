@@ -21,6 +21,7 @@
 
 #include <Nux/View.h>
 #include <map>
+#include <set>
 
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
@@ -75,8 +76,11 @@ public:
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
   void OnWindowMoved (guint32 xid);
+  
+  guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseDoubleClicked ();
   void OnMouseMiddleClicked ();
 
   void Refresh ();
@@ -120,6 +124,7 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  std::set<guint32> _maximized_set;
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;

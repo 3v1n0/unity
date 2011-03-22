@@ -344,6 +344,44 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
+    return (window->defaultViewport () == m_Screen->vp ());
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowObscured (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    CompPoint window_vp = window->defaultViewport ();
+    // Check if any windows above this one are blocking it
+    for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
+    {
+      if (sibling->defaultViewport () == window_vp
+          && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+        return true;
+    }
+  }
+
+  return false;
+}
+
 void
 PluginAdapter::Restore (guint32 xid)
 {
@@ -375,6 +413,28 @@ PluginAdapter::Close (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->close (CurrentTime);
+}
+
+void
+PluginAdapter::Activate (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->activate ();
+}
+
+void
+PluginAdapter::Raise (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->raise ();
 }
 
 void
