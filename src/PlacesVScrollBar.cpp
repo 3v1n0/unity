@@ -235,7 +235,7 @@ PlacesVScrollBar::UpdateTexture ()
                                        (double) width - 3.0f,
                                        (double) height - 3.0f);
   cairo_fill_preserve (cr);
-  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairoGraphics->BlurSurface (BLUR_SIZE - 3);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_fill_preserve (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -292,7 +292,7 @@ PlacesVScrollBar::UpdateTexture ()
                                        (double) height - 3.0f);
 
   cairo_fill_preserve (cr);
-  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairoGraphics->BlurSurface (BLUR_SIZE - 3);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_fill_preserve (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -370,7 +370,7 @@ PlacesVScrollBar::UpdateTexture ()
                                        (double) width - 3.0f,
                                        (double) height - 3.0f);
   cairo_fill_preserve (cr);
-  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairoGraphics->BlurSurface (BLUR_SIZE - 3);
   cairo_fill (cr);
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -419,7 +419,7 @@ PlacesVScrollBar::UpdateTexture ()
                                        (double) width - 1.0f,
                                        (double) height - 1.0f);
   cairo_fill_preserve (cr);
-  cairoGraphics->BlurCanvas (BLUR_SIZE - 3);
+  cairoGraphics->BlurSurface (BLUR_SIZE - 3);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_fill_preserve (cr);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
