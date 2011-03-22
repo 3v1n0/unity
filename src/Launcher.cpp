@@ -575,7 +575,7 @@ Launcher::OnDragFinish (GeisAdapter::GeisDragData *data)
 {
   if (data->id == _drag_out_id)
   { 
-    if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 10.0f)
+    if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, true);
     SetTimeStruct (&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
     _drag_out_id = 0;
