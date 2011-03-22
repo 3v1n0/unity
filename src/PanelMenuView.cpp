@@ -41,6 +41,8 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include "UScreen.h"
+
 #define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
@@ -66,7 +68,11 @@ PanelMenuView::PanelMenuView (int padding)
   _last_width (0),
   _last_height (0),
   _places_showing (false),
-  _show_now_activated (false)
+  _show_now_activated (false),
+  _we_control_active (false),
+  _monitor (0),
+  _active_xid (0),
+  _active_moved_id (0)
 {
   WindowManager *win_manager;
 
@@ -108,6 +114,7 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
   win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
+  win_manager->window_moved.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMoved));
 
   PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
 
@@ -133,6 +140,9 @@ PanelMenuView::~PanelMenuView ()
   _menu_layout->UnReference ();
   _window_buttons->UnReference ();
   _panel_titlebar_grab_area->UnReference ();
+
+  if (_active_moved_id)
+    g_source_remove (_active_moved_id);
 }
 
 void
@@ -158,6 +168,9 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 {
   long ret = TraverseInfo;
   nux::Geometry geo = GetAbsoluteGeometry ();
+
+  if (!_we_control_active)
+    return ret;
 
   if (geo.IsPointInside (ievent.e_x, ievent.e_y))
   {
@@ -252,7 +265,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_own_window || _places_showing)
+  if (_is_own_window || _places_showing || !_we_control_active)
   {
 
   }
@@ -350,7 +363,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (!_is_own_window && !_places_showing)
+  if (!_is_own_window && !_places_showing && _we_control_active)
   {
     if (_is_inside || _last_active_view || _show_now_activated)
     {
@@ -667,13 +680,19 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
   _is_maximized = false;
-
+  _active_xid = 0;
+  if (_active_moved_id)
+    g_source_remove (_active_moved_id);
+  _active_moved_id = 0;
 
   if (BAMF_IS_WINDOW (new_view))
   {
     BamfWindow *window = BAMF_WINDOW (new_view);
-    guint32 xid = bamf_window_get_xid (window);
+    guint32 xid = _active_xid = bamf_window_get_xid (window);
     _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
+    nux::Geometry geo = WindowManager::Default ()->GetWindowGeometry (xid);
+
+    _we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (_monitor).IsPointInside (geo.x, geo.y);
 
     if (_decor_map.find (xid) == _decor_map.end ())
     {
@@ -787,6 +806,32 @@ PanelMenuView::OnWindowRestored (guint xid)
 
     Refresh ();
     FullRedraw ();
+  }
+}
+
+gboolean
+PanelMenuView::UpdateActiveWindowPosition (PanelMenuView *self)
+{
+  nux::Geometry geo = WindowManager::Default ()->GetWindowGeometry (self->_active_xid);
+
+  self->_we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (self->_monitor).IsPointInside (geo.x, geo.y);
+
+  self->_active_moved_id = 0;
+
+  self->QueueDraw ();
+
+  return FALSE;
+}
+
+void
+PanelMenuView::OnWindowMoved (guint xid)
+{
+  if (_active_xid == xid)
+  {
+    if (_active_moved_id)
+      g_source_remove (_active_moved_id);
+    
+    _active_moved_id = g_timeout_add (250, (GSourceFunc)PanelMenuView::UpdateActiveWindowPosition, this);
   }
 }
 
@@ -934,3 +979,14 @@ PanelMenuView::UpdateShowNow (bool ignore)
   QueueDraw ();
 }
 
+void
+PanelMenuView::SetMonitor (int monitor)
+{
+  _monitor = monitor;
+}
+
+bool
+PanelMenuView::GetControlsActive ()
+{
+  return _we_control_active;
+}

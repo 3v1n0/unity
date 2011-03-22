@@ -388,6 +388,24 @@ PluginAdapter::Lower (guint32 xid)
     window->lower ();
 }
 
+nux::Geometry
+PluginAdapter::GetWindowGeometry (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+  nux::Geometry geo (0, 0, 1, 1);
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    geo.x = window->x ();
+    geo.y = window->y ();
+    geo.width = window->width ();
+    geo.height = window->height ();
+  }
+  return geo;
+}
+
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 {
   XClassHint   classHint;

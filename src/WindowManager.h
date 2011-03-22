@@ -61,6 +61,8 @@ public:
 
   void StartMove (guint32 id, int, int);
 
+  virtual nux::Geometry GetWindowGeometry (guint32 xid) = 0;
+
   // Signals
   sigc::signal<void, guint32> window_mapped;
   sigc::signal<void, guint32> window_unmapped;

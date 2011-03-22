@@ -55,6 +55,7 @@ public:
 
   void SetPrimary (bool primary);
   bool GetPrimary ();
+  void SetMonitor (int monitor);
   
   PanelHomeButton * GetHomeButton ();
 
@@ -93,6 +94,7 @@ private:
   float       _opacity;
   bool        _needs_geo_sync;
   bool        _is_primary;
+  int         _monitor;
 };
 
 #endif // PANEL_VIEW_H

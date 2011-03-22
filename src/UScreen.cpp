@@ -59,10 +59,10 @@ UScreen::GetPrimaryMonitor ()
   return gdk_screen_get_primary_monitor (gdk_screen_get_default ());
 }
 
-nux::Geometry
-UScreen::GetPrimaryMonitorGeometry ()
+nux::Geometry&
+UScreen::GetMonitorGeometry (int monitor)
 {
-  return _monitors[GetPrimaryMonitor ()];
+  return _monitors[monitor];
 }
 
 std::vector<nux::Geometry>&

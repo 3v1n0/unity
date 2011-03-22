@@ -47,7 +47,8 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
   _is_dirty (true),
   _opacity (1.0f),
-  _is_primary (false)
+  _is_primary (false),
+  _monitor (0)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle ();
@@ -314,6 +315,9 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
 {
   std::list<Area *>::iterator it;
 
+  if (!_menu_view->GetControlsActive ())
+    return;
+
   std::list<Area *> my_children = _layout->GetChildren ();
   for (it = my_children.begin(); it != my_children.end(); it++)
   {
@@ -372,7 +376,7 @@ PanelView::EndFirstMenuShow ()
 {
   std::list<Area *>::iterator it;
 
-  if (!_is_primary)
+  if (!_menu_view->GetControlsActive ())
     return;
 
   std::list<Area *> my_children = _layout->GetChildren ();
@@ -439,6 +443,8 @@ void
 PanelView::SetPrimary (bool primary)
 {
   _is_primary = primary;
+
+  _home_button->SetVisible (primary);
 }
 
 void
@@ -507,3 +513,11 @@ PanelView::SyncGeometries ()
 
   g_variant_unref (method_args);
 }
+
+void
+PanelView::SetMonitor (int monitor)
+{
+  _monitor = monitor;
+  _menu_view->SetMonitor (monitor);
+}
+

@@ -58,14 +58,19 @@ class WindowManagerDummy : public WindowManager
     g_debug ("%s", G_STRFUNC);
   }
 
- void Close (guint32 xid)
+  void Close (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
   }
   
- void Lower (guint32 xid)
+  void Lower (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
+  }
+
+  nux::Geometry GetWindowGeometry (guint xid)
+  {
+    return nux::Geometry (0, 0, 1, 1);
   }
 };
 

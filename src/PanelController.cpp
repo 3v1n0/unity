@@ -61,8 +61,7 @@ PanelController::StartFirstMenuShow ()
   {
     PanelView *view = ViewForWindow (*it);
 
-    if (view->GetPrimary ())
-      view->StartFirstMenuShow ();
+    view->StartFirstMenuShow ();
   }
 }
 
@@ -74,9 +73,7 @@ PanelController::EndFirstMenuShow ()
   for (it = _windows.begin (); it != eit; ++it)
   {
     PanelView *view = ViewForWindow (*it);
-
-    if (view->GetPrimary ())
-      view->EndFirstMenuShow ();
+    view->EndFirstMenuShow ();
   }
 }
 
@@ -114,13 +111,18 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
   {
     if (i < n_monitors)
     {
+      PanelView *view;
+
       (*it)->EnableInputWindow (false);
       (*it)->InputWindowEnableStruts (false);
 
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       (*it)->SetGeometry (geo);
-      ViewForWindow (*it)->SetPrimary (i == primary_monitor);
+
+      view = ViewForWindow (*it);
+      view->SetPrimary (i == primary_monitor);
+      view->SetMonitor (i);
 
       (*it)->EnableInputWindow (true);
       (*it)->InputWindowEnableStruts (true);
@@ -144,6 +146,8 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       view->SetMaximumHeight (24);
       view->GetHomeButton ()->SetButtonWidth (_bfb_size);
       view->SetOpacity (_opacity);
+      view->SetPrimary (i == primary_monitor);
+      view->SetMonitor (i);
       AddChild (view);
 
       layout->AddView (view, 1);
@@ -163,7 +167,6 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       window->SetGeometry (geo);
-      view->SetPrimary (i == primary_monitor);
 
       /* FIXME: this should not be manual, should be managed with a
          show/hide callback like in GAIL*/
