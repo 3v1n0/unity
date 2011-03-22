@@ -34,6 +34,7 @@
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
+#include "GeisAdapter.h"
  
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -188,6 +189,7 @@ private:
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_DRAG_OUT,
     TIME_TAP_SUPER,
     
     TIME_LAST
@@ -221,6 +223,10 @@ private:
   void OnWindowMaybeIntellihide (guint32 xid);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
+  
+  void OnDragStart  (GeisAdapter::GeisDragData *data);
+  void OnDragUpdate (GeisAdapter::GeisDragData *data);
+  void OnDragFinish (GeisAdapter::GeisDragData *data);
   
   void OnPluginStateChanged ();
   
@@ -263,6 +269,7 @@ private:
   float AutohideProgress             (struct timespec const &current);
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
+  float DragOutProgress              (struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
@@ -429,6 +436,8 @@ private:
   int _launcher_drag_delta;
   int _enter_y;
   int _last_button_press;
+  int _drag_out_id;
+  float _drag_out_delta_x;
   
   int _bfb_width;
   int _bfb_height;
