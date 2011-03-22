@@ -208,6 +208,8 @@ GeisAdapter::GeisTapData * GeisAdapter::ProcessTapGesture (GeisSize count, GeisG
     GeisGestureAttr attr = attrs[i];
     if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_DEVICE_ID))
       result->device_id = attr.integer_val;
+    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_CHILD_WINDOW_ID))
+      result->window = (Window) attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
@@ -245,6 +247,8 @@ GeisAdapter::GeisDragData * GeisAdapter::ProcessDragGesture (GeisSize count, Gei
     GeisGestureAttr attr = attrs[i];
     if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_DEVICE_ID))
       result->device_id = attr.integer_val;
+    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_CHILD_WINDOW_ID))
+      result->window = (Window) attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
@@ -288,6 +292,8 @@ GeisAdapter::GeisPinchData * GeisAdapter::ProcessPinchGesture (GeisSize count, G
     GeisGestureAttr attr = attrs[i];
     if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_DEVICE_ID))
       result->device_id = attr.integer_val;
+    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_CHILD_WINDOW_ID))
+      result->window = (Window) attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
@@ -325,6 +331,8 @@ GeisAdapter::GeisRotateData * GeisAdapter::ProcessRotateGesture (GeisSize count,
     GeisGestureAttr attr = attrs[i];
     if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_DEVICE_ID))
       result->device_id = attr.integer_val;
+    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_CHILD_WINDOW_ID))
+      result->window = (Window) attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
       result->timestamp = attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))

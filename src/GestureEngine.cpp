@@ -67,12 +67,38 @@ GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
   }
 }
 
+CompWindow *
+GestureEngine::FindCompWindow (Window window)
+{
+  CompWindow *result = _screen->findWindow (window);
+  
+  while (!result)
+  {
+    Window parent, root;
+    Window *children;
+    unsigned int nchildren;
+    
+    XQueryTree (_screen->dpy (), window, &root, &parent, &children, &nchildren);
+    
+    if (nchildren)
+      XFree (children);
+    
+    if (parent == root)
+      break;
+    
+    window = parent;
+    result = _screen->findWindow (window);
+  }
+  
+  return result;
+}
+
 void
 GestureEngine::OnDragStart (GeisAdapter::GeisDragData *data)
 {
   if (data->touches == 3)
   {
-    _drag_window = _screen->findWindow (_screen->activeWindow ());
+    _drag_window = FindCompWindow (data->window);
     
     if (!_drag_window)
       return;
@@ -142,7 +168,7 @@ GestureEngine::OnPinchStart (GeisAdapter::GeisPinchData *data)
 {
   if (data->touches == 3)
   {
-    _pinch_window = _screen->findWindow (_screen->activeWindow ());
+    _pinch_window = FindCompWindow (data->window);
     
     if (!_pinch_window)
       return;
