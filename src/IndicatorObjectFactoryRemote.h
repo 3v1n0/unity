@@ -46,6 +46,7 @@ public:
   void Sync (GVariant *args);
   void OnEntryActivateRequestReceived (const char *entry_id);
   void Reconnect ();
+  void OnEntryShowNowChanged (const char *entry_id, bool show_now_state);
 
   void AddProperties (GVariantBuilder *builder);
 

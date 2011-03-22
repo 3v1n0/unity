@@ -21,6 +21,7 @@
 
 #include <Nux/View.h>
 #include <map>
+#include <set>
 
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
@@ -67,15 +68,18 @@ public:
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
   void OnNameChanged (gchar* new_name, gchar* old_name);
 
-  void OnSpreadInitiate (std::list <guint32> &);
-  void OnSpreadTerminate (std::list <guint32> &);
+  void OnSpreadInitiate ();
+  void OnSpreadTerminate ();
   void OnWindowMinimized (guint32 xid);
   void OnWindowUnminimized (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
+  
+  guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseDoubleClicked ();
   void OnMouseMiddleClicked ();
 
   void Refresh ();
@@ -93,6 +97,9 @@ protected:
 
 private:
   gchar * GetActiveViewName ();
+  static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
+  static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
+  void UpdateShowNow (bool ignore);
   
 private:
   BamfMatcher* _matcher;
@@ -113,11 +120,15 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  std::set<guint32> _maximized_set;
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;
 
   int _last_width;
   int _last_height;
+
+  bool _places_showing;
+  bool _show_now_activated;
 };
 #endif

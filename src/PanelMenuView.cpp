@@ -38,6 +38,9 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
@@ -61,7 +64,9 @@ PanelMenuView::PanelMenuView (int padding)
   _is_own_window (false),
   _last_active_view (NULL),
   _last_width (0),
-  _last_height (0)
+  _last_height (0),
+  _places_showing (false),
+  _show_now_activated (false)
 {
   WindowManager *win_manager;
 
@@ -90,7 +95,7 @@ PanelMenuView::PanelMenuView (int padding)
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
-  _panel_titlebar_grab_area->mouse_doubleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
+  _panel_titlebar_grab_area->mouse_doubleleftclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
   _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
@@ -105,6 +110,15 @@ PanelMenuView::PanelMenuView (int padding)
   win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
 
   PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+
+  // Register for all the interesting events
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewShown,
+                                 this);
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                 (UBusCallback)PanelMenuView::OnPlaceViewHidden,
+                                 this);
 
   Refresh ();
 }
@@ -164,12 +178,15 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
       FullRedraw ();
     }
   }
-
+  
   if (_is_maximized)
   {
-    ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
-    ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
+    if (_window_buttons)
+      ret = _window_buttons->ProcessEvent (ievent, ret, ProcessEventInfo);
+    if (_panel_titlebar_grab_area)
+      ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
   }
+  ret = _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
 
   if (!_is_own_window)
     ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
@@ -236,18 +253,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::ColorLayer layer (nux::Color (0x00000000), true, rop);
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), &layer);
 
-  if (_is_own_window)
+  if (_is_own_window || _places_showing)
   {
 
   }
   else if (_is_maximized)
   {
-    if (!_is_inside && !_last_active_view)
+    if (!_is_inside && !_last_active_view && !_show_now_activated)
       gPainter.PushDrawLayer (GfxContext, GetGeometry (), _title_layer);
   }
   else
   {
-    if ((_is_inside || _last_active_view) && _entries.size ())
+    if ((_is_inside || _last_active_view || _show_now_activated) && _entries.size ())
     {
       if (_gradient_texture == NULL)
       {
@@ -334,9 +351,9 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (geo);
 
-  if (!_is_own_window)
+  if (!_is_own_window && !_places_showing)
   {
-    if (_is_inside || _last_active_view)
+    if (_is_inside || _last_active_view || _show_now_activated)
     {
       _layout->ProcessDraw (GfxContext, force_draw);
     }
@@ -590,6 +607,7 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
   view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
   view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
+  proxy->show_now_changed.connect (sigc::mem_fun (this, &PanelMenuView::UpdateShowNow));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
@@ -666,7 +684,10 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
       // make sure it's undecorated just in case it slipped by us earlier 
       // (I'm looking at you, Chromium!)
       if (_is_maximized)
+      {
         WindowManager::Default ()->Undecorate (xid);
+        _maximized_set.insert (xid);
+      }
     }
 
     // first see if we need to remove and old callback
@@ -687,7 +708,7 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
 }
 
 void
-PanelMenuView::OnSpreadInitiate (std::list <guint32> &windows)
+PanelMenuView::OnSpreadInitiate ()
 {
   /*foreach (guint32 &xid, windows)
   {
@@ -697,7 +718,7 @@ PanelMenuView::OnSpreadInitiate (std::list <guint32> &windows)
 }
 
 void
-PanelMenuView::OnSpreadTerminate (std::list <guint32> &windows)
+PanelMenuView::OnSpreadTerminate ()
 {
   /*foreach (guint32 &xid, windows)
   {
@@ -711,7 +732,10 @@ PanelMenuView::OnWindowMinimized (guint32 xid)
 {
   
   if (WindowManager::Default ()->IsWindowMaximized (xid))
+  {
     WindowManager::Default ()->Decorate (xid);
+    _maximized_set.erase (xid);
+  }
 }
 
 void
@@ -720,6 +744,7 @@ PanelMenuView::OnWindowUnminimized (guint32 xid)
   if (WindowManager::Default ()->IsWindowMaximized (xid))
   {
     WindowManager::Default ()->Undecorate (xid);
+    _maximized_set.insert (xid);
   }
 }
 
@@ -727,6 +752,7 @@ void
 PanelMenuView::OnWindowUnmapped (guint32 xid)
 {
   _decor_map.erase (xid);
+  _maximized_set.erase (xid);
 }
 
 void
@@ -737,20 +763,22 @@ PanelMenuView::OnWindowMaximized (guint xid)
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
-    // We could probably just check if a key is available, but who wants to do that
-    if (_decor_map.find (xid) == _decor_map.end ())
-      _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
-  
-    if (_decor_map[xid])
-    {
-      WindowManager::Default ()->Undecorate (xid);
-    }
-
     _is_maximized = true;
-
-    Refresh ();
-    FullRedraw ();
   }
+  
+  // We could probably just check if a key is available, but who wants to do that
+  if (_decor_map.find (xid) == _decor_map.end ())
+    _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
+  
+  if (_decor_map[xid])
+  {
+    WindowManager::Default ()->Undecorate (xid);
+  }
+
+  _maximized_set.insert (xid);
+
+  Refresh ();
+  FullRedraw ();
 }
 
 void
@@ -762,15 +790,17 @@ PanelMenuView::OnWindowRestored (guint xid)
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     _is_maximized = false;
-
-    if (_decor_map[xid])
-    {
-      WindowManager::Default ()->Decorate (xid);
-    }
-
-    Refresh ();
-    FullRedraw ();
   }
+
+  if (_decor_map[xid])
+  {
+    WindowManager::Default ()->Decorate (xid);
+  }
+  
+  _maximized_set.erase (xid);
+
+  Refresh ();
+  FullRedraw ();
 }
 
 void
@@ -809,35 +839,59 @@ PanelMenuView::OnWindowButtonsRedraw ()
   FullRedraw ();
 }
 
+guint32
+PanelMenuView::GetMaximizedWindow ()
+{
+  guint32 window_xid = 0;
+  // Find the front-most of the maximized windows we are controlling
+  foreach (guint32 xid, _maximized_set)
+  {
+    // We can safely assume only the front-most is visible
+    if (WindowManager::Default ()->IsWindowOnCurrentDesktop (xid)
+        && !WindowManager::Default ()->IsWindowObscured (xid))
+    {
+      window_xid = xid;
+      break;
+    }
+  }
+  return window_xid;
+}
+
 void
 PanelMenuView::OnMaximizedGrab (int x, int y)
 {
-  if (_is_maximized)
+  guint32 window_xid = GetMaximizedWindow ();
+  
+  if (window_xid != 0)
   {
-    BamfWindow *window;
+    WindowManager::Default ()->Activate (window_xid);
+    _is_inside = false;
+    _is_grabbed = true;
+    Refresh ();
+    FullRedraw ();
+    WindowManager::Default ()->StartMove (window_xid, x, y);
+  }
+}
 
-    window = bamf_matcher_get_active_window (_matcher);
-    if (BAMF_IS_WINDOW (window))
-    {
-      _is_inside = false;
-      _is_grabbed = true;
-      Refresh ();
-      FullRedraw ();
-      WindowManager::Default ()->StartMove (bamf_window_get_xid (window), x, y);
-    }
+void
+PanelMenuView::OnMouseDoubleClicked ()
+{
+  guint32 window_xid = GetMaximizedWindow ();
+  
+  if (window_xid != 0)
+  {
+    WindowManager::Default ()->Restore (window_xid);
   }
 }
 
 void
 PanelMenuView::OnMouseMiddleClicked ()
 {
-  if (_is_maximized)
+  guint32 window_xid = GetMaximizedWindow ();
+  
+  if (window_xid != 0)
   {
-    BamfWindow *window;
-
-    window = bamf_matcher_get_active_window (_matcher);
-    if (BAMF_IS_WINDOW (window))
-      WindowManager::Default ()->Lower (bamf_window_get_xid (window));
+    WindowManager::Default ()->Lower (window_xid);
   } 
 }
 
@@ -886,3 +940,34 @@ on_name_changed (BamfView*      bamf_view,
 {
   self->OnNameChanged (new_name, old_name);
 }
+
+void
+PanelMenuView::OnPlaceViewShown (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = true;
+  self->QueueDraw ();
+}
+
+void
+PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
+{
+  self->_places_showing = false;
+  self->QueueDraw ();
+}
+
+void
+PanelMenuView::UpdateShowNow (bool ignore)
+{
+  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
+  _show_now_activated = false;
+  
+  for (it = _entries.begin(); it != _entries.end(); it++)
+  {
+    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
+    if (view->GetShowNow ())
+      _show_now_activated = true;
+
+  }
+  QueueDraw ();
+}
+

@@ -323,7 +323,8 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  sigClick.emit (this);
+  if (nux::GetEventButton (button_flags) == 1)
+    sigClick.emit (this);
   QueueDraw ();
 }
 

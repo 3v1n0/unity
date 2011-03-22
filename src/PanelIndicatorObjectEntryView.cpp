@@ -126,9 +126,10 @@ void
 PanelIndicatorObjectEntryView::Refresh ()
 {
   GdkPixbuf            *pixbuf = _proxy->GetPixbuf ();
-  char                 *label = fix_string (_proxy->GetLabel ());
+  char                 *label = NULL;
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
+  PangoAttrList        *attrs = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
   char                 *font_description = NULL;
@@ -146,6 +147,25 @@ PanelIndicatorObjectEntryView::Refresh ()
   PanelStyle *style = PanelStyle::GetDefault ();
   nux::Color  textcol = style->GetTextColor ();
   nux::Color  textshadowcol = style->GetTextShadow ();
+
+  if (_proxy->show_now)
+  {
+    if (!pango_parse_markup (_proxy->GetLabel (),
+                             -1,
+                             '_',
+                             &attrs,
+                             &label,
+                             NULL,
+                             NULL))
+    {
+      label = g_strdup (_proxy->GetLabel ());
+      g_debug ("failed");
+    }
+  }
+  else
+  {
+    label = fix_string (_proxy->GetLabel ());
+  }
 
   // First lets figure out our size
   if (pixbuf && _proxy->icon_visible)
@@ -169,6 +189,12 @@ PanelIndicatorObjectEntryView::Refresh ()
     pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
 
     layout = pango_cairo_create_layout (cr);
+    if (attrs)
+    {
+      pango_layout_set_attributes (layout, attrs);
+      pango_attr_list_unref (attrs);
+    }
+
     pango_layout_set_font_description (layout, desc);
     pango_layout_set_text (layout, label, -1);
     
@@ -394,4 +420,10 @@ PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
 
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
+}
+
+bool
+PanelIndicatorObjectEntryView::GetShowNow ()
+{
+  return _proxy ? _proxy->show_now : false;
 }

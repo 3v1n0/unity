@@ -39,6 +39,7 @@
 
 #include "PlacesHomeView.h"
 
+#include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
 
@@ -63,6 +64,7 @@ public:
     _place_section (0),
     _exec (NULL)
   {
+    SetDndEnabled (false, false);
   }
 
   ~Shortcut ()
@@ -91,10 +93,12 @@ PlacesHomeView::PlacesHomeView ()
   _layout->SetChildrenSize (style->GetHomeTileWidth (), style->GetHomeTileHeight ());
   _layout->EnablePartialVisibility (false);
   _layout->SetHeightMatchContent (true);
-  _layout->SetVerticalExternalMargin (16);
+  _layout->SetVerticalExternalMargin (32);
   _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+  _layout->SetMinMaxSize ((style->GetHomeTileWidth () * 4) + (32 * 5),
+                          (style->GetHomeTileHeight () * 2) + (32 *3));
 
   _client = gconf_client_get_default ();
   gconf_client_add_dir (_client,
@@ -125,9 +129,11 @@ PlacesHomeView::PlacesHomeView ()
                           this,
                           NULL, NULL);
 
-  Refresh ();
-
   expanded.connect (sigc::mem_fun (this, &PlacesHomeView::Refresh));
+
+  SetExpanded (PlacesSettings::GetDefault ()->GetHomeExpanded ());
+  if (GetExpanded ())
+    Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
@@ -150,13 +156,12 @@ PlacesHomeView::Refresh ()
   PlacesStyle *style = PlacesStyle::GetDefault ();
   Shortcut   *shortcut = NULL;
   gchar      *markup = NULL;
-  const char *temp = "<big><b>%s</b></big>";
+  const char *temp = "<big>%s</big>";
   int         icon_size = style->GetHomeTileIconSize ();
 
-  GetCompositionLayout ()->SetVerticalExternalMargin (4);
-  GetCompositionLayout ()->SetHorizontalExternalMargin (18);
-
   _layout->Clear ();
+
+  PlacesSettings::GetDefault ()->SetHomeExpanded (GetExpanded ());
 
   if (!GetExpanded ())
     return;
@@ -168,7 +173,7 @@ PlacesHomeView::Refresh ()
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 4;
+  shortcut->_place_section = 9;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
@@ -180,7 +185,7 @@ PlacesHomeView::Refresh ()
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 3;
+  shortcut->_place_section = 8;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
@@ -246,7 +251,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   gchar           *real_exec;
   GDesktopAppInfo *info;
 
-  markup = g_strdup_printf ("<big><b>%s</b></big>", name);
+  markup = g_strdup_printf ("<big>%s</big>", name);
 
   // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
   // best of times but the following is the closest best-guess without having to do D-Bus

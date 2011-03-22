@@ -36,6 +36,7 @@
 #include "PanelView.h"
 #include "PanelHomeButton.h"
 #include "PlacesController.h"
+#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
@@ -95,6 +96,9 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+    void handleCompizEvent (const char          *plugin,
+                            const char          *event,
+                            CompOption::Vector  &option);
 	
 	bool
 	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
@@ -146,6 +150,8 @@ class UnityScreen :
 
     private:
 
+  void SendExecuteCommand ();
+
 	static gboolean
 	initPluginActions (gpointer data);
 
@@ -157,7 +163,7 @@ class UnityScreen :
 
 	void
 	onRedrawRequested ();
-
+	
 	void Relayout ();
 
 	static gboolean
@@ -201,6 +207,7 @@ class UnityScreen :
 	PanelView              *panelView;
   PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;
+	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;
@@ -216,6 +223,9 @@ class UnityScreen :
 	bool	  doShellRepaint;
 	bool    allowWindowPaint;
 	bool    damaged;
+	bool    _key_nav_mode_requested;
+	bool    _need_send_execute_command;
+	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;

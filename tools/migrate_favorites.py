@@ -174,12 +174,16 @@ if migration_level < '3.2.0':
     migrating_chapter_log("unity mutter", apps_list, unity_mutter_favorites_list, log_file)
     for candidate in unity_mutter_favorites_list:
         candidate_path = '/desktop/unity/launcher/favorites/%s' % candidate
-        if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
-            launcher_location = client.get_string('%s/desktop_file' % candidate_path)
-            position = client.get_string('%s/desktop_file' % candidate_path)
-            if launcher_location:
-                # try to preserve the order, will be done in a second loop
-                unity_mutter_launcher_ordered[position] = launcher_location
+        try:
+            if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
+                launcher_location = client.get_string('%s/desktop_file' % candidate_path)
+                position = client.get_string('%s/desktop_file' % candidate_path)
+                if launcher_location:
+                    # try to preserve the order, will be done in a second loop
+                    unity_mutter_launcher_ordered[position] = launcher_location
+        except GError, e:
+            log("Dont migrate %s: %s" % (candidate_path, e), log_file)
+            continue
     for launcher_location in unity_mutter_launcher_ordered:    
         apps_list = register_new_app(launcher_location, apps_list, log_file)
 
@@ -189,14 +193,18 @@ if migration_level < '3.2.0':
     migrating_chapter_log("netbook-launcher favorites", apps_list, lucid_favorites_list, log_file)
     for candidate in lucid_favorites_list:
         candidate_path = '/apps/netbook-launcher/favorites/%s' % candidate
-        if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
-            try:
-                launcher_location = client.get_string('%s/desktop_file' % candidate_path)
-            except GError, e:
-                log("Dont migrate %s: %s" % (candidate_path, e), log_file)
-                continue
-            if launcher_location:
-                apps_list = register_new_app(launcher_location, apps_list, log_file)
+        try:
+            if (candidate and client.get_string('%s/type' % candidate_path) == 'application'):
+                try:
+                    launcher_location = client.get_string('%s/desktop_file' % candidate_path)
+                except GError, e:
+                    log("Dont migrate %s: %s" % (candidate_path, e), log_file)
+                    continue
+                if launcher_location:
+                    apps_list = register_new_app(launcher_location, apps_list, log_file)
+        except GError, e:
+            log("Dont migrate %s: %s" % (candidate_path, e), log_file)
+            continue
 
     # get GNOME panel favorites and convert them
     panel_list = client.get_list('/apps/panel/general/toplevel_id_list', gconf.VALUE_STRING)

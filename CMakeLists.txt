@@ -12,7 +12,7 @@ subdirs (services tests tools doc)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 6)
-set (UNITY_MICRO 4)
+set (UNITY_MICRO 6)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
@@ -32,8 +32,8 @@ add_custom_target (distcheck
     && mkdir ${ARCHIVE_NAME}/build
     && cd ${ARCHIVE_NAME}/build
     && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-    && make
-    && make install
+    && make -j8
+    && make -j8 install
     && make check
     )
 add_dependencies(distcheck dist)
@@ -94,7 +94,7 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # src (Compiz Plugin)
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk;unity-misc;gconf-2.0")
+set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk;unity-misc;gconf-2.0;libutouch-geis")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)

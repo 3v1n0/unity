@@ -170,7 +170,7 @@ PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsig
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void 
@@ -190,7 +190,7 @@ PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsig
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void 
@@ -205,11 +205,12 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
   g_variant_builder_close (&builder);
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void

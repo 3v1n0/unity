@@ -51,6 +51,10 @@ public:
   void SetExpanded (bool is_expanded);
   bool GetExpanded ();
 
+  int  GetHeaderHeight ();
+
+  void SetDrawSeparator (bool draw_it);
+
   sigc::signal<void> expanded;
 
 private:
@@ -77,7 +81,7 @@ private:
   IconTexture          *_icon;
   nux::StaticCairoText *_name;
   nux::StaticCairoText *_expand_label;
-  nux::TextureArea     *_expand_icon;
+  IconTexture          *_expand_icon;
 
   guint32 _idle_id;
 
@@ -85,6 +89,7 @@ private:
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
   char *_cached_name;
+  bool  _draw_sep;
 };
 
 #endif
