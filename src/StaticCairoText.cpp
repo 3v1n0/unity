@@ -414,9 +414,15 @@ void StaticCairoText::DrawText (cairo_t*   cr,
                                         (float) dpi / (float) PANGO_SCALE);
   }
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
+
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  //cairo_paint (cr);
   cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
 
   pango_layout_context_changed (layout);
