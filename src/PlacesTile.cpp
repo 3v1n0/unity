@@ -94,7 +94,14 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   // draw tiled background
   // set up clip path
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  DrawRoundedRectangle (cr, 1.0, 0, 0, 5.0, highlight_geo.width + PADDING, highlight_geo.height + PADDING);
+  cairo_graphics->DrawRoundedRectangle (cr,
+                                        1.0,
+                                        0,
+                                        0,
+                                        5.0,
+                                        highlight_geo.width + PADDING,
+                                        highlight_geo.height + PADDING,
+                                        true);
   cairo_clip (cr);
 
   int              w, h;
@@ -121,7 +128,14 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   // draw the outline
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
-  DrawRoundedRectangle (cr, 1.0, 0, 0, 5.0, highlight_geo.width + PADDING, highlight_geo.height + PADDING);
+  cairo_graphics->DrawRoundedRectangle (cr,
+                                        1.0,
+                                        0,
+                                        0,
+                                        5.0,
+                                        highlight_geo.width + PADDING,
+                                        highlight_geo.height + PADDING,
+                                        true);
   cairo_set_source_rgba (cr, 0.66, 0.66, 0.66, 1.0);
   cairo_set_line_width (cr, 1.0);
   cairo_stroke (cr);
@@ -191,72 +205,6 @@ PlacesTile::UpdateBackground ()
                                           nux::Color::White,
                                           true,
                                           rop);
-}
-
-static inline double
-_align (double val)
-{
-  double fract = val - (int) val;
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
-  else
-    return val;
-}
-
-void
-PlacesTile::DrawRoundedRectangle (cairo_t* cr,
-                                  double   aspect,
-                                  double   x,
-                                  double   y,
-                                  double   cornerRadius,
-                                  double   width,
-                                  double   height)
-{
-  double radius = cornerRadius / aspect;
-
-  // top-left, right of the corner
-  cairo_move_to (cr, _align (x + radius), _align (y));
-
-  // top-right, left of the corner
-  cairo_line_to (cr, _align (x + width - radius), _align (y));
-
-  // top-right, below the corner
-  cairo_arc (cr,
-             _align (x + width - radius),
-             _align (y + radius),
-             radius,
-             -90.0f * G_PI / 180.0f,
-             0.0f * G_PI / 180.0f);
-
-  // bottom-right, above the corner
-  cairo_line_to (cr, _align (x + width), _align (y + height - radius));
-
-  // bottom-right, left of the corner
-  cairo_arc (cr,
-             _align (x + width - radius),
-             _align (y + height - radius),
-             radius,
-             0.0f * G_PI / 180.0f,
-             90.0f * G_PI / 180.0f);
-
-  // bottom-left, right of the corner
-  cairo_line_to (cr, _align (x + radius), _align (y + height));
-
-  // bottom-left, above the corner
-  cairo_arc (cr,
-             _align (x + radius),
-             _align (y + height - radius),
-             radius,
-             90.0f * G_PI / 180.0f,
-             180.0f * G_PI / 180.0f);
-
-  // top-left, right of the corner
-  cairo_arc (cr,
-             _align (x + radius),
-             _align (y + radius),
-             radius,
-             180.0f * G_PI / 180.0f,
-             270.0f * G_PI / 180.0f);
 }
 
 long
