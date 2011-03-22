@@ -70,7 +70,7 @@ GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
 CompWindow *
 GestureEngine::FindCompWindow (Window window)
 {
-  CompWindow *result = _screen->findWindow (window);
+  CompWindow *result = _screen->findTopLevelWindow (window);
   
   while (!result)
   {
@@ -87,7 +87,7 @@ GestureEngine::FindCompWindow (Window window)
       break;
     
     window = parent;
-    result = _screen->findWindow (window);
+    result = _screen->findTopLevelWindow (window);
   }
   
   return result;
