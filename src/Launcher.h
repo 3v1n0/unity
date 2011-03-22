@@ -78,9 +78,10 @@ public:
   
   typedef enum
   {
-    FADE_SLIDE,
+    FADE_OR_SLIDE,
     SLIDE_ONLY,
     FADE_ONLY,
+    FADE_AND_SLIDE,
   } AutoHideAnimation;
 
   typedef enum

@@ -316,7 +316,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
-    _autohide_animation     = SLIDE_ONLY;
+    _autohide_animation     = FADE_OR_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -900,7 +900,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 /* Min is when you are on the trigger */
 float Launcher::GetAutohidePositionMin ()
 {
-    if (_autohide_animation == SLIDE_ONLY)
+    if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
         return 0.55f;
     else
         return 0.25f;
@@ -908,7 +908,7 @@ float Launcher::GetAutohidePositionMin ()
 /* Max is the initial state over the bfb */
 float Launcher::GetAutohidePositionMax ()
 {
-    if (_autohide_animation == SLIDE_ONLY)
+    if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
         return 1.00f;
     else
         return 0.75f;
@@ -1350,12 +1350,16 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         
         float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
         if (_autohide_animation == FADE_ONLY
-            || (_autohide_animation == FADE_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
+            || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
             *launcher_alpha = 1.0f - autohide_progress;
         else
         {
             if (autohide_progress > 0.0f)
+            {
                 autohide_offset -= geo.width * autohide_progress;
+                if (_autohide_animation == FADE_AND_SLIDE)
+                    *launcher_alpha = 1.0f - 0.5f * autohide_progress;
+            }
         }
     }
     
