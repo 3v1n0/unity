@@ -24,6 +24,8 @@
 #include "unity-util-accessible.h"
 
 PanelController::PanelController ()
+: _bfb_size (66),
+  _opacity (1.0f)
 {
   UScreen *screen = UScreen::GetDefault ();
 
@@ -38,12 +40,66 @@ PanelController::~PanelController ()
 }
 
 void
-PanelController::SetPrimary (nux::BaseWindow *window, bool primary)
+PanelController::SetBFBSize (int size)
+{
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  _bfb_size = size;
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    ViewForWindow (*it)->GetHomeButton ()->SetButtonWidth (_bfb_size);
+  }
+}
+
+void
+PanelController::StartFirstMenuShow ()
+{
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    PanelView *view = ViewForWindow (*it);
+
+    if (view->GetPrimary ())
+      view->StartFirstMenuShow ();
+  }
+}
+
+void
+PanelController::EndFirstMenuShow ()
+{
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    PanelView *view = ViewForWindow (*it);
+
+    if (view->GetPrimary ())
+      view->EndFirstMenuShow ();
+  }
+}
+
+void
+PanelController::SetOpacity (float opacity)
+{
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  _opacity = opacity;
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    ViewForWindow (*it)->SetOpacity (_opacity);
+  }
+}
+
+PanelView *
+PanelController::ViewForWindow (nux::BaseWindow *window)
 {
   nux::Layout *layout = window->GetLayout ();
   std::list<nux::Area *>::iterator it = layout->GetChildren ().begin ();
 
-  static_cast<PanelView *> (*it)->SetPrimary (primary);
+  return static_cast<PanelView *> (*it);
 }
 
 // We need to put a panel on every monitor, and try and re-use the panels we already have
@@ -58,10 +114,17 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
   {
     if (i < n_monitors)
     {
+      (*it)->EnableInputWindow (false);
+      (*it)->InputWindowEnableStruts (false);
+
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       (*it)->SetGeometry (geo);
-      SetPrimary (*it, i == primary_monitor);
+      ViewForWindow (*it)->SetPrimary (i == primary_monitor);
+
+      (*it)->EnableInputWindow (true);
+      (*it)->InputWindowEnableStruts (true);
+
       i++;
     }
   }
@@ -79,6 +142,8 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       
       view = new PanelView ();    
       view->SetMaximumHeight (24);
+      view->GetHomeButton ()->SetButtonWidth (_bfb_size);
+      view->SetOpacity (_opacity);
       AddChild (view);
 
       layout->AddView (view, 1);
@@ -98,7 +163,7 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       nux::Geometry geo = monitors[i];
       geo.height = 24;
       window->SetGeometry (geo);
-      SetPrimary (window, i == primary_monitor);
+      view->SetPrimary (i == primary_monitor);
 
       /* FIXME: this should not be manual, should be managed with a
          show/hide callback like in GAIL*/

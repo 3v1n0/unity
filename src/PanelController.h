@@ -32,12 +32,17 @@ public:
   PanelController  ();
   ~PanelController ();
 
+  void SetBFBSize (int size);
+  void StartFirstMenuShow ();
+  void EndFirstMenuShow ();
+  void SetOpacity (float opacity);
+
 protected:
   const gchar * GetName       ();
   void          AddProperties (GVariantBuilder *builder);
 
 private:
-  void SetPrimary (nux::BaseWindow *window, bool primary);
+  PanelView * ViewForWindow (nux::BaseWindow *window);
   void OnScreenChanged (int primary_monitor, std::vector<nux::Geometry>& monitors);
   
   static void WindowConfigureCallback (int            window_width,
@@ -46,6 +51,8 @@ private:
                                        void          *user_data);
 private:
   std::vector<nux::BaseWindow *> _windows;
+  int _bfb_size;
+  float _opacity;
 };
 
 #endif // _PANEL_CONTROLLER_H_

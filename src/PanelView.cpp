@@ -356,7 +356,7 @@ PanelView::OnSynced ()
 // Useful Public Methods
 //
 PanelHomeButton * 
-PanelView::HomeButton ()
+PanelView::GetHomeButton ()
 {
   return _home_button;
 }
@@ -411,6 +411,12 @@ PanelView::SetOpacity (float opacity)
   _opacity = opacity;
   
   ForceUpdateBackground ();
+}
+
+bool
+PanelView::GetPrimary ()
+{
+  return _is_primary;
 }
 
 static void

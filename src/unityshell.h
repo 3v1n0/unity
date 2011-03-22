@@ -35,8 +35,6 @@
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "UScreen.h"
-#include "PanelView.h"
-#include "PanelHomeButton.h"
 #include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
@@ -175,13 +173,7 @@ class UnityScreen :
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
 	static void
-	panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
-
-	static void
 	initUnity(nux::NThread* thread, void* InitData);
-
-	static gboolean
-	strutHackTimeout (gpointer data);
 
   static void
   OnStartKeyNav (GVariant* data, void* value);
@@ -207,8 +199,6 @@ class UnityScreen :
 	Launcher               *launcher;
 	LauncherController     *controller;
   PanelController        *panelController;
-	PanelView              *panelView;
-  PanelHomeButton        *panelHomeButton;
 	PlacesController 			 *placesController;
 	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;

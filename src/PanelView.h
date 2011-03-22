@@ -54,8 +54,9 @@ public:
   void OnSynced ();
 
   void SetPrimary (bool primary);
+  bool GetPrimary ();
   
-  PanelHomeButton * HomeButton ();
+  PanelHomeButton * GetHomeButton ();
 
   void StartFirstMenuShow ();
   void EndFirstMenuShow ();
