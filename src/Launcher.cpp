@@ -55,6 +55,8 @@
 
 #define MOUSE_DEADZONE 15
 
+#define DRAG_OUT_PIXELS 300.0f
+
 #define S_DBUS_NAME  "com.canonical.Unity.Launcher"
 #define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
 #define S_DBUS_IFACE "com.canonical.Unity.Launcher"
@@ -263,6 +265,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
     PluginAdapter::Default ()->initiate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
     PluginAdapter::Default ()->terminate_spread.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
     PluginAdapter::Default ()->terminate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
+    
+    GeisAdapter *adapter = GeisAdapter::Default (screen);
+    adapter->drag_start.connect  (sigc::mem_fun (this, &Launcher::OnDragStart));
+    adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
+    adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
@@ -354,6 +361,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
+    _drag_out_id            = 0;
     
     _check_window_over_launcher   = true;
     _postreveal_mousemove_delta_x = 0;
@@ -534,6 +542,47 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   return texture;
 }
 
+void 
+Launcher::OnDragStart (GeisAdapter::GeisDragData *data)
+{
+  if (data->touches == 4)
+  {
+    _drag_out_id = data->id;
+    if (_hidden)
+    {
+      _drag_out_delta_x = 0.0f;
+    }
+    else
+    {
+      _drag_out_delta_x = DRAG_OUT_PIXELS;
+      _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+    }
+  }
+}
+
+void 
+Launcher::OnDragUpdate (GeisAdapter::GeisDragData *data)
+{
+  if (data->id == _drag_out_id)
+  {
+    _drag_out_delta_x = CLAMP (_drag_out_delta_x + data->delta_x, 0.0f, DRAG_OUT_PIXELS);
+    EnsureAnimation ();
+  }
+}
+
+void 
+Launcher::OnDragFinish (GeisAdapter::GeisDragData *data)
+{
+  if (data->id == _drag_out_id)
+  { 
+    if (_drag_out_delta_x >= DRAG_OUT_PIXELS)
+      _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, true);
+    SetTimeStruct (&_times[TIME_DRAG_OUT], &_times[TIME_DRAG_OUT], ANIM_DURATION_SHORT);
+    _drag_out_id = 0;
+    EnsureAnimation ();
+  }
+}
+
 void
 Launcher::startKeyNavMode ()
 {
@@ -655,6 +704,16 @@ float Launcher::GetHoverProgress (struct timespec const &current)
 float Launcher::DnDExitProgress (struct timespec const &current)
 {
     return pow (1.0f - CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_END])) / (float) ANIM_DURATION_LONG, 0.0f, 1.0f), 2);
+}
+
+float Launcher::DragOutProgress (struct timespec const &current)
+{
+    float timeout = CLAMP ((float) (TimeDelta (&current, &_times[TIME_DRAG_OUT])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+    float progress = CLAMP (_drag_out_delta_x / DRAG_OUT_PIXELS, 0.0f, 1.0f);
+    
+    if (_drag_out_id || _hide_machine->GetQuirk (LauncherHideMachine::MT_DRAG_OUT))
+      return progress;
+    return progress * (1.0f - timeout);
 }
 
 float Launcher::AutohideProgress (struct timespec const &current)
@@ -804,6 +863,10 @@ bool Launcher::AnimationInProgress ()
     
     // hide animation for dnd
     if (TimeDelta (&current, &_times[TIME_DRAG_EDGE_TOUCH]) < ANIM_DURATION * 6)
+        return true;
+        
+    // restore from drag_out animation
+    if (TimeDelta (&current, &_times[TIME_DRAG_OUT]) < ANIM_DURATION_SHORT)
         return true;
 
     // animations happening on specific icons
@@ -1285,7 +1348,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     if (_hidemode != LAUNCHER_HIDE_NEVER)
     {
         
-        float autohide_progress = AutohideProgress (current);
+        float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
         if (_autohide_animation == FADE_ONLY
             || (_autohide_animation == FADE_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
             *launcher_alpha = 1.0f - autohide_progress;
@@ -1469,6 +1532,9 @@ void Launcher::SetHidden (bool hidden)
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
+    
+    if (hidden)
+      _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
 

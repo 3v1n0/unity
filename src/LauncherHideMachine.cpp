@@ -77,11 +77,13 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
     LAST_ACTION_ACTIVATE   = 1 << 15, 32k
     SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
     EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
+    MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
 INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_DOWN | VERTICAL_SLIDE_ACTIVE |\
-KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE)
+KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
+MT_DRAG_OUT)
 
 void
 LauncherHideMachine::EnsureHideState (bool skip_delay)
@@ -155,7 +157,7 @@ LauncherHideMachine::GetMode ()
 }
 
 #define SKIP_DELAY_QUIRK (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | ACTIVE_WINDOW_UNDER | \
-ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE)
+ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT)
 
 void
 LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active)
