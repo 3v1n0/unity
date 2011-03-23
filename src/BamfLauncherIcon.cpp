@@ -724,28 +724,8 @@ BamfLauncherIcon::GetMenus ()
 {
   std::map<std::string, DbusmenuClient *>::iterator it;
   std::list<DbusmenuMenuitem *> result;
-
+  bool first_separator_needed = false;
   DbusmenuMenuitem* item = NULL;
-  item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (item,
-                                  DBUSMENU_MENUITEM_PROP_TYPE,
-                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
-  result.push_back (item);
-
-  item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (item,
-                                  DBUSMENU_MENUITEM_PROP_LABEL,
-                                  bamf_view_get_name (BAMF_VIEW (m_App)));
-  dbusmenu_menuitem_property_set_bool (item,
-                                       DBUSMENU_MENUITEM_PROP_ENABLED,
-                                       true);
-  result.push_back (item);
-
-  item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (item,
-                                  DBUSMENU_MENUITEM_PROP_TYPE,
-                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
-  result.push_back (item);
 
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
@@ -760,7 +740,9 @@ BamfLauncherIcon::GetMenus ()
       if (!item)
         continue;
 
-      result.push_front (item);
+      first_separator_needed = true;
+
+      result.push_back (item);
     }
   }
 
@@ -776,10 +758,35 @@ BamfLauncherIcon::GetMenus ()
       if (!item)
         continue;
 
-      result.push_front (item);
-    }
+      first_separator_needed = true;
 
+      result.push_back (item);
+    }
   }
+
+  if (first_separator_needed)
+  {
+    item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (item,
+                                    DBUSMENU_MENUITEM_PROP_TYPE,
+                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    result.push_back (item);
+  }
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  bamf_view_get_name (BAMF_VIEW (m_App)));
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+  result.push_back (item);
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TYPE,
+                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
+  result.push_back (item);
 
   EnsureMenuItemsReady ();
 
