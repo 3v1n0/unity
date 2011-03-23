@@ -726,9 +726,10 @@ OnAppLabelActivated (DbusmenuMenuitem* sender,
 {
   BamfLauncherIcon* self = NULL;
 
-  if (data)
-    self = (BamfLauncherIcon*) data;
-
+  if (!data)
+    return;
+    
+  self = (BamfLauncherIcon*) data;
   self->ActivateLauncherIcon ();
 }
 
