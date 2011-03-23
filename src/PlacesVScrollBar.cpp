@@ -81,7 +81,6 @@ PlacesVScrollBar::RecvMouseEnter (int           x,
                                   unsigned long button_flags,
                                   unsigned long key_flags)
 {
-  g_debug ("PlacesVScrollBar::RecvMouseEnter() called");
   _entered = true;
   if (!_drag)
   {
@@ -96,7 +95,6 @@ PlacesVScrollBar::RecvMouseLeave (int           x,
                                   unsigned long button_flags,
                                   unsigned long key_flags)
 {
-  g_debug ("PlacesVScrollBar::RecvMouseLeave() called");
   _entered = false;
   if (!_drag)
   {
@@ -111,7 +109,6 @@ PlacesVScrollBar::RecvMouseDown (int           x,
                                  unsigned long button_flags,
                                  unsigned long key_flags)
 {
-  g_debug ("PlacesVScrollBar::RecvMouseDown() called");
   _state = STATE_DOWN;
   NeedRedraw ();
 }
@@ -122,7 +119,6 @@ PlacesVScrollBar::RecvMouseUp (int           x,
                                unsigned long button_flags,
                                unsigned long key_flags)
 {
-  g_debug ("PlacesVScrollBar::RecvMouseUp() called");
   _drag = false;
   if (_entered)
     _state = STATE_OVER;
@@ -139,7 +135,6 @@ PlacesVScrollBar::RecvMouseDrag (int           x,
                                  unsigned long button_flags,
                                  unsigned long key_flags)
 {
-  g_debug ("PlacesVScrollBar::RecvMouseDrag() called");
   _drag = true;
   NeedRedraw ();
 }
