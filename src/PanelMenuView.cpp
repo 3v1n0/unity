@@ -170,7 +170,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
   nux::Geometry geo = GetAbsoluteGeometry ();
 
   if (!_we_control_active)
-    return ret;
+    return _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
 
   if (geo.IsPointInside (ievent.e_x, ievent.e_y))
   {
@@ -888,6 +888,8 @@ guint32
 PanelMenuView::GetMaximizedWindow ()
 {
   guint32 window_xid = 0;
+  nux::Geometry monitor =  UScreen::GetDefault ()->GetMonitorGeometry (_monitor);
+  
   // Find the front-most of the maximized windows we are controlling
   foreach (guint32 xid, _maximized_set)
   {
@@ -895,8 +897,12 @@ PanelMenuView::GetMaximizedWindow ()
     if (WindowManager::Default ()->IsWindowOnCurrentDesktop (xid)
         && !WindowManager::Default ()->IsWindowObscured (xid))
     {
-      window_xid = xid;
-      break;
+      nux::Geometry geo = WindowManager::Default ()->GetWindowGeometry (xid);
+      if (monitor.IsPointInside (geo.x + (geo.width/2), geo.y))
+      {
+        window_xid = xid;
+        break;
+      }
     }
   }
   return window_xid;
