@@ -100,10 +100,7 @@ PlacesHomeView::PlacesHomeView ()
   _layout->SetHorizontalInternalMargin (32);
 
   _client = gconf_client_get_default ();
-  //As the GConf keys don't get updated when an application is uninstalled, it
-  //is pointless to get notified by GConf when the key changes, because we have
-  //to check for (un-)installed applications when the Dash opens, anyway...
-  /*gconf_client_add_dir (_client,
+  gconf_client_add_dir (_client,
                         BROWSER_DIR,
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
@@ -129,7 +126,7 @@ PlacesHomeView::PlacesHomeView ()
                           MEDIA_DIR"/exec",
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
-                          NULL, NULL);*/
+                          NULL, NULL);
   
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, (UBusCallback)&PlacesHomeView::DashVisible, this);
