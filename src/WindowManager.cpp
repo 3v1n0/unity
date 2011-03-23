@@ -47,6 +47,16 @@ class WindowManagerDummy : public WindowManager
   {
     return true;
   }
+  
+  bool IsWindowOnCurrentDesktop (guint32 xid)
+  {
+    return true;
+  }
+  
+  bool IsWindowObscured (guint32 xid)
+  {
+    return false;
+  }
 
   void Restore (guint32 xid)
   {
@@ -58,14 +68,29 @@ class WindowManagerDummy : public WindowManager
     g_debug ("%s", G_STRFUNC);
   }
 
- void Close (guint32 xid)
+  void Close (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
   }
   
+ void Activate (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
+ void Raise (guint32 xid)
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
+
  void Lower (guint32 xid)
   {
     g_debug ("%s", G_STRFUNC);
+  }
+
+  nux::Geometry GetWindowGeometry (guint xid)
+  {
+    return nux::Geometry (0, 0, 1, 1);
   }
 };
 

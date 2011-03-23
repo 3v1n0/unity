@@ -30,9 +30,11 @@
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
+#include "LauncherHideMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
+#include "GeisAdapter.h"
  
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -76,9 +78,10 @@ public:
   
   typedef enum
   {
-    FADE_SLIDE,
+    FADE_OR_SLIDE,
     SLIDE_ONLY,
     FADE_ONLY,
+    FADE_AND_SLIDE,
   } AutoHideAnimation;
 
   typedef enum
@@ -157,7 +160,7 @@ public:
   int GetMouseY ();
   
   void CheckWindowOverLauncher ();
-  void EnableHiddenStateCheck (bool enabled);
+  void EnableCheckWindowOverLauncher (gboolean enabled);
 
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void> selection_change;
@@ -187,6 +190,7 @@ private:
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_DRAG_OUT,
     TIME_TAP_SUPER,
     
     TIME_LAST
@@ -220,9 +224,14 @@ private:
   void OnWindowMaybeIntellihide (guint32 xid);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
-
+  
+  void OnDragStart  (GeisAdapter::GeisDragData *data);
+  void OnDragUpdate (GeisAdapter::GeisDragData *data);
+  void OnDragFinish (GeisAdapter::GeisDragData *data);
+  
+  void OnPluginStateChanged ();
+  
   static gboolean AnimationTimeout (gpointer data);
-  static gboolean OnAutohideTimeout (gpointer data);
   static gboolean DrawLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
@@ -241,10 +250,8 @@ private:
   LauncherActionState GetActionState(); 
 
   void EnsureHoverState ();
-  void EnsureHiddenState ();
   void EnsureAnimation    ();
   void EnsureScrollTimer ();
-  void SetupAutohideTimer ();
   
   bool MouseOverTopScrollArea ();
   bool MouseOverTopScrollExtrema ();
@@ -263,6 +270,7 @@ private:
   float AutohideProgress             (struct timespec const &current);
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
+  float DragOutProgress              (struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
@@ -277,7 +285,6 @@ private:
 
   void SetHover         ();
   void UnsetHover       ();
-  void ForceHiddenState (bool hidden);
   void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
@@ -309,7 +316,7 @@ private:
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
   
-  static void OnTriggerUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBUpdate (GVariant *data, gpointer user_data);
 
   static void OnActionDone (GVariant *data, void *val);
 
@@ -362,15 +369,6 @@ private:
   
   gboolean TapOnSuper ();
 
-  void
-  DrawRoundedRectangle (cairo_t* cr,
-                        double   aspect,
-                        double   x,
-                        double   y,
-                        double   cornerRadius,
-                        double   width,
-                        double   height);
-
   nux::BaseTexture*
   cairoToTexture2D (const char label,
                     int        width,
@@ -396,16 +394,8 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _hidden_state_check;
-  bool  _mouse_inside_launcher;
-  bool  _mouse_inside_trigger;
-  bool  _mouseover_launcher_locked;
-  bool  _super_show_launcher;
-  bool  _navmod_show_launcher;
-  bool  _placeview_show_launcher;
-  bool  _window_over_launcher;
-  bool  _hide_on_drag_hover;
   bool  _render_drag_window;
+  bool  _check_window_over_launcher;
   
   BacklightMode _backlight_mode;
 
@@ -433,13 +423,16 @@ private:
   int _icon_glow_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
+  int _postreveal_mousemove_delta_x;
+  int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
-  int _dnd_security;
   int _enter_y;
   int _last_button_press;
+  int _drag_out_id;
+  float _drag_out_delta_x;
   
-  int _trigger_width;
-  int _trigger_height;
+  int _bfb_width;
+  int _bfb_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -461,23 +454,22 @@ private:
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  guint _autohide_handle;
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _redraw_handle;
   guint _start_dragicon_handle;
 
   nux::Point2   _mouse_position;
-  nux::Point2   _trigger_mouse_position;
+  nux::Point2   _bfb_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
+  LauncherHideMachine *_hide_machine;
   CompScreen* _screen;
   
-  bool              _dnd_window_is_mapped;
   std::list<char *> _drag_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;

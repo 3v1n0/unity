@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #ifndef PLACES_CONTROLLER_H

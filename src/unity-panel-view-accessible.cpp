@@ -99,7 +99,7 @@ unity_panel_view_accessible_get_n_children (AtkObject *accessible)
     return 0;
 
   panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->HomeButton ()) != NULL)
+  if ((home_button = panel->GetHomeButton ()) != NULL)
     rc = 1;
 
   return rc;
@@ -120,7 +120,7 @@ unity_panel_view_accessible_ref_child (AtkObject *accessible, gint i)
     return NULL;
 
   panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->HomeButton ()) != NULL)
+  if ((home_button = panel->GetHomeButton ()) != NULL)
     {
       nux::Object *child = NULL;
 

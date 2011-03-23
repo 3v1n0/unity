@@ -49,17 +49,23 @@ public:
 
   virtual bool IsWindowMaximized (guint32 xid) = 0;
   virtual bool IsWindowDecorated (guint32 xid) = 0;
+  virtual bool IsWindowOnCurrentDesktop (guint32 xid) = 0;
+  virtual bool IsWindowObscured (guint32 xid) = 0;
 
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;
   virtual void Close (guint32 xid) = 0;
-  
+
+  virtual void Activate (guint32 xid) = 0;
+  virtual void Raise (guint32 xid) = 0;
   virtual void Lower (guint32 xid) = 0;
 
   virtual void Decorate   (guint32 xid);
   virtual void Undecorate (guint32 xid);
 
   void StartMove (guint32 id, int, int);
+
+  virtual nux::Geometry GetWindowGeometry (guint32 xid) = 0;
 
   // Signals
   sigc::signal<void, guint32> window_mapped;
@@ -74,8 +80,12 @@ public:
   sigc::signal<void, guint32> window_hidden;
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
-  sigc::signal<void, std::list<guint32> &> initiate_spread;
-  sigc::signal<void, std::list<guint32> &> terminate_spread;
+  
+  sigc::signal<void> initiate_spread;
+  sigc::signal<void> terminate_spread;
+
+  sigc::signal<void> initiate_expo;
+  sigc::signal<void> terminate_expo;
 
 private:
   Atom m_MoveResizeAtom;

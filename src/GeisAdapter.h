@@ -40,6 +40,7 @@ public:
     {
       int id;
       int device_id;
+      Window window;
       int touches;
       int timestamp;
       int focus_x;
@@ -57,6 +58,7 @@ public:
     {
       int id;
       int device_id;
+      Window window;
       int touches;
       int timestamp;
       int focus_x;
@@ -77,6 +79,7 @@ public:
     {
       int id;
       int device_id;
+      Window window;
       int touches;
       int timestamp;
       int focus_x;
@@ -94,6 +97,7 @@ public:
     {
       int id;
       int device_id;
+      Window window;
       int touches;
       int timestamp;
       int focus_x;

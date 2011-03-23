@@ -48,6 +48,8 @@ class GestureEngine : public sigc::trackable
     
     void EndDrag ();
   private:
+    CompWindow * FindCompWindow (Window window);
+  
     CompScreen *_screen;
     CompWindow *_drag_window;
     CompWindow *_pinch_window;

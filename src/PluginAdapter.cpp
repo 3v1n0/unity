@@ -46,6 +46,8 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ExpoActionList (0),
     m_ScaleActionList (0)
 {
+  _spread_state = false;
+  _expo_state = false;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -56,13 +58,33 @@ PluginAdapter::~PluginAdapter()
 void
 PluginAdapter::OnScreenGrabbed ()
 {
+  if (!_spread_state && screen->grabExist ("scale"))
+  {
+    _spread_state = true;
+    initiate_spread.emit ();
+  }
+  
+  if (!_expo_state && screen->grabExist ("expo"))
+  {
+    _expo_state = true;
+    initiate_expo.emit ();
+  }
 }
 
 void
 PluginAdapter::OnScreenUngrabbed ()
 {
-  if (m_SpreadedWindows.size () && !screen->grabExist ("scale"))
-    terminate_spread.emit (m_SpreadedWindows);
+  if (_spread_state && !screen->grabExist ("scale"))
+  {
+    _spread_state = false;
+    terminate_spread.emit ();
+  }
+  
+  if (_expo_state && !screen->grabExist ("expo"))
+  {
+    _expo_state = false;
+    terminate_expo.emit ();
+  }
 }
 
 void
@@ -258,7 +280,6 @@ PluginAdapter::InitiateScale (std::string *match, int state)
     }
   }
 
-  initiate_spread.emit (xids);
   m_ScaleActionList.InitiateAll (argument, state);
 }
 
@@ -267,7 +288,6 @@ PluginAdapter::TerminateScale ()
 {
   CompOption::Vector argument (0);
 
-  terminate_spread.emit (m_SpreadedWindows);
   m_SpreadedWindows.clear ();
   m_ScaleActionList.TerminateAll (argument);
 }
@@ -276,6 +296,12 @@ bool
 PluginAdapter::IsScaleActive ()
 {
   return m_Screen->grabExist ("scale");
+}
+
+bool
+PluginAdapter::IsExpoActive ()
+{
+  return m_Screen->grabExist ("expo");
 }
 
 void 
@@ -318,6 +344,44 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
+    return (window->defaultViewport () == m_Screen->vp ());
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowObscured (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    CompPoint window_vp = window->defaultViewport ();
+    // Check if any windows above this one are blocking it
+    for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
+    {
+      if (sibling->defaultViewport () == window_vp
+          && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+        return true;
+    }
+  }
+
+  return false;
+}
+
 void
 PluginAdapter::Restore (guint32 xid)
 {
@@ -352,6 +416,28 @@ PluginAdapter::Close (guint32 xid)
 }
 
 void
+PluginAdapter::Activate (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->activate ();
+}
+
+void
+PluginAdapter::Raise (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->raise ();
+}
+
+void
 PluginAdapter::Lower (guint32 xid)
 {
   Window win = (Window)xid;
@@ -360,6 +446,24 @@ PluginAdapter::Lower (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->lower ();
+}
+
+nux::Geometry
+PluginAdapter::GetWindowGeometry (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+  nux::Geometry geo (0, 0, 1, 1);
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    geo.x = window->x ();
+    geo.y = window->y ();
+    geo.width = window->width ();
+    geo.height = window->height ();
+  }
+  return geo;
 }
 
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)

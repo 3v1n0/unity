@@ -59,7 +59,6 @@ PlacesController::PlacesController ()
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
-  _window->InputWindowEnableStruts(false);
   _window->SetOpacity (0.0f);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
@@ -118,9 +117,8 @@ void PlacesController::Show ()
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
   _window->PushToFront ();
-  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
-  //_window->GrabKeyboard ();
+  _window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
   
@@ -138,8 +136,7 @@ void PlacesController::Hide ()
   _window->CaptureMouseDownAnyWhereElse (false);
   _window->ForceStopFocus (1, 1);
   _window->UnGrabPointer ();
-  //_window->UnGrabKeyboard ();
-  _window->EnableInputWindow (false);
+  _window->UnGrabKeyboard ();
   _visible = false;
   _fullscren_request = false;
 

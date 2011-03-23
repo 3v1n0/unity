@@ -22,7 +22,9 @@
  
  #include <X11/cursorfont.h>
  
-#include "GestureEngine.h"
+ #include "ubus-server.h"
+ #include "UBusMessages.h"
+ #include "GestureEngine.h"
 
 GestureEngine::GestureEngine (CompScreen *screen)
 {
@@ -58,7 +60,46 @@ GestureEngine::~GestureEngine ()
 void
 GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
 {
+  if (data->touches == 4)
+  {
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_send_message (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+  }
+}
 
+CompWindow *
+GestureEngine::FindCompWindow (Window window)
+{
+  CompWindow *result = _screen->findTopLevelWindow (window);
+  
+  while (!result)
+  {
+    Window parent, root;
+    Window *children;
+    unsigned int nchildren;
+    
+    XQueryTree (_screen->dpy (), window, &root, &parent, &children, &nchildren);
+    
+    if (nchildren)
+      XFree (children);
+    
+    if (parent == root)
+      break;
+    
+    window = parent;
+    result = _screen->findTopLevelWindow (window);
+  }
+  
+  if (result)
+  {
+    if (!(result->type () & (CompWindowTypeUtilMask | 
+                            CompWindowTypeNormalMask | 
+                            CompWindowTypeDialogMask |
+                            CompWindowTypeModalDialogMask)))
+      result = 0;
+  }
+  
+  return result;
 }
 
 void
@@ -66,10 +107,17 @@ GestureEngine::OnDragStart (GeisAdapter::GeisDragData *data)
 {
   if (data->touches == 3)
   {
-    _drag_window = _screen->findWindow (_screen->activeWindow ());
+    _drag_window = FindCompWindow (data->window);
+    
     
     if (!_drag_window)
       return;
+
+    if (!(_drag_window->actions () & CompWindowActionMoveMask))
+    {
+      _drag_window = 0;
+      return;
+    }
     
     if (_drag_window->state () & MAXIMIZE_STATE)
     {
@@ -136,7 +184,7 @@ GestureEngine::OnPinchStart (GeisAdapter::GeisPinchData *data)
 {
   if (data->touches == 3)
   {
-    _pinch_window = _screen->findWindow (_screen->activeWindow ());
+    _pinch_window = FindCompWindow (data->window);
     
     if (!_pinch_window)
       return;
@@ -156,13 +204,13 @@ GestureEngine::OnPinchUpdate (GeisAdapter::GeisPinchData *data)
     return;
     
   float delta_radius = data->radius - _pinch_start_radius;
-  if (delta_radius > 150.0f)
+  if (delta_radius > 110.0f)
   {
     _pinch_window->maximize (MAXIMIZE_STATE);
     _pinch_start_radius = data->radius;
     EndDrag ();
   }
-  else if (delta_radius < -150.0f)
+  else if (delta_radius < -110.0f)
   {
     _pinch_window->maximize (0);
     _pinch_start_radius = data->radius;

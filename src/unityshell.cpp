@@ -201,6 +201,9 @@ UnityScreen::handleEvent (XEvent *event)
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
+        if (_need_send_execute_command)
+          SendExecuteCommand ();
+        _need_send_execute_command = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -225,19 +228,20 @@ UnityScreen::handleCompizEvent (const char          *plugin,
                                 CompOption::Vector  &option)
 {
 
-  if (strcmp (event, "begin_viewport_switch") == 0)
-  {
-    launcher->EnableHiddenStateCheck (false);
-  }
-  if (strcmp (event, "end_viewport_switch") == 0)
+  /*
+   *  don't take into account window over launcher state during
+   *  the ws switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  if (strcmp (event, "start_viewport_switch") == 0)
+    launcher->EnableCheckWindowOverLauncher (false);
+  else if (strcmp (event, "end_viewport_switch") == 0)
   {
     // compute again the list of all window on the new viewport
     // to decide if we should or not hide the launcher
-    launcher->EnableHiddenStateCheck (true);
+    launcher->EnableCheckWindowOverLauncher (true);
     launcher->CheckWindowOverLauncher ();
   }
-
-    
   screen->handleCompizEvent (plugin, event, option);
   
 }
@@ -273,7 +277,7 @@ UnityScreen::showPanelFirstMenuKeyInitiate (CompAction         *action,
   if (state & CompAction::StateInitKey)
     action->setState (action->state () | CompAction::StateTermKey);
   
-  panelView->StartFirstMenuShow ();
+  panelController->StartFirstMenuShow ();
   return false;
 }
 
@@ -282,14 +286,12 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
                                              CompAction::State   state,
                                              CompOption::Vector &options)
 {
-  panelView->EndFirstMenuShow ();
+  panelController->EndFirstMenuShow ();
   return false;
 }
 
-bool
-UnityScreen::executeCommand (CompAction         *action,
-                             CompAction::State   state,
-                             CompOption::Vector &options)
+void
+UnityScreen::SendExecuteCommand ()
 {
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -297,6 +299,18 @@ UnityScreen::executeCommand (CompAction         *action,
                                            "/com/canonical/unity/applicationsplace/runner",
                                            0,
                                            ""));
+}
+
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  if (!screen->grabbed ())
+    SendExecuteCommand ();
+  else
+    _need_send_execute_command = true;
+    
   return false;
 }
 
@@ -554,15 +568,6 @@ UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, 
                       geo.width, self->_primary_monitor.height - 24);
 }
 
-/* Configure callback for the panel window */
-void
-UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
-{
-  UnityScreen *self = static_cast<UnityScreen *> (user_data);
-  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y,
-                      self->_primary_monitor.width, 24);
-}
-
 /* Start up nux after OpenGL is initialized */
 void
 UnityScreen::initUnity(nux::NThread* thread, void* InitData)
@@ -601,10 +606,10 @@ UnityScreen::optionChanged (CompOption            *opt,
       launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
       break;
     case UnityshellOptions::PanelOpacity:
-      panelView->SetOpacity (optionGetPanelOpacity ());
+      panelController->SetOpacity (optionGetPanelOpacity ());
       break;
     case UnityshellOptions::IconSize:
-      panelHomeButton->SetButtonWidth (optionGetIconSize()+18);
+      panelController->SetBFBSize (optionGetIconSize()+18);
       launcher->SetIconSize (optionGetIconSize()+6, optionGetIconSize());
       PlacesController::SetLauncherSize (optionGetIconSize()+18);
       
@@ -638,8 +643,9 @@ UnityScreen::Relayout ()
 {
   GdkScreen *scr;
   GdkRectangle rect;
-  nux::Geometry lCurGeom, pCurGeom;
+  nux::Geometry lCurGeom;
   gint primary_monitor;
+  int panel_height = 24;
 
   if (!needsRelayout)
     return;
@@ -651,42 +657,23 @@ UnityScreen::Relayout ()
 
   wt->SetWindowSize (rect.width, rect.height);
 
-  pCurGeom = panelWindow->GetGeometry(); 
   lCurGeom = launcherWindow->GetGeometry(); 
+  launcher->SetMaximumHeight(rect.height - panel_height);
 
-  panelWindow->EnableInputWindow(false);
-  panelWindow->InputWindowEnableStruts(false);
-
-  panelView->SetMaximumWidth(rect.width);
-  launcher->SetMaximumHeight(rect.height - pCurGeom.height);
-
-  g_debug ("setting to primary screen rect: x=%d y=%d w=%d h=%d",
+  g_debug ("Setting to primary screen rect: x=%d y=%d w=%d h=%d",
            rect.x,
            rect.y,
            rect.width,
            rect.height);
 
-  panelWindow->SetGeometry(nux::Geometry(rect.x,
-					rect.y,
-					rect.width,
-					pCurGeom.height));
-  panelView->SetGeometry(nux::Geometry(rect.x,
-					rect.y,
-					rect.width,
-					pCurGeom.height));
-
   launcherWindow->SetGeometry(nux::Geometry(rect.x,
-					rect.y + pCurGeom.height,
+					rect.y + panel_height,
 					lCurGeom.width,
-					rect.height - pCurGeom.height));
+					rect.height - panel_height));
   launcher->SetGeometry(nux::Geometry(rect.x,
-					rect.y + pCurGeom.height,
+					rect.y + panel_height,
 					lCurGeom.width,
-					rect.height - pCurGeom.height));
-
-  panelWindow->EnableInputWindow(true);
-  panelWindow->InputWindowEnableStruts(true);
-
+					rect.height - panel_height));
   needsRelayout = false;
 }
 
@@ -750,6 +737,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     doShellRepaint (false)
 {
   _key_nav_mode_requested = false;
+  _need_send_execute_command = false;
   START_FUNCTION ();
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
@@ -848,19 +836,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 UnityScreen::~UnityScreen ()
 {
   launcherWindow->UnReference ();
-  panelWindow->UnReference ();
+  panelController->UnReference ();
   unity_a11y_finalize ();
-}
-
-/* Can't create windows until after we have initialized everything */
-gboolean UnityScreen::strutHackTimeout (gpointer data)
-{
-  UnityScreen *self = (UnityScreen*) data;
-
-  self->panelWindow->InputWindowEnableStruts(false);
-  self->panelWindow->InputWindowEnableStruts(true);
-
-  return FALSE;
 }
 
 /* Start up the launcher */
@@ -904,34 +881,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   LOGGER_START_PROCESS ("initLauncher-Panel");
-  self->panelView = new PanelView ();
-  self->AddChild (self->panelView);
-
-  self->panelHomeButton = self->panelView->HomeButton ();
-
-  layout = new nux::HLayout();
-
-  self->panelView->SetMaximumHeight(24);
-  layout->AddView(self->panelView, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
-
-  self->panelWindow = new nux::BaseWindow("");
-  self->panelWindow->SinkReference ();
-
-  self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
-  self->panelWindow->SetLayout(layout);
-  self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true, "panel", false, false);
-  self->panelWindow->InputWindowEnableStruts(true);
-
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    unity_util_accessible_add_window (self->panelWindow);
-
+  self->panelController = new PanelController ();
+  self->AddChild (self->panelController);
   LOGGER_END_PROCESS ("initLauncher-Panel");
 
   /* Setup Places */
@@ -946,7 +897,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   self->ScheduleRelayout (2000);
-  g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
 
   END_FUNCTION ();
 }
