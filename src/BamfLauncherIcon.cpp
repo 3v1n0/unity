@@ -719,6 +719,19 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
   }
 }
 
+static void
+OnAppLabelActivated (DbusmenuMenuitem* sender,
+                     guint             timestamp,
+                     gpointer data)
+{
+  BamfLauncherIcon* self = NULL;
+
+  if (data)
+    self = (BamfLauncherIcon*) data;
+
+  self->ActivateLauncherIcon ();
+}
+
 std::list<DbusmenuMenuitem *>
 BamfLauncherIcon::GetMenus ()
 {
@@ -780,6 +793,7 @@ BamfLauncherIcon::GetMenus ()
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        true);
+  g_signal_connect (item, "item-activated", (GCallback) OnAppLabelActivated, this);
   result.push_back (item);
 
   item = dbusmenu_menuitem_new ();

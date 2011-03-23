@@ -42,6 +42,8 @@ public:
     const char* DesktopFile ();
     bool IsSticky ();
 
+    void ActivateLauncherIcon ();
+
 protected:
     void OnMouseClick (int button);
     std::list<DbusmenuMenuitem *> GetMenus ();
@@ -58,7 +60,6 @@ protected:
     void OnDndEnter ();
     void OnDndLeave ();
     
-    void ActivateLauncherIcon ();
     void OpenInstanceLauncherIcon ();
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
