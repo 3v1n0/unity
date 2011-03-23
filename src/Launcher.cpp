@@ -539,6 +539,7 @@ Launcher::startKeyNavMode ()
   
   GrabKeyboard ();
   GrabPointer ();
+  EnsureHoverState ();
   
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
@@ -598,6 +599,7 @@ Launcher::exitKeyNavMode ()
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
   QueueDraw ();
+  EnsureHoverState ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
@@ -1387,6 +1389,7 @@ void Launcher::StartKeyShowLauncher ()
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     QueueDraw ();
+    EnsureHoverState ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
     if (_redraw_handle > 0)
       g_source_remove (_redraw_handle);
@@ -1398,6 +1401,7 @@ void Launcher::EndKeyShowLauncher ()
     
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
     QueueDraw ();
+    EnsureHoverState ();
 
     // it's a tap on super
     if (TapOnSuper ())
@@ -1762,6 +1766,7 @@ void
 Launcher::EnsureHoverState ()
 {
   if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER) || _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) || 
+      _hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) || _hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE) ||
       QuicklistManager::Default ()->Current() || GetActionState () != ACTION_NONE)
   {
     SetHover ();
