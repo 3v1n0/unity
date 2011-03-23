@@ -169,6 +169,8 @@ add_executable (test-places
                 ../src/PlacesGroup.h
                 ../src/PlacesView.cpp
                 ../src/PlacesView.h
+                ../src/PlacesVScrollBar.cpp
+                ../src/PlacesVScrollBar.h
                 ../src/PlaceEntryHome.cpp
                 ../src/PlaceEntryRemote.h
                 ../src/PlaceEntryRemote.cpp
@@ -207,6 +209,8 @@ add_executable (test-places-results
                 ../src/PlacesGroupController.h
                 ../src/PlacesGroup.cpp
                 ../src/PlacesGroup.h
+                ../src/PlacesVScrollBar.cpp
+                ../src/PlacesVScrollBar.h
                 )
 
 add_executable (test-quicklist
