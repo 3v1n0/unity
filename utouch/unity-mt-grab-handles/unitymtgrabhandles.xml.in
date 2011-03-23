@@ -9,6 +9,9 @@
 		<requirement>
 			<plugin>composite</plugin>
 		</requirement>
+		<requirement>
+			<plugin>imgpng</plugin>
+		</requirement>
 		<relation type="after">
 			<plugin>composite</plugin>
 			<plugin>opengl</plugin>

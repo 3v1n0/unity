@@ -64,13 +64,14 @@ BamfLauncherIcon::ActivateLauncherIcon ()
   running = bamf_view_is_running (BAMF_VIEW (m_App));
 
   /* Behaviour:
-   * Nothing running -> launch application
-   * Running and active -> spread application
-   * Spread is active and different icon pressed -> change spread
-   * Spread is active -> Spread de-activated, and fall through
+   * 1) Nothing running -> launch application
+   * 2) Running and active -> spread application
+   * 3) Running and not active -> focus application
+   * 4) Spread is active and different icon pressed -> change spread
+   * 5) Spread is active -> Spread de-activated, and fall through
    */
 
-  if (!running)
+  if (!running) // #1 above
   {
     if (GetQuirk (QUIRK_STARTING))
       return;
@@ -80,18 +81,19 @@ BamfLauncherIcon::ActivateLauncherIcon ()
   }
   else if (scaleWasActive)
   {
-    if (!Spread (0, false))
+    if (active ||           // #5 above
+        !Spread (0, false)) // #4 above
     {
       PluginAdapter::Default ()->TerminateScale ();
       Focus ();
       _launcher->SetLastSpreadIcon (NULL);
     }
   }
-  else if (!active)
+  else if (!active) // #3 above
   {
     Focus ();
   }
-  else if (active && !scaleWasActive)
+  else if (active && !scaleWasActive) // #2 above
   {
     Spread (0, false);
   }
@@ -717,11 +719,27 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
   }
 }
 
+static void
+OnAppLabelActivated (DbusmenuMenuitem* sender,
+                     guint             timestamp,
+                     gpointer data)
+{
+  BamfLauncherIcon* self = NULL;
+
+  if (!data)
+    return;
+    
+  self = (BamfLauncherIcon*) data;
+  self->ActivateLauncherIcon ();
+}
+
 std::list<DbusmenuMenuitem *>
 BamfLauncherIcon::GetMenus ()
 {
   std::map<std::string, DbusmenuClient *>::iterator it;
   std::list<DbusmenuMenuitem *> result;
+  bool first_separator_needed = false;
+  DbusmenuMenuitem* item = NULL;
 
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
@@ -735,6 +753,8 @@ BamfLauncherIcon::GetMenus ()
 
       if (!item)
         continue;
+
+      first_separator_needed = true;
 
       result.push_back (item);
     }
@@ -752,10 +772,36 @@ BamfLauncherIcon::GetMenus ()
       if (!item)
         continue;
 
+      first_separator_needed = true;
+
       result.push_back (item);
     }
-
   }
+
+  if (first_separator_needed)
+  {
+    item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (item,
+                                    DBUSMENU_MENUITEM_PROP_TYPE,
+                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    result.push_back (item);
+  }
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  bamf_view_get_name (BAMF_VIEW (m_App)));
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+  g_signal_connect (item, "item-activated", (GCallback) OnAppLabelActivated, this);
+  result.push_back (item);
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TYPE,
+                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
+  result.push_back (item);
 
   EnsureMenuItemsReady ();
 

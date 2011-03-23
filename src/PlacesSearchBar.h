@@ -72,6 +72,7 @@ private:
   void OnComboChanged (nux::ComboBoxSimple *simple);
   void OnMenuClosing (nux::MenuPage *menu, int x, int y);
   void OnEntryActivated ();
+  void OnLayeredLayoutQueueDraw (int i);
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);

@@ -149,7 +149,7 @@ IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *entry_id,
 
 void
 IndicatorObjectProxyRemote::OnScrollReceived (const char *entry_id,
-                                                          int        delta)
+                                              int        delta)
 {
   OnScroll.emit(entry_id, delta);
 }

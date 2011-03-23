@@ -21,11 +21,14 @@
 #include <config.h>
 #endif
 
+#include "panel-marshal.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+
+#include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -67,6 +70,8 @@ enum
   RE_SYNC,
   ACTIVE_MENU_POINTER_MOTION,
   ENTRY_ACTIVATE_REQUEST,
+  ENTRY_SHOW_NOW_CHANGED,
+  GEOMETRIES_CHANGED,
 
   LAST_SIGNAL
 };
@@ -179,6 +184,25 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+ _service_signals[GEOMETRIES_CHANGED] =
+    g_signal_new ("geometries-changed",
+		  G_OBJECT_CLASS_TYPE (obj_class),
+		  G_SIGNAL_RUN_LAST,
+		  0,
+		  NULL, NULL,
+		  panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+		  G_TYPE_NONE, 6,
+		  G_TYPE_OBJECT, G_TYPE_POINTER,
+		  G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+
+ _service_signals[ENTRY_SHOW_NOW_CHANGED] =
+    g_signal_new ("entry-show-now-changed",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  panel_marshal_VOID__STRING_BOOLEAN,
+                  G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
@@ -528,6 +552,23 @@ on_indicator_menu_show (IndicatorObject      *object,
 }
 
 static void
+on_indicator_menu_show_now_changed (IndicatorObject      *object,
+                                    IndicatorObjectEntry *entry,
+                                    gboolean              show_now_changed,
+                                    PanelService         *self)
+{
+  gchar *entry_id;
+  
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  entry_id = g_strdup_printf ("%p", entry);
+
+  g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
+
+  g_free (entry_id);
+}
+
+static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
@@ -551,6 +592,8 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_moved), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
                     G_CALLBACK (on_indicator_menu_show), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_SHOW_NOW_CHANGED,
+                    G_CALLBACK (on_indicator_menu_show_now_changed), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
@@ -861,6 +904,36 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   return g_variant_builder_end (&b);
 }
 
+void
+panel_service_sync_geometry (PanelService *self,
+			     const gchar *indicator_id,
+			     const gchar *entry_id,
+			     gint x,
+			     gint y,
+			     gint width,
+			     gint height)
+{
+  PanelServicePrivate *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+}
+
+static gboolean
+should_skip_menu (IndicatorObjectEntry *entry)
+{
+  gboolean label_ok;
+  gboolean image_ok;
+
+  label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
+    && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+  image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
+    && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+
+  return !label_ok && !image_ok;
+}
+
 static void
 activate_next_prev_menu (PanelService         *self,
                          IndicatorObject      *object,
@@ -873,9 +946,11 @@ activate_next_prev_menu (PanelService         *self,
   gint    n_entries;
   IndicatorObjectEntry *new_entry;
   gchar  *id;
- 
+
   entries = indicator_object_get_entries (object);
   n_entries = g_list_length (entries);
+  // all of these are for switching between independant indicators (for example, sound to messaging. 
+  // As opposed to batter to appmenu)
   if (n_entries == 1
       || (g_list_index (entries, entry) == 0 && direction == GTK_MENU_DIR_PARENT)
       || (g_list_index (entries, entry) == n_entries - 1 && direction == GTK_MENU_DIR_CHILD))
@@ -886,10 +961,12 @@ activate_next_prev_menu (PanelService         *self,
       
       n_indicators = g_slist_length (priv->indicators);
 
+      // changing from first indicator to last indicator
       if (g_slist_index (indicators, object) == 0 && direction == GTK_MENU_DIR_PARENT)
         {
           new_object = g_slist_nth_data (indicators, n_indicators - 1);
         }
+      // changing from last indicator to first indicator
       else if (g_slist_index (indicators, object) == n_indicators -1 && direction == GTK_MENU_DIR_CHILD)
         {
           new_object = g_slist_nth_data (indicators, 0);
@@ -904,18 +981,31 @@ activate_next_prev_menu (PanelService         *self,
       new_entries = indicator_object_get_entries (new_object);
       new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
 
+      g_list_free (entries);
       g_list_free (new_entries);
+
+      if (should_skip_menu (new_entry))
+	{	  
+	  activate_next_prev_menu (self, new_object, new_entry, direction);
+	  return;
+	}
     }
+  // changing within a group of indicators (for example, entries within appmenu)
   else
     {
       new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
+      g_list_free (entries);
+
+      if (should_skip_menu (new_entry))
+	{ 
+	  activate_next_prev_menu (self, object, new_entry, direction);
+	  return;
+	}
     }
-  
+
   id = g_strdup_printf ("%p", new_entry);
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
-
   g_free (id);
-  g_list_free (entries);
 }
 
 static void

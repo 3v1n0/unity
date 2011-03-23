@@ -32,6 +32,8 @@
 
 #include "PlacesController.h"
 
+#define PANEL_HEIGHT 24
+
 int PlacesController::_launcher_size = 66;
 
 PlacesController::PlacesController ()
@@ -57,7 +59,6 @@ PlacesController::PlacesController ()
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
-  _window->InputWindowEnableStruts(false);
   _window->SetOpacity (0.0f);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
@@ -102,7 +103,7 @@ PlacesController::Relayout (GdkScreen *screen, PlacesController *self)
 
   self->GetWindowSize (&width, &height);
   self->_window->SetGeometry (nux::Geometry (self->_monitor_rect.x + _launcher_size, 
-                                             self->_monitor_rect.y + 24,
+                                             self->_monitor_rect.y + PANEL_HEIGHT,
                                              width,
                                              height));
 }
@@ -116,9 +117,8 @@ void PlacesController::Show ()
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
   _window->PushToFront ();
-  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
-  //_window->GrabKeyboard ();
+  _window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
   
@@ -136,8 +136,7 @@ void PlacesController::Hide ()
   _window->CaptureMouseDownAnyWhereElse (false);
   _window->ForceStopFocus (1, 1);
   _window->UnGrabPointer ();
-  //_window->UnGrabKeyboard ();
-  _window->EnableInputWindow (false);
+  _window->UnGrabKeyboard ();
   _visible = false;
   _fullscren_request = false;
 
@@ -237,7 +236,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
   else
   {
     width = rect.width - _launcher_size;
-    height = rect.height - 24;
+    height = rect.height - PANEL_HEIGHT;
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_FULLSCREEN);
     style->SetDefaultNColumns (width / tile_width);
@@ -256,7 +255,7 @@ PlacesController::WindowConfigureCallback(int WindowWidth, int WindowHeight, nux
 
   self->GetWindowSize (&width, &height);
   geo = nux::Geometry (self->_monitor_rect.x + self->_launcher_size, 
-                       self->_monitor_rect.y + 24,
+                       self->_monitor_rect.y + PANEL_HEIGHT,
                        width,
                        height);
 }
@@ -268,7 +267,7 @@ PlacesController::OnDashFullscreenRequest ()
   _fullscren_request = true;
   GetWindowSize (&width, &height);
   _window->SetGeometry (nux::Geometry (_monitor_rect.x + _launcher_size, 
-                                       _monitor_rect.y + 24,
+                                       _monitor_rect.y + PANEL_HEIGHT,
                                        width,
                                        height));
 }
@@ -290,7 +289,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  nux::Geometry geo (_monitor_rect.x, _monitor_rect.y, _launcher_size, 24);
+  nux::Geometry geo (_monitor_rect.x, _monitor_rect.y, _launcher_size, PANEL_HEIGHT);
   if (!geo.IsPointInside (x, y))
     Hide ();
 }

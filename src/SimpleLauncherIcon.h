@@ -47,7 +47,8 @@ private:
     char *m_IconName;
     nux::BaseTexture *m_Icon;
     void ActivateLauncherIcon ();
+    static void OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data);
 };
 
-#endif // BAMFLAUNCHERICON_H
+#endif // SIMPLELAUNCHERICON_H
 

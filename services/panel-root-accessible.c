@@ -118,10 +118,11 @@ panel_root_accessible_initialize (AtkObject *accessible, gpointer data)
       indicator = panel_service_get_indicator (root->priv->service, i);
       if (indicator != NULL)
         {
-	  AtkObject *accessible;
+	  AtkObject *child;
 
-	  accessible = panel_indicator_accessible_new (indicator);
-	  root->priv->a11y_children = g_slist_append (root->priv->a11y_children, accessible);
+	  child = panel_indicator_accessible_new (indicator);
+          atk_object_set_parent (child, accessible);
+	  root->priv->a11y_children = g_slist_append (root->priv->a11y_children, child);
 	}
     }
 }

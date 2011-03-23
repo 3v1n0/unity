@@ -43,6 +43,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
   guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
@@ -78,6 +79,7 @@ private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);
   void OnPlaceEntryAdded (PlaceEntry *entry);
+  void OnPlaceEntryRemoved (PlaceEntry *entry);
   void RefreshEntry (PlaceEntry *entry);
 
   void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);

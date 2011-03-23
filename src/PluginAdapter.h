@@ -69,6 +69,7 @@ public:
     bool IsScaleActive ();
     
     void InitiateExpo ();
+    bool IsExpoActive ();
 
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
@@ -78,12 +79,18 @@ public:
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
+    bool IsWindowOnCurrentDesktop (guint xid);
+    bool IsWindowObscured (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Activate (guint32 xid);
+    void Raise (guint32 xid);
     void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);
+
+    nux::Geometry GetWindowGeometry (guint32 xid);
     
 protected:
     PluginAdapter(CompScreen *screen);
@@ -93,6 +100,9 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
+    
+    bool _spread_state;
+    bool _expo_state;
     
     static PluginAdapter *_default;
 };

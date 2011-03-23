@@ -26,6 +26,10 @@
 
 #include "PlacesSimpleTile.h"
 
+#include <NuxImage/GdkGraphics.h>
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
+
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
                                     const char *label,
                                     int         icon_size,
@@ -36,6 +40,10 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _icon (NULL),
   _uri (NULL)
 {
+  //GtkSettings *settings = gtk_settings_get_default ();
+  //gchar *font = NULL;
+  //gchar *fontstring = NULL;
+  
   nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup (label);
@@ -48,7 +56,11 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SinkReference ();
-  _cairotext->SetFont ("Ubuntu normal 9");
+
+  //g_object_get (settings, "gtk-font-name", &font, NULL);
+  //fontstring = g_strdup_printf ("%s normal 10", font);
+  
+  //_cairotext->SetFont (fontstring);
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);
@@ -63,6 +75,9 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   SetLayout (layout);
 
   SetDndEnabled (true, false);
+
+  //g_free (font);
+  //g_free (fontstring);
 }
 
 
@@ -88,7 +103,63 @@ PlacesSimpleTile::DndSourceDragBegin ()
 nux::NBitmapData * 
 PlacesSimpleTile::DndSourceGetDragImage ()
 {
-  return 0;
+  nux::NBitmapData *result = 0;
+  GdkPixbuf *pbuf;
+  GtkIconTheme *theme;
+  GtkIconInfo *info;
+  GError *error = NULL;
+  GIcon *icon;
+  
+  const char *icon_name = _icon;
+  int size = 64;
+  
+  if (!icon_name)
+    icon_name = "application-default-icon";
+   
+  theme = gtk_icon_theme_get_default ();
+  icon = g_icon_new_for_string (icon_name, NULL);
+
+  if (G_IS_ICON (icon))
+  {
+    info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref (icon);
+  }
+  else
+  {   
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       icon_name,
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
+  if (!info)
+  {
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       "application-default-icon",
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+        
+  if (gtk_icon_info_get_filename (info) == NULL)
+  {
+    gtk_icon_info_free (info);
+    info = gtk_icon_theme_lookup_icon (theme,
+                                       "application-default-icon",
+                                       size,
+                                       (GtkIconLookupFlags) 0);
+  }
+
+  pbuf = gtk_icon_info_load_icon (info, &error);
+  gtk_icon_info_free (info);
+
+  if (GDK_IS_PIXBUF (pbuf))
+  {
+    nux::GdkGraphics graphics (pbuf);
+    result = graphics.GetBitmap ();
+    g_object_unref (pbuf);
+  }
+  
+  return result;
 }
 
 std::list<const char *> 

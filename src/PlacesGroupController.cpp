@@ -235,8 +235,7 @@ PlacesGroupController::ActivateFirst ()
 
     if (tile)
     {
-      nux::Geometry geo = tile->GetGeometry ();
-      tile->OnMouseClick.emit (geo.x, geo.y, 0, 0);
+      tile->sigClick.emit (tile);
       return true;
     }
   }
@@ -256,4 +255,10 @@ PlacesGroupController::GetName ()
 void
 PlacesGroupController::AddProperties (GVariantBuilder *builder)
 {
+}
+
+int
+PlacesGroupController::GetTotalResults ()
+{
+  return _queue.size ();
 }
