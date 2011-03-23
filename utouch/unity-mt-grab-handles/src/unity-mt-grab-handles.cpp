@@ -669,11 +669,13 @@ UnityMTGrabHandlesWindow::onHideTimeout (gpointer data)
 {
     UnityMTGrabHandlesWindow *self = static_cast<UnityMTGrabHandlesWindow*> (data);
     
+    if (screen->grabbed ())
+    	return true;
+
     // hack
     self->hideHandles ();
     self->_mt_screen->mMoreAnimate = true;
     self->_timer_handle = 0;
-    
     return false;
 }
 
