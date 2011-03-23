@@ -415,6 +415,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _group_added_conn.disconnect ();
     _result_added_conn.disconnect ();
     _result_removed_conn.disconnect ();
+    _search_finished_conn.disconnect ();
 
     _results_controller->Clear ();
 
@@ -432,6 +433,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
   _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
+  _search_finished_conn = _entry->search_finished.connect (sigc::mem_fun (this, &PlacesView::OnSearchFinished));
   
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
@@ -841,6 +843,14 @@ PlacesView::ReEvaluateShrinkMode ()
 
   nux::Geometry geo = _results_view->GetGeometry ();
   OnResultsViewGeometryChanged (_results_view, geo);
+}
+
+void
+PlacesView::OnSearchFinished (const char *search_string,
+                              guint32     section_id,
+                              std::map<const char *, const char *>& hints)
+{
+  _search_bar->OnSearchFinished ();
 }
 
 //

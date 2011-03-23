@@ -60,12 +60,11 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _layout->SetHorizontalInternalMargin (12);
 
-  _search_icon = new nux::TextureArea (NUX_TRACKER_LOCATION);
-  _search_icon->SetTexture (icon);
-  _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
-  _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
-  _search_icon->SetCanFocus (false);
+  _spinner = new PlacesSearchBarSpinner ();
+  _spinner->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
+  _layout->AddView (_spinner, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _spinner->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
+  _spinner->SetCanFocus (false);
 
   _layered_layout = new nux::LayeredLayout ();
 
@@ -244,8 +243,7 @@ PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
 void
 PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
-  bool         is_empty;
+  bool is_empty;
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
@@ -260,7 +258,7 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 
   is_empty = g_strcmp0 (_pango_entry->GetText ().c_str (), "") == 0;
   _hint->SetVisible (is_empty);
-  _search_icon->SetTexture (is_empty ? style->GetSearchReadyIcon () : style->GetSearchClearIcon ());
+  _spinner->SetState (is_empty ? STATE_READY : STATE_SEARCHING);
 
   _hint->QueueDraw ();
   _pango_entry->QueueDraw ();
@@ -293,7 +291,7 @@ PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsig
   if (_pango_entry->GetText () != "")
   {
     _pango_entry->SetText ("");
-    _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
+    _spinner->SetState (STATE_READY);
     EmitLiveSearch ();
   }
 }
@@ -308,6 +306,12 @@ void
 PlacesSearchBar::OnLayeredLayoutQueueDraw (int i)
 {
   QueueDraw ();
+}
+
+void
+PlacesSearchBar::OnSearchFinished ()
+{
+  _spinner->SetState (STATE_CLEAR);
 }
 
 void

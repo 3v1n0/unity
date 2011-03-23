@@ -161,6 +161,8 @@ add_executable (test-places
                 ../src/PlacesHomeView.h
                 ../src/PlacesSearchBar.cpp
                 ../src/PlacesSearchBar.h
+                ../src/PlacesSearchBarSpinner.cpp
+                ../src/PlacesSearchBarSpinner.h
                 ../src/PlacesResultsController.cpp
                 ../src/PlacesResultsController.h
                 ../src/PlacesResultsView.h

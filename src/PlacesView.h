@@ -123,6 +123,10 @@ private:
 
   static gboolean OnResizeFrame (PlacesView *self);
 
+  void OnSearchFinished (const char *search_string,
+                         guint32     section_id,
+                         std::map<const char *, const char *>& hints);
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
@@ -135,6 +139,7 @@ private:
   sigc::connection    _group_added_conn;
   sigc::connection    _result_added_conn;
   sigc::connection    _result_removed_conn;
+  sigc::connection    _search_finished_conn;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
