@@ -127,6 +127,8 @@ private:
                          guint32     section_id,
                          std::map<const char *, const char *>& hints);
 
+  static gboolean OnSearchTimedOut (PlacesView *view);
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
@@ -164,6 +166,7 @@ private:
   PlaceEntry *_alt_f2_entry;
 
   guint _n_results;
+  guint _searching_timeout;
 };
 
 #endif // PANEL_HOME_BUTTON_H

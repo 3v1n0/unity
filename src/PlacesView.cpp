@@ -48,7 +48,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _target_height (1),
   _actual_height (1),
   _resize_id (0),
-  _alt_f2_entry (NULL)
+  _alt_f2_entry (NULL),
+  _searching_timeout (0)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -721,6 +722,26 @@ PlacesView::OnSearchChanged (const char *search_string)
     _layered_layout->QueueDraw ();
     QueueDraw ();
   }
+
+  if (_searching_timeout)
+    g_source_remove (_searching_timeout);
+  _searching_timeout = 0;
+
+  if (g_strcmp0 (search_string, ""))
+  {
+    _searching_timeout = g_timeout_add (5000, (GSourceFunc)PlacesView::OnSearchTimedOut, this);
+  }
+}
+
+gboolean
+PlacesView::OnSearchTimedOut (PlacesView *view)
+{
+  std::map <const char *, const char *> hints;
+
+  view->_searching_timeout = 0;
+  view->OnSearchFinished ( "", 0, hints);
+
+  return FALSE;
 }
 
 //
