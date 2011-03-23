@@ -90,7 +90,6 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
-  _combo->SetCanFocus (false); // NOT SUPPORTING THIS QUITE YET
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
