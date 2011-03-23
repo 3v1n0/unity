@@ -60,6 +60,10 @@ public:
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
+    
+    void SetShowHandlesAction (CompAction *action) { _grab_show_action = action; }
+    void SetHideHandlesAction (CompAction *action) { _grab_hide_action = action; }
+    void SetToggleHandlesAction (CompAction *action) { _grab_toggle_action = action; }
 
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
@@ -70,6 +74,10 @@ public:
     
     void InitiateExpo ();
     bool IsExpoActive ();
+    
+    void ShowGrabHandles (CompWindow *window);
+    void HideGrabHandles (CompWindow *window);
+    void ToggleGrabHandles (CompWindow *window);
 
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
@@ -103,6 +111,10 @@ private:
     
     bool _spread_state;
     bool _expo_state;
+    
+    CompAction *_grab_show_action;
+    CompAction *_grab_hide_action;
+    CompAction *_grab_toggle_action;
     
     static PluginAdapter *_default;
 };

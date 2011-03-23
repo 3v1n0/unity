@@ -48,6 +48,10 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
 {
   _spread_state = false;
   _expo_state = false;
+  
+  _grab_show_action = 0;
+  _grab_hide_action = 0;
+  _grab_toggle_action = 0;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -519,4 +523,58 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   if (win_wmclass)
     free (win_wmclass);
+}
+
+void 
+PluginAdapter::ShowGrabHandles (CompWindow *window)
+{
+  if (!_grab_show_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_show_action->initiate () (_grab_show_action, 0, argument);
+}
+
+void 
+PluginAdapter::HideGrabHandles (CompWindow *window)
+{
+  if (!_grab_hide_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_hide_action->initiate () (_grab_hide_action, 0, argument);
+}
+
+void 
+PluginAdapter::ToggleGrabHandles (CompWindow *window)
+{
+  if (!_grab_toggle_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_toggle_action->initiate () (_grab_toggle_action, 0, argument);
 }

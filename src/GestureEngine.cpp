@@ -25,6 +25,7 @@
  #include "ubus-server.h"
  #include "UBusMessages.h"
  #include "GestureEngine.h"
+ #include "PluginAdapter.h"
 
 GestureEngine::GestureEngine (CompScreen *screen)
 {
@@ -64,6 +65,13 @@ GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
   {
     UBusServer *ubus = ubus_server_get_default ();
     ubus_server_send_message (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+  }
+  else if (data->touches == 3)
+  {
+    CompWindow *result = FindCompWindow (data->window);
+    
+    if (result)
+      PluginAdapter::Default ()->ToggleGrabHandles (result);
   }
 }
 
