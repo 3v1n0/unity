@@ -279,7 +279,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   gchar           *real_exec;
   GDesktopAppInfo *info;
 
-  markup = g_strdup_printf ("<big><b>%s</b></big>", name);
+  markup = g_strdup_printf ("<big>%s</big>", name);
   
   // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
   // best of times but the following is the closest best-guess without having to do D-Bus
