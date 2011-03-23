@@ -189,9 +189,6 @@ PlacesHomeView::Refresh ()
   const char *temp = "<big><b>%s</b></big>";
   int         icon_size = style->GetHomeTileIconSize ();
   
-  GetCompositionLayout ()->SetVerticalExternalMargin (4);
-  GetCompositionLayout ()->SetHorizontalExternalMargin (18);
-
   _layout->Clear ();
 
   if (!GetExpanded ())
