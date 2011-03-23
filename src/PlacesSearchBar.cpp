@@ -43,6 +43,8 @@
 
 #include "PlacesStyle.h"
 
+#include "unitya11y.h"
+
 #define LIVE_SEARCH_TIMEOUT 250
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
@@ -75,6 +77,14 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layered_layout->AddLayer (_hint);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
+  if (unity_a11y_initialized () == TRUE)
+    {
+      AtkObject *atk_object = NULL;
+
+      atk_object = unity_a11y_get_accessible (_pango_entry);
+      atk_object_set_name (atk_object, "Search Bar Entry");
+    }
+
   _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
   _pango_entry->SetCanFocus (true);
   _pango_entry->activated.connect (sigc::mem_fun (this, &PlacesSearchBar::OnEntryActivated));
