@@ -442,11 +442,13 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName = NULL;
-  double                label_x  = 18.0f;
-  double                label_y  = 18.0f;
-  double                label_w  = 18.0f;
-  double                label_h  = 18.0f;
-  double                label_r  = 3.0f;
+
+  double label_pos = double(_icon_size / 3.0f);
+  double label_x = label_pos;
+  double label_y = label_pos;
+  double label_w = label_pos;
+  double label_h = label_pos;
+  double label_r = 3.0f;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
@@ -459,7 +461,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   layout = pango_cairo_create_layout (cr);
   g_object_get (settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string (fontName);
-  pango_font_description_set_size (desc, 11 * PANGO_SCALE);
+  pango_font_description_set_absolute_size (desc, label_pos * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
@@ -1873,6 +1875,22 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _icon_image_size_delta = tile_size - icon_size;
     _icon_glow_size = icon_size + 14;
 
+    for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+    {
+      if (_superkey_labels[i])
+        _superkey_labels[i]->UnReference();
+      _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
+    }
+
+    LauncherModel::iterator it;
+    for (it = _model->main_begin(); it != _model->main_end(); it++)
+    {
+        LauncherIcon *icon = *it;
+        guint64 shortcut = icon->GetShortcut();
+        if (shortcut != 0 && !g_ascii_isdigit((gchar)shortcut))
+                icon->SetSuperkeyLabel(cairoToTexture2D((gchar)shortcut,_icon_size,_icon_size));
+    }
+
     // recreate tile textures
 
     _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
@@ -1892,7 +1910,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     // needs to be disconnected
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
-   guint64 shortcut = icon->GetShortcut ();
+    guint64 shortcut = icon->GetShortcut ();
     if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
       icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
