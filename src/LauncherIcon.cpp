@@ -328,7 +328,7 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
 
 void LauncherIcon::SetTooltipText(const TCHAR* text)
 {
-    m_TooltipText = text;
+    m_TooltipText = g_markup_escape_text (text, -1);
     _tooltip->SetText (m_TooltipText);
 }
 
