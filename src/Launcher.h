@@ -369,15 +369,6 @@ private:
   
   gboolean TapOnSuper ();
 
-  void
-  DrawRoundedRectangle (cairo_t* cr,
-                        double   aspect,
-                        double   x,
-                        double   y,
-                        double   cornerRadius,
-                        double   width,
-                        double   height);
-
   nux::BaseTexture*
   cairoToTexture2D (const char label,
                     int        width,

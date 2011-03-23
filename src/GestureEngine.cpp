@@ -90,6 +90,15 @@ GestureEngine::FindCompWindow (Window window)
     result = _screen->findTopLevelWindow (window);
   }
   
+  if (result)
+  {
+    if (!(result->type () & (CompWindowTypeUtilMask | 
+                            CompWindowTypeNormalMask | 
+                            CompWindowTypeDialogMask |
+                            CompWindowTypeModalDialogMask)))
+      result = 0;
+  }
+  
   return result;
 }
 
@@ -100,8 +109,15 @@ GestureEngine::OnDragStart (GeisAdapter::GeisDragData *data)
   {
     _drag_window = FindCompWindow (data->window);
     
+    
     if (!_drag_window)
       return;
+
+    if (!(_drag_window->actions () & CompWindowActionMoveMask))
+    {
+      _drag_window = 0;
+      return;
+    }
     
     if (_drag_window->state () & MAXIMIZE_STATE)
     {

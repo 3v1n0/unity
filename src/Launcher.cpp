@@ -362,6 +362,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _last_button_press      = 0;
     _selection_atom         = 0;
     _drag_out_id            = 0;
+    _drag_out_delta_x       = 0.0f;
     
     _check_window_over_launcher   = true;
     _postreveal_mousemove_delta_x = 0;
@@ -428,62 +429,6 @@ Launcher::GetName ()
   return "Launcher";
 }
 
-void
-Launcher::DrawRoundedRectangle (cairo_t* cr,
-                                double   aspect,
-                                double   x,
-                                double   y,
-                                double   cornerRadius,
-                                double   width,
-                                double   height)
-{
-  double radius = cornerRadius / aspect;
-  
-  // top-left, right of the corner
-  cairo_move_to (cr, x + radius, y);
-  
-  // top-right, left of the corner
-  cairo_line_to (cr, x + width - radius, y);
-  
-  // top-right, below the corner
-  cairo_arc (cr,
-             x + width - radius,
-             y + radius,
-             radius,
-             -90.0f * G_PI / 180.0f,
-             0.0f * G_PI / 180.0f);
-  
-  // bottom-right, above the corner
-  cairo_line_to (cr, x + width, y + height - radius);
-
-  // bottom-right, left of the corner
-  cairo_arc (cr,
-             x + width - radius,
-             y + height - radius,
-             radius,
-             0.0f * G_PI / 180.0f,
-             90.0f * G_PI / 180.0f);
-  
-  // bottom-left, right of the corner
-  cairo_line_to (cr, x + radius, y + height);
-  
-  // bottom-left, above the corner
-  cairo_arc (cr,
-             x + radius,
-             y + height - radius,
-             radius,
-             90.0f * G_PI / 180.0f,
-             180.0f * G_PI / 180.0f);
-  
-  // top-left, right of the corner
-  cairo_arc (cr,
-             x + radius,
-             y + radius,
-             radius,
-             180.0f * G_PI / 180.0f,
-             270.0f * G_PI / 180.0f);
-}
-
 nux::BaseTexture*
 Launcher::cairoToTexture2D (const char label, int width, int height)
 {
@@ -507,7 +452,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   cairo_paint (cr);
   cairo_scale (cr, 1.0f, 1.0f);
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  DrawRoundedRectangle (cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
+  cg->DrawRoundedRectangle (cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.65f);
   cairo_fill (cr);
 
@@ -545,6 +490,9 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
 void 
 Launcher::OnDragStart (GeisAdapter::GeisDragData *data)
 {
+  if (_drag_out_id && _drag_out_id == data->id)
+    return;
+    
   if (data->touches == 4)
   {
     _drag_out_id = data->id;

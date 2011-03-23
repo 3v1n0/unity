@@ -229,13 +229,13 @@ QuicklistMenuItemLabel::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        0.5f,
-                        0.5f,
-                        ITEM_CORNER_RADIUS_ABS,
-                        width - 1.0f,
-                        height - 1.0f);
+  _cairoGraphics->DrawRoundedRectangle (cr,
+                                        1.0f,
+                                        0.5f,
+                                        0.5f,
+                                        ITEM_CORNER_RADIUS_ABS,
+                                        width - 1.0f,
+                                        height - 1.0f);
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
