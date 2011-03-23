@@ -1467,6 +1467,8 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
   }
   
   self->EnsureAnimation ();
+  
+  g_variant_iter_free (prop_iter);
 }
 
 void Launcher::OnActionDone (GVariant *data, void *val)
