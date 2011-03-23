@@ -19,6 +19,8 @@
 
 #include "PlacesSearchBarSpinner.h"
 
+#include <Nux/VLayout.h>
+
 #include "PlacesStyle.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBarSpinner);
@@ -31,6 +33,11 @@ PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
 
   _search_ready = style->GetSearchReadyIcon ();
   _clear_full = style->GetSearchClearIcon ();
+  _clear_alone = style->GetSearchClearAloneIcon ();
+  _clear_spinner = style->GetSearchClearSpinnerIcon ();
+
+  _2d_rotate.Identity ();
+  _2d_rotate.Rotate_z (180.0);
 }
 
 PlacesSearchBarSpinner::~PlacesSearchBarSpinner ()
@@ -55,7 +62,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::GetPainter ().PaintBackground (GfxContext, geo);
 
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap (nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
   if (_state == STATE_READY)
   {
@@ -69,7 +76,37 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else if (_state == STATE_SEARCHING)
   {
+    nux::Geometry clear_geo (geo.x + ((geo.width - _clear_spinner->GetWidth ())/2),
+                             geo.y + ((geo.height - _clear_spinner->GetHeight ())/2),
+                             _clear_spinner->GetWidth (),
+                             _clear_spinner->GetHeight ());
 
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-clear_geo.x - clear_geo.width / 2,
+                                    -clear_geo.y - clear_geo.height / 2, 0));
+    GfxContext.PushModelViewMatrix (_2d_rotate);    
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(clear_geo.x + clear_geo.width/ 2,
+                                    clear_geo.y + clear_geo.height / 2, 0));
+
+    _clear_spinner->GetDeviceTexture ()->SetFiltering (GL_LINEAR, GL_LINEAR);
+    GfxContext.QRP_1Tex (clear_geo.x,
+                         clear_geo.y,
+                         clear_geo.width,
+                         clear_geo.height,
+                         _clear_spinner->GetDeviceTexture (),
+                         texxform,
+                         nux::Color::White);
+
+    GfxContext.PopModelViewMatrix ();
+    GfxContext.PopModelViewMatrix ();
+    GfxContext.PopModelViewMatrix ();
+
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _clear_alone->GetWidth ())/2),
+                         geo.y + ((geo.height - _clear_alone->GetHeight ())/2),
+                         _clear_alone->GetWidth (),
+                         _clear_alone->GetHeight (),
+                         _clear_alone->GetDeviceTexture (),
+                         texxform,
+                         nux::Color::White);
   }
   else
   {
@@ -88,7 +125,6 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PlacesSearchBarSpinner::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-
 }
 
 void

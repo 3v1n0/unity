@@ -24,7 +24,7 @@
 #include <Nux/View.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
-
+#include <NuxCore/Math/Matrix4.h>
 #include "Introspectable.h"
 
 enum SpinnerState
@@ -59,8 +59,10 @@ private:
 
   nux::BaseTexture *_search_ready;
   nux::BaseTexture *_clear_full;
-  //nux::BaseTexture *_clear_outline;
-  //nux::TextureArea *_clear_outline_progress;
+  nux::BaseTexture *_clear_alone;
+  nux::BaseTexture *_clear_spinner;
+
+  nux::Matrix4 _2d_rotate;
 };
 
 #endif

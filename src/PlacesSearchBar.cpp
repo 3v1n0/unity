@@ -62,6 +62,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _spinner = new PlacesSearchBarSpinner ();
   _spinner->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
+  //_spinner->SetMaximumWidth (icon->GetWidth ());
   _layout->AddView (_spinner, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   _spinner->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
   _spinner->SetCanFocus (false);
