@@ -120,6 +120,8 @@ add_executable (test-panel
                 ../src/WindowButtons.h
                 ../src/WindowManager.cpp
                 ../src/WindowManager.h
+                ../src/UScreen.cpp
+                ../src/UScreen.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
                 )

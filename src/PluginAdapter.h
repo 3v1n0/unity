@@ -89,6 +89,8 @@ public:
     void Lower (guint32 xid);
 
     void MaximizeIfBigEnough (CompWindow *window);
+
+    nux::Geometry GetWindowGeometry (guint32 xid);
     
 protected:
     PluginAdapter(CompScreen *screen);

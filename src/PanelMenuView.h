@@ -75,6 +75,7 @@ public:
   void OnWindowUnmapped (guint32 xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
+  void OnWindowMoved (guint32 xid);
   
   guint32 GetMaximizedWindow ();
 
@@ -89,6 +90,8 @@ public:
   void OnMinimizeClicked ();
   void OnRestoreClicked ();
   void OnWindowButtonsRedraw ();
+  void SetMonitor (int monitor);
+  bool GetControlsActive ();
 
 protected:
   const gchar * GetName ();
@@ -100,6 +103,7 @@ private:
   static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
   static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
   void UpdateShowNow (bool ignore);
+  static gboolean UpdateActiveWindowPosition (PanelMenuView *self);
   
 private:
   BamfMatcher* _matcher;
@@ -130,5 +134,10 @@ private:
 
   bool _places_showing;
   bool _show_now_activated;
+
+  bool _we_control_active;
+  int  _monitor;
+  guint32 _active_xid;
+  guint32 _active_moved_id;
 };
 #endif
