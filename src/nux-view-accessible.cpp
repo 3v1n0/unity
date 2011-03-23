@@ -31,6 +31,7 @@
 #include "unitya11y.h"
 
 #include "Nux/Layout.h"
+#include "Nux/Area.h"
 
 /* GObject */
 static void nux_view_accessible_class_init (NuxViewAccessibleClass *klass);
@@ -62,6 +63,8 @@ static void on_layout_changed_cb              (nux::View *view,
                                                nux::Layout *layout,
                                                AtkObject *accessible,
                                                gboolean is_add);
+static void on_focus_changed_cb               (nux::Area *area,
+                                               AtkObject *accessible);
 
 G_DEFINE_TYPE_WITH_CODE (NuxViewAccessible,
                          nux_view_accessible,
@@ -69,9 +72,21 @@ G_DEFINE_TYPE_WITH_CODE (NuxViewAccessible,
                          G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
                                                 atk_component_interface_init))
 
+#define NUX_VIEW_ACCESSIBLE_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_VIEW_ACCESSIBLE,        \
+                                NuxViewAccessiblePrivate))
+
+struct _NuxViewAccessiblePrivate
+{
+  /* Cached values (used to avoid extra notifications) */
+  gboolean focused;
+};
+
+
 static void
 nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
@@ -79,11 +94,17 @@ nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
   atk_class->ref_state_set = nux_view_accessible_ref_state_set;
   atk_class->ref_child = nux_view_accessible_ref_child;
   atk_class->get_n_children = nux_view_accessible_get_n_children;
+
+  g_type_class_add_private (gobject_class, sizeof (NuxViewAccessiblePrivate));
 }
 
 static void
 nux_view_accessible_init (NuxViewAccessible *view_accessible)
 {
+  NuxViewAccessiblePrivate *priv =
+    NUX_VIEW_ACCESSIBLE_GET_PRIVATE (view_accessible);
+
+  view_accessible->priv = priv;
 }
 
 AtkObject*
@@ -115,8 +136,12 @@ nux_view_accessible_initialize (AtkObject *accessible,
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
   view = dynamic_cast<nux::View *>(nux_object);
 
+  /* focus support non based on Focusable, required for the Launcher */
   view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb), accessible));
   view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb), accessible));
+
+  /* focus support based on Focusable, used on the Dash */
+  view->FocusChanged.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
 
   view->LayoutAdded.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
                                          accessible, TRUE));
@@ -214,8 +239,8 @@ on_start_focus_cb (AtkObject *accessible)
 {
   g_debug ("[a11y] on start_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
 
-  g_signal_emit_by_name (accessible, "focus_event", TRUE);
-  atk_focus_tracker_notify (accessible);
+  // g_signal_emit_by_name (accessible, "focus_event", TRUE);
+  // atk_focus_tracker_notify (accessible);
 }
 
 static void
@@ -223,8 +248,8 @@ on_end_focus_cb (AtkObject *accessible)
 {
   g_debug ("[a11y] on end_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
 
-  g_signal_emit_by_name (accessible, "focus_event", FALSE);
-  atk_focus_tracker_notify (accessible);
+  // g_signal_emit_by_name (accessible, "focus_event", FALSE);
+  // atk_focus_tracker_notify (accessible);
 }
 
 static void
@@ -252,6 +277,32 @@ on_layout_changed_cb (nux::View *view,
 
   /* index is always 0 as there is always just one layout */
   g_signal_emit_by_name (accessible, signal_name, 0, atk_child, NULL);
+}
+
+static void
+on_focus_changed_cb (nux::Area *area,
+                     AtkObject *accessible)
+{
+  gboolean focus_in = FALSE;
+  NuxViewAccessible *self = NULL;
+
+  g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
+
+  self = NUX_VIEW_ACCESSIBLE (accessible);
+
+  if (area->GetFocused ())
+    focus_in = TRUE;
+
+  g_debug ("[a11y][view] on_focus_change_cb: (%p:%s:%i)",
+           accessible, atk_object_get_name (accessible), focus_in);
+
+  if (self->priv->focused != focus_in)
+    {
+      self->priv->focused = focus_in;
+
+      g_signal_emit_by_name (accessible, "focus_event", focus_in);
+      atk_focus_tracker_notify (accessible);
+    }
 }
 
 /* AtkComponent.h */

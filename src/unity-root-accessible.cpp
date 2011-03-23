@@ -172,14 +172,14 @@ unity_root_accessible_get_parent (AtkObject *obj)
  * temporal. This method should be a internal root method, as part of
  * a basewindow::show callback, as in the case of gail
  */
-void
+AtkObject *
 unity_root_accessible_add_window (UnityRootAccessible *self,
                                   nux::BaseWindow *window)
 {
   AtkObject *window_accessible = NULL;
   gint index = 0;
 
-  g_return_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self));
+  g_return_val_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self), NULL);
 
   window_accessible =
     unity_a11y_get_accessible (window);
@@ -193,6 +193,8 @@ unity_root_accessible_add_window (UnityRootAccessible *self,
 
   g_signal_emit_by_name (self, "children-changed::add",
                          index, window_accessible, NULL);
+
+  return window_accessible;
 }
 
 /* private */
