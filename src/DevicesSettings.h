@@ -40,7 +40,12 @@ public:
 
   static DevicesSettings * GetDefault ();
 
-  DevicesOption GetDevicesOption ();
+  void          SetDevicesOption (DevicesOption devices_option);
+  DevicesOption GetDevicesOption () { return _devices_option; };
+
+  GSList * GetFavorites ();
+  void     AddFavorite    (const char *uuid);
+  void     RemoveFavorite (const char *uuid);
 
   sigc::signal<void, DevicesSettings *> changed;
 
@@ -50,7 +55,8 @@ private:
 
 private:
   GSettings    *_settings;
-  int           _raw_devices_option;
+  GSList       *_favorites;
+  bool          _ignore_signals;
   DevicesOption _devices_option;
 };
 
