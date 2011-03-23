@@ -51,6 +51,7 @@ protected:
   // Introspectable methods
   const gchar * GetName ();
   void AddProperties (GVariantBuilder *builder);
+  static gboolean OnFrame (PlacesSearchBarSpinner *self);
 
 private:
 
@@ -63,6 +64,9 @@ private:
   nux::BaseTexture *_clear_spinner;
 
   nux::Matrix4 _2d_rotate;
+  float        _rotation;
+
+  guint32 _spinner_timeout;
 };
 
 #endif

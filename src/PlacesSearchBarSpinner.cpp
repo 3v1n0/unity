@@ -27,7 +27,9 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBarSpinner);
 
 PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
 : nux::View (NUX_TRACKER_LOCATION),
-  _state (STATE_READY)
+  _state (STATE_READY),
+  _rotation (0.0f),
+  _spinner_timeout (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
@@ -37,7 +39,7 @@ PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
   _clear_spinner = style->GetSearchClearSpinnerIcon ();
 
   _2d_rotate.Identity ();
-  _2d_rotate.Rotate_z (180.0);
+  _2d_rotate.Rotate_z (0.0);
 }
 
 PlacesSearchBarSpinner::~PlacesSearchBarSpinner ()
@@ -63,6 +65,8 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.min_filter = nux::TEXFILTER_LINEAR;
+  texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
   if (_state == STATE_READY)
   {
@@ -87,7 +91,6 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(clear_geo.x + clear_geo.width/ 2,
                                     clear_geo.y + clear_geo.height / 2, 0));
 
-    _clear_spinner->GetDeviceTexture ()->SetFiltering (GL_LINEAR, GL_LINEAR);
     GfxContext.QRP_1Tex (clear_geo.x,
                          clear_geo.y,
                          clear_geo.width,
@@ -127,6 +130,21 @@ PlacesSearchBarSpinner::DrawContent (nux::GraphicsEngine &GfxContext, bool force
 {
 }
 
+gboolean
+PlacesSearchBarSpinner::OnFrame (PlacesSearchBarSpinner *self)
+{
+  self->_rotation += 0.1f;
+
+  if (self->_rotation >= 360.0f)
+    self->_rotation = 0.0f;
+
+  self->_2d_rotate.Rotate_z (self->_rotation);
+
+  self->QueueDraw ();
+
+  return TRUE;
+}
+
 void
 PlacesSearchBarSpinner::SetState (SpinnerState state)
 {
@@ -134,6 +152,17 @@ PlacesSearchBarSpinner::SetState (SpinnerState state)
     return;
 
   _state = state;
+
+  if (_spinner_timeout)
+    g_source_remove (_spinner_timeout);
+  _2d_rotate.Rotate_z (0.0f);
+  _rotation = 0.0f;
+
+  if (_state == STATE_SEARCHING)
+  {
+    _spinner_timeout = g_timeout_add (15, (GSourceFunc)PlacesSearchBarSpinner::OnFrame, this);
+  }
+
   QueueDraw ();
 }
 
