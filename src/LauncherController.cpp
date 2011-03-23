@@ -39,6 +39,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   
   _launcher->SetModel (_model);
   _launcher->launcher_addrequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherAddRequest));
+  _launcher->launcher_removerequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRemoveRequest));
   _favorite_store = FavoriteStore::GetDefault ();
 
   _place_section = new PlaceLauncherSection (_launcher);
@@ -134,6 +135,18 @@ void
 LauncherController::OnIconAdded (LauncherIcon *icon)
 {
   this->RegisterIcon (icon);
+}
+
+void
+LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
+{
+  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+  
+  // we only handle bamf Icon removal request for now.
+  if (!bamf_icon)
+    return;
+    
+  bamf_icon->UnStick ();
 }
 
 void

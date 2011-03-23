@@ -2541,9 +2541,20 @@ void Launcher::EndIconDrag ()
 {
   if (_drag_window)
   {
-    _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
-    _drag_window->StartAnimation ();
-    _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+    LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+  
+    if(hovered_icon && hovered_icon->Type () == LauncherIcon::TYPE_TRASH)
+    {
+      launcher_removerequest.emit (_drag_icon);
+      _drag_window->ShowWindow (false);
+      EnsureAnimation ();
+    }
+    else
+    {
+      _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
+      _drag_window->StartAnimation ();
+      _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+    }
   }
   
   if (MouseBeyondDragThreshold ())
