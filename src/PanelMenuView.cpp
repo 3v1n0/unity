@@ -458,6 +458,12 @@ void
 PanelMenuView::Refresh ()
 {
   nux::Geometry         geo = GetGeometry ();
+
+  // We can get into a race that causes the geometry to be wrong as there hasn't been a layout
+  // cycle before the first callback. This is to protect from that.
+  if (geo.width > _monitor_geo.width)
+    return;
+  
   char                 *label = GetActiveViewName ();
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
@@ -1026,6 +1032,7 @@ void
 PanelMenuView::SetMonitor (int monitor)
 {
   _monitor = monitor;
+  _monitor_geo = UScreen::GetDefault ()->GetMonitorGeometry (_monitor);
 }
 
 bool
