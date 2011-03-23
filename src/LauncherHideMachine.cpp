@@ -105,7 +105,15 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       break;
     }
     
-    if (GetQuirk (LAST_ACTION_ACTIVATE))
+    bool hide_for_window = false;
+    if (_mode == AUTOHIDE)
+      hide_for_window = true;
+    else if (_mode == DODGE_WINDOWS)
+      hide_for_window = GetQuirk (ANY_WINDOW_UNDER);
+    else if (_mode == DODGE_ACTIVE_WINDOW)
+      hide_for_window = GetQuirk (ACTIVE_WINDOW_UNDER);
+    
+    if (GetQuirk (LAST_ACTION_ACTIVATE) && hide_for_window)
     {
       should_hide = true;
       break;
@@ -128,12 +136,7 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       break;
     }
 
-    if (_mode == AUTOHIDE)
-      should_hide = true;
-    else if (_mode == DODGE_WINDOWS)
-      should_hide = GetQuirk (ANY_WINDOW_UNDER);
-    else if (_mode == DODGE_ACTIVE_WINDOW)
-      should_hide = GetQuirk (ACTIVE_WINDOW_UNDER);
+    should_hide = hide_for_window;
 
   } while (false);
   
