@@ -1,6 +1,78 @@
 unity (3.6.8-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - crash at the second drag and drop from an unity place (LP: #736704)
+    - Compiz crashes with SIGSEGV in nux::GraphicsDisplay::GrabPointer when
+      opening the Dash (LP: #737287)
+    - Visual Tearing/Rendering Issues with Unity Launcher (LP: #737476)
+    - unity-window-decorator crash on unity panel dragout (LP: #740480)
+    - unity-panel-service crashed with SIGSEGV in g_type_check_instance_is_a()
+      (LP: #694699)
+    - compiz crashed with SIGSEGV in nux::BaseTexture::GetDeviceTexture()
+      (LP: #692823)
+    - the "no result" and "search the web" items need icons (LP: #711199)
+    - Resizing with external padding/grab area prevents reaching edge of
+      screen (LP: #710356)
+    - drag and drop of launcher icons uses microscopic drag icon (LP: #727647)
+    - text in places look squeezed (LP: #727799)
+    - at-spi-registry consumes most of the CPU and make the system unusable on
+      Natty (LP: #729827)
+    - migrate_favorites.py crashed with GError in __main__: Bad key or
+      directory name: "/desktop/unity/launcher/favorites/app-
+      dc++.desktop/type": `+' is an invalid character in key/directory names
+      (LP: #737016)
+    - Launcher hide state is confusing (LP: #739850)
+    - Polish new launcher hide state (part 2) (LP: #740020)
+    - launcher icons should expan on super or when entering keynav
+      (LP: #741319)
+    - Launcher - Dragging a Launcher icon to the Trash should remove the icon
+      (LP: #676466)
+    - Launcher - Enable dragging and dropping of files & folders to Launcher
+      icons (LP: #676549)
+    - Dash - Add Dash group header mouseover effect (LP: #689640)
+    - unity aborts when you plug in an external monitor (LP: #700757)
+    - Keyboard-navigation: focus on launcher remembered (LP: #713340)
+    - Launcher Quicklists should always contain the application title
+      (LP: #723877)
+    - When a maximized window has window on top of it in 'restored state' (not
+      maximised) , it is not possible to un-maximized the window by dragging
+      the title bar downwards (LP: #723882)
+    - When windows open for the first time they should not hide the launcher
+      (LP: #723878)
+    - UI blocked when expanding a section with more than 2000 items
+      (LP: #736059)
+    - Change ALT-Tab to bring the target window to the front (LP: #736938)
+    - compiz crashed with SIGABRT in __kernel_vsyscall() (LP: #737814)
+    - Launcher does not respond to changes in icon theme (LP: #605475)
+    - Implement new style scrollbars in Dash (LP: #608124)
+    - Closing launcher menu raises window under mouse (LP: #728787)
+    - adding url launcher support from the search (LP: #739038)
+    - Launcher - Set Launcher 'Hide Animation' to 'Slide only' by default.
+      Also introduce subtle fade in effect. (LP: #739567)
+    - "Time & Date" settings appears in launcher with empty tooltip
+      (LP: #740907)
+    - ZeitgeistLog missing implementation of get_property for "connected"
+      (LP: #734080)
+    - often can't alt-click-dnd to move the focussed dialog (LP: #711911)
+    - The Unity Panel's window controls and window dragging features should
+      work for the uppermost maximized window regardless of current window in
+      focus. (LP: #716177)
+    - When Unity launcher is visible restore a maximized window loses its
+      focus (LP: #728690)
+    - Missing "children_changed" event emission from the atk support for the
+      nux::View and nux::Layout objects (LP: #734806)
+    - Possible race condition in PanelMenuView::OnWindowMaximized and
+      OnWindowRestored (LP: #736580)
+    - dash search box doesn't respond to keyboard input (LP: #736850)
+    - category dropdown in *.places is nonfunctional (nothing can be selected
+      (LP: #737203)
+    - compiz crashed with SIGSEGV in DeviceLauncherIcon::UpdateVisibility()
+      (LP: #737318)
+    - Unity doesn't support Touchscreen/drag to slide (LP: #737520)
+    - [a11y] Launcher a11y support works with at-spi2 but not with at-spi
+      (LP: #739689)
+    - unity --distro fail on symlinks (LP: #740779)
+    - dash home screen can become outdated (LP: #730623)
   * debian/control:
     - depends on libutouch-geis-dev to bring MT support to unity
 
