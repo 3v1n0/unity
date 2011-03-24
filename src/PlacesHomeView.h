@@ -49,6 +49,7 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
+  static void DashVisible (GVariant *data, void *val);
   void OnShortcutClicked (PlacesTile *_tile);
   static void OnKeyChanged (GConfClient    *client,
                             guint           cnxn_id,
@@ -56,11 +57,15 @@ private:
                             PlacesHomeView *self);
   void CreateShortcutFromExec (const char *exec, 
                                const char *name,
-                               const char *icon_hint);
+                               std::vector<std::string>& alternatives);
 
 private:
   nux::GridHLayout        *_layout;
   GConfClient *_client;
+  std::vector<std::string> _browser_alternatives;
+  std::vector<std::string> _photo_alternatives;
+  std::vector<std::string> _email_alternatives;
+  std::vector<std::string> _music_alternatives;
 };
 
 

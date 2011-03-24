@@ -222,7 +222,7 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   glow = nux::Color (r, g, b);
 }
 
-nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size)
+nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size, bool update_glow_colors)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
@@ -274,7 +274,9 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   if (GDK_IS_PIXBUF (pbuf))
   {
     result = nux::CreateTexture2DFromPixbuf (pbuf, true);
-    ColorForIcon (pbuf, _background_color, _glow_color);
+    
+    if (update_glow_colors)
+      ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
   }
@@ -288,13 +290,13 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
     if (g_strcmp0 (icon_name, "folder") == 0)
       return NULL;
     else
-      return TextureFromGtkTheme ("folder", size);
+      return TextureFromGtkTheme ("folder", size, update_glow_colors);
   }
   
   return result;
 }
 
-nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size)
+nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int size, bool update_glow_colors)
 {
 
   GdkPixbuf *pbuf;
@@ -302,14 +304,16 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
   GError *error = NULL;
   
   if (!icon_name)
-    return TextureFromGtkTheme (DEFAULT_ICON, size);
+    return TextureFromGtkTheme (DEFAULT_ICON, size, update_glow_colors);
   
   pbuf = gdk_pixbuf_new_from_file_at_size (icon_name, size, size, &error);
 
   if (GDK_IS_PIXBUF (pbuf))
   {
     result = nux::CreateTexture2DFromPixbuf (pbuf, true);
-    ColorForIcon (pbuf, _background_color, _glow_color);
+    
+    if (update_glow_colors)
+      ColorForIcon (pbuf, _background_color, _glow_color);
   
     g_object_unref (pbuf);
   }
@@ -320,7 +324,7 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
                error->message);
     g_error_free (error);
 
-    return TextureFromGtkTheme (DEFAULT_ICON, size);
+    return TextureFromGtkTheme (DEFAULT_ICON, size, update_glow_colors);
   }
   
   return result;
@@ -732,9 +736,9 @@ LauncherIcon::SetEmblemIconName (const char *name)
   nux::BaseTexture *emblem;
   
   if (g_str_has_prefix (name, "/"))
-    emblem = TextureFromPath (name, 22);
+    emblem = TextureFromPath (name, 22, false);
   else
-    emblem = TextureFromGtkTheme (name, 22);
+    emblem = TextureFromGtkTheme (name, 22, false);
     
   SetEmblem (emblem);
 }

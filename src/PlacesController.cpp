@@ -112,7 +112,7 @@ void PlacesController::Show ()
 {
   if (_visible)
     return;
-
+    
   _view->AboutToShow ();
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
@@ -149,6 +149,9 @@ void PlacesController::Hide ()
 
 void PlacesController::ToggleShowHide ()
 {
+  if (!_visible)
+    ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_VISIBLE, NULL);
+
   _visible ? Hide () : Show ();
 }
 
