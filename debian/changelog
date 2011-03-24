@@ -75,6 +75,7 @@ unity (3.6.8-0ubuntu1) UNRELEASED; urgency=low
     - dash home screen can become outdated (LP: #730623)
   * debian/control:
     - depends on libutouch-geis-dev to bring MT support to unity
+    - dep on latest nux
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Mar 2011 04:06:44 +0100
 
