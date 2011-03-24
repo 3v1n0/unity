@@ -187,6 +187,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
   bool paint_blur = type != PlacesSettings::NO_BLUR;
+  nux::BaseTexture *corner = style->GetDashCorner ();
 
   GfxContext.PushClippingRectangle (geo);
 
@@ -195,7 +196,6 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  geo.height = _actual_height;
   _bg_blur_geo = geo;
 
   if ((_size_mode == SIZE_MODE_HOVER))
@@ -242,17 +242,25 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
+    nux::Geometry bg_clip = geo;
+    bg_clip.width -= corner->GetWidth ();
+    bg_clip.height = _actual_height - corner->GetHeight ();
+
+    GfxContext.PushClippingRectangle (bg_clip);
+
     gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                    _bg_blur_texture,
                                    texxform_blur__bg,
                                    nux::Color::White,
                                    true,
                                    rop);
+  
+    GfxContext.PopClippingRectangle ();
   }
+  geo.height = _actual_height;
 
   if (_size_mode == SIZE_MODE_HOVER)
   {
-    nux::BaseTexture *corner = style->GetDashCorner ();
     nux::BaseTexture *bottom = style->GetDashBottomTile ();
     nux::BaseTexture *right = style->GetDashRightTile ();
     nux::BaseTexture *icon = style->GetDashFullscreenIcon ();
