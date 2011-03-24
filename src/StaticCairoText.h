@@ -54,6 +54,8 @@ namespace nux
         NUX_ALIGN_LEFT,
         NUX_ALIGN_CENTRE,
         NUX_ALIGN_RIGHT,
+        NUX_ALIGN_TOP = NUX_ALIGN_LEFT,
+        NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
       } AlignState;
 
       StaticCairoText (const TCHAR* text, NUX_FILE_LINE_PROTO);
@@ -82,6 +84,7 @@ namespace nux
       void SetTextColor (Color textColor);
       void SetTextEllipsize (EllipsizeState state);
       void SetTextAlignment (AlignState state);
+      void SetTextVerticalAlignment (AlignState state);
       void SetFont (const char *fontstring);
 
       void GetTextExtents (int &width, int &height);
@@ -99,6 +102,7 @@ namespace nux
       Color          _textColor;
       EllipsizeState _ellipsize;
       AlignState     _align;
+      AlignState     _valign;
       char*           _fontstring;
 
       CairoGraphics* _cairoGraphics;

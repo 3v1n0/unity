@@ -95,6 +95,6 @@ DeviceLauncherSection::OnMountAdded (GVolumeMonitor        *monitor,
 {
     GVolume *volume = g_mount_get_volume (mount);
     DeviceLauncherIcon *icon = (DeviceLauncherIcon *) g_hash_table_lookup (self->_ht, (gpointer) volume);
-
-    icon->UpdateVisibility ();
+    if (icon)
+      icon->UpdateVisibility ();
 }

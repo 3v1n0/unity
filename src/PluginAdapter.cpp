@@ -46,6 +46,12 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
     m_ExpoActionList (0),
     m_ScaleActionList (0)
 {
+  _spread_state = false;
+  _expo_state = false;
+  
+  _grab_show_action = 0;
+  _grab_hide_action = 0;
+  _grab_toggle_action = 0;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -56,13 +62,37 @@ PluginAdapter::~PluginAdapter()
 void
 PluginAdapter::OnScreenGrabbed ()
 {
+  compiz_screen_grabbed.emit ();
+
+  if (!_spread_state && screen->grabExist ("scale"))
+  {
+    _spread_state = true;
+    initiate_spread.emit ();
+  }
+  
+  if (!_expo_state && screen->grabExist ("expo"))
+  {
+    _expo_state = true;
+    initiate_expo.emit ();
+  }
 }
 
 void
 PluginAdapter::OnScreenUngrabbed ()
 {
-  if (m_SpreadedWindows.size () && !screen->grabExist ("scale"))
-    terminate_spread.emit (m_SpreadedWindows);
+  if (_spread_state && !screen->grabExist ("scale"))
+  {
+    _spread_state = false;
+    terminate_spread.emit ();
+  }
+  
+  if (_expo_state && !screen->grabExist ("expo"))
+  {
+    _expo_state = false;
+    terminate_expo.emit ();
+  }
+  
+  compiz_screen_ungrabbed.emit ();
 }
 
 void
@@ -258,7 +288,6 @@ PluginAdapter::InitiateScale (std::string *match, int state)
     }
   }
 
-  initiate_spread.emit (xids);
   m_ScaleActionList.InitiateAll (argument, state);
 }
 
@@ -267,7 +296,6 @@ PluginAdapter::TerminateScale ()
 {
   CompOption::Vector argument (0);
 
-  terminate_spread.emit (m_SpreadedWindows);
   m_SpreadedWindows.clear ();
   m_ScaleActionList.TerminateAll (argument);
 }
@@ -276,6 +304,12 @@ bool
 PluginAdapter::IsScaleActive ()
 {
   return m_Screen->grabExist ("scale");
+}
+
+bool
+PluginAdapter::IsExpoActive ()
+{
+  return m_Screen->grabExist ("expo");
 }
 
 void 
@@ -318,6 +352,44 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
   return true;
 }
 
+bool
+PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
+    return (window->defaultViewport () == m_Screen->vp ());
+  }
+
+  return false;
+}
+
+bool
+PluginAdapter::IsWindowObscured (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    CompPoint window_vp = window->defaultViewport ();
+    // Check if any windows above this one are blocking it
+    for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
+    {
+      if (sibling->defaultViewport () == window_vp
+          && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+        return true;
+    }
+  }
+
+  return false;
+}
+
 void
 PluginAdapter::Restore (guint32 xid)
 {
@@ -352,6 +424,28 @@ PluginAdapter::Close (guint32 xid)
 }
 
 void
+PluginAdapter::Activate (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->activate ();
+}
+
+void
+PluginAdapter::Raise (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+
+  window = m_Screen->findWindow (win);
+  if (window)
+    window->raise ();
+}
+
+void
 PluginAdapter::Lower (guint32 xid)
 {
   Window win = (Window)xid;
@@ -360,6 +454,30 @@ PluginAdapter::Lower (guint32 xid)
   window = m_Screen->findWindow (win);
   if (window)
     window->lower ();
+}
+
+nux::Geometry
+PluginAdapter::GetWindowGeometry (guint32 xid)
+{
+  Window win = (Window)xid;
+  CompWindow *window;
+  nux::Geometry geo (0, 0, 1, 1);
+
+  window = m_Screen->findWindow (win);
+  if (window)
+  {
+    geo.x = window->x ();
+    geo.y = window->y ();
+    geo.width = window->width ();
+    geo.height = window->height ();
+  }
+  return geo;
+}
+
+bool
+PluginAdapter::IsScreenGrabbed ()
+{
+  return m_Screen->grabbed ();
 }
 
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
@@ -415,4 +533,58 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   if (win_wmclass)
     free (win_wmclass);
+}
+
+void 
+PluginAdapter::ShowGrabHandles (CompWindow *window)
+{
+  if (!_grab_show_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_show_action->initiate () (_grab_show_action, 0, argument);
+}
+
+void 
+PluginAdapter::HideGrabHandles (CompWindow *window)
+{
+  if (!_grab_hide_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_hide_action->initiate () (_grab_hide_action, 0, argument);
+}
+
+void 
+PluginAdapter::ToggleGrabHandles (CompWindow *window)
+{
+  if (!_grab_toggle_action)
+    return;
+    
+  CompOption::Vector argument;
+
+  argument.resize (2);
+  argument[0].setName ("root", CompOption::TypeInt);
+  argument[0].value ().set ((int) screen->root ());
+  argument[1].setName ("window", CompOption::TypeInt);
+  argument[1].value ().set ((int) window->id ());
+
+  /* Initiate the first available action with the arguments */
+  _grab_toggle_action->initiate () (_grab_toggle_action, 0, argument);
 }

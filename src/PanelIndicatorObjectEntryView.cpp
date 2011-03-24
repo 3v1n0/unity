@@ -73,7 +73,7 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
     _proxy->ShowMenu (GetAbsoluteGeometry ().x + 1, //cairo translation
-                      PANEL_HEIGHT,
+                      GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
@@ -89,7 +89,7 @@ void
 PanelIndicatorObjectEntryView::Activate ()
 {
   _proxy->ShowMenu (GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
-                    PANEL_HEIGHT,
+                    GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                     time (NULL),
                     1);
 }

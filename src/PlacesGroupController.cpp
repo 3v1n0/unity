@@ -19,6 +19,7 @@
 #include "PlacesGroupController.h"
 
 #include <Nux/GridHLayout.h>
+#include <glib/gi18n-lib.h>
 
 #include "PlacesStyle.h"
 #include "PlacesSimpleTile.h"
@@ -55,12 +56,22 @@ PlacesGroupController::PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup
 
   _group->expanded.connect (sigc::mem_fun (this, &PlacesGroupController::CheckTiles));
   style->columns_changed.connect (sigc::mem_fun (this, &PlacesGroupController::CheckTiles));
+
+  _more_tile = new PlacesSimpleTile ("gtk-add",
+                                     _("Load more results..."),
+                                     style->GetTileIconSize (),
+                                     false,
+                                     "more-tile");
+  _more_tile->Reference ();
+  _more_tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::MoreTileClicked));
 }
 
 PlacesGroupController::~PlacesGroupController ()
 {
   if (_check_tiles_id)
     g_source_remove (_check_tiles_id);
+  if (_more_tile)
+    _more_tile->UnReference ();
 }
 
 const void *
@@ -114,6 +125,13 @@ PlacesGroupController::TileClicked (PlacesTile *tile)
   {
     _entry->ActivateResult (tile->GetId ());
   }
+}
+
+void
+PlacesGroupController::MoreTileClicked (PlacesTile *tile)
+{
+  if (!_check_tiles_id)
+    _check_tiles_id = g_timeout_add (150, (GSourceFunc)CheckTilesTimeout, this);
 }
 
 void
@@ -178,6 +196,9 @@ PlacesGroupController::CheckTiles ()
   else
     n_to_show = style->GetDefaultNColumns ();
 
+  if (_more_tile->GetParentObject ())
+    _group->GetChildLayout ()->RemoveChildObject (_more_tile);
+
   if (_id_to_tile.size () == n_to_show)
   {
     // Hoorah
@@ -185,6 +206,9 @@ PlacesGroupController::CheckTiles ()
   else if (_id_to_tile.size () < n_to_show)
   {
     std::vector<const void *>::iterator it = _queue.begin ();
+    int max_rows_to_add = style->GetDefaultNColumns () * 15;
+    int max_rows_per_click = max_rows_to_add * 3;
+    int n_tiles = _id_to_tile.size ();
 
     if (_queue.size () >= n_to_show)
     {
@@ -194,6 +218,33 @@ PlacesGroupController::CheckTiles ()
       {
         _entry->GetResult ((*it), sigc::mem_fun (this, &PlacesGroupController::AddTile));
         it++;
+        n_tiles++;
+
+        if (n_tiles % max_rows_to_add == 0)
+        {
+          // What we do over here is add a "Load more results..." button which will then kick off
+          // another fill cycle. Generally the user will never need to see this, but in the case
+          // of large results sets, this gives us a chance of not blocking the entire WM for
+          // 20 secs as we load in 2000+ results.
+          if (n_tiles % max_rows_per_click == 0)
+          {
+            _group->GetChildLayout ()->AddView (_more_tile);
+          }
+          else
+          {
+            // The idea here is that we increase the timeouts of adding tiles in relation to
+            // how big the view is getting. In theory it shouldn't be needed but in reality with
+            // Nux having to do so many calculations it is needed. Ideally we'd be rendering
+            // the entire results view as a scene with re-usable tiles but that would have been
+            // too difficult to get right with a11y, so instead we need to just deal with this
+            // the best way we can.
+            if (!_check_tiles_id)
+              _check_tiles_id = g_timeout_add (350 * n_tiles/max_rows_to_add,
+                                               (GSourceFunc)CheckTilesTimeout,
+                                               this);
+          }
+          return;
+        }
       }
     }
   }
@@ -235,8 +286,7 @@ PlacesGroupController::ActivateFirst ()
 
     if (tile)
     {
-      nux::Geometry geo = tile->GetGeometry ();
-      tile->OnMouseClick.emit (geo.x, geo.y, 0, 0);
+      tile->sigClick.emit (tile);
       return true;
     }
   }

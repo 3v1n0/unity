@@ -28,7 +28,7 @@
 
 #include <NuxImage/GdkGraphics.h>
 #include <gtk/gtk.h>
-
+#include <gdk/gdk.h>
 
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
                                     const char *label,
@@ -52,7 +52,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SinkReference ();
-  _cairotext->SetFont ("Ubuntu normal 9");
+
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);

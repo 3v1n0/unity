@@ -17,6 +17,7 @@
  */
 
 
+#include <glib.h>
 #include <core/core.h>
 #include <composite/composite.h>
 #include <opengl/opengl.h>
@@ -114,9 +115,18 @@ class UnityMTGrabHandlesScreen :
 
 	void handleEvent (XEvent *);
 
-	bool showHandles (CompAction         *action,
+	bool toggleHandles (CompAction         *action,
 			  CompAction::State  state,
 			  CompOption::Vector &options);
+
+  
+  bool showHandles (CompAction         *action,
+			  CompAction::State  state,
+			  CompOption::Vector &options);  
+
+  bool hideHandles (CompAction         *action,
+			  CompAction::State  state,
+			  CompOption::Vector &options);  
 
 	void addHandles (Unity::MT::GrabHandleGroup *handles);
 	void removeHandles (Unity::MT::GrabHandleGroup *handles);
@@ -139,6 +149,9 @@ class UnityMTGrabHandlesScreen :
 	Atom					   mCompResizeWindowAtom;
 
 	bool					mMoreAnimate;
+	
+	// hack
+	friend class UnityMTGrabHandlesWindow;
 };
 
 #define UMTGH_SCREEN(screen)						      \
@@ -177,13 +190,22 @@ class UnityMTGrabHandlesWindow :
 		     const CompRegion &,
 		     unsigned int);
 
+  bool    handlesVisible ();
 	void    hideHandles ();
-	void	showHandles ();
+	void    showHandles ();
 	void    restackHandles ();
 
     private:
+  
+  void resetTimer ();
+  void disableTimer ();
+  static gboolean onHideTimeout (gpointer data);
 
 	Unity::MT::GrabHandleGroup *mHandles;
+	UnityMTGrabHandlesScreen *_mt_screen;
+	guint _timer_handle;
+	
+	friend class Unity::MT::GrabHandle;
 };
 
 #define UMTGH_WINDOW(window)						      \
