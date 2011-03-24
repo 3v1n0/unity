@@ -69,7 +69,8 @@ class PlacesVScrollBar : public nux::VScrollBar
                         unsigned long key_flags);
 
   protected:
-    void PreLayoutManagement ();
+    virtual void PreLayoutManagement ();
+    virtual long PostLayoutManagement (long LayoutResult);
 
     void Draw (nux::GraphicsEngine& gfxContext,
                bool                 forceDraw);

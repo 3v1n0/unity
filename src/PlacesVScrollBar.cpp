@@ -142,9 +142,16 @@ PlacesVScrollBar::RecvMouseDrag (int           x,
 void
 PlacesVScrollBar::PreLayoutManagement ()
 {
-  UpdateTexture ();
-
   nux::VScrollBar::PreLayoutManagement ();
+}
+
+long
+PlacesVScrollBar::PostLayoutManagement (long LayoutResult)
+{
+  long ret = nux::VScrollBar::PostLayoutManagement (LayoutResult);
+
+  UpdateTexture ();
+  return ret;
 }
 
 void
@@ -163,7 +170,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
     return;
 
   //texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_SCALE_COORD);
 
   gfxContext.GetRenderStates ().SetBlend (true);
   gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
