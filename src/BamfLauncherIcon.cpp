@@ -804,15 +804,19 @@ BamfLauncherIcon::GetMenus ()
     result.push_back (item);
   }
 
+  gchar *app_name;
+  app_name = g_markup_escape_text (bamf_view_get_name (BAMF_VIEW (m_App)), -1);
+
   item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (item,
                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                  bamf_view_get_name (BAMF_VIEW (m_App)));
+                                  app_name);
   dbusmenu_menuitem_property_set_bool (item,
                                        DBUSMENU_MENUITEM_PROP_ENABLED,
                                        true);
   g_signal_connect (item, "item-activated", (GCallback) OnAppLabelActivated, this);
   result.push_back (item);
+  g_free (app_name);
 
   item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (item,
