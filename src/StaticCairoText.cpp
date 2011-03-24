@@ -49,6 +49,7 @@ namespace nux
   SetMinimumSize (1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
+  _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
   SetCanFocus (false);
 }
@@ -78,6 +79,13 @@ StaticCairoText::SetTextAlignment (AlignState state)
 {
   _align = state;
   NeedRedraw ();
+}
+
+void
+StaticCairoText::SetTextVerticalAlignment (AlignState state)
+{
+  _valign = state;
+  QueueDraw ();
 }
 
 void StaticCairoText::PreLayoutManagement ()
@@ -169,10 +177,10 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   Color col = Color::Black;
   col.SetAlpha (0.0f);
   gfxContext.QRP_Color (base.x,
-      base.y,
-      base.width,
-      base.height,
-      col);
+                        base.y,
+                        base.width,
+                        base.height,
+                        col);
 
   gfxContext.QRP_1Tex (base.x,
                        base.y + ((base.height - _cached_extent_height)/2),
@@ -414,9 +422,15 @@ void StaticCairoText::DrawText (cairo_t*   cr,
                                         (float) dpi / (float) PANGO_SCALE);
   }
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
+
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  //cairo_paint (cr);
   cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
 
   pango_layout_context_changed (layout);

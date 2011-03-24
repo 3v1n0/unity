@@ -9,6 +9,9 @@
 		<requirement>
 			<plugin>composite</plugin>
 		</requirement>
+		<requirement>
+			<plugin>imgpng</plugin>
+		</requirement>
 		<relation type="after">
 			<plugin>composite</plugin>
 			<plugin>opengl</plugin>
@@ -24,6 +27,14 @@
 			<_short>Toggle Handles</_short>
 			<_long>Show/Hide the handles</_long>
 			<!--<default>&lt;Control&gt;&lt;Alt&gt;h</default>-->
+		</option>
+		<option name="show_handles_key" type="key">
+			<_short>Toggle Handles</_short>
+			<_long>Show/Hide the handles</_long>
+		</option>
+		<option name="hide_handles_key" type="key">
+			<_short>Toggle Handles</_short>
+			<_long>Show/Hide the handles</_long>
 		</option>
 		<option name="fade_duration" type="int">
 			<_short>Fade Duration</_short>

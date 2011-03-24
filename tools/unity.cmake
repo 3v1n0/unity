@@ -152,10 +152,10 @@ def reset_to_distro():
 			try:
 				shutil.rmtree(elem)
 			except OSError, e:
-				if os.path.isfile(elem):
+				if os.path.isfile(elem) or os.path.islink(elem):
 					os.remove(elem)
 				else:
-					print "ERROR: Cannot remove %s", e
+					print "ERROR: Cannot remove %s: %s" % (elem, e)
 					error = True
 	
 	if error:

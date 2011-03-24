@@ -52,6 +52,8 @@ public:
 
   nux::BaseTexture * GetSearchReadyIcon ();
   nux::BaseTexture * GetSearchClearIcon ();
+  nux::BaseTexture * GetSearchClearAloneIcon ();
+  nux::BaseTexture * GetSearchClearSpinnerIcon ();
 
   nux::BaseTexture * GetGroupUnexpandIcon ();
   nux::BaseTexture * GetGroupExpandIcon ();
@@ -80,6 +82,8 @@ private:
 
   nux::BaseTexture *_search_ready_texture;
   nux::BaseTexture *_search_clear_texture;
+  nux::BaseTexture *_search_clear_alone_texture;
+  nux::BaseTexture *_search_clear_spinner_texture;
 
   nux::BaseTexture *_group_unexpand_texture;
   nux::BaseTexture *_group_expand_texture;

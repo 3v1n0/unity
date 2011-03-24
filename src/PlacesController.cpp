@@ -30,6 +30,7 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include "PluginAdapter.h"
 #include "PlacesController.h"
 
 #define PANEL_HEIGHT 24
@@ -41,6 +42,8 @@ PlacesController::PlacesController ()
   _fullscren_request (false),
   _timeline_id (0)
 {
+  _need_show = false;
+  
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION,
@@ -59,7 +62,6 @@ PlacesController::PlacesController ()
   _window->SinkReference ();
   _window->SetConfigureNotifyCallback(&PlacesController::WindowConfigureCallback, this);
   _window->ShowWindow(false);
-  _window->InputWindowEnableStruts(false);
   _window->SetOpacity (0.0f);
 
   _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
@@ -80,6 +82,8 @@ PlacesController::PlacesController ()
 
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
   _view->SetFocused (true);
+
+  PluginAdapter::Default ()->compiz_screen_ungrabbed.connect (sigc::mem_fun (this, &PlacesController::OnCompizScreenUngrabbed));
 
   Relayout (gdk_screen_get_default (), this);
   g_signal_connect (gdk_screen_get_default (), "monitors-changed",
@@ -109,18 +113,31 @@ PlacesController::Relayout (GdkScreen *screen, PlacesController *self)
                                              height));
 }
 
+void PlacesController::OnCompizScreenUngrabbed ()
+{
+  if (_need_show)
+    Show ();
+}
+
 void PlacesController::Show ()
 {
   if (_visible)
     return;
-
+  
+  if (PluginAdapter::Default ()->IsScreenGrabbed ())
+  {
+    _need_show = true;
+    return;
+  }
+  
+  _need_show = false;
+    
   _view->AboutToShow ();
   _window->ShowWindow (true, false);
   // Raise this window on top of all other BaseWindows
   _window->PushToFront ();
-  _window->EnableInputWindow (true, "places", false, true);
   _window->GrabPointer ();
-  //_window->GrabKeyboard ();
+  _window->GrabKeyboard ();
   _window->QueueDraw ();
   _window->CaptureMouseDownAnyWhereElse (true);
   
@@ -138,8 +155,7 @@ void PlacesController::Hide ()
   _window->CaptureMouseDownAnyWhereElse (false);
   _window->ForceStopFocus (1, 1);
   _window->UnGrabPointer ();
-  //_window->UnGrabKeyboard ();
-  _window->EnableInputWindow (false);
+  _window->UnGrabKeyboard ();
   _visible = false;
   _fullscren_request = false;
 
@@ -152,6 +168,9 @@ void PlacesController::Hide ()
 
 void PlacesController::ToggleShowHide ()
 {
+  if (!_visible)
+    ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_VISIBLE, NULL);
+
   _visible ? Hide () : Show ();
 }
 

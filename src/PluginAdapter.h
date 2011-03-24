@@ -60,6 +60,10 @@ public:
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
+    
+    void SetShowHandlesAction (CompAction *action) { _grab_show_action = action; }
+    void SetHideHandlesAction (CompAction *action) { _grab_hide_action = action; }
+    void SetToggleHandlesAction (CompAction *action) { _grab_toggle_action = action; }
 
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
@@ -69,6 +73,11 @@ public:
     bool IsScaleActive ();
     
     void InitiateExpo ();
+    bool IsExpoActive ();
+    
+    void ShowGrabHandles (CompWindow *window);
+    void HideGrabHandles (CompWindow *window);
+    void ToggleGrabHandles (CompWindow *window);
 
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
@@ -78,12 +87,20 @@ public:
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
+    bool IsWindowOnCurrentDesktop (guint xid);
+    bool IsWindowObscured (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Activate (guint32 xid);
+    void Raise (guint32 xid);
     void Lower (guint32 xid);
+    
+    bool IsScreenGrabbed ();
 
     void MaximizeIfBigEnough (CompWindow *window);
+
+    nux::Geometry GetWindowGeometry (guint32 xid);
     
 protected:
     PluginAdapter(CompScreen *screen);
@@ -93,6 +110,13 @@ private:
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
+    
+    bool _spread_state;
+    bool _expo_state;
+    
+    CompAction *_grab_show_action;
+    CompAction *_grab_hide_action;
+    CompAction *_grab_toggle_action;
     
     static PluginAdapter *_default;
 };

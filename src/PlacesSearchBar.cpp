@@ -60,12 +60,12 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout (NUX_TRACKER_LOCATION);
   _layout->SetHorizontalInternalMargin (12);
 
-  _search_icon = new nux::TextureArea (NUX_TRACKER_LOCATION);
-  _search_icon->SetTexture (icon);
-  _search_icon->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
-  _layout->AddView (_search_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _search_icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
-  _search_icon->SetCanFocus (false);
+  _spinner = new PlacesSearchBarSpinner ();
+  _spinner->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
+  //_spinner->SetMaximumWidth (icon->GetWidth ());
+  _layout->AddView (_spinner, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  _spinner->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
+  _spinner->SetCanFocus (false);
 
   _layered_layout = new nux::LayeredLayout ();
 
@@ -90,7 +90,6 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo->SetVisible (false);
   _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
   _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
-  _combo->SetCanFocus (false); // NOT SUPPORTING THIS QUITE YET
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
@@ -190,15 +189,11 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
 
   if (_entry)
   {
-    // i18n: This is for a dynamic place name i.e. "Search Files & Folders"
-    const gchar *search_template = _("Search %s");
     gchar       *markup;
-    gchar       *res;
     gchar       *tmp;
 
     tmp = g_markup_escape_text (entry->GetSearchHint (), -1);
-    res = g_strdup_printf (search_template, tmp);
-    markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", res);
+    markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", tmp);
 
     _hint->SetText (markup);
     _pango_entry->SetText (search_string ? search_string : "");
@@ -210,7 +205,6 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     if (_combo->IsVisible ())
       _combo->SetSelectionIndex (section_id);
 
-    g_free (res);
     g_free (tmp);
     g_free (markup);
   }
@@ -249,8 +243,7 @@ PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
 void
 PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
-  bool         is_empty;
+  bool is_empty;
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
@@ -265,7 +258,7 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 
   is_empty = g_strcmp0 (_pango_entry->GetText ().c_str (), "") == 0;
   _hint->SetVisible (is_empty);
-  _search_icon->SetTexture (is_empty ? style->GetSearchReadyIcon () : style->GetSearchClearIcon ());
+  _spinner->SetState (is_empty ? STATE_READY : STATE_SEARCHING);
 
   _hint->QueueDraw ();
   _pango_entry->QueueDraw ();
@@ -298,7 +291,7 @@ PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsig
   if (_pango_entry->GetText () != "")
   {
     _pango_entry->SetText ("");
-    _search_icon->SetTexture (PlacesStyle::GetDefault ()->GetSearchReadyIcon ());
+    _spinner->SetState (STATE_READY);
     EmitLiveSearch ();
   }
 }
@@ -313,6 +306,12 @@ void
 PlacesSearchBar::OnLayeredLayoutQueueDraw (int i)
 {
   QueueDraw ();
+}
+
+void
+PlacesSearchBar::OnSearchFinished ()
+{
+  _spinner->SetState (STATE_CLEAR);
 }
 
 void

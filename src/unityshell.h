@@ -33,9 +33,10 @@
 #include "Introspectable.h"
 #include "Launcher.h"
 #include "LauncherController.h"
-#include "PanelView.h"
-#include "PanelHomeButton.h"
+#include "PanelController.h"
+#include "UScreen.h"
 #include "PlacesController.h"
+#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
@@ -149,6 +150,8 @@ class UnityScreen :
 
     private:
 
+  void SendExecuteCommand ();
+
 	static gboolean
 	initPluginActions (gpointer data);
 
@@ -160,7 +163,7 @@ class UnityScreen :
 
 	void
 	onRedrawRequested ();
-
+	
 	void Relayout ();
 
 	static gboolean
@@ -170,13 +173,7 @@ class UnityScreen :
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
 	static void
-	panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
-
-	static void
 	initUnity(nux::NThread* thread, void* InitData);
-
-	static gboolean
-	strutHackTimeout (gpointer data);
 
   static void
   OnStartKeyNav (GVariant* data, void* value);
@@ -201,9 +198,9 @@ class UnityScreen :
 
 	Launcher               *launcher;
 	LauncherController     *controller;
-	PanelView              *panelView;
-  PanelHomeButton        *panelHomeButton;
+  PanelController        *panelController;
 	PlacesController 			 *placesController;
+	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
 	nux::BaseWindow        *panelWindow;

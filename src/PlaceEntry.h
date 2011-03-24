@@ -162,6 +162,8 @@ public:
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&>                    global_group_added;
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_added;
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_removed;
+
+  sigc::signal<void, const char *, guint32, std::map<const char *, const char *>&> search_finished;
 };
 
 #endif // PLACE_ENTRY_H

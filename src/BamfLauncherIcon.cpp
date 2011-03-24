@@ -651,6 +651,23 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
 }
 
 void
+BamfLauncherIcon::UnStick (void)
+{
+  BamfView *view = BAMF_VIEW (this->m_App);
+  
+  if (!bamf_view_is_sticky (view))
+    return;
+
+  const gchar *desktop_file = bamf_application_get_desktop_file (this->m_App);
+  bamf_view_set_sticky (view, false);
+  if (bamf_view_is_closed (view))
+    this->Remove ();
+
+  if (desktop_file && strlen (desktop_file) > 0)
+    FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+}
+
+void
 BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
 {
   BamfView *view = BAMF_VIEW (self->m_App);
@@ -719,11 +736,27 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
   }
 }
 
+static void
+OnAppLabelActivated (DbusmenuMenuitem* sender,
+                     guint             timestamp,
+                     gpointer data)
+{
+  BamfLauncherIcon* self = NULL;
+
+  if (!data)
+    return;
+    
+  self = (BamfLauncherIcon*) data;
+  self->ActivateLauncherIcon ();
+}
+
 std::list<DbusmenuMenuitem *>
 BamfLauncherIcon::GetMenus ()
 {
   std::map<std::string, DbusmenuClient *>::iterator it;
   std::list<DbusmenuMenuitem *> result;
+  bool first_separator_needed = false;
+  DbusmenuMenuitem* item = NULL;
 
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
@@ -737,6 +770,8 @@ BamfLauncherIcon::GetMenus ()
 
       if (!item)
         continue;
+
+      first_separator_needed = true;
 
       result.push_back (item);
     }
@@ -754,10 +789,36 @@ BamfLauncherIcon::GetMenus ()
       if (!item)
         continue;
 
+      first_separator_needed = true;
+
       result.push_back (item);
     }
-
   }
+
+  if (first_separator_needed)
+  {
+    item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (item,
+                                    DBUSMENU_MENUITEM_PROP_TYPE,
+                                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    result.push_back (item);
+  }
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_LABEL,
+                                  bamf_view_get_name (BAMF_VIEW (m_App)));
+  dbusmenu_menuitem_property_set_bool (item,
+                                       DBUSMENU_MENUITEM_PROP_ENABLED,
+                                       true);
+  g_signal_connect (item, "item-activated", (GCallback) OnAppLabelActivated, this);
+  result.push_back (item);
+
+  item = dbusmenu_menuitem_new ();
+  dbusmenu_menuitem_property_set (item,
+                                  DBUSMENU_MENUITEM_PROP_TYPE,
+                                  DBUSMENU_CLIENT_TYPES_SEPARATOR);
+  result.push_back (item);
 
   EnsureMenuItemsReady ();
 

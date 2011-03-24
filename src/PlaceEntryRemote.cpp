@@ -1025,5 +1025,17 @@ on_proxy_signal_received (GDBusProxy *proxy,
 { 
   PlaceEntryRemote *self = static_cast<PlaceEntryRemote *> (user_data);  
 
-  g_debug ("%p: %s", self, sender_name);
+  if (g_strcmp0 (signal_name, "SearchFinished") == 0)
+  {
+    guint32       section = 0;
+    gchar        *search_string = NULL;
+    GVariantIter *iter;
+    std::map<const char *, const char*> hints;
+
+    g_variant_get (parameters, "(usa{ss})", &section, &search_string, &iter);
+    self->search_finished.emit (search_string, section, hints);
+    
+    g_free (search_string);
+    g_variant_iter_free (iter);
+  }
 }

@@ -920,6 +920,20 @@ panel_service_sync_geometry (PanelService *self,
   g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
 }
 
+static gboolean
+should_skip_menu (IndicatorObjectEntry *entry)
+{
+  gboolean label_ok;
+  gboolean image_ok;
+
+  label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
+    && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+  image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
+    && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+
+  return !label_ok && !image_ok;
+}
+
 static void
 activate_next_prev_menu (PanelService         *self,
                          IndicatorObject      *object,
@@ -932,9 +946,11 @@ activate_next_prev_menu (PanelService         *self,
   gint    n_entries;
   IndicatorObjectEntry *new_entry;
   gchar  *id;
- 
+
   entries = indicator_object_get_entries (object);
   n_entries = g_list_length (entries);
+  // all of these are for switching between independant indicators (for example, sound to messaging. 
+  // As opposed to batter to appmenu)
   if (n_entries == 1
       || (g_list_index (entries, entry) == 0 && direction == GTK_MENU_DIR_PARENT)
       || (g_list_index (entries, entry) == n_entries - 1 && direction == GTK_MENU_DIR_CHILD))
@@ -945,10 +961,12 @@ activate_next_prev_menu (PanelService         *self,
       
       n_indicators = g_slist_length (priv->indicators);
 
+      // changing from first indicator to last indicator
       if (g_slist_index (indicators, object) == 0 && direction == GTK_MENU_DIR_PARENT)
         {
           new_object = g_slist_nth_data (indicators, n_indicators - 1);
         }
+      // changing from last indicator to first indicator
       else if (g_slist_index (indicators, object) == n_indicators -1 && direction == GTK_MENU_DIR_CHILD)
         {
           new_object = g_slist_nth_data (indicators, 0);
@@ -963,18 +981,31 @@ activate_next_prev_menu (PanelService         *self,
       new_entries = indicator_object_get_entries (new_object);
       new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
 
+      g_list_free (entries);
       g_list_free (new_entries);
+
+      if (should_skip_menu (new_entry))
+	{	  
+	  activate_next_prev_menu (self, new_object, new_entry, direction);
+	  return;
+	}
     }
+  // changing within a group of indicators (for example, entries within appmenu)
   else
     {
       new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
+      g_list_free (entries);
+
+      if (should_skip_menu (new_entry))
+	{ 
+	  activate_next_prev_menu (self, object, new_entry, direction);
+	  return;
+	}
     }
-  
+
   id = g_strdup_printf ("%p", new_entry);
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
-
   g_free (id);
-  g_list_free (entries);
 }
 
 static void
