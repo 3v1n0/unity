@@ -2,6 +2,8 @@ unity (3.6.8-0ubuntu3) UNRELEASED; urgency=low
 
   * debian/unity.install:
     - ensure we ship every files (compiz moved some) (LP: #741858)
+  * debian/rules:
+    - readd previously removed --fail-missing
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Mar 2011 17:35:27 +0100
 
