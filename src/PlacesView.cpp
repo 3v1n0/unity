@@ -816,12 +816,17 @@ PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 void
 PlacesView::OnEntryActivated ()
 {
-  if (_searching_timeout)
+  if (_searching_timeout && !_pending_activation)
   {
     _pending_activation = true;
   }
-  else if (!_results_controller->ActivateFirst ())
-    g_debug ("Cannot activate anything");
+  else
+  {
+    if (!_results_controller->ActivateFirst ())
+      g_debug ("Cannot activate anything");
+
+    _pending_activation = false;
+  }
 }
 
 void
