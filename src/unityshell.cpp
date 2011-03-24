@@ -445,6 +445,21 @@ UnityScreen::initPluginActions (gpointer data)
     PluginAdapter::Default ()->SetScaleAction (scaleActions);
   }
 
+  p = CompPlugin::find ("unitymtgrabhandles");
+
+  if (p)
+  {
+    foreach (CompOption &option, p->vTable->getOptions ())
+    {
+      if (option.name () == "show_handles_key")
+        PluginAdapter::Default ()->SetShowHandlesAction (&option.value ().action ());
+      else if (option.name () == "hide_handles_key")
+        PluginAdapter::Default ()->SetHideHandlesAction (&option.value ().action ());
+      else if (option.name () == "toggle_handles_key")
+        PluginAdapter::Default ()->SetToggleHandlesAction (&option.value ().action ());
+    }
+  }
+
   return FALSE;
 }
 
