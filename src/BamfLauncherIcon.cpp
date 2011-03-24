@@ -651,6 +651,23 @@ BamfLauncherIcon::OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *se
 }
 
 void
+BamfLauncherIcon::UnStick (void)
+{
+  BamfView *view = BAMF_VIEW (this->m_App);
+  
+  if (!bamf_view_is_sticky (view))
+    return;
+
+  const gchar *desktop_file = bamf_application_get_desktop_file (this->m_App);
+  bamf_view_set_sticky (view, false);
+  if (bamf_view_is_closed (view))
+    this->Remove ();
+
+  if (desktop_file && strlen (desktop_file) > 0)
+    FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+}
+
+void
 BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self)
 {
   BamfView *view = BAMF_VIEW (self->m_App);

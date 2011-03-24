@@ -539,6 +539,7 @@ Launcher::startKeyNavMode ()
   
   GrabKeyboard ();
   GrabPointer ();
+  EnsureHoverState ();
   
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
@@ -598,6 +599,7 @@ Launcher::exitKeyNavMode ()
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
   QueueDraw ();
+  EnsureHoverState ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
@@ -1387,6 +1389,7 @@ void Launcher::StartKeyShowLauncher ()
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     QueueDraw ();
+    EnsureHoverState ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
     if (_redraw_handle > 0)
       g_source_remove (_redraw_handle);
@@ -1398,6 +1401,7 @@ void Launcher::EndKeyShowLauncher ()
     
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
     QueueDraw ();
+    EnsureHoverState ();
 
     // it's a tap on super
     if (TapOnSuper ())
@@ -1764,6 +1768,7 @@ void
 Launcher::EnsureHoverState ()
 {
   if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER) || _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) || 
+      _hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) || _hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE) ||
       QuicklistManager::Default ()->Current() || GetActionState () != ACTION_NONE)
   {
     SetHover ();
@@ -2543,9 +2548,20 @@ void Launcher::EndIconDrag ()
 {
   if (_drag_window)
   {
-    _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
-    _drag_window->StartAnimation ();
-    _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+    LauncherIcon* hovered_icon = MouseIconIntersection (_mouse_position.x, _mouse_position.y);
+  
+    if(hovered_icon && hovered_icon->Type () == LauncherIcon::TYPE_TRASH)
+    {
+      launcher_removerequest.emit (_drag_icon);
+      _drag_window->ShowWindow (false);
+      EnsureAnimation ();
+    }
+    else
+    {
+      _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
+      _drag_window->StartAnimation ();
+      _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+    }
   }
   
   if (MouseBeyondDragThreshold ())
@@ -2785,11 +2801,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           it = _model->at (temp_current_icon_index );
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
-        if (it != (LauncherModel::iterator)NULL)
-          _current_icon_index = temp_current_icon_index;      
+        if (it != (LauncherModel::iterator)NULL) {
+          _current_icon_index = temp_current_icon_index;
+          _launcher_drag_delta += (_icon_size + _space_between_icons);
+        }
+        EnsureAnimation ();
+        selection_change.emit ();
       }
-      EnsureAnimation ();
-      selection_change.emit ();
     break;
 
     // down (move selection down and unfold launcher if needed)
@@ -2804,9 +2822,11 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           it = _model->at (temp_current_icon_index );
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
-        if (it != (LauncherModel::iterator)NULL)
-          _current_icon_index = temp_current_icon_index;     
-
+        if (it != (LauncherModel::iterator)NULL) {
+          _current_icon_index = temp_current_icon_index;
+          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+        }
+      
         EnsureAnimation ();
         selection_change.emit ();
       }
