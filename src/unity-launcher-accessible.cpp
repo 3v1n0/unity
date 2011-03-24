@@ -37,6 +37,9 @@
 #include "Launcher.h"
 #include "LauncherModel.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 /* GObject */
 static void unity_launcher_accessible_class_init (UnityLauncherAccessibleClass *klass);
 static void unity_launcher_accessible_init       (UnityLauncherAccessible *self);
@@ -63,7 +66,8 @@ static void on_icon_added_cb       (LauncherIcon *icon, UnityLauncherAccessible 
 static void on_icon_removed_cb     (LauncherIcon *icon, UnityLauncherAccessible *self);
 static void on_order_change_cb     (UnityLauncherAccessible *self);
 static void update_children_index  (UnityLauncherAccessible *self);
-
+static void on_launcher_start_key_nav_cb (GVariant *data, gpointer user_data);
+static void on_launcher_end_key_nav_cb   (GVariant *data, gpointer user_data);
 
 G_DEFINE_TYPE_WITH_CODE (UnityLauncherAccessible, unity_launcher_accessible,  NUX_TYPE_VIEW_ACCESSIBLE,
                          G_IMPLEMENT_INTERFACE (ATK_TYPE_SELECTION, atk_selection_interface_init))
@@ -78,6 +82,8 @@ struct _UnityLauncherAccessiblePrivate
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
+
+  gboolean focused;
 };
 
 
@@ -169,6 +175,18 @@ unity_launcher_accessible_initialize (AtkObject *accessible,
       self->priv->on_order_changed_connection =
         model->order_changed.connect (sigc::bind (sigc::ptr_fun (on_order_change_cb), self));
     }
+
+  /* Specific launcher keynav stuff */
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus,
+                                 UBUS_LAUNCHER_START_KEY_NAV,
+                                 (UBusCallback) on_launcher_start_key_nav_cb,
+                                 accessible);
+
+  ubus_server_register_interest (ubus,
+                                 UBUS_LAUNCHER_END_KEY_NAV,
+                                 (UBusCallback) on_launcher_end_key_nav_cb,
+                                 accessible);
 }
 
 static gint
@@ -215,7 +233,6 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
     return 0;
 
   launcher = dynamic_cast<Launcher *>(nux_object);
-  g_debug ("[Launcher] ref_child Launcher = %p", launcher);
 
   launcher_model = launcher->GetModel ();
 
@@ -224,6 +241,9 @@ unity_launcher_accessible_ref_child (AtkObject *obj,
 
   child = dynamic_cast<nux::Object *>(*it);
   child_accessible = unity_a11y_get_accessible (child);
+
+  g_debug ("[a11y][launcher] ref_child (%p:%s)",
+           child_accessible, atk_object_get_name (child_accessible));
 
   g_object_ref (child_accessible);
 
@@ -336,7 +356,7 @@ unity_launcher_accessible_is_child_selected (AtkSelection *selection,
 /* private */
 static void on_selection_change_cb (UnityLauncherAccessible *launcher_accessible)
 {
-  g_debug ("[LAUNCHER]: selection changed");
+  g_debug ("[a11y][launcher] selection changed");
 
   g_signal_emit_by_name (ATK_OBJECT (launcher_accessible), "selection-changed");
 }
@@ -362,7 +382,7 @@ on_icon_added_cb (LauncherIcon *icon,
 
   index = atk_object_get_index_in_parent (icon_accessible);
 
-  g_debug ("[a11y] icon (%p, %s) added on container (%p,%s) at index %i",
+  g_debug ("[a11y][launcher] icon (%p, %s) added on container (%p,%s) at index %i",
            icon_accessible, atk_object_get_name (icon_accessible),
            self, atk_object_get_name ( ATK_OBJECT (self)),
            index);
@@ -389,7 +409,7 @@ on_icon_removed_cb (LauncherIcon *icon,
 
   index = atk_object_get_index_in_parent (icon_accessible);
 
-  g_debug ("[a11y] icon (%p, %s) removed on container (%p,%s) at index %i",
+  g_debug ("[a11y][launcher] icon (%p, %s) removed on container (%p,%s) at index %i",
            icon_accessible, atk_object_get_name (icon_accessible),
            self, atk_object_get_name (ATK_OBJECT (self)),
            index);
@@ -437,4 +457,32 @@ on_order_change_cb (UnityLauncherAccessible *self)
   g_return_if_fail (UNITY_IS_LAUNCHER_ACCESSIBLE (self));
 
   update_children_index (self);
+}
+
+static void
+on_launcher_start_key_nav_cb (GVariant *data,
+                              gpointer user_data)
+{
+  AtkObject *accessible = ATK_OBJECT (user_data);
+
+  g_debug ("[a11y][launcher] starting key nav");
+
+  UNITY_LAUNCHER_ACCESSIBLE (accessible)->priv->focused = TRUE;
+
+  g_signal_emit_by_name (accessible, "focus-event", TRUE);
+  atk_focus_tracker_notify (accessible);
+}
+
+static void
+on_launcher_end_key_nav_cb (GVariant *data,
+                            gpointer user_data)
+{
+  AtkObject *accessible = ATK_OBJECT (user_data);
+
+  g_debug ("[a11y][launcher] ending key nav");
+
+  UNITY_LAUNCHER_ACCESSIBLE (accessible)->priv->focused = FALSE;
+
+  g_signal_emit_by_name (accessible, "focus-event", FALSE);
+  atk_focus_tracker_notify (accessible);
 }

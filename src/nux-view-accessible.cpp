@@ -55,8 +55,6 @@ static void     nux_view_accessible_remove_focus_handler (AtkComponent *componen
                                                           guint handler_id);
 
 /* private methods */
-static void on_start_focus_cb                 (AtkObject *accessible);
-static void on_end_focus_cb                   (AtkObject *accessible);
 static void nux_view_accessible_focus_handler (AtkObject *accessible,
                                                gboolean focus_in);
 static void on_layout_changed_cb              (nux::View *view,
@@ -135,10 +133,6 @@ nux_view_accessible_initialize (AtkObject *accessible,
 
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
   view = dynamic_cast<nux::View *>(nux_object);
-
-  /* focus support non based on Focusable, required for the Launcher */
-  view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb), accessible));
-  view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb), accessible));
 
   /* focus support based on Focusable, used on the Dash */
   view->FocusChanged.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
@@ -232,24 +226,6 @@ nux_view_accessible_ref_child (AtkObject *obj,
     g_object_ref (layout_accessible);
 
   return layout_accessible;
-}
-
-static void
-on_start_focus_cb (AtkObject *accessible)
-{
-  g_debug ("[a11y] on start_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
-
-  // g_signal_emit_by_name (accessible, "focus_event", TRUE);
-  // atk_focus_tracker_notify (accessible);
-}
-
-static void
-on_end_focus_cb (AtkObject *accessible)
-{
-  g_debug ("[a11y] on end_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
-
-  // g_signal_emit_by_name (accessible, "focus_event", FALSE);
-  // atk_focus_tracker_notify (accessible);
 }
 
 static void
@@ -388,7 +364,7 @@ nux_view_accessible_focus_handler (AtkObject *accessible,
 {
   g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
 
-  g_debug ("[a11y] view_focus_handler (%p:%s:%i)",
+  g_debug ("[a11y][view] focus_handler (%p:%s:%i)",
            accessible, atk_object_get_name (accessible), focus_in);
 
   atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);
