@@ -38,6 +38,11 @@ static WindowManager *window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
+  bool IsScreenGrabbed ()
+  {
+    return false;
+  }
+  
   bool IsWindowMaximized (guint32 xid)
   {
     return false;

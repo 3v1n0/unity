@@ -30,6 +30,7 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include "PluginAdapter.h"
 #include "PlacesController.h"
 
 #define PANEL_HEIGHT 24
@@ -41,6 +42,8 @@ PlacesController::PlacesController ()
   _fullscren_request (false),
   _timeline_id (0)
 {
+  _need_show = false;
+  
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION,
@@ -80,6 +83,8 @@ PlacesController::PlacesController ()
   PlacesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &PlacesController::OnSettingsChanged));
   _view->SetFocused (true);
 
+  PluginAdapter::Default ()->compiz_screen_ungrabbed.connect (sigc::mem_fun (this, &PlacesController::OnCompizScreenUngrabbed));
+
   Relayout (gdk_screen_get_default (), this);
   g_signal_connect (gdk_screen_get_default (), "monitors-changed",
                     G_CALLBACK (PlacesController::Relayout), this);
@@ -108,10 +113,24 @@ PlacesController::Relayout (GdkScreen *screen, PlacesController *self)
                                              height));
 }
 
+void PlacesController::OnCompizScreenUngrabbed ()
+{
+  if (_need_show)
+    Show ();
+}
+
 void PlacesController::Show ()
 {
   if (_visible)
     return;
+  
+  if (PluginAdapter::Default ()->IsScreenGrabbed ())
+  {
+    _need_show = true;
+    return;
+  }
+  
+  _need_show = false;
     
   _view->AboutToShow ();
   _window->ShowWindow (true, false);

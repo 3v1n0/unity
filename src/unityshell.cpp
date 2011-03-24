@@ -201,9 +201,6 @@ UnityScreen::handleEvent (XEvent *event)
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
-        if (_need_send_execute_command)
-          SendExecuteCommand ();
-        _need_send_execute_command = false;
       break;
     case KeyPress:
       KeySym key_sym;
@@ -306,11 +303,7 @@ UnityScreen::executeCommand (CompAction         *action,
                              CompAction::State   state,
                              CompOption::Vector &options)
 {
-  if (!screen->grabbed ())
-    SendExecuteCommand ();
-  else
-    _need_send_execute_command = true;
-    
+  SendExecuteCommand ();
   return false;
 }
 
@@ -736,9 +729,8 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     gScreen (GLScreen::get (screen)),
     doShellRepaint (false)
 {
-  _key_nav_mode_requested = false;
-  _need_send_execute_command = false;
   START_FUNCTION ();
+  _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
 

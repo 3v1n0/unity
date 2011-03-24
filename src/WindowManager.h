@@ -62,6 +62,8 @@ public:
 
   virtual void Decorate   (guint32 xid);
   virtual void Undecorate (guint32 xid);
+  
+  virtual bool IsScreenGrabbed () = 0;
 
   void StartMove (guint32 id, int, int);
 
@@ -86,6 +88,9 @@ public:
 
   sigc::signal<void> initiate_expo;
   sigc::signal<void> terminate_expo;
+  
+  sigc::signal<void> compiz_screen_grabbed;
+  sigc::signal<void> compiz_screen_ungrabbed;
 
 private:
   Atom m_MoveResizeAtom;

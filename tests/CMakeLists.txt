@@ -153,8 +153,6 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
 add_executable (test-places
                 TestPlaces.cpp
                 ${PLACES_COMMON_SOURCE}
-                ../src/PlacesController.cpp
-                ../src/PlacesController.h
                 ../src/PlacesHomeView.cpp
                 ../src/PlacesHomeView.h
                 ../src/PlacesSearchBar.cpp

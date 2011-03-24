@@ -58,6 +58,8 @@ PluginAdapter::~PluginAdapter()
 void
 PluginAdapter::OnScreenGrabbed ()
 {
+  compiz_screen_grabbed.emit ();
+
   if (!_spread_state && screen->grabExist ("scale"))
   {
     _spread_state = true;
@@ -85,6 +87,8 @@ PluginAdapter::OnScreenUngrabbed ()
     _expo_state = false;
     terminate_expo.emit ();
   }
+  
+  compiz_screen_ungrabbed.emit ();
 }
 
 void
@@ -464,6 +468,12 @@ PluginAdapter::GetWindowGeometry (guint32 xid)
     geo.height = window->height ();
   }
   return geo;
+}
+
+bool
+PluginAdapter::IsScreenGrabbed ()
+{
+  return m_Screen->grabbed ();
 }
 
 void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)

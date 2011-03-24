@@ -87,6 +87,8 @@ public:
     void Activate (guint32 xid);
     void Raise (guint32 xid);
     void Lower (guint32 xid);
+    
+    bool IsScreenGrabbed ();
 
     void MaximizeIfBigEnough (CompWindow *window);
 
