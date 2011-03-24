@@ -354,7 +354,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
+    gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
                                nux::Color::White,
@@ -363,7 +363,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     bgs++;
   }
  
-  nux::GetPainter ().PushDrawLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
+  nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
   bgs++;
 
   if (_layout)
