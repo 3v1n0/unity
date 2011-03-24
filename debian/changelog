@@ -68,6 +68,8 @@ unity (3.6.8-0ubuntu1) UNRELEASED; urgency=low
       (LP: #737203)
     - compiz crashed with SIGSEGV in DeviceLauncherIcon::UpdateVisibility()
       (LP: #737318)
+    - Dragging a file to the bottom left corner should send it to the trash
+      (LP: #728598)
     - Unity doesn't support Touchscreen/drag to slide (LP: #737520)
     - [a11y] Launcher a11y support works with at-spi2 but not with at-spi
       (LP: #739689)
