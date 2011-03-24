@@ -2799,11 +2799,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           it = _model->at (temp_current_icon_index );
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
-        if (it != (LauncherModel::iterator)NULL)
-          _current_icon_index = temp_current_icon_index;      
+        if (it != (LauncherModel::iterator)NULL) {
+          _current_icon_index = temp_current_icon_index;
+          _launcher_drag_delta += (_icon_size + _space_between_icons);
+        }
+        EnsureAnimation ();
+        selection_change.emit ();
       }
-      EnsureAnimation ();
-      selection_change.emit ();
     break;
 
     // down (move selection down and unfold launcher if needed)
@@ -2818,9 +2820,11 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
           it = _model->at (temp_current_icon_index );
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
-        if (it != (LauncherModel::iterator)NULL)
-          _current_icon_index = temp_current_icon_index;     
-
+        if (it != (LauncherModel::iterator)NULL) {
+          _current_icon_index = temp_current_icon_index;
+          _launcher_drag_delta -= (_icon_size + _space_between_icons);
+        }
+      
         EnsureAnimation ();
         selection_change.emit ();
       }
