@@ -113,6 +113,11 @@ IconTexture::LoadIcon ()
                                                     sigc::mem_fun (this, &IconTexture::IconLoaded));
     g_object_unref (icon);
   }
+  else if (g_str_has_prefix (_icon_name, "http://"))
+  {
+    IconLoader::GetDefault ()->LoadFromURI (_icon_name,
+                                            _size, sigc::mem_fun (this, &IconTexture::IconLoaded));
+  }
   else
   {
     IconLoader::GetDefault ()->LoadFromIconName (_icon_name,
