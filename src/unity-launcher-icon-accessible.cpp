@@ -222,6 +222,7 @@ unity_launcher_icon_accessible_ref_state_set (AtkObject *obj)
   AtkStateSet *state_set = NULL;
   UnityLauncherIconAccessible *self = NULL;
   nux::Object *nux_object = NULL;
+  LauncherIcon *icon = NULL;
 
   g_return_val_if_fail (UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (obj), NULL);
   self = UNITY_LAUNCHER_ICON_ACCESSIBLE (obj);
@@ -232,6 +233,19 @@ unity_launcher_icon_accessible_ref_state_set (AtkObject *obj)
 
   if (nux_object == NULL) /* actor is defunct */
     return state_set;
+
+  /* by default */
+  atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
+  atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
+  atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
+
+  icon = dynamic_cast<LauncherIcon *>(nux_object);
+
+  if (icon->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
+    {
+      atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+      atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
+    }
 
   if (self->priv->selected)
     {
