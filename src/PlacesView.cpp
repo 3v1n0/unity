@@ -49,7 +49,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _actual_height (1),
   _resize_id (0),
   _alt_f2_entry (NULL),
-  _searching_timeout (0)
+  _searching_timeout (0),
+  _pending_activation (false)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -807,7 +808,11 @@ PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 void
 PlacesView::OnEntryActivated ()
 {
-  if (!_results_controller->ActivateFirst ())
+  if (_searching_timeout)
+  {
+    _pending_activation = true;
+  }
+  else if (!_results_controller->ActivateFirst ())
     g_debug ("Cannot activate anything");
 }
 
@@ -871,6 +876,17 @@ PlacesView::OnSearchFinished (const char *search_string,
                               guint32     section_id,
                               std::map<const char *, const char *>& hints)
 {
+  if (_pending_activation)
+  {
+    if (!_results_controller->ActivateFirst ())
+      g_debug ("Cannot activate anything");
+  }
+  _pending_activation = false;
+
+  if (_searching_timeout)
+    g_source_remove (_searching_timeout);
+  _searching_timeout = 0;
+
   _search_bar->OnSearchFinished ();
 }
 
