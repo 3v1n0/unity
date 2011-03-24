@@ -25,7 +25,8 @@
 #include "PluginAdapter.h"
 
 SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
-:   LauncherIcon(IconManager)
+:   LauncherIcon(IconManager),
+  _theme_changed_id (0)
 {
   m_Icon = 0;
   m_IconName = 0;
@@ -36,14 +37,17 @@ SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
   LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
   LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
 
-  g_signal_connect (gtk_icon_theme_get_default (), "changed",
-                    G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
+  _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                                        G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
   if (m_Icon)
     m_Icon->UnReference ();
+
+  if (_theme_changed_id)
+    g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
 }
 
 void
