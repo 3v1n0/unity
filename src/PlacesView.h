@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #ifndef PLACES_VIEW_H
@@ -36,6 +37,7 @@
 
 #include "PlacesSearchBar.h"
 #include "PlacesHomeView.h"
+#include "PlacesEmptyView.h"
 
 #include "PlacesResultsController.h"
 #include "PlacesResultsView.h"
@@ -121,17 +123,25 @@ private:
 
   static gboolean OnResizeFrame (PlacesView *self);
 
+  void OnSearchFinished (const char *search_string,
+                         guint32     section_id,
+                         std::map<const char *, const char *>& hints);
+
+  static gboolean OnSearchTimedOut (PlacesView *view);
+
 private:
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
   nux::LayeredLayout *_layered_layout;
   PlacesSearchBar    *_search_bar;
   PlacesHomeView     *_home_view;
+  PlacesEmptyView    *_empty_view;
   PlaceEntryHome     *_home_entry;
   PlaceEntry         *_entry;
   sigc::connection    _group_added_conn;
   sigc::connection    _result_added_conn;
   sigc::connection    _result_removed_conn;
+  sigc::connection    _search_finished_conn;
 
   PlacesResultsController *_results_controller;
   PlacesResultsView       *_results_view;
@@ -154,6 +164,10 @@ private:
   gint64 _resize_start_time;
 
   PlaceEntry *_alt_f2_entry;
+
+  guint _n_results;
+  guint _searching_timeout;
+  bool  _pending_activation;
 };
 
 #endif // PANEL_HOME_BUTTON_H

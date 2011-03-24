@@ -139,5 +139,6 @@ private:
   int  _monitor;
   guint32 _active_xid;
   guint32 _active_moved_id;
+  nux::Geometry _monitor_geo;
 };
 #endif

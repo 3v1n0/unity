@@ -40,10 +40,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _icon (NULL),
   _uri (NULL)
 {
-  //GtkSettings *settings = gtk_settings_get_default ();
-  //gchar *font = NULL;
-  //gchar *fontstring = NULL;
-  
   nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup (label);
@@ -57,10 +53,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SinkReference ();
 
-  //g_object_get (settings, "gtk-font-name", &font, NULL);
-  //fontstring = g_strdup_printf ("%s normal 10", font);
-  
-  //_cairotext->SetFont (fontstring);
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetMaximumWidth (140);
@@ -75,9 +67,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   SetLayout (layout);
 
   SetDndEnabled (true, false);
-
-  //g_free (font);
-  //g_free (fontstring);
 }
 
 

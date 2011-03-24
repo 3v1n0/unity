@@ -32,6 +32,8 @@
 #include "Nux/EditTextBox.h"
 #include "Nux/TextEntry.h"
 
+#include "PlacesSearchBarSpinner.h"
+
 #include "PlaceEntry.h"
 
 class PlacesView;
@@ -53,6 +55,7 @@ public:
   void SetActiveEntry (PlaceEntry *entry,
                        guint       section_id,
                        const char *search_string);
+  void OnSearchFinished ();
 
   sigc::signal<void, const char *> search_changed;
   sigc::signal<void> activated;
@@ -89,7 +92,7 @@ private:
   guint                    _live_search_timeout;
 
   friend class PlacesView;
-  nux::TextureArea        *_search_icon;
+  PlacesSearchBarSpinner  *_spinner;
   nux::ComboBoxSimple     *_combo;
 };
 
