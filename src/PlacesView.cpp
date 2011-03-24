@@ -191,7 +191,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
   geo.height = _actual_height;
-  nux::Geometry _bg_blur_geo = geo;
+  _bg_blur_geo = geo;
 
   if ((_size_mode == SIZE_MODE_HOVER))
   {
@@ -337,8 +337,8 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
   nux::Geometry clip_geo = GetGeometry ();
-  bool paint_blur = type != PlacesSettings::NO_BLUR;
-  int bgs = 1;
+  bool paint_blur = (type != PlacesSettings::NO_BLUR);
+  int bgs = 0;
 
   clip_geo.height = _bg_layer->GetGeometry ().height -1;
   GfxContext.PushClippingRectangle (clip_geo);
@@ -348,14 +348,13 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   if (_bg_blur_texture.IsValid () && paint_blur)
   {
-
     nux::TexCoordXForm texxform_blur__bg;
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
+    gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
                                nux::Color::White,
@@ -364,7 +363,8 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     bgs++;
   }
  
-  nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
+  nux::GetPainter ().PushDrawLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
+  bgs++;
 
   if (_layout)
   {    
