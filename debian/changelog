@@ -1,4 +1,4 @@
-unity (3.6.8-0ubuntu1) UNRELEASED; urgency=low
+unity (3.6.8-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - crash at the second drag and drop from an unity place (LP: #736704)
@@ -79,7 +79,7 @@ unity (3.6.8-0ubuntu1) UNRELEASED; urgency=low
     - depends on libutouch-geis-dev to bring MT support to unity
     - dep on latest nux
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Mar 2011 04:06:44 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Mar 2011 04:55:41 +0100
 
 unity (3.6.6-0ubuntu1) natty; urgency=low
 
