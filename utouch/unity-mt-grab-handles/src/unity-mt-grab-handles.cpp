@@ -510,7 +510,7 @@ UnityMTGrabHandlesWindow::glDraw (const GLMatrix            &transform,
 
     UMTGH_SCREEN (screen);
 
-    if (mHandles)
+    if (mHandles && mHandles->visible ())
     {
 	unsigned int handle = 0;
 
