@@ -53,7 +53,8 @@ struct _UnityRootAccessibleClass
 GType      unity_root_accessible_get_type (void);
 AtkObject *unity_root_accessible_new      (void);
 
-void       unity_root_accessible_add_window (UnityRootAccessible *self, nux::BaseWindow *window);
+AtkObject *unity_root_accessible_add_window (UnityRootAccessible *self,
+                                             nux::BaseWindow *window);
 
 G_END_DECLS
 

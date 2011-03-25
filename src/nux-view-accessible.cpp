@@ -31,6 +31,7 @@
 #include "unitya11y.h"
 
 #include "Nux/Layout.h"
+#include "Nux/Area.h"
 
 /* GObject */
 static void nux_view_accessible_class_init (NuxViewAccessibleClass *klass);
@@ -44,34 +45,34 @@ static AtkStateSet* nux_view_accessible_ref_state_set       (AtkObject *obj);
 static gint         nux_view_accessible_get_n_children      (AtkObject *obj);
 static AtkObject*   nux_view_accessible_ref_child           (AtkObject *obj,
                                                              gint i);
-
-/* AtkComponent.h */
-static void     atk_component_interface_init             (AtkComponentIface *iface);
-static gboolean nux_view_accessible_grab_focus           (AtkComponent *component);
-static guint    nux_view_accessible_add_focus_handler    (AtkComponent *component,
-                                                          AtkFocusHandler handler);
-static void     nux_view_accessible_remove_focus_handler (AtkComponent *component,
-                                                          guint handler_id);
-
 /* private methods */
-static void on_start_focus_cb                 (AtkObject *accessible);
-static void on_end_focus_cb                   (AtkObject *accessible);
-static void nux_view_accessible_focus_handler (AtkObject *accessible,
-                                               gboolean focus_in);
-static void on_layout_changed_cb              (nux::View *view,
-                                               nux::Layout *layout,
-                                               AtkObject *accessible,
-                                               gboolean is_add);
+static void on_layout_changed_cb (nux::View *view,
+                                  nux::Layout *layout,
+                                  AtkObject *accessible,
+                                  gboolean is_add);
+static void on_start_focus_cb    (AtkObject *accessible);
+static void on_end_focus_cb      (AtkObject *accessible);
 
-G_DEFINE_TYPE_WITH_CODE (NuxViewAccessible,
-                         nux_view_accessible,
-                         NUX_TYPE_AREA_ACCESSIBLE,
-                         G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
-                                                atk_component_interface_init))
+
+G_DEFINE_TYPE (NuxViewAccessible,
+               nux_view_accessible,
+               NUX_TYPE_AREA_ACCESSIBLE)
+
+#define NUX_VIEW_ACCESSIBLE_GET_PRIVATE(obj) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_VIEW_ACCESSIBLE,        \
+                                NuxViewAccessiblePrivate))
+
+struct _NuxViewAccessiblePrivate
+{
+  /* Cached values (used to avoid extra notifications) */
+  gboolean focused;
+};
+
 
 static void
 nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
@@ -79,11 +80,17 @@ nux_view_accessible_class_init (NuxViewAccessibleClass *klass)
   atk_class->ref_state_set = nux_view_accessible_ref_state_set;
   atk_class->ref_child = nux_view_accessible_ref_child;
   atk_class->get_n_children = nux_view_accessible_get_n_children;
+
+  g_type_class_add_private (gobject_class, sizeof (NuxViewAccessiblePrivate));
 }
 
 static void
 nux_view_accessible_init (NuxViewAccessible *view_accessible)
 {
+  NuxViewAccessiblePrivate *priv =
+    NUX_VIEW_ACCESSIBLE_GET_PRIVATE (view_accessible);
+
+  view_accessible->priv = priv;
 }
 
 AtkObject*
@@ -115,16 +122,17 @@ nux_view_accessible_initialize (AtkObject *accessible,
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
   view = dynamic_cast<nux::View *>(nux_object);
 
-  view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb), accessible));
-  view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb), accessible));
-
   view->LayoutAdded.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
                                          accessible, TRUE));
   view->LayoutRemoved.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
                                            accessible, FALSE));
 
-  atk_component_add_focus_handler (ATK_COMPONENT (accessible),
-                                   nux_view_accessible_focus_handler);
+  /* Some extra focus things as Focusable is not used on Launcher and
+     some BaseWindow */
+  view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb),
+                                          accessible));
+  view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb),
+                                        accessible));
 }
 
 static AtkStateSet*
@@ -145,10 +153,8 @@ nux_view_accessible_ref_state_set (AtkObject *obj)
 
   view = dynamic_cast<nux::View *>(nux_object);
 
-  /* FIXME: Waiting for the full keyboard navigation support, for the
-     moment any nux object is focusable*/
-  atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
-
+  /* required for some basic object as the BaseWindow containing the
+     Launcher */
   if (view->HasKeyboardFocus ())
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
@@ -210,24 +216,6 @@ nux_view_accessible_ref_child (AtkObject *obj,
 }
 
 static void
-on_start_focus_cb (AtkObject *accessible)
-{
-  g_debug ("[a11y] on start_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
-
-  g_signal_emit_by_name (accessible, "focus_event", TRUE);
-  atk_focus_tracker_notify (accessible);
-}
-
-static void
-on_end_focus_cb (AtkObject *accessible)
-{
-  g_debug ("[a11y] on end_focus_cb: (%p:%s)", accessible, atk_object_get_name (accessible));
-
-  g_signal_emit_by_name (accessible, "focus_event", FALSE);
-  atk_focus_tracker_notify (accessible);
-}
-
-static void
 on_layout_changed_cb (nux::View *view,
                       nux::Layout *layout,
                       AtkObject *accessible,
@@ -254,91 +242,33 @@ on_layout_changed_cb (nux::View *view,
   g_signal_emit_by_name (accessible, signal_name, 0, atk_child, NULL);
 }
 
-/* AtkComponent.h */
 static void
-atk_component_interface_init (AtkComponentIface *iface)
+check_focus (NuxViewAccessible *self,
+             gboolean focus_in)
 {
-  g_return_if_fail (iface != NULL);
-
-  /* focus management */
-  iface->grab_focus           = nux_view_accessible_grab_focus;
-  iface->add_focus_handler    = nux_view_accessible_add_focus_handler;
-  iface->remove_focus_handler = nux_view_accessible_remove_focus_handler;
-}
-
-static gboolean
-nux_view_accessible_grab_focus (AtkComponent *component)
-{
-  nux::Object *nux_object = NULL;
-  nux::View *view = NULL;
-
-  g_return_val_if_fail (NUX_IS_VIEW_ACCESSIBLE (component), FALSE);
-
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (component));
-  if (nux_object == NULL) /* actor is defunct */
-    return FALSE;
-
-  view = dynamic_cast<nux::View *>(nux_object);
-
-  view->ForceStartFocus (0, 0);
-
-  /* FIXME: ForceStartFocus doesn't return if the force was succesful
-     or not, we suppose that this is the case like in cally and gail */
-  return TRUE;
-}
-
-/*
- * comment C&P from cally-actor:
- *
- * "These methods are basically taken from gail, as I don't see any
- * reason to modify it. It makes me wonder why it is really required
- * to be implemented in the toolkit"
- */
-
-static guint
-nux_view_accessible_add_focus_handler (AtkComponent *component,
-                                       AtkFocusHandler handler)
-{
-  GSignalMatchType match_type;
-  gulong ret;
-  guint signal_id;
-
-  g_return_val_if_fail (NUX_IS_VIEW_ACCESSIBLE (component), 0);
-
-  match_type = (GSignalMatchType) (G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC);
-  signal_id = g_signal_lookup ("focus-event", ATK_TYPE_OBJECT);
-
-  ret = g_signal_handler_find (component, match_type, signal_id, 0, NULL,
-                               (gpointer) handler, NULL);
-  if (!ret)
+  if (self->priv->focused != focus_in)
     {
-      return g_signal_connect_closure_by_id (component,
-                                             signal_id, 0,
-                                             g_cclosure_new (G_CALLBACK (handler), NULL,
-                                                             (GClosureNotify) NULL),
-                                             FALSE);
+      self->priv->focused = focus_in;
+
+      g_signal_emit_by_name (self, "focus-event", focus_in);
+      atk_focus_tracker_notify (ATK_OBJECT (self));
     }
-  else
-    return 0;
 }
 
 static void
-nux_view_accessible_remove_focus_handler (AtkComponent *component,
-                                          guint handler_id)
+on_start_focus_cb (AtkObject *accessible)
 {
-  g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (component));
+  g_debug ("[a11y][view] on_start_focus_cb: (%p:%s)", accessible,
+           atk_object_get_name (accessible));
 
-  g_signal_handler_disconnect (component, handler_id);
+  check_focus (NUX_VIEW_ACCESSIBLE (accessible), TRUE);
 }
 
 static void
-nux_view_accessible_focus_handler (AtkObject *accessible,
-                                   gboolean focus_in)
+on_end_focus_cb (AtkObject *accessible)
 {
-  g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
+  g_debug ("[a11y][view] on_end_focus_cb: (%p:%s)",
+           accessible, atk_object_get_name (accessible));
 
-  g_debug ("[a11y] view_focus_handler (%p:%s:%i)",
-           accessible, atk_object_get_name (accessible), focus_in);
-
-  atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);
+  check_focus (NUX_VIEW_ACCESSIBLE (accessible), FALSE);
 }

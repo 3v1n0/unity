@@ -898,7 +898,14 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
   if (unity_a11y_initialized () == TRUE)
-    unity_util_accessible_add_window (self->placesController->GetWindow ());
+    {
+      AtkObject *atk_obj = NULL;
+
+      atk_obj = unity_util_accessible_add_window (self->placesController->GetWindow ());
+
+      /* FIXME: BaseWindow should expose his name */
+      atk_object_set_name (atk_obj, "Places");
+    }
 
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
