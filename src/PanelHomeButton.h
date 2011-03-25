@@ -52,9 +52,12 @@ protected:
 private:
   void Refresh ();
   static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
+  
+  static void OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data);
 
 private:
   int _button_width;
+  int _urgent_count;
 };
 
 #endif // PANEL_HOME_BUTTON_H
