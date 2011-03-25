@@ -235,6 +235,18 @@ void
 LauncherController::RegisterIcon (LauncherIcon *icon)
 {
   _model->AddIcon (icon);
+
+  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+  if (bamf_icon)
+  {
+    LauncherEntryRemote *entry = NULL;
+    const char *path;
+    path = bamf_icon->DesktopFile ();
+    if (path)
+      entry = _remote_model->LookupByDesktopFile (path);
+    if (entry)
+      icon->InsertEntryRemote (entry);
+  }
 }
 
 /* static private */
