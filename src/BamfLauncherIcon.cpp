@@ -165,7 +165,7 @@ BamfLauncherIcon::OnWindowMinimized (guint32 xid)
   if (!OwnsWindow (xid))
     return;
 
-  Present (0.5f, 600);
+  Present (0.0f, 600);
   UpdateQuirkTimeDelayed (300, QUIRK_SHIMMER);
 }
 
@@ -866,8 +866,10 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  data[0] = center.x - 24;
-  data[1] = center.y - 24;
+  //data[0] = center.x - 24;
+  //data[1] = center.y - 24;
+  data[0] = 0;
+  data[1] = 0;
   data[2] = 48;
   data[3] = 48;
 
