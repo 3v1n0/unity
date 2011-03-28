@@ -3355,10 +3355,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   int width = texture->GetWidth ();
   int height = texture->GetHeight ();
   
-  int progress_width = _progress_bar_trough->GetWidth ();
+  int progress_width =  _icon_size;
   int progress_height = _progress_bar_trough->GetHeight ();
 
-  int fill_width = _progress_bar_fill->GetWidth ();
+  int fill_width = _icon_image_size - _icon_image_size_delta;
   int fill_height = _progress_bar_fill->GetHeight ();
   
   int fill_offset = (progress_width - fill_width) / 2;
