@@ -2848,8 +2848,8 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
       {
-        (*it)->OpenQuicklist (true);
-        leaveKeyNavMode ();
+        if ((*it)->OpenQuicklist (true))
+          leaveKeyNavMode ();
       }
     break;
 

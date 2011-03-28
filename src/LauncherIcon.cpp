@@ -394,14 +394,14 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-void LauncherIcon::OpenQuicklist (bool default_to_first_item)
+gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
 
   std::list<DbusmenuMenuitem *> menus = Menus ();
   if (menus.empty ())
-    return;
+    return false;
     
   if (PluginAdapter::Default ()->IsScaleActive())
     PluginAdapter::Default ()->TerminateScale ();
@@ -443,6 +443,8 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   int tip_x = geo.x + geo.width + 1;
   int tip_y = geo.y + _center.y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+  
+  return true;
 }
 
 void LauncherIcon::RecvMouseDown (int button)
