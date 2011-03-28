@@ -40,6 +40,9 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define DEFAULT_ICON "application-default-icon"
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
@@ -96,6 +99,8 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
 LauncherIcon::~LauncherIcon()
 {
+  SetQuirk (QUIRK_URGENT, false);
+
   // Remove from introspection
   RemoveChild (_quicklist);
   RemoveChild (_tooltip);
@@ -613,9 +618,17 @@ LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
   
   // Present on urgent as a general policy
   if (quirk == QUIRK_VISIBLE && value)
-    Present (0.5f, 1500);
-  if (quirk == QUIRK_URGENT && value)
-    Present (0.5f, 1500);
+    Present (0.0f, 1500);
+  if (quirk == QUIRK_URGENT)
+  {
+    if (value)
+    {
+      Present (0.0f, 1500);
+    }
+    
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_send_message (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean (value));
+  }
 }
 
 gboolean

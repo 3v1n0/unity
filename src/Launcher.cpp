@@ -1536,7 +1536,7 @@ Launcher::CheckIntersectWindow (CompWindow *window)
   if (!window || !(window->type () & intersect_types) || !window->isMapped () || !window->isViewable ())
     return false;
 
-  if (CompRegion (window->inputRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
+  if (CompRegion (window->borderRect ()).intersects (CompRect (geo.x, geo.y, geo.width, geo.height)))
     return true;
 
   return false;

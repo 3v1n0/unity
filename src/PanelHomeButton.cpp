@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION)
 {
+  _urgent_count = 0;
   _button_width = 66;
   SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
@@ -54,11 +55,32 @@ PanelHomeButton::PanelHomeButton ()
   g_signal_connect (gtk_icon_theme_get_default (), "changed",
                     G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
 
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
+                                 (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
+                                 this);
+
   Refresh ();
 }
 
 PanelHomeButton::~PanelHomeButton ()
 {
+}
+
+void 
+PanelHomeButton::OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data)
+{
+  PanelHomeButton *self = static_cast<PanelHomeButton *> (user_data);
+  
+  if (g_variant_get_boolean (data))
+    self->_urgent_count++;
+  else
+    self->_urgent_count--;
+  
+  if (self->_urgent_count < 0)
+    self->_urgent_count = 0;
+  
+  self->Refresh (); 
 }
 
 void
@@ -123,7 +145,7 @@ PanelHomeButton::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            nux::Color::White,  // The color used to modulate the texture.
+                                                            _urgent_count ? nux::Color (0xFF24C5F6) : nux::Color::White,  // The color used to modulate the texture.
                                                             true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );

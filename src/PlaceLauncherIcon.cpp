@@ -32,11 +32,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
   _entry (entry)
 {
-  gchar *escape;
-
-  escape = g_markup_escape_text (entry->GetName (), -1);
-
-  SetTooltipText (escape);
+  SetTooltipText (entry->GetName ());
   SetShortcut (entry->GetShortcut());
   SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);
@@ -45,8 +41,6 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   SetIconType (TYPE_PLACE); 
 
   entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
-
-  g_free (escape);
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()
