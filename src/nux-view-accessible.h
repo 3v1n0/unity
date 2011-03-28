@@ -37,10 +37,14 @@ G_BEGIN_DECLS
 
 typedef struct _NuxViewAccessible        NuxViewAccessible;
 typedef struct _NuxViewAccessibleClass   NuxViewAccessibleClass;
+typedef struct _NuxViewAccessiblePrivate NuxViewAccessiblePrivate;
 
 struct _NuxViewAccessible
 {
   NuxAreaAccessible parent;
+
+  /*< private >*/
+  NuxViewAccessiblePrivate *priv;
 };
 
 struct _NuxViewAccessibleClass
@@ -50,6 +54,8 @@ struct _NuxViewAccessibleClass
 
 GType      nux_view_accessible_get_type (void);
 AtkObject *nux_view_accessible_new      (nux::Object *object);
+
+gboolean   nux_view_accessible_get_key_focused (NuxViewAccessible *self);
 
 G_END_DECLS
 

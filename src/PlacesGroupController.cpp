@@ -286,7 +286,8 @@ PlacesGroupController::ActivateFirst ()
 
     if (tile)
     {
-      tile->sigClick.emit (tile);
+      nux::Geometry geo = tile->GetGeometry ();
+      tile->OnMouseClick.emit (geo.x, geo.y, 0, 0);
       return true;
     }
   }

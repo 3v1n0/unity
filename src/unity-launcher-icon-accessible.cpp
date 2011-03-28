@@ -185,11 +185,6 @@ unity_launcher_icon_accessible_initialize (AtkObject *accessible,
 
   atk_component_add_focus_handler (ATK_COMPONENT (accessible),
                                    unity_launcher_icon_accessible_focus_handler);
-
-  /* Check the cached selected state and notify the first selection.
-   * Ie: it is required to ensure a first notification
-   */
-  check_selected (UNITY_LAUNCHER_ICON_ACCESSIBLE (accessible));
 }
 
 
@@ -305,13 +300,16 @@ check_selected (UnityLauncherIconAccessible *self)
   icon = dynamic_cast<LauncherIcon *>(nux_object);
   launcher = icon->GetLauncher ();
 
-  if ((launcher == NULL) || (self->priv->parent_focused == FALSE))
+  if (launcher == NULL)
     return;
 
   selected_icon = launcher->GetSelectedMenuIcon ();
 
   if (icon == selected_icon)
     found = TRUE;
+
+  if ((found) && (self->priv->parent_focused == FALSE))
+    return;
 
   if (found != self->priv->selected)
     {
@@ -325,11 +323,11 @@ check_selected (UnityLauncherIconAccessible *self)
                                       ATK_STATE_ACTIVE,
                                       found);
 
-      g_signal_emit_by_name (self, "focus_event", found, &return_val);
+      g_signal_emit_by_name (self, "focus-event", self->priv->selected, &return_val);
       atk_focus_tracker_notify (ATK_OBJECT (self));
 
-      g_debug ("[LAUNCHER-ICON]: selected state changed (%p:%i:%s)",
-               self, found, atk_object_get_name (ATK_OBJECT (self)));
+      g_debug ("[a11y][launcher-icon] selected state changed (%p:%i:%s)",
+               self, self->priv->selected, atk_object_get_name (ATK_OBJECT (self)));
     }
 }
 
@@ -428,7 +426,7 @@ unity_launcher_icon_accessible_focus_handler (AtkObject *accessible,
 {
   g_return_if_fail (UNITY_IS_LAUNCHER_ICON_ACCESSIBLE (accessible));
 
-  g_debug ("[a11y] launcher_icon_focus_handler (%p:%s:%i)",
+  g_debug ("[a11y][launcher-icon] focus_handler (%p:%s:%i)",
            accessible, atk_object_get_name (accessible), focus_in);
 
   atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);

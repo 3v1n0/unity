@@ -37,10 +37,14 @@ G_BEGIN_DECLS
 
 typedef struct _NuxBaseWindowAccessible        NuxBaseWindowAccessible;
 typedef struct _NuxBaseWindowAccessibleClass   NuxBaseWindowAccessibleClass;
+typedef struct _NuxBaseWindowAccessiblePrivate NuxBaseWindowAccessiblePrivate;
 
 struct _NuxBaseWindowAccessible
 {
   NuxViewAccessible parent;
+
+  /*< private >*/
+  NuxBaseWindowAccessiblePrivate *priv;
 };
 
 struct _NuxBaseWindowAccessibleClass
