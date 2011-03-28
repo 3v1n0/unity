@@ -434,15 +434,6 @@ BamfLauncherIcon::Spread (int state, bool force)
 }
 
 void
-BamfLauncherIcon::OnMouseClick (int button)
-{
-  if (button == 1)
-    ActivateLauncherIcon ();
-  else if (button == 2)
-    OpenInstanceLauncherIcon ();
-}
-
-void
 BamfLauncherIcon::OnClosed (BamfView *view, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;

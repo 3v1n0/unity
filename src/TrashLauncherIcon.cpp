@@ -92,14 +92,6 @@ TrashLauncherIcon::GetMenus ()
 }
 
 void
-TrashLauncherIcon::OnMouseClick (int button)
-{
-  if (button == 1)
-    ActivateLauncherIcon ();
-  
-}
-
-void
 TrashLauncherIcon::ActivateLauncherIcon ()
 {
   GError *error = NULL;

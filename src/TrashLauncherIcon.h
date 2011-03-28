@@ -33,7 +33,6 @@ public:
   virtual nux::Color GlowColor ();
 
 protected:
-  void OnMouseClick (int button);
   void UpdateTrashIcon ();
   
   nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);

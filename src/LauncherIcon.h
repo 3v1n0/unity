@@ -93,6 +93,7 @@ public:
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
+    void RecvMouseClick (int button);
     
     void HideTooltip ();
     void OpenQuicklist (bool default_to_first_item = false);

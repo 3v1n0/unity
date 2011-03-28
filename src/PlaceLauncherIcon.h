@@ -36,7 +36,6 @@ public:
   virtual nux::Color GlowColor ();
 
 protected:
-  void OnMouseClick (int button);
   void UpdatePlaceIcon ();
   std::list<DbusmenuMenuitem *> GetMenus ();
 

@@ -94,6 +94,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
   
 }
 
@@ -150,12 +151,18 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     ActivateLauncherIcon ();
 }
 
 void
 LauncherIcon::OpenInstance ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     OpenInstanceLauncherIcon ();
 }
 
@@ -395,6 +402,9 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   std::list<DbusmenuMenuitem *> menus = Menus ();
   if (menus.empty ())
     return;
+    
+  if (PluginAdapter::Default ()->IsScaleActive())
+    PluginAdapter::Default ()->TerminateScale ();
 
   std::list<DbusmenuMenuitem *>::iterator it;
   for (it = menus.begin (); it != menus.end (); it++)
@@ -448,6 +458,14 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
+}
+
+void LauncherIcon::RecvMouseClick (int button)
+{
+  if (button == 1)
+    Activate ();
+  else if (button == 2)
+    OpenInstance ();
 }
 
 void LauncherIcon::HideTooltip ()
