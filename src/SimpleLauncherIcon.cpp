@@ -69,8 +69,6 @@ SimpleLauncherIcon::OnMouseUp (int button)
 void
 SimpleLauncherIcon::OnMouseClick (int button)
 {
-  if (button == 1 && PluginAdapter::Default ()->IsScaleActive())
-    PluginAdapter::Default ()->TerminateScale ();
 }
 
 void
@@ -86,7 +84,6 @@ SimpleLauncherIcon::OnMouseLeave ()
 void
 SimpleLauncherIcon::ActivateLauncherIcon ()
 {
-  MouseClick.emit (1);
 }
 
 nux::BaseTexture *
