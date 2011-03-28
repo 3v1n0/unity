@@ -297,16 +297,19 @@ DeviceLauncherIcon::OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLaunche
 void
 DeviceLauncherIcon::StopDrive ()
 {
-  GDrive *drive;
+  GDrive          *drive;
+  GMountOperation *mount_op;
 
   drive = g_volume_get_drive (_volume);
+  mount_op = gtk_mount_operation_new (NULL);
   g_drive_stop (drive,
                 (GMountUnmountFlags)0,
-                NULL,
+                mount_op,
                 NULL,
                 (GAsyncReadyCallback)OnStopDriveReady,
                 this);
   g_object_unref (drive);
+  g_object_unref (mount_op);
 }
 
 void
