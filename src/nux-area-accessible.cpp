@@ -55,11 +55,13 @@ static guint    nux_area_accessible_add_focus_handler    (AtkComponent *componen
                                                           AtkFocusHandler handler);
 static void     nux_area_accessible_remove_focus_handler (AtkComponent *component,
                                                           guint handler_id);
-static void nux_area_accessible_focus_handler            (AtkObject *accessible,
+static void     nux_area_accessible_focus_handler        (AtkObject *accessible,
                                                           gboolean focus_in);
 /* private */
 static void on_focus_changed_cb               (nux::Area *area,
                                                AtkObject *accessible);
+static void on_parent_window_activate_cb      (AtkObject *parent_window,
+                                               NuxAreaAccessible *self);
 static AtkObject   * search_for_parent_window (AtkObject *object);
 
 
@@ -376,12 +378,21 @@ check_parent_window_active (NuxAreaAccessible *self)
   gboolean active = FALSE;
   AtkStateSet *state_set = NULL;
 
-  if (self->priv->parent_window != NULL)
-    self->priv->parent_window = search_for_parent_window (ATK_OBJECT (self));
+  if (self->priv->parent_window == NULL)
+    {
+      self->priv->parent_window = search_for_parent_window (ATK_OBJECT (self));
 
-  state_set = atk_object_ref_state_set (ATK_OBJECT (self));
+      g_signal_connect (self->priv->parent_window,
+                        "activate",
+                        G_CALLBACK (on_parent_window_activate_cb),
+                        self);
+    }
+
+  state_set = atk_object_ref_state_set (ATK_OBJECT (self->priv->parent_window));
 
   active = atk_state_set_contains_state (state_set, ATK_STATE_ACTIVE);
+
+  g_debug ("[a11y][area] check_parent_window_active %i", active);
 
   g_object_unref (state_set);
 
@@ -389,8 +400,8 @@ check_parent_window_active (NuxAreaAccessible *self)
 }
 
 static void
-on_focus_changed_cb (nux::Area *area,
-                     AtkObject *accessible)
+check_focus_change (nux::Area *area,
+                    AtkObject *accessible)
 {
   gboolean focus_in = FALSE;
   NuxAreaAccessible *self = NULL;
@@ -422,6 +433,13 @@ on_focus_changed_cb (nux::Area *area,
     }
 }
 
+static void
+on_focus_changed_cb (nux::Area *area,
+                     AtkObject *accessible)
+{
+  check_focus_change (area, accessible);
+}
+
 static AtkObject *
 search_for_parent_window (AtkObject *object)
 {
@@ -438,4 +456,19 @@ search_for_parent_window (AtkObject *object)
     g_debug ("[a11y][area] search_for_parent NO PARENT");
 
   return parent;
+}
+
+static void
+on_parent_window_activate_cb (AtkObject *parent_window,
+                              NuxAreaAccessible *self)
+{
+  nux::Object *nux_object = NULL;
+  nux::Area *area = NULL;
+
+  g_debug ("[a11y][area] on_parent_window_activate");
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  area = dynamic_cast<nux::Area *>(nux_object);
+
+  check_focus_change (area, ATK_OBJECT (self));
 }
