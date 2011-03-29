@@ -58,6 +58,8 @@ private:
 private:
   int _button_width;
   int _urgent_count;
+  
+  gulong _theme_changed_id;
 };
 
 #endif // PANEL_HOME_BUTTON_H

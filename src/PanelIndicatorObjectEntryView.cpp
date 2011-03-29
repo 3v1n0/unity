@@ -42,19 +42,22 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
-  _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
-  _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_indicator_activate_changed_connection = _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   _padding = padding;
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
-  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
 PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 {
+  _on_indicator_activate_changed_connection.disconnect ();
+  _on_indicator_updated_connection.disconnect ();
+  _on_panelstyle_changed_connection.disconnect ();
 }
 
 void

@@ -56,6 +56,11 @@ public:
 private:
   nux::CairoGraphics _util_cg;
   int _padding;
+  
+  sigc::connection _on_indicator_activate_changed_connection;
+  sigc::connection _on_indicator_updated_connection;
+  sigc::connection _on_panelstyle_changed_connection;
+
 };
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

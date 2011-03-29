@@ -52,7 +52,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle ();
-  _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
+  _on_panel_style_changed_connection = _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -73,15 +73,22 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    AddChild (_tray);
 
   _remote = new IndicatorObjectFactoryRemote ();
-  _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
-  _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
-  _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
-  _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
-  _remote->IndicatorObjectFactory::OnSynced.connect (sigc::mem_fun (this, &PanelView::OnSynced));
+  _on_object_added_connection = _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
+  _on_menu_pointer_moved_connection = _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
+  _on_entry_activate_request_connection = _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
+  _on_entry_activated_connection = _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
+  _on_synced_connection = _remote->IndicatorObjectFactory::OnSynced.connect (sigc::mem_fun (this, &PanelView::OnSynced));
 }
 
 PanelView::~PanelView ()
 {
+  _on_panel_style_changed_connection.disconnect ();
+  _on_object_added_connection.disconnect ();
+  _on_menu_pointer_moved_connection.disconnect ();
+  _on_entry_activate_request_connection.disconnect ();
+  _on_entry_activated_connection.disconnect ();
+  _on_synced_connection.disconnect ();
+  
   _style->UnReference ();
   delete _remote;
   delete _bg_layer;
