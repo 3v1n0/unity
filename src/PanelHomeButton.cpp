@@ -52,8 +52,8 @@ PanelHomeButton::PanelHomeButton ()
   OnMouseLeave.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
   OnMouseMove.connect  (sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
-  g_signal_connect (gtk_icon_theme_get_default (), "changed",
-                    G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
+  _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                                            G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
 
   UBusServer *ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
@@ -65,6 +65,8 @@ PanelHomeButton::PanelHomeButton ()
 
 PanelHomeButton::~PanelHomeButton ()
 {
+  if (_theme_changed_id)
+    g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
 }
 
 void 

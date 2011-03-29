@@ -228,7 +228,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _active_quicklist = 0;
     
     _hide_machine = new LauncherHideMachine ();
-    _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));
+    _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));    
+    _hover_machine = new LauncherHoverMachine ();
+    _set_hover_connection = (sigc::connection) _hover_machine->should_hover_changed.connect (sigc::mem_fun (this, &Launcher::SetHover));
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -425,6 +427,9 @@ Launcher::~Launcher()
   if (_set_hidden_connection.connected ())
     _set_hidden_connection.disconnect ();
 
+  if (_set_hover_connection.connected ())
+    _set_hover_connection.disconnect ();
+
   if (_recv_mouse_down_connection.connected ())
     _recv_mouse_down_connection.disconnect ();
 
@@ -533,11 +538,13 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName = NULL;
-  double                label_x  = 18.0f;
-  double                label_y  = 18.0f;
-  double                label_w  = 18.0f;
-  double                label_h  = 18.0f;
-  double                label_r  = 3.0f;
+
+  double label_pos = double(_icon_size / 3.0f);
+  double label_x = label_pos;
+  double label_y = label_pos;
+  double label_w = label_pos;
+  double label_h = label_pos;
+  double label_r = 3.0f;
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
@@ -550,7 +557,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   layout = pango_cairo_create_layout (cr);
   g_object_get (settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string (fontName);
-  pango_font_description_set_size (desc, 11 * PANGO_SCALE);
+  pango_font_description_set_absolute_size (desc, label_pos * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
@@ -626,11 +633,11 @@ void
 Launcher::startKeyNavMode ()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
+  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, true);
   _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   GrabKeyboard ();
   GrabPointer ();
-  EnsureHoverState ();
   
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
@@ -686,11 +693,11 @@ Launcher::exitKeyNavMode ()
   UnGrabKeyboard ();
   UnGrabPointer ();
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
+  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, false);
 
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
   QueueDraw ();
-  EnsureHoverState ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
                             NULL);
@@ -724,6 +731,18 @@ void Launcher::SetMousePosition (int x, int y)
       SetTimeStruct (&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
     
     EnsureScrollTimer ();
+}
+
+void Launcher::SetStateMouseOverLauncher (bool over_launcher)
+{
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+    _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+}
+
+void Launcher::SetStateMouseOverBFB (bool over_bfb)
+{
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, over_bfb);
+    _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_BFB, over_bfb);
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
@@ -1468,9 +1487,19 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 gboolean Launcher::TapOnSuper ()
 {
     struct timespec current;
-    clock_gettime (CLOCK_MONOTONIC, &current);  
+    bool tap_on_super;
+    bool shortcuts_shown = false;
+    clock_gettime (CLOCK_MONOTONIC, &current);
         
-    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
+    tap_on_super = (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
+
+    if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
+      shortcuts_shown = !tap_on_super;
+
+    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, shortcuts_shown);
+    
+    return tap_on_super;
+    
 }
 
 /* Launcher Show/Hide logic */
@@ -1480,7 +1509,6 @@ void Launcher::StartKeyShowLauncher ()
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     QueueDraw ();
-    EnsureHoverState ();
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
     if (_redraw_handle > 0)
       g_source_remove (_redraw_handle);
@@ -1491,8 +1519,8 @@ void Launcher::EndKeyShowLauncher ()
 {
     
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
+    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, false);
     QueueDraw ();
-    EnsureHoverState ();
 
     // it's a tap on super
     if (TapOnSuper ())
@@ -1505,7 +1533,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
     
     // hack around issue in nux where leave events dont always come after a grab
-    self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, false);
+    self->SetStateMouseOverBFB (false);
 }
 
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
@@ -1554,9 +1582,7 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
   {
     if (g_str_equal ("hovered", prop_key))
     {
-      self->_hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, g_variant_get_boolean (prop_value));
-
-      self->EnsureHoverState ();
+      self->SetStateMouseOverBFB (g_variant_get_boolean (prop_value));
       self->EnsureScrollTimer ();    
     }
   }
@@ -1579,6 +1605,8 @@ void Launcher::SetHidden (bool hidden)
 
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
+    _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
+
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
@@ -1845,6 +1873,8 @@ Launcher::SetActionState (LauncherActionState actionstate)
     
   _launcher_action_state = actionstate;
   
+  _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_IN_ACTION, (actionstate != ACTION_NONE));
+  
   if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
     exitKeyNavMode ();
 }
@@ -1855,40 +1885,24 @@ Launcher::GetActionState ()
   return _launcher_action_state;
 }
 
-void
-Launcher::EnsureHoverState ()
+void Launcher::SetHover (bool hovered)
 {
-  if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER) || _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB) || 
-      _hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) || _hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE) ||
-      QuicklistManager::Default ()->Current() || GetActionState () != ACTION_NONE)
+  
+  if (hovered == _hovered)
+    return;
+    
+  _hovered = hovered;
+
+  if (_hovered)
   {
-    SetHover ();
+    _enter_y = (int) _mouse_position.y;
+    SetTimeStruct (&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
   }
   else
   {
-    UnsetHover ();
+    SetTimeStruct (&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
   }
-}
-
-void Launcher::SetHover ()
-{
-  if (_hovered)
-    return;
-
-  _enter_y = (int) _mouse_position.y;
-
-  _hovered = true;
-  SetTimeStruct (&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
-  EnsureAnimation ();
-}
-
-void Launcher::UnsetHover ()
-{
-  if (!_hovered)
-    return;
-
-  _hovered = false;
-  SetTimeStruct (&_times[TIME_LEAVE], &_times[TIME_ENTER], ANIM_DURATION);
+  
   EnsureAnimation ();
 }
 
@@ -1971,6 +1985,22 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _icon_image_size_delta = tile_size - icon_size;
     _icon_glow_size = icon_size + 14;
 
+    for (int i = 0; i < MAX_SUPERKEY_LABELS; i++)
+    {
+      if (_superkey_labels[i])
+        _superkey_labels[i]->UnReference();
+      _superkey_labels[i] = cairoToTexture2D ((char) ('0' + ((i  + 1) % 10)), _icon_size, _icon_size);
+    }
+
+    LauncherModel::iterator it;
+    for (it = _model->main_begin(); it != _model->main_end(); it++)
+    {
+        LauncherIcon *icon = *it;
+        guint64 shortcut = icon->GetShortcut();
+        if (shortcut > 32 && !g_ascii_isdigit ((gchar)shortcut))
+                icon->SetSuperkeyLabel (cairoToTexture2D ((gchar)shortcut, _icon_size, _icon_size));
+    }
+
     // recreate tile textures
 
     _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
@@ -1990,8 +2020,8 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     // needs to be disconnected
     icon->needs_redraw_connection = (sigc::connection) icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
-   guint64 shortcut = icon->GetShortcut ();
-    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
+    guint64 shortcut = icon->GetShortcut ();
+    if (shortcut > 32 && !g_ascii_isdigit ((gchar) shortcut))
       icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
     AddChild (icon);
@@ -2448,11 +2478,11 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
-    /* deal with dynamic labels for places, which can be set via the locale */
-    if (shortcut != 0)
+    if (shortcut > 32)
     {
       if (!g_ascii_isdigit ((gchar) shortcut))
       {
+        /* deal with dynamic labels for places, which can be set via the locale */
         RenderIcon (GfxContext,
                     arg,
                     arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
@@ -2719,12 +2749,6 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 {
   SetMousePosition (x, y);
   nux::Geometry geo = GetGeometry ();
-
-  if (GetActionState () != ACTION_NONE && !geo.IsInside(nux::Point(x, y)))
-  {
-    // we are no longer hovered
-    EnsureHoverState ();
-  }
   
   MouseUpLogic (x, y, button_flags, key_flags);
   
@@ -2737,7 +2761,6 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
   _last_button_press = 0;
-  EnsureHoverState ();
   EnsureAnimation ();
 }
 
@@ -2793,9 +2816,7 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
     return;
   
   SetMousePosition (x, y);
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, true);
-
-  EnsureHoverState ();
+  SetStateMouseOverLauncher (true);
 
   EventLogic ();
   EnsureAnimation ();
@@ -2809,10 +2830,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
     return;
 
   SetMousePosition (x, y);
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
-        
-  if (GetActionState () == ACTION_NONE)
-      EnsureHoverState ();
+  SetStateMouseOverLauncher  (false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -2954,8 +2972,8 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
       {
-        (*it)->OpenQuicklist (true);
-        leaveKeyNavMode ();
+        if ((*it)->OpenQuicklist (true))
+          leaveKeyNavMode ();
       }
     break;
 
@@ -2989,17 +3007,17 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)
 {
   _hide_machine->SetQuirk (LauncherHideMachine::QUICKLIST_OPEN, true);
+  _hover_machine->SetQuirk (LauncherHoverMachine::QUICKLIST_OPEN, true);
   EventLogic ();
-  EnsureHoverState ();
   EnsureAnimation ();
 }
 
 void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
 {
   _hide_machine->SetQuirk (LauncherHideMachine::QUICKLIST_OPEN, false);
+  _hover_machine->SetQuirk (LauncherHoverMachine::QUICKLIST_OPEN, false);
 
   EventLogic ();
-  EnsureHoverState ();
   EnsureAnimation ();
 }
 
@@ -3445,10 +3463,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   int width = texture->GetWidth ();
   int height = texture->GetHeight ();
   
-  int progress_width = _progress_bar_trough->GetWidth ();
+  int progress_width =  _icon_size;
   int progress_height = _progress_bar_trough->GetHeight ();
 
-  int fill_width = _progress_bar_fill->GetWidth ();
+  int fill_width = _icon_image_size - _icon_image_size_delta;
   int fill_height = _progress_bar_fill->GetHeight ();
   
   int fill_offset = (progress_width - fill_width) / 2;
@@ -3544,7 +3562,7 @@ Launcher::ProcessDndEnter ()
 void 
 Launcher::ProcessDndLeave ()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, false);
+  SetStateMouseOverLauncher (false);
   _drag_edge_touching = false;
 
   SetActionState (ACTION_NONE);
@@ -3582,7 +3600,6 @@ Launcher::ProcessDndLeave ()
   _steal_drag = false;
   _dnd_hovered_icon = 0;
   
-  EnsureHoverState ();
 }
 
 std::list<char *>
@@ -3644,7 +3661,7 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 
     // only set hover once we know our first x/y
     SetActionState (ACTION_DRAG_EXTERNAL);
-    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, true);
+    SetStateMouseOverLauncher (true);
     
     LauncherModel::iterator it;
     for (it = _model->begin (); it != _model->end () && !_steal_drag; it++)
@@ -3655,7 +3672,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
         (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
     }
   
-    EnsureHoverState ();
   }
   
   g_free (uri_list_const);

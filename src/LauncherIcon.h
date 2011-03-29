@@ -93,9 +93,10 @@ public:
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
+    void RecvMouseClick (int button);
     
     void HideTooltip ();
-    void OpenQuicklist (bool default_to_first_item = false);
+    gboolean OpenQuicklist (bool default_to_first_item = false);
 
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
@@ -279,6 +280,7 @@ private:
     sigc::connection _on_mouse_leave_connection;
     sigc::connection _on_mouse_down_connection;
     sigc::connection _on_mouse_up_connection;
+    sigc::connection _on_mouse_click_connection;
 };
 
 #endif // LAUNCHERICON_H

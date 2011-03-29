@@ -45,7 +45,6 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 					     NULL,
 					     NULL);
 
-  _on_empty_trash_handler_id   = 0;
   _on_trash_changed_handler_id = g_signal_connect (m_TrashMonitor,
                                                    "changed",
                                                    G_CALLBACK (&TrashLauncherIcon::OnTrashChanged),
@@ -56,10 +55,6 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 
 TrashLauncherIcon::~TrashLauncherIcon()
 {
-  if (_on_empty_trash_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _menu_items["Empty"],
-                                 _on_empty_trash_handler_id);
-
   if (_on_trash_changed_handler_id != 0)
     g_signal_handler_disconnect ((gpointer) m_TrashMonitor,
                                   _on_trash_changed_handler_id);
@@ -79,11 +74,12 @@ TrashLauncherIcon::GlowColor ()
   return nux::Color (0xFF333333);
 }
 
-void
-TrashLauncherIcon::EnsureMenuItemsReady ()
+std::list<DbusmenuMenuitem *>
+TrashLauncherIcon::GetMenus ()
 {
+  std::list<DbusmenuMenuitem *> result;
   DbusmenuMenuitem *menu_item;
-
+  
   /* Empty Trash */
   menu_item = dbusmenu_menuitem_new ();
   g_object_ref (menu_item);
@@ -92,36 +88,12 @@ TrashLauncherIcon::EnsureMenuItemsReady ()
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !_empty);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-  _on_empty_trash_handler_id = g_signal_connect (menu_item,
-                                                 DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
-                                                 (GCallback)&TrashLauncherIcon::OnEmptyTrash,
-                                                 this);
-
-  _menu_items["Empty"] = menu_item;
-}
-
-void
-TrashLauncherIcon::OnMouseClick (int button)
-{
-  SimpleLauncherIcon::OnMouseClick (button);
-
-  if (button == 1)
-    ActivateLauncherIcon ();
-
-  else if (button == 3)
-  {
-    EnsureMenuItemsReady ();
-
-    _quicklist->RemoveAllMenuItem ();
-    QuicklistMenuItemLabel* item = new QuicklistMenuItemLabel (_menu_items["Empty"], NUX_TRACKER_LOCATION);
-    _quicklist->AddMenuItem (item);
-    
-    int tip_x = _launcher->GetBaseWidth () + 1; //icon_x + icon_w;
-    nux::Point3 center = GetCenter ();
-    int tip_y = center.y+ _launcher->GetParent ()->GetGeometry ().y;
-    QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
-    nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_quicklist);
-  }
+  g_signal_connect (menu_item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
+                    (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);
+  result.push_back(menu_item);
+  
+  return result;
 }
 
 void

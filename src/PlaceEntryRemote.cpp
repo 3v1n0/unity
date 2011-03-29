@@ -188,7 +188,7 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
   _icon (NULL),
   _description (NULL),
   _searchhint (_("Search")),
-  _shortcut (10), // impossible shortcut
+  _shortcut (0),
   _position (0),
   _mimetypes (NULL),
   _sensitive (true),

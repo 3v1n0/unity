@@ -33,21 +33,18 @@ public:
   virtual nux::Color GlowColor ();
 
 protected:
-  void OnMouseClick (int button);
   void UpdateTrashIcon ();
   
   nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
   void OnAcceptDrop (std::list<char *> uris);
 
 private:
-  std::map<std::string, DbusmenuMenuitem *> _menu_items;
-  gulong _on_empty_trash_handler_id;
   gulong _on_trash_changed_handler_id;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
 
   void ActivateLauncherIcon ();
-  void EnsureMenuItemsReady ();
+  std::list<DbusmenuMenuitem *> GetMenus ();
 
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
   static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,

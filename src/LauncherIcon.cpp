@@ -94,6 +94,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _on_mouse_leave_connection = (sigc::connection) MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   _on_mouse_down_connection = (sigc::connection) MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   _on_mouse_up_connection = (sigc::connection) MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  _on_mouse_click_connection = (sigc::connection) MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
 }
 
 LauncherIcon::~LauncherIcon()
@@ -136,6 +137,9 @@ LauncherIcon::~LauncherIcon()
   
   if (_on_mouse_up_connection.connected ())
     _on_mouse_up_connection.disconnect ();
+
+  if (_on_mouse_click_connection.connected ())
+    _on_mouse_click_connection.disconnect ();
 }
 
 bool
@@ -171,12 +175,18 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     ActivateLauncherIcon ();
 }
 
 void
 LauncherIcon::OpenInstance ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     OpenInstanceLauncherIcon ();
 }
 
@@ -408,14 +418,17 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-void LauncherIcon::OpenQuicklist (bool default_to_first_item)
+gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
 
   std::list<DbusmenuMenuitem *> menus = Menus ();
   if (menus.empty ())
-    return;
+    return false;
+    
+  if (PluginAdapter::Default ()->IsScaleActive())
+    PluginAdapter::Default ()->TerminateScale ();
 
   std::list<DbusmenuMenuitem *>::iterator it;
   for (it = menus.begin (); it != menus.end (); it++)
@@ -454,6 +467,8 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   int tip_x = geo.x + geo.width + 1;
   int tip_y = geo.y + _center.y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+  
+  return true;
 }
 
 void LauncherIcon::RecvMouseDown (int button)
@@ -469,6 +484,14 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
+}
+
+void LauncherIcon::RecvMouseClick (int button)
+{
+  if (button == 1)
+    Activate ();
+  else if (button == 2)
+    OpenInstance ();
 }
 
 void LauncherIcon::HideTooltip ()

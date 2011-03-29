@@ -29,14 +29,14 @@ PanelController::PanelController ()
 {
   UScreen *screen = UScreen::GetDefault ();
 
-  screen->changed.connect (sigc::mem_fun (this, &PanelController::OnScreenChanged));
+  _on_screen_change_connection = screen->changed.connect (sigc::mem_fun (this, &PanelController::OnScreenChanged));
 
   OnScreenChanged (screen->GetPrimaryMonitor (), screen->GetMonitors ());
 }
 
 PanelController::~PanelController ()
 {
-
+  _on_screen_change_connection.disconnect ();
 }
 
 void

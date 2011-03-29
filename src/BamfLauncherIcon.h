@@ -46,7 +46,6 @@ public:
     void ActivateLauncherIcon ();
 
 protected:
-    void OnMouseClick (int button);
     std::list<DbusmenuMenuitem *> GetMenus ();
 
     void UpdateIconGeometries (nux::Point3 center);
