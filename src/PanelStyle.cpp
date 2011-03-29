@@ -38,14 +38,18 @@ PanelStyle::PanelStyle ()
   gtk_widget_set_size_request (_offscreen, 100, 24);
   gtk_widget_show_all (_offscreen);
 
-  g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
-                    G_CALLBACK (PanelStyle::OnStyleChanged), this);
+  _gtk_theme_changed_id = g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
+                                            G_CALLBACK (PanelStyle::OnStyleChanged), this);
 
   Refresh ();
 }
 
 PanelStyle::~PanelStyle ()
 {
+  if (_gtk_theme_changed_id)
+    g_signal_handler_disconnect (gtk_settings_get_default (),
+                                 _gtk_theme_changed_id);
+  
   gtk_widget_destroy (_offscreen);
 
   if (_style == this)
