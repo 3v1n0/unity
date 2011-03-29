@@ -95,6 +95,7 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 
   SetLayout (_group_layout);
 
+  /* don't need to disconnect these signals as they are disconnected when this object destroys the contents */
   _icon->OnMouseClick.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseClick));
   _icon->OnMouseEnter.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseEnter));
   _icon->OnMouseLeave.connect (sigc::mem_fun (this, &PlacesGroup::RecvMouseLeave));
@@ -112,7 +113,10 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
 PlacesGroup::~PlacesGroup ()
 {
   if (_idle_id)
-  g_source_remove (_idle_id);
+    g_source_remove (_idle_id);
+
+  if (_cached_name != NULL)
+    g_free (_cached_name);
 }
 
 void
@@ -146,6 +150,7 @@ PlacesGroup::SetName (const char *name)
   if (_cached_name != NULL)
   {
     g_free (_cached_name);
+    _cached_name = NULL;
   }
   
   _cached_name = g_strdup (name);
