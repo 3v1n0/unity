@@ -93,6 +93,8 @@ public:
   void SetMonitor (int monitor);
   bool GetControlsActive ();
 
+  bool HasOurWindowFocused ();
+
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();

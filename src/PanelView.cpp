@@ -289,7 +289,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
     {
       PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
       
-      if (view->_layout == NULL)
+      if (view->_layout == NULL
+          || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
         continue;
 
       geo = view->GetAbsoluteGeometry ();
@@ -391,7 +392,8 @@ PanelView::EndFirstMenuShow ()
   {
     PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
-    if (view->_layout == NULL)
+    if (view->_layout == NULL
+        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
       continue;
 
     std::list<Area *>::iterator it2;

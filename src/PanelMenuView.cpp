@@ -1065,3 +1065,9 @@ PanelMenuView::GetControlsActive ()
 {
   return _we_control_active;
 }
+
+bool
+PanelMenuView::HasOurWindowFocused ()
+{
+  return _is_own_window;
+}
