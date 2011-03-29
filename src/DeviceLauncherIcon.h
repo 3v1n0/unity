@@ -58,6 +58,8 @@ private:
 
 private:
   GVolume *_volume;
+  gulong _on_removed_handler_id;
+  gulong _on_changed_handler_id;
 };
 
 #endif // _DEVICE_LAUNCHER_ICON_H__H

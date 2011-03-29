@@ -498,6 +498,38 @@ private:
                                        gpointer               user_data);
   
   struct timespec  _times[TIME_LAST];
+
+  sigc::connection _set_hidden_connection;
+  sigc::connection _recv_mouse_down_connection;
+  sigc::connection _recv_mouse_up_connection;
+  sigc::connection _recv_mouse_drag_connection;
+  sigc::connection _recv_mouse_enter_connection;
+  sigc::connection _recv_mouse_leave_connection;
+  sigc::connection _recv_mouse_move_connection;
+  sigc::connection _recv_mouse_wheel_connection;
+  sigc::connection _recv_key_pressed_connection;
+  sigc::connection _recv_mouse_down_outside_connection;
+  sigc::connection _recv_quicklist_opened_connection;
+  sigc::connection _recv_quicklist_closed_connection;
+  sigc::connection _on_window_maximized_intellihide_connection;
+  sigc::connection _on_window_restored_intellihide_connection;
+  sigc::connection _on_window_unminimized_intellihide_connection;
+  sigc::connection _on_window_mapped_intellihide_connection;
+  sigc::connection _on_window_unmapped_intellihide_connection;
+  sigc::connection _on_window_shown_intellihide_connection;
+  sigc::connection _on_window_hidden_intellihide_connection;
+  sigc::connection _on_window_resized_intellihide_connection;
+  sigc::connection _on_window_moved_intellihide_connection;
+  sigc::connection _on_window_mapped_connection;
+  sigc::connection _on_window_unmapped_connection;
+  sigc::connection _on_initiate_spread_connection;
+  sigc::connection _on_initiate_expo_connection;
+  sigc::connection _on_terminate_spread_connection;
+  sigc::connection _on_terminate_expo_connection;
+  sigc::connection _on_drag_start_connection;
+  sigc::connection _on_drag_update_connection;
+  sigc::connection _on_drag_finish_connection;
+
 };
 
 #endif // LAUNCHER_H

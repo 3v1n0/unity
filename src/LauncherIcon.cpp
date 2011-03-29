@@ -89,12 +89,11 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   // Add to introspection
   AddChild (_quicklist);
   AddChild (_tooltip);
-  
-  MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
-  MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
-  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
-  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
-  
+
+  _on_mouse_enter_connection = (sigc::connection) MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
+  _on_mouse_leave_connection = (sigc::connection) MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  _on_mouse_down_connection = (sigc::connection) MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  _on_mouse_up_connection = (sigc::connection) MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
 }
 
 LauncherIcon::~LauncherIcon()
@@ -115,6 +114,28 @@ LauncherIcon::~LauncherIcon()
 
   if (_superkey_label)
     _superkey_label->UnReference ();
+
+  // clean up the whole signal-callback mess
+  if (on_icon_added_connection.connected ())
+    on_icon_added_connection.disconnect ();
+
+  if (on_icon_removed_connection.connected ())
+    on_icon_removed_connection.disconnect ();
+
+  if (on_order_changed_connection.connected ())
+    on_order_changed_connection.disconnect ();
+
+  if (_on_mouse_enter_connection.connected ())
+    _on_mouse_enter_connection.disconnect ();
+  
+  if (_on_mouse_leave_connection.connected ())
+    _on_mouse_leave_connection.disconnect ();
+  
+  if (_on_mouse_down_connection.connected ())
+    _on_mouse_down_connection.disconnect ();
+  
+  if (_on_mouse_up_connection.connected ())
+    _on_mouse_up_connection.disconnect ();
 }
 
 bool

@@ -154,6 +154,12 @@ public:
     sigc::signal<void, LauncherIcon *> hide;
     sigc::signal<void, LauncherIcon *> remove;
     sigc::signal<void, LauncherIcon *> needs_redraw;
+
+    sigc::connection needs_redraw_connection;
+    sigc::connection on_icon_added_connection;
+    sigc::connection on_icon_removed_connection;
+    sigc::connection on_order_changed_connection;
+
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
@@ -268,6 +274,11 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
+
+    sigc::connection _on_mouse_enter_connection;
+    sigc::connection _on_mouse_leave_connection;
+    sigc::connection _on_mouse_down_connection;
+    sigc::connection _on_mouse_up_connection;
 };
 
 #endif // LAUNCHERICON_H

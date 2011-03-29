@@ -139,7 +139,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   EnsureWindowState ();
   UpdateMenus ();
 
-  PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
 
   /* hack */
   SetProgress (0.0f);
@@ -148,6 +148,15 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
+                               _menu_callbacks["Pin"]);
+
+  g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
+                               _menu_callbacks["Quit"]);
+
+  if (_on_window_minimized_connection.connected ())
+    _on_window_minimized_connection.disconnect ();
+
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnUrgentChanged,      this);
@@ -708,7 +717,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
+    _menu_callbacks["Pin"] = g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
 
     _menu_items["Pin"] = menu_item;
   }
@@ -730,7 +739,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
+    _menu_callbacks["Quit"] = g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
 
     _menu_items["Quit"] = menu_item;
   }

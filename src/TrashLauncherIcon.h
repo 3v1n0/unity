@@ -41,6 +41,8 @@ protected:
 
 private:
   std::map<std::string, DbusmenuMenuitem *> _menu_items;
+  gulong _on_empty_trash_handler_id;
+  gulong _on_trash_changed_handler_id;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
 
