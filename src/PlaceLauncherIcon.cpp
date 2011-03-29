@@ -61,17 +61,6 @@ PlaceLauncherIcon::GlowColor ()
 }
 
 void
-PlaceLauncherIcon::OnMouseClick (int button)
-{
-  SimpleLauncherIcon::OnMouseClick (button);
-
-  if (button == 1)
-  {
-    ActivateLauncherIcon ();
-  }
-}
-
-void
 PlaceLauncherIcon::ActivateLauncherIcon ()
 {
   ActivatePlace (0, "");

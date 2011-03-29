@@ -31,6 +31,7 @@
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
+#include "LauncherHoverMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
@@ -240,6 +241,9 @@ private:
 
   void SetMousePosition (int x, int y);
   
+  void SetStateMouseOverLauncher (bool over_launcher);
+  void SetStateMouseOverBFB (bool over_bfb);
+  
   bool MouseBeyondDragThreshold ();
 
   void OnDragWindowAnimCompleted ();
@@ -250,7 +254,6 @@ private:
   void SetActionState (LauncherActionState actionstate);
   LauncherActionState GetActionState(); 
 
-  void EnsureHoverState ();
   void EnsureAnimation    ();
   void EnsureScrollTimer ();
   
@@ -284,8 +287,7 @@ private:
   float IconDropDimValue             (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
-  void SetHover         ();
-  void UnsetHover       ();
+  void SetHover         (bool hovered);
   void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
@@ -469,6 +471,7 @@ private:
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
   LauncherHideMachine *_hide_machine;
+  LauncherHoverMachine *_hover_machine;
   CompScreen* _screen;
   
   std::list<char *> _drag_data;
