@@ -923,13 +923,22 @@ panel_service_sync_geometry (PanelService *self,
 static gboolean
 should_skip_menu (IndicatorObjectEntry *entry)
 {
-  gboolean label_ok;
-  gboolean image_ok;
+  gboolean label_ok = FALSE;
+  gboolean image_ok = FALSE;
 
-  label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
-    && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
-  image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
-    && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+  g_return_val_if_fail (entry != NULL, TRUE);
+
+  if (GTK_IS_LABEL (entry->label))
+    {
+      label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
+	      && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+    }
+
+  if (GTK_IS_IMAGE (entry->image))
+    {
+      image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
+	      && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+    }
 
   return !label_ok && !image_ok;
 }
