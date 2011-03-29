@@ -103,6 +103,9 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   OnFontChanged (NULL, NULL, this);
 
   _pango_entry->cursor_moved.connect (sigc::mem_fun (this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
+
+  ubus_server_register_interest (ubus_server_get_default (), UBUS_PLACE_VIEW_HIDDEN,
+                                 (UBusCallback)PlacesSearchBar::OnPlacesClosed, this);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -345,6 +348,12 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
   pango_font_description_free (desc);
   g_free (font_name);
   g_free (font_desc);
+}
+
+void
+PlacesSearchBar::OnPlacesClosed (GVariant *variant, PlacesSearchBar *self)
+{
+  self->_combo->GetMenuPage ()->StopMenu ();
 }
 
 static void
