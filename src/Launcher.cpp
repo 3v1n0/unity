@@ -1904,8 +1904,8 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     {
         LauncherIcon *icon = *it;
         guint64 shortcut = icon->GetShortcut();
-        if (shortcut != 0 && !g_ascii_isdigit((gchar)shortcut))
-                icon->SetSuperkeyLabel(cairoToTexture2D((gchar)shortcut,_icon_size,_icon_size));
+        if (shortcut > 32 && !g_ascii_isdigit ((gchar)shortcut))
+                icon->SetSuperkeyLabel (cairoToTexture2D ((gchar)shortcut, _icon_size, _icon_size));
     }
 
     // recreate tile textures
@@ -1928,7 +1928,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
     guint64 shortcut = icon->GetShortcut ();
-    if (shortcut != 0 && !g_ascii_isdigit ((gchar) shortcut))
+    if (shortcut > 32 && !g_ascii_isdigit ((gchar) shortcut))
       icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));
 
     AddChild (icon);
@@ -2373,11 +2373,11 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
-    /* deal with dynamic labels for places, which can be set via the locale */
-    if (shortcut != 0)
+    if (shortcut > 32)
     {
       if (!g_ascii_isdigit ((gchar) shortcut))
       {
+        /* deal with dynamic labels for places, which can be set via the locale */
         RenderIcon (GfxContext,
                     arg,
                     arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
