@@ -319,7 +319,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
-    _autohide_animation     = FADE_OR_SLIDE;
+    _autohide_animation     = FADE_AND_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -874,7 +874,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
-        return 0.40f;
+        return 0.35f;
     else
         return 0.25f;
 }
