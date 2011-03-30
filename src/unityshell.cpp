@@ -578,7 +578,7 @@ UnityWindow::place (CompPoint &pos)
   {
     case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
     case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width)
+      if (pos.x () <= geo.width && window->width () + geo.width < screen->workArea ().width ())
         {
           pos.setX (geo.width);
           return true;
