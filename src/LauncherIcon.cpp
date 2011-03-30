@@ -89,13 +89,12 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   // Add to introspection
   AddChild (_quicklist);
   AddChild (_tooltip);
-  
+
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
-  
 }
 
 LauncherIcon::~LauncherIcon()
@@ -116,6 +115,16 @@ LauncherIcon::~LauncherIcon()
 
   if (_superkey_label)
     _superkey_label->UnReference ();
+
+  // clean up the whole signal-callback mess
+  if (on_icon_added_connection.connected ())
+    on_icon_added_connection.disconnect ();
+
+  if (on_icon_removed_connection.connected ())
+    on_icon_removed_connection.disconnect ();
+
+  if (on_order_changed_connection.connected ())
+    on_order_changed_connection.disconnect ();
 }
 
 bool

@@ -51,6 +51,11 @@ public:
   Launcher       *_launcher;
   GVolumeMonitor *_monitor;
   GHashTable     *_ht;
+
+private:
+  gulong _on_volume_added_handler_id;
+  gulong _on_volume_removed_handler_id;
+  gulong _on_mount_added_handler_id;
 };
 
 #endif // _DEVICE_LAUNCHER_SECTION_H_
