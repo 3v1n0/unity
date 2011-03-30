@@ -212,6 +212,8 @@ class UnityScreen :
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
+  
+  GLTexture::List _shadow_texture;
 
 	/* handle paint order */
 	bool	  doShellRepaint;

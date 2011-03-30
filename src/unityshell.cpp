@@ -119,6 +119,54 @@ UnityScreen::paintDisplay (const CompRegion &region)
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
+  
+  nuxPrologue ();
+  foreach (GLTexture *tex, _shadow_texture)
+  {
+    glActiveTextureARB(GL_TEXTURE0);
+    glEnable (tex->target ());
+    glBindTexture (tex->target (), tex->name ());
+    
+    glTexParameterf (tex->target (), GL_TEXTURE_WRAP_S, GL_REPEAT);
+    
+    // TextureEnvironment
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
+    // RGB
+    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_REPLACE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+    // ALPHA
+    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_REPLACE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+    glActiveTextureARB(GL_TEXTURE1);
+    glBindTexture (tex->target (), 0);
+
+    glBegin (GL_QUADS);
+    {
+      int TexHeight = 20;
+      //int TexWidth = 1;
+      int PanelHeight = 24;
+      
+      glMultiTexCoord2iARB(GL_TEXTURE0, 0, 0);
+      glVertex3i(0, PanelHeight, 1);
+      
+      glMultiTexCoord2iARB(GL_TEXTURE0, 0, 1);
+      glVertex3i(0, PanelHeight + TexHeight, 1);
+      
+      glMultiTexCoord2iARB(GL_TEXTURE0, 1, 1);
+      glVertex3i(output->width (), PanelHeight + TexHeight, 1);
+      
+      glMultiTexCoord2iARB(GL_TEXTURE0, 1, 0);
+      glVertex3i(output->width (), PanelHeight, 1);
+    }
+    glEnd ();
+    
+    glBindTexture (tex->target (), 0);
+    glDisable (tex->target ());
+  }
+  nuxEpilogue ();
 
   doShellRepaint = false;
 }
@@ -839,6 +887,11 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);
+  
+  CompString name (PKGDATADIR"/panel-shadow.png");
+  CompString pname ("unityshell");
+  CompSize size (1, 20);
+  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
 
   END_FUNCTION ();
 }
