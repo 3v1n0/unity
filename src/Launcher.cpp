@@ -1437,7 +1437,15 @@ void Launcher::EndKeyShowLauncher ()
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
     
     // hack around issue in nux where leave events dont always come after a grab
     self->SetStateMouseOverBFB (false);
@@ -1446,7 +1454,15 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+    }
 }
 
 void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
