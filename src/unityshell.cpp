@@ -567,6 +567,21 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+bool
+UnityWindow::place (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+
+  if (pos.x () <= geo.width)
+    {
+      pos.setX (geo.width);
+      return true;
+    }
+
+  return false;
+}
+
 /* Configure callback for the launcher window */
 void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
