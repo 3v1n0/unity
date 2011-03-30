@@ -192,7 +192,7 @@ class UnityMTGrabHandlesWindow :
 
   bool    handlesVisible ();
 	void    hideHandles ();
-	void    showHandles ();
+	void    showHandles (bool use_timer);
 	void    restackHandles ();
 
     private:

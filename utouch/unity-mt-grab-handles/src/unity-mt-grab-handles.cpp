@@ -131,8 +131,6 @@ Unity::MT::GrabHandle::handleButtonPress (XButtonEvent *be)
     if (!w)
 	return;
     
-    UnityMTGrabHandlesWindow::get (w)->resetTimer ();
-
     if (screen->getOption ("raise_on_click"))
 	w->updateAttributes (CompStackingUpdateModeAboveFullscreen);
 
@@ -696,7 +694,7 @@ UnityMTGrabHandlesWindow::disableTimer ()
 }
 
 void
-UnityMTGrabHandlesWindow::showHandles ()
+UnityMTGrabHandlesWindow::showHandles (bool use_timer)
 {    
     if (!mHandles)
     {
@@ -712,9 +710,12 @@ UnityMTGrabHandlesWindow::showHandles ()
 
 	window->updateWindowOutputExtents ();
 	cWindow->damageOutputExtents ();
-	
-	resetTimer ();
     }
+    
+    if (use_timer)
+	resetTimer ();
+    else
+	disableTimer ();
 }
 
 void
@@ -771,7 +772,7 @@ UnityMTGrabHandlesScreen::toggleHandles (CompAction         *action,
 	if (uw->handlesVisible ())
 	    uw->hideHandles ();
 	else
-	    uw->showHandles ();
+	    uw->showHandles (true);
 
     	mMoreAnimate = true;
     }
@@ -787,6 +788,9 @@ UnityMTGrabHandlesScreen::showHandles (CompAction         *action,
     CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (options,
 								       "window",
 								       0));
+    
+    bool use_timer = CompOption::getBoolOptionNamed (options, "use-timer", true);
+    
     if (w)
     {
 	UMTGH_WINDOW (w);
@@ -794,11 +798,10 @@ UnityMTGrabHandlesScreen::showHandles (CompAction         *action,
 	if (!uw->allowHandles ())
 	    return false;
 	
+        uw->showHandles (use_timer);
+
 	if (!uw->handlesVisible ())
-	{
-	    uw->showHandles ();
 	    mMoreAnimate = true;
-	}
     }
 
     return true;

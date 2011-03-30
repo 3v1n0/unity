@@ -536,18 +536,20 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 }
 
 void 
-PluginAdapter::ShowGrabHandles (CompWindow *window)
+PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
 {
   if (!_grab_show_action)
     return;
     
   CompOption::Vector argument;
 
-  argument.resize (2);
+  argument.resize (3);
   argument[0].setName ("root", CompOption::TypeInt);
   argument[0].value ().set ((int) screen->root ());
   argument[1].setName ("window", CompOption::TypeInt);
   argument[1].value ().set ((int) window->id ());
+  argument[2].setName ("use-timer", CompOption::TypeBool);
+  argument[2].value ().set (use_timer);
 
   /* Initiate the first available action with the arguments */
   _grab_show_action->initiate () (_grab_show_action, 0, argument);
