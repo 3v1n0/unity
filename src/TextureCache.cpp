@@ -25,7 +25,7 @@ TextureCache::TextureCache()
 
 TextureCache::~TextureCache()
 {
-  map<nux::BaseTexture *, sigc::connection>::iterator it;
+  std::map<nux::BaseTexture *, sigc::connection>::iterator it;
   // disconnect all our signals
   for (it=_cache_con.begin() ; it != _cache_con.end(); it++)
     (*it).second.disconnect ();
