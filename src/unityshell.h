@@ -142,7 +142,7 @@ class UnityScreen :
 
   void ScheduleRelayout (guint timeout);
 
-    protected:
+protected:
 
 	const gchar* GetName ();
 
@@ -255,6 +255,8 @@ class UnityWindow :
   void resizeNotify (int x, int y, int w, int h);
   
   void stateChangeNotify (unsigned int lastState);
+
+  bool place (CompPoint &pos);
 };
 
 #define EX_SCREEN (screen) \

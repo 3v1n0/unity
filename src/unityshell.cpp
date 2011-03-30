@@ -567,6 +567,30 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+bool
+UnityWindow::place (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
+
+  switch (hideMode)
+  {
+    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
+    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+      if (pos.x () <= geo.width && window->width () + geo.width < screen->workArea ().width ())
+        {
+          pos.setX (geo.width);
+          return true;
+        }
+      break;
+    default:
+      break;
+  }
+
+  return false;
+}
+
 /* Configure callback for the launcher window */
 void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
