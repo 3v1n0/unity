@@ -1,3 +1,11 @@
+unity (3.6.8-0ubuntu4) UNRELEASED; urgency=low
+
+  * use dh7 --with translations module: (LP: #745774)
+    - debian/rules: remove cruft, add --with translations
+    - debian/control: build-dep on dh-translations
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 30 Mar 2011 18:03:53 +0200
+
 unity (3.6.8-0ubuntu3) natty; urgency=low
 
   * debian/unity.install:
