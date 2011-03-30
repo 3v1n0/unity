@@ -117,3 +117,8 @@ LauncherHoverMachine::GetQuirk (LauncherHoverMachine::HoverQuirk quirk, bool all
   return (_quirks & quirk) == quirk;
 }
 
+char*
+LauncherHoverMachine::DebugHoverQuirks ()
+{
+  return g_strdup_printf ("%d", _quirks);
+}

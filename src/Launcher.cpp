@@ -616,7 +616,9 @@ Launcher::AddProperties (GVariantBuilder *builder)
 {
   struct timespec current;
   clock_gettime (CLOCK_MONOTONIC, &current);
-
+  char* hidequirks_mask = _hide_machine->DebugHideQuirks ();
+  char* hoverquirks_mask = _hover_machine->DebugHoverQuirks ();
+  
   g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
   g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
@@ -626,7 +628,11 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "mouse-over-launcher", g_variant_new_boolean (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)));
+  g_variant_builder_add (builder, "{sv}", "hide-quirks", g_variant_new_string (hidequirks_mask));
+  g_variant_builder_add (builder, "{sv}", "hover-quirks", g_variant_new_string (hoverquirks_mask));
+
+  g_free (hidequirks_mask);
+  g_free (hoverquirks_mask);
 }
 
 void Launcher::SetMousePosition (int x, int y)

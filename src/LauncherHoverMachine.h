@@ -47,6 +47,8 @@ class LauncherHoverMachine : public sigc::trackable
     
     sigc::signal<void, bool> should_hover_changed;
     
+    char *DebugHoverQuirks ();
+    
   private:
     void EnsureHoverState ();
     void SetShouldHover (bool value);

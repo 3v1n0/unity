@@ -206,3 +206,9 @@ LauncherHideMachine::OnHideDelayTimeout (gpointer data)
   self->_hide_delay_handle = 0;
   return false;
 }
+
+char*
+LauncherHideMachine::DebugHideQuirks ()
+{
+  return g_strdup_printf ("%d", _quirks);
+}
