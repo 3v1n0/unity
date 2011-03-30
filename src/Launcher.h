@@ -504,15 +504,6 @@ private:
 
   sigc::connection _set_hidden_connection;
   sigc::connection _set_hover_connection;
-  sigc::connection _recv_mouse_down_connection;
-  sigc::connection _recv_mouse_up_connection;
-  sigc::connection _recv_mouse_drag_connection;
-  sigc::connection _recv_mouse_enter_connection;
-  sigc::connection _recv_mouse_leave_connection;
-  sigc::connection _recv_mouse_move_connection;
-  sigc::connection _recv_mouse_wheel_connection;
-  sigc::connection _recv_key_pressed_connection;
-  sigc::connection _recv_mouse_down_outside_connection;
   sigc::connection _recv_quicklist_opened_connection;
   sigc::connection _recv_quicklist_closed_connection;
   sigc::connection _on_window_maximized_intellihide_connection;

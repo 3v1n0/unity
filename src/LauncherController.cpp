@@ -76,7 +76,8 @@ LauncherController::~LauncherController()
   if (_on_device_section_icon_added_connection.connected ())
     _on_device_section_icon_added_connection.disconnect ();
 
-  g_source_remove (_bamf_timer_handler_id);
+  if (_bamf_timer_handler_id != 0)
+    g_source_remove (_bamf_timer_handler_id);
 
   if (_on_remote_model_entry_added_connection.connected ())
     _on_remote_model_entry_added_connection.disconnect ();

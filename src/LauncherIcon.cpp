@@ -90,11 +90,11 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   AddChild (_quicklist);
   AddChild (_tooltip);
 
-  _on_mouse_enter_connection = (sigc::connection) MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
-  _on_mouse_leave_connection = (sigc::connection) MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
-  _on_mouse_down_connection = (sigc::connection) MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
-  _on_mouse_up_connection = (sigc::connection) MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
-  _on_mouse_click_connection = (sigc::connection) MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
+  MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
+  MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
 }
 
 LauncherIcon::~LauncherIcon()
@@ -125,21 +125,6 @@ LauncherIcon::~LauncherIcon()
 
   if (on_order_changed_connection.connected ())
     on_order_changed_connection.disconnect ();
-
-  if (_on_mouse_enter_connection.connected ())
-    _on_mouse_enter_connection.disconnect ();
-  
-  if (_on_mouse_leave_connection.connected ())
-    _on_mouse_leave_connection.disconnect ();
-  
-  if (_on_mouse_down_connection.connected ())
-    _on_mouse_down_connection.disconnect ();
-  
-  if (_on_mouse_up_connection.connected ())
-    _on_mouse_up_connection.disconnect ();
-
-  if (_on_mouse_click_connection.connected ())
-    _on_mouse_click_connection.disconnect ();
 }
 
 bool

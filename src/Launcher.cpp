@@ -234,15 +234,15 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-    _recv_mouse_down_connection = (sigc::connection) OnMouseDown.connect (sigc::mem_fun (this, &Launcher::RecvMouseDown));
-    _recv_mouse_up_connection = (sigc::connection) OnMouseUp.connect (sigc::mem_fun (this, &Launcher::RecvMouseUp));
-    _recv_mouse_drag_connection = (sigc::connection) OnMouseDrag.connect (sigc::mem_fun (this, &Launcher::RecvMouseDrag));
-    _recv_mouse_enter_connection = (sigc::connection) OnMouseEnter.connect (sigc::mem_fun (this, &Launcher::RecvMouseEnter));
-    _recv_mouse_leave_connection = (sigc::connection) OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
-    _recv_mouse_move_connection = (sigc::connection) OnMouseMove.connect (sigc::mem_fun (this, &Launcher::RecvMouseMove));
-    _recv_mouse_wheel_connection = (sigc::connection) OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
-    _recv_key_pressed_connection = (sigc::connection) OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
-    _recv_mouse_down_outside_connection = (sigc::connection) OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &Launcher::RecvMouseDownOutsideArea));
+    OnMouseDown.connect (sigc::mem_fun (this, &Launcher::RecvMouseDown));
+    OnMouseUp.connect (sigc::mem_fun (this, &Launcher::RecvMouseUp));
+    OnMouseDrag.connect (sigc::mem_fun (this, &Launcher::RecvMouseDrag));
+    OnMouseEnter.connect (sigc::mem_fun (this, &Launcher::RecvMouseEnter));
+    OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
+    OnMouseMove.connect (sigc::mem_fun (this, &Launcher::RecvMouseMove));
+    OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
+    OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &Launcher::RecvMouseDownOutsideArea));
     //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
     
     CaptureMouseDownAnyWhereElse (true);
@@ -429,33 +429,6 @@ Launcher::~Launcher()
 
   if (_set_hover_connection.connected ())
     _set_hover_connection.disconnect ();
-
-  if (_recv_mouse_down_connection.connected ())
-    _recv_mouse_down_connection.disconnect ();
-
-  if (_recv_mouse_up_connection.connected ())
-    _recv_mouse_up_connection.disconnect ();
-
-  if (_recv_mouse_drag_connection.connected ())
-    _recv_mouse_drag_connection.disconnect ();
-  
-  if (_recv_mouse_enter_connection.connected ())
-    _recv_mouse_enter_connection.disconnect ();
-  
-  if (_recv_mouse_leave_connection.connected ())
-    _recv_mouse_leave_connection.disconnect ();
-  
-  if (_recv_mouse_move_connection.connected ())
-    _recv_mouse_move_connection.disconnect ();
-  
-  if (_recv_mouse_wheel_connection.connected ())
-    _recv_mouse_wheel_connection.disconnect ();
-  
-  if (_recv_key_pressed_connection.connected ())
-    _recv_key_pressed_connection.disconnect ();
-  
-  if (_recv_mouse_down_outside_connection.connected ())
-    _recv_mouse_down_outside_connection.disconnect ();
   
   if (_recv_quicklist_opened_connection.connected ())
     _recv_quicklist_opened_connection.disconnect ();

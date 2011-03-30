@@ -275,12 +275,6 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
-
-    sigc::connection _on_mouse_enter_connection;
-    sigc::connection _on_mouse_leave_connection;
-    sigc::connection _on_mouse_down_connection;
-    sigc::connection _on_mouse_up_connection;
-    sigc::connection _on_mouse_click_connection;
 };
 
 #endif // LAUNCHERICON_H
