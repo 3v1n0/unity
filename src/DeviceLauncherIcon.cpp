@@ -33,11 +33,15 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 
   DevicesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  g_signal_connect (_volume, "removed",
-                    G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
+  _on_removed_handler_id = g_signal_connect (_volume,
+                                             "removed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnRemoved),
+                                             this);
 
-  g_signal_connect (_volume, "changed",
-                    G_CALLBACK (&DeviceLauncherIcon::OnChanged), this);
+  _on_changed_handler_id = g_signal_connect (_volume,
+                                             "changed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnChanged),
+                                             this);
 
   UpdateDeviceIcon ();
 
@@ -47,7 +51,11 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 
 DeviceLauncherIcon::~DeviceLauncherIcon()
 {
+  if (_on_removed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_removed_handler_id);
 
+  if (_on_changed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_changed_handler_id);
 }
 
 void

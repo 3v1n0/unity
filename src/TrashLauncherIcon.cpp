@@ -45,16 +45,20 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 					     NULL,
 					     NULL);
 
-  g_signal_connect(m_TrashMonitor,
-                   "changed",
-                   G_CALLBACK (&TrashLauncherIcon::OnTrashChanged),
-                   this);
+  _on_trash_changed_handler_id = g_signal_connect (m_TrashMonitor,
+                                                   "changed",
+                                                   G_CALLBACK (&TrashLauncherIcon::OnTrashChanged),
+                                                   this);
 
   UpdateTrashIcon ();
 }
 
 TrashLauncherIcon::~TrashLauncherIcon()
 {
+  if (_on_trash_changed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) m_TrashMonitor,
+                                  _on_trash_changed_handler_id);
+
   g_object_unref (m_TrashMonitor);
 }
 
@@ -83,6 +87,7 @@ TrashLauncherIcon::GetMenus ()
   dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !_empty);
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
   g_signal_connect (menu_item,
                     DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 
                     (GCallback)&TrashLauncherIcon::OnEmptyTrash, this);

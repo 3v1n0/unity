@@ -39,6 +39,7 @@ protected:
   void OnAcceptDrop (std::list<char *> uris);
 
 private:
+  gulong _on_trash_changed_handler_id;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
 

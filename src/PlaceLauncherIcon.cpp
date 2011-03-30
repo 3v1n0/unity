@@ -40,12 +40,13 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   SetQuirk (QUIRK_ACTIVE, entry->IsActive ());
   SetIconType (TYPE_PLACE); 
 
-  entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
+  _on_active_changed_connection = (sigc::connection) entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()
 {
-
+  if (_on_active_changed_connection.connected ())
+    _on_active_changed_connection.disconnect ();
 }
 
 nux::Color 
@@ -85,8 +86,12 @@ PlaceLauncherIcon::ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection&
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   dbusmenu_menuitem_property_set_int (menu_item, SECTION_NUMBER, _current_menu.size ());
   _current_menu.push_back (menu_item);
-  g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (&PlaceLauncherIcon::OnOpen), this);
+
+  g_signal_connect (menu_item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                    G_CALLBACK (&PlaceLauncherIcon::OnOpen),
+                    this);
+
   g_free (temp);
 }
 

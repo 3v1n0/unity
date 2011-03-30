@@ -294,8 +294,11 @@ bool
 IconLoader::ProcessGIconTask (IconLoaderTask *task)
 {
   GdkPixbuf   *pixbuf = NULL;
-  GIcon       *icon;
-  GError      *error = NULL;
+  GIcon       *icon   = NULL;
+  GError      *error  = NULL;
+
+  if (!task)
+    return false;
 
   icon = g_icon_new_for_string (task->data, &error);
   

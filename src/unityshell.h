@@ -207,6 +207,7 @@ class UnityScreen :
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
   bool                   needsRelayout;
+  guint32                relayoutSourceId;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

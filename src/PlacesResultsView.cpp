@@ -52,7 +52,12 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 PlacesResultsView::~PlacesResultsView ()
 {
   _layout->Clear ();
-}
+  if (_idle_id != 0)
+  {
+    g_source_remove (_idle_id);
+    _idle_id = 0;
+  }
+} 
 
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)

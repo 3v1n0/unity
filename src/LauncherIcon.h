@@ -155,6 +155,12 @@ public:
     sigc::signal<void, LauncherIcon *> hide;
     sigc::signal<void, LauncherIcon *> remove;
     sigc::signal<void, LauncherIcon *> needs_redraw;
+
+    sigc::connection needs_redraw_connection;
+    sigc::connection on_icon_added_connection;
+    sigc::connection on_icon_removed_connection;
+    sigc::connection on_order_changed_connection;
+
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
