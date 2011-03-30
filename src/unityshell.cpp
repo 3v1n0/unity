@@ -572,12 +572,21 @@ UnityWindow::place (CompPoint &pos)
 {
   UnityScreen *us = UnityScreen::get (screen);
   nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
 
-  if (pos.x () <= geo.width)
-    {
-      pos.setX (geo.width);
-      return true;
-    }
+  switch (hideMode)
+  {
+    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
+    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+      if (pos.x () <= geo.width)
+        {
+          pos.setX (geo.width);
+          return true;
+        }
+      break;
+    default:
+      break;
+  }
 
   return false;
 }
