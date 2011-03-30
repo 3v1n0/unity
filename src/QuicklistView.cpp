@@ -127,8 +127,17 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     case NUX_VK_UP:
       if (_current_item_index > 0)
       {
+        const gchar* label = NULL;
+
         GetNthItems (_current_item_index)->_prelight = false;
-        _current_item_index--;
+
+        label = dbusmenu_menuitem_property_get (GetNthItems (_current_item_index - 1)->_menuItem,
+                                                DBUSMENU_MENUITEM_PROP_LABEL);
+        if (!label)
+          _current_item_index -= 2;
+        else
+          _current_item_index--;
+
         GetNthItems (_current_item_index)->_prelight = true;
         QueueDraw ();
       }
@@ -138,8 +147,17 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     case NUX_VK_DOWN:
       if (_current_item_index < GetNumItems () - 1)
       {
+        const gchar* label = NULL;
+
         GetNthItems (_current_item_index)->_prelight = false;
-        _current_item_index++;
+
+        label = dbusmenu_menuitem_property_get (GetNthItems (_current_item_index + 1)->_menuItem,
+                                                DBUSMENU_MENUITEM_PROP_LABEL);
+        if (!label)
+          _current_item_index += 2;
+        else
+          _current_item_index++;
+
         GetNthItems (_current_item_index)->_prelight = true;
         QueueDraw ();
       }
