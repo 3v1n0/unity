@@ -874,7 +874,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
-        return 0.55f;
+        return 0.40f;
     else
         return 0.25f;
 }
