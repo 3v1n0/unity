@@ -76,9 +76,11 @@ UnityScreen::nuxPrologue ()
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
+  glLoadIdentity ();
 
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix ();
+  glLoadIdentity ();
 
   glGetError();
 }
@@ -110,64 +112,69 @@ UnityScreen::nuxEpilogue ()
 }
 
 void
-UnityScreen::paintDisplay (const CompRegion &region)
+UnityScreen::paintPanelShadow ()
 {
   nuxPrologue ();
   
+  CompOutput *output = _last_output;
+  float vc[4];
+  float h = 20.0f;
+  float w = 1.0f;
+  float panel_h = 24.0f;
+  
+  float x1 = 0.0f;
+  float y1 = panel_h;
+  float x2 = x1 + output->width ();
+  float y2 = y1 + h; 
+  
+  vc[0] = ((x1 * 2.0) / screen->width ()) - 1.0;
+  vc[1] = ((x2 * 2.0) / screen->width ()) - 1.0;
+  vc[2] = ((y1 * -2.0) / screen->height ()) + 1.0;
+  vc[3] = ((y2 * -2.0) / screen->height ()) + 1.0;
+  
+  foreach (GLTexture *tex, _shadow_texture)
+  {
+    glEnable (GL_BLEND);
+    glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
+    
+    GL::activeTexture (GL_TEXTURE0_ARB);
+    tex->enable (GLTexture::Fast);
+    
+    glTexParameteri (tex->target (), GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+    glBegin (GL_QUADS);
+    {
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), 0));
+      glVertex2f(vc[0], vc[2]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), h));
+      glVertex2f(vc[0], vc[3]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), h));
+      glVertex2f(vc[1], vc[3]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), 0));
+      glVertex2f(vc[1], vc[2]);
+    }
+    glEnd ();
+    
+    tex->disable ();
+    glDisable (GL_BLEND);
+  }
+  nuxEpilogue ();
+}
+
+void
+UnityScreen::paintDisplay (const CompRegion &region)
+{
+  nuxPrologue ();
   CompOutput *output = _last_output;
   nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
   
-  nuxPrologue ();
-  foreach (GLTexture *tex, _shadow_texture)
-  {
-    glActiveTextureARB(GL_TEXTURE0);
-    glEnable (tex->target ());
-    glBindTexture (tex->target (), tex->name ());
-    
-    glTexParameterf (tex->target (), GL_TEXTURE_WRAP_S, GL_REPEAT);
-    
-    // TextureEnvironment
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB);
-    // RGB
-    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB_ARB, GL_REPLACE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB_ARB, GL_TEXTURE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-    // ALPHA
-    glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA_ARB, GL_REPLACE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA_ARB, GL_TEXTURE);
-    glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
-    glActiveTextureARB(GL_TEXTURE1);
-    glBindTexture (tex->target (), 0);
-
-    glBegin (GL_QUADS);
-    {
-      int TexHeight = 20;
-      //int TexWidth = 1;
-      int PanelHeight = 24;
-      
-      glMultiTexCoord2iARB(GL_TEXTURE0, 0, 0);
-      glVertex3i(0, PanelHeight, 1);
-      
-      glMultiTexCoord2iARB(GL_TEXTURE0, 0, 1);
-      glVertex3i(0, PanelHeight + TexHeight, 1);
-      
-      glMultiTexCoord2iARB(GL_TEXTURE0, 1, 1);
-      glVertex3i(output->width (), PanelHeight + TexHeight, 1);
-      
-      glMultiTexCoord2iARB(GL_TEXTURE0, 1, 0);
-      glVertex3i(output->width (), PanelHeight, 1);
-    }
-    glEnd ();
-    
-    glBindTexture (tex->target (), 0);
-    glDisable (tex->target ());
-  }
-  nuxEpilogue ();
-
   doShellRepaint = false;
 }
 
@@ -582,6 +589,9 @@ UnityWindow::glDraw (const GLMatrix     &matrix,
   }
 
   bool ret = gWindow->glDraw (matrix, attrib, region, mask);
+
+  if (window->type () == CompWindowTypeDesktopMask)
+    uScreen->paintPanelShadow ();
 
   return ret;
 }
