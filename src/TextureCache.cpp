@@ -25,7 +25,14 @@ TextureCache::TextureCache()
 
 TextureCache::~TextureCache()
 {
-
+  map<nux::BaseTexture *, sigc::connection>::iterator it;
+  // disconnect all our signals
+  for (it=_cache_con.begin() ; it != _cache_con.end(); it++)
+    (*it).second.disconnect ();
+  
+  _cache.clear ();
+  _cache_inverse.clear ();
+  _cache_con.clear ();
 }
 
 TextureCache *
@@ -62,13 +69,10 @@ TextureCache::FindTexture (const char *texture_id, int width, int height, Create
   {
     // no texture yet, lets make one
     slot (texture_id, width, height, &texture);
-
-    //texture->add_destroy_notify_callback (payload, &(TextureCache::OnDestroyNotify));
-    //sigc::mem_fun(myalerter, &AlienAlerter::alert)
-    texture->OnDestroyed.connect (sigc::mem_fun (this, &TextureCache::OnDestroyNotify));
-
+    
     _cache[key] = texture;
     _cache_inverse[texture] = key;
+    _cache_con[texture] = texture->OnDestroyed.connect (sigc::mem_fun (this, &TextureCache::OnDestroyNotify));
   }
 
   g_free (key);
@@ -84,12 +88,13 @@ TextureCache::OnDestroyNotify (nux::Trackable *Object)
   
   if (key.empty ())
   {
-    g_error ("Texture cache has got into a weird state, we have problems");
+    // object doesn't exist in the map, could happen if the cache is 
     return;
   }
 
   _cache.erase (_cache.find (key));
   _cache_inverse.erase (_cache_inverse.find (texture));
+  _cache_con.erase (_cache_con.find (texture));
 
   return;
 }

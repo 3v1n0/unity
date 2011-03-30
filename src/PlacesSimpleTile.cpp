@@ -73,7 +73,9 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 PlacesSimpleTile::~PlacesSimpleTile ()
 {
   _icontex->UnReference ();
+  _icontex = NULL;
   _cairotext->UnReference ();
+  _cairotext = NULL;
 
   g_free (_label);
   g_free (_icon);
@@ -89,7 +91,7 @@ PlacesSimpleTile::DndSourceDragBegin ()
                             NULL);
 }
 
-nux::NBitmapData * 
+nux::NBitmapData *
 PlacesSimpleTile::DndSourceGetDragImage ()
 {
   nux::NBitmapData *result = 0;
@@ -104,10 +106,10 @@ PlacesSimpleTile::DndSourceGetDragImage ()
   
   if (!icon_name)
     icon_name = "application-default-icon";
-   
+  
   theme = gtk_icon_theme_get_default ();
   icon = g_icon_new_for_string (icon_name, NULL);
-
+  
   if (G_IS_ICON (icon))
   {
     info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
