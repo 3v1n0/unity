@@ -643,7 +643,8 @@ UnityScreen::NeedsRelayout ()
 void
 UnityScreen::ScheduleRelayout (guint timeout)
 {
-  g_timeout_add (timeout, &UnityScreen::RelayoutTimeout, this);
+  if (relayoutSourceId == 0)
+    relayoutSourceId = g_timeout_add (timeout, &UnityScreen::RelayoutTimeout, this);
 }
 
 void
@@ -692,6 +693,7 @@ UnityScreen::RelayoutTimeout (gpointer data)
 
   uScr->NeedsRelayout ();
   uScr->Relayout();
+  uScr->relayoutSourceId = 0;
 
   return FALSE;
 }
@@ -742,6 +744,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     screen (screen),
     cScreen (CompositeScreen::get (screen)),
     gScreen (GLScreen::get (screen)),
+    relayoutSourceId (0),
     doShellRepaint (false)
 {
   START_FUNCTION ();
@@ -845,6 +848,9 @@ UnityScreen::~UnityScreen ()
   launcherWindow->UnReference ();
   panelController->UnReference ();
   unity_a11y_finalize ();
+
+  if (relayoutSourceId != 0)
+    g_source_remove (relayoutSourceId);
 }
 
 /* Start up the launcher */

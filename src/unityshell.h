@@ -1,3 +1,4 @@
+
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /* Compiz unity plugin
  * unity.h
@@ -207,6 +208,7 @@ class UnityScreen :
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
   bool                   needsRelayout;
+  guint32                relayoutSourceId;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
