@@ -315,6 +315,18 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 
     switch (event->type)
     {
+    	case FocusIn:
+	case FocusOut:
+	    if (event->xfocus.mode == NotifyUngrab)
+	    {
+		foreach (CompWindow *w, screen->windows ())
+		{
+		    UnityMTGrabHandlesWindow *mtwindow = UnityMTGrabHandlesWindow::get (w);
+		    if (mtwindow->handleTimerActive ())
+		    	mtwindow->resetTimer ();
+		}
+	    }
+      break;
         case ClientMessage:
 
 	    if (event->xclient.message_type == mCompResizeWindowAtom)
@@ -461,6 +473,12 @@ UnityMTGrabHandlesScreen::preparePaint (int msec)
     }
 
     cScreen->preparePaint (msec);
+}
+
+bool
+UnityMTGrabHandlesWindow::handleTimerActive ()
+{
+  return _timer_handle != 0;
 }
 
 bool
@@ -683,7 +701,7 @@ UnityMTGrabHandlesWindow::resetTimer ()
     if (_timer_handle)
 	g_source_remove (_timer_handle);
     
-    _timer_handle = g_timeout_add (3000, &UnityMTGrabHandlesWindow::onHideTimeout, this);
+    _timer_handle = g_timeout_add (2000, &UnityMTGrabHandlesWindow::onHideTimeout, this);
 }
 
 void
