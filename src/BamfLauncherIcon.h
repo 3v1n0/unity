@@ -64,6 +64,8 @@ protected:
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
+    const char* BamfName ();
+
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
@@ -75,6 +77,9 @@ private:
     bool _dnd_hovered;
     guint _dnd_hover_timer;
     sigc::connection _on_window_minimized_connection;
+
+    gchar *_cached_desktop_file;
+    gchar *_cached_name;
 
     void EnsureWindowState ();
 
