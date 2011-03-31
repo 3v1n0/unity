@@ -76,11 +76,9 @@ UnityScreen::nuxPrologue ()
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
-  glLoadIdentity ();
 
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix ();
-  glLoadIdentity ();
 
   glGetError();
 }
@@ -112,7 +110,7 @@ UnityScreen::nuxEpilogue ()
 }
 
 void
-UnityScreen::paintPanelShadow ()
+UnityScreen::paintPanelShadow (const GLMatrix &matrix)
 {
   nuxPrologue ();
   
@@ -127,10 +125,10 @@ UnityScreen::paintPanelShadow ()
   float x2 = x1 + output->width ();
   float y2 = y1 + h; 
   
-  vc[0] = ((x1 * 2.0) / screen->width ()) - 1.0;
-  vc[1] = ((x2 * 2.0) / screen->width ()) - 1.0;
-  vc[2] = ((y1 * -2.0) / screen->height ()) + 1.0;
-  vc[3] = ((y2 * -2.0) / screen->height ()) + 1.0;
+  vc[0] = x1;
+  vc[1] = x2;
+  vc[2] = y1;
+  vc[3] = y2;
   
   foreach (GLTexture *tex, _shadow_texture)
   {
@@ -144,7 +142,6 @@ UnityScreen::paintPanelShadow ()
 
     glBegin (GL_QUADS);
     {
-      
       glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), 0));
       glVertex2f(vc[0], vc[2]);
       
@@ -591,7 +588,9 @@ UnityWindow::glDraw (const GLMatrix     &matrix,
   bool ret = gWindow->glDraw (matrix, attrib, region, mask);
 
   if (window->type () == CompWindowTypeDesktopMask)
-    uScreen->paintPanelShadow ();
+  {
+    uScreen->paintPanelShadow (matrix);
+  }
 
   return ret;
 }
