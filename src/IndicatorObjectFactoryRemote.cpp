@@ -106,6 +106,8 @@ IndicatorObjectFactoryRemote::ForceRefresh ()
 void
 IndicatorObjectFactoryRemote::Reconnect ()
 {
+  g_spawn_command_line_sync ("killall unity-panel-service", NULL, NULL, NULL, NULL);
+
   if (g_getenv ("PANEL_USE_LOCAL_SERVICE"))
   {
     run_local_panel_service ();
