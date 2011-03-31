@@ -81,12 +81,12 @@ GestureEngine::FindCompWindow (Window window)
   while (!result)
   {
     Window parent, root;
-    Window *children;
+    Window *children = NULL;
     unsigned int nchildren;
     
     XQueryTree (_screen->dpy (), window, &root, &parent, &children, &nchildren);
     
-    if (nchildren)
+    if (children)
       XFree (children);
     
     if (parent == root)
