@@ -406,6 +406,11 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
   g_free (uname);
 }
 
+GDBusProxy *
+IndicatorObjectFactoryRemote::GetRemoteProxy ()
+{
+  return _proxy;
+}
   
 //
 // C callbacks, they just link to class methods and aren't interesting

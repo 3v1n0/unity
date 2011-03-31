@@ -37,10 +37,6 @@
 #include "IndicatorObjectFactoryRemote.h"
 #include "PanelIndicatorObjectView.h"
 
-#define S_NAME  "com.canonical.Unity.Panel.Service"
-#define S_PATH  "/com/canonical/Unity/Panel/Service"
-#define S_IFACE "com.canonical.Unity.Panel.Service"
-
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
 PanelView::PanelView (NUX_FILE_LINE_DECL)
@@ -432,22 +428,6 @@ PanelView::GetPrimary ()
   return _is_primary;
 }
 
-static void
-on_sync_geometries_done_cb (GObject      *source,
-                            GAsyncResult *res,
-                            gpointer      data)
-{
-  GVariant *args;
-  GError *error = NULL;
-
-  args = g_dbus_proxy_call_finish ((GDBusProxy*) source, res, &error);
-  if (error != NULL)
-  {
-    g_warning ("Error when calling SyncGeometries: %s", error->message);
-    g_error_free (error);
-  }
-}
-
 void
 PanelView::SetPrimary (bool primary)
 {
@@ -460,8 +440,8 @@ void
 PanelView::SyncGeometries ()
 {
   GVariantBuilder b;
-  GDBusProxy *bus_proxy;
-  GVariant *method_args;
+  GDBusProxy     *bus_proxy;
+  GVariant       *method_args;
   std::list<Area *>::iterator it;
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
@@ -501,26 +481,16 @@ PanelView::SyncGeometries ()
   method_args = g_variant_builder_end (&b);
 
   // Send geometries to the panel service
-  bus_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SESSION,
-                                             G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                                             NULL,
-                                             S_NAME,
-                                             S_PATH,
-                                             S_IFACE,
-                                             NULL,
-                                             NULL);
+  bus_proxy =_remote->GetRemoteProxy ();
   if (bus_proxy != NULL)
   {
     g_dbus_proxy_call (bus_proxy, "SyncGeometries", method_args,
                        G_DBUS_CALL_FLAGS_NONE,
                        -1,
                        NULL,
-                       on_sync_geometries_done_cb,
-                       this);
-    g_object_unref (bus_proxy);
+                       NULL,
+                       NULL);
   }
-
-  g_variant_unref (method_args);
 }
 
 void
