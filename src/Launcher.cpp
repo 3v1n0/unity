@@ -2107,6 +2107,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  RenderArg const &arg,
                                  int running,
                                  int active,
+                                 float alpha,
                                  nux::Geometry geo)
 {
   int markerCenter = (int) arg.render_center.y;
@@ -2119,6 +2120,9 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
+      
+    color.SetRGBA (color.R () * alpha, color.G () * alpha,
+                   color.B () * alpha, alpha);
 
     nux::BaseTexture *texture;
 
@@ -2167,6 +2171,8 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
+    color.SetRGBA (color.R () * alpha, color.G () * alpha,
+                   color.B () * alpha, alpha);
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
                               markerCenter - (_arrow_rtl->GetHeight () / 2),
                               (float) _arrow_rtl->GetWidth(),
@@ -2487,6 +2493,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg,
                     arg.running_arrow ? arg.window_indicators : 0,
                     arg.active_arrow ? 1 : 0,
+                    arg.alpha,
                     geo);
 
   /* draw superkey-shortcut label */ 

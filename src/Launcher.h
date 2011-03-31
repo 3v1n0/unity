@@ -327,6 +327,7 @@ private:
                          RenderArg const &arg,
                          int running,
                          int active,
+                         float alpha,
                          nux::Geometry geo);
 
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
