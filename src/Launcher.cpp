@@ -2553,6 +2553,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
+                                                                                                    nux::Color(0x00000000), 
+                                                                                                    nux::Color(0x00000000), 
+                                                                                                    nux::Color(0x60000000));
 
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
