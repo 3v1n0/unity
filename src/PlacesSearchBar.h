@@ -60,6 +60,11 @@ public:
   sigc::signal<void, const char *> search_changed;
   sigc::signal<void> activated;
 
+  nux::TextEntry* GetTextEntry ()
+  {
+    return _pango_entry;
+  }
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
