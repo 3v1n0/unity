@@ -119,19 +119,24 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
   result_icon = result.GetIcon ();
 
   if (_type == RENDERER_TYPE_HORI_TILE)
+  {
     tile = new PlacesHorizontalTile (result_icon,
                                      result_name,
                                      result_comment,
                                      style->GetTileIconSize (),
                                      false,
                                      result.GetId ());
+    static_cast<PlacesHorizontalTile *> (tile)->SetURI (result.GetURI ());
+  }
   else
+  {
     tile = new PlacesSimpleTile (result_icon,
                                  result_name,
                                  style->GetTileIconSize (),
                                  false,
                                  result.GetId ());
-
+    static_cast<PlacesSimpleTile *> (tile)->SetURI (result.GetURI ());
+  }
   tile->QueueRelayout ();
   tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::TileClicked));
 
