@@ -98,39 +98,32 @@ GeisAdapter::GestureStart(void *cookie, GeisGestureType gesture_type, GeisGestur
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (gesture_type == GEIS_GESTURE_PRIMITIVE_DRAG)
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     data->id = gesture_id;
     self->drag_start.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_ROTATE)
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     data->id = gesture_id;
     self->rotate_start.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_PINCH)
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     data->id = gesture_id;
     self->pinch_start.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TAP)
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     data->id = gesture_id;
     self->tap.emit (data);
-    g_free (data);
-  }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TOUCH)
-  {
-    GeisTouchData *data = self->ProcessTouchGesture (count, attrs);
-    data->id = gesture_id;
-    self->touch_start.emit (data);
     g_free (data);
   }
 }
@@ -140,39 +133,32 @@ GeisAdapter::GestureUpdate(void *cookie, GeisGestureType gesture_type, GeisGestu
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (gesture_type == GEIS_GESTURE_PRIMITIVE_DRAG)
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     data->id = gesture_id;
     self->drag_update.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_ROTATE)
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     data->id = gesture_id;
     self->rotate_update.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_PINCH)
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     data->id = gesture_id;
     self->pinch_update.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TAP)
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     data->id = gesture_id;
     self->tap.emit (data);
-    g_free (data);
-  }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TOUCH)
-  {
-    GeisTouchData *data = self->ProcessTouchGesture (count, attrs);
-    data->id = gesture_id;
-    self->touch_update.emit (data);
     g_free (data);
   }
 }
@@ -182,39 +168,32 @@ GeisAdapter::GestureFinish(void *cookie, GeisGestureType gesture_type, GeisGestu
 {
   GeisAdapter *self = static_cast<GeisAdapter *> (cookie);
   
-  if (gesture_type == GEIS_GESTURE_PRIMITIVE_DRAG)
+  if (gesture_type == 0)
   {
     GeisDragData *data = self->ProcessDragGesture (count, attrs);
     data->id = gesture_id;
     self->drag_finish.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_ROTATE)
+  else if (gesture_type == 2)
   {
     GeisRotateData *data = self->ProcessRotateGesture (count, attrs);
     data->id = gesture_id;
     self->rotate_finish.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_PINCH)
+  else if (gesture_type == 1)
   {
     GeisPinchData *data = self->ProcessPinchGesture (count, attrs);
     data->id = gesture_id;
     self->pinch_finish.emit (data);
     g_free (data);
   }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TAP)
+  else if (gesture_type == 15)
   {
     GeisTapData *data = self->ProcessTapGesture (count, attrs);
     data->id = gesture_id;
     self->tap.emit (data);
-    g_free (data);
-  }
-  else if (gesture_type == GEIS_GESTURE_PRIMITIVE_TOUCH)
-  {
-    GeisTouchData *data = self->ProcessTouchGesture (count, attrs);
-    data->id = gesture_id;
-    self->touch_finish.emit (data);
     g_free (data);
   }
 }
@@ -258,39 +237,6 @@ GeisAdapter::GeisTapData * GeisAdapter::ProcessTapGesture (GeisSize count, GeisG
       result->position_x = attr.float_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_POSITION_Y))
       result->position_y = attr.float_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_X1))
-      result->bound_x1 = attr.float_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_Y1))
-      result->bound_y1 = attr.float_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_X2))
-      result->bound_x2 = attr.float_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_Y2))
-      result->bound_y2 = attr.float_val;
-  }
-  
-  return result;
-}
-
-GeisAdapter::GeisTouchData * GeisAdapter::ProcessTouchGesture (GeisSize count, GeisGestureAttr *attrs)
-{
-  GeisTouchData *result = (GeisTouchData*) g_malloc0 (sizeof (GeisTouchData));
-
-  int i;
-  for (i = 0; i < (int) count; i++)
-  {
-    GeisGestureAttr attr = attrs[i];
-    if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_DEVICE_ID))
-      result->device_id = attr.integer_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_CHILD_WINDOW_ID))
-      result->window = (Window) attr.integer_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TIMESTAMP))
-      result->timestamp = attr.integer_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_X))
-      result->focus_x = attr.integer_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_FOCUS_Y))
-      result->focus_y = attr.integer_val;
-    else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_TOUCHES))
-      result->touches = attr.integer_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_X1))
       result->bound_x1 = attr.float_val;
     else if (g_str_equal (attr.name, GEIS_GESTURE_ATTRIBUTE_BOUNDINGBOX_Y1))
@@ -428,8 +374,8 @@ GeisAdapter::GeisRotateData * GeisAdapter::ProcessRotateGesture (GeisSize count,
 }
 
 static const char* s_gestures[] = {
-  GEIS_GESTURE_TYPE_DRAG3, GEIS_GESTURE_TYPE_TAP3, GEIS_GESTURE_TYPE_ROTATE3, GEIS_GESTURE_TYPE_PINCH3, GEIS_GESTURE_TYPE_TOUCH3,
-  GEIS_GESTURE_TYPE_DRAG4, GEIS_GESTURE_TYPE_TAP4, GEIS_GESTURE_TYPE_ROTATE4, GEIS_GESTURE_TYPE_PINCH4, GEIS_GESTURE_TYPE_TOUCH4,
+  GEIS_GESTURE_TYPE_DRAG3, GEIS_GESTURE_TYPE_TAP3, GEIS_GESTURE_TYPE_ROTATE3, GEIS_GESTURE_TYPE_PINCH3,
+  GEIS_GESTURE_TYPE_DRAG4, GEIS_GESTURE_TYPE_TAP4, GEIS_GESTURE_TYPE_ROTATE4, GEIS_GESTURE_TYPE_PINCH4,
   GEIS_GESTURE_TYPE_SYSTEM,
   NULL
 };

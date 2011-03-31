@@ -175,7 +175,6 @@ class UnityMTGrabHandlesWindow :
     public:
 
 	bool allowHandles ();
-	bool handleTimerActive ();
 
 	void grabNotify (int, int, unsigned int, unsigned int);
 	void ungrabNotify ();
@@ -193,13 +192,13 @@ class UnityMTGrabHandlesWindow :
 
   bool    handlesVisible ();
 	void    hideHandles ();
-	void    showHandles (bool use_timer);
+	void    showHandles ();
 	void    restackHandles ();
 
-  void resetTimer ();
-  void disableTimer ();
     private:
   
+  void resetTimer ();
+  void disableTimer ();
   static gboolean onHideTimeout (gpointer data);
 
 	Unity::MT::GrabHandleGroup *mHandles;

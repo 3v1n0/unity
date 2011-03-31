@@ -75,8 +75,6 @@ class UnityScreen :
 
 	/* nux draw wrapper */
 	void paintDisplay (const CompRegion 	&region);
-	
-	void paintPanelShadow (const GLMatrix &matrix);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -144,7 +142,7 @@ class UnityScreen :
 
   void ScheduleRelayout (guint timeout);
 
-protected:
+    protected:
 
 	const gchar* GetName ();
 
@@ -214,8 +212,6 @@ protected:
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
-  
-  GLTexture::List _shadow_texture;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
@@ -259,8 +255,6 @@ class UnityWindow :
   void resizeNotify (int x, int y, int w, int h);
   
   void stateChangeNotify (unsigned int lastState);
-
-  bool place (CompPoint &pos);
 };
 
 #define EX_SCREEN (screen) \

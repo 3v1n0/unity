@@ -110,68 +110,16 @@ UnityScreen::nuxEpilogue ()
 }
 
 void
-UnityScreen::paintPanelShadow (const GLMatrix &matrix)
-{
-  nuxPrologue ();
-  
-  CompOutput *output = _last_output;
-  float vc[4];
-  float h = 20.0f;
-  float w = 1.0f;
-  float panel_h = 24.0f;
-  
-  float x1 = 0.0f;
-  float y1 = panel_h;
-  float x2 = x1 + output->width ();
-  float y2 = y1 + h; 
-  
-  vc[0] = x1;
-  vc[1] = x2;
-  vc[2] = y1;
-  vc[3] = y2;
-  
-  foreach (GLTexture *tex, _shadow_texture)
-  {
-    glEnable (GL_BLEND);
-    glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
-    
-    GL::activeTexture (GL_TEXTURE0_ARB);
-    tex->enable (GLTexture::Fast);
-    
-    glTexParameteri (tex->target (), GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-    glBegin (GL_QUADS);
-    {
-      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), 0));
-      glVertex2f(vc[0], vc[2]);
-      
-      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), h));
-      glVertex2f(vc[0], vc[3]);
-      
-      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), h));
-      glVertex2f(vc[1], vc[3]);
-      
-      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), 0));
-      glVertex2f(vc[1], vc[2]);
-    }
-    glEnd ();
-    
-    tex->disable ();
-    glDisable (GL_BLEND);
-  }
-  nuxEpilogue ();
-}
-
-void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
+  
   CompOutput *output = _last_output;
   nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
-  
+
   doShellRepaint = false;
 }
 
@@ -587,11 +535,6 @@ UnityWindow::glDraw (const GLMatrix     &matrix,
 
   bool ret = gWindow->glDraw (matrix, attrib, region, mask);
 
-  if (window->type () == CompWindowTypeDesktopMask)
-  {
-    uScreen->paintPanelShadow (matrix);
-  }
-
   return ret;
 }
 
@@ -622,30 +565,6 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
 {
   PluginAdapter::Default ()->NotifyResized (window, x, y, w, h);
   window->resizeNotify (x, y, w, h);
-}
-
-bool
-UnityWindow::place (CompPoint &pos)
-{
-  UnityScreen *us = UnityScreen::get (screen);
-  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
-  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
-
-  switch (hideMode)
-  {
-    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
-    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width && window->width () + geo.width < screen->workArea ().width ())
-        {
-          pos.setX (geo.width);
-          return true;
-        }
-      break;
-    default:
-      break;
-  }
-
-  return false;
 }
 
 /* Configure callback for the launcher window */
@@ -920,11 +839,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);
-  
-  CompString name (PKGDATADIR"/panel-shadow.png");
-  CompString pname ("unityshell");
-  CompSize size (1, 20);
-  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
 
   END_FUNCTION ();
 }

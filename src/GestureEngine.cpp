@@ -33,7 +33,6 @@ GestureEngine::GestureEngine (CompScreen *screen)
 
   _drag_id = 0;
   _pinch_id = 0;
-  _touch_id = 0;
   _drag_grab = 0;
   _pinch_grab = 0;
   
@@ -52,10 +51,6 @@ GestureEngine::GestureEngine (CompScreen *screen)
   adapter->pinch_start.connect (sigc::mem_fun (this, &GestureEngine::OnPinchStart));
   adapter->pinch_update.connect (sigc::mem_fun (this, &GestureEngine::OnPinchUpdate));
   adapter->pinch_finish.connect (sigc::mem_fun (this, &GestureEngine::OnPinchFinish));
-  
-  adapter->touch_start.connect (sigc::mem_fun (this, &GestureEngine::OnTouchStart));
-  adapter->touch_update.connect (sigc::mem_fun (this, &GestureEngine::OnTouchUpdate));
-  adapter->touch_finish.connect (sigc::mem_fun (this, &GestureEngine::OnTouchFinish));
 }
 
 GestureEngine::~GestureEngine ()
@@ -70,6 +65,13 @@ GestureEngine::OnTap (GeisAdapter::GeisTapData *data)
   {
     UBusServer *ubus = ubus_server_get_default ();
     ubus_server_send_message (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+  }
+  else if (data->touches == 3)
+  {
+    CompWindow *result = FindCompWindow (data->window);
+    
+    if (result)
+      PluginAdapter::Default ()->ToggleGrabHandles (result);
   }
 }
 
@@ -183,39 +185,6 @@ void
 GestureEngine::OnRotateFinish (GeisAdapter::GeisRotateData *data)
 {
 
-}
-
-void
-GestureEngine::OnTouchStart (GeisAdapter::GeisTouchData *data)
-{
-  if (data->touches == 3)
-  {
-    CompWindow *result = FindCompWindow (data->window);
-    
-    if (result)
-    {
-      PluginAdapter::Default ()->ShowGrabHandles (result, false);
-      _touch_id = data->id;
-      _touch_window = result;
-    }
-  }
-}
-
-void
-GestureEngine::OnTouchUpdate (GeisAdapter::GeisTouchData *data)
-{
-
-}
-
-void
-GestureEngine::OnTouchFinish (GeisAdapter::GeisTouchData *data)
-{
-  if (_touch_id == data->id)
-  {
-    PluginAdapter::Default ()->ShowGrabHandles (_touch_window, true);
-    _touch_id = 0;
-    _touch_window = 0;
-  }
 }
 
 void

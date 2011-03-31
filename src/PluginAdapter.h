@@ -75,7 +75,7 @@ public:
     void InitiateExpo ();
     bool IsExpoActive ();
     
-    void ShowGrabHandles (CompWindow *window, bool use_timer);
+    void ShowGrabHandles (CompWindow *window);
     void HideGrabHandles (CompWindow *window);
     void ToggleGrabHandles (CompWindow *window);
 

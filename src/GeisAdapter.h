@@ -111,21 +111,6 @@ public:
       float bound_y2;
     } GeisPinchData;
     
-    typedef struct _GeisTouchData
-    {
-      int id;
-      int device_id;
-      Window window;
-      int touches;
-      int timestamp;
-      int focus_x;
-      int focus_y;
-      float bound_x1;
-      float bound_y1;
-      float bound_x2;
-      float bound_y2;
-    } GeisTouchData;
-    
     sigc::signal<void, GeisTapData*> tap;
     
     sigc::signal<void, GeisDragData*> drag_start;
@@ -140,9 +125,6 @@ public:
     sigc::signal<void, GeisPinchData*> pinch_update;
     sigc::signal<void, GeisPinchData*> pinch_finish;
     
-    sigc::signal<void, GeisTouchData*> touch_start;
-    sigc::signal<void, GeisTouchData*> touch_update;
-    sigc::signal<void, GeisTouchData*> touch_finish;
 protected:
     GeisAdapter(CompScreen *screen);
     
@@ -163,7 +145,6 @@ protected:
     GeisDragData *   ProcessDragGesture   (GeisSize attr_count, GeisGestureAttr *attrs);
     GeisPinchData *  ProcessPinchGesture  (GeisSize attr_count, GeisGestureAttr *attrs);
     GeisRotateData * ProcessRotateGesture (GeisSize attr_count, GeisGestureAttr *attrs);
-    GeisTouchData *  ProcessTouchGesture  (GeisSize attr_count, GeisGestureAttr *attrs);
     
 private:
     void RegisterRootInstance ();

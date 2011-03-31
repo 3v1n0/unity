@@ -46,10 +46,6 @@ class GestureEngine : public sigc::trackable
     void OnPinchUpdate (GeisAdapter::GeisPinchData *data);
     void OnPinchFinish (GeisAdapter::GeisPinchData *data);
     
-    void OnTouchStart (GeisAdapter::GeisTouchData *data);
-    void OnTouchUpdate (GeisAdapter::GeisTouchData *data);
-    void OnTouchFinish (GeisAdapter::GeisTouchData *data);
-    
     void EndDrag ();
   private:
     CompWindow * FindCompWindow (Window window);
@@ -57,13 +53,11 @@ class GestureEngine : public sigc::trackable
     CompScreen *_screen;
     CompWindow *_drag_window;
     CompWindow *_pinch_window;
-    CompWindow *_touch_window;
     CompScreen::GrabHandle _drag_grab;
     CompScreen::GrabHandle _pinch_grab;
     
     int _drag_id;
     int _pinch_id;
-    int _touch_id;
     
     float _pinch_start_radius;
 };
