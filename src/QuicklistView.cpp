@@ -116,6 +116,29 @@ QuicklistView::RecvEndFocus ()
 {
 }
 
+bool
+QuicklistView::IsMenuItemSeperator (int index)
+{
+  DbusmenuMenuitem* item   = NULL;
+  const gchar*      label  = NULL;
+  bool              result = false;
+
+  if (index < 0)
+    return false;
+
+  item = GetNthItems (index)->_menuItem;
+  if (!item)
+    return false;
+
+  label = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+  if (!label)
+    result = true;
+  else
+    result = false;
+
+  return result;
+}
+
 void
 QuicklistView::RecvKeyPressed (unsigned int  key_sym,
                                unsigned long key_code,
@@ -127,15 +150,10 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     case NUX_VK_UP:
       if (_current_item_index > 0)
       {
-        const gchar* label = NULL;
-
         GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index--;
 
-        label = dbusmenu_menuitem_property_get (GetNthItems (_current_item_index - 1)->_menuItem,
-                                                DBUSMENU_MENUITEM_PROP_LABEL);
-        if (!label)
-          _current_item_index -= 2;
-        else
+        while (IsMenuItemSeperator (_current_item_index))
           _current_item_index--;
 
         GetNthItems (_current_item_index)->_prelight = true;
@@ -147,15 +165,10 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     case NUX_VK_DOWN:
       if (_current_item_index < GetNumItems () - 1)
       {
-        const gchar* label = NULL;
-
         GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index++;
 
-        label = dbusmenu_menuitem_property_get (GetNthItems (_current_item_index + 1)->_menuItem,
-                                                DBUSMENU_MENUITEM_PROP_LABEL);
-        if (!label)
-          _current_item_index += 2;
-        else
+        while (IsMenuItemSeperator (_current_item_index))
           _current_item_index++;
 
         GetNthItems (_current_item_index)->_prelight = true;
