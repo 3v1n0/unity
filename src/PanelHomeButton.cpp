@@ -113,10 +113,13 @@ PanelHomeButton::Refresh ()
   cairo_set_line_width (cr, 1);
 
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
-  gdk_cairo_set_source_pixbuf (cr, pixbuf,
-                               (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
-                               (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
-  g_object_unref (pixbuf);
+  if (GDK_IS_PIXBUF (pixbuf))
+  {
+    gdk_cairo_set_source_pixbuf (cr, pixbuf,
+                                 (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
+                                 (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
+    g_object_unref (pixbuf);
+  }
 
   cairo_paint (cr);
 

@@ -84,6 +84,7 @@ private:
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
+  static void OnPlacesClosed (GVariant *variant, PlacesSearchBar *self); 
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
