@@ -202,8 +202,8 @@ PlacesHomeView::Refresh ()
   if (!GetExpanded ())
     return;
 
-  // Find Media Apps
-  markup = g_strdup_printf (temp, _("Find Media Apps"));
+  // Media Apps
+  markup = g_strdup_printf (temp, _("Media Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_media_apps.png",
                            markup,
                            icon_size);
@@ -214,8 +214,8 @@ PlacesHomeView::Refresh ()
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
 
-  // Find Internet Apps
-  markup = g_strdup_printf (temp, _("Find Internet Apps"));
+  // Internet Apps
+  markup = g_strdup_printf (temp, _("Internet Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_internet_apps.png",
                            markup,
                            icon_size);
@@ -226,8 +226,8 @@ PlacesHomeView::Refresh ()
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
 
-  // Find More Apps
-  markup = g_strdup_printf (temp, _("Find More Apps"));
+  // More Apps
+  markup = g_strdup_printf (temp, _("More Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_more_apps.png",
                            markup,
                            icon_size);
