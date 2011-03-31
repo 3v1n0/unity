@@ -285,7 +285,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     m_LastSpreadIcon = NULL;
 
     _current_icon       = NULL;
-    _last_selected_icon = NULL;
     _current_icon_index = -1;
     _last_icon_index    = -1;
 
@@ -2039,6 +2038,21 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon->needs_redraw_connection.connected ())
       icon->needs_redraw_connection.disconnect ();
+
+    if (icon == _current_icon)
+      _current_icon = 0;
+    if (icon == m_ActiveTooltipIcon)
+      m_ActiveTooltipIcon = 0;
+    if (icon == m_ActiveMenuIcon)
+      m_ActiveMenuIcon = 0;
+    if (icon == m_LastSpreadIcon)
+      m_LastSpreadIcon = 0;
+    if (icon == _icon_under_mouse)
+      _icon_under_mouse = 0;
+    if (icon == _icon_mouse_down)
+      _icon_mouse_down = 0;
+    if (icon == _drag_icon)
+      _drag_icon = 0;
 
     icon->UnReference ();
     EnsureAnimation();
