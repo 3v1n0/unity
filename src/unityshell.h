@@ -75,6 +75,8 @@ class UnityScreen :
 
 	/* nux draw wrapper */
 	void paintDisplay (const CompRegion 	&region);
+	
+	void paintPanelShadow (const GLMatrix &matrix);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -212,6 +214,8 @@ protected:
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
+  
+  GLTexture::List _shadow_texture;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
