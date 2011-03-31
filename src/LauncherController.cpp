@@ -200,10 +200,9 @@ LauncherController::OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry)
 }
 
 void
-LauncherController::OnExpoClicked (int button)
+LauncherController::OnExpoActivated ()
 {
-  if (button == 1)
-    PluginAdapter::Default ()->InitiateExpo ();
+  PluginAdapter::Default ()->InitiateExpo ();
 }
 
 void
@@ -241,7 +240,7 @@ LauncherController::InsertExpoAction ()
   _expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
   _expoIcon->SetShortcut('s');
   
-  _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
+  _on_expoicon_activate_connection = _expoIcon->activate.connect (sigc::mem_fun (this, &LauncherController::OnExpoActivated));
   
   RegisterIcon (_expoIcon);
 }
@@ -249,6 +248,8 @@ LauncherController::InsertExpoAction ()
 void
 LauncherController::RemoveExpoAction ()
 {
+  if (_on_expoicon_activate_connection)
+    _on_expoicon_activate_connection.disconnect ();
   _model->RemoveIcon (_expoIcon);
 }
 

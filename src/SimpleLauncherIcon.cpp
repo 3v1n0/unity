@@ -84,6 +84,7 @@ SimpleLauncherIcon::OnMouseLeave ()
 void
 SimpleLauncherIcon::ActivateLauncherIcon ()
 {
+  activate.emit ();
 }
 
 nux::BaseTexture *

@@ -646,7 +646,7 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
     return;
   }
 
-  if (g_str_has_prefix (uri, "application://"))
+  if (g_str_has_prefix (uri, "application://") or g_str_has_prefix (uri, "unity-runner://"))
   {
     char            *id = g_strdup (&uri[14]);
     GDesktopAppInfo *info;

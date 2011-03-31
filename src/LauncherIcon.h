@@ -230,6 +230,7 @@ protected:
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
 
+    DbusmenuClient *_menuclient_dynamic_quicklist;
 
     friend class Launcher;
     friend class LauncherController;

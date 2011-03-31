@@ -84,7 +84,10 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
 
+  // FIXME: the abstraction is already broken, should be fixed for O
+  // right now, hooking the dynamic quicklist the less ugly possible way
   QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
+  _menuclient_dynamic_quicklist = NULL;
   
   // Add to introspection
   AddChild (_quicklist);
@@ -950,7 +953,7 @@ LauncherIcon::OnRemoteProgressChanged (LauncherEntryRemote *remote)
 void
 LauncherIcon::OnRemoteQuicklistChanged (LauncherEntryRemote *remote)
 {
-  // FIXME
+  _menuclient_dynamic_quicklist = remote->Quicklist ();
 }
 
 void

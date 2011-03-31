@@ -51,7 +51,7 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
-#define TRIGGER_SQR_RADIUS 9
+#define TRIGGER_SQR_RADIUS 25
 
 #define MOUSE_DEADZONE 15
 
@@ -318,7 +318,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
-    _autohide_animation     = FADE_OR_SLIDE;
+    _autohide_animation     = FADE_AND_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -682,7 +682,9 @@ Launcher::AddProperties (GVariantBuilder *builder)
 {
   struct timespec current;
   clock_gettime (CLOCK_MONOTONIC, &current);
-
+  char* hidequirks_mask = _hide_machine->DebugHideQuirks ();
+  char* hoverquirks_mask = _hover_machine->DebugHoverQuirks ();
+  
   g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
   g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
@@ -692,7 +694,11 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "mouse-over-launcher", g_variant_new_boolean (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)));
+  g_variant_builder_add (builder, "{sv}", "hide-quirks", g_variant_new_string (hidequirks_mask));
+  g_variant_builder_add (builder, "{sv}", "hover-quirks", g_variant_new_string (hoverquirks_mask));
+
+  g_free (hidequirks_mask);
+  g_free (hoverquirks_mask);
 }
 
 void Launcher::SetMousePosition (int x, int y)
@@ -934,7 +940,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
-        return 0.55f;
+        return 0.35f;
     else
         return 0.25f;
 }
@@ -1503,7 +1509,15 @@ void Launcher::EndKeyShowLauncher ()
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
     
     // hack around issue in nux where leave events dont always come after a grab
     self->SetStateMouseOverBFB (false);
@@ -1512,7 +1526,15 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+    }
 }
 
 void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)

@@ -556,6 +556,10 @@ BamfLauncherIcon::UpdateMenus ()
   }
 
   g_list_free (children);
+  
+  // add dynamic quicklist
+  if (_menuclient_dynamic_quicklist != NULL)
+    _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
 
   // make a client for desktop file actions
   if (!DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts) &&
@@ -757,7 +761,10 @@ BamfLauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *> result;
   bool first_separator_needed = false;
   DbusmenuMenuitem* item = NULL;
-
+  
+  // FIXME for O: hack around the wrong abstraction
+  UpdateMenus ();
+  
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
     GList * child = NULL;
@@ -777,6 +784,7 @@ BamfLauncherIcon::GetMenus ()
     }
   }
 
+  // FIXME: this should totally be added as a _menu_client
   if (DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts))
   {
     GList * child = NULL;
