@@ -83,6 +83,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
+  _time_delay_handle = 0;
 
   QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
   
@@ -112,6 +113,10 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+  
+  if (_time_delay_handle)
+    g_source_remove (_time_delay_handle);
+  _time_delay_handle = 0;
 
   if (_superkey_label)
     _superkey_label->UnReference ();
@@ -669,6 +674,8 @@ LauncherIcon::OnDelayedUpdateTimeout (gpointer data)
   clock_gettime (CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
   self->needs_redraw.emit (self);
   
+  self->_time_delay_handle = 0;
+  
   return false;
 }
 
@@ -679,7 +686,7 @@ LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIcon::Quirk quirk)
   arg->self = this;
   arg->quirk = quirk;
   
-  g_timeout_add (ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
+  _time_delay_handle = g_timeout_add (ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
 }
 
 void
