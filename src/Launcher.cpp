@@ -61,6 +61,13 @@
 #define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
 #define S_DBUS_IFACE "com.canonical.Unity.Launcher"
 
+// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
+// be moved to the correct place in NuxGraphics-headers
+#define NUX_KP_DOWN  0xFF99
+#define NUX_KP_UP    0xFF97
+#define NUX_KP_LEFT  0xFF96
+#define NUX_KP_RIGHT 0xFF98
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -2914,6 +2921,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
   {
     // up (move selection up or go to global-menu if at top-most icon)
     case NUX_VK_UP:
+    case NUX_KP_UP:
       if (_current_icon_index > 0)
       {
         int temp_current_icon_index = _current_icon_index;
@@ -2935,6 +2943,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
+    case NUX_KP_DOWN:
       if (_current_icon_index < _model->Size () - 1)
       {
         int temp_current_icon_index = _current_icon_index;
@@ -2957,6 +2966,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
       // hide again
       exitKeyNavMode ();
@@ -2967,6 +2977,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (!(key_state & NUX_STATE_SHIFT))
         break;
     case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
       // open quicklist of currently selected icon
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
