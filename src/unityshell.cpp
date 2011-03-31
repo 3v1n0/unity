@@ -120,7 +120,7 @@ UnityScreen::paintPanelShadow (const GLMatrix &matrix)
   float w = 1.0f;
   float panel_h = 24.0f;
   
-  float x1 = 0.0f;
+  float x1 = output->x ();
   float y1 = panel_h;
   float x2 = x1 + output->width ();
   float y2 = y1 + h; 
