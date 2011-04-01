@@ -1,4 +1,4 @@
-unity (3.8.2-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.2-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - compiz crashed with SIGSEGV in std::_List_node_base::_M_hook()
@@ -108,7 +108,7 @@ unity (3.8.2-0ubuntu1) UNRELEASED; urgency=low
       it on it for now
     - build-dep on quilt
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 01 Apr 2011 08:46:58 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 01 Apr 2011 12:03:56 +0200
 
 unity (3.6.8-0ubuntu3) natty; urgency=low
 
