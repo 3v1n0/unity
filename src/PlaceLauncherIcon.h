@@ -36,7 +36,6 @@ public:
   virtual nux::Color GlowColor ();
 
 protected:
-  void OnMouseClick (int button);
   void UpdatePlaceIcon ();
   std::list<DbusmenuMenuitem *> GetMenus ();
 
@@ -51,6 +50,7 @@ private:
 private:
   PlaceEntry *_entry;
   std::list<DbusmenuMenuitem *>  _current_menu;
+  sigc::connection _on_active_changed_connection;
 };
 
 #endif // _PLACE_LAUNCHER_ICON_H__H

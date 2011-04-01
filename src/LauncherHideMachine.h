@@ -55,7 +55,7 @@ class LauncherHideMachine : public sigc::trackable
       LAST_ACTION_ACTIVATE   = 1 << 15,
       SCALE_ACTIVE           = 1 << 16,
       EXPO_ACTIVE            = 1 << 17,
-      MT_DRAG_OUT            = 1 << 18,
+      MT_DRAG_OUT            = 1 << 18
     } HideQuirk;
   
     LauncherHideMachine ();
@@ -70,6 +70,8 @@ class LauncherHideMachine : public sigc::trackable
     bool ShouldHide ();
     
     sigc::signal<void, bool> should_hide_changed;
+    
+    char *DebugHideQuirks ();
     
   private:
     void EnsureHideState (bool skip_delay);

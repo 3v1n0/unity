@@ -67,11 +67,20 @@ public:
     sigc::signal<void, LauncherIcon *> icon_added;
     sigc::signal<void, LauncherIcon *> icon_removed;
     sigc::signal<void> order_changed;
-    
+
+    // connected to from class Launcher
+    sigc::connection on_icon_added_connection;
+    sigc::connection on_icon_removed_connection;
+    sigc::connection on_order_changed_connection;
+
 private:
-    Base _inner;
-    Base _inner_shelf;
-    Base _inner_main;
+    Base             _inner;
+    Base             _inner_shelf;
+    Base             _inner_main;
+    sigc::connection _on_mouse_enter_connection;
+    sigc::connection _on_mouse_leave_connection;
+    sigc::connection _on_mouse_down_connection;
+    sigc::connection _on_mouse_up_connection;
     
     void Populate ();
     

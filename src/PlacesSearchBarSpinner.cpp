@@ -44,7 +44,8 @@ PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
 
 PlacesSearchBarSpinner::~PlacesSearchBarSpinner ()
 {
-
+  if (_spinner_timeout)
+    g_source_remove (_spinner_timeout);
 }
 
 long
@@ -155,6 +156,7 @@ PlacesSearchBarSpinner::SetState (SpinnerState state)
 
   if (_spinner_timeout)
     g_source_remove (_spinner_timeout);
+  _spinner_timeout = 0;
   _2d_rotate.Rotate_z (0.0f);
   _rotation = 0.0f;
 

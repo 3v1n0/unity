@@ -50,6 +50,8 @@ public:
 
   void AddProperties (GVariantBuilder *builder);
 
+  GDBusProxy * GetRemoteProxy ();
+
 private:
   IndicatorObjectProxyRemote* IndicatorForID (const char *id);
 private:

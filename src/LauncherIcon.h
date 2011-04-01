@@ -93,9 +93,10 @@ public:
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
+    void RecvMouseClick (int button);
     
     void HideTooltip ();
-    void OpenQuicklist (bool default_to_first_item = false);
+    gboolean OpenQuicklist (bool default_to_first_item = false);
 
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
@@ -154,6 +155,12 @@ public:
     sigc::signal<void, LauncherIcon *> hide;
     sigc::signal<void, LauncherIcon *> remove;
     sigc::signal<void, LauncherIcon *> needs_redraw;
+
+    sigc::connection needs_redraw_connection;
+    sigc::connection on_icon_added_connection;
+    sigc::connection on_icon_removed_connection;
+    sigc::connection on_order_changed_connection;
+
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
@@ -223,6 +230,7 @@ protected:
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
 
+    DbusmenuClient *_menuclient_dynamic_quicklist;
 
     friend class Launcher;
     friend class LauncherController;
@@ -251,6 +259,7 @@ private:
     float            _progress;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
+    guint            _time_delay_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
     

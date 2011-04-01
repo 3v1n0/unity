@@ -139,7 +139,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   EnsureWindowState ();
   UpdateMenus ();
 
-  PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
 
   /* hack */
   SetProgress (0.0f);
@@ -148,6 +148,15 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
+                               _menu_callbacks["Pin"]);
+
+  g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
+                               _menu_callbacks["Quit"]);
+
+  if (_on_window_minimized_connection.connected ())
+    _on_window_minimized_connection.disconnect ();
+
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnUrgentChanged,      this);
@@ -165,7 +174,7 @@ BamfLauncherIcon::OnWindowMinimized (guint32 xid)
   if (!OwnsWindow (xid))
     return;
 
-  Present (0.5f, 600);
+  Present (0.0f, 600);
   UpdateQuirkTimeDelayed (300, QUIRK_SHIMMER);
 }
 
@@ -434,15 +443,6 @@ BamfLauncherIcon::Spread (int state, bool force)
 }
 
 void
-BamfLauncherIcon::OnMouseClick (int button)
-{
-  if (button == 1)
-    ActivateLauncherIcon ();
-  else if (button == 2)
-    OpenInstanceLauncherIcon ();
-}
-
-void
 BamfLauncherIcon::OnClosed (BamfView *view, gpointer data)
 {
   BamfLauncherIcon *self = (BamfLauncherIcon *) data;
@@ -556,6 +556,10 @@ BamfLauncherIcon::UpdateMenus ()
   }
 
   g_list_free (children);
+  
+  // add dynamic quicklist
+  if (_menuclient_dynamic_quicklist != NULL)
+    _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
 
   // make a client for desktop file actions
   if (!DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts) &&
@@ -708,7 +712,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
+    _menu_callbacks["Pin"] = g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnTogglePin, this);
 
     _menu_items["Pin"] = menu_item;
   }
@@ -730,7 +734,7 @@ BamfLauncherIcon::EnsureMenuItemsReady ()
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
+    _menu_callbacks["Quit"] = g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, (GCallback) &BamfLauncherIcon::OnQuit, this);
 
     _menu_items["Quit"] = menu_item;
   }
@@ -757,7 +761,10 @@ BamfLauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *> result;
   bool first_separator_needed = false;
   DbusmenuMenuitem* item = NULL;
-
+  
+  // FIXME for O: hack around the wrong abstraction
+  UpdateMenus ();
+  
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
     GList * child = NULL;
@@ -777,6 +784,7 @@ BamfLauncherIcon::GetMenus ()
     }
   }
 
+  // FIXME: this should totally be added as a _menu_client
   if (DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts))
   {
     GList * child = NULL;
@@ -866,8 +874,10 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  data[0] = center.x - 24;
-  data[1] = center.y - 24;
+  //data[0] = center.x - 24;
+  //data[1] = center.y - 24;
+  data[0] = 0;
+  data[1] = 0;
   data[2] = 48;
   data[3] = 48;
 

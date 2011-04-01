@@ -53,6 +53,10 @@ private:
   std::vector<nux::BaseWindow *> _windows;
   int _bfb_size;
   float _opacity;
+  
+  sigc::connection _on_screen_change_connection;
+
+  bool _open_menu_start_received;
 };
 
 #endif // _PANEL_CONTROLLER_H_

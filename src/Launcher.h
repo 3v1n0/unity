@@ -31,6 +31,7 @@
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
+#include "LauncherHoverMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
@@ -240,6 +241,9 @@ private:
 
   void SetMousePosition (int x, int y);
   
+  void SetStateMouseOverLauncher (bool over_launcher);
+  void SetStateMouseOverBFB (bool over_bfb);
+  
   bool MouseBeyondDragThreshold ();
 
   void OnDragWindowAnimCompleted ();
@@ -250,7 +254,6 @@ private:
   void SetActionState (LauncherActionState actionstate);
   LauncherActionState GetActionState(); 
 
-  void EnsureHoverState ();
   void EnsureAnimation    ();
   void EnsureScrollTimer ();
   
@@ -284,8 +287,7 @@ private:
   float IconDropDimValue             (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
-  void SetHover         ();
-  void UnsetHover       ();
+  void SetHover         (bool hovered);
   void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
@@ -325,6 +327,7 @@ private:
                          RenderArg const &arg,
                          int running,
                          int active,
+                         float alpha,
                          nux::Geometry geo);
 
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
@@ -380,13 +383,15 @@ private:
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
+  LauncherIcon* _icon_under_mouse;
+  LauncherIcon* _icon_mouse_down;
+  LauncherIcon* _drag_icon;
 
-  // used by keyboard/a11y-navigation
-  LauncherIcon* _current_icon;
-  LauncherIcon* _last_selected_icon;
   int           _current_icon_index;
   int           _last_icon_index;
 
@@ -411,11 +416,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
-  
-  LauncherIcon* _icon_under_mouse;
-  LauncherIcon* _icon_mouse_down;
-  LauncherIcon* _drag_icon;
+  AutoHideAnimation _autohide_animation;  
 
   int _space_between_icons;
   int _icon_size;
@@ -469,6 +470,7 @@ private:
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
   LauncherHideMachine *_hide_machine;
+  LauncherHoverMachine *_hover_machine;
   CompScreen* _screen;
   
   std::list<char *> _drag_data;
@@ -498,6 +500,30 @@ private:
                                        gpointer               user_data);
   
   struct timespec  _times[TIME_LAST];
+
+  sigc::connection _set_hidden_connection;
+  sigc::connection _set_hover_connection;
+  sigc::connection _recv_quicklist_opened_connection;
+  sigc::connection _recv_quicklist_closed_connection;
+  sigc::connection _on_window_maximized_intellihide_connection;
+  sigc::connection _on_window_restored_intellihide_connection;
+  sigc::connection _on_window_unminimized_intellihide_connection;
+  sigc::connection _on_window_mapped_intellihide_connection;
+  sigc::connection _on_window_unmapped_intellihide_connection;
+  sigc::connection _on_window_shown_intellihide_connection;
+  sigc::connection _on_window_hidden_intellihide_connection;
+  sigc::connection _on_window_resized_intellihide_connection;
+  sigc::connection _on_window_moved_intellihide_connection;
+  sigc::connection _on_window_mapped_connection;
+  sigc::connection _on_window_unmapped_connection;
+  sigc::connection _on_initiate_spread_connection;
+  sigc::connection _on_initiate_expo_connection;
+  sigc::connection _on_terminate_spread_connection;
+  sigc::connection _on_terminate_expo_connection;
+  sigc::connection _on_drag_start_connection;
+  sigc::connection _on_drag_update_connection;
+  sigc::connection _on_drag_finish_connection;
+
 };
 
 #endif // LAUNCHER_H

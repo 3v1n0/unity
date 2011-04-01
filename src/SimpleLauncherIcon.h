@@ -34,6 +34,8 @@ public:
     nux::BaseTexture * GetTextureForSize (int size);
     
     void SetIconName (const char *name);
+    
+    sigc::signal<void> activate;
 
 protected:
     virtual void OnMouseDown (int button);
@@ -43,12 +45,18 @@ protected:
     virtual void OnMouseLeave ();
 
 private:
-    
+
     char *m_IconName;
     nux::BaseTexture *m_Icon;
     void ActivateLauncherIcon ();
     static void OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data);
     guint32 _theme_changed_id;
+
+    sigc::connection _on_mouse_down_connection;
+    sigc::connection _on_mouse_up_connection;
+    sigc::connection _on_mouse_click_connection;
+    sigc::connection _on_mouse_enter_connection;
+    sigc::connection _on_mouse_leave_connection;
 };
 
 #endif // SIMPLELAUNCHERICON_H

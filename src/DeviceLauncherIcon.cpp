@@ -33,11 +33,15 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 
   DevicesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  g_signal_connect (_volume, "removed",
-                    G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
+  _on_removed_handler_id = g_signal_connect (_volume,
+                                             "removed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnRemoved),
+                                             this);
 
-  g_signal_connect (_volume, "changed",
-                    G_CALLBACK (&DeviceLauncherIcon::OnChanged), this);
+  _on_changed_handler_id = g_signal_connect (_volume,
+                                             "changed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnChanged),
+                                             this);
 
   UpdateDeviceIcon ();
 
@@ -47,7 +51,11 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 
 DeviceLauncherIcon::~DeviceLauncherIcon()
 {
+  if (_on_removed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_removed_handler_id);
 
+  if (_on_changed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_changed_handler_id);
 }
 
 void
@@ -297,16 +305,19 @@ DeviceLauncherIcon::OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLaunche
 void
 DeviceLauncherIcon::StopDrive ()
 {
-  GDrive *drive;
+  GDrive          *drive;
+  GMountOperation *mount_op;
 
   drive = g_volume_get_drive (_volume);
+  mount_op = gtk_mount_operation_new (NULL);
   g_drive_stop (drive,
                 (GMountUnmountFlags)0,
-                NULL,
+                mount_op,
                 NULL,
                 (GAsyncReadyCallback)OnStopDriveReady,
                 this);
   g_object_unref (drive);
+  g_object_unref (mount_op);
 }
 
 void

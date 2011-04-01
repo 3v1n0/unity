@@ -162,7 +162,7 @@
                     <_long>Animation played when the launcher is showing or hiding</_long>
                     <min>0</min>
                     <max>3</max>
-                    <default>0</default>
+                    <default>3</default>
                     <desc>
                         <value>0</value>
                         <_name>Fade on bfb and Slide</_name>
