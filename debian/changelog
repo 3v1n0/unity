@@ -103,9 +103,10 @@ unity (3.8.2-0ubuntu1) UNRELEASED; urgency=low
     - debian/control: build-dep on dh-translations
   * debian/control:
     - build-dep on latest nux
-  * debian/patches/01_dont_dep_on_latest_geis_grail.patch:
+  * add debian/patches/01_dont_dep_on_latest_geis_grail.patch:
     - new geis/grail still not in natty. Remove MT support making us depending
       it on it for now
+    - build-dep on quilt
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 01 Apr 2011 08:46:58 +0200
 

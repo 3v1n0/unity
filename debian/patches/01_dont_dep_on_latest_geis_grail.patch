@@ -1,6 +1,6 @@
 === modified file 'src/GeisAdapter.cpp'
---- src/GeisAdapter.cpp	2011-03-30 17:29:51 +0000
-+++ src/GeisAdapter.cpp	2011-04-01 09:15:34 +0000
+--- a/src/GeisAdapter.cpp	2011-03-30 17:29:51 +0000
++++ b/src/GeisAdapter.cpp	2011-04-01 09:15:34 +0000
 @@ -20,6 +20,10 @@
  #include <glib.h>
  #include "GeisAdapter.h"
