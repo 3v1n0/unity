@@ -1,6 +1,103 @@
 unity (3.8.2-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - compiz crashed with SIGSEGV in std::_List_node_base::_M_hook()
+      (LP: #711916)
+    - New window tracking system breaks in the case where windows try to
+      restack relative to destroyed windows that were never mapped
+      (LP: #723014)
+    - does not display icons until hovered (LP: #726033)
+    - Unity Launcher has black spaces where icons should be (LP: #729353)
+    - compiz crashed with SIGSEGV in sigc::internal::signal_emit0<void,
+      sigc::nil>::emit() (LP: #729715)
+    - compiz crashed with SIGSEGV in SimpleLauncherIcon::OnIconThemeChanged()
+      (LP: #741652)
+    - compiz crashed with SIGSEGV in free() (LP: #738864)
+    - compiz crashed with SIGSEGV in g_closure_invoke() (LP: #741674)
+    - compiz crashed with SIGSEGV in free() (LP: #742300)
+    - Unity can't get touch the touch initialization signals from GEIS
+      (LP: #742555)
+    - Windows that reparent away from the root before they are mapped can
+      cause other windows to become invisible (and compiz to crash)
+      (LP: #743011)
+    - compiz crashed with SIGSEGV in gdk_cairo_set_source_pixbuf()
+      (LP: #744231)
+    - [dash] Keyboard navigation not implemented as specified (LP: #608132)
+    - xterms broken in unity (LP: #692463)
+    - Unity opens application menu on Alt+F10 shortcut (LP: #722674)
+    - First four items in Dash begin "Find" "Find" "Find" "Find" (LP: #729002)
+    - Increase the size of the top left Launcher reveal area from 1px to a
+      slightly larger triangle that comes out of the top left corner
+      (LP: #736034)
+    - Add a test case for invisible windows regressions (LP: #736876)
+    - Re-sync with xquerytree to avoid stacking order issues (LP: #740465)
+    - Keyboard navigation: quicklist not opening for Trash launcher item
+      (LP: #741793)
+    - Wrong window moves (LP: #741656)
+    - compiz crashed with SIGSEGV in
+      SimpleLauncherIcon::ActivateLauncherIcon() (LP: #742110)
+    - Combo in the search bar did not disappear after the places was closed
+      (LP: #742712)
+    - Expo doesn't quit reliably when using keynav or shortcut (LP: #744196)
+    - Make the BFB icon turn blue when an application goes urgent
+      (LP: #744973)
+    - Launcher - increase "launcher reveal %"  for 'Fade and slide' launcher
+      reveal transition to 65% (LP: #745602)
+    - Arrows do not fade out with rest of launcher durring DND (LP: #746811)
+    - Don't create windows over the launcher (LP: #688816)
+    - Launcher - Indicate which application is currently focused with a
+      glowing Launcher icon (LP: #676604)
+    - Unity Grid is broken for multi-monitor setups (LP: #709221)
+    - dynamic quicklists are not working (LP: #729074)
+    - When windows open for the first time they should not hide the launcher
+      (LP: #723878)
+    - it is still possible to quit unity from the panel (LP: #733725)
+    - Selection does not fit small icons in Unity Dash (LP: #735746)
+    - Unmounting media gives no error when failed (LP: #737633)
+    - ATI/fglrx workaround patch (LP: #740298)
+    - "Files & Folders" tooltip says "Files &amp; Folders" (LP: #741654)
+    - Time & Date has no application quicklist menuitem title (LP: #741680)
+    - Launcher icon progress-bar too big for a 32px launcher (LP: #741775)
+    - Dash - Starting to drag a file from the Dash closes the Dash as a
+      temporary stop-gap measure (LP: #741926)
+    - compiz crashed with SIGSEGV in IconLoader::ProcessGIconTask()
+      (LP: #742091)
+    - Lenses with no shortcut still display black box when pressing super
+      (LP: #742985)
+    - Wall of desktop move wrong window (LP: #743634)
+    - Whitelist HPLIP's hp-systray for Unity's application indicators
+      (LP: #744308)
+    - libzeitgeist SIGSEGV when reinstalling ZeitgeistMonitors (LP: #742438)
+    - Compiz switcher Alt-Tab order is not predictable - should maintain LIFO
+      ordering in application switcher (LP: #175874)
+    - Add hide and hover machines state debug through dbus (LP: #745586)
+    - the application panel stays up with auto hide after a password dialog
+      (LP: #684590)
+    - Panel - Should have Drop Shadow (LP: #688555)
+    - Wrong item gets dragged out (LP: #729796)
+    - launcher hide a little bit too early if you bring the current window
+      next to it (LP: #741761)
+    - Launcher icons shouldn't hover when tapping press (LP: #744344)
+    - unity appmenu opens when pressing esc while moving a dialog
+      (LP: #745062)
+    - "Unable to show unity-runner:" warnings (LP: #745746)
+    - Several ATK_STATE(s) not properly used on the accessibility framework
+      (LP: #727140)
+    - Window maximise/un-maximise does not return the window to the same
+      position. (LP: #723859)
+    - "Applications" and "Files & Folders" keyboard shortcut overlays not
+      drawn correctly with scalable launcher (LP: #731212)
+    - [natty-alpha3] [LiveCD] compiz crash on boot, unity fails to start,
+      installation impossible (LP: #729597)
+    - [a11y] Regression on the Launcher accessibility support between revno
+      948 and revno 964 (LP: #736790)
+    - can't search in "more applications" section (LP: #737393)
+    - [a11y] panel service crashes with a11y enabled while navigating
+      (LP: #740360)
+    - superkey shortcut labels does not scale properly (LP: #741346)
+    - Keyboard navigation: don't allow right key on workspace switcher
+      (LP: #741772)
+    - LauncherEntryRemote startup race condition (LP: #742695)
   * use dh7 --with translations module: (LP: #745774)
     - debian/rules: remove cruft, add --with translations
     - debian/control: build-dep on dh-translations
