@@ -538,7 +538,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 void 
 PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
 {
-  if (!_grab_show_action)
+  if (!_grab_show_action || !window)
     return;
     
   CompOption::Vector argument;
@@ -558,7 +558,7 @@ PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
 void 
 PluginAdapter::HideGrabHandles (CompWindow *window)
 {
-  if (!_grab_hide_action)
+  if (!_grab_hide_action || !window)
     return;
     
   CompOption::Vector argument;
@@ -576,7 +576,7 @@ PluginAdapter::HideGrabHandles (CompWindow *window)
 void 
 PluginAdapter::ToggleGrabHandles (CompWindow *window)
 {
-  if (!_grab_toggle_action)
+  if (!_grab_toggle_action || !window)
     return;
     
   CompOption::Vector argument;
