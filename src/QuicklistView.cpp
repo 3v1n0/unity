@@ -148,6 +148,10 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
   {
     // up (highlight previous menu-item)
     case NUX_VK_UP:
+      // protect against edge-case of first item being a separator 
+      if (_current_item_index == 1 && IsMenuItemSeperator (0))
+        break;
+
       if (_current_item_index > 0)
       {
         GetNthItems (_current_item_index)->_prelight = false;
@@ -163,6 +167,10 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
 
     // down (highlight next menu-item)
     case NUX_VK_DOWN:
+      // protect against edge-case of last item being a separator 
+      if (_current_item_index == (GetNumItems () - 1) && IsMenuItemSeperator (GetNumItems ()))
+        break;
+
       if (_current_item_index < GetNumItems () - 1)
       {
         GetNthItems (_current_item_index)->_prelight = false;
