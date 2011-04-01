@@ -24,6 +24,8 @@
 #include "unity-util-accessible.h"
 #include "unity-root-accessible.h"
 
+#include "nux-base-window-accessible.h"
+
 static void unity_util_accessible_class_init (UnityUtilAccessibleClass	*klass);
 static void unity_util_accessible_init       (UnityUtilAccessible *unity_util_accessible);
 
@@ -144,12 +146,25 @@ add_listener (GSignalEmissionHook listener,
 	  listener_idx++;
 	}
       else
-        g_debug ("Signal type %s not supported\n", signal_name);
+        {
+          /* Mainly becase some "window::xxx" methods not implemented
+             on NuxBaseWindowAccessible */
+          g_debug ("Signal type %s not supported\n", signal_name);
+        }
     }
   else
     g_warning ("Invalid object type %s\n", object_type);
 
   return rc;
+}
+
+static void
+do_window_event_initialization (void)
+{
+  /*
+   * Ensure that NuxBaseWindowClass exists
+   */
+  g_type_class_unref (g_type_class_ref (NUX_TYPE_BASE_WINDOW_ACCESSIBLE));
 }
 
 static guint
@@ -164,8 +179,16 @@ unity_util_accessible_add_global_event_listener (GSignalEmissionHook listener,
     {
       if (g_str_equal ("window", split_string[0]))
         {
-	  /* FIXME: need to specifically process window: events (create, destroy,
-	     minimize, maximize, restore, activate, deactivate) */
+          /* Using NuxBaseWindow as the toplevelwindow */
+          static gboolean initialized = FALSE;
+
+          if (initialized == FALSE)
+            {
+              do_window_event_initialization ();
+              initialized = TRUE;
+            }
+
+          rc = add_listener (listener, "NuxBaseWindowAccessible", split_string [1], event_type);
 	}
       else
         {
@@ -421,11 +444,15 @@ unity_util_accessible_remove_key_event_listener (guint remove_listener)
 }
 
 /* Public */
-void
+AtkObject *
 unity_util_accessible_add_window (nux::BaseWindow *window)
 {
-  unity_root_accessible_add_window
+  AtkObject *atk_obj = NULL;
+
+  atk_obj = unity_root_accessible_add_window
     (UNITY_ROOT_ACCESSIBLE (unity_util_accessible_get_root ()), window);
+
+  return atk_obj;
 }
 
 void

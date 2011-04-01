@@ -51,7 +51,7 @@
 
 #define BACKLIGHT_STRENGTH  0.9f
 
-#define TRIGGER_SQR_RADIUS 9
+#define TRIGGER_SQR_RADIUS 25
 
 #define MOUSE_DEADZONE 15
 
@@ -60,6 +60,13 @@
 #define S_DBUS_NAME  "com.canonical.Unity.Launcher"
 #define S_DBUS_PATH  "/com/canonical/Unity/Launcher"
 #define S_DBUS_IFACE "com.canonical.Unity.Launcher"
+
+// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
+// be moved to the correct place in NuxGraphics-headers
+#define NUX_KP_DOWN  0xFF99
+#define NUX_KP_UP    0xFF97
+#define NUX_KP_LEFT  0xFF96
+#define NUX_KP_RIGHT 0xFF98
 
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
@@ -278,7 +285,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     m_LastSpreadIcon = NULL;
 
     _current_icon       = NULL;
-    _last_selected_icon = NULL;
     _current_icon_index = -1;
     _last_icon_index    = -1;
 
@@ -318,7 +324,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_action_state  = ACTION_NONE;
     _launch_animation       = LAUNCH_ANIMATION_NONE;
     _urgent_animation       = URGENT_ANIMATION_NONE;
-    _autohide_animation     = FADE_OR_SLIDE;
+    _autohide_animation     = FADE_AND_SLIDE;
     _hidemode               = LAUNCHER_HIDE_NEVER;
     _icon_under_mouse       = NULL;
     _icon_mouse_down        = NULL;
@@ -682,7 +688,9 @@ Launcher::AddProperties (GVariantBuilder *builder)
 {
   struct timespec current;
   clock_gettime (CLOCK_MONOTONIC, &current);
-
+  char* hidequirks_mask = _hide_machine->DebugHideQuirks ();
+  char* hoverquirks_mask = _hover_machine->DebugHoverQuirks ();
+  
   g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
   g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
   g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
@@ -692,7 +700,11 @@ Launcher::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
   g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
   g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "mouse-over-launcher", g_variant_new_boolean (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER)));
+  g_variant_builder_add (builder, "{sv}", "hide-quirks", g_variant_new_string (hidequirks_mask));
+  g_variant_builder_add (builder, "{sv}", "hover-quirks", g_variant_new_string (hoverquirks_mask));
+
+  g_free (hidequirks_mask);
+  g_free (hoverquirks_mask);
 }
 
 void Launcher::SetMousePosition (int x, int y)
@@ -934,7 +946,7 @@ void Launcher::SetTimeStruct (struct timespec *timer, struct timespec *sister, i
 float Launcher::GetAutohidePositionMin ()
 {
     if (_autohide_animation == SLIDE_ONLY || _autohide_animation == FADE_AND_SLIDE)
-        return 0.55f;
+        return 0.35f;
     else
         return 0.25f;
 }
@@ -1503,7 +1515,15 @@ void Launcher::EndKeyShowLauncher ()
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+    }
     
     // hack around issue in nux where leave events dont always come after a grab
     self->SetStateMouseOverBFB (false);
@@ -1512,7 +1532,15 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
 void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
 {
     Launcher *self = (Launcher*)val;
+    LauncherModel::iterator it;
+    
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    
+    // TODO: add in a timeout for seeing the animation (and make it smoother)
+    for (it = self->_model->begin (); it != self->_model->end (); it++)
+    {
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+    }
 }
 
 void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
@@ -2011,6 +2039,21 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
     if (icon->needs_redraw_connection.connected ())
       icon->needs_redraw_connection.disconnect ();
 
+    if (icon == _current_icon)
+      _current_icon = 0;
+    if (icon == m_ActiveTooltipIcon)
+      m_ActiveTooltipIcon = 0;
+    if (icon == m_ActiveMenuIcon)
+      m_ActiveMenuIcon = 0;
+    if (icon == m_LastSpreadIcon)
+      m_LastSpreadIcon = 0;
+    if (icon == _icon_under_mouse)
+      _icon_under_mouse = 0;
+    if (icon == _icon_mouse_down)
+      _icon_mouse_down = 0;
+    if (icon == _drag_icon)
+      _drag_icon = 0;
+
     icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
@@ -2064,6 +2107,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  RenderArg const &arg,
                                  int running,
                                  int active,
+                                 float alpha,
                                  nux::Geometry geo)
 {
   int markerCenter = (int) arg.render_center.y;
@@ -2076,6 +2120,9 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 
     if (arg.running_colored)
       color = nux::Color::SkyBlue;
+      
+    color.SetRGBA (color.R () * alpha, color.G () * alpha,
+                   color.B () * alpha, alpha);
 
     nux::BaseTexture *texture;
 
@@ -2124,6 +2171,8 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::Color::LightGrey;
+    color.SetRGBA (color.R () * alpha, color.G () * alpha,
+                   color.B () * alpha, alpha);
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
                               markerCenter - (_arrow_rtl->GetHeight () / 2),
                               (float) _arrow_rtl->GetWidth(),
@@ -2444,6 +2493,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg,
                     arg.running_arrow ? arg.window_indicators : 0,
                     arg.active_arrow ? 1 : 0,
+                    arg.alpha,
                     geo);
 
   /* draw superkey-shortcut label */ 
@@ -2553,6 +2603,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
+                                                                                                    nux::Color(0x00000000), 
+                                                                                                    nux::Color(0x00000000), 
+                                                                                                    nux::Color(0x60000000));
 
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
@@ -2888,6 +2942,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
   {
     // up (move selection up or go to global-menu if at top-most icon)
     case NUX_VK_UP:
+    case NUX_KP_UP:
       if (_current_icon_index > 0)
       {
         int temp_current_icon_index = _current_icon_index;
@@ -2909,6 +2964,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // down (move selection down and unfold launcher if needed)
     case NUX_VK_DOWN:
+    case NUX_KP_DOWN:
       if (_current_icon_index < _model->Size () - 1)
       {
         int temp_current_icon_index = _current_icon_index;
@@ -2931,6 +2987,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // esc/left (close quicklist or exit laucher key-focus)
     case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
     case NUX_VK_ESCAPE:
       // hide again
       exitKeyNavMode ();
@@ -2941,6 +2998,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (!(key_state & NUX_STATE_SHIFT))
         break;
     case NUX_VK_RIGHT:
+    case NUX_KP_RIGHT:
       // open quicklist of currently selected icon
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)

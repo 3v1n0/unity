@@ -327,6 +327,7 @@ private:
                          RenderArg const &arg,
                          int running,
                          int active,
+                         float alpha,
                          nux::Geometry geo);
 
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
@@ -382,13 +383,15 @@ private:
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
+  LauncherIcon* _icon_under_mouse;
+  LauncherIcon* _icon_mouse_down;
+  LauncherIcon* _drag_icon;
 
-  // used by keyboard/a11y-navigation
-  LauncherIcon* _current_icon;
-  LauncherIcon* _last_selected_icon;
   int           _current_icon_index;
   int           _last_icon_index;
 
@@ -413,11 +416,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
-  
-  LauncherIcon* _icon_under_mouse;
-  LauncherIcon* _icon_mouse_down;
-  LauncherIcon* _drag_icon;
+  AutoHideAnimation _autohide_animation;  
 
   int _space_between_icons;
   int _icon_size;

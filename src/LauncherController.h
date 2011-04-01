@@ -94,13 +94,15 @@ private:
 
     void SetupBamf ();
 
-    void OnExpoClicked (int button);
+    void OnExpoActivated ();
     
     /* statics */
     
     static bool BamfTimerCallback (void *data);
 
     static void OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer data);
+    
+    sigc::connection _on_expoicon_activate_connection;
 };
 
 #endif // LAUNCHERCONTROLLER_H

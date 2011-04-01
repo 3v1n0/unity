@@ -35,7 +35,8 @@ namespace nux
   View (NUX_FILE_LINE_PARAM),
   _fontstring (NULL),
   _cairoGraphics (NULL),
-  _texture2D (NULL)
+  _texture2D (NULL),
+  _lines (-2)
 
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -85,6 +86,14 @@ void
 StaticCairoText::SetTextVerticalAlignment (AlignState state)
 {
   _valign = state;
+  QueueDraw ();
+}
+
+void
+StaticCairoText::SetLines (int lines)
+{
+  _lines = lines;
+  UpdateTexture ();
   QueueDraw ();
 }
 
@@ -325,7 +334,7 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
 
 
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
-  pango_layout_set_height (layout, -2);
+  pango_layout_set_height (layout, _lines);
   pango_layout_set_width (layout, maxwidth * PANGO_SCALE);
 
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
@@ -406,7 +415,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pango_layout_set_width (layout, textWidth * PANGO_SCALE);
-  pango_layout_set_height (layout, -2);
+  pango_layout_set_height (layout, _lines);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
                                         gdk_screen_get_font_options (screen));
