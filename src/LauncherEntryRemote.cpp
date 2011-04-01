@@ -49,6 +49,8 @@ LauncherEntryRemote::LauncherEntryRemote(const gchar *dbus_name, GVariant *val)
   _count_visible = FALSE;
   _progress_visible = FALSE;
 
+  _urgent = FALSE;
+
   g_variant_ref_sink (val);
   g_variant_get (val, "(sa{sv})", &app_uri, &prop_iter);
 

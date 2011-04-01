@@ -1187,10 +1187,20 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
 
     // we dont need to show strays
     if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
+    {
+      if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
+      {
+        arg.running_arrow = true;
+        arg.window_indicators = 1;
+      }
+      else
         arg.window_indicators = 0;
+    }
     else
-        arg.window_indicators = icon->RelatedWindows ();
-
+    {
+      arg.window_indicators = icon->RelatedWindows ();
+    }
+    
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
 
