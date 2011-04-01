@@ -347,7 +347,17 @@ on_name_lost (GDBusConnection *connection,
               const gchar     *name,
               gpointer         user_data)
 {
+  PanelService *service = PANEL_SERVICE (user_data);
+  
   g_debug ("%s", G_STRFUNC);
+  if (service != NULL)
+  {
+    g_signal_handlers_disconnect_by_func (service, on_service_resync, connection);
+    g_signal_handlers_disconnect_by_func (service, on_service_entry_activated, connection);
+    g_signal_handlers_disconnect_by_func (service, on_service_active_menu_pointer_motion, connection);
+    g_signal_handlers_disconnect_by_func (service, on_service_entry_activate_request, connection);
+    g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
+  }
   gtk_main_quit ();
 }
 

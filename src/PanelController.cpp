@@ -25,18 +25,19 @@
 
 PanelController::PanelController ()
 : _bfb_size (66),
-  _opacity (1.0f)
+  _opacity (1.0f),
+  _open_menu_start_received (false)
 {
   UScreen *screen = UScreen::GetDefault ();
 
-  screen->changed.connect (sigc::mem_fun (this, &PanelController::OnScreenChanged));
+  _on_screen_change_connection = screen->changed.connect (sigc::mem_fun (this, &PanelController::OnScreenChanged));
 
   OnScreenChanged (screen->GetPrimaryMonitor (), screen->GetMonitors ());
 }
 
 PanelController::~PanelController ()
 {
-
+  _on_screen_change_connection.disconnect ();
 }
 
 void
@@ -63,12 +64,18 @@ PanelController::StartFirstMenuShow ()
 
     view->StartFirstMenuShow ();
   }
+
+  _open_menu_start_received = true;
 }
 
 void
 PanelController::EndFirstMenuShow ()
 {
   std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  if (!_open_menu_start_received)
+    return;
+  _open_menu_start_received = false;
 
   for (it = _windows.begin (); it != eit; ++it)
   {

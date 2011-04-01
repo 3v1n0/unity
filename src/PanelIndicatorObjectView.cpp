@@ -54,13 +54,16 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   // so redefining the minimum value for them.
   SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
  
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
+  _on_entry_added_connection = _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
+  _on_entry_moved_connection = _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
+  _on_entry_removed_connection = _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
 }
 
 PanelIndicatorObjectView::~PanelIndicatorObjectView ()
 {
+  _on_entry_added_connection.disconnect ();
+  _on_entry_moved_connection.disconnect ();
+  _on_entry_removed_connection.disconnect ();
 }
 
 long

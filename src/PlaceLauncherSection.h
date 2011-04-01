@@ -42,6 +42,7 @@ private:
 
   Launcher     *_launcher;
   PlaceFactory *_factory;
+  sigc::connection _on_place_added_connection;
 };
 
 #endif // _PLACE_LAUNCHER_SECTION_H_

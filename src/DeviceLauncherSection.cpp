@@ -26,20 +26,38 @@ DeviceLauncherSection::DeviceLauncherSection (Launcher *launcher)
   _monitor = g_volume_monitor_get ();
   _ht = g_hash_table_new (g_direct_hash , g_direct_equal);
 
-   g_signal_connect (_monitor, "volume-added",
-                     G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded), this);
+   _on_volume_added_handler_id = g_signal_connect (_monitor,
+                                                   "volume-added",
+                                                   G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded),
+                                                   this);
 
-   g_signal_connect (_monitor, "volume-removed",
-                     G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved), this);
+   _on_volume_removed_handler_id = g_signal_connect (_monitor,
+                                                     "volume-removed",
+                                                     G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved),
+                                                     this);
     
-   g_signal_connect (_monitor, "mount-added",
-                     G_CALLBACK (&DeviceLauncherSection::OnMountAdded), this);
+   _on_mount_added_handler_id = g_signal_connect (_monitor,
+                                                  "mount-added",
+                                                  G_CALLBACK (&DeviceLauncherSection::OnMountAdded),
+                                                  this);
 
    g_idle_add ((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
 
 DeviceLauncherSection::~DeviceLauncherSection ()
 {
+  if (_on_volume_added_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _monitor,
+                                 _on_volume_added_handler_id);
+
+  if (_on_volume_removed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _monitor,
+                                 _on_volume_removed_handler_id);
+
+  if (_on_mount_added_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _monitor,
+                                 _on_mount_added_handler_id);
+
   g_object_unref (_monitor);
   g_hash_table_unref (_ht);
 }

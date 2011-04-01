@@ -15,75 +15,83 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Gordon Allott <gord.allott@canonical.com>
- *              Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
 #include "PlacesSettings.h"
+#include "PlacesSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include "PlacesSimpleTile.h"
+#include "PlacesHorizontalTile.h"
 
+#include <Nux/HLayout.h>
 #include <NuxImage/GdkGraphics.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
-                                    const char *label,
-                                    int         icon_size,
-                                    bool defer_icon_loading,
-                                    const void *id)
+PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
+                                            const char *label,
+                                            const char *comment,
+                                            int         icon_size,
+                                            bool defer_icon_loading,
+                                            const void *id)
 : PlacesTile (NUX_TRACKER_LOCATION, id),
   _label (NULL),
   _icon (NULL),
   _uri (NULL)
 {
-  nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
-
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
+  _comment = g_strdup_printf ("<small>%s</small>", comment);
+
+  int w = (PlacesSettings::GetDefault ()->GetDefaultTileWidth () * 2) - icon_size - 24;//padding
+
+  nux::HLayout *layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
 
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
-  _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
-  _icontex->SinkReference ();
+  _icontex->SetMinMaxSize (icon_size * 1.5, icon_size);
   AddChild (_icontex);
+  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
+
+  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  
+  nux::VLayout *vlayout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  layout->AddView (vlayout, 1, nux::eLeft, nux::eFull);
+
+  vlayout->AddLayout (new nux::SpaceLayout (0, 0, 6, 6));
 
   _cairotext = new nux::StaticCairoText (_label);
-  _cairotext->SinkReference ();
+  _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _cairotext->SetMaximumWidth (w);
+  vlayout->AddView (_cairotext, 0, nux::eLeft, nux::eFull);
 
-  _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
-  _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  _cairotext->SetMaximumWidth (140);
-
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
-
-  SetMinMaxSize (160, 128);
+  _cairotext = new nux::StaticCairoText (_comment);
+  _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _cairotext->SetLines (-3);
+  _cairotext->SetMaximumWidth (w);
+  _cairotext->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.8f));
+  vlayout->AddView (_cairotext, 1, nux::eLeft, nux::eFull);
 
   SetLayout (layout);
-
+  
   SetDndEnabled (true, false);
 }
 
 
-PlacesSimpleTile::~PlacesSimpleTile ()
+PlacesHorizontalTile::~PlacesHorizontalTile ()
 {
-  _icontex->UnReference ();
-  _icontex = NULL;
-  _cairotext->UnReference ();
-  _cairotext = NULL;
-
+  g_free (_comment);
   g_free (_label);
   g_free (_icon);
   g_free (_uri);
 }
 
 void
-PlacesSimpleTile::DndSourceDragBegin ()
+PlacesHorizontalTile::DndSourceDragBegin ()
 {
   Reference ();
   ubus_server_send_message (ubus_server_get_default (),
@@ -91,8 +99,8 @@ PlacesSimpleTile::DndSourceDragBegin ()
                             NULL);
 }
 
-nux::NBitmapData *
-PlacesSimpleTile::DndSourceGetDragImage ()
+nux::NBitmapData * 
+PlacesHorizontalTile::DndSourceGetDragImage ()
 {
   nux::NBitmapData *result = 0;
   GdkPixbuf *pbuf;
@@ -106,10 +114,10 @@ PlacesSimpleTile::DndSourceGetDragImage ()
   
   if (!icon_name)
     icon_name = "application-default-icon";
-  
+   
   theme = gtk_icon_theme_get_default ();
   icon = g_icon_new_for_string (icon_name, NULL);
-  
+
   if (G_IS_ICON (icon))
   {
     info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
@@ -154,7 +162,7 @@ PlacesSimpleTile::DndSourceGetDragImage ()
 }
 
 std::list<const char *> 
-PlacesSimpleTile::DndSourceGetDragTypes ()
+PlacesHorizontalTile::DndSourceGetDragTypes ()
 {
   std::list<const char*> result;
   result.push_back ("text/uri-list");
@@ -162,7 +170,7 @@ PlacesSimpleTile::DndSourceGetDragTypes ()
 }
 
 const char *
-PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *format)
+PlacesHorizontalTile::DndSourceGetDataForType (const char *type, int *size, int *format)
 {
   *format = 8;
 
@@ -179,20 +187,20 @@ PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *for
 }
 
 void
-PlacesSimpleTile::DndSourceDragFinished (nux::DndAction result)
+PlacesHorizontalTile::DndSourceDragFinished (nux::DndAction result)
 {
   UnReference ();
 }
 
 nux::Geometry
-PlacesSimpleTile::GetHighlightGeometry ()
+PlacesHorizontalTile::GetHighlightGeometry ()
 {
   nux::Geometry base = GetGeometry ();
   int width = 0, height = 0;
 
   _icontex->GetTextureSize (&width, &height);
   
-  _highlight_geometry.x = (base.width - width) / 2;
+  _highlight_geometry.x = 12;
   _highlight_geometry.y = 12;
   _highlight_geometry.width = width;
   _highlight_geometry.height = height;
@@ -200,26 +208,8 @@ PlacesSimpleTile::GetHighlightGeometry ()
   return _highlight_geometry;
 }
 
-const char *
-PlacesSimpleTile::GetLabel ()
-{
-  return _label;
-}
-
-const char *
-PlacesSimpleTile::GetIcon ()
-{
-  return _icon;
-}
-
-const char *
-PlacesSimpleTile::GetURI ()
-{
-  return _uri;
-}
-
 void
-PlacesSimpleTile::SetURI (const char *uri)
+PlacesHorizontalTile::SetURI (const char *uri)
 {
   if (_uri)
     g_free (_uri);
@@ -231,19 +221,19 @@ PlacesSimpleTile::SetURI (const char *uri)
 }
 
 const gchar*
-PlacesSimpleTile::GetName ()
+PlacesHorizontalTile::GetName ()
 {
-	return "PlacesTile";
+	return "PlacesHorizontalTile";
 }
 
 const gchar *
-PlacesSimpleTile::GetChildsName ()
+PlacesHorizontalTile::GetChildsName ()
 {
-  return "PlacesTileContents";
+  return "PlacesHorizontalTileContents";
 }
 
 void
-PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
+PlacesHorizontalTile::AddProperties (GVariantBuilder *builder)
 {
   nux::Geometry geo = GetGeometry ();
 
@@ -251,12 +241,4 @@ PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-}
-
-void
-PlacesSimpleTile::LoadIcon ()
-{
-  _icontex->LoadIcon ();
-
-  QueueDraw ();
 }

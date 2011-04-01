@@ -38,6 +38,9 @@ LauncherDragWindow::~LauncherDragWindow ()
 {
   if (_anim_handle)
     g_source_remove (_anim_handle);
+
+  if (on_anim_completed.connected ())
+    on_anim_completed.disconnect ();
 }
 
 bool 

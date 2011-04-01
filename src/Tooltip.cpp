@@ -121,6 +121,8 @@ namespace nux
     SetBaseX (x);
     SetBaseY (y);
 
+    PushToFront ();
+
     ShowWindow (true);
   }
 

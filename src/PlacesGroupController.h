@@ -27,6 +27,12 @@
 #include "PlacesGroup.h"
 #include "PlacesTile.h"
 
+enum PlacesGroupRendererType
+{
+  RENDERER_TYPE_DEFAULT = 0,
+  RENDERER_TYPE_HORI_TILE
+};
+
 class PlacesGroupController : public nux::Object, public Introspectable
 {
 public:
@@ -57,6 +63,7 @@ private:
   void MoreTileClicked (PlacesTile *tile);
 
 private:
+  PlacesGroupRendererType _type;
   PlaceEntry  *_entry;
   PlacesGroup *_group;
   const void  *_id;

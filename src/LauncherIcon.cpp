@@ -40,6 +40,9 @@
 #include "QuicklistMenuItemCheckmark.h"
 #include "QuicklistMenuItemRadio.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #define DEFAULT_ICON "application-default-icon"
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
@@ -80,22 +83,28 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
+  _time_delay_handle = 0;
 
+  // FIXME: the abstraction is already broken, should be fixed for O
+  // right now, hooking the dynamic quicklist the less ugly possible way
   QuicklistManager::Default ()->RegisterQuicklist (_quicklist);
+  _menuclient_dynamic_quicklist = NULL;
   
   // Add to introspection
   AddChild (_quicklist);
   AddChild (_tooltip);
-  
+
   MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
   MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
   MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
-  
+  MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
 }
 
 LauncherIcon::~LauncherIcon()
 {
+  SetQuirk (QUIRK_URGENT, false);
+
   // Remove from introspection
   RemoveChild (_quicklist);
   RemoveChild (_tooltip);
@@ -107,9 +116,23 @@ LauncherIcon::~LauncherIcon()
   if (_center_stabilize_handle)
     g_source_remove (_center_stabilize_handle);
   _center_stabilize_handle = 0;
+  
+  if (_time_delay_handle)
+    g_source_remove (_time_delay_handle);
+  _time_delay_handle = 0;
 
   if (_superkey_label)
     _superkey_label->UnReference ();
+
+  // clean up the whole signal-callback mess
+  if (on_icon_added_connection.connected ())
+    on_icon_added_connection.disconnect ();
+
+  if (on_icon_removed_connection.connected ())
+    on_icon_removed_connection.disconnect ();
+
+  if (on_order_changed_connection.connected ())
+    on_order_changed_connection.disconnect ();
 }
 
 bool
@@ -145,12 +168,18 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     ActivateLauncherIcon ();
 }
 
 void
 LauncherIcon::OpenInstance ()
 {
+    if (PluginAdapter::Default ()->IsScaleActive())
+      PluginAdapter::Default ()->TerminateScale ();
+    
     OpenInstanceLauncherIcon ();
 }
 
@@ -382,14 +411,17 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-void LauncherIcon::OpenQuicklist (bool default_to_first_item)
+gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
 
   std::list<DbusmenuMenuitem *> menus = Menus ();
   if (menus.empty ())
-    return;
+    return false;
+    
+  if (PluginAdapter::Default ()->IsScaleActive())
+    PluginAdapter::Default ()->TerminateScale ();
 
   std::list<DbusmenuMenuitem *>::iterator it;
   for (it = menus.begin (); it != menus.end (); it++)
@@ -428,6 +460,8 @@ void LauncherIcon::OpenQuicklist (bool default_to_first_item)
   int tip_x = geo.x + geo.width + 1;
   int tip_y = geo.y + _center.y;
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
+  
+  return true;
 }
 
 void LauncherIcon::RecvMouseDown (int button)
@@ -443,6 +477,14 @@ void LauncherIcon::RecvMouseUp (int button)
     if (_quicklist->IsVisible ())
       _quicklist->CaptureMouseDownAnyWhereElse (true);
   }
+}
+
+void LauncherIcon::RecvMouseClick (int button)
+{
+  if (button == 1)
+    Activate ();
+  else if (button == 2)
+    OpenInstance ();
 }
 
 void LauncherIcon::HideTooltip ()
@@ -613,9 +655,17 @@ LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
   
   // Present on urgent as a general policy
   if (quirk == QUIRK_VISIBLE && value)
-    Present (0.5f, 1500);
-  if (quirk == QUIRK_URGENT && value)
-    Present (0.5f, 1500);
+    Present (0.0f, 1500);
+  if (quirk == QUIRK_URGENT)
+  {
+    if (value)
+    {
+      Present (0.0f, 1500);
+    }
+    
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_send_message (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean (value));
+  }
 }
 
 gboolean
@@ -627,6 +677,8 @@ LauncherIcon::OnDelayedUpdateTimeout (gpointer data)
   clock_gettime (CLOCK_MONOTONIC, &(self->_quirk_times[arg->quirk]));
   self->needs_redraw.emit (self);
   
+  self->_time_delay_handle = 0;
+  
   return false;
 }
 
@@ -637,7 +689,7 @@ LauncherIcon::UpdateQuirkTimeDelayed (guint ms, LauncherIcon::Quirk quirk)
   arg->self = this;
   arg->quirk = quirk;
   
-  g_timeout_add (ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
+  _time_delay_handle = g_timeout_add (ms, &LauncherIcon::OnDelayedUpdateTimeout, arg);
 }
 
 void
@@ -908,7 +960,7 @@ LauncherIcon::OnRemoteProgressChanged (LauncherEntryRemote *remote)
 void
 LauncherIcon::OnRemoteQuicklistChanged (LauncherEntryRemote *remote)
 {
-  // FIXME
+  _menuclient_dynamic_quicklist = remote->Quicklist ();
 }
 
 void

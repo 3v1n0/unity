@@ -51,11 +51,15 @@ PlacesTile::~PlacesTile ()
   if (_hilight_background)
   {
     _hilight_background->UnReference ();
+    _hilight_background = NULL;
     con_obj.disconnect ();
   }
 
   if (_hilight_layer)
+  {
     delete _hilight_layer;
+    _hilight_layer = NULL;
+  }
 }
 
 const void *
@@ -203,6 +207,7 @@ PlacesTile::UpdateBackground ()
   if (_hilight_background)
   {
     _hilight_background->UnReference ();
+    _hilight_background = NULL;
     con_obj.disconnect ();
   }
 

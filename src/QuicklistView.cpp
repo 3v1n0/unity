@@ -41,6 +41,13 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
+// be moved to the correct place in NuxGraphics-headers
+#define NUX_KP_DOWN  0xFF99
+#define NUX_KP_UP    0xFF97
+#define NUX_KP_LEFT  0xFF96
+#define NUX_KP_RIGHT 0xFF98
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
@@ -125,6 +132,7 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
   {
     // up (highlight previous menu-item)
     case NUX_VK_UP:
+    case NUX_KP_UP:
       if (_current_item_index > 0)
       {
         GetNthItems (_current_item_index)->_prelight = false;
@@ -136,6 +144,7 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
 
     // down (highlight next menu-item)
     case NUX_VK_DOWN:
+    case NUX_KP_DOWN:
       if (_current_item_index < GetNumItems () - 1)
       {
         GetNthItems (_current_item_index)->_prelight = false;
@@ -147,6 +156,7 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
 
     // left (close quicklist, go back to laucher key-nav)
     case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
       _current_item_index = 0;
       GetNthItems (_current_item_index)->_prelight = true;
       Hide ();
