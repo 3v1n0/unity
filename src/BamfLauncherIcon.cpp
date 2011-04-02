@@ -150,6 +150,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
 
