@@ -1624,6 +1624,8 @@ void Launcher::SetHidden (bool hidden)
       ProcessDndLeave ();
 
     EnsureAnimation ();
+    
+    hidden_changed.emit ();
 }
 
 int

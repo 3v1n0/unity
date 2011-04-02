@@ -108,6 +108,8 @@ public:
   LauncherIcon* GetSelectedMenuIcon ();
 
   void SetIconSize(int tile_size, int icon_size);
+  
+  bool Hidden () { return _hidden; }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
@@ -166,6 +168,7 @@ public:
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
+  sigc::signal<void> hidden_changed;
 protected:
   // Introspectable methods
   const gchar* GetName ();
