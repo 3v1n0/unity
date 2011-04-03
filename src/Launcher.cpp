@@ -361,6 +361,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _redraw_handle          = 0;
     _start_dragicon_handle  = 0;
     _focus_keynav_handle    = 0;
+    _dnd_check_handle       = 0;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -428,6 +429,12 @@ Launcher::~Launcher()
       _superkey_labels[i]->UnReference ();
   }
   g_bus_unown_name (_dbus_owner);
+  
+  if (_dnd_check_handle)
+  {
+    g_source_remove (_dnd_check_handle);
+    _dnd_check_handle = 0;
+  }
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -1715,16 +1722,22 @@ Launcher::OnUpdateDragManagerTimeout (gpointer data)
   
   Window drag_owner = XGetSelectionOwner (self->_screen->dpy (), self->_selection_atom);
   
-  if (drag_owner)
+  // evil hack because Qt does not release the seelction owner on drag finished
+  Window root_r, child_r;
+  int root_x_r, root_y_r, win_x_r, win_y_r;
+  unsigned int mask;
+  XQueryPointer (self->_screen->dpy (), self->_screen->root (), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  
+  if (drag_owner && (mask | (Button1Mask & Button2Mask & Button3Mask)))
   {
     self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-  }
-  else
-  {
-    self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-    self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
+    return true;
   }
 
+  self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
+  
+  self->_dnd_check_handle = 0;
   return false;
 }
 
@@ -1734,7 +1747,8 @@ Launcher::OnWindowMapped (guint32 xid)
   CompWindow *window = _screen->findWindow (xid);
   if (window && window->type () | CompWindowTypeDndMask)
   {
-    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
+    if (!_dnd_check_handle)
+      _dnd_check_handle = g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -1744,7 +1758,8 @@ Launcher::OnWindowUnmapped (guint32 xid)
   CompWindow *window = _screen->findWindow (xid);
   if (window && window->type () | CompWindowTypeDndMask)
   {
-    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
+    if (!_dnd_check_handle)
+      _dnd_check_handle = g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 

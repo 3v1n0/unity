@@ -463,6 +463,7 @@ private:
   guint _focus_keynav_handle;
   guint _redraw_handle;
   guint _start_dragicon_handle;
+  guint _dnd_check_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;
