@@ -531,6 +531,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   gchar*                fontName = NULL;
 
   double label_pos = double(_icon_size / 3.0f);
+  double text_size = double(_icon_size / 4.0f);
   double label_x = label_pos;
   double label_y = label_pos;
   double label_w = label_pos;
@@ -548,7 +549,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   layout = pango_cairo_create_layout (cr);
   g_object_get (settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string (fontName);
-  pango_font_description_set_absolute_size (desc, label_pos * PANGO_SCALE);
+  pango_font_description_set_absolute_size (desc, text_size * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
