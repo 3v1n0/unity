@@ -362,6 +362,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _start_dragicon_handle  = 0;
     _focus_keynav_handle    = 0;
     _dnd_check_handle       = 0;
+    _ignore_repeat_shortcut_handle = 0;
+    _latest_shortcut        = 0;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -502,6 +504,9 @@ Launcher::~Launcher()
   
   if (_on_drag_finish_connection.connected ())
     _on_drag_finish_connection.disconnect ();
+    
+  if (_ignore_repeat_shortcut_handle > 0)
+    g_source_remove (_ignore_repeat_shortcut_handle);
 }
 
 /* Introspection */
@@ -2917,6 +2922,18 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
+
+gboolean
+Launcher::ResetRepeatShorcutTimeout (gpointer data)
+{
+  Launcher *self = (Launcher*) data;
+  
+  self->_latest_shortcut = 0;
+  
+  self->_ignore_repeat_shortcut_handle = 0;
+  return false;
+}
+
 gboolean
 Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
@@ -2926,17 +2943,32 @@ Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
     return false;
 
   LauncherModel::iterator it;
-  int i;
   
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+  for (it = _model->begin (); it != _model->end (); it++)
   {
     if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
     {
+      /*
+       * start a timeout while repressing the same shortcut will be ignored.
+       * This is because the keypress repeat is handled by Xorg and we have no
+       * way to know if a press is an actual press or just an automated repetition
+       * because the button is hold down. (key release events are sent in both cases)
+      */
+      if (_ignore_repeat_shortcut_handle > 0)
+        g_source_remove (_ignore_repeat_shortcut_handle);
+      _ignore_repeat_shortcut_handle = g_timeout_add (IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
+      
+      if (_latest_shortcut == (*it)->GetShortcut ())
+        return true;
+      
       if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
         (*it)->OpenInstance ();
       else
         (*it)->Activate ();
+
+      _latest_shortcut = (*it)->GetShortcut ();
+      
       // disable the "tap on super" check
       _times[TIME_TAP_SUPER].tv_sec = 0;
       _times[TIME_TAP_SUPER].tv_nsec = 0;

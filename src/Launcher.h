@@ -44,6 +44,8 @@
 #define SUPER_TAP_DURATION  250
 #define START_DRAGICON_DURATION 500
 
+#define IGNORE_REPEAT_SHORTCUT_DURATION  250
+
 #define MAX_SUPERKEY_LABELS 10
 
 class LauncherModel;
@@ -241,6 +243,7 @@ private:
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   static gboolean StartIconDragTimeout (gpointer data);
+  static gboolean ResetRepeatShorcutTimeout (gpointer data);
 
   void SetMousePosition (int x, int y);
   
@@ -464,6 +467,7 @@ private:
   guint _redraw_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
+  guint _ignore_repeat_shortcut_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;
@@ -483,6 +487,7 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
+  guint64            _latest_shortcut;
   
   Atom              _selection_atom;
 
