@@ -35,6 +35,7 @@
 #include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
+#include "IndicatorObjectEntryProxy.h"
 #include "PanelIndicatorObjectView.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
@@ -389,7 +390,7 @@ PanelView::EndFirstMenuShow ()
     PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
     if (view->_layout == NULL
-        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
+        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))       
       continue;
 
     std::list<Area *>::iterator it2;
@@ -398,6 +399,10 @@ PanelView::EndFirstMenuShow ()
     for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
     {
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+      IndicatorObjectEntryProxy *proxy = entry->_proxy;
+
+      if (proxy != NULL && !proxy->label_sensitive && !proxy->icon_sensitive)
+        continue;
 
       entry->Activate ();
       return;
