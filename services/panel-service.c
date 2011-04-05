@@ -568,12 +568,21 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
   g_free (entry_id);
 }
 
+static const gchar * indicator_environment[] = {
+	"unity",
+	"unity-3d",
+	"unity-panel-service",
+	NULL
+};
+
 static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
   gchar *name;
   GList *entries, *entry;
+
+  indicator_object_set_environment(object, (const GStrv)indicator_environment);
 
   if (_name != NULL)
     name = g_strdup (_name);
