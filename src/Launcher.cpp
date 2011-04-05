@@ -360,6 +360,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     _autoscroll_handle             = 0;
     _super_show_launcher_handle    = 0;
+    _super_show_shortcuts_handle   = 0;
     _start_dragicon_handle         = 0;
     _focus_keynav_handle           = 0;
     _dnd_check_handle              = 0;
@@ -367,6 +368,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     _latest_shortcut        = 0;
     _super_pressed          = false;
+    _shortcuts_shown        = false;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -443,6 +445,8 @@ Launcher::~Launcher()
     g_source_remove (_focus_keynav_handle);
   if (_super_show_launcher_handle)
     g_source_remove (_super_show_launcher_handle);
+  if (_super_show_shortcuts_handle)
+    g_source_remove (_super_show_shortcuts_handle);
   if (_start_dragicon_handle)
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
@@ -1494,19 +1498,9 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 gboolean Launcher::TapOnSuper ()
 {
     struct timespec current;
-    bool tap_on_super;
-    //bool shortcuts_shown = false;
     clock_gettime (CLOCK_MONOTONIC, &current);
         
-    tap_on_super = (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
-
-    /*if (_super_pressed)
-      shortcuts_shown = !tap_on_super;
-
-    _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, shortcuts_shown);*/
-    
-    return tap_on_super;
-    
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);    
 }
 
 /* Launcher Show/Hide logic */
@@ -1521,19 +1515,54 @@ void Launcher::StartKeyShowLauncher ()
     if (_super_show_launcher_handle > 0)
       g_source_remove (_super_show_launcher_handle);
     _super_show_launcher_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::SuperShowLauncherTimeout, this);
+    
+    if (_super_show_shortcuts_handle > 0)
+      g_source_remove (_super_show_shortcuts_handle);
+    _super_show_shortcuts_handle = g_timeout_add (SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
-    
+
     _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
     _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
     _super_pressed = false;
+    _shortcuts_shown = false;
     QueueDraw ();
+    
+    // remove further show launcher (which can happen when we close the dash with super)
+    if (_super_show_launcher_handle > 0)
+      g_source_remove (_super_show_launcher_handle);
+    if (_super_show_shortcuts_handle > 0)
+      g_source_remove (_super_show_shortcuts_handle);
 
     // it's a tap on super and we didn't use any shortcuts
     if (TapOnSuper () && !_latest_shortcut)
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
+}
+
+
+gboolean Launcher::SuperShowLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, true);
+    
+    self->_super_show_launcher_handle = 0;
+    return false;    
+}
+
+gboolean Launcher::SuperShowShortcutsTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_shortcuts_shown = true;
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
+
+    self->QueueDraw ();
+    
+    self->_super_show_shortcuts_handle = 0;
+    return false;    
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
@@ -1662,17 +1691,6 @@ int
 Launcher::GetMouseY ()
 {
   return _mouse_position.y;
-}
-
-gboolean Launcher::SuperShowLauncherTimeout (gpointer data)
-{
-    Launcher *self = (Launcher*) data;
-    
-    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, true);
-    //self->QueueDraw ();
-    
-    self->_super_show_launcher_handle = 0;
-    return false;    
 }
 
 bool
@@ -2535,7 +2553,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW) && false/*!TapOnSuper ()*/)
+  if (_shortcuts_shown)
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
