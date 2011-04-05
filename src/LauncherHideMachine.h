@@ -78,13 +78,16 @@ class LauncherHideMachine : public sigc::trackable
     void SetShouldHide (bool value, bool skip_delay);
 
     static gboolean OnHideDelayTimeout (gpointer data);
+    static gboolean EmitShouldHideChanged (gpointer data);
   
     bool      _should_hide;
+    bool      _latest_emit_should_hide;
     HideQuirk _quirks;
     HideMode  _mode;
     unsigned int _hide_delay_timeout_length;
     
     guint _hide_delay_handle;
+    guint _hide_changed_emit_handle;
 };
 
 #endif

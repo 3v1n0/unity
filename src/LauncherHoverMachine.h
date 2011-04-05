@@ -56,7 +56,7 @@ class LauncherHoverMachine : public sigc::trackable
     static gboolean EmitShouldHoverChanged (gpointer data);
   
     bool       _should_hover;
-    bool       _pending_should_hover;
+    bool       _latest_emit_should_hover;
     HoverQuirk _quirks;
     
     guint _hover_changed_emit_handle;

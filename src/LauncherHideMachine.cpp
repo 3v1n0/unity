@@ -25,6 +25,9 @@ LauncherHideMachine::LauncherHideMachine ()
   _quirks = DEFAULT;
   _should_hide = false;
   
+  _latest_emit_should_hide = false; // avoid building a struct in the callback
+  _hide_changed_emit_handle = 0;
+  
   _hide_delay_handle = 0;
   _hide_delay_timeout_length = 750;
 }
@@ -35,6 +38,11 @@ LauncherHideMachine::~LauncherHideMachine ()
   {
     g_source_remove (_hide_delay_handle);
     _hide_delay_handle = 0;
+  }
+  if (_hide_changed_emit_handle)
+  {
+    g_source_remove (_hide_changed_emit_handle);
+    _hide_changed_emit_handle = 0;
   }
 }
 
@@ -54,7 +62,10 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
   else
   {
     _should_hide = value;
-    should_hide_changed.emit (value);
+    
+    if (_hide_changed_emit_handle)
+      g_source_remove (_hide_changed_emit_handle);
+    _hide_changed_emit_handle = g_timeout_add (0, &EmitShouldHideChanged, this);  
   }
 }
 
@@ -204,6 +215,21 @@ LauncherHideMachine::OnHideDelayTimeout (gpointer data)
   self->EnsureHideState (true);
   
   self->_hide_delay_handle = 0;
+  return false;
+}
+
+gboolean
+LauncherHideMachine::EmitShouldHideChanged (gpointer data)
+{
+  LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
+
+  self->_hide_changed_emit_handle = 0;  
+  if (self->_should_hide == self->_latest_emit_should_hide)
+    return false;
+    
+  self->_latest_emit_should_hide = self->_should_hide;
+  self->should_hide_changed.emit (self->_should_hide);
+  
   return false;
 }
 
