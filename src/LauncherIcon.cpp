@@ -71,6 +71,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _mouse_inside = false;
   _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
+  _tooltip->SinkReference ();
   _icon_type = TYPE_NONE;
   _sort_priority = 0;
   _shortcut = 0;
@@ -79,6 +80,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _superkey_label = 0;
 
   _quicklist = new QuicklistView ();
+  _quicklist->SinkReference ();
   _quicklist_is_initialized = false;
   
   _present_time_handle = 0;
@@ -133,6 +135,9 @@ LauncherIcon::~LauncherIcon()
 
   if (on_order_changed_connection.connected ())
     on_order_changed_connection.disconnect ();
+
+  _quicklist->UnReference ();
+  _tooltip->UnReference ();
 }
 
 bool
