@@ -433,10 +433,17 @@ Launcher::~Launcher()
   g_bus_unown_name (_dbus_owner);
   
   if (_dnd_check_handle)
-  {
     g_source_remove (_dnd_check_handle);
-    _dnd_check_handle = 0;
-  }
+  if (_autoscroll_handle)
+    g_source_remove (_autoscroll_handle);
+  if (_focus_keynav_handle)
+    g_source_remove (_focus_keynav_handle);
+  if (_redraw_handle)
+    g_source_remove (_redraw_handle);
+  if (_start_dragicon_handle)
+    g_source_remove (_start_dragicon_handle);
+  if (_ignore_repeat_shortcut_handle)
+    g_source_remove (_ignore_repeat_shortcut_handle);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -505,8 +512,6 @@ Launcher::~Launcher()
   if (_on_drag_finish_connection.connected ())
     _on_drag_finish_connection.disconnect ();
     
-  if (_ignore_repeat_shortcut_handle > 0)
-    g_source_remove (_ignore_repeat_shortcut_handle);
 }
 
 /* Introspection */
@@ -658,6 +663,7 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
                              NULL);
 
    self->selection_change.emit ();
+   self->_focus_keynav_handle = 0;
 
    return false;
 }
@@ -1658,6 +1664,7 @@ gboolean Launcher::DrawLauncherTimeout (gpointer data)
     Launcher *self = (Launcher*) data;
     
     self->QueueDraw ();
+    self->_redraw_handle = 0;
     return false;    
 }
 
@@ -1981,6 +1988,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
   
   self->EnsureAnimation ();
+  self->_autoscroll_handle = 0;
   
   return TRUE;
 }
@@ -2688,6 +2696,7 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
     // if we are still waiting…
     if (self->GetActionState () == ACTION_NONE)
       self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
+    self->_start_dragicon_handle = 0;
     return false;    
 }
 
