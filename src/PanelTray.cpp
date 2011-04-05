@@ -24,9 +24,7 @@
 PanelTray::PanelTray ()
 : _n_children (0),
   _last_x (0),
-  _last_y (0),
-  _idle_add_sync_handler (0),
-  _idle_remove_sync_handler (0)
+  _last_y (0)
 {
   _settings = g_settings_new (SETTINGS_NAME);
   _whitelist = g_settings_get_strv (_settings, "systray-whitelist");
@@ -66,10 +64,7 @@ PanelTray::~PanelTray ()
 {
   if (_tray_expose_id)
     g_signal_handler_disconnect (_window, _tray_expose_id);
-  if (_idle_remove_sync_handler)
-    g_source_remove (_idle_remove_sync_handler);
-  if (_idle_add_sync_handler)
-    g_source_remove (_idle_add_sync_handler);
+  g_idle_remove_by_data (this);
   
   g_strfreev (_whitelist);
   g_object_unref (_settings);
@@ -145,7 +140,7 @@ PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
       na_tray_child_set_composited (icon, TRUE);
 
     self->_n_children++;
-    self->_idle_add_sync_handler = g_idle_add ((GSourceFunc)IdleSync, self);
+    g_idle_add ((GSourceFunc)IdleSync, self);
   }
 
   g_debug ("TrayChild %s: %s %s %s",
@@ -164,7 +159,7 @@ PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
 void
 PanelTray::OnTrayIconRemoved (NaTrayManager *manager, NaTrayChild *child, PanelTray *self)
 {
-  self->_idle_remove_sync_handler = g_idle_add ((GSourceFunc)IdleSync, self);
+  g_idle_add ((GSourceFunc)IdleSync, self);
   self->_n_children--;
 }
 

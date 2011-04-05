@@ -42,7 +42,11 @@
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
+#define SHORTCUTS_SHOWN_DELAY  750
 #define START_DRAGICON_DURATION 500
+#define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
+
+#define IGNORE_REPEAT_SHORTCUT_DURATION  250
 
 #define MAX_SUPERKEY_LABELS 10
 
@@ -197,6 +201,7 @@ private:
     TIME_DRAG_EDGE_TOUCH,
     TIME_DRAG_OUT,
     TIME_TAP_SUPER,
+    TIME_SUPER_PRESSED,
     
     TIME_LAST
   } LauncherActionTimes;
@@ -237,10 +242,13 @@ private:
   void OnPluginStateChanged ();
   
   static gboolean AnimationTimeout (gpointer data);
-  static gboolean DrawLauncherTimeout (gpointer data);
+  static gboolean SuperShowLauncherTimeout (gpointer data);
+  static gboolean SuperHideLauncherTimeout (gpointer data);
+  static gboolean SuperShowShortcutsTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   static gboolean StartIconDragTimeout (gpointer data);
+  static gboolean ResetRepeatShorcutTimeout (gpointer data);
 
   void SetMousePosition (int x, int y);
   
@@ -406,6 +414,10 @@ private:
   bool  _render_drag_window;
   bool  _check_window_over_launcher;
   
+  bool          _shortcuts_shown;  
+  bool          _super_pressed;
+  guint64       _latest_shortcut;
+    
   BacklightMode _backlight_mode;
 
   float _folded_angle;
@@ -461,9 +473,12 @@ private:
 
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
-  guint _redraw_handle;
+  guint _super_show_launcher_handle;
+  guint _super_hide_launcher_handle;
+  guint _super_show_shortcuts_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
+  guint _ignore_repeat_shortcut_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;

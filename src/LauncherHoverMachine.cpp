@@ -23,7 +23,7 @@ LauncherHoverMachine::LauncherHoverMachine ()
 {
   _quirks = DEFAULT;
   _should_hover = false;
-  _pending_should_hover = false; // avoid building a struct in the callback
+  _latest_emit_should_hover = false;
   _hover_changed_emit_handle = 0;
   
 }
@@ -42,7 +42,7 @@ LauncherHoverMachine::~LauncherHoverMachine ()
     LAUNCHER_HIDDEN        = 1 << 0, 1
     MOUSE_OVER_LAUNCHER    = 1 << 1, 2
     MOUSE_OVER_BFB         = 1 << 2, 4
-    SHOTCUT_KEYS_VISIBLE   = 1 << 3, 8
+    SHORTCUT_KEYS_VISIBLE  = 1 << 3, 8
     QUICKLIST_OPEN         = 1 << 4, 16
     KEY_NAV_ACTIVE         = 1 << 5, 32
     LAUNCHER_IN_ACTION     = 1 << 6, 64
@@ -60,7 +60,7 @@ LauncherHoverMachine::EnsureHoverState ()
   }
     
   if (GetQuirk ((HoverQuirk) (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB |
-                              SHOTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
+                              SHORTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
                               QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
     should_hover = true;
   else
@@ -72,11 +72,11 @@ LauncherHoverMachine::EnsureHoverState ()
 
 void
 LauncherHoverMachine::SetShouldHover (bool value)
-{
+{  
+  _should_hover = value;
+  
   if (_hover_changed_emit_handle)
     g_source_remove (_hover_changed_emit_handle);
-  
-  _pending_should_hover = value;
   _hover_changed_emit_handle = g_timeout_add (0, &EmitShouldHoverChanged, this);  
 }
 
@@ -84,14 +84,14 @@ gboolean
 LauncherHoverMachine::EmitShouldHoverChanged (gpointer data)
 {
   LauncherHoverMachine *self = static_cast<LauncherHoverMachine *> (data);
-  
-  if (self->_should_hover == self->_pending_should_hover)
+
+  self->_hover_changed_emit_handle = 0;  
+  if (self->_should_hover == self->_latest_emit_should_hover)
     return false;
-    
-  self->_should_hover = self->_pending_should_hover;
-  self->_hover_changed_emit_handle = 0;
   
+  self->_latest_emit_should_hover = self->_should_hover;
   self->should_hover_changed.emit (self->_should_hover);
+
   return false;
 }
 
