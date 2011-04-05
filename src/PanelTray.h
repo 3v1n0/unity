@@ -71,7 +71,5 @@ private:
   int        _last_y;
   
   gulong  _tray_expose_id;
-  guint   _idle_add_sync_handler;
-  guint   _idle_remove_sync_handler;
 };
 #endif
