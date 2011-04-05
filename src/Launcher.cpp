@@ -2694,8 +2694,15 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
     Launcher *self = (Launcher*) data;
     
     // if we are still waiting…
-    if (self->GetActionState () == ACTION_NONE)
+    if (self->GetActionState () == ACTION_NONE) {
+      if (self->_icon_under_mouse)
+      {
+      self->_icon_under_mouse->MouseLeave.emit ();
+      self->_icon_under_mouse->_mouse_inside = false;
+      self->_icon_under_mouse = 0;
+      } 
       self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
+    }
     self->_start_dragicon_handle = 0;
     return false;    
 }
@@ -2711,6 +2718,7 @@ void Launcher::StartIconDragRequest (int x, int y)
     StartIconDrag (drag_icon);
     SetActionState (ACTION_DRAG_ICON);
     UpdateDragWindowPosition (x, y);
+    EnsureAnimation ();
   } 
 }
 
