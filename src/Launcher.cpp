@@ -1520,8 +1520,8 @@ void Launcher::EndKeyShowLauncher ()
     _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, false);
     QueueDraw ();
 
-    // it's a tap on super
-    if (TapOnSuper ())
+    // it's a tap on super and we didn't use any shortcuts
+    if (TapOnSuper () && !_latest_shortcut)
       ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
 }
 

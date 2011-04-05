@@ -487,7 +487,7 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
-  guint64            _latest_shortcut;
+  guint64           _latest_shortcut;
   
   Atom              _selection_atom;
 
