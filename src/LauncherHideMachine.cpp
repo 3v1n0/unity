@@ -171,7 +171,7 @@ LauncherHideMachine::GetMode ()
 }
 
 #define SKIP_DELAY_QUIRK (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | ACTIVE_WINDOW_UNDER | \
-ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT)
+ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT | TRIGGER_BUTTON_SHOW)
 
 void
 LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active)

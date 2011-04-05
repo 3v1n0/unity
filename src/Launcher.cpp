@@ -360,6 +360,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     _autoscroll_handle             = 0;
     _super_show_launcher_handle    = 0;
+    _super_hide_launcher_handle    = 0;
     _super_show_shortcuts_handle   = 0;
     _start_dragicon_handle         = 0;
     _focus_keynav_handle           = 0;
@@ -451,6 +452,10 @@ Launcher::~Launcher()
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
     g_source_remove (_ignore_repeat_shortcut_handle);
+  if (_super_show_launcher_handle)
+    g_source_remove (_super_show_launcher_handle);
+  if (_super_hide_launcher_handle)
+    g_source_remove (_super_hide_launcher_handle);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -1510,7 +1515,8 @@ void Launcher::StartKeyShowLauncher ()
     _super_pressed = true;
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
     
-    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
+    SetTimeStruct (&_times[TIME_TAP_SUPER]);
+    SetTimeStruct (&_times[TIME_SUPER_PRESSED]);
     
     if (_super_show_launcher_handle > 0)
       g_source_remove (_super_show_launcher_handle);
@@ -1523,8 +1529,10 @@ void Launcher::StartKeyShowLauncher ()
 
 void Launcher::EndKeyShowLauncher ()
 {
-
-    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
+    int remaining_time_before_hide;
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
+ 
     _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
     _super_pressed = false;
     _shortcuts_shown = false;
@@ -1538,9 +1546,24 @@ void Launcher::EndKeyShowLauncher ()
 
     // it's a tap on super and we didn't use any shortcuts
     if (TapOnSuper () && !_latest_shortcut)
-      ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
+      ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+      
+    remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP ((int) (TimeDelta (&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
+    
+    if (_super_hide_launcher_handle > 0)
+      g_source_remove (_super_hide_launcher_handle);
+    _super_hide_launcher_handle = g_timeout_add (remaining_time_before_hide, &Launcher::SuperHideLauncherTimeout, this);
 }
 
+gboolean Launcher::SuperHideLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
+    
+    self->_super_hide_launcher_handle = 0;
+    return false;    
+}
 
 gboolean Launcher::SuperShowLauncherTimeout (gpointer data)
 {

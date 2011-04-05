@@ -44,6 +44,7 @@
 #define SUPER_TAP_DURATION  250
 #define SHORTCUTS_SHOWN_DELAY  750
 #define START_DRAGICON_DURATION 500
+#define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
 
 #define IGNORE_REPEAT_SHORTCUT_DURATION  250
 
@@ -200,6 +201,7 @@ private:
     TIME_DRAG_EDGE_TOUCH,
     TIME_DRAG_OUT,
     TIME_TAP_SUPER,
+    TIME_SUPER_PRESSED,
     
     TIME_LAST
   } LauncherActionTimes;
@@ -241,6 +243,7 @@ private:
   
   static gboolean AnimationTimeout (gpointer data);
   static gboolean SuperShowLauncherTimeout (gpointer data);
+  static gboolean SuperHideLauncherTimeout (gpointer data);
   static gboolean SuperShowShortcutsTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
@@ -471,6 +474,7 @@ private:
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _super_show_launcher_handle;
+  guint _super_hide_launcher_handle;
   guint _super_show_shortcuts_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
