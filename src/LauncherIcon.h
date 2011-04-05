@@ -230,6 +230,7 @@ protected:
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
 
+    DbusmenuClient *_menuclient_dynamic_quicklist;
 
     friend class Launcher;
     friend class LauncherController;
@@ -258,6 +259,7 @@ private:
     float            _progress;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
+    guint            _time_delay_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
     

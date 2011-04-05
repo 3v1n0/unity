@@ -140,6 +140,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/PlacesStyle.h
                           ../src/PlacesTile.cpp
                           ../src/PlacesTile.h
+                          ../src/PlacesHorizontalTile.cpp
+                          ../src/PlacesHorizontalTile.h
                           ../src/PlacesSimpleTile.cpp
                           ../src/PlacesSimpleTile.h
                           ../src/TextureCache.h

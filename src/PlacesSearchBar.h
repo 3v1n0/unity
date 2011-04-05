@@ -60,6 +60,11 @@ public:
   sigc::signal<void, const char *> search_changed;
   sigc::signal<void> activated;
 
+  nux::TextEntry* GetTextEntry ()
+  {
+    return _pango_entry;
+  }
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
@@ -79,6 +84,7 @@ private:
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
   static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
+  static void OnPlacesClosed (GVariant *variant, PlacesSearchBar *self); 
 
 private:
   nux::AbstractPaintLayer *_bg_layer;

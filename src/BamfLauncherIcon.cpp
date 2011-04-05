@@ -111,6 +111,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   _remote_uri = 0;
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
+  _launcher = IconManager;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
@@ -142,6 +143,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   UpdateMenus ();
 
   _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  _hidden_changed_connection = (sigc::connection) IconManager->hidden_changed.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   /* hack */
   SetProgress (0.0f);
@@ -150,6 +152,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
 
@@ -158,6 +161,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_on_window_minimized_connection.connected ())
     _on_window_minimized_connection.disconnect ();
+  
+  if (_hidden_changed_connection.connected ())
+    _hidden_changed_connection.disconnect ();
 
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
@@ -171,6 +177,12 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   g_free (_cached_desktop_file);
   g_free (_cached_name);
+}
+
+void
+BamfLauncherIcon::OnLauncherHiddenChanged ()
+{
+  UpdateIconGeometries (GetCenter ());
 }
 
 void
@@ -589,6 +601,10 @@ BamfLauncherIcon::UpdateMenus ()
   }
 
   g_list_free (children);
+  
+  // add dynamic quicklist
+  if (_menuclient_dynamic_quicklist != NULL)
+    _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
 
   // make a client for desktop file actions
   if (!DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts) &&
@@ -790,7 +806,10 @@ BamfLauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *> result;
   bool first_separator_needed = false;
   DbusmenuMenuitem* item = NULL;
-
+  
+  // FIXME for O: hack around the wrong abstraction
+  UpdateMenus ();
+  
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
     GList * child = NULL;
@@ -810,6 +829,7 @@ BamfLauncherIcon::GetMenus ()
     }
   }
 
+  // FIXME: this should totally be added as a _menu_client
   if (DBUSMENU_IS_MENUITEM (_menu_desktop_shortcuts))
   {
     GList * child = NULL;
@@ -899,10 +919,16 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  //data[0] = center.x - 24;
-  //data[1] = center.y - 24;
-  data[0] = 0;
-  data[1] = 0;
+  if (_launcher->Hidden ())
+  {
+    data[0] = 0;
+    data[1] = 0;
+  }
+  else
+  {
+    data[0] = center.x - 24;
+    data[1] = center.y - 24;
+  }
   data[2] = 48;
   data[3] = 48;
 

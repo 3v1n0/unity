@@ -84,6 +84,7 @@ SimpleLauncherIcon::OnMouseLeave ()
 void
 SimpleLauncherIcon::ActivateLauncherIcon ()
 {
+  activate.emit ();
 }
 
 nux::BaseTexture *
@@ -94,6 +95,7 @@ SimpleLauncherIcon::GetTextureForSize (int size)
     
   if (m_Icon)
     m_Icon->UnReference ();
+  m_Icon = 0;
   
   if (!m_IconName)
     return 0;
@@ -139,6 +141,6 @@ SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
   {
     self->m_Icon->UnReference ();
     self->m_Icon = 0;
+    self->needs_redraw.emit (self);
   }
-  self->needs_redraw.emit (self);
 }

@@ -23,11 +23,13 @@
 
 #include "PlacesStyle.h"
 #include "PlacesSimpleTile.h"
+#include "PlacesHorizontalTile.h"
 
 static const guint kPadding = 4;
 
 PlacesGroupController::PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup& group)
-: _entry (entry),
+: _type (RENDERER_TYPE_DEFAULT),
+  _entry (entry),
   _group (NULL),
   _check_tiles_id (0)
 {
@@ -39,16 +41,22 @@ PlacesGroupController::PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup
   _group->SetName(group.GetName ());
   _group->SetIcon (group.GetIcon ());
 
+  if (g_strcmp0 (group.GetRenderer (), "UnityHorizontalTileRenderer") == 0)
+    _type = RENDERER_TYPE_HORI_TILE;
+  
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   layout->ForceChildrenSize (true);
-  layout->SetChildrenSize (style->GetTileWidth (), style->GetTileHeight ());
   layout->EnablePartialVisibility (false);
-
   layout->SetVerticalExternalMargin (kPadding);
   layout->SetHorizontalExternalMargin (kPadding);
   layout->SetVerticalInternalMargin (kPadding);
   layout->SetHorizontalInternalMargin (kPadding);
   layout->SetHeightMatchContent (true);
+
+  if (_type == RENDERER_TYPE_HORI_TILE)
+    layout->SetChildrenSize (style->GetTileWidth () * 2, style->GetTileIconSize () + 24); //padding
+  else
+    layout->SetChildrenSize (style->GetTileWidth (), style->GetTileHeight ());
 
   _group->SetChildLayout (layout);
   _group->SetVisible (false);
@@ -57,11 +65,19 @@ PlacesGroupController::PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup
   _group->expanded.connect (sigc::mem_fun (this, &PlacesGroupController::CheckTiles));
   style->columns_changed.connect (sigc::mem_fun (this, &PlacesGroupController::CheckTiles));
 
-  _more_tile = new PlacesSimpleTile ("gtk-add",
-                                     _("Load more results..."),
-                                     style->GetTileIconSize (),
-                                     false,
-                                     "more-tile");
+  if (_type == RENDERER_TYPE_HORI_TILE)
+    _more_tile = new PlacesHorizontalTile ("gtk-add",
+                                           _("Load more results..."),
+                                           "",
+                                           style->GetTileIconSize (),
+                                           false,
+                                           "more-tile");
+  else
+    _more_tile = new PlacesSimpleTile ("gtk-add",
+                                       _("Load more results..."),
+                                       style->GetTileIconSize (),
+                                       false,
+                                       "more-tile");
   _more_tile->Reference ();
   _more_tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::MoreTileClicked));
 }
@@ -95,17 +111,32 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
 
   gchar            *result_name;
   const gchar      *result_icon;
-  PlacesSimpleTile *tile;
+  gchar            *result_comment;
+  PlacesTile       *tile;
 
   result_name = g_markup_escape_text (result.GetName (), -1);
+  result_comment = g_markup_escape_text (result.GetComment (), -1);
   result_icon = result.GetIcon ();
 
-  tile = new PlacesSimpleTile (result_icon,
-                               result_name,
-                               style->GetTileIconSize (),
-                               false,
-                               result.GetId ());
-  tile->SetURI (result.GetURI ());
+  if (_type == RENDERER_TYPE_HORI_TILE)
+  {
+    tile = new PlacesHorizontalTile (result_icon,
+                                     result_name,
+                                     result_comment,
+                                     style->GetTileIconSize (),
+                                     false,
+                                     result.GetId ());
+    static_cast<PlacesHorizontalTile *> (tile)->SetURI (result.GetURI ());
+  }
+  else
+  {
+    tile = new PlacesSimpleTile (result_icon,
+                                 result_name,
+                                 style->GetTileIconSize (),
+                                 false,
+                                 result.GetId ());
+    static_cast<PlacesSimpleTile *> (tile)->SetURI (result.GetURI ());
+  }
   tile->QueueRelayout ();
   tile->sigClick.connect (sigc::mem_fun (this, &PlacesGroupController::TileClicked));
 
@@ -116,6 +147,7 @@ PlacesGroupController::AddTile (PlaceEntry       *ignore,
   _group->SetVisible (true);
 
   g_free (result_name);
+  g_free (result_comment);
 }
 
 void

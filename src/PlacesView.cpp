@@ -184,6 +184,14 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   return ret;
 }
 
+static gboolean
+OnQueueDrawDrawDraw (PlacesView *self)
+{
+  self->QueueDraw ();
+
+  return FALSE;
+}
+
 void
 PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
@@ -237,6 +245,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.Push2DWindow (GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
       GfxContext.ApplyClippingRectangle ();
     }
+
+    g_timeout_add (0, (GSourceFunc)OnQueueDrawDrawDraw, this);
   }
 
   if (_bg_blur_texture.IsValid ()  && paint_blur)
@@ -652,7 +662,7 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
     return;
   }
 
-  if (g_str_has_prefix (uri, "application://"))
+  if (g_str_has_prefix (uri, "application://") or g_str_has_prefix (uri, "unity-runner://"))
   {
     char            *id = g_strdup (&uri[14]);
     GDesktopAppInfo *info;

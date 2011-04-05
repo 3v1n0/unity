@@ -108,6 +108,8 @@ public:
   LauncherIcon* GetSelectedMenuIcon ();
 
   void SetIconSize(int tile_size, int icon_size);
+  
+  bool Hidden () { return _hidden; }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
@@ -166,6 +168,7 @@ public:
   sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
   sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
+  sigc::signal<void> hidden_changed;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -327,6 +330,7 @@ private:
                          RenderArg const &arg,
                          int running,
                          int active,
+                         float alpha,
                          nux::Geometry geo);
 
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
@@ -382,13 +386,15 @@ private:
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
+  LauncherIcon* _icon_under_mouse;
+  LauncherIcon* _icon_mouse_down;
+  LauncherIcon* _drag_icon;
 
-  // used by keyboard/a11y-navigation
-  LauncherIcon* _current_icon;
-  LauncherIcon* _last_selected_icon;
   int           _current_icon_index;
   int           _last_icon_index;
 
@@ -413,11 +419,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
-  
-  LauncherIcon* _icon_under_mouse;
-  LauncherIcon* _icon_mouse_down;
-  LauncherIcon* _drag_icon;
+  AutoHideAnimation _autohide_animation;  
 
   int _space_between_icons;
   int _icon_size;
@@ -461,6 +463,7 @@ private:
   guint _focus_keynav_handle;
   guint _redraw_handle;
   guint _start_dragicon_handle;
+  guint _dnd_check_handle;
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;

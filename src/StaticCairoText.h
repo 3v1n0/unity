@@ -86,6 +86,7 @@ namespace nux
       void SetTextAlignment (AlignState state);
       void SetTextVerticalAlignment (AlignState state);
       void SetFont (const char *fontstring);
+      void SetLines (int lines);
 
       void GetTextExtents (int &width, int &height);
 
@@ -110,6 +111,8 @@ namespace nux
 
       int            _pre_layout_width;
       int            _pre_layout_height;
+
+      int            _lines;
 
       void GetTextExtents (const TCHAR* font,
                            int&         width,
