@@ -692,12 +692,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
 
   if (sticky)
   {
-    bamf_view_set_sticky (view, false);
-    if (bamf_view_is_closed (view))
-      self->Remove ();
-
-    if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+    self->UnStick ();
   }
   else
   {
