@@ -341,11 +341,14 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
   g_return_if_fail (desktop_path);
   g_return_if_fail (desktop_path[0] == '/');
 
-  n_total_favs = g_slist_length (m_favorites) - 1;
+  n_total_favs = g_slist_length (m_favorites);
   
   char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
+  
+  for (i = 0; i < n_total_favs + 1; i++)
+    favs[i] = NULL;
 
+  i = 0;
   for (f = m_favorites; f; f = f->next)
     {
       if (g_strcmp0 ((char *)f->data, desktop_path) != 0)
@@ -358,7 +361,7 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
           found = true;
         }
     }
-
+    
   if (!found)
     {
       g_warning ("Unable to remove favorite '%s': Does not exist in favorites",

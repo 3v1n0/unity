@@ -123,6 +123,9 @@ void PlacesController::Show ()
 {
   if (_visible)
     return;
+    
+  if (PluginAdapter::Default ()->IsExpoActive () || PluginAdapter::Default ()->IsScaleActive ())
+    return;
   
   if (PluginAdapter::Default ()->IsScreenGrabbed ())
   {

@@ -50,6 +50,8 @@ protected:
 
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
+    
+    void OnLauncherHiddenChanged ();
 
     void AddProperties (GVariantBuilder *builder);
     
@@ -67,6 +69,7 @@ protected:
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
+    Launcher *_launcher;
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
     std::map<std::string, gulong> _menu_callbacks;
@@ -75,6 +78,7 @@ private:
     bool _dnd_hovered;
     guint _dnd_hover_timer;
     sigc::connection _on_window_minimized_connection;
+    sigc::connection _hidden_changed_connection;
 
     void EnsureWindowState ();
 

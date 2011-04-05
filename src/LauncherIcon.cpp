@@ -914,6 +914,8 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
     
   if (remote->ProgressVisible ())
     OnRemoteProgressVisibleChanged (remote);
+  
+  OnRemoteQuicklistChanged (remote);
 }
 
 void 

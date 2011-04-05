@@ -109,6 +109,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   _remote_uri = 0;
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
+  _launcher = IconManager;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
@@ -140,6 +141,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   UpdateMenus ();
 
   _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  _hidden_changed_connection = (sigc::connection) IconManager->hidden_changed.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   /* hack */
   SetProgress (0.0f);
@@ -148,6 +150,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
 
@@ -156,6 +159,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_on_window_minimized_connection.connected ())
     _on_window_minimized_connection.disconnect ();
+  
+  if (_hidden_changed_connection.connected ())
+    _hidden_changed_connection.disconnect ();
 
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
@@ -166,6 +172,12 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref (m_App);
+}
+
+void
+BamfLauncherIcon::OnLauncherHiddenChanged ()
+{
+  UpdateIconGeometries (GetCenter ());
 }
 
 void
@@ -680,12 +692,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
 
   if (sticky)
   {
-    bamf_view_set_sticky (view, false);
-    if (bamf_view_is_closed (view))
-      self->Remove ();
-
-    if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+    self->UnStick ();
   }
   else
   {
@@ -874,10 +881,16 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  //data[0] = center.x - 24;
-  //data[1] = center.y - 24;
-  data[0] = 0;
-  data[1] = 0;
+  if (_launcher->Hidden ())
+  {
+    data[0] = 0;
+    data[1] = 0;
+  }
+  else
+  {
+    data[0] = center.x - 24;
+    data[1] = center.y - 24;
+  }
   data[2] = 48;
   data[3] = 48;
 
