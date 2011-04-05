@@ -23,7 +23,7 @@ LauncherHoverMachine::LauncherHoverMachine ()
 {
   _quirks = DEFAULT;
   _should_hover = false;
-  _latest_emit_should_hover = false; // avoid building a struct in the callback
+  _latest_emit_should_hover = false;
   _hover_changed_emit_handle = 0;
   
 }
@@ -42,7 +42,7 @@ LauncherHoverMachine::~LauncherHoverMachine ()
     LAUNCHER_HIDDEN        = 1 << 0, 1
     MOUSE_OVER_LAUNCHER    = 1 << 1, 2
     MOUSE_OVER_BFB         = 1 << 2, 4
-    SHOTCUT_KEYS_VISIBLE   = 1 << 3, 8
+    SHORTCUT_KEYS_VISIBLE  = 1 << 3, 8
     QUICKLIST_OPEN         = 1 << 4, 16
     KEY_NAV_ACTIVE         = 1 << 5, 32
     LAUNCHER_IN_ACTION     = 1 << 6, 64
@@ -60,7 +60,7 @@ LauncherHoverMachine::EnsureHoverState ()
   }
     
   if (GetQuirk ((HoverQuirk) (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB |
-                              SHOTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
+                              SHORTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
                               QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
     should_hover = true;
   else

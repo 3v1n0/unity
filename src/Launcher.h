@@ -239,7 +239,7 @@ private:
   void OnPluginStateChanged ();
   
   static gboolean AnimationTimeout (gpointer data);
-  static gboolean DrawLauncherTimeout (gpointer data);
+  static gboolean SuperShowLauncherTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
   static gboolean StartIconDragTimeout (gpointer data);
@@ -464,7 +464,7 @@ private:
 
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
-  guint _redraw_handle;
+  guint _super_show_launcher_handle;
   guint _start_dragicon_handle;
   guint _dnd_check_handle;
   guint _ignore_repeat_shortcut_handle;
@@ -487,6 +487,8 @@ private:
   bool              _steal_drag;
   bool              _drag_edge_touching;
   LauncherIcon     *_dnd_hovered_icon;
+  
+  bool              _super_pressed;
   guint64           _latest_shortcut;
   
   Atom              _selection_atom;

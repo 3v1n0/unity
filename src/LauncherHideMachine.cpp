@@ -25,7 +25,7 @@ LauncherHideMachine::LauncherHideMachine ()
   _quirks = DEFAULT;
   _should_hide = false;
   
-  _latest_emit_should_hide = false; // avoid building a struct in the callback
+  _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
   
   _hide_delay_handle = 0;
@@ -77,7 +77,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
     QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
     EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
     INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
-    TRIGGER_BUTTON_DOWN    = 1 << 7, 128 #VISIBLE_REQUIRED
+    TRIGGER_BUTTON_SHOW    = 1 << 7, 128 #VISIBLE_REQUIRED
     ANY_WINDOW_UNDER       = 1 << 8, 256
     ACTIVE_WINDOW_UNDER    = 1 << 9, 512
     DND_PUSHED_OFF         = 1 << 10, 1024
@@ -92,7 +92,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
-INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_DOWN | VERTICAL_SLIDE_ACTIVE |\
+INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_SHOW | VERTICAL_SLIDE_ACTIVE |\
 KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
 MT_DRAG_OUT)
 

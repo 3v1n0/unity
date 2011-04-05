@@ -357,13 +357,16 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_drag_delta    = 0;
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
-    _autoscroll_handle      = 0;
-    _redraw_handle          = 0;
-    _start_dragicon_handle  = 0;
-    _focus_keynav_handle    = 0;
-    _dnd_check_handle       = 0;
+
+    _autoscroll_handle             = 0;
+    _super_show_launcher_handle    = 0;
+    _start_dragicon_handle         = 0;
+    _focus_keynav_handle           = 0;
+    _dnd_check_handle              = 0;
     _ignore_repeat_shortcut_handle = 0;
+
     _latest_shortcut        = 0;
+    _super_pressed          = false;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -438,8 +441,8 @@ Launcher::~Launcher()
     g_source_remove (_autoscroll_handle);
   if (_focus_keynav_handle)
     g_source_remove (_focus_keynav_handle);
-  if (_redraw_handle)
-    g_source_remove (_redraw_handle);
+  if (_super_show_launcher_handle)
+    g_source_remove (_super_show_launcher_handle);
   if (_start_dragicon_handle)
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
@@ -1492,15 +1495,15 @@ gboolean Launcher::TapOnSuper ()
 {
     struct timespec current;
     bool tap_on_super;
-    bool shortcuts_shown = false;
+    //bool shortcuts_shown = false;
     clock_gettime (CLOCK_MONOTONIC, &current);
         
     tap_on_super = (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
 
-    if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
+    /*if (_super_pressed)
       shortcuts_shown = !tap_on_super;
 
-    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, shortcuts_shown);
+    _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, shortcuts_shown);*/
     
     return tap_on_super;
     
@@ -1510,20 +1513,22 @@ gboolean Launcher::TapOnSuper ()
 
 void Launcher::StartKeyShowLauncher ()
 {
-    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
+    _super_pressed = true;
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-    QueueDraw ();
+    
     SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
-    if (_redraw_handle > 0)
-      g_source_remove (_redraw_handle);
-    _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
+    
+    if (_super_show_launcher_handle > 0)
+      g_source_remove (_super_show_launcher_handle);
+    _super_show_launcher_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::SuperShowLauncherTimeout, this);
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
     
-    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
-    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, false);
+    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
+    _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
+    _super_pressed = false;
     QueueDraw ();
 
     // it's a tap on super and we didn't use any shortcuts
@@ -1659,12 +1664,14 @@ Launcher::GetMouseY ()
   return _mouse_position.y;
 }
 
-gboolean Launcher::DrawLauncherTimeout (gpointer data)
+gboolean Launcher::SuperShowLauncherTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
     
-    self->QueueDraw ();
-    self->_redraw_handle = 0;
+    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, true);
+    //self->QueueDraw ();
+    
+    self->_super_show_launcher_handle = 0;
     return false;    
 }
 
@@ -2528,7 +2535,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) && !TapOnSuper ())
+  if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW) && false/*!TapOnSuper ()*/)
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2957,7 +2964,7 @@ Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
                                      unsigned long key_code,
                                      unsigned long key_state)
 {
-  if (!_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
+  if (!_super_pressed)
     return false;
 
   LauncherModel::iterator it;

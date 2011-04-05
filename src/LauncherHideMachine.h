@@ -44,7 +44,7 @@ class LauncherHideMachine : public sigc::trackable
       QUICKLIST_OPEN         = 1 << 4, 
       EXTERNAL_DND_ACTIVE    = 1 << 5, 
       INTERNAL_DND_ACTIVE    = 1 << 6, 
-      TRIGGER_BUTTON_DOWN    = 1 << 7, 
+      TRIGGER_BUTTON_SHOW    = 1 << 7, 
       ANY_WINDOW_UNDER       = 1 << 8, 
       ACTIVE_WINDOW_UNDER    = 1 << 9,
       DND_PUSHED_OFF         = 1 << 10,
