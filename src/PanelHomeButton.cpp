@@ -56,7 +56,7 @@ PanelHomeButton::PanelHomeButton ()
                                             G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
+  _urgent_interest = ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
                                  (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
                                  this);
 
@@ -67,6 +67,8 @@ PanelHomeButton::~PanelHomeButton ()
 {
   if (_theme_changed_id)
     g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
+
+  ubus_server_unregister_interest (ubus_server_get_default (), _urgent_interest);
 }
 
 void 
