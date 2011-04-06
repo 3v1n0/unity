@@ -3001,9 +3001,10 @@ Launcher::ResetRepeatShorcutTimeout (gpointer data)
 }
 
 gboolean
-Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
+Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
                                      unsigned long key_code,
-                                     unsigned long key_state)
+                                     unsigned long key_state,
+                                     char*         key_string)
 {
   if (!_super_pressed)
     return false;
@@ -3013,8 +3014,9 @@ Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (it = _model->begin (); it != _model->end (); it++)
   {
-    if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-    {
+    if ((XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code) ||
+        ((gchar)((*it)->GetShortcut ()) == key_string[0]))
+    {      
       /*
        * start a timeout while repressing the same shortcut will be ignored.
        * This is because the keypress repeat is handled by Xorg and we have no
