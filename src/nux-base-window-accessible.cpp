@@ -47,15 +47,15 @@ static void nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass 
 static void nux_base_window_accessible_init       (NuxBaseWindowAccessible *base_window_accessible);
 
 /* AtkObject.h */
-static void       nux_base_window_accessible_initialize     (AtkObject *accessible,
-                                                             gpointer   data);
-static AtkObject *nux_base_window_accessible_get_parent     (AtkObject *obj);
+static void       nux_base_window_accessible_initialize      (AtkObject *accessible,
+                                                              gpointer   data);
+static AtkObject *nux_base_window_accessible_get_parent      (AtkObject *obj);
 static AtkStateSet *nux_base_window_accessible_ref_state_set (AtkObject *obj);
 
 /* private */
-static void       on_focus_event_cb                         (AtkObject *object,
-                                                             gboolean in,
-                                                             gpointer data);
+static void         on_change_focus_cb                        (AtkObject *accessible,
+                                                               gboolean focus_in);
+
 
 G_DEFINE_TYPE (NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
@@ -150,12 +150,21 @@ static void
 nux_base_window_accessible_initialize (AtkObject *accessible,
                                        gpointer data)
 {
+  nux::Object *nux_object = NULL;
+  nux::BaseWindow *bwindow = NULL;
+
   ATK_OBJECT_CLASS (nux_base_window_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_WINDOW;
 
-  g_signal_connect (accessible, "focus-event",
-                    G_CALLBACK (on_focus_event_cb), NULL);
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  bwindow = dynamic_cast<nux::BaseWindow *>(nux_object);
+
+  /* This gives us if the window has the underlying key input */
+  bwindow->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_change_focus_cb),
+                                             accessible, TRUE));
+  bwindow->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_change_focus_cb),
+                                           accessible, FALSE));
 }
 
 static AtkObject*
@@ -194,14 +203,13 @@ nux_base_window_accessible_ref_state_set (AtkObject *obj)
 
 /* private */
 static void
-on_focus_event_cb (AtkObject *object,
-                   gboolean focus_in,
-                   gpointer data)
+on_change_focus_cb (AtkObject *object,
+                    gboolean focus_in)
 {
   NuxBaseWindowAccessible *self = NULL;
 
   /* On the base window, we suppose that the window is active if it
-     has the focus*/
+     has the key focus (see nux::InputArea) */
   self = NUX_BASE_WINDOW_ACCESSIBLE (object);
 
   if (self->priv->active != focus_in)

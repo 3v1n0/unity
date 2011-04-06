@@ -540,6 +540,7 @@ Launcher::startKeyNavMode ()
   GrabKeyboard ();
   GrabPointer ();
   EnsureHoverState ();
+  SetFocused (true);
   
   // FIXME: long term solution is to rewrite the keynav handle
   if (_focus_keynav_handle > 0)
@@ -595,6 +596,7 @@ Launcher::exitKeyNavMode ()
   UnGrabKeyboard ();
   UnGrabPointer ();
   _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
+  SetFocused (false);
 
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;

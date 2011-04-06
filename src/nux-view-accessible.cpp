@@ -38,9 +38,8 @@ static void nux_view_accessible_class_init (NuxViewAccessibleClass *klass);
 static void nux_view_accessible_init       (NuxViewAccessible *view_accessible);
 
 /* AtkObject.h */
-static void       nux_view_accessible_initialize     (AtkObject *accessible,
-                                                      gpointer   data);
-
+static void         nux_view_accessible_initialize          (AtkObject *accessible,
+                                                             gpointer   data);
 static AtkStateSet* nux_view_accessible_ref_state_set       (AtkObject *obj);
 static gint         nux_view_accessible_get_n_children      (AtkObject *obj);
 static AtkObject*   nux_view_accessible_ref_child           (AtkObject *obj,
@@ -64,8 +63,8 @@ G_DEFINE_TYPE (NuxViewAccessible,
 
 struct _NuxViewAccessiblePrivate
 {
-  /* Cached values (used to avoid extra notifications) */
-  gboolean focused;
+  /* focused using InputArea OnStartFocus and OnEndFocus signals */
+  gboolean key_focused;
 };
 
 
@@ -127,8 +126,9 @@ nux_view_accessible_initialize (AtkObject *accessible,
   view->LayoutRemoved.connect (sigc::bind (sigc::ptr_fun (on_layout_changed_cb),
                                            accessible, FALSE));
 
-  /* Some extra focus things as Focusable is not used on Launcher and
-     some BaseWindow */
+  /* Focusable is not used on BaseWindow and Launcher, so we need to
+     take that into account here.*/
+
   view->OnStartFocus.connect (sigc::bind (sigc::ptr_fun (on_start_focus_cb),
                                           accessible));
   view->OnEndFocus.connect (sigc::bind (sigc::ptr_fun (on_end_focus_cb),
@@ -141,8 +141,10 @@ nux_view_accessible_ref_state_set (AtkObject *obj)
   AtkStateSet *state_set = NULL;
   nux::Object *nux_object = NULL;
   nux::View *view = NULL;
+  NuxViewAccessible *self = NULL;
 
   g_return_val_if_fail (NUX_IS_VIEW_ACCESSIBLE (obj), NULL);
+  self = NUX_VIEW_ACCESSIBLE (obj);
 
   state_set = ATK_OBJECT_CLASS (nux_view_accessible_parent_class)->ref_state_set (obj);
 
@@ -153,9 +155,9 @@ nux_view_accessible_ref_state_set (AtkObject *obj)
 
   view = dynamic_cast<nux::View *>(nux_object);
 
-  /* required for some basic object as the BaseWindow containing the
-     Launcher */
-  if (view->HasKeyboardFocus ())
+  /* HasKeyboardFocus is not a reliable here:
+     see bug https://bugs.launchpad.net/nux/+bug/745049 */
+  if (self->priv->key_focused)
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
   return state_set;
@@ -246,9 +248,12 @@ static void
 check_focus (NuxViewAccessible *self,
              gboolean focus_in)
 {
-  if (self->priv->focused != focus_in)
+
+ FIXME: investigate to make check_focus virtual, and change key_focused with the on_start_cb methods, and using a "pending_notification" boolean
+
+  if (self->priv->key_focused != focus_in)
     {
-      self->priv->focused = focus_in;
+      self->priv->key_focused = focus_in;
 
       g_signal_emit_by_name (self, "focus-event", focus_in);
       atk_focus_tracker_notify (ATK_OBJECT (self));
