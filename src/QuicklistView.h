@@ -139,7 +139,9 @@ private:
   
   //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
   void CheckAndEmitItemSignal (int x, int y);
-  
+
+  bool IsMenuItemSeperator (int index);
+
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
   int                   _anchorY;
