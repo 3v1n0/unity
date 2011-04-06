@@ -65,8 +65,8 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 
   _related_windows = 0;
 
-  _background_color = nux::Color::White;
-  _glow_color = nux::Color::White;
+  _background_color = nux::Colors::White;
+  _glow_color = nux::Colors::White;
   
   _mouse_inside = false;
   _has_visible_window = false;

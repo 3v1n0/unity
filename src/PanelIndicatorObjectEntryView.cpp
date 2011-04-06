@@ -295,7 +295,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,
-                                                            nux::Color::White,
+                                                            nux::Colors::White,
                                                             true,
                                                             rop);
   SetPaintLayer (texture_layer);
