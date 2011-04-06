@@ -42,10 +42,12 @@ public:
   /* Callbacks, not interesting to others */
   void OnDirectoryEnumerationReady (GObject      *source,
                                     GAsyncResult *result);
-
+private:
+  static bool DoSortThemMister (Place *a, Place *b);
+ 
 public:
   /* For Debugging */
-  bool read_directory;  
+  bool read_directory;
 
 private:
   char  *_directory;
