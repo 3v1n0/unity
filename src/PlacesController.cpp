@@ -162,8 +162,6 @@ void PlacesController::Hide ()
   _visible = false;
   _fullscren_request = false;
 
-  _view->SetActiveEntry (NULL, 0, "");
-
   StartShowHideTimeline ();
   
   ubus_server_send_message (ubus_server_get_default (),  UBUS_PLACE_VIEW_HIDDEN, NULL);
@@ -218,8 +216,12 @@ PlacesController::OnViewShowHideFrame (PlacesController *self)
     // Make sure the state is right
     self->_window->SetOpacity (self->_visible ? 1.0f : 0.0f);
     if (!self->_visible)
+    {
       self->_window->ShowWindow (false, false);
-
+      //reset the active entry
+      self->_view->SetActiveEntry (NULL, 0, "");
+    }
+    
     return FALSE;
   }
   return TRUE;

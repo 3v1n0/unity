@@ -104,6 +104,8 @@ BamfLauncherIcon::ActivateLauncherIcon ()
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {
+  _cached_desktop_file = NULL;
+  _cached_name = NULL;
   m_App = app;
   m_Screen = screen;
   _remote_uri = 0;
@@ -113,7 +115,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
-  SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
+  SetTooltipText (BamfName ());
   SetIconName (icon_name);
   SetIconType (TYPE_APPLICATION);
 
@@ -172,6 +174,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref (m_App);
+
+  g_free (_cached_desktop_file);
+  g_free (_cached_name);
 }
 
 void
@@ -199,7 +204,35 @@ BamfLauncherIcon::IsSticky ()
 const char*
 BamfLauncherIcon::DesktopFile ()
 {
-  return bamf_application_get_desktop_file (m_App);
+  char *filename = NULL;
+  filename = (char*) bamf_application_get_desktop_file (m_App);
+
+  if (filename != NULL)
+  {
+    if (_cached_desktop_file != NULL)
+      g_free (_cached_desktop_file);
+    
+    _cached_desktop_file = g_strdup (filename);
+  }
+  
+  return _cached_desktop_file;
+}
+
+const char*
+BamfLauncherIcon::BamfName ()
+{
+  char *name = NULL;
+  name = (char *)bamf_view_get_name (BAMF_VIEW (m_App));
+
+  if (name != NULL)
+  {
+    if (_cached_name != NULL)
+      g_free (_cached_name);
+
+    _cached_name = g_strdup (name);
+  }
+
+  return _cached_name;
 }
 
 void
@@ -820,7 +853,7 @@ BamfLauncherIcon::GetMenus ()
   }
 
   gchar *app_name;
-  app_name = g_markup_escape_text (bamf_view_get_name (BAMF_VIEW (m_App)), -1);
+  app_name = g_markup_escape_text (BamfName (), -1);
 
   item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (item,
