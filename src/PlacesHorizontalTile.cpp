@@ -47,16 +47,17 @@ PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
   _comment = g_strdup_printf ("<small>%s</small>", comment);
 
   int w = (PlacesSettings::GetDefault ()->GetDefaultTileWidth () * 2) - icon_size - 24;//padding
+  int lines = 0;
 
   nux::HLayout *layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddLayout (new nux::SpaceLayout (6, 6, 0, 0));
 
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
-  _icontex->SetMinMaxSize (icon_size * 1.5, icon_size);
+  _icontex->SetMinMaxSize (icon_size, icon_size);
   AddChild (_icontex);
-  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
+  layout->AddView (_icontex, 0, nux::eLeft, nux::eFix);
 
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
+  layout->AddLayout (new nux::SpaceLayout (6, 6, 0, 0));
   
   nux::VLayout *vlayout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   layout->AddView (vlayout, 1, nux::eLeft, nux::eFull);
@@ -66,12 +67,14 @@ PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
   _cairotext = new nux::StaticCairoText (_label);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _cairotext->SetMaximumWidth (w);
+  _cairotext->SetLines (-2);
   vlayout->AddView (_cairotext, 0, nux::eLeft, nux::eFull);
+  lines = _cairotext->GetLineCount ();
 
   _cairotext = new nux::StaticCairoText (_comment);
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _cairotext->SetLines (-3);
+  _cairotext->SetLines (-1 * (4 - lines));
   _cairotext->SetMaximumWidth (w);
   _cairotext->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.8f));
   vlayout->AddView (_cairotext, 1, nux::eLeft, nux::eFull);
@@ -197,13 +200,12 @@ PlacesHorizontalTile::GetHighlightGeometry ()
 {
   nux::Geometry base = GetGeometry ();
   int width = 0, height = 0;
-
   _icontex->GetTextureSize (&width, &height);
-  
-  _highlight_geometry.x = 12;
-  _highlight_geometry.y = 12;
-  _highlight_geometry.width = width;
-  _highlight_geometry.height = height;
+
+  _highlight_geometry.x = 6;
+  _highlight_geometry.y = 6;
+  _highlight_geometry.width = _icontex->GetMaximumWidth ();
+  _highlight_geometry.height = base.height - 12;
 
   return _highlight_geometry;
 }

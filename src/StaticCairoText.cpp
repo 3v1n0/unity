@@ -36,7 +36,8 @@ namespace nux
   _fontstring (NULL),
   _cairoGraphics (NULL),
   _texture2D (NULL),
-  _lines (-2)
+  _lines (-2),
+  _actual_lines (0)
 
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -260,6 +261,11 @@ StaticCairoText::SetFont (const char *fontstring)
   sigFontChanged.emit (this);
 }
 
+int 
+StaticCairoText::GetLineCount ()
+{
+  return _actual_lines;
+}
 
 void StaticCairoText::GetTextExtents (int &width, int &height)
 {
@@ -446,6 +452,8 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   cairo_move_to (cr, 0.0f, 0.0f);
   pango_cairo_show_layout (cr, layout);
+
+  _actual_lines = pango_layout_get_line_count (layout);
 
   // clean up
   pango_font_description_free (desc);
