@@ -77,7 +77,7 @@ G_DEFINE_TYPE_WITH_CODE (NuxAreaAccessible,
 
 struct _NuxAreaAccessiblePrivate
 {
-  /* Cached values (used to avoid extra notifications) */
+  /* focused as Focusable events */
   gboolean focused;
 
   /* Top level parent window, it is not required to be the direct
@@ -393,24 +393,28 @@ check_parent_window_active (NuxAreaAccessible *self)
 
   active = atk_state_set_contains_state (state_set, ATK_STATE_ACTIVE);
 
-  g_debug ("[a11y][area] check_parent_window_active %i", active);
-
   g_object_unref (state_set);
 
   return active;
 }
 
 static void
-check_focus_change (nux::Area *area,
-                    AtkObject *accessible)
+check_focus_change (AtkObject *accessible)
 {
   gboolean focus_in = FALSE;
   NuxAreaAccessible *self = NULL;
   gboolean is_parent_window_active = FALSE;
+  nux::Area *area = NULL;
+  nux::Object *nux_object = NULL;
 
   g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (accessible));
-
   self = NUX_AREA_ACCESSIBLE (accessible);
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  if (nux_object == NULL) /* defunct */
+    return;
+
+  area = dynamic_cast<nux::Area *>(nux_object);
 
   if (area->GetFocused ())
     focus_in = TRUE;
@@ -438,7 +442,7 @@ static void
 on_focus_changed_cb (nux::Area *area,
                      AtkObject *accessible)
 {
-  check_focus_change (area, accessible);
+  check_focus_change (accessible);
 }
 
 static AtkObject *
@@ -456,18 +460,19 @@ search_for_parent_window (AtkObject *object)
   return parent;
 }
 
+// static gboolean
+// check_focus_change_on_idle (gpointer data)
+// {
+//   check_focus_change (ATK_OBJECT (data));
+
+//   return FALSE;
+// }
+
 static void
 on_parent_window_activate_cb (AtkObject *parent_window,
                               NuxAreaAccessible *self)
 {
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
-
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
-  if (nux_object == NULL) /* defunct */
-    return;
-
-  area = dynamic_cast<nux::Area *>(nux_object);
-
-  check_focus_change (area, ATK_OBJECT (self));
+  // g_idle_add (check_focus_change_on_idle,
+  //             self);
+  check_focus_change (ATK_OBJECT (self));
 }
