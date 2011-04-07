@@ -77,7 +77,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _search_ready->GetHeight (),
                          _search_ready->GetDeviceTexture (),
                          texxform,
-                         nux::Color::White);
+                         nux::Colors::White);
   }
   else if (_state == STATE_SEARCHING)
   {
@@ -98,7 +98,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          clear_geo.height,
                          _clear_spinner->GetDeviceTexture (),
                          texxform,
-                         nux::Color::White);
+                         nux::Colors::White);
 
     GfxContext.PopModelViewMatrix ();
     GfxContext.PopModelViewMatrix ();
@@ -110,7 +110,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _clear_alone->GetHeight (),
                          _clear_alone->GetDeviceTexture (),
                          texxform,
-                         nux::Color::White);
+                         nux::Colors::White);
   }
   else
   {
@@ -120,7 +120,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _clear_full->GetHeight (),
                          _clear_full->GetDeviceTexture (),
                          texxform,
-                         nux::Color::White);
+                         nux::Colors::White);
   }
 
   GfxContext.PopClippingRectangle ();

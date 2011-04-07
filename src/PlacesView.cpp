@@ -232,7 +232,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
     nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Color::White, 1.0f, 2);
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Colors::White, 1.0f, 2);
 
     if (current_fbo.IsValid ())
     { 
@@ -266,7 +266,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                    _bg_blur_texture,
                                    texxform_blur__bg,
-                                   nux::Color::White,
+                                   nux::Colors::White,
                                    true,
                                    rop);
   
@@ -300,7 +300,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            corner->GetHeight (),
                            corner->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Fullscreen toggle
@@ -310,7 +310,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            icon->GetHeight (),
                            icon->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Bottom repeated texture
@@ -326,7 +326,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            bottom->GetHeight (),
                            bottom->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Right repeated texture
@@ -342,7 +342,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            real_height + offset,
                            right->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
   }
   else
@@ -385,7 +385,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
-                               nux::Color::White,
+                               nux::Colors::White,
                                true,
                                rop);
     bgs++;
