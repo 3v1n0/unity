@@ -1376,7 +1376,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         sum += height;
 
         // magic constant must some day be explained, for now suffice to say this constant prevents the bottom from "marching";
-        float magic_constant = 1.2f;
+        float magic_constant = 1.3f;
 
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
