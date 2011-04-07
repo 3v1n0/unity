@@ -61,6 +61,8 @@ PanelHomeButton::PanelHomeButton ()
                                  this);
 
   Refresh ();
+  
+  SetDndEnabled (false, true);
 }
 
 PanelHomeButton::~PanelHomeButton ()
@@ -276,4 +278,27 @@ PanelHomeButton::OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data)
   PanelHomeButton* self = (PanelHomeButton*) data;
 
   self->Refresh ();
+}
+
+void 
+PanelHomeButton::ProcessDndEnter ()
+{
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER, NULL);
+}
+
+void 
+PanelHomeButton::ProcessDndLeave ()
+{
+}
+
+void 
+PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
+{
+  SendDndStatus (false, nux::DNDACTION_NONE, GetAbsoluteGeometry ());
+}
+
+void 
+PanelHomeButton::ProcessDndDrop (int x, int y)
+{
 }

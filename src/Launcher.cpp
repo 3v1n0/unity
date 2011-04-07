@@ -419,6 +419,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
     ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
                                    (UBusCallback)&Launcher::OnActionDone,
                                    this);
+                                   
+    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                   (UBusCallback)&Launcher::OnBFBDndEnter,
+                                   this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -1622,6 +1626,12 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     {
       (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
     }
+}
+
+void Launcher::OnBFBDndEnter (GVariant *data, gpointer user_data)
+{
+  Launcher *self = static_cast<Launcher *> (user_data);
+  self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
 }
 
 void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
