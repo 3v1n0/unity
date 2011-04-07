@@ -381,6 +381,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_out_id            = 0;
     _drag_out_delta_x       = 0.0f;
     
+    // FIXME: remove
+    _initial_drag_animation = false;
+    
     _check_window_over_launcher   = true;
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
@@ -1322,7 +1325,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     
     icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y), roundf (center.z)));
     
-    if (icon == _drag_icon && _drag_window && _drag_window->Animating ())
+    // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
+    // we should ideally just need it at start to set the target
+    if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating ())
       _drag_window->SetAnimationTarget ((int) center.x, (int) center.y + _parent->GetGeometry ().y);
     
     center.y += (half_size * size_modifier) + spacing;   // move to end
@@ -2748,7 +2753,8 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
       self->_icon_under_mouse->MouseLeave.emit ();
       self->_icon_under_mouse->_mouse_inside = false;
       self->_icon_under_mouse = 0;
-      } 
+      }
+      self->_initial_drag_animation = true;
       self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
     }
     self->_start_dragicon_handle = 0;
@@ -2765,7 +2771,11 @@ void Launcher::StartIconDragRequest (int x, int y)
   {
     StartIconDrag (drag_icon);
     SetActionState (ACTION_DRAG_ICON);
-    UpdateDragWindowPosition (x, y);
+    UpdateDragWindowPosition (drag_icon->GetCenter ().x, drag_icon->GetCenter ().y);
+    if(_initial_drag_animation) {
+      _drag_window->SetAnimationTarget (x, y + _drag_window->GetGeometry ().height/2);
+      _drag_window->StartAnimation ();
+    }
     EnsureAnimation ();
   } 
 }
@@ -2882,6 +2892,9 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
+  
+  // FIXME: hack (see SetupRenderArg)
+  _initial_drag_animation = false;
 
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;

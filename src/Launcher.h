@@ -519,6 +519,8 @@ private:
                                        gpointer               user_data);
   
   struct timespec  _times[TIME_LAST];
+  
+  bool _initial_drag_animation;
 
   sigc::connection _set_hidden_connection;
   sigc::connection _set_hover_connection;
