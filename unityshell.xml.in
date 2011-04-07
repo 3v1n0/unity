@@ -33,7 +33,7 @@
             </relation>
             <requirement>
                 <plugin>opengl</plugin>
-                <plugin>wall</plugin>
+                <feature>largedesktop</feature>
             </requirement>
         </deps>
         <options>
