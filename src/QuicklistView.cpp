@@ -123,6 +123,29 @@ QuicklistView::RecvEndFocus ()
 {
 }
 
+bool
+QuicklistView::IsMenuItemSeperator (int index)
+{
+  DbusmenuMenuitem* item   = NULL;
+  const gchar*      label  = NULL;
+  bool              result = false;
+
+  if (index < 0)
+    return false;
+
+  item = GetNthItems (index)->_menuItem;
+  if (!item)
+    return false;
+
+  label = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+  if (!label)
+    result = true;
+  else
+    result = false;
+
+  return result;
+}
+
 void
 QuicklistView::RecvKeyPressed (unsigned int  key_sym,
                                unsigned long key_code,
@@ -133,10 +156,18 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     // up (highlight previous menu-item)
     case NUX_VK_UP:
     case NUX_KP_UP:
+      // protect against edge-case of first item being a separator 
+      if (_current_item_index == 1 && IsMenuItemSeperator (0))
+        break;
+
       if (_current_item_index > 0)
       {
         GetNthItems (_current_item_index)->_prelight = false;
         _current_item_index--;
+
+        while (IsMenuItemSeperator (_current_item_index))
+          _current_item_index--;
+
         GetNthItems (_current_item_index)->_prelight = true;
         QueueDraw ();
       }
@@ -145,10 +176,18 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     // down (highlight next menu-item)
     case NUX_VK_DOWN:
     case NUX_KP_DOWN:
+      // protect against edge-case of last item being a separator 
+      if (_current_item_index == (GetNumItems () - 1) && IsMenuItemSeperator (GetNumItems ()))
+        break;
+
       if (_current_item_index < GetNumItems () - 1)
       {
         GetNthItems (_current_item_index)->_prelight = false;
         _current_item_index++;
+
+        while (IsMenuItemSeperator (_current_item_index))
+          _current_item_index++;
+
         GetNthItems (_current_item_index)->_prelight = true;
         QueueDraw ();
       }

@@ -101,8 +101,8 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  static void CloseRequest (GVariant *data, PlacesView *self);
-
+  static void     CloseRequest (GVariant *data, PlacesView *self);
+  static gboolean OnCloseTimeout (PlacesView *self);
   void OnGroupAdded    (PlaceEntry *entry, PlaceEntryGroup& group);
   void OnResultAdded   (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
@@ -130,6 +130,8 @@ private:
   static gboolean OnSearchTimedOut (PlacesView *view);
 
 private:
+  guint _close_idle;
+  
   PlaceFactory       *_factory;
   nux::HLayout       *_layout;
   nux::LayeredLayout *_layered_layout;

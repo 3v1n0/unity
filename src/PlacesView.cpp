@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (PlaceFactory *factory)
 : nux::View (NUX_TRACKER_LOCATION),
+  _close_idle (0),
   _factory (factory),
   _entry (NULL),
   _size_mode (SIZE_MODE_FULLSCREEN),
@@ -134,6 +135,11 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
 PlacesView::~PlacesView ()
 {
+  if (_close_idle != 0)
+  {
+    g_source_remove (_close_idle);
+    _close_idle = 0;
+  }
   delete _home_entry;
 }
 
@@ -170,7 +176,6 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     geo.height = _actual_height;
     if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
     {
-      SetActiveEntry (NULL, 0, "");
       return TraverseInfo |= nux::eMouseEventSolved;
     }
   }
@@ -419,6 +424,7 @@ PlacesView::AboutToShow ()
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  
   if (signal)
     entry_changed.emit (entry);
 
@@ -808,7 +814,22 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
 void
 PlacesView::CloseRequest (GVariant *data, PlacesView *self)
 {
+  if (self->_close_idle != 0)
+  {
+    g_source_remove (self->_close_idle);
+    self->_close_idle = 0;
+  }
+
+  //add a timeout because the home view flashes on close
+  self->_close_idle = g_timeout_add_seconds (100, (GSourceFunc)OnCloseTimeout, self);
+}
+
+gboolean 
+PlacesView::OnCloseTimeout (PlacesView *self)
+{
+  self->_close_idle = 0;
   self->SetActiveEntry (NULL, 0, "");
+  return FALSE;
 }
 
 nux::TextEntry*
