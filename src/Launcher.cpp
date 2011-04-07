@@ -357,10 +357,19 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _launcher_drag_delta    = 0;
     _dnd_delta_y            = 0;
     _dnd_delta_x            = 0;
-    _autoscroll_handle      = 0;
-    _redraw_handle          = 0;
-    _start_dragicon_handle  = 0;
-    _focus_keynav_handle    = 0;
+
+    _autoscroll_handle             = 0;
+    _super_show_launcher_handle    = 0;
+    _super_hide_launcher_handle    = 0;
+    _super_show_shortcuts_handle   = 0;
+    _start_dragicon_handle         = 0;
+    _focus_keynav_handle           = 0;
+    _dnd_check_handle              = 0;
+    _ignore_repeat_shortcut_handle = 0;
+
+    _latest_shortcut        = 0;
+    _super_pressed          = false;
+    _shortcuts_shown        = false;
     _floating               = false;
     _hovered                = false;
     _hidden                 = false;
@@ -371,6 +380,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _selection_atom         = 0;
     _drag_out_id            = 0;
     _drag_out_delta_x       = 0.0f;
+    
+    // FIXME: remove
+    _initial_drag_animation = false;
     
     _check_window_over_launcher   = true;
     _postreveal_mousemove_delta_x = 0;
@@ -428,6 +440,25 @@ Launcher::~Launcher()
       _superkey_labels[i]->UnReference ();
   }
   g_bus_unown_name (_dbus_owner);
+  
+  if (_dnd_check_handle)
+    g_source_remove (_dnd_check_handle);
+  if (_autoscroll_handle)
+    g_source_remove (_autoscroll_handle);
+  if (_focus_keynav_handle)
+    g_source_remove (_focus_keynav_handle);
+  if (_super_show_launcher_handle)
+    g_source_remove (_super_show_launcher_handle);
+  if (_super_show_shortcuts_handle)
+    g_source_remove (_super_show_shortcuts_handle);
+  if (_start_dragicon_handle)
+    g_source_remove (_start_dragicon_handle);
+  if (_ignore_repeat_shortcut_handle)
+    g_source_remove (_ignore_repeat_shortcut_handle);
+  if (_super_show_launcher_handle)
+    g_source_remove (_super_show_launcher_handle);
+  if (_super_hide_launcher_handle)
+    g_source_remove (_super_hide_launcher_handle);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -495,6 +526,7 @@ Launcher::~Launcher()
   
   if (_on_drag_finish_connection.connected ())
     _on_drag_finish_connection.disconnect ();
+    
 }
 
 /* Introspection */
@@ -519,6 +551,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   gchar*                fontName = NULL;
 
   double label_pos = double(_icon_size / 3.0f);
+  double text_size = double(_icon_size / 4.0f);
   double label_x = label_pos;
   double label_y = label_pos;
   double label_w = label_pos;
@@ -536,7 +569,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   layout = pango_cairo_create_layout (cr);
   g_object_get (settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string (fontName);
-  pango_font_description_set_absolute_size (desc, label_pos * PANGO_SCALE);
+  pango_font_description_set_absolute_size (desc, text_size * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
@@ -645,6 +678,7 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
                              NULL);
 
    self->selection_change.emit ();
+   self->_focus_keynav_handle = 0;
 
    return false;
 }
@@ -1291,7 +1325,9 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     
     icon->SetCenter (nux::Point3 (roundf (center.x), roundf (center.y), roundf (center.z)));
     
-    if (icon == _drag_icon && _drag_window && _drag_window->Animating ())
+    // FIXME: this is a hack, we should have a look why SetAnimationTarget is necessary in SetAnimationTarget
+    // we should ideally just need it at start to set the target
+    if (!_initial_drag_animation && icon == _drag_icon && _drag_window && _drag_window->Animating ())
       _drag_window->SetAnimationTarget ((int) center.x, (int) center.y + _parent->GetGeometry ().y);
     
     center.y += (half_size * size_modifier) + spacing;   // move to end
@@ -1472,44 +1508,89 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 gboolean Launcher::TapOnSuper ()
 {
     struct timespec current;
-    bool tap_on_super;
-    bool shortcuts_shown = false;
     clock_gettime (CLOCK_MONOTONIC, &current);
         
-    tap_on_super = (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);
-
-    if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
-      shortcuts_shown = !tap_on_super;
-
-    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, shortcuts_shown);
-    
-    return tap_on_super;
-    
+    return (TimeDelta (&current, &_times[TIME_TAP_SUPER]) < SUPER_TAP_DURATION);    
 }
 
 /* Launcher Show/Hide logic */
 
 void Launcher::StartKeyShowLauncher ()
 {
-    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, true);
+    _super_pressed = true;
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-    QueueDraw ();
-    SetTimeStruct (&_times[TIME_TAP_SUPER], NULL, SUPER_TAP_DURATION);
-    if (_redraw_handle > 0)
-      g_source_remove (_redraw_handle);
-    _redraw_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::DrawLauncherTimeout, this);
+    
+    SetTimeStruct (&_times[TIME_TAP_SUPER]);
+    SetTimeStruct (&_times[TIME_SUPER_PRESSED]);
+    
+    if (_super_show_launcher_handle > 0)
+      g_source_remove (_super_show_launcher_handle);
+    _super_show_launcher_handle = g_timeout_add (SUPER_TAP_DURATION, &Launcher::SuperShowLauncherTimeout, this);
+    
+    if (_super_show_shortcuts_handle > 0)
+      g_source_remove (_super_show_shortcuts_handle);
+    _super_show_shortcuts_handle = g_timeout_add (SHORTCUTS_SHOWN_DELAY, &Launcher::SuperShowShortcutsTimeout, this);
 }
 
 void Launcher::EndKeyShowLauncher ()
 {
-    
-    _hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN, false);
-    _hover_machine->SetQuirk (LauncherHoverMachine::SHOTCUT_KEYS_VISIBLE, false);
+    int remaining_time_before_hide;
+    struct timespec current;
+    clock_gettime (CLOCK_MONOTONIC, &current);
+ 
+    _hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, false);
+    _super_pressed = false;
+    _shortcuts_shown = false;
     QueueDraw ();
+    
+    // remove further show launcher (which can happen when we close the dash with super)
+    if (_super_show_launcher_handle > 0)
+      g_source_remove (_super_show_launcher_handle);
+    if (_super_show_shortcuts_handle > 0)
+      g_source_remove (_super_show_shortcuts_handle);
 
-    // it's a tap on super
-    if (TapOnSuper ())
-      ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);      
+    // it's a tap on super and we didn't use any shortcuts
+    if (TapOnSuper () && !_latest_shortcut)
+      ubus_server_send_message (ubus_server_get_default (), UBUS_DASH_EXTERNAL_ACTIVATION, NULL);
+      
+    remaining_time_before_hide = BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION - CLAMP ((int) (TimeDelta (&current, &_times[TIME_SUPER_PRESSED])), 0, BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION);
+    
+    if (_super_hide_launcher_handle > 0)
+      g_source_remove (_super_hide_launcher_handle);
+    _super_hide_launcher_handle = g_timeout_add (remaining_time_before_hide, &Launcher::SuperHideLauncherTimeout, this);
+}
+
+gboolean Launcher::SuperHideLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, false);
+    
+    self->_super_hide_launcher_handle = 0;
+    return false;    
+}
+
+gboolean Launcher::SuperShowLauncherTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_hide_machine->SetQuirk (LauncherHideMachine::TRIGGER_BUTTON_SHOW, true);
+    
+    self->_super_show_launcher_handle = 0;
+    return false;    
+}
+
+gboolean Launcher::SuperShowShortcutsTimeout (gpointer data)
+{
+    Launcher *self = (Launcher*) data;
+    
+    self->_shortcuts_shown = true;
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, true);
+
+    self->QueueDraw ();
+    
+    self->_super_show_shortcuts_handle = 0;
+    return false;    
 }
 
 void Launcher::OnPlaceViewShown (GVariant *data, void *val)
@@ -1624,6 +1705,8 @@ void Launcher::SetHidden (bool hidden)
       ProcessDndLeave ();
 
     EnsureAnimation ();
+    
+    hidden_changed.emit ();
 }
 
 int
@@ -1636,14 +1719,6 @@ int
 Launcher::GetMouseY ()
 {
   return _mouse_position.y;
-}
-
-gboolean Launcher::DrawLauncherTimeout (gpointer data)
-{
-    Launcher *self = (Launcher*) data;
-    
-    self->QueueDraw ();
-    return false;    
 }
 
 bool
@@ -1713,16 +1788,22 @@ Launcher::OnUpdateDragManagerTimeout (gpointer data)
   
   Window drag_owner = XGetSelectionOwner (self->_screen->dpy (), self->_selection_atom);
   
-  if (drag_owner)
+  // evil hack because Qt does not release the seelction owner on drag finished
+  Window root_r, child_r;
+  int root_x_r, root_y_r, win_x_r, win_y_r;
+  unsigned int mask;
+  XQueryPointer (self->_screen->dpy (), self->_screen->root (), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  
+  if (drag_owner && (mask | (Button1Mask & Button2Mask & Button3Mask)))
   {
     self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-  }
-  else
-  {
-    self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-    self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
+    return true;
   }
 
+  self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  self->_hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, false);
+  
+  self->_dnd_check_handle = 0;
   return false;
 }
 
@@ -1732,7 +1813,8 @@ Launcher::OnWindowMapped (guint32 xid)
   CompWindow *window = _screen->findWindow (xid);
   if (window && window->type () | CompWindowTypeDndMask)
   {
-    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
+    if (!_dnd_check_handle)
+      _dnd_check_handle = g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -1742,7 +1824,8 @@ Launcher::OnWindowUnmapped (guint32 xid)
   CompWindow *window = _screen->findWindow (xid);
   if (window && window->type () | CompWindowTypeDndMask)
   {
-    g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
+    if (!_dnd_check_handle)
+      _dnd_check_handle = g_timeout_add (200, &Launcher::OnUpdateDragManagerTimeout, this);
   }
 }
 
@@ -1958,6 +2041,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
   
   self->EnsureAnimation ();
+  self->_autoscroll_handle = 0;
   
   return TRUE;
 }
@@ -2116,10 +2200,10 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Color::LightGrey;
+    nux::Color color = nux::Colors::LightGrey;
 
     if (arg.running_colored)
-      color = nux::Color::SkyBlue;
+      color = nux::Colors::SkyBlue;
       
     color.SetRGBA (color.R () * alpha, color.G () * alpha,
                    color.B () * alpha, alpha);
@@ -2170,7 +2254,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Color::LightGrey;
+    nux::Color color = nux::Colors::LightGrey;
     color.SetRGBA (color.R () * alpha, color.G () * alpha,
                    color.B () * alpha, alpha);
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
@@ -2414,7 +2498,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   RenderIcon (GfxContext,
               arg,
               arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
-              nux::Color::White,
+              nux::Colors::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"]);
 
@@ -2424,7 +2508,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _icon_shine_texture->GetDeviceTexture (),
-               nux::Color::White,
+               nux::Colors::White,
                arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2473,7 +2557,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _offscreen_progress_texture,
-               nux::Color::White,
+               nux::Colors::White,
                arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2483,7 +2567,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
-               nux::Color::White,
+               nux::Colors::White,
                arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
@@ -2497,7 +2581,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN) && !TapOnSuper ())
+  if (_shortcuts_shown)
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2663,8 +2747,17 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
     Launcher *self = (Launcher*) data;
     
     // if we are still waiting…
-    if (self->GetActionState () == ACTION_NONE)
+    if (self->GetActionState () == ACTION_NONE) {
+      if (self->_icon_under_mouse)
+      {
+      self->_icon_under_mouse->MouseLeave.emit ();
+      self->_icon_under_mouse->_mouse_inside = false;
+      self->_icon_under_mouse = 0;
+      }
+      self->_initial_drag_animation = true;
       self->StartIconDragRequest (self->GetMouseX (), self->GetMouseY ());
+    }
+    self->_start_dragicon_handle = 0;
     return false;    
 }
 
@@ -2678,7 +2771,12 @@ void Launcher::StartIconDragRequest (int x, int y)
   {
     StartIconDrag (drag_icon);
     SetActionState (ACTION_DRAG_ICON);
-    UpdateDragWindowPosition (x, y);
+    UpdateDragWindowPosition (drag_icon->GetCenter ().x, drag_icon->GetCenter ().y);
+    if(_initial_drag_animation) {
+      _drag_window->SetAnimationTarget (x, y + _drag_window->GetGeometry ().height/2);
+      _drag_window->StartAnimation ();
+    }
+    EnsureAnimation ();
   } 
 }
 
@@ -2794,6 +2892,9 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
+  
+  // FIXME: hack (see SetupRenderArg)
+  _initial_drag_animation = false;
 
   _dnd_delta_y += dy;
   _dnd_delta_x += dx;
@@ -2900,26 +3001,55 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation ();
 }
 
+
 gboolean
-Launcher::CheckSuperShortcutPressed (unsigned int key_sym,
-                                     unsigned long key_code,
-                                     unsigned long key_state)
+Launcher::ResetRepeatShorcutTimeout (gpointer data)
 {
-  if (!_hide_machine->GetQuirk (LauncherHideMachine::TRIGGER_BUTTON_DOWN))
+  Launcher *self = (Launcher*) data;
+  
+  self->_latest_shortcut = 0;
+  
+  self->_ignore_repeat_shortcut_handle = 0;
+  return false;
+}
+
+gboolean
+Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
+                                     unsigned long key_code,
+                                     unsigned long key_state,
+                                     char*         key_string)
+{
+  if (!_super_pressed)
     return false;
 
   LauncherModel::iterator it;
-  int i;
   
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+  for (it = _model->begin (); it != _model->end (); it++)
   {
-    if (XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code)
-    {
+    if ((XKeysymToKeycode (screen->dpy (), (*it)->GetShortcut ()) == key_code) ||
+        ((gchar)((*it)->GetShortcut ()) == key_string[0]))
+    {      
+      /*
+       * start a timeout while repressing the same shortcut will be ignored.
+       * This is because the keypress repeat is handled by Xorg and we have no
+       * way to know if a press is an actual press or just an automated repetition
+       * because the button is hold down. (key release events are sent in both cases)
+      */
+      if (_ignore_repeat_shortcut_handle > 0)
+        g_source_remove (_ignore_repeat_shortcut_handle);
+      _ignore_repeat_shortcut_handle = g_timeout_add (IGNORE_REPEAT_SHORTCUT_DURATION, &Launcher::ResetRepeatShorcutTimeout, this);
+      
+      if (_latest_shortcut == (*it)->GetShortcut ())
+        return true;
+      
       if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
         (*it)->OpenInstance ();
       else
         (*it)->Activate ();
+
+      _latest_shortcut = (*it)->GetShortcut ();
+      
       // disable the "tap on super" check
       _times[TIME_TAP_SUPER].tv_sec = 0;
       _times[TIME_TAP_SUPER].tv_nsec = 0;
@@ -3534,10 +3664,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
   
   GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
+                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
                             
   GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);  
+                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);  
 
   GfxContext.PopClippingRectangle (); 
 
@@ -3546,10 +3676,10 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
   
   GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Color::White);
+                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
   
   GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Color::White);
+                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);
   
   GfxContext.PopClippingRectangle (); 
 

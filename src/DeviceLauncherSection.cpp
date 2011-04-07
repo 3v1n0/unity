@@ -41,7 +41,7 @@ DeviceLauncherSection::DeviceLauncherSection (Launcher *launcher)
                                                   G_CALLBACK (&DeviceLauncherSection::OnMountAdded),
                                                   this);
 
-   g_idle_add ((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
+   _on_device_populate_entry_id = g_idle_add ((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
 
 DeviceLauncherSection::~DeviceLauncherSection ()
@@ -57,6 +57,9 @@ DeviceLauncherSection::~DeviceLauncherSection ()
   if (_on_mount_added_handler_id != 0)
     g_signal_handler_disconnect ((gpointer) _monitor,
                                  _on_mount_added_handler_id);
+
+  if (_on_device_populate_entry_id)
+    g_source_remove (_on_device_populate_entry_id);
 
   g_object_unref (_monitor);
   g_hash_table_unref (_ht);
@@ -81,6 +84,8 @@ DeviceLauncherSection::PopulateEntries (DeviceLauncherSection *self)
   }
 
   g_list_free (volumes);
+  
+  self->_on_device_populate_entry_id = 0;
 
   return false;
 }

@@ -20,6 +20,7 @@
 #include "gdk/gdk.h"
 
 #include "PlacesSettings.h"
+#include "PlacesStyle.h"
 
 #define HOME_EXPANDED "home-expanded"
 
@@ -91,8 +92,7 @@ PlacesSettings::GetFormFactor ()
 int
 PlacesSettings::GetDefaultTileWidth ()
 {
-  //FIXME: We want to calculate this from DPI
-  return 140;
+  return PlacesStyle::GetDefault ()->GetTileWidth ();
 }
 
 PlacesSettings::DashBlurType

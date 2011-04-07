@@ -284,6 +284,13 @@ PluginAdapter::InitiateScale (std::string *match, int state)
     {
       if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) == m_SpreadedWindows.end ())
         m_SpreadedWindows.push_back (w->id ());
+      /* FIXME:
+         just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only 
+         called if you click on the launcher, not on any icon. More generally, we should hook up InitiateScale and TerminateScale
+         to a Scale plugin signal as the shortcut will have a different behaviour then.
+      */
+      if (w->minimized ())
+        w->unminimize ();
       xids.push_back (w->id ());
     }
   }
@@ -538,7 +545,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 void 
 PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
 {
-  if (!_grab_show_action)
+  if (!_grab_show_action || !window)
     return;
     
   CompOption::Vector argument;
@@ -558,7 +565,7 @@ PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
 void 
 PluginAdapter::HideGrabHandles (CompWindow *window)
 {
-  if (!_grab_hide_action)
+  if (!_grab_hide_action || !window)
     return;
     
   CompOption::Vector argument;
@@ -576,7 +583,7 @@ PluginAdapter::HideGrabHandles (CompWindow *window)
 void 
 PluginAdapter::ToggleGrabHandles (CompWindow *window)
 {
-  if (!_grab_toggle_action)
+  if (!_grab_toggle_action || !window)
     return;
     
   CompOption::Vector argument;

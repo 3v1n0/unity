@@ -256,8 +256,12 @@ UnityScreen::handleEvent (XEvent *event)
       break;
     case KeyPress:
       KeySym key_sym;
-      if (XLookupString (&(event->xkey), NULL, 0, &key_sym, 0) > 0)
-        skip_other_plugins = launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state);
+      char key_string[2];
+      int result;
+      if ((result = XLookupString (&(event->xkey), key_string, 2, &key_sym, 0)) > 0) {
+        key_string[result] = 0;
+        skip_other_plugins = launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state, key_string);
+      }
       break;
   }
 
@@ -630,22 +634,23 @@ UnityWindow::place (CompPoint &pos)
   UnityScreen *us = UnityScreen::get (screen);
   nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
   Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
+  
+  bool result = window->place (pos);
 
   switch (hideMode)
   {
     case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
     case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width && window->width () + geo.width < screen->workArea ().width ())
+      if (pos.x () <= geo.width && window->width () + geo.width + 1< screen->workArea ().width ())
         {
-          pos.setX (geo.width);
-          return true;
+          pos.setX (geo.width + 1);
         }
       break;
     default:
       break;
   }
 
-  return false;
+  return result;
 }
 
 /* Configure callback for the launcher window */

@@ -99,7 +99,7 @@ LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    if (g_str_equal (path, (*it)->DesktopFile ()))
+    if (!g_strcmp0 (path, (*it)->DesktopFile ()))
       return;
   }
 

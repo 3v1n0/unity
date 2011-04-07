@@ -44,7 +44,7 @@ class LauncherHideMachine : public sigc::trackable
       QUICKLIST_OPEN         = 1 << 4, 
       EXTERNAL_DND_ACTIVE    = 1 << 5, 
       INTERNAL_DND_ACTIVE    = 1 << 6, 
-      TRIGGER_BUTTON_DOWN    = 1 << 7, 
+      TRIGGER_BUTTON_SHOW    = 1 << 7, 
       ANY_WINDOW_UNDER       = 1 << 8, 
       ACTIVE_WINDOW_UNDER    = 1 << 9,
       DND_PUSHED_OFF         = 1 << 10,
@@ -78,13 +78,16 @@ class LauncherHideMachine : public sigc::trackable
     void SetShouldHide (bool value, bool skip_delay);
 
     static gboolean OnHideDelayTimeout (gpointer data);
+    static gboolean EmitShouldHideChanged (gpointer data);
   
     bool      _should_hide;
+    bool      _latest_emit_should_hide;
     HideQuirk _quirks;
     HideMode  _mode;
     unsigned int _hide_delay_timeout_length;
     
     guint _hide_delay_handle;
+    guint _hide_changed_emit_handle;
 };
 
 #endif

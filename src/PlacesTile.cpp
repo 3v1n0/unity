@@ -26,7 +26,7 @@
 #include "PlacesTile.h"
 
 #define PADDING 8
-#define BLUR_SIZE 5
+#define BLUR_SIZE 6
 
 PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   View (NUX_FILE_LINE_PARAM),
@@ -85,6 +85,7 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
 {
   nux::Geometry base = GetGeometry ();
   nux::Geometry highlight_geo = GetHighlightGeometry ();
+  
   nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
                                                                highlight_geo.width + PADDING + (BLUR_SIZE*3),
                                                                highlight_geo.height + PADDING + (BLUR_SIZE*3));
@@ -96,10 +97,10 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
   
-  int bg_width = highlight_geo.width + PADDING;
-  int bg_height = highlight_geo.height + PADDING;
- 	int bg_x = BLUR_SIZE;
- 	int bg_y = BLUR_SIZE;
+  int bg_width = highlight_geo.width + PADDING + 1;
+  int bg_height = highlight_geo.height + PADDING +1;
+ 	int bg_x = BLUR_SIZE-1;
+ 	int bg_y = BLUR_SIZE-1;
 	
   // draw the glow
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
@@ -115,9 +116,7 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
                                        true);
   cairo_fill (cr);
   cairo_graphics->BlurSurface (BLUR_SIZE - 2);
-	
-  // draw tiled background
-  // set up clip path
+
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   cairo_graphics->DrawRoundedRectangle (cr,
                                         1.0,
@@ -128,44 +127,21 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
                                         bg_height,
                                         true);
   cairo_clip (cr);
-
-  int              w, h;
-  cairo_surface_t *image;
-  cairo_pattern_t *pattern;
-
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-  image = cairo_image_surface_create_from_png (PKGDATADIR"/places-tile-bg-tilable.png");
-  w = cairo_image_surface_get_width (image);
-  h = cairo_image_surface_get_height (image);
-
-
-  pattern = cairo_pattern_create_for_surface (image);
-  cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-
-  cairo_set_source (cr, pattern);
-
-  cairo_rectangle (cr, 0, 0, base.width, base.height);
-  cairo_fill (cr);
-
-  cairo_pattern_destroy (pattern);
-  cairo_surface_destroy (image);
-
-  // draw the outline
-	
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   cairo_graphics->DrawRoundedRectangle (cr,
                                         1.0,
                                         bg_x,
-                                       	bg_y,
+                                        bg_y,
                                         5.0,
                                         bg_width,
                                         bg_height,
                                         true);
-  cairo_set_source_rgba (cr, 0.66, 0.66, 0.66, 1.0);
-  cairo_set_line_width (cr, 1.0);
-  cairo_stroke (cr);
-  
+  cairo_set_source_rgba (cr, 240/255.0f, 240/255.0f, 240/255.0f, 1.0f);
+  cairo_fill_preserve (cr);
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0);
+  cairo_stroke (cr); 
   
   cairo_destroy (cr);
 
@@ -230,7 +206,7 @@ PlacesTile::UpdateBackground ()
 
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
                                           texxform,
-                                          nux::Color::White,
+                                          nux::Colors::White,
                                           true,
                                           rop);
 }
@@ -255,10 +231,10 @@ PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
   {
     UpdateBackground ();
     nux::Geometry hl_geo = GetHighlightGeometry ();
-    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE - 1,
-                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE - 1,
-                                                       hl_geo.width + PADDING + 1 + BLUR_SIZE*2,
-                                                       hl_geo.height + PADDING + 1 + BLUR_SIZE*2);
+    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE,
+                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE,
+                                                       hl_geo.width + PADDING + BLUR_SIZE*2,
+                                                       hl_geo.height + PADDING + BLUR_SIZE*2);
 
     _hilight_layer->SetGeometry (total_highlight_geo);
     nux::GetPainter ().RenderSinglePaintLayer (gfxContext, total_highlight_geo, _hilight_layer);
@@ -279,10 +255,10 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     UpdateBackground ();
 
     nux::Geometry hl_geo = GetHighlightGeometry ();
-    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE - 1,
-                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE - 1,
-                                                       hl_geo.width + PADDING + 1 + BLUR_SIZE*2,
-                                                       hl_geo.height + PADDING + 1 + BLUR_SIZE*2);
+    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE,
+                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE,
+                                                       hl_geo.width + PADDING + BLUR_SIZE*2,
+                                                       hl_geo.height + PADDING + BLUR_SIZE*2);
 
     nux::GetPainter ().PushLayer (GfxContext, total_highlight_geo, _hilight_layer);
   }

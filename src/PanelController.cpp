@@ -134,8 +134,12 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       (*it)->EnableInputWindow (true);
       (*it)->InputWindowEnableStruts (true);
 
+      g_debug ("PanelController:: Updated Panel for Monitor %d", i);
+
       i++;
     }
+    else
+      break;
   }
 
   // Add new ones if needed
@@ -181,6 +185,8 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
         unity_util_accessible_add_window (window);
 
       _windows.push_back (window);
+
+      g_debug ("PanelController:: Added Panel for Monitor %d", i);
     }
   }
 
@@ -190,6 +196,7 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
     for (sit = it; sit != eit; ++sit)
     {
       (*sit)->UnReference ();
+      g_debug ("PanelController:: Removed extra Panel");
     }
 
     _windows.erase (it, _windows.end ());

@@ -83,7 +83,7 @@ public:
                                 (float)geo.height,
                                 tex->GetDeviceTexture (),
                                 texxform,
-                                nux::Color::White);
+                                nux::Colors::White);
     GfxContext.GetRenderStates ().SetBlend (false);
     GfxContext.PopClippingRectangle();
   }

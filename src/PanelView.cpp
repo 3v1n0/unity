@@ -35,6 +35,7 @@
 #include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
+#include "IndicatorObjectEntryProxy.h"
 #include "PanelIndicatorObjectView.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
@@ -194,7 +195,7 @@ PanelView::UpdateBackground ()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::Color col = nux::Color::White;
+  nux::Color col = nux::Colors::White;
   col.SetAlpha (_opacity);
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
@@ -389,7 +390,7 @@ PanelView::EndFirstMenuShow ()
     PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
     if (view->_layout == NULL
-        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
+        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))       
       continue;
 
     std::list<Area *>::iterator it2;
@@ -398,6 +399,10 @@ PanelView::EndFirstMenuShow ()
     for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
     {
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+      IndicatorObjectEntryProxy *proxy = entry->_proxy;
+
+      if (proxy != NULL && !proxy->label_sensitive && !proxy->icon_sensitive)
+        continue;
 
       entry->Activate ();
       return;

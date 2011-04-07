@@ -47,7 +47,7 @@ public:
   void OnEntryAdded   (GVariant    *args);
   void OnEntryRemoved (const gchar *dbus_path);
 
-  const gchar * GetDBusName ();
+  const gchar * GetDBusPath ();
 
   void ActivateResult (const char *uri, const char *mimetype);
 

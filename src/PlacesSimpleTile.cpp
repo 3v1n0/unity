@@ -20,7 +20,7 @@
  *
  */
 
-#include "PlacesSettings.h"
+#include "PlacesStyle.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -40,29 +40,30 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _icon (NULL),
   _uri (NULL)
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
 
   _label = g_strdup (label);
   _icon = g_strdup (icon_name);
 
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
-  _icontex->SetMinMaxSize (PlacesSettings::GetDefault ()->GetDefaultTileWidth (), icon_size);
+  _icontex->SetMinMaxSize (style->GetTileWidth (), icon_size);
   _icontex->SinkReference ();
   AddChild (_icontex);
 
-  _cairotext = new nux::StaticCairoText (_label);
+  _cairotext = new nux::StaticCairoText ("");
+  _cairotext->SetMaximumWidth (style->GetTileWidth ());
   _cairotext->SinkReference ();
-
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  _cairotext->SetMaximumWidth (140);
-
+  _cairotext->SetText (_label);
+  
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
 
-  SetMinMaxSize (160, 128);
+  SetMinMaxSize (style->GetTileWidth (), style->GetTileHeight ());
 
   SetLayout (layout);
 
