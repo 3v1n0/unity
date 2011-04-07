@@ -60,6 +60,7 @@ private:
   int _urgent_count;
   
   gulong _theme_changed_id;
+  guint _urgent_interest;
 };
 
 #endif // PANEL_HOME_BUTTON_H

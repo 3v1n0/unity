@@ -537,8 +537,8 @@ on_proxy_signal_received (GDBusProxy *proxy,
   }
   else if (g_strcmp0 (signal_name, "EntryShowNowChanged") == 0)
   {
-    gchar *id = NULL;
-    bool   show_now_state;
+    gchar    *id = NULL;
+    gboolean  show_now_state;
 
     g_variant_get (parameters, "(sb)", &id, &show_now_state);
 

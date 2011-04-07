@@ -162,7 +162,7 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
   else
   {
     texture = _normalTexture[0]->GetDeviceTexture ();
-    _color = nux::Colors::Gray;
+    _color = nux::Color (0.8f, 0.8f, 0.8f, 1.0f);
   }
 
   gfxContext.QRP_1Tex (base.x,

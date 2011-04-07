@@ -88,6 +88,7 @@ public:
     
     void    SetShortcut (guint64 shortcut);
     guint64 GetShortcut ();
+    void SetSortPriority (int priority);
     
     void RecvMouseEnter ();
     void RecvMouseLeave ();
@@ -182,7 +183,6 @@ protected:
     void Unpresent ();
     
     void SetIconType (IconType type);
-    void SetSortPriority (int priority);
 
     void SetEmblem (nux::BaseTexture *emblem);
     void SetSuperkeyLabel (nux::BaseTexture* label);

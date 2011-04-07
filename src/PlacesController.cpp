@@ -252,7 +252,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
       width += tile_width;
 
     width = MAX (width, tile_width * 7);
-    height = ((width/tile_width) - 3) * tile_width;
+    height = MIN (rect.height, (style->GetTileHeight () * 5.5) + 12);
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
     style->SetDefaultNColumns (6);

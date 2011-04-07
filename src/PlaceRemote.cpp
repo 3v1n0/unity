@@ -204,6 +204,12 @@ PlaceRemote::~PlaceRemote ()
     g_object_unref (_activation_proxy);
 }
 
+const gchar * 
+PlaceRemote::GetDBusPath ()
+{
+  return _dbus_path;
+}
+
 void
 PlaceRemote::Connect ()
 {
