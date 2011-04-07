@@ -85,6 +85,10 @@ private:
     gchar *_cached_desktop_file;
     gchar *_cached_name;
 
+
+    GFileMonitor *_desktop_file_monitor;
+    gulong _on_desktop_file_changed_handler_id;
+
     void EnsureWindowState ();
 
     void UpdateMenus ();
@@ -109,7 +113,13 @@ private:
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
-    
+
+    static void OnDesktopFileChanged (GFileMonitor        *monitor,
+                                      GFile               *file,
+                                      GFile               *other_file,
+                                      GFileMonitorEvent    event_type,
+                                      gpointer             data);
+
     static gboolean OnDndHoveredTimeout (gpointer data);
 };
 
