@@ -43,6 +43,7 @@ PanelHomeButton::PanelHomeButton ()
 {
   _urgent_count = 0;
   _button_width = 66;
+  _pressed = false;
   SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
   OnMouseClick.connect (sigc::mem_fun (this, &PanelHomeButton::RecvMouseClick));
@@ -58,6 +59,14 @@ PanelHomeButton::PanelHomeButton ()
   UBusServer *ubus = ubus_server_get_default ();
   _urgent_interest = ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
                                  (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
+                                 this);
+
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+                                 (UBusCallback)&PanelHomeButton::OnPlaceShown,
+                                 this);
+
+  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                 (UBusCallback)&PanelHomeButton::OnPlaceHidden,
                                  this);
 
   Refresh ();
@@ -114,11 +123,24 @@ PanelHomeButton::Refresh ()
   cairo_t *cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
+  /* button pressed effect */
+  if (_pressed) {
+    cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.3f);
+    cairo_rectangle (cr, 0, 0, width-1, height);
+    cairo_fill (cr);
+  }
+
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
   if (GDK_IS_PIXBUF (pixbuf))
   {
+    int offset = 0;
+
+    /* if the button pressed, draw the icon 1 px to the right */
+    if (_pressed) {
+      offset = 1;
+    }
     gdk_cairo_set_source_pixbuf (cr, pixbuf,
-                                 (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
+                                 (_button_width-gdk_pixbuf_get_width (pixbuf))/2 + offset,
                                  (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
     g_object_unref (pixbuf);
   }
@@ -276,4 +298,22 @@ PanelHomeButton::OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data)
   PanelHomeButton* self = (PanelHomeButton*) data;
 
   self->Refresh ();
+}
+
+void
+PanelHomeButton::OnPlaceShown (GVariant *data, gpointer user_data)
+{
+  PanelHomeButton *self = static_cast<PanelHomeButton *> (user_data);
+
+  self->_pressed = true;
+  self->Refresh (); 
+}
+
+void
+PanelHomeButton::OnPlaceHidden (GVariant *data, gpointer user_data)
+{
+  PanelHomeButton *self = static_cast<PanelHomeButton *> (user_data);
+
+  self->_pressed = false;
+  self->Refresh (); 
 }

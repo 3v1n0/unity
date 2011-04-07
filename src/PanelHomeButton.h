@@ -54,10 +54,13 @@ private:
   static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
   
   static void OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data);
+  static void OnPlaceShown (GVariant *data, gpointer user_data);
+  static void OnPlaceHidden (GVariant *data, gpointer user_data);
 
 private:
   int _button_width;
   int _urgent_count;
+  bool _pressed;
   
   gulong _theme_changed_id;
   guint _urgent_interest;
