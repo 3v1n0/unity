@@ -115,9 +115,7 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
                                        true);
   cairo_fill (cr);
   cairo_graphics->BlurSurface (BLUR_SIZE - 2);
-	
-  // draw tiled background
-  // set up clip path
+
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   cairo_graphics->DrawRoundedRectangle (cr,
                                         1.0,
@@ -128,44 +126,21 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
                                         bg_height,
                                         true);
   cairo_clip (cr);
-
-  int              w, h;
-  cairo_surface_t *image;
-  cairo_pattern_t *pattern;
-
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-  image = cairo_image_surface_create_from_png (PKGDATADIR"/places-tile-bg-tilable.png");
-  w = cairo_image_surface_get_width (image);
-  h = cairo_image_surface_get_height (image);
-
-
-  pattern = cairo_pattern_create_for_surface (image);
-  cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-
-  cairo_set_source (cr, pattern);
-
-  cairo_rectangle (cr, 0, 0, base.width, base.height);
-  cairo_fill (cr);
-
-  cairo_pattern_destroy (pattern);
-  cairo_surface_destroy (image);
-
-  // draw the outline
-	
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   cairo_graphics->DrawRoundedRectangle (cr,
                                         1.0,
                                         bg_x,
-                                       	bg_y,
+                                        bg_y,
                                         5.0,
                                         bg_width,
                                         bg_height,
                                         true);
-  cairo_set_source_rgba (cr, 0.66, 0.66, 0.66, 1.0);
-  cairo_set_line_width (cr, 1.0);
-  cairo_stroke (cr);
-  
+  cairo_set_source_rgba (cr, 240/255.0f, 240/255.0f, 240/255.0f, 1.0f);
+  cairo_fill_preserve (cr);
+
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0);
+  cairo_stroke (cr); 
   
   cairo_destroy (cr);
 
