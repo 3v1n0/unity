@@ -178,7 +178,7 @@ QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[1]->GetDeviceTexture ();
     }
 
-    _color = nux::Color::White;
+    _color = nux::Colors::White;
   }
   else
   {
@@ -238,7 +238,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, nux::Colors::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -267,7 +267,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, nux::Colors::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 

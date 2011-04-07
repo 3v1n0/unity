@@ -152,7 +152,7 @@ PanelHomeButton::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            _urgent_count ? nux::Color (0xFF24C5F6) : nux::Color::White,  // The color used to modulate the texture.
+                                                            _urgent_count ? nux::Color (0xFF24C5F6) : nux::Colors::White,  // The color used to modulate the texture.
                                                             true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );

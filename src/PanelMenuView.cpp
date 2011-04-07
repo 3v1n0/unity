@@ -358,10 +358,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.QRP_2TexMod(geo.x, geo.y,
                              geo.width, geo.height,
                              _gradient_texture, texxform0,
-                             nux::Color::White,
+                             nux::Colors::White,
                              _title_tex->GetDeviceTexture (),
                              texxform1,
-                             nux::Color::White);
+                             nux::Colors::White);
 
       GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
@@ -608,7 +608,7 @@ PanelMenuView::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
-                                        nux::Color::White,
+                                        nux::Colors::White,
                                         true, 
                                         rop);
 
@@ -948,7 +948,7 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
   if (window_xid != 0)
   {
     WindowManager::Default ()->Activate (window_xid);
-    _is_inside = false;
+    _is_inside = true;
     _is_grabbed = true;
     Refresh ();
     FullRedraw ();

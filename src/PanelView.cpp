@@ -195,7 +195,7 @@ PanelView::UpdateBackground ()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::Color col = nux::Color::White;
+  nux::Color col = nux::Colors::White;
   col.SetAlpha (_opacity);
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
