@@ -1,4 +1,4 @@
-unity (3.8.4-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.4-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - [fglrx] compiz crashed with SIGSEGV in nux::IOpenGLSurface::UnlockRect()
@@ -103,7 +103,7 @@ unity (3.8.4-0ubuntu1) UNRELEASED; urgency=low
       mode.
     - dep on latest nux for the ABI beak and picking the right shlibs
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 07 Apr 2011 17:11:04 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 07 Apr 2011 18:27:02 +0200
 
 unity (3.8.2-0ubuntu1) natty; urgency=low
 
