@@ -948,7 +948,7 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
   if (window_xid != 0)
   {
     WindowManager::Default ()->Activate (window_xid);
-    _is_inside = false;
+    _is_inside = true;
     _is_grabbed = true;
     Refresh ();
     FullRedraw ();
