@@ -104,15 +104,18 @@ BamfLauncherIcon::ActivateLauncherIcon ()
 BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app, CompScreen *screen)
 :   SimpleLauncherIcon(IconManager)
 {
+  _cached_desktop_file = NULL;
+  _cached_name = NULL;
   m_App = app;
   m_Screen = screen;
   _remote_uri = 0;
   _dnd_hover_timer = 0;
   _dnd_hovered = false;
+  _launcher = IconManager;
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
-  SetTooltipText (bamf_view_get_name (BAMF_VIEW (app)));
+  SetTooltipText (BamfName ());
   SetIconName (icon_name);
   SetIconType (TYPE_APPLICATION);
 
@@ -140,6 +143,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   UpdateMenus ();
 
   _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
+  _hidden_changed_connection = (sigc::connection) IconManager->hidden_changed.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   /* hack */
   SetProgress (0.0f);
@@ -148,6 +152,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
 BamfLauncherIcon::~BamfLauncherIcon()
 {
+  g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
 
@@ -156,6 +161,9 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_on_window_minimized_connection.connected ())
     _on_window_minimized_connection.disconnect ();
+  
+  if (_hidden_changed_connection.connected ())
+    _hidden_changed_connection.disconnect ();
 
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);
@@ -166,6 +174,15 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref (m_App);
+
+  g_free (_cached_desktop_file);
+  g_free (_cached_name);
+}
+
+void
+BamfLauncherIcon::OnLauncherHiddenChanged ()
+{
+  UpdateIconGeometries (GetCenter ());
 }
 
 void
@@ -187,7 +204,35 @@ BamfLauncherIcon::IsSticky ()
 const char*
 BamfLauncherIcon::DesktopFile ()
 {
-  return bamf_application_get_desktop_file (m_App);
+  char *filename = NULL;
+  filename = (char*) bamf_application_get_desktop_file (m_App);
+
+  if (filename != NULL)
+  {
+    if (_cached_desktop_file != NULL)
+      g_free (_cached_desktop_file);
+    
+    _cached_desktop_file = g_strdup (filename);
+  }
+  
+  return _cached_desktop_file;
+}
+
+const char*
+BamfLauncherIcon::BamfName ()
+{
+  char *name = NULL;
+  name = (char *)bamf_view_get_name (BAMF_VIEW (m_App));
+
+  if (name != NULL)
+  {
+    if (_cached_name != NULL)
+      g_free (_cached_name);
+
+    _cached_name = g_strdup (name);
+  }
+
+  return _cached_name;
 }
 
 void
@@ -680,12 +725,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
 
   if (sticky)
   {
-    bamf_view_set_sticky (view, false);
-    if (bamf_view_is_closed (view))
-      self->Remove ();
-
-    if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+    self->UnStick ();
   }
   else
   {
@@ -813,7 +853,7 @@ BamfLauncherIcon::GetMenus ()
   }
 
   gchar *app_name;
-  app_name = g_markup_escape_text (bamf_view_get_name (BAMF_VIEW (m_App)), -1);
+  app_name = g_markup_escape_text (BamfName (), -1);
 
   item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (item,
@@ -874,10 +914,16 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  //data[0] = center.x - 24;
-  //data[1] = center.y - 24;
-  data[0] = 0;
-  data[1] = 0;
+  if (_launcher->Hidden ())
+  {
+    data[0] = 0;
+    data[1] = 0;
+  }
+  else
+  {
+    data[0] = center.x - 24;
+    data[1] = center.y - 24;
+  }
   data[2] = 48;
   data[3] = 48;
 

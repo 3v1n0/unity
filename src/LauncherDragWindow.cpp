@@ -115,7 +115,7 @@ LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool force_dra
                             _icon->GetHeight(),
                             _icon,
                             texxform,
-                            nux::Color::White);
+                            nux::Colors::White);
   
   GfxContext.PopClippingRectangle ();
 }

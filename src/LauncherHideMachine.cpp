@@ -25,6 +25,9 @@ LauncherHideMachine::LauncherHideMachine ()
   _quirks = DEFAULT;
   _should_hide = false;
   
+  _latest_emit_should_hide = false;
+  _hide_changed_emit_handle = 0;
+  
   _hide_delay_handle = 0;
   _hide_delay_timeout_length = 750;
 }
@@ -35,6 +38,11 @@ LauncherHideMachine::~LauncherHideMachine ()
   {
     g_source_remove (_hide_delay_handle);
     _hide_delay_handle = 0;
+  }
+  if (_hide_changed_emit_handle)
+  {
+    g_source_remove (_hide_changed_emit_handle);
+    _hide_changed_emit_handle = 0;
   }
 }
 
@@ -54,7 +62,10 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
   else
   {
     _should_hide = value;
-    should_hide_changed.emit (value);
+    
+    if (_hide_changed_emit_handle)
+      g_source_remove (_hide_changed_emit_handle);
+    _hide_changed_emit_handle = g_timeout_add (0, &EmitShouldHideChanged, this);  
   }
 }
 
@@ -66,7 +77,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
     QUICKLIST_OPEN         = 1 << 4, 16  #VISIBLE_REQUIRED
     EXTERNAL_DND_ACTIVE    = 1 << 5, 32  #VISIBLE_REQUIRED
     INTERNAL_DND_ACTIVE    = 1 << 6, 64  #VISIBLE_REQUIRED
-    TRIGGER_BUTTON_DOWN    = 1 << 7, 128 #VISIBLE_REQUIRED
+    TRIGGER_BUTTON_SHOW    = 1 << 7, 128 #VISIBLE_REQUIRED
     ANY_WINDOW_UNDER       = 1 << 8, 256
     ACTIVE_WINDOW_UNDER    = 1 << 9, 512
     DND_PUSHED_OFF         = 1 << 10, 1024
@@ -81,7 +92,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
-INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_DOWN | VERTICAL_SLIDE_ACTIVE |\
+INTERNAL_DND_ACTIVE | TRIGGER_BUTTON_SHOW | VERTICAL_SLIDE_ACTIVE |\
 KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
 MT_DRAG_OUT)
 
@@ -160,7 +171,7 @@ LauncherHideMachine::GetMode ()
 }
 
 #define SKIP_DELAY_QUIRK (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF | ACTIVE_WINDOW_UNDER | \
-ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT)
+ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT | TRIGGER_BUTTON_SHOW)
 
 void
 LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active)
@@ -204,6 +215,21 @@ LauncherHideMachine::OnHideDelayTimeout (gpointer data)
   self->EnsureHideState (true);
   
   self->_hide_delay_handle = 0;
+  return false;
+}
+
+gboolean
+LauncherHideMachine::EmitShouldHideChanged (gpointer data)
+{
+  LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
+
+  self->_hide_changed_emit_handle = 0;  
+  if (self->_should_hide == self->_latest_emit_should_hide)
+    return false;
+    
+  self->_latest_emit_should_hide = self->_should_hide;
+  self->should_hide_changed.emit (self->_should_hide);
+  
   return false;
 }
 

@@ -56,6 +56,7 @@ private:
   gulong _on_volume_added_handler_id;
   gulong _on_volume_removed_handler_id;
   gulong _on_mount_added_handler_id;
+  gulong _on_device_populate_entry_id;
 };
 
 #endif // _DEVICE_LAUNCHER_SECTION_H_

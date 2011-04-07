@@ -100,7 +100,7 @@ PanelMenuView::PanelMenuView (int padding)
   _on_winbutton_redraw_signal_connection = _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
-  _panel_titlebar_grab_area->Reference ();
+  _panel_titlebar_grab_area->SinkReference ();
   _on_titlebargrab_mouse_down_connnection = _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
   _on_titlebargrab_mouse_doubleleftclick_connnection = _panel_titlebar_grab_area->mouse_doubleleftclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
   _on_titlebargrab_mouse_middleclick_connnection = _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
@@ -358,10 +358,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.QRP_2TexMod(geo.x, geo.y,
                              geo.width, geo.height,
                              _gradient_texture, texxform0,
-                             nux::Color::White,
+                             nux::Colors::White,
                              _title_tex->GetDeviceTexture (),
                              texxform1,
-                             nux::Color::White);
+                             nux::Colors::White);
 
       GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
@@ -608,7 +608,7 @@ PanelMenuView::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
-                                        nux::Color::White,
+                                        nux::Colors::White,
                                         true, 
                                         rop);
 
@@ -948,7 +948,7 @@ PanelMenuView::OnMaximizedGrab (int x, int y)
   if (window_xid != 0)
   {
     WindowManager::Default ()->Activate (window_xid);
-    _is_inside = false;
+    _is_inside = true;
     _is_grabbed = true;
     Refresh ();
     FullRedraw ();

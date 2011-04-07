@@ -1,11 +1,12 @@
-unity (3.8.2-0ubuntu3) UNRELEASED; urgency=low
+unity (3.8.4-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/control:
     - makes unity depends on compiz-plugins-main as we are binding to the expose
       mode.
     - dep on latest nux for the ABI beak and picking the right shlibs
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 07 Apr 2011 14:23:34 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 07 Apr 2011 17:11:04 +0200
 
 unity (3.8.2-0ubuntu1) natty; urgency=low
 

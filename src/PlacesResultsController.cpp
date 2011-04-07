@@ -36,6 +36,8 @@ PlacesResultsController::PlacesResultsController ()
 
 PlacesResultsController::~PlacesResultsController ()
 {
+  if (_make_things_look_nice_id)
+    g_source_remove (_make_things_look_nice_id);
   _results_view->UnReference ();
 }
 

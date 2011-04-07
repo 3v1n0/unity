@@ -212,7 +212,8 @@ GestureEngine::OnTouchFinish (GeisAdapter::GeisTouchData *data)
 {
   if (_touch_id == data->id)
   {
-    PluginAdapter::Default ()->ShowGrabHandles (_touch_window, true);
+    if (_touch_window)
+      PluginAdapter::Default ()->ShowGrabHandles (_touch_window, true);
     _touch_id = 0;
     _touch_window = 0;
   }

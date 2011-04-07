@@ -123,6 +123,9 @@ void PlacesController::Show ()
 {
   if (_visible)
     return;
+    
+  if (PluginAdapter::Default ()->IsExpoActive () || PluginAdapter::Default ()->IsScaleActive ())
+    return;
   
   if (PluginAdapter::Default ()->IsScreenGrabbed ())
   {
@@ -158,8 +161,6 @@ void PlacesController::Hide ()
   _window->UnGrabKeyboard ();
   _visible = false;
   _fullscren_request = false;
-
-  _view->SetActiveEntry (NULL, 0, "");
 
   StartShowHideTimeline ();
   
@@ -215,8 +216,12 @@ PlacesController::OnViewShowHideFrame (PlacesController *self)
     // Make sure the state is right
     self->_window->SetOpacity (self->_visible ? 1.0f : 0.0f);
     if (!self->_visible)
+    {
       self->_window->ShowWindow (false, false);
-
+      //reset the active entry
+      self->_view->SetActiveEntry (NULL, 0, "");
+    }
+    
     return FALSE;
   }
   return TRUE;
@@ -247,7 +252,7 @@ PlacesController::GetWindowSize (int *out_width, int *out_height)
       width += tile_width;
 
     width = MAX (width, tile_width * 7);
-    height = ((width/tile_width) - 3) * tile_width;
+    height = MIN (rect.height, (style->GetTileHeight () * 5.5) + 12);
 
     _view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
     style->SetDefaultNColumns (6);

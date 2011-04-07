@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (PlaceFactory *factory)
 : nux::View (NUX_TRACKER_LOCATION),
+  _close_idle (0),
   _factory (factory),
   _entry (NULL),
   _size_mode (SIZE_MODE_FULLSCREEN),
@@ -134,6 +135,11 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
 PlacesView::~PlacesView ()
 {
+  if (_close_idle != 0)
+  {
+    g_source_remove (_close_idle);
+    _close_idle = 0;
+  }
   delete _home_entry;
 }
 
@@ -170,7 +176,6 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     geo.height = _actual_height;
     if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
     {
-      SetActiveEntry (NULL, 0, "");
       return TraverseInfo |= nux::eMouseEventSolved;
     }
   }
@@ -227,7 +232,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
     nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Color::White, 1.0f, 2);
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Colors::White, 1.0f, 2);
 
     if (current_fbo.IsValid ())
     { 
@@ -261,7 +266,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                    _bg_blur_texture,
                                    texxform_blur__bg,
-                                   nux::Color::White,
+                                   nux::Colors::White,
                                    true,
                                    rop);
   
@@ -295,7 +300,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            corner->GetHeight (),
                            corner->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Fullscreen toggle
@@ -305,7 +310,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            icon->GetHeight (),
                            icon->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Bottom repeated texture
@@ -321,7 +326,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            bottom->GetHeight (),
                            bottom->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Right repeated texture
@@ -337,7 +342,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            real_height + offset,
                            right->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
   }
   else
@@ -380,7 +385,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
-                               nux::Color::White,
+                               nux::Colors::White,
                                true,
                                rop);
     bgs++;
@@ -419,6 +424,7 @@ PlacesView::AboutToShow ()
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  
   if (signal)
     entry_changed.emit (entry);
 
@@ -808,7 +814,22 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
 void
 PlacesView::CloseRequest (GVariant *data, PlacesView *self)
 {
+  if (self->_close_idle != 0)
+  {
+    g_source_remove (self->_close_idle);
+    self->_close_idle = 0;
+  }
+
+  //add a timeout because the home view flashes on close
+  self->_close_idle = g_timeout_add_seconds (100, (GSourceFunc)OnCloseTimeout, self);
+}
+
+gboolean 
+PlacesView::OnCloseTimeout (PlacesView *self)
+{
+  self->_close_idle = 0;
   self->SetActiveEntry (NULL, 0, "");
+  return FALSE;
 }
 
 nux::TextEntry*
