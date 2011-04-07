@@ -1,6 +1,103 @@
 unity (3.8.4-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - [fglrx] compiz crashed with SIGSEGV in nux::IOpenGLSurface::UnlockRect()
+      (LP: #685682)
+    - SIGSEGV in g_atomic_int_get (LP: #688803)
+    - unity-panel-service crashed with SIGSEGV in bamf_factory_view_for_path()
+      (LP: #717684)
+    - New window tracking system breaks in the case where windows try to
+      restack relative to destroyed windows that were never mapped
+      (LP: #723014)
+    - Numpad 'Enter' doesn't work on highlighted items in dash, places-files and
+      places-apps (LP: #741615)
+    - compiz crashed with SIGSEGV in free() (LP: #738864)
+    - compiz crashed with SIGSEGV in g_closure_invoke() (LP: #741674)
+    - compiz crashed with SIGSEGV in CompWindow::id() (LP: #742028)
+    - Windows that reparent away from the root before they are mapped can
+      cause other windows to become invisible (and compiz to crash)
+      (LP: #743011)
+    - compiz crashed with SIGABRT in raise() (LP: #743414)
+    - compiz crashed with SIGSEGV in g_object_get_qdata() (LP: #742905)
+    - compiz crashed with SIGSEGV in g_closure_invoke() (LP: #748033)
+    - compiz crashed with SIGSEGV in CompScreen::dpy() (LP: #751372)
+    - compiz crashed with SIGABRT in __kernel_vsyscall() (LP: #744867)
+    - unity-window-decorator crashed with SIGSEGV in gdk_window_get_events()
+      (LP: #725284)
+    - Missing icons in app launcher (LP: #728393)
+    - Multiple quick clicks on launcher icon with multiple windows completely
+      crashes Unity (LP: #731790)
+    - Add a test case for invisible windows regressions (LP: #736876)
+    - Re-sync with xquerytree to avoid stacking order issues (LP: #740465)
+    - Wrong window moves (LP: #741656)
+    - compiz crashed with SIGSEGV in g_cclosure_marshal_VOID__VOID()
+      (LP: #742280)
+    - panel superposition (LP: #742859)
+    - unity-window-decorator doesn't start on secondary X session
+      (LP: #730495)
+    - Unity Launcher stops autohiding and is not responsive (LP: #744325)
+    - dash categories dropdown menu leaves "ghost" on desktop (LP: #746800)
+    - new dialogs open close enough of the launcher to make hide (LP: #747302)
+    - dnd from the application place to the launcher works only once
+      (LP: #747316)
+    - compiz crashed with SIGSEGV in CompWindow::id() while opening tcl/tk
+      interface of R (LP: #747439)
+    - minimize animates window fading to the top left corner (ubuntu symbol)
+      (LP: #747765)
+    - Spread - Clicking on a app icon to spread the windows must always show
+      all the windows, regardless of whether or not some of the windows are
+      minimised (LP: #750349)
+    - Launcher - Show visual de-coupling of Launcher app icons  (LP: #751196)
+    - unity-window-decorator crashed with SIGSEGV in event_filter_func()
+      (LP: #748317)
+    - Pressing Super-W to switch windows also presents Dash (LP: #753453)
+    - Don't create windows over the launcher (LP: #688816)
+    - Unity Grid is broken for multi-monitor setups (LP: #709221)
+    - F10 key does not move focus to indicators when on the desktop.
+      (LP: #727548)
+    - dynamic quicklists are not working (LP: #729074)
+    - Launcher tooltips appear under Dash (LP: #729093)
+    - Upon first login, launcher gets in the way of maximized windows
+      (LP: #731786)
+    - Dash: Applications should have higher preference (LP: #737379)
+    - Empty Trash legend illegible (LP: #739862)
+    - ATI/fglrx workaround patch (LP: #740298)
+    - Dash draws some icons off right edge of screen (LP: #740415)
+    - Add test case for ICCCM Section 4.1.4 (LP: #741074)
+    - you can see the dash icons when a place is closed (LP: #741599)
+    - Launcher unhides and stays unhidden when dragging elements in Opera
+      (LP: #741731)
+    - Applications added to the launcher can be put in a state where they are
+      named "EmptyLabel" (LP: #742378)
+    - Wall of desktop move wrong window (LP: #743634)
+    - Compiz switcher Alt-Tab order is not predictable - should maintain LIFO
+      ordering in application switcher (LP: #175874)
+    - Restart the panel service to resync app menus (LP: #746474)
+    - If you hold super key, the application launcher doesn't works with
+      numpad of FN key (LP: #747153)
+    - Horizontal renderer rendering issues (LP: #747337)
+    - Shortcut hint in Launcher is too large and refine the shortcut <show
+      launcher behavior> (LP: #747812)
+    - Enforce switcher 'bring to front' to avoid seeing the launcher while
+      doing ALT-Tab (LP: #750283)
+    - Deal with repeated key on launcher shortcut (LP: #750535)
+    - When we press Enter to run the first search result, Unity should wait
+      until searching is finished (LP: #749428)
+    - Dash can be wrongly displayed with super if you are too quick or trigger
+      scale and such (LP: #751102)
+    - the application panel stays up with auto hide after a password dialog
+      (LP: #684590)
+    - Keynav with keypad arrow keys not possible (LP: #741154)
+    - Feature Freeze Exception: Animation for Grid Plugin Previews
+      (LP: #744104)
+    - Add packaging dependency on compiz-plugins-main (LP: #748564)
+    - Dash - Switch dash highlight to new highlight (LP: #750365)
+    - Compiz won't allow Desktop Cube plugin to load with unity (LP: #711561)
+    - unity messes up with workspaces (LP: #728428)
+    - Dash - improve carrot (LP: #750354)
+    - Dash - Cursor navigation allows the user to keep scrolling down
+      indefinitely  (LP: #750375)
+    - Dash - Icons inside tiles are not centered (LP: #748588)
   * debian/control:
     - makes unity depends on compiz-plugins-main as we are binding to the expose
       mode.
@@ -1120,7 +1217,6 @@ unity (0.2.42-0ubuntu1) maverick; urgency=low
       return to the Home screen of that place and clear the search (LP: #607829)
     - Fix mutter crashed with SIGSEGV in g_type_check_instance() (LP: #641561)
     - Fix panel and menu item font colors don't match (LP: #637480)
-    - Fix indicators have orange color (LP: #632975)
     - Fix inactive menus are accessible on switching to a window (LP: #604505)
     - Use semi-transparent rectangle around launcher-icon (LP: #643388)
     - Fix mutter crashes when closing pop-up dialog (LP: #642669)
