@@ -126,6 +126,10 @@ IndicatorObjectEntryProxyRemote::Refresh (const char *__id,
                                           bool        __image_sensitive,
                                           bool        __image_visible)
 {
+  // sanity check
+  if (!__id || !__label || !__image_data)
+    return;
+
   g_free (_id);
   g_free (_label);
   g_free (_image_data);
