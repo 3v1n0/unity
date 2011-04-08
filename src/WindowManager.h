@@ -60,8 +60,8 @@ public:
   virtual void Raise (guint32 xid) = 0;
   virtual void Lower (guint32 xid) = 0;
 
-  virtual void Decorate   (guint32 xid);
-  virtual void Undecorate (guint32 xid);
+  virtual void Decorate   (guint32 xid) {};
+  virtual void Undecorate (guint32 xid) {};
   
   virtual bool IsScreenGrabbed () = 0;
 
