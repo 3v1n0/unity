@@ -760,6 +760,10 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
 {
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+    
+    // avoid a race when the BFB doesn't see we are not over the trigger anymore
+    if (over_launcher)
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
 }
 
 void Launcher::SetStateMouseOverBFB (bool over_bfb)
