@@ -536,7 +536,7 @@ PlaceRemote::OnActivationResultReceived (GObject      *source,
 {
   GVariant    *args;
   GError      *error = NULL;
-  guint        ret = 0;
+  guint32      ret;
 
   args = g_dbus_proxy_call_finish ((GDBusProxy *)source, result, &error);
   if (error)
@@ -546,7 +546,8 @@ PlaceRemote::OnActivationResultReceived (GObject      *source,
     g_error_free (error);
     return;
   }
-
+  
+  g_variant_get (args, "(u)", &ret);
   self->result_activated.emit (self->_active_uri.c_str (), (ActivationResult)ret);
 
   g_variant_unref (args);

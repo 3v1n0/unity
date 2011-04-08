@@ -48,6 +48,11 @@ public:
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
+  
+  void ProcessDndEnter ();
+  void ProcessDndLeave ();
+  void ProcessDndMove (int x, int y, std::list<char *> mimes);
+  void ProcessDndDrop (int x, int y);
 
 private:
   void Refresh ();

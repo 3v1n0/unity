@@ -331,6 +331,7 @@ private:
   static void OnPlaceViewShown (GVariant *data, void *val);
   
   static void OnBFBUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBDndEnter (GVariant *data, gpointer user_data);
 
   static void OnActionDone (GVariant *data, void *val);
 
