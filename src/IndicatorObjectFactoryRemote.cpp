@@ -329,20 +329,23 @@ IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
 
 void
 IndicatorObjectFactoryRemote::Sync (GVariant *args)
-{
-  GVariantIter *iter;
-  gchar        *indicator_id;
-  gchar        *entry_id;
-  gchar        *label;
-  gboolean      label_sensitive;
-  gboolean      label_visible;
-  guint32       image_type;
-  gchar        *image_data;
-  gboolean      image_sensitive;
-  gboolean      image_visible;
-
+{    
+  GVariantIter *iter            = NULL;
+  gchar        *indicator_id    = NULL;
+  gchar        *entry_id        = NULL;
+  gchar        *label           = NULL;
+  gboolean      label_sensitive = false;
+  gboolean      label_visible   = false;
+  guint32       image_type      = 0;
+  gchar        *image_data      = NULL;
+  gboolean      image_sensitive = false;
+  gboolean      image_visible   = false;
   IndicatorObjectProxyRemote *current_proxy = NULL;
   gchar                      *current_proxy_id = NULL;
+
+  // sanity check
+  if (!args)
+    return;
 
   g_variant_get (args, "(a(sssbbusbb))", &iter);
   while (g_variant_iter_loop (iter, "(sssbbusbb)",
