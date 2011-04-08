@@ -501,6 +501,8 @@ private:
   LauncherIcon     *_dnd_hovered_icon;
   
   Atom              _selection_atom;
+  
+  guint             _launcher_animation_timeout;
 
   /* gdbus */
   guint                       _dbus_owner;

@@ -238,6 +238,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));    
     _hover_machine = new LauncherHoverMachine ();
     _set_hover_connection = (sigc::connection) _hover_machine->should_hover_changed.connect (sigc::mem_fun (this, &Launcher::SetHover));
+    
+    _launcher_animation_timeout = 0;
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -530,6 +532,9 @@ Launcher::~Launcher()
   
   if (_on_drag_finish_connection.connected ())
     _on_drag_finish_connection.disconnect ();
+    
+  if (_launcher_animation_timeout > 0)
+    g_source_remove (_launcher_animation_timeout);
     
 }
 
@@ -862,6 +867,7 @@ gboolean Launcher::AnimationTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
     self->NeedRedraw ();
+    self->_launcher_animation_timeout = 0;
     return false;
 }
 
@@ -2635,8 +2641,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     float launcher_alpha = 1.0f;
 
     // rely on the compiz event loop to come back to us in a nice throttling
-    if (AnimationInProgress ())   
-      g_timeout_add (0, &Launcher::AnimationTimeout, this);
+    if (AnimationInProgress ())
+      _launcher_animation_timeout = g_timeout_add (0, &Launcher::AnimationTimeout, this);
 
     nux::ROPConfig ROP;
     ROP.Blend = false;
