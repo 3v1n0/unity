@@ -161,5 +161,8 @@ private:
   sigc::connection _on_panelstyle_changed_connection;
   
   gulong _activate_window_changed_id;
+
+  guint32 _place_shown_interest;
+  guint32 _place_hidden_interest;
 };
 #endif
