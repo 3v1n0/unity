@@ -313,9 +313,7 @@ PlacesController::CloseRequest (GVariant *data, void *val)
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  nux::Geometry geo (_monitor_rect.x, _monitor_rect.y, _launcher_size, PANEL_HEIGHT);
-  if (!geo.IsPointInside (x, y))
-    Hide ();
+  Hide ();
 }
 
 void
