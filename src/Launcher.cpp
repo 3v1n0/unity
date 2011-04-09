@@ -152,6 +152,7 @@ varying vec4 varyTexCoord0;                                             \n\
                                                                         \n\
 uniform sampler2D TextureObject0;                                       \n\
 uniform vec4 color0;                                                    \n\
+uniform vec4 desat_factor;                                              \n\
 vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
 {                                                                       \n\
   return texture2D(TexObject, TexCoord.st);                             \n\
@@ -162,9 +163,12 @@ void main()                                                             \n\
   vec4 tex = varyTexCoord0;                                             \n\
   tex.s = tex.s/varyTexCoord0.w;                                        \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
-	                                                                \n\
-  vec4 texel = SampleTexture(TextureObject0, tex);                      \n\
-  gl_FragColor = color0*texel;                                                 \n\
+	                                                                      \n\
+  vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
+  vec4 desat = dot (vec4 (0.30, 0.59, 0.11, 0.0) * texel);              \n\
+  vec4 final_color = (1 - desat_factor)*desat + desat_factor * texel;   \n\
+  final_color.a = texel.a;                                              \n\
+  gl_FragColor = final_color;                                           \n\
 }                                                                       \n\
 ");
 
@@ -190,21 +194,29 @@ nux::NString PerspectiveCorrectVtx = TEXT (
 nux::NString PerspectiveCorrectTexFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
+                            PARAM factor = program.local[1];            \n\
+                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
-                            TEMP temp1;                                 \n\
-                            TEMP recip;                                 \n\
+                            TEMP desat;                                 \n\
+                            TEMP color;                                 \n\
                             MOV pcoord, fragment.texcoord[0].w;         \n\
                             RCP temp, fragment.texcoord[0].w;           \n\
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], 2D;           \n\
-                            MUL result.color, color0, tex0;             \n\
+                            MUL color, color0, tex0;                    \n\
+                            MOV desat, color;                           \n\
+                            DP4 desat, luma, desat;                     \n\
+                            LRP result.color.rgb, factor.x, color, desat;    \n\
+                            MOV result.color.a, color;    \n\
                             END");
 
 nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
+                            PARAM factor = program.local[1];            \n\
+                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
@@ -212,7 +224,11 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             RCP temp, fragment.texcoord[0].w;           \n\
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], RECT;         \n\
-                            MUL result.color, color0, tex0;     \n\
+                            MUL color, color0, tex0;                    \n\
+                            MOV desat, color;                           \n\
+                            DP4 desat, luma, desat;                     \n\
+                            LRP result.color.rgb, factor.x, color, desat;    \n\
+                            MOV result.color.a, color;    \n\
                             END");
 
 static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
@@ -2366,16 +2382,18 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int TextureCoord0Location;
   int VertexColorLocation;
   int FragmentColor;
+  int DesatFactor;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->Begin();
 
-    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
+    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB ("TextureObject0");
+    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation  ("iVertex");
+    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation  ("iTexCoord0");
+    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation  ("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
+    DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
 
@@ -2431,12 +2449,18 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    //*********** CHANGE THE DESATURATION FACTOR HERE **************/
+    CHECKGL ( glUniform4fARB (DesatFactor, 0.1f, 0.1f, 0.1f, 0.1f));
+
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+
+    //*********** CHANGE THE DESATURATION FACTOR HERE **************/
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 1, 0.1f, 0.1f, 0.1f, 0.1f));
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
