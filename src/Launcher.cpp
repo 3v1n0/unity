@@ -229,10 +229,16 @@ Launcher::Launcher (nux::BaseWindow* parent,
 ,   m_ContentOffsetY(0)
 ,   m_BackgroundLayer(0)
 ,   _model (0)
+,   _show_on_edge (true)
 {
     _parent = parent;
     _screen = screen;
     _active_quicklist = 0;
+
+    _settings = g_settings_new ("com.canonical.Unity.Launcher");
+    g_signal_connect (_settings, "changed",
+                      (GCallback)(Launcher::SettingsChanged), this);
+    SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
     
     _hide_machine = new LauncherHideMachine ();
     _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));    
@@ -538,6 +544,17 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::SettingsChanged (GSettings *settings, char *key, Launcher *self)
+{
+  bool show_on_edge = g_settings_get_boolean (settings, "shows-on-edge") ? true : false;
+
+  if (self->_show_on_edge == show_on_edge)
+    return;
+
+  self->_show_on_edge = show_on_edge;
 }
 
 nux::BaseTexture*

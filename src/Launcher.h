@@ -392,6 +392,8 @@ private:
 
   std::list<char *> StringToUriList (char * input);
 
+  static void SettingsChanged (GSettings *settings, gchar *key, Launcher *self);
+
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
@@ -546,6 +548,8 @@ private:
   sigc::connection _on_drag_update_connection;
   sigc::connection _on_drag_finish_connection;
 
+  GSettings *_settings;
+  bool       _show_on_edge;
 };
 
 #endif // LAUNCHER_H
