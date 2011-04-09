@@ -166,7 +166,7 @@ void main()                                                             \n\
 	                                                                      \n\
   vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
   vec4 desat = dot (vec4 (0.30, 0.59, 0.11, 0.0) * texel);              \n\
-  vec4 final_color = (1 - desat_factor)*desat + desat_factor * texel;   \n\
+  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor)*desat + desat_factor * texel;   \n\
   final_color.a = texel.a;                                              \n\
   gl_FragColor = final_color;                                           \n\
 }                                                                       \n\
@@ -206,8 +206,7 @@ nux::NString PerspectiveCorrectTexFrg = TEXT (
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], 2D;           \n\
                             MUL color, color0, tex0;                    \n\
-                            MOV desat, color;                           \n\
-                            DP4 desat, luma, desat;                     \n\
+                            DP4 desat, luma, color;                     \n\
                             LRP result.color.rgb, factor.x, color, desat;    \n\
                             MOV result.color.a, color;    \n\
                             END");
@@ -225,8 +224,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], RECT;         \n\
                             MUL color, color0, tex0;                    \n\
-                            MOV desat, color;                           \n\
-                            DP4 desat, luma, desat;                     \n\
+                            DP4 desat, luma, color;                     \n\
                             LRP result.color.rgb, factor.x, color, desat;    \n\
                             MOV result.color.a, color;    \n\
                             END");
