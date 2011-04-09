@@ -2046,7 +2046,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry ();
 
-  if (!self->_hovered || (self->GetActionState () != ACTION_DRAG_ICON && self->GetActionState () != ACTION_DRAG_EXTERNAL))
+  if (!self->_hovered || self->GetActionState () == ACTION_DRAG_LAUNCHER)
     return TRUE;
   
   if (self->MouseOverTopScrollArea ())
@@ -2065,7 +2065,6 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
   
   self->EnsureAnimation ();
-  self->_autoscroll_handle = 0;
   
   return TRUE;
 }
@@ -2076,7 +2075,7 @@ void Launcher::EnsureScrollTimer ()
   
   if (needed && !_autoscroll_handle)
   {
-    _autoscroll_handle = g_timeout_add (15, &Launcher::OnScrollTimeout, this);
+    _autoscroll_handle = g_timeout_add (20, &Launcher::OnScrollTimeout, this);
   }
   else if (!needed && _autoscroll_handle)
   {
