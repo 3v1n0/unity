@@ -32,3 +32,4 @@ link_directories(${LIB_PATHS})
 
 add_executable(unity-preferences unity-preferences.c)
 install(TARGETS unity-preferences DESTINATION ${CMAKE_INSTALL_PREFIX}/bin/)
+install (FILES unity-preferences.desktop DESTINATION ${DATADIR}/applications)
