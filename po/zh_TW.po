@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-02-21 19:06+0100\n"
+"POT-Creation-Date: 2011-04-08 13:47-0400\n"
 "PO-Revision-Date: 2010-03-02 12:37-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Chinese (traditional)\n"
@@ -31,19 +31,18 @@ msgstr ""
 msgid "Empty Trash"
 msgstr ""
 
+msgid "Empty Trash..."
+msgstr ""
+
 msgid "Empty all items from Trash?"
 msgstr ""
 
+#. Find Files
 msgid "Find Files"
 msgstr ""
 
-msgid "Find Internet Apps"
-msgstr ""
-
-msgid "Find Media Apps"
-msgstr ""
-
-msgid "Find More Apps"
+#. Internet Apps
+msgid "Internet Apps"
 msgstr ""
 
 #, fuzzy
@@ -53,15 +52,37 @@ msgstr "保留在啟動程式中"
 msgid "Listen to Music"
 msgstr ""
 
+#. Media Apps
+msgid "Media Apps"
+msgstr ""
+
+#. More Apps
+msgid "More Apps"
+msgstr ""
+
 msgid "Open"
 msgstr ""
 
 msgid "Quit"
 msgstr "結束"
 
+msgid "Safely Remove"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search across all places"
+msgstr ""
+
+msgid "Shortcuts"
+msgstr ""
+
 msgid "Trash"
 msgstr ""
 
+#. Photos
+#. FIXME: Need to figure out the default
 msgid "View Photos"
 msgstr ""
 
