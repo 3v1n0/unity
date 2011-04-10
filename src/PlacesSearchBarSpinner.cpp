@@ -33,10 +33,11 @@ PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
-  _search_ready = style->GetSearchReadyIcon ();
-  _clear_full = style->GetSearchClearIcon ();
-  _clear_alone = style->GetSearchClearAloneIcon ();
-  _clear_spinner = style->GetSearchClearSpinnerIcon ();
+  _magnify = style->GetSearchMagnifyIcon ();
+  _close = style->GetSearchCloseIcon ();
+  _close_glow = style->GetSearchCloseGlowIcon ();
+  _spin = style->GetSearchSpinIcon ();
+  _spin_glow = style->GetSearchSpinGlowIcon ();
 
   _2d_rotate.Identity ();
   _2d_rotate.Rotate_z (0.0);
@@ -69,56 +70,64 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
+  GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin_glow->GetWidth ())/2),
+                       geo.y + ((geo.height - _spin_glow->GetHeight ())/2),
+                       _spin_glow->GetWidth (),
+                       _spin_glow->GetHeight (),
+                       _spin_glow->GetDeviceTexture (),
+                       texxform,
+                       nux::Colors::White);
+
   if (_state == STATE_READY)
   {
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _search_ready->GetWidth ())/2),
-                         geo.y + ((geo.height - _search_ready->GetHeight ())/2),
-                         _search_ready->GetWidth (),
-                         _search_ready->GetHeight (),
-                         _search_ready->GetDeviceTexture (),
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _magnify->GetWidth ())/2),
+                         geo.y + ((geo.height - _magnify->GetHeight ())/2),
+                         _magnify->GetWidth (),
+                         _magnify->GetHeight (),
+                         _magnify->GetDeviceTexture (),
                          texxform,
                          nux::Colors::White);
   }
   else if (_state == STATE_SEARCHING)
   {
-    nux::Geometry clear_geo (geo.x + ((geo.width - _clear_spinner->GetWidth ())/2),
-                             geo.y + ((geo.height - _clear_spinner->GetHeight ())/2),
-                             _clear_spinner->GetWidth (),
-                             _clear_spinner->GetHeight ());
+    nux::Geometry spin_geo (geo.x + ((geo.width - _spin->GetWidth ())/2),
+                             geo.y + ((geo.height - _spin->GetHeight ())/2),
+                             _spin->GetWidth (),
+                             _spin->GetHeight ());
 
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-clear_geo.x - clear_geo.width / 2,
-                                    -clear_geo.y - clear_geo.height / 2, 0));
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-spin_geo.x - spin_geo.width / 2,
+                                    -spin_geo.y - spin_geo.height / 2, 0));
     GfxContext.PushModelViewMatrix (_2d_rotate);    
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(clear_geo.x + clear_geo.width/ 2,
-                                    clear_geo.y + clear_geo.height / 2, 0));
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(spin_geo.x + spin_geo.width/ 2,
+                                    spin_geo.y + spin_geo.height / 2, 0));
 
-    GfxContext.QRP_1Tex (clear_geo.x,
-                         clear_geo.y,
-                         clear_geo.width,
-                         clear_geo.height,
-                         _clear_spinner->GetDeviceTexture (),
+    GfxContext.QRP_1Tex (spin_geo.x,
+                         spin_geo.y,
+                         spin_geo.width,
+                         spin_geo.height,
+                         _spin->GetDeviceTexture (),
                          texxform,
                          nux::Colors::White);
 
     GfxContext.PopModelViewMatrix ();
     GfxContext.PopModelViewMatrix ();
     GfxContext.PopModelViewMatrix ();
-
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _clear_alone->GetWidth ())/2),
-                         geo.y + ((geo.height - _clear_alone->GetHeight ())/2),
-                         _clear_alone->GetWidth (),
-                         _clear_alone->GetHeight (),
-                         _clear_alone->GetDeviceTexture (),
-                         texxform,
-                         nux::Colors::White);
   }
   else
   {
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _clear_full->GetWidth ())/2),
-                         geo.y + ((geo.height - _clear_full->GetHeight ())/2),
-                         _clear_full->GetWidth (),
-                         _clear_full->GetHeight (),
-                         _clear_full->GetDeviceTexture (),
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _close_glow->GetWidth ())/2),
+                         geo.y + ((geo.height - _close_glow->GetHeight ())/2),
+                         _close_glow->GetWidth (),
+                         _close_glow->GetHeight (),
+                         _close_glow->GetDeviceTexture (),
+                         texxform,
+                         nux::Colors::White);
+
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _close->GetWidth ())/2),
+                         geo.y + ((geo.height - _close->GetHeight ())/2),
+                         _close->GetWidth (),
+                         _close->GetHeight (),
+                         _close->GetDeviceTexture (),
                          texxform,
                          nux::Colors::White);
   }

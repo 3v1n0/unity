@@ -1004,7 +1004,7 @@ activate_next_prev_menu (PanelService         *self,
           gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
           new_object = g_slist_nth_data (indicators, new_object_index);
           new_entries = indicator_object_get_entries (new_object);
-	}
+	      }
 
       new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
 
