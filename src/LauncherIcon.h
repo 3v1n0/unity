@@ -73,6 +73,7 @@ public:
       QUIRK_PROGRESS,
       QUIRK_DROP_PRELIGHT,
       QUIRK_DROP_DIM,
+      QUIRK_DESAT,
       
       QUIRK_LAST,
     } Quirk;
