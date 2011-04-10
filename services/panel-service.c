@@ -996,6 +996,8 @@ activate_next_prev_menu (PanelService         *self,
           new_object = g_slist_nth_data (indicators, new_object_index);
         }
 
+      if (!INDICATOR_IS_OBJECT (new_object))
+        return;
       new_entries = indicator_object_get_entries (new_object);
       // if the indicator has no entries, move to the next/prev one until we find one with entries
       while (new_entries == NULL)
@@ -1003,8 +1005,10 @@ activate_next_prev_menu (PanelService         *self,
           gint cur_object_index = g_slist_index (indicators, new_object);
           gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
           new_object = g_slist_nth_data (indicators, new_object_index);
+          if (!INDICATOR_IS_OBJECT (new_object))
+            return;
           new_entries = indicator_object_get_entries (new_object);
-	}
+        }
 
       new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
 
@@ -1013,9 +1017,9 @@ activate_next_prev_menu (PanelService         *self,
 
       if (should_skip_menu (new_entry))
         {	  
-	  activate_next_prev_menu (self, new_object, new_entry, direction);
-	  return;
-	}
+          activate_next_prev_menu (self, new_object, new_entry, direction);
+      	  return;
+        }
     }
   // changing within a group of indicators (for example, entries within appmenu)
   else
@@ -1025,9 +1029,9 @@ activate_next_prev_menu (PanelService         *self,
 
       if (should_skip_menu (new_entry))
         { 
-	  activate_next_prev_menu (self, object, new_entry, direction);
-	  return;
-	}
+          activate_next_prev_menu (self, object, new_entry, direction);
+          return;
+        }
     }
 
   id = g_strdup_printf ("%p", new_entry);

@@ -374,9 +374,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      gPainter.PushDrawLayer (GfxContext,
-                              geo,
-                              _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer (GfxContext,
+                                geo,
+                                _title_layer);
     }
   }
 
