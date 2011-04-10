@@ -94,12 +94,14 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                              geo.y + ((geo.height - _spin->GetHeight ())/2),
                              _spin->GetWidth (),
                              _spin->GetHeight ());
+    int spin_offset_w = (geo.width % 2) ? 0 : 1;
+    int spin_offset_h = (geo.height % 2) ? 0 : 1;
 
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-spin_geo.x - spin_geo.width / 2,
-                                    -spin_geo.y - spin_geo.height / 2, 0));
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                    -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
     GfxContext.PushModelViewMatrix (_2d_rotate);    
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(spin_geo.x + spin_geo.width/ 2,
-                                    spin_geo.y + spin_geo.height / 2, 0));
+    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w)/ 2.0f,
+                                    spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
 
     GfxContext.QRP_1Tex (spin_geo.x,
                          spin_geo.y,
