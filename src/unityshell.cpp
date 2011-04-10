@@ -269,7 +269,7 @@ UnityScreen::handleEvent (XEvent *event)
   if (!skip_other_plugins)
     screen->handleEvent (event);
 
-  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", "resize", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
