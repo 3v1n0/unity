@@ -442,4 +442,5 @@ PlacesVScrollBar::UpdateTexture ()
   cairo_destroy (cr);
   delete bitmap;
   delete cairoGraphics;
+  cairo_surface_destroy (tmp_surf);
 }
