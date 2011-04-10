@@ -70,9 +70,14 @@ IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_i
 IconTexture::~IconTexture ()
 {
   g_free (_icon_name);
-
   if (_texture_cached)
+  {   
     _texture_cached->UnReference ();
+    if (_texture_cached->GetReferenceCount () == 1)
+    {
+      _texture_cached->UnReference ();
+    }
+  }
 }
 
 void
@@ -138,7 +143,6 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
 {
   TextureCache *cache = TextureCache::GetDefault ();
   char *id = NULL;
-
   _pixbuf_cached = pixbuf;
 
   // Cache the pixbuf dimensions so we scale correctly
@@ -148,7 +152,11 @@ IconTexture::Refresh (GdkPixbuf *pixbuf)
   // Try and get a texture from the texture cache
   id = g_strdup_printf ("IconTexture.%s", _icon_name);
   if (_texture_cached)
+  {
     _texture_cached->UnReference ();
+     if (_texture_cached->GetReferenceCount () == 1)
+       _texture_cached->UnReference (); 
+  }
 
   _texture_cached = cache->FindTexture (id,
                                         _texture_width,
@@ -224,7 +232,12 @@ void
 IconTexture::SetTexture (nux::BaseTexture *texture)
 {
   if (_texture_cached)
+  {
     _texture_cached->UnReference ();
+    if (_texture_cached->GetReferenceCount () == 1)
+      _texture_cached->UnReference (); 
+  }
+  
   _texture_cached = texture;
   _texture_cached->Reference ();
 }
