@@ -491,6 +491,8 @@ void StaticCairoText::UpdateTexture ()
 
   _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
+  
+  delete bitmap;
 
   cairo_destroy (cr);
 
