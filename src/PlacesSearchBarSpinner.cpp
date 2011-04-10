@@ -117,6 +117,25 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
+    texxform.FlipVCoord (true);
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin->GetWidth ())/2),
+                         geo.y + ((geo.height - _spin->GetHeight ())/2),
+                         _spin->GetWidth (),
+                         _spin->GetHeight (),
+                         _spin->GetDeviceTexture (),
+                         texxform,
+                         nux::Colors::White);
+    texxform.FlipVCoord (false);
+
+    GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin->GetWidth ())/2),
+                         geo.y + ((geo.height - _spin->GetHeight ())/2),
+                         _spin->GetWidth (),
+                         _spin->GetHeight (),
+                         _spin->GetDeviceTexture (),
+                         texxform,
+                         nux::Colors::White);
+
+
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _close_glow->GetWidth ())/2),
                          geo.y + ((geo.height - _close_glow->GetHeight ())/2),
                          _close_glow->GetWidth (),
