@@ -243,6 +243,7 @@ PlacesStyle::TextureFromFilename (const char *filename)
     g_object_unref (pixbuf);
   }
 
+  texture->Reference (); // stop it getting unreffed by IconTexture
   return texture;
 }
 
