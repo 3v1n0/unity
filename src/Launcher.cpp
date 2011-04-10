@@ -1365,7 +1365,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
     float icon_hide_offset = autohide_offset;
 
-    icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+    icon_hide_offset *= 1.0f - (present_progress * (_hide_machine->GetShowOnEdge () ? icon->PresentUrgency () : 0.0f));
 
     // icon is crossing threshold, start folding
     center.z += folded_z_distance * folding_progress;

@@ -114,6 +114,7 @@ public:
   void SetIconSize(int tile_size, int icon_size);
   
   bool Hidden () { return _hidden; }
+  bool ShowOnEdge () { return _hide_machine->GetShowOnEdge (); }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
