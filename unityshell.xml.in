@@ -42,7 +42,9 @@
                 <option name="launcher_reveal_edge" type="edge">
                     <_short>Reveal Mode</_short>
                     <_long>I lost all sense of sanity, there was a time when a knew a couch from a man, but that time has passed and now I lounge on my friends</_long>
-                    <default>Left</default>
+                    <default>
+                        <edge name="Left"/>
+                    </default>
                  </option>
 	              <option name="launcher_hide_mode" type="int">
                     <_short>Hide Launcher</_short>
