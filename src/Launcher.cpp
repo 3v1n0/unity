@@ -3035,7 +3035,8 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   SetStateMouseOverLauncher (true);
   
   // make sure we actually get a chance to get events before turning this off
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -3060,7 +3061,8 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   SetMousePosition (x, y);
   
   // make sure we actually get a chance to get events before turning this off
-  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     
   _postreveal_mousemove_delta_x += dx;
   _postreveal_mousemove_delta_y += dy;
