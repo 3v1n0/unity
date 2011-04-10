@@ -63,14 +63,11 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
 {
   {
     gchar *name;
-    gchar *escape;
 
     name = g_volume_get_name (_volume);
-    escape = g_markup_escape_text (name, -1);
 
-    SetTooltipText (escape);
+    SetTooltipText (name);
 
-    g_free (escape);
     g_free (name);
   }
   
