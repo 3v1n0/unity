@@ -55,7 +55,8 @@ class LauncherHideMachine : public sigc::trackable
       LAST_ACTION_ACTIVATE   = 1 << 15,
       SCALE_ACTIVE           = 1 << 16,
       EXPO_ACTIVE            = 1 << 17,
-      MT_DRAG_OUT            = 1 << 18
+      MT_DRAG_OUT            = 1 << 18,
+      MOUSE_OVER_ACTIVE_EDGE = 1 << 19,
     } HideQuirk;
   
     LauncherHideMachine ();

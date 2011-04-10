@@ -318,7 +318,6 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (font);
-  pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
 
