@@ -126,14 +126,19 @@ QuicklistView::RecvEndFocus ()
 bool
 QuicklistView::IsMenuItemSeperator (int index)
 {
-  DbusmenuMenuitem* item   = NULL;
-  const gchar*      label  = NULL;
-  bool              result = false;
+  QuicklistMenuItem* menu_item = NULL;
+  DbusmenuMenuitem*  item   = NULL;
+  const gchar*       label  = NULL;
+  bool               result = false;
 
   if (index < 0)
     return false;
 
-  item = GetNthItems (index)->_menuItem;
+  menu_item = GetNthItems (index);
+  if (!menu_item)
+    return false;
+  
+  item = menu_item->_menuItem;
   if (!item)
     return false;
 

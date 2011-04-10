@@ -27,6 +27,27 @@
 #include "IndicatorObjectFactory.h"
 #include "IndicatorObjectProxyRemote.h"
 
+class SyncData
+{
+public:
+  SyncData (IndicatorObjectFactory *self)
+  : _self (self),
+    _cancel (g_cancellable_new ())
+  {
+  }
+
+  ~SyncData ()
+  {
+    g_object_unref (_cancel);
+    _cancel = NULL;
+    _self = NULL;
+  }
+
+  IndicatorObjectFactory *_self;
+  GCancellable *_cancel;
+};
+
+
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
 class IndicatorObjectFactoryRemote : public IndicatorObjectFactory
@@ -52,10 +73,14 @@ public:
 
   GDBusProxy * GetRemoteProxy ();
 
+  std::vector<SyncData*> _sync_cancellables;
+
 private:
   IndicatorObjectProxyRemote* IndicatorForID (const char *id);
 private:
-  GDBusProxy *_proxy;
+  GDBusProxy   *_proxy;
+  guint32       _proxy_signal_id;
+  guint32       _proxy_name_id;
 };
 
 #endif // INDICATOR_OBJECT_FACTORY_REMOTE_H

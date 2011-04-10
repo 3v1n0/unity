@@ -170,6 +170,8 @@ private:
   guint _n_results;
   guint _searching_timeout;
   bool  _pending_activation;
+
+  bool  _search_empty;
 };
 
 #endif // PANEL_HOME_BUTTON_H
