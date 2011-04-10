@@ -112,6 +112,9 @@ UnityScreen::nuxEpilogue ()
 void
 UnityScreen::paintPanelShadow (const GLMatrix &matrix)
 {
+  if (PluginAdapter::Default ()->IsExpoActive ())
+    return;
+  
   nuxPrologue ();
   
   CompOutput *output = _last_output;
