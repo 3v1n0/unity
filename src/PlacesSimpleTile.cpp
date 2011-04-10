@@ -48,8 +48,8 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize (style->GetTileWidth (), icon_size);
-  _icontex->SinkReference ();
   AddChild (_icontex);
+
 
   _cairotext = new nux::StaticCairoText ("");
   _cairotext->SetMaximumWidth (style->GetTileWidth ());
@@ -57,7 +57,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetText (_label);
-  
+
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
@@ -73,11 +73,6 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 
 PlacesSimpleTile::~PlacesSimpleTile ()
 {
-  _icontex->UnReference ();
-  _icontex = NULL;
-  _cairotext->UnReference ();
-  _cairotext = NULL;
-
   g_free (_label);
   g_free (_icon);
   g_free (_uri);
