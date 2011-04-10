@@ -553,7 +553,6 @@ private:
   sigc::connection _on_drag_finish_connection;
 
   GSettings *_settings;
-  bool       _show_on_edge;
 };
 
 #endif // LAUNCHER_H

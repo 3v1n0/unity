@@ -24,6 +24,7 @@ LauncherHideMachine::LauncherHideMachine ()
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
   _should_hide = false;
+  _show_on_edge = false;
   
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
@@ -137,14 +138,21 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
     HideQuirk _should_show_quirk;
     if (GetQuirk (LAUNCHER_HIDDEN))
     {
-      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER | MOUSE_OVER_ACTIVE_EDGE);
+      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
+      
+      if (_show_on_edge)
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
+      
     }
     else 
     {
-      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB | MOUSE_OVER_ACTIVE_EDGE);
+      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB);
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk (MOUSE_MOVE_POST_REVEAL))
         _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER); 
+      
+      if (_show_on_edge)
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
 
     if (GetQuirk (_should_show_quirk))
@@ -213,6 +221,21 @@ bool
 LauncherHideMachine::ShouldHide ()
 {
   return _should_hide;
+}
+
+void     
+LauncherHideMachine::SetShowOnEdge (bool value)
+{
+  if (value == _show_on_edge)
+    return;
+    
+  _show_on_edge = value;
+}
+
+bool     
+LauncherHideMachine::GetShowOnEdge ()
+{
+  return _show_on_edge;
 }
 
 gboolean

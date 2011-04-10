@@ -65,6 +65,9 @@ class LauncherHideMachine : public sigc::trackable
     void     SetMode (HideMode mode);
     HideMode GetMode ();
     
+    void     SetShowOnEdge (bool value);
+    bool     GetShowOnEdge ();
+    
     void SetQuirk (HideQuirk quirk, bool active);
     bool GetQuirk (HideQuirk quirk, bool allow_partial = true);
     
@@ -83,6 +86,7 @@ class LauncherHideMachine : public sigc::trackable
   
     bool      _should_hide;
     bool      _latest_emit_should_hide;
+    bool      _show_on_edge;
     HideQuirk _quirks;
     HideMode  _mode;
     unsigned int _hide_delay_timeout_length;
