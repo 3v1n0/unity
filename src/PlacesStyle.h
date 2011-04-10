@@ -50,10 +50,11 @@ public:
   nux::BaseTexture * GetDashCorner ();
   nux::BaseTexture * GetDashFullscreenIcon ();
 
-  nux::BaseTexture * GetSearchReadyIcon ();
-  nux::BaseTexture * GetSearchClearIcon ();
-  nux::BaseTexture * GetSearchClearAloneIcon ();
-  nux::BaseTexture * GetSearchClearSpinnerIcon ();
+  nux::BaseTexture * GetSearchMagnifyIcon ();
+  nux::BaseTexture * GetSearchCloseIcon ();
+  nux::BaseTexture * GetSearchCloseGlowIcon ();
+  nux::BaseTexture * GetSearchSpinIcon ();
+  nux::BaseTexture * GetSearchSpinGlowIcon ();
 
   nux::BaseTexture * GetGroupUnexpandIcon ();
   nux::BaseTexture * GetGroupExpandIcon ();
@@ -80,10 +81,11 @@ private:
   nux::BaseTexture *_dash_corner_texture;
   nux::BaseTexture *_dash_fullscreen_icon;
 
-  nux::BaseTexture *_search_ready_texture;
-  nux::BaseTexture *_search_clear_texture;
-  nux::BaseTexture *_search_clear_alone_texture;
-  nux::BaseTexture *_search_clear_spinner_texture;
+  nux::BaseTexture *_search_magnify_texture;
+  nux::BaseTexture *_search_close_texture;
+  nux::BaseTexture *_search_close_glow_texture;
+  nux::BaseTexture *_search_spin_texture;
+  nux::BaseTexture *_search_spin_glow_texture;
 
   nux::BaseTexture *_group_unexpand_texture;
   nux::BaseTexture *_group_expand_texture;
