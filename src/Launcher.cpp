@@ -165,8 +165,8 @@ void main()                                                             \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
 	                                                                      \n\
   vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
-  vec4 desat = dot (vec4 (0.30, 0.59, 0.11, 0.0) * texel);              \n\
-  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor)*desat + desat_factor * texel;   \n\
+  vec4 desat = vec4 (0.30*texel.r + 0.59*texel.g + 0.11*texel.b);       \n\
+  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
   final_color.a = texel.a;                                              \n\
   gl_FragColor = final_color;                                           \n\
 }                                                                       \n\
