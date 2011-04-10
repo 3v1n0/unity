@@ -215,6 +215,7 @@ private:
     float         y_rotation;
     float         z_rotation;
     float         alpha;
+    float         saturation;
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
@@ -286,6 +287,7 @@ private:
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
   float DragOutProgress              (struct timespec const &current);
+  float IconDesatValue               (LauncherIcon *icon, struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
