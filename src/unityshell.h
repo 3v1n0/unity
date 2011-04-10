@@ -127,7 +127,12 @@ class UnityScreen :
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);
-
+                               
+  bool
+  launcherRevealEdgeInitiate (CompAction         *action,
+                              CompAction::State   state,
+                              CompOption::Vector &options);
+  
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);

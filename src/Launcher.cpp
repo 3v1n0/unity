@@ -1703,7 +1703,11 @@ void Launcher::SetHidden (bool hidden)
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
     if (hidden)
+    {
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+    }
+    
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
 
@@ -3068,6 +3072,12 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
   }
   
   return false;
+}
+
+void 
+Launcher::EdgeRevealTriggered ()
+{
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
 }
 
 void

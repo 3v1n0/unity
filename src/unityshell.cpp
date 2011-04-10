@@ -343,6 +343,15 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
   return false;
 }
 
+bool
+UnityScreen::launcherRevealEdgeInitiate (CompAction         *action,
+                                         CompAction::State   state,
+                                         CompOption::Vector &options)
+{
+  launcher->EdgeRevealTriggered ();
+  return false;
+}
+
 void
 UnityScreen::SendExecuteCommand ()
 {
@@ -894,6 +903,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
 
   UBusServer* ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus,
