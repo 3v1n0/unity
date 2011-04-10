@@ -184,7 +184,7 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
   gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  Color col = Color::Black;
+  Color col = Colors::Black;
   col.SetAlpha (0.0f);
   gfxContext.QRP_Color (base.x,
                         base.y,
