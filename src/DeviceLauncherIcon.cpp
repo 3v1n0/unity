@@ -101,17 +101,6 @@ DeviceLauncherIcon::GlowColor ()
   return nux::Color (0xFF333333);
 }
 
-void
-DeviceLauncherIcon::OnMouseClick (int button)
-{
-  SimpleLauncherIcon::OnMouseClick (button);
-
-  if (button == 1)
-  {
-    ActivateLauncherIcon ();
-  }
-}
-
 std::list<DbusmenuMenuitem *>
 DeviceLauncherIcon::GetMenus ()
 {
