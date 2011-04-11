@@ -449,6 +449,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                   this,
                                   NULL);
 
+    _settings = g_settings_new ("com.canonical.Unity.Launcher");
+    g_signal_connect (_settings, "changed",
+                      (GCallback)(Launcher::SettingsChanged), this);
+    SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
+
     SetDndEnabled (false, true);
 }
 
@@ -557,6 +562,13 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::SettingsChanged (GSettings *settings, char *key, Launcher *self)
+{
+  bool show_on_edge = g_settings_get_boolean (settings, "shows-on-edge") ? true : false;
+  self->_hide_machine->SetShowOnEdge (show_on_edge);
 }
 
 nux::BaseTexture*
@@ -780,9 +792,11 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
     
-    // avoid a race when the BFB doesn't see we are not over the trigger anymore
     if (over_launcher)
+    {
+      // avoid a race when the BFB doesn't see we are not over the trigger anymore
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
+    }
 }
 
 void Launcher::SetStateMouseOverBFB (bool over_bfb)
@@ -1357,7 +1371,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
     float icon_hide_offset = autohide_offset;
 
-    icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+    icon_hide_offset *= 1.0f - (present_progress * (_hide_machine->GetShowOnEdge () ? icon->PresentUrgency () : 0.0f));
 
     // icon is crossing threshold, start folding
     center.z += folded_z_distance * folding_progress;
@@ -1754,7 +1768,10 @@ void Launcher::SetHidden (bool hidden)
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
     if (hidden)
+    {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+    }
+    
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
 
@@ -3022,6 +3039,10 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
+  
+  // make sure we actually get a chance to get events before turning this off
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -3044,6 +3065,10 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
+  
+  // make sure we actually get a chance to get events before turning this off
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     
   _postreveal_mousemove_delta_x += dx;
   _postreveal_mousemove_delta_y += dy;
@@ -3135,6 +3160,12 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
   }
   
   return false;
+}
+
+void 
+Launcher::EdgeRevealTriggered ()
+{
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
 }
 
 void

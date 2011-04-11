@@ -114,6 +114,7 @@ public:
   void SetIconSize(int tile_size, int icon_size);
   
   bool Hidden () { return _hidden; }
+  bool ShowOnEdge () { return _hide_machine->GetShowOnEdge (); }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
@@ -137,6 +138,8 @@ public:
   
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
+  
+  void EdgeRevealTriggered ();
   
   gboolean CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
   
@@ -394,6 +397,8 @@ private:
 
   std::list<char *> StringToUriList (char * input);
 
+  static void SettingsChanged (GSettings *settings, gchar *key, Launcher *self);
+
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
@@ -550,6 +555,7 @@ private:
   sigc::connection _on_drag_update_connection;
   sigc::connection _on_drag_finish_connection;
 
+  GSettings *_settings;
 };
 
 #endif // LAUNCHER_H

@@ -127,7 +127,12 @@ class UnityScreen :
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);
-
+                               
+  bool
+  launcherRevealEdgeInitiate (CompAction         *action,
+                              CompAction::State   state,
+                              CompOption::Vector &options);
+  
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
@@ -182,12 +187,18 @@ protected:
 
   static void
   OnExitKeyNav (GVariant* data, void* value);
+  
+  static gboolean
+  OnEdgeTriggerTimeout (gpointer data);
 
   void
   startLauncherKeyNav ();
 
   void
   restartLauncherKeyNav ();
+  
+  void
+  OnLauncherHiddenChanged ();
 
   static void
   OnQuicklistEndKeyNav (GVariant* data, void* value);
@@ -210,6 +221,7 @@ protected:
 	DebugDBusInterface 		 *debugger;
   bool                   needsRelayout;
   guint32                relayoutSourceId;
+  guint                  _edge_trigger_handle;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

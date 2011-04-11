@@ -24,6 +24,7 @@ LauncherHideMachine::LauncherHideMachine ()
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
   _should_hide = false;
+  _show_on_edge = false;
   
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
@@ -89,6 +90,7 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
     SCALE_ACTIVE           = 1 << 16, 64k  #VISIBLE_REQUIRED
     EXPO_ACTIVE            = 1 << 17, 128k #VISIBLE_REQUIRED
     MT_DRAG_OUT            = 1 << 18, 256k #VISIBLE_REQUIRED
+    MOUSE_OVER_ACTIVE_EDGE   = 1 << 19, 512k
 */
 
 #define VISIBLE_REQUIRED (QUICKLIST_OPEN | EXTERNAL_DND_ACTIVE | \
@@ -116,6 +118,7 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       break;
     }
     
+    // figure out if we are going to hide because of a window
     bool hide_for_window = false;
     if (_mode == AUTOHIDE)
       hide_for_window = true;
@@ -124,21 +127,32 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
     else if (_mode == DODGE_ACTIVE_WINDOW)
       hide_for_window = GetQuirk (ACTIVE_WINDOW_UNDER);
     
+    // if we activated AND we would hide because of a window, go ahead and do it
     if (GetQuirk (LAST_ACTION_ACTIVATE) && hide_for_window)
     {
       should_hide = true;
       break;
     }
     
+    // Is there anything holding us open?
     HideQuirk _should_show_quirk;
-
     if (GetQuirk (LAUNCHER_HIDDEN))
+    {
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
-    else {
+      
+      if (_show_on_edge)
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
+      
+    }
+    else 
+    {
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB);
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk (MOUSE_MOVE_POST_REVEAL))
         _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER); 
+      
+      if (_show_on_edge)
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
 
     if (GetQuirk (_should_show_quirk))
@@ -146,7 +160,8 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       should_hide = false;
       break;
     }
-
+    
+    // nothing holding us open, any reason to hide?
     should_hide = hide_for_window;
 
   } while (false);
@@ -206,6 +221,23 @@ bool
 LauncherHideMachine::ShouldHide ()
 {
   return _should_hide;
+}
+
+void     
+LauncherHideMachine::SetShowOnEdge (bool value)
+{
+  if (value == _show_on_edge)
+    return;
+    
+  _show_on_edge = value;
+
+  g_debug ("Shows on edge: %d", _show_on_edge);
+}
+
+bool     
+LauncherHideMachine::GetShowOnEdge ()
+{
+  return _show_on_edge;
 }
 
 gboolean
