@@ -1,4 +1,4 @@
-unity (3.8.6-0ubuntu2) natty; urgency=low
+unity (3.8.6-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - compiz crashed with SIGABRT in raise() (LP: #748163)
@@ -31,7 +31,6 @@ unity (3.8.6-0ubuntu2) natty; urgency=low
       (LP: #754585)
     - Pressing F10 then "left arrow" wit Unity on Natty makes the system
       unusable (LP: #756867)
-    - compiz crashed with SIGSEGV in __pthread_mutex_lock() (LP: #711231)
     - compiz crashed with SIGSEGV in __pthread_mutex_lock() (LP: #711231)
     - Tooltips and Dash Font Problems (LP: #741605)
     - Title elipisising incorrect.  Type “Shotwell” for a good example
