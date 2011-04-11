@@ -229,13 +229,6 @@ StaticCairoText::SetText (NString text)
     int width = 0;
     int height = 0;
     GetTextExtents (width, height);
-      
-    g_debug ("StaticCairoText::SetText() - \"%s\" (%d, %d, %d)",
-             _text.GetTCharPtr(),
-             width,
-             height,
-             GetMaximumWidth ());
-
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
@@ -317,7 +310,6 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
     return;
   }
 
-
   int maxwidth = GetMaximumWidth ();
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
@@ -365,14 +357,8 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   pango_layout_context_changed (layout);
   pango_layout_get_extents (layout, NULL, &logRect);
 
-  g_debug ("GetTextExtents() -\n\ttext: \"%s\"\n\tx: %d\n\ty: %d\n\tw: %d\n\th: %d\n",
-           _text.GetTCharPtr(),
-           logRect.x / PANGO_SCALE,
-           logRect.y / PANGO_SCALE,
-           logRect.width / PANGO_SCALE,
-           logRect.height / PANGO_SCALE);
-  width  = logRect.width / PANGO_SCALE;
-  height = logRect.height / PANGO_SCALE;
+  width  = (logRect.x + logRect.width) / PANGO_SCALE;
+  height = (logRect.y + logRect.height) / PANGO_SCALE;
   _cached_extent_height = height;
   _cached_extent_width = width;
 
@@ -381,7 +367,6 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   g_object_unref (layout);
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
-
 }
 
 void StaticCairoText::DrawText (cairo_t*   cr,
