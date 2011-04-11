@@ -73,6 +73,7 @@ public:
       QUIRK_PROGRESS,
       QUIRK_DROP_PRELIGHT,
       QUIRK_DROP_DIM,
+      QUIRK_DESAT,
       
       QUIRK_LAST,
     } Quirk;
@@ -210,6 +211,8 @@ protected:
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
     void OnRemoteProgressChanged  (LauncherEntryRemote *remote);
     void OnRemoteQuicklistChanged (LauncherEntryRemote *remote);
+    
+    void OnRemoteUrgentChanged (LauncherEntryRemote *remote);
 
     void OnRemoteEmblemVisibleChanged   (LauncherEntryRemote *remote);
     void OnRemoteCountVisibleChanged    (LauncherEntryRemote *remote);
@@ -262,6 +265,7 @@ private:
     guint            _time_delay_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
+    bool             _remote_urgent;
     
     gint64           _shortcut;
     

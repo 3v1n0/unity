@@ -51,7 +51,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _resize_id (0),
   _alt_f2_entry (NULL),
   _searching_timeout (0),
-  _pending_activation (false)
+  _pending_activation (false),
+  _search_empty (false)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -424,7 +425,6 @@ PlacesView::AboutToShow ()
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
-  
   if (signal)
     entry_changed.emit (entry);
 
@@ -452,6 +452,7 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 
   _entry->SetActive (true);
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
+  _search_empty = (g_strcmp0 (search_string, "") == 0 && _entry == _home_entry);
 
   _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
@@ -619,6 +620,10 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
+  // We never show these so ignore them
+  if (_search_empty)
+    return;
+
   _n_results++;
 
   if (_n_results <= 2
@@ -729,12 +734,15 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 void
 PlacesView::OnSearchChanged (const char *search_string)
 {
+  _search_empty = false;
+
   if (_entry == _home_entry)
   {
     if (g_strcmp0 (search_string, "") == 0)
     {
       _layered_layout->SetActiveLayer (_home_view);
       _home_view->QueueDraw ();
+      _search_empty = true;
     }
     else
     {

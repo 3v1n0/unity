@@ -61,6 +61,8 @@ PanelHomeButton::PanelHomeButton ()
                                  this);
 
   Refresh ();
+  
+  SetDndEnabled (false, true);
 }
 
 PanelHomeButton::~PanelHomeButton ()
@@ -132,6 +134,16 @@ PanelHomeButton::Refresh ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.1f);
   cairo_rectangle (cr, width-1, 2, 1, height-4);
   cairo_fill (cr);
+  
+  if (_urgent_count)
+  {
+    cairo_set_source_rgba (cr, 0.18f, 0.8f, 0.95f, 1.0f);
+    cairo_move_to (cr, 0, 0);
+    cairo_line_to (cr, 8, 0);
+    cairo_line_to (cr, 0, 8);
+    cairo_line_to (cr, 0, 0);
+    cairo_fill (cr);
+  }
 
   cairo_destroy (cr);
 
@@ -152,7 +164,7 @@ PanelHomeButton::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            _urgent_count ? nux::Color (0xFF24C5F6) : nux::Colors::White,  // The color used to modulate the texture.
+                                                            nux::Colors::White,  // The color used to modulate the texture.
                                                             true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );
@@ -276,4 +288,27 @@ PanelHomeButton::OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data)
   PanelHomeButton* self = (PanelHomeButton*) data;
 
   self->Refresh ();
+}
+
+void 
+PanelHomeButton::ProcessDndEnter ()
+{
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER, NULL);
+}
+
+void 
+PanelHomeButton::ProcessDndLeave ()
+{
+}
+
+void 
+PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
+{
+  SendDndStatus (false, nux::DNDACTION_NONE, GetAbsoluteGeometry ());
+}
+
+void 
+PanelHomeButton::ProcessDndDrop (int x, int y)
+{
 }

@@ -53,7 +53,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
     _live_search_timeout (0)
 {
   PlacesStyle      *style = PlacesStyle::GetDefault ();
-  nux::BaseTexture *icon = style->GetSearchReadyIcon ();
+  nux::BaseTexture *icon = style->GetSearchMagnifyIcon ();
 
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
