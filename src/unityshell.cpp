@@ -253,6 +253,7 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
+        cScreen->damageScreen (); // evil hack
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
