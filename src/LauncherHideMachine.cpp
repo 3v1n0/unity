@@ -230,6 +230,8 @@ LauncherHideMachine::SetShowOnEdge (bool value)
     return;
     
   _show_on_edge = value;
+
+  g_debug ("Shows on edge: %d", _show_on_edge);
 }
 
 bool     
