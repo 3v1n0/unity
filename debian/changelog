@@ -1,6 +1,56 @@
 unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
 
   * New upstream release.
+    - compiz crashed with SIGABRT in raise() (LP: #748163)
+    - System freezes when maximize button is clicked (LP: #754063)
+    - compiz crashed with SIGSEGV in QuicklistView::IsMenuItemSeperator()
+      (LP: #754302)
+    - compiz crashed with SIGSEGV in std::_List_node_base::_M_hook()
+      (LP: #754235)
+    - compiz crashed with SIGSEGV in ubus_server_pump_message_queue()
+      (LP: #754657)
+    - drag from dash to launcher (LP: #662616)
+    - Add a test case for unity-decorator regressions (LP: #736878)
+    - the files place category combo has empty space (LP: #741641)
+    - panel superposition (LP: #742859)
+    - Unity Launcher stops autohiding and is not responsive (LP: #744325)
+    - Unity Launcher stops autohiding and is not responsive (LP: #744325)
+    - [FFE] Need API to set urgency from background process (LP: #747677)
+    - Launcher - Escape from 'drag behind the Launcher' interaction
+      (LP: #750298)
+    - Launcher needs to be desaturated when Dash is open, not transparent.
+      (LP: #750358)
+    - compiz crashed with SIGSEGV in free() (LP: #752293)
+    - migrate_favorites.py crashed with ImportError in __main__: No module
+      named gconf (LP: #752176)
+    - compiz crashed with SIGSEGV in PluginClassHandler<DecorWindow,
+      CompWindow, 0>::get() (LP: #743807)
+    - cannot close the dash by clicking on the bfb (LP: #753914)
+    - Animation for Grid Previews is broken (LP: #754088)
+    - compiz crashed with SIGSEGV in PanelMenuView::OnPlaceViewShown()
+      (LP: #754585)
+    - Pressing F10 then "left arrow" wit Unity on Natty makes the system
+      unusable (LP: #756867)
+    - compiz crashed with SIGSEGV in __pthread_mutex_lock() (LP: #711231)
+    - compiz crashed with SIGSEGV in __pthread_mutex_lock() (LP: #711231)
+    - Tooltips and Dash Font Problems (LP: #741605)
+    - Title elipisising incorrect.  Type “Shotwell” for a good example
+      (LP: #750350)
+    - compiz crashed with SIGSEGV in Launcher::Launcher() (LP: #748096)
+    - BFB - Turn top left corner blue rather than Ubuntu logo (LP: #755286)
+    - launcher appears and gets stuck when resizing windows with mouse
+      (LP: #754690)
+    - Wrong item gets dragged out (LP: #729796)
+    - Launcher - when the launcher is folded, the bottom icon partially falls
+      off the end of the screen (LP: #731869)
+    - unity-window-decorator: Resize padding: Tiny focused windows lose resize
+      padding and shadow when <69 pixels wide (LP: #737707)
+    - Deinstalling an application with launcher entry leaves orphaned shortcut
+      (LP: #748107)
+    - Two Nautilus windows open when clicked on a device icon on Launcher
+      (started after 3.8.2) (LP: #748299)
+    - compiz crashed with SIGSEGV in Launcher::AnimationTimeout()
+      (LP: #749890)
   * debian/control:
     - build-dep on latest nux (ABI break)
   * debian/unity-common.install:
