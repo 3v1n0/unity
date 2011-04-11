@@ -1,10 +1,12 @@
-unity (3.8.6-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
 
   * New upstream release.
   * debian/control:
     - build-dep on latest nux (ABI break)
+  * debian/unity-common.install:
+    - install the desktop file for the new capplet
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 11:45:59 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 12:09:16 +0200
 
 unity (3.8.4-0ubuntu1) natty; urgency=low
 
