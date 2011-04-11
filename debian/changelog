@@ -1,3 +1,12 @@
+unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - build-dep on grail/geis with version bumped
+  * 01_dont_dep_on_latest_geis_grail.patch:
+    - not needed anymore
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 16:20:08 +0200
+
 unity (3.8.6-0ubuntu1) natty; urgency=low
 
   * New upstream release.

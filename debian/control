@@ -23,7 +23,7 @@ Build-Depends: cmake,
                libdee-dev (>= 0.5.4),
                libindicator-dev (>= 0.3.19),
                libunity-misc-dev (>= 0.2.1),
-               libutouch-grail-dev,
+               libutouch-grail-dev (>= 1.0.20),
                libxcb-icccm1-dev,
                libnux-0.9-dev (>= 0.9.42),
                compiz-dev (>= 1:0.9.2.1+glibmainloop4-0ubuntu4),
@@ -33,7 +33,7 @@ Build-Depends: cmake,
                libboost-serialization1.42-dev,
                libstartup-notification0-dev,
                libatk1.0-dev,
-               libutouch-geis-dev (>= 2.0.0)
+               libutouch-geis-dev (>= 2.0.10)
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu
