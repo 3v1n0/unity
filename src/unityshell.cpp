@@ -374,6 +374,9 @@ UnityScreen::launcherRevealEdgeInitiate (CompAction         *action,
                                          CompAction::State   state,
                                          CompOption::Vector &options)
 {
+  if (screen->grabbed ())
+    return false;
+
   if (_edge_trigger_handle)
     g_source_remove (_edge_trigger_handle);
     
