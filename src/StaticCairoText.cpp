@@ -229,6 +229,13 @@ StaticCairoText::SetText (NString text)
     int width = 0;
     int height = 0;
     GetTextExtents (width, height);
+      
+    g_debug ("StaticCairoText::SetText() - \"%s\" (%d, %d, %d)",
+             _text.GetTCharPtr(),
+             width,
+             height,
+             GetMaximumWidth ());
+
     UpdateTexture ();
     sigTextChanged.emit (this);
   }
@@ -337,7 +344,6 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   else
     pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
 
-
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pango_layout_set_height (layout, _lines);
   pango_layout_set_width (layout, maxwidth * PANGO_SCALE);
@@ -359,6 +365,12 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   pango_layout_context_changed (layout);
   pango_layout_get_extents (layout, NULL, &logRect);
 
+  g_debug ("GetTextExtents() -\n\ttext: \"%s\"\n\tx: %d\n\ty: %d\n\tw: %d\n\th: %d\n",
+           _text.GetTCharPtr(),
+           logRect.x / PANGO_SCALE,
+           logRect.y / PANGO_SCALE,
+           logRect.width / PANGO_SCALE,
+           logRect.height / PANGO_SCALE);
   width  = logRect.width / PANGO_SCALE;
   height = logRect.height / PANGO_SCALE;
   _cached_extent_height = height;
@@ -393,7 +405,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
     fontName = g_strdup (_fontstring);
 
   GetTextExtents (fontName, textWidth, textHeight);
-
+    
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (fontName);
@@ -410,7 +422,6 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   else
     pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
 
-
   if (_align == NUX_ALIGN_LEFT)
     pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
   else if (_align == NUX_ALIGN_CENTRE)
@@ -420,6 +431,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
   pango_layout_set_width (layout, textWidth * PANGO_SCALE);
+
   pango_layout_set_height (layout, _lines);
   pangoCtx = pango_layout_get_context (layout); // is not ref'ed
   pango_cairo_context_set_font_options (pangoCtx,
@@ -451,6 +463,24 @@ void StaticCairoText::DrawText (cairo_t*   cr,
 
   cairo_move_to (cr, 0.0f, 0.0f);
   pango_cairo_show_layout (cr, layout);
+
+  PangoRectangle inkRect = {0, 0, 0, 0};
+  PangoRectangle logRect = {0, 0, 0, 0};
+  pango_layout_get_extents (layout, &inkRect, &logRect);
+  cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
+  cairo_rectangle (cr,
+                   inkRect.x / PANGO_SCALE,
+                   inkRect.y / PANGO_SCALE,
+                   inkRect.width / PANGO_SCALE,
+                   inkRect.height / PANGO_SCALE);
+  cairo_stroke (cr);
+  cairo_set_source_rgba (cr, 0.0f, 0.0f, 1.0f, 1.0f);
+  cairo_rectangle (cr,
+                   logRect.x / PANGO_SCALE,
+                   logRect.y / PANGO_SCALE,
+                   logRect.width / PANGO_SCALE,
+                   logRect.height / PANGO_SCALE);
+  cairo_stroke (cr);
 
   _actual_lines = pango_layout_get_line_count (layout);
 

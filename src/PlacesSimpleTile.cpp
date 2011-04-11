@@ -57,7 +57,7 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
   _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetText (_label);
-  
+
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
   layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
   layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
