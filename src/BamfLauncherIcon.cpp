@@ -142,6 +142,18 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   EnsureWindowState ();
   UpdateMenus ();
 
+  // add a file watch to the desktop file so that if/when the app is removed we can remove ourself from the launcher.
+  GFile *_desktop_file = g_file_new_for_path (DesktopFile ());
+  _desktop_file_monitor = g_file_monitor_file (_desktop_file,
+                                               G_FILE_MONITOR_NONE,
+                                               NULL,
+                                               NULL);
+
+  _on_desktop_file_changed_handler_id = g_signal_connect (_desktop_file_monitor,
+                                                          "changed",
+                                                          G_CALLBACK (&BamfLauncherIcon::OnDesktopFileChanged),
+                                                          this);
+
   _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
   _hidden_changed_connection = (sigc::connection) IconManager->hidden_changed.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
@@ -159,6 +171,10 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
                                _menu_callbacks["Quit"]);
 
+  if (_on_desktop_file_changed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _desktop_file_monitor,
+                                 _on_desktop_file_changed_handler_id);
+
   if (_on_window_minimized_connection.connected ())
     _on_window_minimized_connection.disconnect ();
   
@@ -174,6 +190,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnClosed,             this);
 
   g_object_unref (m_App);
+  g_object_unref (_desktop_file_monitor);
 
   g_free (_cached_desktop_file);
   g_free (_cached_name);
@@ -191,7 +208,7 @@ BamfLauncherIcon::OnWindowMinimized (guint32 xid)
   if (!OwnsWindow (xid))
     return;
 
-  Present (0.0f, 600);
+  Present (0.5f, 600);
   UpdateQuirkTimeDelayed (300, QUIRK_SHIMMER);
 }
 
@@ -914,7 +931,7 @@ BamfLauncherIcon::UpdateIconGeometries (nux::Point3 center)
   BamfView *view;
   long data[4];
 
-  if (_launcher->Hidden ())
+  if (_launcher->Hidden () && !_launcher->ShowOnEdge ())
   {
     data[0] = 0;
     data[1] = 0;
@@ -1060,4 +1077,21 @@ void
 BamfLauncherIcon::OnAcceptDrop (std::list<char *> uris)
 {
   OpenInstanceWithUris (ValidateUrisForLaunch (uris));
+}
+
+void
+BamfLauncherIcon::OnDesktopFileChanged (GFileMonitor        *monitor,
+                                        GFile               *file,
+                                        GFile               *other_file,
+                                        GFileMonitorEvent    event_type,
+                                        gpointer             data)
+{
+  BamfLauncherIcon *self = static_cast<BamfLauncherIcon*> (data);
+  switch (event_type) {
+  case G_FILE_MONITOR_EVENT_DELETED:
+    self->UnStick ();
+    break;
+  default:
+    break;
+  }
 }

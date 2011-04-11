@@ -68,6 +68,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _background_color = nux::Colors::White;
   _glow_color = nux::Colors::White;
   
+  _remote_urgent = false;
   _mouse_inside = false;
   _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
@@ -660,12 +661,12 @@ LauncherIcon::SetQuirk (LauncherIcon::Quirk quirk, bool value)
   
   // Present on urgent as a general policy
   if (quirk == QUIRK_VISIBLE && value)
-    Present (0.0f, 1500);
+    Present (0.5f, 1500);
   if (quirk == QUIRK_URGENT)
   {
     if (value)
     {
-      Present (0.0f, 1500);
+      Present (0.5f, 1500);
     }
     
     UBusServer *ubus = ubus_server_get_default ();
@@ -910,6 +911,8 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   remote->count_visible_changed.connect    (sigc::mem_fun(this, &LauncherIcon::OnRemoteCountVisibleChanged));
   remote->progress_visible_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteProgressVisibleChanged));
   
+  remote->urgent_changed.connect (sigc::mem_fun(this, &LauncherIcon::OnRemoteUrgentChanged));
+  
   
   if (remote->EmblemVisible ())
     OnRemoteEmblemVisibleChanged (remote);
@@ -920,7 +923,8 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   if (remote->ProgressVisible ())
     OnRemoteProgressVisibleChanged (remote);
   
-  OnRemoteQuicklistChanged (remote);
+  if (remote->Urgent ())
+    OnRemoteUrgentChanged (remote);
 }
 
 void 
@@ -933,6 +937,16 @@ LauncherIcon::RemoveEntryRemote (LauncherEntryRemote *remote)
   
   DeleteEmblem ();
   SetQuirk (QUIRK_PROGRESS, false);
+  
+  if (_remote_urgent)
+    SetQuirk (QUIRK_URGENT, false);
+}
+
+void
+LauncherIcon::OnRemoteUrgentChanged (LauncherEntryRemote *remote)
+{
+  _remote_urgent = remote->Urgent ();
+  SetQuirk (QUIRK_URGENT, remote->Urgent ());
 }
 
 void

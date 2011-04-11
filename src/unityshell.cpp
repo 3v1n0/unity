@@ -110,8 +110,20 @@ UnityScreen::nuxEpilogue ()
 }
 
 void
+UnityScreen::OnLauncherHiddenChanged ()
+{
+  if (launcher->Hidden ())
+    screen->addAction (&optionGetLauncherRevealEdge ());
+  else
+    screen->removeAction (&optionGetLauncherRevealEdge ());
+}
+
+void
 UnityScreen::paintPanelShadow (const GLMatrix &matrix)
 {
+  if (PluginAdapter::Default ()->IsExpoActive ())
+    return;
+  
   nuxPrologue ();
   
   CompOutput *output = _last_output;
@@ -250,6 +262,7 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
+        cScreen->damageScreen (); // evil hack
         if (_key_nav_mode_requested)
           launcher->startKeyNavMode ();
         _key_nav_mode_requested = false;
@@ -269,7 +282,7 @@ UnityScreen::handleEvent (XEvent *event)
   if (!skip_other_plugins)
     screen->handleEvent (event);
 
-  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", "resize", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
@@ -340,6 +353,38 @@ UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
                                              CompOption::Vector &options)
 {
   panelController->EndFirstMenuShow ();
+  return false;
+}
+
+gboolean
+UnityScreen::OnEdgeTriggerTimeout (gpointer data)
+{
+  UnityScreen *self = static_cast<UnityScreen *> (data);
+  
+  Window root_r, child_r;
+  int root_x_r, root_y_r, win_x_r, win_y_r;
+  unsigned int mask;
+  XQueryPointer (self->screen->dpy (), self->screen->root (), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  
+  if (root_x_r == 0)
+    self->launcher->EdgeRevealTriggered ();
+  
+  self->_edge_trigger_handle = 0;
+  return false;
+}
+
+bool
+UnityScreen::launcherRevealEdgeInitiate (CompAction         *action,
+                                         CompAction::State   state,
+                                         CompOption::Vector &options)
+{
+  if (screen->grabbed ())
+    return false;
+
+  if (_edge_trigger_handle)
+    g_source_remove (_edge_trigger_handle);
+    
+  _edge_trigger_handle = g_timeout_add (500, &UnityScreen::OnEdgeTriggerTimeout, this);
   return false;
 }
 
@@ -831,6 +876,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
     cScreen (CompositeScreen::get (screen)),
     gScreen (GLScreen::get (screen)),
     relayoutSourceId (0),
+    _edge_trigger_handle (0),
     doShellRepaint (false)
 {
   START_FUNCTION ();
@@ -894,6 +940,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
 
   UBusServer* ubus = ubus_server_get_default ();
   ubus_server_register_interest (ubus,
@@ -955,6 +1002,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
+  
   self->AddChild (self->launcher);
 
   nux::HLayout* layout = new nux::HLayout();

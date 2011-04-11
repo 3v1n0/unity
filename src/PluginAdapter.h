@@ -27,6 +27,14 @@
 
 #include "WindowManager.h"
 
+typedef struct {
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    long input_mode;
+    unsigned long status;
+} MotifWmHints, MwmHints;
+
 class MultiActionList
 {
 public:
@@ -84,6 +92,9 @@ public:
     void NotifyResized (CompWindow *window, int x, int y, int w, int h);
     void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
     
+    void Decorate   (guint32 xid);
+    void Undecorate (guint32 xid);
+    
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
@@ -106,6 +117,8 @@ protected:
     PluginAdapter(CompScreen *screen);
 
 private:
+    void SetMwmWindowHints (Window xid, MotifWmHints *new_hints);
+
     CompScreen *m_Screen;
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;

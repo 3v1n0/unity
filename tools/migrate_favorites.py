@@ -7,14 +7,19 @@
 # under the terms of the GNU General Public License version 3, as published 
 # by the Free Software Foundation.
 
-import datetime
-import gconf
-import glob
-import gobject
-import os
 import sys
-import subprocess
-from xdg import BaseDirectory
+
+try:
+    import datetime
+    import gconf
+    import glob
+    import gobject
+    import os
+    import subprocess
+    from xdg import BaseDirectory
+except ImportError, e:
+    print "No migration because of a missing python module: %s" % e
+    sys.exit (1)
 
 LAST_MIGRATION = '3.2.10'
 

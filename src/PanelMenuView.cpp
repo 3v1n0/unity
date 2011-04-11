@@ -121,10 +121,10 @@ PanelMenuView::PanelMenuView (int padding)
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+  _place_shown_interest = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
                                  (UBusCallback)PanelMenuView::OnPlaceViewShown,
                                  this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+  _place_hidden_interest = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
                                  (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                  this);
 
@@ -169,6 +169,8 @@ PanelMenuView::~PanelMenuView ()
   _window_buttons->UnReference ();
   _panel_titlebar_grab_area->UnReference ();
 
+  ubus_server_unregister_interest (ubus_server_get_default (), _place_shown_interest);
+  ubus_server_unregister_interest (ubus_server_get_default (), _place_hidden_interest);
 }
 
 void
@@ -372,9 +374,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      gPainter.PushDrawLayer (GfxContext,
-                              geo,
-                              _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer (GfxContext,
+                                geo,
+                                _title_layer);
     }
   }
 

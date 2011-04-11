@@ -51,6 +51,7 @@ public:
   gboolean EmblemVisible();
   gboolean CountVisible();
   gboolean ProgressVisible();
+  gboolean Urgent();
 
   sigc::signal<void, LauncherEntryRemote *, const gchar * > dbus_name_changed; // gives the old name as arg
   sigc::signal<void, LauncherEntryRemote *> emblem_changed;
@@ -61,6 +62,8 @@ public:
   sigc::signal<void, LauncherEntryRemote *> emblem_visible_changed;
   sigc::signal<void, LauncherEntryRemote *> count_visible_changed;
   sigc::signal<void, LauncherEntryRemote *> progress_visible_changed;
+  
+  sigc::signal<void, LauncherEntryRemote *> urgent_changed;
 
 private:
 
@@ -76,6 +79,7 @@ private:
   gboolean _emblem_visible;
   gboolean _count_visible;
   gboolean _progress_visible;
+  gboolean _urgent;
 
   void SetDBusName (const gchar *dbus_name);
   void SetEmblem (const gchar *emblem);
@@ -87,6 +91,8 @@ private:
   void SetEmblemVisible (gboolean visible);
   void SetCountVisible (gboolean visible);
   void SetProgressVisible (gboolean visible);
+  
+  void SetUrgent (gboolean urgent);
 
   void Update (LauncherEntryRemote *other);
   void Update (GVariantIter *prop_iter);
