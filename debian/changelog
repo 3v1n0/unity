@@ -1,4 +1,4 @@
-unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
+unity (3.8.6-0ubuntu2) natty; urgency=low
 
   * New upstream release.
     - compiz crashed with SIGABRT in raise() (LP: #748163)
@@ -56,7 +56,7 @@ unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
   * debian/unity-common.install:
     - install the desktop file for the new capplet
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 12:09:16 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 12:42:33 +0200
 
 unity (3.8.4-0ubuntu1) natty; urgency=low
 
