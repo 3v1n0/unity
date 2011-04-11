@@ -449,24 +449,6 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   cairo_move_to (cr, 0.0f, 0.0f);
   pango_cairo_show_layout (cr, layout);
 
-  PangoRectangle inkRect = {0, 0, 0, 0};
-  PangoRectangle logRect = {0, 0, 0, 0};
-  pango_layout_get_extents (layout, &inkRect, &logRect);
-  cairo_set_source_rgba (cr, 1.0f, 0.0f, 0.0f, 1.0f);
-  cairo_rectangle (cr,
-                   inkRect.x / PANGO_SCALE,
-                   inkRect.y / PANGO_SCALE,
-                   inkRect.width / PANGO_SCALE,
-                   inkRect.height / PANGO_SCALE);
-  cairo_stroke (cr);
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 1.0f, 1.0f);
-  cairo_rectangle (cr,
-                   logRect.x / PANGO_SCALE,
-                   logRect.y / PANGO_SCALE,
-                   logRect.width / PANGO_SCALE,
-                   logRect.height / PANGO_SCALE);
-  cairo_stroke (cr);
-
   _actual_lines = pango_layout_get_line_count (layout);
 
   // clean up
