@@ -18,6 +18,7 @@
  */
 
 #include "Nux/Nux.h"
+#include "Nux/Area.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 
@@ -53,13 +54,16 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   // so redefining the minimum value for them.
   SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
  
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
+  _on_entry_added_connection = _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
+  _on_entry_moved_connection = _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
+  _on_entry_removed_connection = _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
 }
 
 PanelIndicatorObjectView::~PanelIndicatorObjectView ()
 {
+  _on_entry_added_connection.disconnect ();
+  _on_entry_moved_connection.disconnect ();
+  _on_entry_removed_connection.disconnect ();
 }
 
 long
@@ -75,7 +79,6 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 void
 PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-
 }
 
 void
@@ -153,3 +156,4 @@ PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
+

@@ -25,22 +25,35 @@
 #include "PluginAdapter.h"
 
 SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
-:   LauncherIcon(IconManager)
+:   LauncherIcon(IconManager),
+  _theme_changed_id (0)
 {
   m_Icon = 0;
   m_IconName = 0;
-  
-  LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
-  LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
-  LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
-  LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
-  LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+
+  _on_mouse_down_connection = (sigc::connection) LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
+  _on_mouse_up_connection = (sigc::connection) LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
+  _on_mouse_click_connection = (sigc::connection) LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
+  _on_mouse_enter_connection = (sigc::connection) LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
+  _on_mouse_leave_connection = (sigc::connection) LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+
+  _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                                        G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
+  _on_mouse_down_connection.disconnect ();
+  _on_mouse_up_connection.disconnect ();
+  _on_mouse_click_connection.disconnect ();
+  _on_mouse_enter_connection.disconnect ();
+  _on_mouse_leave_connection.disconnect ();
+
   if (m_Icon)
     m_Icon->UnReference ();
+
+  if (_theme_changed_id)
+    g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
 }
 
 void
@@ -56,8 +69,6 @@ SimpleLauncherIcon::OnMouseUp (int button)
 void
 SimpleLauncherIcon::OnMouseClick (int button)
 {
-  if (button == 1 && PluginAdapter::Default ()->IsScaleActive())
-    PluginAdapter::Default ()->TerminateScale ();
 }
 
 void
@@ -73,7 +84,7 @@ SimpleLauncherIcon::OnMouseLeave ()
 void
 SimpleLauncherIcon::ActivateLauncherIcon ()
 {
-  MouseClick.emit (1);
+  activate.emit ();
 }
 
 nux::BaseTexture *
@@ -84,6 +95,7 @@ SimpleLauncherIcon::GetTextureForSize (int size)
     
   if (m_Icon)
     m_Icon->UnReference ();
+  m_Icon = 0;
   
   if (!m_IconName)
     return 0;
@@ -109,4 +121,29 @@ SimpleLauncherIcon::SetIconName (const char *name)
   }
   
   needs_redraw.emit (this);
+}
+
+void
+SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
+{
+  SimpleLauncherIcon *self;
+
+  if (!data)
+    return;
+  
+  // invalidate the current cache
+  LauncherIcon::_current_theme_is_mono = -1;
+
+  self = (SimpleLauncherIcon*) data;
+  
+  /*
+   * Unreference the previous icon and redraw
+   * (forcing the new icon to be loaded)
+   */
+  if (self->m_Icon)
+  {
+    self->m_Icon->UnReference ();
+    self->m_Icon = 0;
+    self->needs_redraw.emit (self);
+  }
 }

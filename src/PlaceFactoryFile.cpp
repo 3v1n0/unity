@@ -17,6 +17,8 @@
  */
 #include "config.h"
 
+#include <algorithm>
+
 #include "PlaceFactoryFile.h"
 
 #include "PlaceRemote.h"
@@ -120,7 +122,6 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
       if (place->IsValid ())
       {
         _places.push_back (place);
-        place_added.emit (place);
       }
       else
         delete place;
@@ -142,9 +143,41 @@ PlaceFactoryFile::OnDirectoryEnumerationReady (GObject      *source,
     return;
   }
 
+  // Sort them
+  std::sort (_places.begin (), _places.end (), DoSortThemMister);
+
+  // Signal their creation
+  std::vector<Place *>::iterator it, eit = _places.end ();
+  for (it = _places.begin (); it != eit; ++it)
+  {
+    place_added.emit (*it);
+    g_debug ("%s", static_cast<PlaceRemote *> (*it)->GetDBusPath ());
+  }
+
   read_directory = true;
 
   g_object_unref (enumerator);
+}
+
+bool
+PlaceFactoryFile::DoSortThemMister (Place *aa, Place *bb)
+{
+#define FIRST "/com/canonical/unity/applicationsplace"
+#define SECOND "/com/canonical/unity/filesplace"
+
+  PlaceRemote *a = static_cast<PlaceRemote *> (aa);
+  PlaceRemote *b = static_cast<PlaceRemote *> (bb);
+
+  if (g_strcmp0 (a->GetDBusPath (), FIRST) == 0)
+    return true;
+  else if (g_strcmp0 (b->GetDBusPath (), FIRST) == 0)
+    return false;
+  else if (g_strcmp0 (a->GetDBusPath (), SECOND) == 0)
+    return true;
+  else if (g_strcmp0 (b->GetDBusPath (), SECOND) == 0)
+    return false;
+  else
+    return g_strcmp0 (a->GetDBusPath (), b->GetDBusPath ()) == 0;
 }
 
 /*

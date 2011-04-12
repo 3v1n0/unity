@@ -27,6 +27,7 @@
 #include "Nux/GridVLayout.h"
 #include "PlacesGroup.h"
 #include "PlacesResultsView.h"
+#include "PlacesVScrollBar.h"
 
 PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   :   ScrollView (NUX_FILE_LINE_PARAM)
@@ -34,11 +35,15 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
   _layout = new nux::VLayout (NUX_TRACKER_LOCATION);
 
   _layout->SetContentDistribution(nux::MAJOR_POSITION_TOP);
-  _layout->SetHorizontalExternalMargin (14);
-  _layout->SetVerticalInternalMargin (14);
+  _layout->SetHorizontalExternalMargin (0);
+  _layout->SetVerticalInternalMargin (0);
+  setBorder (0);
+  setTopBorder (0);
 
   SetLayout (_layout);
 
+  PlacesVScrollBar* vscrollbar = new PlacesVScrollBar ();
+  SetVScrollBar (vscrollbar);
   EnableVerticalScrollBar (true);
   EnableHorizontalScrollBar (false);
   _idle_id = 0;
@@ -47,7 +52,12 @@ PlacesResultsView::PlacesResultsView (NUX_FILE_LINE_DECL)
 PlacesResultsView::~PlacesResultsView ()
 {
   _layout->Clear ();
-}
+  if (_idle_id != 0)
+  {
+    g_source_remove (_idle_id);
+    _idle_id = 0;
+  }
+} 
 
 void
 PlacesResultsView::AddGroup (PlacesGroup *group)

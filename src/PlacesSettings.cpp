@@ -20,6 +20,9 @@
 #include "gdk/gdk.h"
 
 #include "PlacesSettings.h"
+#include "PlacesStyle.h"
+
+#define HOME_EXPANDED "home-expanded"
 
 static PlacesSettings *_places_settings = NULL;
 
@@ -89,8 +92,7 @@ PlacesSettings::GetFormFactor ()
 int
 PlacesSettings::GetDefaultTileWidth ()
 {
-  //FIXME: We want to calculate this from DPI
-  return 140;
+  return PlacesStyle::GetDefault ()->GetTileWidth ();
 }
 
 PlacesSettings::DashBlurType
@@ -105,3 +107,14 @@ PlacesSettings::SetDashBlurType (PlacesSettings::DashBlurType type)
   _dash_blur_type = type;
 }
 
+bool
+PlacesSettings::GetHomeExpanded ()
+{
+  return g_settings_get_enum (_settings, HOME_EXPANDED) == 1 ? true : false;
+}
+
+void
+PlacesSettings::SetHomeExpanded (bool expanded)
+{
+  g_settings_set_enum (_settings, HOME_EXPANDED, expanded ? 1 : 0);
+}

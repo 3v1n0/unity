@@ -48,13 +48,24 @@ public:
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
+  
+  void ProcessDndEnter ();
+  void ProcessDndLeave ();
+  void ProcessDndMove (int x, int y, std::list<char *> mimes);
+  void ProcessDndDrop (int x, int y);
 
 private:
   void Refresh ();
   static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
+  
+  static void OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data);
 
 private:
   int _button_width;
+  int _urgent_count;
+  
+  gulong _theme_changed_id;
+  guint _urgent_interest;
 };
 
 #endif // PANEL_HOME_BUTTON_H

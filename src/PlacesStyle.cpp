@@ -38,8 +38,11 @@ PlacesStyle::PlacesStyle ()
   _dash_right_texture (NULL),
   _dash_corner_texture (NULL),
   _dash_fullscreen_icon (NULL),
-  _search_ready_texture (NULL),
-  _search_clear_texture (NULL),
+  _search_magnify_texture (NULL),
+  _search_close_texture (NULL),
+  _search_close_glow_texture (NULL),
+  _search_spin_texture (NULL),
+  _search_spin_glow_texture (NULL),
   _group_unexpand_texture (NULL),
   _group_expand_texture (NULL)
 {
@@ -61,10 +64,14 @@ PlacesStyle::~PlacesStyle ()
     _dash_corner_texture->UnReference ();
   if (_dash_fullscreen_icon)
     _dash_fullscreen_icon->UnReference ();
-  if (_search_ready_texture)
-    _search_ready_texture->UnReference ();
-  if (_search_clear_texture)
-    _search_clear_texture->UnReference ();
+  if (_search_magnify_texture)
+    _search_magnify_texture->UnReference ();
+  if (_search_close_texture)
+    _search_close_texture->UnReference ();
+  if (_search_close_glow_texture)
+    _search_close_glow_texture->UnReference ();
+  if (_search_spin_texture)
+    _search_spin_texture->UnReference ();
   if (_group_unexpand_texture)
     _group_unexpand_texture->UnReference ();
   if (_group_expand_texture)
@@ -170,19 +177,43 @@ PlacesStyle::GetDashFullscreenIcon ()
 }
 
 nux::BaseTexture *
-PlacesStyle::GetSearchReadyIcon ()
+PlacesStyle::GetSearchMagnifyIcon ()
 {
-  if (!_search_ready_texture)
-    _search_ready_texture = TextureFromFilename (PKGDATADIR"/search_ready_icon.png");
-  return _search_ready_texture;
+  if (!_search_magnify_texture)
+    _search_magnify_texture = TextureFromFilename (PKGDATADIR"/search_magnify.png");
+  return _search_magnify_texture;
 }
 
 nux::BaseTexture *
-PlacesStyle::GetSearchClearIcon ()
+PlacesStyle::GetSearchCloseIcon ()
 {
-  if (!_search_clear_texture)
-    _search_clear_texture = TextureFromFilename (PKGDATADIR"/search_clear_icon.png");
-  return _search_clear_texture;
+  if (!_search_close_texture)
+    _search_close_texture = TextureFromFilename (PKGDATADIR"/search_close.png");
+  return _search_close_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetSearchCloseGlowIcon ()
+{
+  if (!_search_close_glow_texture)
+    _search_close_glow_texture = TextureFromFilename (PKGDATADIR"/search_close_glow.png");
+  return _search_close_glow_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetSearchSpinIcon ()
+{
+  if (!_search_spin_texture)
+    _search_spin_texture = TextureFromFilename (PKGDATADIR"/search_spin.png");
+  return _search_spin_texture;
+}
+
+nux::BaseTexture *
+PlacesStyle::GetSearchSpinGlowIcon ()
+{
+  if (!_search_spin_glow_texture)
+    _search_spin_glow_texture = TextureFromFilename (PKGDATADIR"/search_spin_glow.png");
+  return _search_spin_glow_texture;
 }
 
 nux::BaseTexture *
@@ -221,6 +252,7 @@ PlacesStyle::TextureFromFilename (const char *filename)
     g_object_unref (pixbuf);
   }
 
+  texture->Reference (); // stop it getting unreffed by IconTexture
   return texture;
 }
 

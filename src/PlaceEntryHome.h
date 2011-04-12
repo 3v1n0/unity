@@ -43,6 +43,7 @@ public:
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
   guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
@@ -78,11 +79,15 @@ private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);
   void OnPlaceEntryAdded (PlaceEntry *entry);
+  void OnPlaceEntryRemoved (PlaceEntry *entry);
   void RefreshEntry (PlaceEntry *entry);
 
   void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
   void OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnSearchFinished (const char                           *search_string,
+                         guint32                               section_id,
+                         std::map<const char *, const char *>& hints);
 
 public:
   PlaceFactory *_factory;
@@ -92,6 +97,9 @@ public:
   std::map<const void *, PlaceEntry *> _id_to_entry;
 
   ResultForeachCallback _foreach_callback;
+
+  guint       _n_searches_done;
+  std::string _last_search;
 };
 
 #endif // PLACE_ENTRY_HOME_H

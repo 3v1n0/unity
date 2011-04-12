@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #ifndef PLACES_CONTROLLER_H
@@ -60,12 +61,14 @@ private:
   void OnActivePlaceEntryChanged (PlaceEntry *entry);
   void OnSettingsChanged (PlacesSettings *settings);
   void OnDashFullscreenRequest ();
+  void OnCompizScreenUngrabbed ();
   void GetWindowSize (int *width, int *height);
   void StartShowHideTimeline ();
   static gboolean OnViewShowHideFrame (PlacesController *self);
   static void Relayout (GdkScreen *screen, PlacesController *self);
 
 private:
+
   nux::BaseWindow  *_window;
   nux::HLayout     *_window_layout;
   PlacesView       *_view;
@@ -77,6 +80,8 @@ private:
   float             _last_opacity;
   gint64            _start_time;
   GdkRectangle      _monitor_rect;
+  
+  bool              _need_show;
 };
 
 #endif // PLACES_CONTROLLER_H

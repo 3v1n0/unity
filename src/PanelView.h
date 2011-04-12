@@ -51,8 +51,13 @@ public:
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
+  void OnSynced ();
+
+  void SetPrimary (bool primary);
+  bool GetPrimary ();
+  void SetMonitor (int monitor);
   
-  PanelHomeButton * HomeButton ();
+  PanelHomeButton * GetHomeButton ();
 
   void StartFirstMenuShow ();
   void EndFirstMenuShow ();
@@ -70,6 +75,7 @@ protected:
 private:
   void UpdateBackground ();
   void ForceUpdateBackground ();
+  void SyncGeometries ();
 
 private:
   IndicatorObjectFactoryRemote *_remote;
@@ -86,6 +92,16 @@ private:
   PanelStyle *_style;
   bool        _is_dirty;
   float       _opacity;
+  bool        _needs_geo_sync;
+  bool        _is_primary;
+  int         _monitor;
+  
+  sigc::connection _on_panel_style_changed_connection;
+  sigc::connection _on_object_added_connection;
+  sigc::connection _on_menu_pointer_moved_connection;
+  sigc::connection _on_entry_activate_request_connection;
+  sigc::connection _on_entry_activated_connection;
+  sigc::connection _on_synced_connection;
 };
 
 #endif // PANEL_VIEW_H

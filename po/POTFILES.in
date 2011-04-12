@@ -2,5 +2,9 @@ src/BamfLauncherIcon.cpp
 src/DeviceLauncherIcon.cpp
 src/LauncherController.cpp
 src/PlaceLauncherIcon.cpp
+src/PlaceEntryHome.cpp
+src/PlaceEntryRemote.cpp
+src/PlacesGroup.cpp
 src/PlacesHomeView.cpp
 src/TrashLauncherIcon.cpp
+tools/unity-preferences.c

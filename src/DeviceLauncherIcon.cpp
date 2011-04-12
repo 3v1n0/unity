@@ -30,16 +30,32 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
 : SimpleLauncherIcon(launcher),
   _volume (volume)
 {
-  g_signal_connect (_volume, "removed",
-                    G_CALLBACK (&DeviceLauncherIcon::OnRemoved), this);
+
+  DevicesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &DeviceLauncherIcon::OnSettingsChanged));
+
+  _on_removed_handler_id = g_signal_connect (_volume,
+                                             "removed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnRemoved),
+                                             this);
+
+  _on_changed_handler_id = g_signal_connect (_volume,
+                                             "changed",
+                                             G_CALLBACK (&DeviceLauncherIcon::OnChanged),
+                                             this);
 
   UpdateDeviceIcon ();
+
+  UpdateVisibility ();
 
 }
 
 DeviceLauncherIcon::~DeviceLauncherIcon()
 {
+  if (_on_removed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_removed_handler_id);
 
+  if (_on_changed_handler_id != 0)
+    g_signal_handler_disconnect ((gpointer) _volume, _on_changed_handler_id);
 }
 
 void
@@ -47,14 +63,11 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
 {
   {
     gchar *name;
-    gchar *escape;
 
     name = g_volume_get_name (_volume);
-    escape = g_markup_escape_text (name, -1);
 
-    SetTooltipText (escape);
+    SetTooltipText (name);
 
-    g_free (escape);
     g_free (name);
   }
   
@@ -86,17 +99,6 @@ nux::Color
 DeviceLauncherIcon::GlowColor ()
 {
   return nux::Color (0xFF333333);
-}
-
-void
-DeviceLauncherIcon::OnMouseClick (int button)
-{
-  SimpleLauncherIcon::OnMouseClick (button);
-
-  if (button == 1)
-  {
-    ActivateLauncherIcon ();
-  }
 }
 
 std::list<DbusmenuMenuitem *>
@@ -276,6 +278,7 @@ DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIco
 void
 DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
 {
+  self->_volume = NULL;
   self->Remove ();
 }
 
@@ -288,16 +291,19 @@ DeviceLauncherIcon::OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLaunche
 void
 DeviceLauncherIcon::StopDrive ()
 {
-  GDrive *drive;
+  GDrive          *drive;
+  GMountOperation *mount_op;
 
   drive = g_volume_get_drive (_volume);
+  mount_op = gtk_mount_operation_new (NULL);
   g_drive_stop (drive,
                 (GMountUnmountFlags)0,
-                NULL,
+                mount_op,
                 NULL,
                 (GAsyncReadyCallback)OnStopDriveReady,
                 this);
   g_object_unref (drive);
+  g_object_unref (mount_op);
 }
 
 void
@@ -307,7 +313,58 @@ DeviceLauncherIcon::OnStopDriveReady (GObject *object,
 {
   GDrive *drive;
 
+  if (!self || !G_IS_VOLUME (self->_volume))
+  {
+    return;
+  }
+
   drive = g_volume_get_drive (self->_volume);
   g_drive_stop_finish (drive, result, NULL);
   g_object_unref (drive);
 }
+
+void
+DeviceLauncherIcon::OnChanged (GVolume *volume, DeviceLauncherIcon *self)
+{
+  if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
+      && g_volume_get_mount (volume) == NULL)
+  {
+    self->SetQuirk (QUIRK_VISIBLE, false); 
+  } 
+}
+
+void
+DeviceLauncherIcon::UpdateVisibility ()
+{
+  switch (DevicesSettings::GetDefault ()->GetDevicesOption ())
+  {
+    case DevicesSettings::NEVER:
+      SetQuirk (QUIRK_VISIBLE, false);
+      break;
+    case DevicesSettings::ONLY_MOUNTED:
+    {
+      GMount *mount =  g_volume_get_mount (_volume);
+
+      if (mount == NULL)
+      {
+        SetQuirk (QUIRK_VISIBLE, false); 
+      }
+      else
+      {
+        SetQuirk (QUIRK_VISIBLE, true); 
+        g_object_unref (mount);
+      }
+      break;
+    }
+    case DevicesSettings::ALWAYS:
+      SetQuirk (QUIRK_VISIBLE, true);
+      break;
+  }
+}
+
+void
+DeviceLauncherIcon::OnSettingsChanged (DevicesSettings     *settings)
+{
+  UpdateVisibility ();
+}
+

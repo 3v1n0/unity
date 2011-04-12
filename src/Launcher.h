@@ -30,16 +30,23 @@
 #include "Introspectable.h"
 #include "LauncherIcon.h"
 #include "LauncherDragWindow.h"
+#include "LauncherHideMachine.h"
+#include "LauncherHoverMachine.h"
 #include "NuxGraphics/IOpenGLAsmShader.h"
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
+#include "GeisAdapter.h"
  
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
 #define ANIM_DURATION_LONG  350
 
 #define SUPER_TAP_DURATION  250
-#define SINGLE_FINGER_HOLD_DURATION 1000
+#define SHORTCUTS_SHOWN_DELAY  750
+#define START_DRAGICON_DURATION 500
+#define BEFORE_HIDE_LAUNCHER_ON_SUPER_DURATION 1000
+
+#define IGNORE_REPEAT_SHORTCUT_DURATION  250
 
 #define MAX_SUPERKEY_LABELS 10
 
@@ -76,9 +83,10 @@ public:
   
   typedef enum
   {
-    FADE_SLIDE,
+    FADE_OR_SLIDE,
     SLIDE_ONLY,
     FADE_ONLY,
+    FADE_AND_SLIDE,
   } AutoHideAnimation;
 
   typedef enum
@@ -104,6 +112,9 @@ public:
   LauncherIcon* GetSelectedMenuIcon ();
 
   void SetIconSize(int tile_size, int icon_size);
+  
+  bool Hidden () { return _hidden; }
+  bool ShowOnEdge () { return _hide_machine->GetShowOnEdge (); }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
@@ -128,7 +139,9 @@ public:
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
   
-  gboolean CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  void EdgeRevealTriggered ();
+  
+  gboolean CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
   
   nux::BaseWindow* GetParent () { return _parent; };
 
@@ -141,6 +154,7 @@ public:
   virtual void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  virtual void RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
 
@@ -154,9 +168,14 @@ public:
 
   int GetMouseX ();
   int GetMouseY ();
+  
+  void CheckWindowOverLauncher ();
+  void EnableCheckWindowOverLauncher (gboolean enabled);
 
-  sigc::signal<void, char *, LauncherIcon *> launcher_dropped;
+  sigc::signal<void, char *, LauncherIcon *> launcher_addrequest;
+  sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
+  sigc::signal<void> hidden_changed;
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -179,12 +198,13 @@ private:
   {
     TIME_ENTER,
     TIME_LEAVE,
-    TIME_DRAG_START,
     TIME_DRAG_END,
     TIME_DRAG_THRESHOLD,
     TIME_AUTOHIDE,
     TIME_DRAG_EDGE_TOUCH,
+    TIME_DRAG_OUT,
     TIME_TAP_SUPER,
+    TIME_SUPER_PRESSED,
     
     TIME_LAST
   } LauncherActionTimes;
@@ -198,6 +218,7 @@ private:
     float         y_rotation;
     float         z_rotation;
     float         alpha;
+    float         saturation;
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
@@ -217,15 +238,26 @@ private:
   void OnWindowMaybeIntellihide (guint32 xid);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
-
+  
+  void OnDragStart  (GeisAdapter::GeisDragData *data);
+  void OnDragUpdate (GeisAdapter::GeisDragData *data);
+  void OnDragFinish (GeisAdapter::GeisDragData *data);
+  
+  void OnPluginStateChanged ();
+  
   static gboolean AnimationTimeout (gpointer data);
-  static gboolean OnAutohideTimeout (gpointer data);
-  static gboolean DrawLauncherTimeout (gpointer data);
+  static gboolean SuperShowLauncherTimeout (gpointer data);
+  static gboolean SuperHideLauncherTimeout (gpointer data);
+  static gboolean SuperShowShortcutsTimeout (gpointer data);
   static gboolean StrutHack (gpointer data);
   static gboolean MoveFocusToKeyNavModeTimeout (gpointer data);
-  static gboolean SingleFingerHoldTimeout (gpointer data);
+  static gboolean StartIconDragTimeout (gpointer data);
+  static gboolean ResetRepeatShorcutTimeout (gpointer data);
 
   void SetMousePosition (int x, int y);
+  
+  void SetStateMouseOverLauncher (bool over_launcher);
+  void SetStateMouseOverBFB (bool over_bfb);
   
   bool MouseBeyondDragThreshold ();
 
@@ -237,11 +269,8 @@ private:
   void SetActionState (LauncherActionState actionstate);
   LauncherActionState GetActionState(); 
 
-  void EnsureHoverState ();
-  void EnsureHiddenState ();
   void EnsureAnimation    ();
   void EnsureScrollTimer ();
-  void SetupAutohideTimer ();
   
   bool MouseOverTopScrollArea ();
   bool MouseOverTopScrollExtrema ();
@@ -252,7 +281,6 @@ private:
   static gboolean OnScrollTimeout (gpointer data);
   static gboolean OnUpdateDragManagerTimeout (gpointer data);
 
-  void CheckWindowOverLauncher ();
   bool CheckIntersectWindow (CompWindow *window);
 
   float DnDStartProgress             (struct timespec const &current);
@@ -261,6 +289,8 @@ private:
   float AutohideProgress             (struct timespec const &current);
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
+  float DragOutProgress              (struct timespec const &current);
+  float IconDesatValue               (LauncherIcon *icon, struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
@@ -273,9 +303,7 @@ private:
   float IconDropDimValue             (LauncherIcon *icon, struct timespec const &current);
   float IconCenterTransitionProgress (LauncherIcon *icon, struct timespec const &current);
 
-  void SetHover         ();
-  void UnsetHover       ();
-  void ForceHiddenState (bool hidden);
+  void SetHover         (bool hovered);
   void SetHidden        (bool hidden);
 
   void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
@@ -307,7 +335,8 @@ private:
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
   
-  static void OnTriggerUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBUpdate (GVariant *data, gpointer user_data);
+  static void OnBFBDndEnter (GVariant *data, gpointer user_data);
 
   static void OnActionDone (GVariant *data, void *val);
 
@@ -315,6 +344,7 @@ private:
                          RenderArg const &arg,
                          int running,
                          int active,
+                         float alpha,
                          nux::Geometry geo);
 
   void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
@@ -336,13 +366,14 @@ private:
   void SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
                              float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
   
-  void UpdateIconXForm (std::list<Launcher::RenderArg> &args);
+  void UpdateIconXForm (std::list<Launcher::RenderArg> &args, nux::Geometry geo);
 
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
   void MouseDownLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   void MouseUpLogic (int x, int y, unsigned long button_flags, unsigned long key_flags);
   
+  void StartIconDragRequest (int x, int y);
   void StartIconDrag (LauncherIcon *icon);
   void EndIconDrag ();
   void UpdateDragWindowPosition (int x, int y);
@@ -359,15 +390,6 @@ private:
   
   gboolean TapOnSuper ();
 
-  void
-  DrawRoundedRectangle (cairo_t* cr,
-                        double   aspect,
-                        double   x,
-                        double   y,
-                        double   cornerRadius,
-                        double   width,
-                        double   height);
-
   nux::BaseTexture*
   cairoToTexture2D (const char label,
                     int        width,
@@ -375,16 +397,20 @@ private:
 
   std::list<char *> StringToUriList (char * input);
 
+  static void SettingsChanged (GSettings *settings, gchar *key, Launcher *self);
+
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
 
+  // used by keyboard/a11y-navigation
+  LauncherIcon* _current_icon;
   LauncherIcon* m_ActiveTooltipIcon;
   LauncherIcon* m_ActiveMenuIcon;
   LauncherIcon* m_LastSpreadIcon;
+  LauncherIcon* _icon_under_mouse;
+  LauncherIcon* _icon_mouse_down;
+  LauncherIcon* _drag_icon;
 
-  // used by keyboard/a11y-navigation
-  LauncherIcon* _current_icon;
-  LauncherIcon* _last_selected_icon;
   int           _current_icon_index;
   int           _last_icon_index;
 
@@ -393,16 +419,13 @@ private:
   bool  _hovered;
   bool  _floating;
   bool  _hidden;
-  bool  _mouse_inside_launcher;
-  bool  _mouse_inside_trigger;
-  bool  _mouseover_launcher_locked;
-  bool  _super_show_launcher;
-  bool  _navmod_show_launcher;
-  bool  _placeview_show_launcher;
-  bool  _window_over_launcher;
-  bool  _hide_on_drag_hover;
   bool  _render_drag_window;
+  bool  _check_window_over_launcher;
   
+  bool          _shortcuts_shown;  
+  bool          _super_pressed;
+  guint64       _latest_shortcut;
+    
   BacklightMode _backlight_mode;
 
   float _folded_angle;
@@ -416,11 +439,7 @@ private:
   LauncherActionState _launcher_action_state;
   LaunchAnimation _launch_animation;
   UrgentAnimation _urgent_animation;
-  AutoHideAnimation _autohide_animation;
-  
-  LauncherIcon* _icon_under_mouse;
-  LauncherIcon* _icon_mouse_down;
-  LauncherIcon* _drag_icon;
+  AutoHideAnimation _autohide_animation;  
 
   int _space_between_icons;
   int _icon_size;
@@ -429,13 +448,16 @@ private:
   int _icon_glow_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
+  int _postreveal_mousemove_delta_x;
+  int _postreveal_mousemove_delta_y;
   int _launcher_drag_delta;
-  int _dnd_security;
   int _enter_y;
   int _last_button_press;
+  int _drag_out_id;
+  float _drag_out_delta_x;
   
-  int _trigger_width;
-  int _trigger_height;
+  int _bfb_width;
+  int _bfb_height;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -457,24 +479,27 @@ private:
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  guint _autohide_handle;
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
-  guint _redraw_handle;
-  guint _single_finger_hold_handle;
-  GTimer* _single_finger_hold_timer;
+  guint _super_show_launcher_handle;
+  guint _super_hide_launcher_handle;
+  guint _super_show_shortcuts_handle;
+  guint _start_dragicon_handle;
+  guint _dnd_check_handle;
+  guint _ignore_repeat_shortcut_handle;
 
   nux::Point2   _mouse_position;
-  nux::Point2   _trigger_mouse_position;
+  nux::Point2   _bfb_mouse_position;
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   LauncherModel* _model;
   LauncherDragWindow* _drag_window;
+  LauncherHideMachine *_hide_machine;
+  LauncherHoverMachine *_hover_machine;
   CompScreen* _screen;
   
-  bool              _dnd_window_is_mapped;
   std::list<char *> _drag_data;
   nux::DndAction    _drag_action;
   bool              _data_checked;
@@ -484,7 +509,53 @@ private:
   
   Atom              _selection_atom;
   
+  guint             _launcher_animation_timeout;
+
+  /* gdbus */
+  guint                       _dbus_owner;
+  static const gchar          introspection_xml[];
+  static GDBusInterfaceVTable interface_vtable;
+  
+  static void OnBusAcquired  (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void OnNameLost    (GDBusConnection *connection, const gchar *name, gpointer user_data);
+  static void handle_dbus_method_call (GDBusConnection       *connection,
+                                       const gchar           *sender,
+                                       const gchar           *object_path,
+                                       const gchar           *interface_name,
+                                       const gchar           *method_name,
+                                       GVariant              *parameters,
+                                       GDBusMethodInvocation *invocation,
+                                       gpointer               user_data);
+  
   struct timespec  _times[TIME_LAST];
+  
+  bool _initial_drag_animation;
+
+  sigc::connection _set_hidden_connection;
+  sigc::connection _set_hover_connection;
+  sigc::connection _recv_quicklist_opened_connection;
+  sigc::connection _recv_quicklist_closed_connection;
+  sigc::connection _on_window_maximized_intellihide_connection;
+  sigc::connection _on_window_restored_intellihide_connection;
+  sigc::connection _on_window_unminimized_intellihide_connection;
+  sigc::connection _on_window_mapped_intellihide_connection;
+  sigc::connection _on_window_unmapped_intellihide_connection;
+  sigc::connection _on_window_shown_intellihide_connection;
+  sigc::connection _on_window_hidden_intellihide_connection;
+  sigc::connection _on_window_resized_intellihide_connection;
+  sigc::connection _on_window_moved_intellihide_connection;
+  sigc::connection _on_window_mapped_connection;
+  sigc::connection _on_window_unmapped_connection;
+  sigc::connection _on_initiate_spread_connection;
+  sigc::connection _on_initiate_expo_connection;
+  sigc::connection _on_terminate_spread_connection;
+  sigc::connection _on_terminate_expo_connection;
+  sigc::connection _on_drag_start_connection;
+  sigc::connection _on_drag_update_connection;
+  sigc::connection _on_drag_finish_connection;
+
+  GSettings *_settings;
 };
 
 #endif // LAUNCHER_H

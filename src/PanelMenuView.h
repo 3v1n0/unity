@@ -21,6 +21,7 @@
 
 #include <Nux/View.h>
 #include <map>
+#include <set>
 
 #include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
@@ -67,15 +68,19 @@ public:
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
   void OnNameChanged (gchar* new_name, gchar* old_name);
 
-  void OnSpreadInitiate (std::list <guint32> &);
-  void OnSpreadTerminate (std::list <guint32> &);
+  void OnSpreadInitiate ();
+  void OnSpreadTerminate ();
   void OnWindowMinimized (guint32 xid);
   void OnWindowUnminimized (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
+  void OnWindowMoved (guint32 xid);
+  
+  guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
+  void OnMouseDoubleClicked ();
   void OnMouseMiddleClicked ();
 
   void Refresh ();
@@ -85,6 +90,10 @@ public:
   void OnMinimizeClicked ();
   void OnRestoreClicked ();
   void OnWindowButtonsRedraw ();
+  void SetMonitor (int monitor);
+  bool GetControlsActive ();
+
+  bool HasOurWindowFocused ();
 
 protected:
   const gchar * GetName ();
@@ -93,6 +102,10 @@ protected:
 
 private:
   gchar * GetActiveViewName ();
+  static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
+  static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
+  void UpdateShowNow (bool ignore);
+  static gboolean UpdateActiveWindowPosition (PanelMenuView *self);
   
 private:
   BamfMatcher* _matcher;
@@ -113,11 +126,43 @@ private:
   PanelTitlebarGrabArea * _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
+  std::set<guint32> _maximized_set;
   int _padding;
   gpointer _name_changed_callback_instance;
   gulong _name_changed_callback_id;
 
   int _last_width;
   int _last_height;
+
+  bool _places_showing;
+  bool _show_now_activated;
+
+  bool _we_control_active;
+  int  _monitor;
+  guint32 _active_xid;
+  guint32 _active_moved_id;
+  nux::Geometry _monitor_geo;
+  
+  sigc::connection _on_winbutton_close_clicked_connection;
+  sigc::connection _on_winbutton_minimize_clicked_connection;
+  sigc::connection _on_winbutton_restore_clicked_connection;
+  sigc::connection _on_winbutton_redraw_signal_connection;
+  sigc::connection _on_titlebargrab_mouse_down_connnection;
+  sigc::connection _on_titlebargrab_mouse_doubleleftclick_connnection;
+  sigc::connection _on_titlebargrab_mouse_middleclick_connnection;
+  sigc::connection _on_window_minimized_connection;
+  sigc::connection _on_window_unminimized_connection;
+  sigc::connection _on_window_initspread_connection;
+  sigc::connection _on_window_terminatespread_connection;
+  sigc::connection _on_window_maximized_connection;
+  sigc::connection _on_window_restored_connection;
+  sigc::connection _on_window_unmapped_connection;
+  sigc::connection _on_window_moved_connection;
+  sigc::connection _on_panelstyle_changed_connection;
+  
+  gulong _activate_window_changed_id;
+
+  guint32 _place_shown_interest;
+  guint32 _place_hidden_interest;
 };
 #endif

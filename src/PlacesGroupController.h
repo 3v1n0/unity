@@ -27,6 +27,12 @@
 #include "PlacesGroup.h"
 #include "PlacesTile.h"
 
+enum PlacesGroupRendererType
+{
+  RENDERER_TYPE_DEFAULT = 0,
+  RENDERER_TYPE_HORI_TILE
+};
+
 class PlacesGroupController : public nux::Object, public Introspectable
 {
 public:
@@ -43,6 +49,8 @@ public:
 
   bool ActivateFirst ();
 
+  int GetTotalResults ();
+
 protected:
   const gchar* GetName ();
   void         AddProperties (GVariantBuilder *builder);
@@ -52,14 +60,17 @@ private:
   void CheckTiles ();
   static gboolean CheckTilesTimeout (PlacesGroupController *self);
   void TileClicked (PlacesTile *tile);
+  void MoreTileClicked (PlacesTile *tile);
 
 private:
+  PlacesGroupRendererType _type;
   PlaceEntry  *_entry;
   PlacesGroup *_group;
   const void  *_id;
   std::map<const void *, PlacesTile *>  _id_to_tile;
   guint _check_tiles_id;
   std::vector<const void *> _queue;
+  PlacesTile *_more_tile;
 };
 
 #endif // PLACES_GROUP_CONTROLLER_H

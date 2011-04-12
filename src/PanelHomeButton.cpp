@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION)
 {
+  _urgent_count = 0;
   _button_width = 66;
   SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
@@ -51,14 +52,41 @@ PanelHomeButton::PanelHomeButton ()
   OnMouseLeave.connect (sigc::mem_fun(this, &PanelHomeButton::RecvMouseLeave));
   OnMouseMove.connect  (sigc::mem_fun(this, &PanelHomeButton::RecvMouseMove));
 
-  g_signal_connect (gtk_icon_theme_get_default (), "changed",
-                    G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
+  _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
+                                            G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
+
+  UBusServer *ubus = ubus_server_get_default ();
+  _urgent_interest = ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
+                                 (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
+                                 this);
 
   Refresh ();
+  
+  SetDndEnabled (false, true);
 }
 
 PanelHomeButton::~PanelHomeButton ()
 {
+  if (_theme_changed_id)
+    g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
+
+  ubus_server_unregister_interest (ubus_server_get_default (), _urgent_interest);
+}
+
+void 
+PanelHomeButton::OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data)
+{
+  PanelHomeButton *self = static_cast<PanelHomeButton *> (user_data);
+  
+  if (g_variant_get_boolean (data))
+    self->_urgent_count++;
+  else
+    self->_urgent_count--;
+  
+  if (self->_urgent_count < 0)
+    self->_urgent_count = 0;
+  
+  self->Refresh (); 
 }
 
 void
@@ -89,10 +117,13 @@ PanelHomeButton::Refresh ()
   cairo_set_line_width (cr, 1);
 
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
-  gdk_cairo_set_source_pixbuf (cr, pixbuf,
-                               (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
-                               (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
-  g_object_unref (pixbuf);
+  if (GDK_IS_PIXBUF (pixbuf))
+  {
+    gdk_cairo_set_source_pixbuf (cr, pixbuf,
+                                 (_button_width-gdk_pixbuf_get_width (pixbuf))/2,
+                                 (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
+    g_object_unref (pixbuf);
+  }
 
   cairo_paint (cr);
 
@@ -103,6 +134,16 @@ PanelHomeButton::Refresh ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.1f);
   cairo_rectangle (cr, width-1, 2, 1, height-4);
   cairo_fill (cr);
+  
+  if (_urgent_count)
+  {
+    cairo_set_source_rgba (cr, 0.18f, 0.8f, 0.95f, 1.0f);
+    cairo_move_to (cr, 0, 0);
+    cairo_line_to (cr, 8, 0);
+    cairo_line_to (cr, 0, 8);
+    cairo_line_to (cr, 0, 0);
+    cairo_fill (cr);
+  }
 
   cairo_destroy (cr);
 
@@ -123,7 +164,7 @@ PanelHomeButton::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            nux::Color::White,  // The color used to modulate the texture.
+                                                            nux::Colors::White,  // The color used to modulate the texture.
                                                             true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );
@@ -170,7 +211,7 @@ PanelHomeButton::RecvMouseEnter (int x, int y, unsigned long button_flags, unsig
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void 
@@ -190,7 +231,7 @@ PanelHomeButton::RecvMouseLeave (int x, int y, unsigned long button_flags, unsig
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void 
@@ -205,11 +246,12 @@ PanelHomeButton::RecvMouseMove(int x, int y, int dx, int dy, unsigned long butto
   g_variant_builder_add (&builder, "i", PANEL_HEIGHT);
   
   g_variant_builder_open (&builder, G_VARIANT_TYPE ("a{sv}"));
+  g_variant_builder_add (&builder, "{sv}", "hovered", g_variant_new_boolean (true));
   g_variant_builder_close (&builder);
   
 
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_TRIGGER_UPDATE, g_variant_builder_end (&builder));
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_UPDATE, g_variant_builder_end (&builder));
 }
 
 void
@@ -246,4 +288,27 @@ PanelHomeButton::OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data)
   PanelHomeButton* self = (PanelHomeButton*) data;
 
   self->Refresh ();
+}
+
+void 
+PanelHomeButton::ProcessDndEnter ()
+{
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER, NULL);
+}
+
+void 
+PanelHomeButton::ProcessDndLeave ()
+{
+}
+
+void 
+PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
+{
+  SendDndStatus (false, nux::DNDACTION_NONE, GetAbsoluteGeometry ());
+}
+
+void 
+PanelHomeButton::ProcessDndDrop (int x, int y)
+{
 }

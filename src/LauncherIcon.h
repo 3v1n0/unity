@@ -73,6 +73,7 @@ public:
       QUIRK_PROGRESS,
       QUIRK_DROP_PRELIGHT,
       QUIRK_DROP_DIM,
+      QUIRK_DESAT,
       
       QUIRK_LAST,
     } Quirk;
@@ -88,14 +89,16 @@ public:
     
     void    SetShortcut (guint64 shortcut);
     guint64 GetShortcut ();
+    void SetSortPriority (int priority);
     
     void RecvMouseEnter ();
     void RecvMouseLeave ();
     void RecvMouseDown (int button);
     void RecvMouseUp (int button);
+    void RecvMouseClick (int button);
     
     void HideTooltip ();
-    void OpenQuicklist (bool default_to_first_item = false);
+    gboolean OpenQuicklist (bool default_to_first_item = false);
 
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
@@ -154,6 +157,12 @@ public:
     sigc::signal<void, LauncherIcon *> hide;
     sigc::signal<void, LauncherIcon *> remove;
     sigc::signal<void, LauncherIcon *> needs_redraw;
+
+    sigc::connection needs_redraw_connection;
+    sigc::connection on_icon_added_connection;
+    sigc::connection on_icon_removed_connection;
+    sigc::connection on_order_changed_connection;
+
 protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
@@ -175,7 +184,6 @@ protected:
     void Unpresent ();
     
     void SetIconType (IconType type);
-    void SetSortPriority (int priority);
 
     void SetEmblem (nux::BaseTexture *emblem);
     void SetSuperkeyLabel (nux::BaseTexture* label);
@@ -196,13 +204,17 @@ protected:
     virtual void ActivateLauncherIcon () {}
     virtual void OpenInstanceLauncherIcon () {}
 
-    nux::BaseTexture * TextureFromGtkTheme (const char *name, int size);
-    nux::BaseTexture * TextureFromPath     (const char *name, int size);
+    nux::BaseTexture * TextureFromGtkTheme         (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *name, int size, bool update_glow_colors = true, bool is_default_theme=false);
+    nux::BaseTexture * TextureFromPath             (const char *name, int size, bool update_glow_colors = true);
+    static bool        IsMonoDefaultTheme          ();
 
     void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
     void OnRemoteProgressChanged  (LauncherEntryRemote *remote);
     void OnRemoteQuicklistChanged (LauncherEntryRemote *remote);
+    
+    void OnRemoteUrgentChanged (LauncherEntryRemote *remote);
 
     void OnRemoteEmblemVisibleChanged   (LauncherEntryRemote *remote);
     void OnRemoteCountVisibleChanged    (LauncherEntryRemote *remote);
@@ -222,7 +234,10 @@ protected:
 
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
+    
+    static int _current_theme_is_mono;
 
+    DbusmenuClient *_menuclient_dynamic_quicklist;
 
     friend class Launcher;
     friend class LauncherController;
@@ -251,8 +266,10 @@ private:
     float            _progress;
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
+    guint            _time_delay_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
+    bool             _remote_urgent;
     
     gint64           _shortcut;
     
@@ -268,6 +285,8 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
+    
+    static GtkIconTheme *_unity_theme;
 };
 
 #endif // LAUNCHERICON_H

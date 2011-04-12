@@ -21,6 +21,7 @@
 #include "PlaceEntryHome.h"
 
 #include <glib/gi18n-lib.h>
+#include <algorithm>
 
 class PlaceEntryGroupHome : public PlaceEntryGroup
 {
@@ -61,7 +62,8 @@ private:
 
 
 PlaceEntryHome::PlaceEntryHome (PlaceFactory *factory)
-: _factory (factory)
+: _factory (factory),
+  _n_searches_done (0)
 {
   LoadExistingEntries ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlaceEntryHome::OnPlaceAdded));
@@ -95,6 +97,20 @@ PlaceEntryHome::OnPlaceAdded (Place *place)
     PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
     OnPlaceEntryAdded (entry);
   }
+
+  place->entry_removed.connect (sigc::mem_fun (this, &PlaceEntryHome::OnPlaceEntryRemoved));
+}
+
+void
+PlaceEntryHome::OnPlaceEntryRemoved (PlaceEntry *entry)
+{
+  std::vector<PlaceEntry *>::iterator it;
+
+  it = std::find (_entries.begin (), _entries.end (), entry);
+  if (it != _entries.end ())
+  {
+    _entries.erase (it);
+  }
 }
 
 void
@@ -102,10 +118,14 @@ PlaceEntryHome::OnPlaceEntryAdded (PlaceEntry *entry)
 {
   PlaceEntryGroupHome group (entry);
 
+  if (!entry->ShowInGlobal ())
+    return;
+
   _entries.push_back (entry);
 
   entry->global_result_added.connect (sigc::mem_fun (this, &PlaceEntryHome::OnResultAdded));
   entry->global_result_removed.connect (sigc::mem_fun (this, &PlaceEntryHome::OnResultRemoved));
+  entry->search_finished.connect (sigc::mem_fun (this, &PlaceEntryHome::OnSearchFinished));
 
   group_added.emit (this, group);
 }
@@ -148,6 +168,12 @@ const gchar *
 PlaceEntryHome::GetName ()
 {
   return "";
+}
+
+const gchar *
+PlaceEntryHome::GetSearchHint ()
+{
+  return _("Search"); 
 }
 
 const gchar *
@@ -219,6 +245,9 @@ void
 PlaceEntryHome::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
   std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  _n_searches_done = 0;
+  _last_search = search;
 
   for (it = _entries.begin (); it != eit; ++it)
   {
@@ -292,3 +321,19 @@ PlaceEntryHome::ActivateResult (const void *id)
     entry->ActivateGlobalResult (id);
   }
 }
+
+void
+PlaceEntryHome::OnSearchFinished (const char                           *search_string,
+                                  guint32                               section_id,
+                                  std::map<const char *, const char *>& hints)
+{
+  if (_last_search == search_string)
+  {
+    _n_searches_done++;
+    if (_n_searches_done == _entries.size ())
+    {
+      search_finished.emit (search_string, section_id, hints);
+    }
+  }
+}
+

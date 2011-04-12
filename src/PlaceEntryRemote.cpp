@@ -187,7 +187,8 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
   _name (NULL),
   _icon (NULL),
   _description (NULL),
-  _shortcut (10), // impossible shortcut
+  _searchhint (_("Search")),
+  _shortcut (0),
   _position (0),
   _mimetypes (NULL),
   _sensitive (true),
@@ -234,6 +235,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   gchar  *name;
   gchar  *description;
   gchar  *shortcut_entry;
+  gchar  *searchhint;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
   if (_dbus_path == NULL
@@ -264,16 +266,22 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   name = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_NAME, NULL);
   _icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
   description = g_key_file_get_string (key_file, group, "Description", NULL);
+  searchhint = g_key_file_get_string (key_file, group, "SearchHint", NULL);
 
+  
   if (domain)
   {
     _name = g_strdup (dgettext (domain, name));
     _description = g_strdup (dgettext (domain, description));
+    if (searchhint)
+      _searchhint = g_strdup (dgettext (domain, searchhint));
   }
   else
   {
     _name = g_strdup (name);
     _description = g_strdup (description);
+    if (searchhint)
+      _searchhint = g_strdup (searchhint);
   }
   
   if (g_key_file_has_key (key_file, group, "Shortcut", NULL))
@@ -332,6 +340,12 @@ const gchar *
 PlaceEntryRemote::GetDescription ()
 {
   return _description;
+}
+
+const gchar *
+PlaceEntryRemote::GetSearchHint ()
+{
+  return _searchhint;
 }
 
 guint64
@@ -590,6 +604,9 @@ PlaceEntryRemote::GetResult (const void *id, ResultForeachCallback slot)
   guint         n_group;
   DeeModelIter *iter = (DeeModelIter *)id;
   DeeModelIter *group_iter;
+
+  if (iter == NULL || dee_model_is_last (_results_model, iter))
+    return;
 
   n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
   group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
@@ -1008,5 +1025,17 @@ on_proxy_signal_received (GDBusProxy *proxy,
 { 
   PlaceEntryRemote *self = static_cast<PlaceEntryRemote *> (user_data);  
 
-  g_debug ("%p: %s", self, sender_name);
+  if (g_strcmp0 (signal_name, "SearchFinished") == 0)
+  {
+    guint32       section = 0;
+    gchar        *search_string = NULL;
+    GVariantIter *iter;
+    std::map<const char *, const char*> hints;
+
+    g_variant_get (parameters, "(usa{ss})", &section, &search_string, &iter);
+    self->search_finished.emit (search_string, section, hints);
+    
+    g_free (search_string);
+    g_variant_iter_free (iter);
+  }
 }

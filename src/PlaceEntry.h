@@ -83,7 +83,8 @@ public:
   virtual const char * GetName        () = 0;
   virtual const char * GetIcon        () = 0;
   virtual const char * GetDescription () = 0;
-  virtual       guint64 GetShortcut    () = 0;
+  virtual const char * GetSearchHint  () = 0;
+  virtual guint64      GetShortcut    () = 0;
   
   // For ordering entries within a place
   virtual guint32        GetPosition  () = 0;
@@ -161,6 +162,8 @@ public:
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&>                    global_group_added;
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_added;
   sigc::signal<void, PlaceEntry *, PlaceEntryGroup&, PlaceEntryResult&> global_result_removed;
+
+  sigc::signal<void, const char *, guint32, std::map<const char *, const char *>&> search_finished;
 };
 
 #endif // PLACE_ENTRY_H

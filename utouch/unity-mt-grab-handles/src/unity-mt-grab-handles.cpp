@@ -126,12 +126,11 @@ Unity::MT::GrabHandle::handleButtonPress (XButtonEvent *be)
      * press on this window will start resizing the window around */
     XEvent     event;
     CompWindow *w;
-
     w = screen->findTopLevelWindow (mOwner, false);
 
     if (!w)
 	return;
-
+    
     if (screen->getOption ("raise_on_click"))
 	w->updateAttributes (CompStackingUpdateModeAboveFullscreen);
 
@@ -316,6 +315,18 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 
     switch (event->type)
     {
+    	case FocusIn:
+	case FocusOut:
+	    if (event->xfocus.mode == NotifyUngrab)
+	    {
+		foreach (CompWindow *w, screen->windows ())
+		{
+		    UnityMTGrabHandlesWindow *mtwindow = UnityMTGrabHandlesWindow::get (w);
+		    if (mtwindow->handleTimerActive ())
+		    	mtwindow->resetTimer ();
+		}
+	    }
+      break;
         case ClientMessage:
 
 	    if (event->xclient.message_type == mCompResizeWindowAtom)
@@ -402,7 +413,6 @@ UnityMTGrabHandlesScreen::handleEvent (XEvent *event)
 	    }
 
 	    break;
-
 	case ConfigureNotify:
 
 	    w = screen->findTopLevelWindow (event->xconfigure.window);
@@ -466,6 +476,12 @@ UnityMTGrabHandlesScreen::preparePaint (int msec)
 }
 
 bool
+UnityMTGrabHandlesWindow::handleTimerActive ()
+{
+  return _timer_handle != 0;
+}
+
+bool
 UnityMTGrabHandlesWindow::allowHandles ()
 {
     /* Not on windows we can't move or resize */
@@ -488,10 +504,10 @@ UnityMTGrabHandlesWindow::getOutputExtents (CompWindowExtents &output)
     if (mHandles)
     {
 	/* Only care about the handle on the outside */
-	output.left   = MAX (output.left, window->input ().left + mHandles->at (0).width () / 2);
-	output.right  = MAX (output.right, window->input ().right + mHandles->at (0).width () / 2);
-	output.top    = MAX (output.top, window->input ().top  + mHandles->at (0).height () / 2);
-	output.bottom = MAX (output.bottom, window->input ().bottom + mHandles->at (0).height () / 2);
+	output.left   = MAX (output.left,   window->borderRect ().left   () + mHandles->at (0).width  () / 2);
+	output.right  = MAX (output.right,  window->borderRect ().right  () + mHandles->at (0).width  () / 2);
+	output.top    = MAX (output.top,    window->borderRect ().top    () + mHandles->at (0).height () / 2);
+	output.bottom = MAX (output.bottom, window->borderRect ().bottom () + mHandles->at (0).height () / 2);
     }
     else
 	window->getOutputExtents (output);
@@ -510,7 +526,7 @@ UnityMTGrabHandlesWindow::glDraw (const GLMatrix            &transform,
 
     UMTGH_SCREEN (screen);
 
-    if (mHandles)
+    if (mHandles && mHandles->visible ())
     {
 	unsigned int handle = 0;
 
@@ -643,15 +659,60 @@ UnityMTGrabHandlesWindow::ungrabNotify ()
     window->ungrabNotify ();
 }
 
+bool
+UnityMTGrabHandlesWindow::handlesVisible ()
+{
+    if (!mHandles)
+	return false;
+    
+    return mHandles->visible ();
+}
+
 void
 UnityMTGrabHandlesWindow::hideHandles ()
 {
     if (mHandles)
 	mHandles->hide ();
+
+    window->updateWindowOutputExtents ();
+    cWindow->damageOutputExtents ();
+    
+    disableTimer ();
+}
+
+gboolean
+UnityMTGrabHandlesWindow::onHideTimeout (gpointer data)
+{
+    UnityMTGrabHandlesWindow *self = static_cast<UnityMTGrabHandlesWindow*> (data);
+    
+    if (screen->grabbed ())
+    	return true;
+
+    // hack
+    self->hideHandles ();
+    self->_mt_screen->mMoreAnimate = true;
+    self->_timer_handle = 0;
+    return false;
 }
 
 void
-UnityMTGrabHandlesWindow::showHandles ()
+UnityMTGrabHandlesWindow::resetTimer ()
+{
+    if (_timer_handle)
+	g_source_remove (_timer_handle);
+    
+    _timer_handle = g_timeout_add (2000, &UnityMTGrabHandlesWindow::onHideTimeout, this);
+}
+
+void
+UnityMTGrabHandlesWindow::disableTimer ()
+{
+    if (_timer_handle)
+	g_source_remove (_timer_handle);
+}
+
+void
+UnityMTGrabHandlesWindow::showHandles (bool use_timer)
 {    
     if (!mHandles)
     {
@@ -661,19 +722,18 @@ UnityMTGrabHandlesWindow::showHandles ()
 
     if (!mHandles->visible ())
     {
+    	activate ();
 	mHandles->show ();
 	mHandles->relayout (window->inputRect (), true);
 
 	window->updateWindowOutputExtents ();
 	cWindow->damageOutputExtents ();
     }
+    
+    if (use_timer)
+	resetTimer ();
     else
-    {
-	hideHandles ();
-
-	window->updateWindowOutputExtents ();
-	cWindow->damageOutputExtents ();
-    }
+	disableTimer ();
 }
 
 void
@@ -713,6 +773,32 @@ UnityMTGrabHandlesScreen::removeHandles (Unity::MT::GrabHandleGroup *handles)
 }
 
 bool
+UnityMTGrabHandlesScreen::toggleHandles (CompAction         *action,
+				       CompAction::State  state,
+				       CompOption::Vector &options)
+{
+    CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (options,
+								       "window",
+								       0));
+    if (w)
+    {
+	UMTGH_WINDOW (w);
+
+	if (!uw->allowHandles ())
+	    return false;
+	
+	if (uw->handlesVisible ())
+	    uw->hideHandles ();
+	else
+	    uw->showHandles (true);
+
+    	mMoreAnimate = true;
+    }
+
+    return true;
+}
+
+bool
 UnityMTGrabHandlesScreen::showHandles (CompAction         *action,
 				       CompAction::State  state,
 				       CompOption::Vector &options)
@@ -720,17 +806,45 @@ UnityMTGrabHandlesScreen::showHandles (CompAction         *action,
     CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (options,
 								       "window",
 								       0));
-
+    
+    bool use_timer = CompOption::getBoolOptionNamed (options, "use-timer", true);
+    
     if (w)
     {
 	UMTGH_WINDOW (w);
 
 	if (!uw->allowHandles ())
 	    return false;
+	
+        uw->showHandles (use_timer);
 
-	uw->showHandles ();
+	if (!uw->handlesVisible ())
+	    mMoreAnimate = true;
+    }
 
-    	mMoreAnimate = true;
+    return true;
+}
+
+bool
+UnityMTGrabHandlesScreen::hideHandles (CompAction         *action,
+				       CompAction::State  state,
+				       CompOption::Vector &options)
+{
+    CompWindow *w = screen->findWindow (CompOption::getIntOptionNamed (options,
+								       "window",
+								       0));
+    if (w)
+    {
+	UMTGH_WINDOW (w);
+
+	if (!uw->allowHandles ())
+	    return false;
+	
+	if (uw->handlesVisible ())
+	{
+	    uw->hideHandles ();
+	    mMoreAnimate = true;
+	}
     }
 
     return true;
@@ -764,7 +878,9 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen (CompScreen *s) :
 					       mHandleTextures.at (i).second);
     }
 
-    optionSetToggleHandlesKeyInitiate (boost::bind (&UnityMTGrabHandlesScreen::showHandles, this, _1, _2, _3));
+    optionSetToggleHandlesKeyInitiate (boost::bind (&UnityMTGrabHandlesScreen::toggleHandles, this, _1, _2, _3));
+    optionSetShowHandlesKeyInitiate (boost::bind (&UnityMTGrabHandlesScreen::showHandles, this, _1, _2, _3));
+    optionSetHideHandlesKeyInitiate (boost::bind (&UnityMTGrabHandlesScreen::hideHandles, this, _1, _2, _3));
 }
 
 UnityMTGrabHandlesScreen::~UnityMTGrabHandlesScreen ()
@@ -789,6 +905,10 @@ UnityMTGrabHandlesWindow::UnityMTGrabHandlesWindow (CompWindow *w) :
     WindowInterface::setHandler (window);
     CompositeWindowInterface::setHandler (cWindow);
     GLWindowInterface::setHandler (gWindow);
+    
+    // hack
+    _mt_screen = UnityMTGrabHandlesScreen::get (screen);
+    _timer_handle = 0;
 }
 
 UnityMTGrabHandlesWindow::~UnityMTGrabHandlesWindow ()

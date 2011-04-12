@@ -35,6 +35,7 @@
 #include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
+#include "IndicatorObjectEntryProxy.h"
 #include "PanelIndicatorObjectView.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
@@ -42,10 +43,13 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 PanelView::PanelView (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
   _is_dirty (true),
-  _opacity (1.0f)
+  _opacity (1.0f),
+  _is_primary (false),
+  _monitor (0)
 {
+  _needs_geo_sync = false;
   _style = new PanelStyle ();
-  _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
+  _on_panel_style_changed_connection = _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -66,14 +70,22 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    AddChild (_tray);
 
   _remote = new IndicatorObjectFactoryRemote ();
-  _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
-  _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
-  _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
-  _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
+  _on_object_added_connection = _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
+  _on_menu_pointer_moved_connection = _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
+  _on_entry_activate_request_connection = _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
+  _on_entry_activated_connection = _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
+  _on_synced_connection = _remote->IndicatorObjectFactory::OnSynced.connect (sigc::mem_fun (this, &PanelView::OnSynced));
 }
 
 PanelView::~PanelView ()
 {
+  _on_panel_style_changed_connection.disconnect ();
+  _on_object_added_connection.disconnect ();
+  _on_menu_pointer_moved_connection.disconnect ();
+  _on_entry_activate_request_connection.disconnect ();
+  _on_entry_activated_connection.disconnect ();
+  _on_synced_connection.disconnect ();
+  
   _style->UnReference ();
   delete _remote;
   delete _bg_layer;
@@ -122,6 +134,12 @@ PanelView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PopBackground ();
 
   GfxContext.PopClippingRectangle ();
+
+  if (_needs_geo_sync && _menu_view->GetControlsActive ())
+  {
+    SyncGeometries ();
+    _needs_geo_sync = false;
+  }
 }
 
 void
@@ -177,7 +195,7 @@ PanelView::UpdateBackground ()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::Color col = nux::Color::White;
+  nux::Color col = nux::Colors::White;
   col.SetAlpha (_opacity);
   
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
@@ -268,7 +286,8 @@ PanelView::OnMenuPointerMoved (int x, int y)
     {
       PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
       
-      if (view->_layout == NULL)
+      if (view->_layout == NULL
+          || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
         continue;
 
       geo = view->GetAbsoluteGeometry ();
@@ -300,6 +319,9 @@ void
 PanelView::OnEntryActivateRequest (const char *entry_id)
 {
   std::list<Area *>::iterator it;
+
+  if (!_menu_view->GetControlsActive ())
+    return;
 
   std::list<Area *> my_children = _layout->GetChildren ();
   for (it = my_children.begin(); it != my_children.end(); it++)
@@ -333,11 +355,17 @@ PanelView::OnEntryActivated (const char *entry_id)
     _menu_view->AllMenusClosed ();
 }
 
+void
+PanelView::OnSynced ()
+{
+  _needs_geo_sync = true;
+}
+
 //
 // Useful Public Methods
 //
 PanelHomeButton * 
-PanelView::HomeButton ()
+PanelView::GetHomeButton ()
 {
   return _home_button;
 }
@@ -353,12 +381,16 @@ PanelView::EndFirstMenuShow ()
 {
   std::list<Area *>::iterator it;
 
+  if (!_menu_view->GetControlsActive ())
+    return;
+
   std::list<Area *> my_children = _layout->GetChildren ();
   for (it = my_children.begin(); it != my_children.end(); it++)
   {
     PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
-    if (view->_layout == NULL)
+    if (view->_layout == NULL
+        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))       
       continue;
 
     std::list<Area *>::iterator it2;
@@ -367,6 +399,10 @@ PanelView::EndFirstMenuShow ()
     for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
     {
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+      IndicatorObjectEntryProxy *proxy = entry->_proxy;
+
+      if (proxy != NULL && !proxy->label_sensitive && !proxy->icon_sensitive)
+        continue;
 
       entry->Activate ();
       return;
@@ -390,3 +426,82 @@ PanelView::SetOpacity (float opacity)
   
   ForceUpdateBackground ();
 }
+
+bool
+PanelView::GetPrimary ()
+{
+  return _is_primary;
+}
+
+void
+PanelView::SetPrimary (bool primary)
+{
+  _is_primary = primary;
+
+  _home_button->SetVisible (primary);
+}
+
+void
+PanelView::SyncGeometries ()
+{
+  GVariantBuilder b;
+  GDBusProxy     *bus_proxy;
+  GVariant       *method_args;
+  std::list<Area *>::iterator it;
+
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
+
+  std::list<Area *> my_children = _layout->GetChildren ();
+  for (it = my_children.begin(); it != my_children.end(); it++)
+  {
+    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
+
+    if (view->_layout == NULL)
+      continue;
+
+    std::list<Area *>::iterator it2;
+
+    std::list<Area *> its_children = view->_layout->GetChildren ();
+    for (it2 = its_children.begin (); it2 != its_children.end (); it2++)
+    {
+      nux::Geometry geo;
+      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
+
+      if (entry == NULL)
+        continue;
+
+      geo = entry->GetAbsoluteGeometry ();
+      g_variant_builder_add (&b, "(ssiiii)",
+			     GetName (),
+			     entry->_proxy->GetId (),
+			     geo.x,
+			     geo.y,
+			     geo.GetWidth (),
+			     geo.GetHeight ());
+    }
+  }
+
+  g_variant_builder_close (&b);
+  method_args = g_variant_builder_end (&b);
+
+  // Send geometries to the panel service
+  bus_proxy =_remote->GetRemoteProxy ();
+  if (bus_proxy != NULL)
+  {
+    g_dbus_proxy_call (bus_proxy, "SyncGeometries", method_args,
+                       G_DBUS_CALL_FLAGS_NONE,
+                       -1,
+                       NULL,
+                       NULL,
+                       NULL);
+  }
+}
+
+void
+PanelView::SetMonitor (int monitor)
+{
+  _monitor = monitor;
+  _menu_view->SetMonitor (monitor);
+}
+

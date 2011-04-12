@@ -39,8 +39,12 @@
 
 #include "PlacesHomeView.h"
 
+#include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
+
+#include <string>
+#include <vector>
 
 #define DESKTOP_DIR  "/desktop/gnome/applications"
 #define BROWSER_DIR  DESKTOP_DIR"/browser"
@@ -63,6 +67,7 @@ public:
     _place_section (0),
     _exec (NULL)
   {
+    SetDndEnabled (false, false);
   }
 
   ~Shortcut ()
@@ -91,10 +96,12 @@ PlacesHomeView::PlacesHomeView ()
   _layout->SetChildrenSize (style->GetHomeTileWidth (), style->GetHomeTileHeight ());
   _layout->EnablePartialVisibility (false);
   _layout->SetHeightMatchContent (true);
-  _layout->SetVerticalExternalMargin (16);
+  _layout->SetVerticalExternalMargin (32);
   _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+  _layout->SetMinMaxSize ((style->GetHomeTileWidth () * 4) + (32 * 5),
+                          (style->GetHomeTileHeight () * 2) + (32 *3));
 
   _client = gconf_client_get_default ();
   gconf_client_add_dir (_client,
@@ -124,15 +131,50 @@ PlacesHomeView::PlacesHomeView ()
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
+  
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, (UBusCallback)&PlacesHomeView::DashVisible, this);
 
-  Refresh ();
+  //In case the GConf key is invalid (e.g. when an app was uninstalled), we
+  //rely on a fallback "whitelist" mechanism instead of showing nothing at all
+  _browser_alternatives.push_back("firefox");
+  _browser_alternatives.push_back("chromium-browser");
+  _browser_alternatives.push_back("epiphany-browser");
+  _browser_alternatives.push_back("midori");
+  
+  _photo_alternatives.push_back("shotwell");
+  _photo_alternatives.push_back("f-spot");
+  _photo_alternatives.push_back("gthumb");
+  _photo_alternatives.push_back("gwenview");
+  _photo_alternatives.push_back("eog");
+  
+  _email_alternatives.push_back("evolution");
+  _email_alternatives.push_back("thunderbird");
+  _email_alternatives.push_back("claws-mail");
+  _email_alternatives.push_back("kmail");
+  
+  _music_alternatives.push_back("banshee-1");
+  _music_alternatives.push_back("rhythmbox");
+  _music_alternatives.push_back("totem");
+  _music_alternatives.push_back("vlc");
 
   expanded.connect (sigc::mem_fun (this, &PlacesHomeView::Refresh));
+
+  SetExpanded (PlacesSettings::GetDefault ()->GetHomeExpanded ());
+  if (GetExpanded ())
+    Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
 {
   g_object_unref (_client);
+}
+
+void
+PlacesHomeView::DashVisible (GVariant *data, void *val)
+{
+  PlacesHomeView *self = (PlacesHomeView*)val;
+  self->Refresh ();
 }
 
 void
@@ -150,43 +192,42 @@ PlacesHomeView::Refresh ()
   PlacesStyle *style = PlacesStyle::GetDefault ();
   Shortcut   *shortcut = NULL;
   gchar      *markup = NULL;
-  const char *temp = "<big><b>%s</b></big>";
+  const char *temp = "<big>%s</big>";
   int         icon_size = style->GetHomeTileIconSize ();
 
-  GetCompositionLayout ()->SetVerticalExternalMargin (4);
-  GetCompositionLayout ()->SetHorizontalExternalMargin (18);
-
   _layout->Clear ();
+
+  PlacesSettings::GetDefault ()->SetHomeExpanded (GetExpanded ());
 
   if (!GetExpanded ())
     return;
 
-  // Find Media Apps
-  markup = g_strdup_printf (temp, _("Find Media Apps"));
+  // Media Apps
+  markup = g_strdup_printf (temp, _("Media Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_media_apps.png",
                            markup,
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 4;
+  shortcut->_place_section = 9;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
 
-  // Find Internet Apps
-  markup = g_strdup_printf (temp, _("Find Internet Apps"));
+  // Internet Apps
+  markup = g_strdup_printf (temp, _("Internet Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_internet_apps.png",
                            markup,
                            icon_size);
   shortcut->_id = TYPE_PLACE;
   shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
-  shortcut->_place_section = 3;
+  shortcut->_place_section = 8;
   _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
   shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
   g_free (markup);
 
-  // Find More Apps
-  markup = g_strdup_printf (temp, _("Find More Apps"));
+  // More Apps
+  markup = g_strdup_printf (temp, _("More Apps"));
   shortcut = new Shortcut (PKGDATADIR"/find_more_apps.png",
                            markup,
                            icon_size);
@@ -211,21 +252,21 @@ PlacesHomeView::Refresh ()
 
   // Browser
   markup = gconf_client_get_string (_client, BROWSER_DIR"/exec", NULL);
-  CreateShortcutFromExec (markup, _("Browse the Web"), "firefox");
+  CreateShortcutFromExec (markup, _("Browse the Web"), _browser_alternatives);
   g_free (markup);
 
   // Photos
   // FIXME: Need to figure out the default
-  CreateShortcutFromExec ("shotwell", _("View Photos"), "shotwell");
+  CreateShortcutFromExec ("shotwell", _("View Photos"), _photo_alternatives);
 
   // Email
   markup = gconf_client_get_string (_client, CALENDAR_DIR"/exec", NULL);
-  CreateShortcutFromExec (markup, _("Check Email"), "evolution");
+  CreateShortcutFromExec (markup, _("Check Email"), _email_alternatives);
   g_free (markup);
 
   // Music
   markup = gconf_client_get_string (_client, MEDIA_DIR"/exec", NULL);
-  CreateShortcutFromExec (markup, _("Listen to Music"), "banshee-1");
+  CreateShortcutFromExec (markup, _("Listen to Music"), _music_alternatives);
   g_free (markup);
 
   QueueDraw ();
@@ -236,7 +277,7 @@ PlacesHomeView::Refresh ()
 void
 PlacesHomeView::CreateShortcutFromExec (const char *exec,
                                         const char *name,
-                                        const char *icon_hint)
+                                        std::vector<std::string>& alternatives)
 {
   PlacesStyle     *style = PlacesStyle::GetDefault ();
   Shortcut        *shortcut = NULL;
@@ -246,7 +287,7 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   gchar           *real_exec;
   GDesktopAppInfo *info;
 
-  markup = g_strdup_printf ("<big><b>%s</b></big>", name);
+  markup = g_strdup_printf ("<big>%s</big>", name);
 
   // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
   // best of times but the following is the closest best-guess without having to do D-Bus
@@ -266,32 +307,39 @@ PlacesHomeView::CreateShortcutFromExec (const char *exec,
   }
   else
   {
-    id = g_strdup_printf ("%s.desktop", icon_hint);
+    id = g_strdup_printf ("%s.desktop", alternatives[0].c_str());
   }
   
   info = g_desktop_app_info_new (id);
-  if (G_IS_DESKTOP_APP_INFO (info))
+  std::vector<std::string>::iterator iter = alternatives.begin();
+  while (iter != alternatives.end())
   {
-    icon = g_icon_to_string (g_app_info_get_icon (G_APP_INFO (info)));
-    real_exec = g_strdup (g_app_info_get_executable (G_APP_INFO (info)));
-
-    g_object_unref (info);
+    if (!G_IS_DESKTOP_APP_INFO (info))
+    {
+      id = g_strdup_printf ("%s.desktop", (*iter).c_str());
+      info = g_desktop_app_info_new (id);
+      iter++;    
+    }
+  
+    if (G_IS_DESKTOP_APP_INFO (info))
+    {
+      icon = g_icon_to_string (g_app_info_get_icon (G_APP_INFO (info)));
+      real_exec = g_strdup (g_app_info_get_executable (G_APP_INFO (info)));
+      
+      shortcut = new Shortcut (icon, markup, style->GetHomeTileIconSize ());
+      shortcut->_id = TYPE_EXEC;
+      shortcut->_exec = real_exec;
+      _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+      shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+      
+      g_free (icon);
+      
+      break;
+    }
   }
-  else
-  {
-    icon = g_strdup (icon_hint);
-    real_exec = g_strdup ("firefox");
-  }
-
-  shortcut = new Shortcut (icon, markup, style->GetHomeTileIconSize ());
-  shortcut->_id = TYPE_EXEC;
-  shortcut->_exec = real_exec; //shorcut will free
-  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
-  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
-
+  
   g_free (id);
   g_free (markup);
-  g_free (icon);
 }
 
 void

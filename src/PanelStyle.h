@@ -76,6 +76,8 @@ class PanelStyle : public nux::Object
     nux::Color         _bg_bottom;
     nux::Color         _text_shadow;
     nux::Color         _line;
+    
+    gulong            _gtk_theme_changed_id;
 };
 
 #endif // PANEL_STYLE_H

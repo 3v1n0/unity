@@ -14,11 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
+ *              Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
 #include "config.h"
 
 #include "Nux/Nux.h"
+#include "Nux/ColorArea.h"
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
@@ -39,9 +41,18 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesView);
 
 PlacesView::PlacesView (PlaceFactory *factory)
 : nux::View (NUX_TRACKER_LOCATION),
+  _close_idle (0),
   _factory (factory),
   _entry (NULL),
-  _size_mode (SIZE_MODE_FULLSCREEN)
+  _size_mode (SIZE_MODE_FULLSCREEN),
+  _shrink_mode (SHRINK_MODE_NONE),
+  _target_height (1),
+  _actual_height (1),
+  _resize_id (0),
+  _alt_f2_entry (NULL),
+  _searching_timeout (0),
+  _pending_activation (false),
+  _search_empty (false)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -54,6 +65,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layout->AddLayout (vlayout, 1, nux::eCenter, nux::eFull);
 
   _h_spacer= new nux::SpaceLayout (1, 1, 1, nux::AREA_MAX_HEIGHT);
+  _h_spacer->SetVisible (false);
   _layout->AddLayout (_h_spacer, 0, nux::eCenter, nux::eFull);
 
   _search_bar = new PlacesSearchBar ();
@@ -63,13 +75,21 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _search_bar->search_changed.connect (sigc::mem_fun (this, &PlacesView::OnSearchChanged));
   _search_bar->activated.connect (sigc::mem_fun (this, &PlacesView::OnEntryActivated));
 
+  nux::HLayout *hlayout = new nux::HLayout (NUX_TRACKER_LOCATION);
+  vlayout->AddLayout (hlayout, 1, nux::eCenter, nux::eFull);
+
+  nux::SpaceLayout *slayout = new nux::SpaceLayout (24, 24, 1, nux::AREA_MAX_HEIGHT);
+  hlayout->AddLayout (slayout, 1, nux::eCenter, nux::eFull);
+
   _layered_layout = new nux::LayeredLayout (NUX_TRACKER_LOCATION);
-  vlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
+  hlayout->AddLayout (_layered_layout, 1, nux::eCenter, nux::eFull);
 
   _v_spacer = new nux::SpaceLayout (1, nux::AREA_MAX_WIDTH, 1, 1);
+  _v_spacer->SetVisible (false);
   vlayout->AddLayout (_v_spacer, 0, nux::eCenter, nux::eFull);
 
   _home_view = new PlacesHomeView ();
+  _home_view->expanded.connect (sigc::mem_fun (this, &PlacesView::ReEvaluateShrinkMode));
   _layered_layout->AddLayer (_home_view);
   AddChild (_home_view);
 
@@ -78,6 +98,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _results_controller->SetView (_results_view);
   _layered_layout->AddLayer (_results_view);
   _results_view->GetLayout ()->OnGeometryChanged.connect (sigc::mem_fun (this, &PlacesView::OnResultsViewGeometryChanged));
+
+  _empty_view = new PlacesEmptyView ();
+  _layered_layout->AddLayer (_empty_view);
 
   _layered_layout->SetActiveLayer (_home_view);
 
@@ -109,20 +132,21 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _icon_loader = IconLoader::GetDefault ();
 
   SetActiveEntry (_home_entry, 0, "");
-
-  //_layout->SetFocused (true);
 }
 
 PlacesView::~PlacesView ()
 {
+  if (_close_idle != 0)
+  {
+    g_source_remove (_close_idle);
+    _close_idle = 0;
+  }
   delete _home_entry;
 }
 
 long
 PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  // FIXME: This breaks with multi-monitor
-  nux::Geometry homebutton (0.0f, 0.0f, 66.0f, 24.0f);
   long ret = TraverseInfo;
 
   if ((ievent.e_event == nux::NUX_KEYDOWN) &&
@@ -138,7 +162,7 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
     nux::BaseTexture *corner = style->GetDashCorner ();
     nux::Geometry     geo = GetAbsoluteGeometry ();
     nux::Geometry     fullscreen (geo.x + geo.width - corner->GetWidth (),
-                                  geo.y + geo.height - corner->GetHeight (),
+                                  geo.y + _actual_height - corner->GetHeight (),
                                   corner->GetWidth (),
                                   corner->GetHeight ());
 
@@ -149,10 +173,24 @@ PlacesView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 
       return TraverseInfo |= nux::eMouseEventSolved;
     }
+
+    geo.height = _actual_height;
+    if (!geo.IsPointInside (ievent.e_x, ievent.e_y))
+    {
+      return TraverseInfo |= nux::eMouseEventSolved;
+    }
   }
 
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
+}
+
+static gboolean
+OnQueueDrawDrawDraw (PlacesView *self)
+{
+  self->QueueDraw ();
+
+  return FALSE;
 }
 
 void
@@ -163,6 +201,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry geo_absolute = GetAbsoluteGeometry ();
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
   bool paint_blur = type != PlacesSettings::NO_BLUR;
+  nux::BaseTexture *corner = style->GetDashCorner ();
 
   GfxContext.PushClippingRectangle (geo);
 
@@ -171,7 +210,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-  nux::Geometry _bg_blur_geo = GetGeometry ();
+  _bg_blur_geo = geo;
 
   if ((_size_mode == SIZE_MODE_HOVER))
   {
@@ -194,7 +233,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
     nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Color::White, 1.0f, 2);
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Colors::White, 1.0f, 2);
 
     if (current_fbo.IsValid ())
     { 
@@ -207,6 +246,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.Push2DWindow (GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
       GfxContext.ApplyClippingRectangle ();
     }
+
+    g_timeout_add (0, (GSourceFunc)OnQueueDrawDrawDraw, this);
   }
 
   if (_bg_blur_texture.IsValid ()  && paint_blur)
@@ -217,17 +258,25 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
+    nux::Geometry bg_clip = geo;
+    bg_clip.width -= corner->GetWidth ();
+    bg_clip.height = _actual_height - corner->GetHeight ();
+
+    GfxContext.PushClippingRectangle (bg_clip);
+
     gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                    _bg_blur_texture,
                                    texxform_blur__bg,
-                                   nux::Color::White,
+                                   nux::Colors::White,
                                    true,
                                    rop);
+  
+    GfxContext.PopClippingRectangle ();
   }
+  geo.height = _actual_height;
 
   if (_size_mode == SIZE_MODE_HOVER)
   {
-    nux::BaseTexture *corner = style->GetDashCorner ();
     nux::BaseTexture *bottom = style->GetDashBottomTile ();
     nux::BaseTexture *right = style->GetDashRightTile ();
     nux::BaseTexture *icon = style->GetDashFullscreenIcon ();
@@ -252,7 +301,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            corner->GetHeight (),
                            corner->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Fullscreen toggle
@@ -262,7 +311,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            icon->GetHeight (),
                            icon->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Bottom repeated texture
@@ -278,7 +327,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            bottom->GetHeight (),
                            bottom->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
 
     { // Right repeated texture
@@ -294,7 +343,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            real_height + offset,
                            right->GetDeviceTexture (),
                            texxform,
-                           nux::Color::White);
+                           nux::Colors::White);
     }
   }
   else
@@ -316,16 +365,18 @@ void
 PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault ()->GetDashBlurType ();
-  bool paint_blur = type != PlacesSettings::NO_BLUR;
-  int bgs = 1;
+  nux::Geometry clip_geo = GetGeometry ();
+  bool paint_blur = (type != PlacesSettings::NO_BLUR);
+  int bgs = 0;
 
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  clip_geo.height = _bg_layer->GetGeometry ().height -1;
+  GfxContext.PushClippingRectangle (clip_geo);
+
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
   if (_bg_blur_texture.IsValid () && paint_blur)
   {
-
     nux::TexCoordXForm texxform_blur__bg;
     nux::ROPConfig rop;
     rop.Blend = true;
@@ -335,16 +386,19 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
-                               nux::Color::White,
+                               nux::Colors::White,
                                true,
                                rop);
     bgs++;
   }
  
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
+  bgs++;
 
   if (_layout)
+  {    
     _layout->ProcessDraw (GfxContext, force_draw);
+  }
 
   nux::GetPainter ().PopBackground (bgs);
 
@@ -360,6 +414,12 @@ void
 PlacesView::AboutToShow ()
 {
   _bg_blur_texture.Release ();
+  if (_resize_id)
+    g_source_remove (_resize_id);
+  _resize_id = 0;
+  _actual_height = _last_height = _target_height;
+
+ _search_bar->_pango_entry->SetFocused (true);
 }
 
 void
@@ -370,6 +430,9 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
 
   if (entry == NULL)
     entry = _home_entry;
+  else if (!_alt_f2_entry
+           && g_strcmp0 (entry->GetId (), "/com/canonical/unity/applicationsplace/runner") ==0)
+    _alt_f2_entry = entry;
 
   if (_entry)
   {
@@ -378,14 +441,18 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
     _group_added_conn.disconnect ();
     _result_added_conn.disconnect ();
     _result_removed_conn.disconnect ();
+    _search_finished_conn.disconnect ();
 
     _results_controller->Clear ();
+
+    _n_results = 0;
   }
 
   _entry = entry;
 
   _entry->SetActive (true);
   _search_bar->SetActiveEntry (_entry, section_id, search_string);
+  _search_empty = (g_strcmp0 (search_string, "") == 0 && _entry == _home_entry);
 
   _entry->ForeachGroup (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _entry->ForeachResult (sigc::mem_fun (this, &PlacesView::OnResultAdded));
@@ -393,13 +460,17 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   _group_added_conn = _entry->group_added.connect (sigc::mem_fun (this, &PlacesView::OnGroupAdded));
   _result_added_conn = _entry->result_added.connect (sigc::mem_fun (this, &PlacesView::OnResultAdded));
   _result_removed_conn = _entry->result_removed.connect (sigc::mem_fun (this, &PlacesView::OnResultRemoved));
+  _search_finished_conn = _entry->search_finished.connect (sigc::mem_fun (this, &PlacesView::OnSearchFinished));
   
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
     _layered_layout->SetActiveLayer (_home_view);
   else
     _layered_layout->SetActiveLayer (_results_view);
 
-  
+  if (_entry == _alt_f2_entry)
+  _actual_height = _target_height = _last_height = _search_bar->GetGeometry ().height;
+
+  ReEvaluateShrinkMode ();
 }
 
 PlaceEntry *
@@ -414,16 +485,87 @@ PlacesView::GetResultsController ()
   return _results_controller;
 }
 
-void
-PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo)
+gboolean
+PlacesView::OnResizeFrame (PlacesView *self)
 {
-  if (view_geo.height >= _results_view->GetGeometry ().height)
+#define _LENGTH_ 200000
+  gint64 diff;
+  float  progress;
+  float  last_height;
+
+  diff = g_get_monotonic_time () - self->_resize_start_time;
+
+  progress = diff/(float)_LENGTH_;
+  
+  last_height = self->_last_height;
+
+  if (self->_target_height > self->_last_height)
   {
-    ;
+    self->_actual_height = last_height + ((self->_target_height - last_height) * progress);
   }
   else
   {
-    ;
+    self->_actual_height = last_height - ((last_height - self->_target_height) * progress);
+  }
+
+  if (diff > _LENGTH_)
+  {
+    self->_resize_id = 0;
+
+    // Make sure the state is right
+    self->_actual_height = self->_target_height;
+  
+    self->QueueDraw ();
+    return FALSE;
+  }
+
+  self->QueueDraw ();
+  return TRUE;
+}
+
+void
+PlacesView::OnResultsViewGeometryChanged (nux::Area *view, nux::Geometry& view_geo)
+{
+#define UNEXPANDED_HOME_PADDING 12
+  nux::BaseTexture *corner = PlacesStyle::GetDefault ()->GetDashCorner ();
+
+  if (_shrink_mode == SHRINK_MODE_NONE || _size_mode == SIZE_MODE_FULLSCREEN)
+  {
+    _target_height = GetGeometry ().height;
+    _actual_height = _target_height;
+  }
+  else
+  {
+    gint target_height = _search_bar->GetGeometry ().height;
+
+    if (_layered_layout->GetActiveLayer () == _home_view)
+    {
+      if (_home_view->GetExpanded ())
+        target_height += _home_view->GetLayout ()->GetContentHeight ();
+      else
+        target_height += _home_view->GetHeaderHeight () + UNEXPANDED_HOME_PADDING;
+    }
+    else
+    {
+      target_height += _results_view->GetLayout ()->GetContentHeight ();
+    }
+
+    target_height += corner->GetHeight ();
+    if (target_height >= GetGeometry ().height)
+      target_height = GetGeometry ().height;
+
+    if (_target_height != target_height)
+    {
+      _target_height = target_height;
+      _last_height = _actual_height;
+      _resize_start_time = g_get_monotonic_time ();
+
+      if (_resize_id)
+        g_source_remove (_resize_id);
+      _resize_id = g_timeout_add (15, (GSourceFunc)PlacesView::OnResizeFrame, this);
+    }
+   
+    QueueDraw ();
   }
 }
 
@@ -459,6 +601,10 @@ PlacesView::SetSizeMode (SizeMode size_mode)
     _v_spacer->SetMaximumHeight (corner->GetHeight ());
   }
 
+  _h_spacer->SetVisible (size_mode == SIZE_MODE_HOVER);
+  _v_spacer->SetVisible (size_mode == SIZE_MODE_HOVER);
+  
+  ReEvaluateShrinkMode ();
   QueueDraw ();
 }
 
@@ -474,12 +620,36 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
+  // We never show these so ignore them
+  if (_search_empty)
+    return;
+
+  _n_results++;
+
+  if (_n_results <= 2
+      && (g_strcmp0 (group.GetRenderer (), "UnityEmptySearchRenderer") == 0
+          || g_strcmp0 (group.GetRenderer (), "UnityEmptySectionRenderer") == 0))
+  {
+    if (_n_results == 1)
+      _empty_view->SetText (result.GetName ());
+    _layered_layout->SetActiveLayerN (2);
+  }
+
   _results_controller->AddResult (entry, group, result);
 }
 
 void
 PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
+  _n_results--;
+
+  if (_n_results <= 1
+      && (g_strcmp0 (group.GetRenderer (), "UnityEmptySearchRenderer") == 0
+          || g_strcmp0 (group.GetRenderer (), "UnityEmptySectionRenderer") == 0))
+  {
+    _layered_layout->SetActiveLayerN (1);
+  }
+
   _results_controller->RemoveResult (entry, group, result);
 }
 
@@ -487,6 +657,7 @@ void
 PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 {
   const char *uri;
+  int         i;
 
   uri = g_variant_get_string (data, NULL);
 
@@ -496,24 +667,52 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
     return;
   }
 
-  if (g_str_has_prefix (uri, "application://"))
+  if (g_str_has_prefix (uri, "application://") or g_str_has_prefix (uri, "unity-runner://"))
   {
-    const char      *id = &uri[14];
+    char            *id = g_strdup (&uri[14]);
     GDesktopAppInfo *info;
 
-    info = g_desktop_app_info_new (id);
-    if (G_IS_DESKTOP_APP_INFO (info))
+    /* The docs for g_desktop_app_info_new() says it respects "-" to "/"
+     * substitution as per XDG Menu Spec, but it only seems to work for
+     * exactly 1 substitution where as Wine programs often require many.
+     * Bottom line: We must do some manual trial and error to find desktop
+     * files in deeply nested directories */
+    while (id != NULL)
     {
-      GError *error = NULL;
-
-      g_app_info_launch (G_APP_INFO (info), NULL, NULL, &error);
-      if (error)
+      info = g_desktop_app_info_new (id);
+      if (info != NULL)
       {
-        g_warning ("Unable to launch %s: %s", id,  error->message);
-        g_error_free (error);
+        GError *error = NULL;
+
+        g_app_info_launch (G_APP_INFO (info), NULL, NULL, &error);
+        if (error)
+        {
+          g_warning ("Unable to launch %s: %s", id,  error->message);
+          g_error_free (error);
+        }
+        g_object_unref (info);
+        break;
       }
-      g_object_unref (info);
+     
+     /* Try to replace the next - with a / and do the lookup again.
+      * If we set id=NULL we'll exit the outer loop */
+     for (i = 0; ; i++)
+     {
+       if (id[i] == '-')
+       {
+         id[i] = '/';
+         break;
+       }
+       else if (id[i] == '\0')
+       {
+         g_free (id);
+         id = NULL;
+         break;
+       }
+     }
    }
+   
+   g_free (id);
   }
   else
   {
@@ -535,12 +734,15 @@ PlacesView::OnResultActivated (GVariant *data, PlacesView *self)
 void
 PlacesView::OnSearchChanged (const char *search_string)
 {
+  _search_empty = false;
+
   if (_entry == _home_entry)
   {
     if (g_strcmp0 (search_string, "") == 0)
     {
       _layered_layout->SetActiveLayer (_home_view);
       _home_view->QueueDraw ();
+      _search_empty = true;
     }
     else
     {
@@ -553,6 +755,26 @@ PlacesView::OnSearchChanged (const char *search_string)
     _layered_layout->QueueDraw ();
     QueueDraw ();
   }
+
+  if (_searching_timeout)
+    g_source_remove (_searching_timeout);
+  _searching_timeout = 0;
+
+  if (g_strcmp0 (search_string, ""))
+  {
+    _searching_timeout = g_timeout_add (5000, (GSourceFunc)PlacesView::OnSearchTimedOut, this);
+  }
+}
+
+gboolean
+PlacesView::OnSearchTimedOut (PlacesView *view)
+{
+  std::map <const char *, const char *> hints;
+
+  view->_searching_timeout = 0;
+  view->OnSearchFinished ( "", 0, hints);
+
+  return FALSE;
 }
 
 //
@@ -600,7 +822,22 @@ PlacesView::PlaceEntryActivateRequest (const char *entry_id,
 void
 PlacesView::CloseRequest (GVariant *data, PlacesView *self)
 {
+  if (self->_close_idle != 0)
+  {
+    g_source_remove (self->_close_idle);
+    self->_close_idle = 0;
+  }
+
+  //add a timeout because the home view flashes on close
+  self->_close_idle = g_timeout_add_seconds (100, (GSourceFunc)OnCloseTimeout, self);
+}
+
+gboolean 
+PlacesView::OnCloseTimeout (PlacesView *self)
+{
+  self->_close_idle = 0;
   self->SetActiveEntry (NULL, 0, "");
+  return FALSE;
 }
 
 nux::TextEntry*
@@ -618,8 +855,17 @@ PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 void
 PlacesView::OnEntryActivated ()
 {
-  if (!_results_controller->ActivateFirst ())
-    g_debug ("Cannot activate anything");
+  if (_searching_timeout && !_pending_activation)
+  {
+    _pending_activation = true;
+  }
+  else
+  {
+    if (!_results_controller->ActivateFirst ())
+      g_debug ("Cannot activate anything");
+
+    _pending_activation = false;
+  }
 }
 
 void
@@ -660,6 +906,41 @@ PlacesView::OnPlaceResultActivated (const char *uri, ActivationResult res)
   };
 }
 
+void
+PlacesView::ReEvaluateShrinkMode ()
+{
+  if (_size_mode == SIZE_MODE_FULLSCREEN)
+    _shrink_mode = SHRINK_MODE_NONE;
+
+  if (_entry == _home_entry || _entry == _alt_f2_entry)
+  {
+    _shrink_mode = SHRINK_MODE_CONTENTS;
+  }
+  else
+    _shrink_mode = SHRINK_MODE_NONE;
+
+  nux::Geometry geo = _results_view->GetGeometry ();
+  OnResultsViewGeometryChanged (_results_view, geo);
+}
+
+void
+PlacesView::OnSearchFinished (const char *search_string,
+                              guint32     section_id,
+                              std::map<const char *, const char *>& hints)
+{
+  if (_pending_activation)
+  {
+    if (!_results_controller->ActivateFirst ())
+      g_debug ("Cannot activate anything");
+  }
+  _pending_activation = false;
+
+  if (_searching_timeout)
+    g_source_remove (_searching_timeout);
+  _searching_timeout = 0;
+
+  _search_bar->OnSearchFinished ();
+}
 
 //
 // Introspection

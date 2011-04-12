@@ -83,6 +83,108 @@ FavoriteStoreGSettings::~FavoriteStoreGSettings ()
   g_object_unref (m_settings);
 }
 
+/* If the desktop file exists, we *will* find it dang it
+ * Returns null if we failed =(
+ *
+ * Most of this code copied from bamf - its nice to have this
+ * agree with bamf at the very least
+ */
+char *exhaustive_desktopfile_lookup (char *desktop_file)
+{
+  GFile *file;
+  GFileInfo *info;
+  GFileEnumerator *enumerator;
+  GList *dirs = NULL, *l;
+  const char *env;
+  char  *path;
+  char  *subpath;
+  char **data_dirs = NULL;
+  char **data;
+  
+  env = g_getenv ("XDG_DATA_DIRS");
+  
+  if (env)
+  {
+    data_dirs = g_strsplit (env, ":", 0);
+    
+    for (data = data_dirs; *data; data++)
+    {
+      path = g_build_filename (*data, "applications", NULL);
+      if (g_file_test (path, G_FILE_TEST_IS_DIR))
+        dirs = g_list_prepend (dirs, path);
+      else
+        g_free (path);
+    }
+  }
+  
+  if (!g_list_find_custom (dirs, "/usr/share/applications", (GCompareFunc) g_strcmp0))
+    dirs = g_list_prepend (dirs, g_strdup ("/usr/share/applications"));
+  
+  if (!g_list_find_custom (dirs, "/usr/local/share/applications", (GCompareFunc) g_strcmp0))
+    dirs = g_list_prepend (dirs, g_strdup ("/usr/local/share/applications"));
+  
+  dirs = g_list_prepend (dirs, g_strdup (g_build_filename (g_get_home_dir (), ".share/applications", NULL)));
+  
+  if (data_dirs)
+    g_strfreev (data_dirs);
+  
+  /* include subdirs */
+  for (l = dirs; l; l = l->next)
+  {
+    path = (char *)l->data;
+    
+    file = g_file_new_for_path (path);
+    
+    if (!g_file_query_exists (file, NULL))
+    {
+      g_object_unref (file);
+      continue;
+    }
+    
+    enumerator = g_file_enumerate_children (file,
+                                            "standard::*",
+                                            G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+                                            NULL,
+                                            NULL);
+    
+    if (!enumerator)
+      continue;
+    
+    info = g_file_enumerator_next_file (enumerator, NULL, NULL);
+    for (; info; info = g_file_enumerator_next_file (enumerator, NULL, NULL))
+    {
+      if (g_file_info_get_file_type (info) != G_FILE_TYPE_DIRECTORY)
+        continue;
+      
+      subpath = g_build_filename (path, g_file_info_get_name (info), NULL);
+      /* append for non-recursive recursion love */
+      dirs = g_list_append (dirs, subpath);
+      
+      g_object_unref (info);
+    }
+    
+    g_object_unref (enumerator);
+    g_object_unref (file);
+  }
+  
+  /* dirs now contains a list if lookup directories */
+  /* go through the dir list and stat to check it exists */
+  path = NULL;
+  for (l = dirs; l; l = l->next)
+  {
+    path = g_build_filename ((char *)l->data, desktop_file, NULL);
+    if (g_file_test (path, G_FILE_TEST_EXISTS))
+      break;
+
+    g_free (path);
+    path = NULL;
+  }
+
+  g_list_free (dirs);
+
+  return path;
+}
+
 void
 FavoriteStoreGSettings::Refresh ()
 {
@@ -120,12 +222,22 @@ FavoriteStoreGSettings::Refresh ()
           if (info == NULL || g_desktop_app_info_get_filename (info) == NULL)
             {
               g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
+              char *exhaustive_path;
 
-              i++;
-              continue;
+              exhaustive_path = exhaustive_desktopfile_lookup (favs[i]);
+              if (exhaustive_path == NULL)
+                {
+                  g_warning ("Desktop file '%s' Does not exist anywhere we can find it", favs[i]);
+                }
+              else
+                {
+                  m_favorites = g_slist_append (m_favorites, exhaustive_path);
+                }
             }
-
-          m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
+          else
+            {
+              m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
+            }
 
           g_object_unref (info);
         }
@@ -229,11 +341,14 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
   g_return_if_fail (desktop_path);
   g_return_if_fail (desktop_path[0] == '/');
 
-  n_total_favs = g_slist_length (m_favorites) - 1;
+  n_total_favs = g_slist_length (m_favorites);
   
   char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
+  
+  for (i = 0; i < n_total_favs + 1; i++)
+    favs[i] = NULL;
 
+  i = 0;
   for (f = m_favorites; f; f = f->next)
     {
       if (g_strcmp0 ((char *)f->data, desktop_path) != 0)
@@ -246,7 +361,7 @@ FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
           found = true;
         }
     }
-
+    
   if (!found)
     {
       g_warning ("Unable to remove favorite '%s': Does not exist in favorites",

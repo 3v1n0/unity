@@ -69,5 +69,7 @@ private:
   NaTray    *_tray;
   int        _last_x;
   int        _last_y;
+  
+  gulong  _tray_expose_id;
 };
 #endif

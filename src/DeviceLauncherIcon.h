@@ -21,6 +21,7 @@
 #define _DEVICE_LAUNCHER_ICON_H__H
 
 #include "SimpleLauncherIcon.h"
+#include "DevicesSettings.h"
 
 #include <gio/gio.h>
 
@@ -33,11 +34,11 @@ public:
   
   virtual nux::Color BackgroundColor ();
   virtual nux::Color GlowColor ();
+  void UpdateVisibility ();
 
 protected:
-  void OnMouseClick (int button);
-  void UpdateDeviceIcon ();
   std::list<DbusmenuMenuitem *> GetMenus ();
+  void UpdateDeviceIcon ();
 
 private:
   void ActivateLauncherIcon ();
@@ -47,13 +48,17 @@ private:
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnRemoved (GVolume *volume, DeviceLauncherIcon *self);
+  static void OnChanged (GVolume *volume, DeviceLauncherIcon *self);
   static void OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnEjectReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnStopDriveReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  void OnSettingsChanged (DevicesSettings *settings);
 
 private:
   GVolume *_volume;
+  gulong _on_removed_handler_id;
+  gulong _on_changed_handler_id;
 };
 
 #endif // _DEVICE_LAUNCHER_ICON_H__H

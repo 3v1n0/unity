@@ -42,19 +42,22 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
-  _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
-  _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_indicator_activate_changed_connection = _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   _padding = padding;
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
-  PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
 PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 {
+  _on_indicator_activate_changed_connection.disconnect ();
+  _on_indicator_updated_connection.disconnect ();
+  _on_panelstyle_changed_connection.disconnect ();
 }
 
 void
@@ -73,7 +76,7 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
     _proxy->ShowMenu (GetAbsoluteGeometry ().x + 1, //cairo translation
-                      PANEL_HEIGHT,
+                      GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
@@ -89,7 +92,7 @@ void
 PanelIndicatorObjectEntryView::Activate ()
 {
   _proxy->ShowMenu (GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
-                    PANEL_HEIGHT,
+                    GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                     time (NULL),
                     1);
 }
@@ -126,9 +129,10 @@ void
 PanelIndicatorObjectEntryView::Refresh ()
 {
   GdkPixbuf            *pixbuf = _proxy->GetPixbuf ();
-  char                 *label = fix_string (_proxy->GetLabel ());
+  char                 *label = NULL;
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
+  PangoAttrList        *attrs = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
   char                 *font_description = NULL;
@@ -146,6 +150,25 @@ PanelIndicatorObjectEntryView::Refresh ()
   PanelStyle *style = PanelStyle::GetDefault ();
   nux::Color  textcol = style->GetTextColor ();
   nux::Color  textshadowcol = style->GetTextShadow ();
+
+  if (_proxy->show_now)
+  {
+    if (!pango_parse_markup (_proxy->GetLabel (),
+                             -1,
+                             '_',
+                             &attrs,
+                             &label,
+                             NULL,
+                             NULL))
+    {
+      label = g_strdup (_proxy->GetLabel ());
+      g_debug ("failed");
+    }
+  }
+  else
+  {
+    label = fix_string (_proxy->GetLabel ());
+  }
 
   // First lets figure out our size
   if (pixbuf && _proxy->icon_visible)
@@ -169,6 +192,12 @@ PanelIndicatorObjectEntryView::Refresh ()
     pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
 
     layout = pango_cairo_create_layout (cr);
+    if (attrs)
+    {
+      pango_layout_set_attributes (layout, attrs);
+      pango_attr_list_unref (attrs);
+    }
+
     pango_layout_set_font_description (layout, desc);
     pango_layout_set_text (layout, label, -1);
     
@@ -266,7 +295,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,
-                                                            nux::Color::White,
+                                                            nux::Colors::White,
                                                             true,
                                                             rop);
   SetPaintLayer (texture_layer);
@@ -394,4 +423,10 @@ PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
 
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
+}
+
+bool
+PanelIndicatorObjectEntryView::GetShowNow ()
+{
+  return _proxy ? _proxy->show_now : false;
 }

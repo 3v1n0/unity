@@ -38,14 +38,15 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   _sort_priority = 0;
   
   _launcher->SetModel (_model);
-  _launcher->launcher_dropped.connect (sigc::mem_fun (this, &LauncherController::OnLauncherDropped));
+  _on_launcher_add_request_connection = (sigc::connection) _launcher->launcher_addrequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherAddRequest));
+  _on_launcher_remove_request_connection = (sigc::connection) _launcher->launcher_removerequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRemoveRequest));
   _favorite_store = FavoriteStore::GetDefault ();
 
   _place_section = new PlaceLauncherSection (_launcher);
-  _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
+  _on_place_section_icon_added_connection = (sigc::connection) _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
  
   _device_section = new DeviceLauncherSection (_launcher);
-  _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
+  _on_device_section_icon_added_connection = (sigc::connection) _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
   _num_workspaces = _screen->vpSize ().width ();
   if(_num_workspaces > 1)
@@ -54,22 +55,43 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, n
   }
   InsertTrash ();
 
-  g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
+  _bamf_timer_handler_id = g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
-  _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteRemoved));
+  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
+  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteRemoved));
 }
 
 LauncherController::~LauncherController()
 {
+  if (_on_launcher_add_request_connection.connected ())
+    _on_launcher_add_request_connection.disconnect ();
+
+  if (_on_launcher_remove_request_connection.connected ())
+    _on_launcher_remove_request_connection.disconnect ();
+
+  if (_on_place_section_icon_added_connection.connected ())
+    _on_place_section_icon_added_connection.disconnect ();
+
+  if (_on_device_section_icon_added_connection.connected ())
+    _on_device_section_icon_added_connection.disconnect ();
+
+  if (_bamf_timer_handler_id != 0)
+    g_source_remove (_bamf_timer_handler_id);
+
+  if (_on_remote_model_entry_added_connection.connected ())
+    _on_remote_model_entry_added_connection.disconnect ();
+
+  if (_on_remote_model_entry_removed_connection.connected ())
+    _on_remote_model_entry_removed_connection.disconnect ();
+
   _favorite_store->UnReference ();
   delete _place_section;
   delete _device_section;
 }
 
 void
-LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
+LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
 {
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
@@ -77,7 +99,7 @@ LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    if (g_str_equal (path, (*it)->DesktopFile ()))
+    if (!g_strcmp0 (path, (*it)->DesktopFile ()))
       return;
   }
 
@@ -85,7 +107,8 @@ LauncherController::OnLauncherDropped (char *path, LauncherIcon *before)
   if (result)
   {
     RegisterIcon (result);
-    _model->ReorderBefore (result, before, false);
+    if (before)
+      _model->ReorderBefore (result, before, false);
   }
 }
 
@@ -136,6 +159,18 @@ LauncherController::OnIconAdded (LauncherIcon *icon)
 }
 
 void
+LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
+{
+  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+  
+  // we only handle bamf Icon removal request for now.
+  if (!bamf_icon)
+    return;
+    
+  bamf_icon->UnStick ();
+}
+
+void
 LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
 {
   LauncherModel::iterator it;
@@ -165,10 +200,9 @@ LauncherController::OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry)
 }
 
 void
-LauncherController::OnExpoClicked (int button)
+LauncherController::OnExpoActivated ()
 {
-  if (button == 1)
-    PluginAdapter::Default ()->InitiateExpo ();
+  PluginAdapter::Default ()->InitiateExpo ();
 }
 
 void
@@ -204,9 +238,9 @@ LauncherController::InsertExpoAction ()
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);
   _expoIcon->SetIconType (LauncherIcon::TYPE_EXPO);
-  _expoIcon->SetShortcut('w');
+  _expoIcon->SetShortcut('s');
   
-  _expoIcon->MouseClick.connect (sigc::mem_fun (this, &LauncherController::OnExpoClicked));
+  _on_expoicon_activate_connection = _expoIcon->activate.connect (sigc::mem_fun (this, &LauncherController::OnExpoActivated));
   
   RegisterIcon (_expoIcon);
 }
@@ -214,6 +248,8 @@ LauncherController::InsertExpoAction ()
 void
 LauncherController::RemoveExpoAction ()
 {
+  if (_on_expoicon_activate_connection)
+    _on_expoicon_activate_connection.disconnect ();
   _model->RemoveIcon (_expoIcon);
 }
 
@@ -221,6 +257,18 @@ void
 LauncherController::RegisterIcon (LauncherIcon *icon)
 {
   _model->AddIcon (icon);
+
+  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+  if (bamf_icon)
+  {
+    LauncherEntryRemote *entry = NULL;
+    const char *path;
+    path = bamf_icon->DesktopFile ();
+    if (path)
+      entry = _remote_model->LookupByDesktopFile (path);
+    if (entry)
+      icon->InsertEntryRemote (entry);
+  }
 }
 
 /* static private */

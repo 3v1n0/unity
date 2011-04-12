@@ -42,7 +42,7 @@ PanelTray::PanelTray ()
   gtk_widget_realize (_window);
   gdk_window_set_back_pixmap (_window->window, NULL, FALSE);
   gtk_widget_set_app_paintable (_window, TRUE);
-  g_signal_connect (_window, "expose-event", G_CALLBACK (PanelTray::OnTrayExpose), this);
+  _tray_expose_id = g_signal_connect (_window, "expose-event", G_CALLBACK (PanelTray::OnTrayExpose), this);
 
   if (!g_getenv ("UNITY_PANEL_TRAY_DISABLE"))
   {
@@ -62,6 +62,10 @@ PanelTray::PanelTray ()
 
 PanelTray::~PanelTray ()
 {
+  if (_tray_expose_id)
+    g_signal_handler_disconnect (_window, _tray_expose_id);
+  g_idle_remove_by_data (this);
+  
   g_strfreev (_whitelist);
   g_object_unref (_settings);
 }

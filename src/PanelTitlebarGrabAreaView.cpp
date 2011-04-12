@@ -74,6 +74,12 @@ void PanelTitlebarGrabArea::RecvMouseDown (int x, int y, unsigned long button_fl
 
 void PanelTitlebarGrabArea::RecvMouseDoubleClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  int button = nux::GetEventButton (button_flags);
+  if (button == 1)
+  {
+    mouse_doubleleftclick.emit ();
+    return;
+  }
   mouse_doubleclick.emit ();
 }
 

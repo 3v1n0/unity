@@ -21,17 +21,20 @@
 #include "PlaceLauncherSection.h"
 
 PlaceLauncherSection::PlaceLauncherSection (Launcher *launcher)
-: _launcher (launcher)
+: _launcher (launcher),
+  _priority (10000)
 {
   _factory = PlaceFactory::GetDefault ();
-  _factory->place_added.connect (sigc::mem_fun (this, &PlaceLauncherSection::OnPlaceAdded));
+  _on_place_added_connection = (sigc::connection) _factory->place_added.connect (sigc::mem_fun (this, 
+                                                                                                &PlaceLauncherSection::OnPlaceAdded));
 
   PopulateEntries ();
 }
 
 PlaceLauncherSection::~PlaceLauncherSection ()
 {
-
+  if (_on_place_added_connection.connected ())
+    _on_place_added_connection.disconnect ();
 }
 
 void
@@ -47,6 +50,7 @@ PlaceLauncherSection::OnPlaceAdded (Place *place)
     if (entry->ShowInLauncher ())
     {
       PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
+      icon->SetSortPriority (_priority++);
       IconAdded.emit (icon);
     }
   }
@@ -71,9 +75,9 @@ PlaceLauncherSection::PopulateEntries ()
       if (entry->ShowInLauncher ())
       {
         PlaceLauncherIcon *icon = new PlaceLauncherIcon (_launcher, entry);
+        icon->SetSortPriority (_priority++);
         IconAdded.emit (icon);
       }
     }
   }
 }
-

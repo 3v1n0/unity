@@ -48,6 +48,7 @@ protected:
   char * Hash (const char *id, int width, int height);
   std::map<std::string, nux::BaseTexture *> _cache;
   std::map<nux::BaseTexture *, std::string> _cache_inverse; // just for faster lookups
+  std::map<nux::BaseTexture *, sigc::connection> _cache_con; // track our connections
   void OnDestroyNotify (nux::Trackable *Object);
 };
 
