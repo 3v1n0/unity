@@ -2727,7 +2727,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       RenderIconToTexture (GfxContext, _drag_icon, _offscreen_drag_texture);
       _drag_window->ShowWindow (true);
-      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
       
       _render_drag_window = false;
     }
