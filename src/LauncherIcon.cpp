@@ -44,11 +44,16 @@
 #include "UBusMessages.h"
 
 #define DEFAULT_ICON "application-default-icon"
+#define MONO_TEST_ICON "gnome-home"
+#define UNITY_THEME_NAME "unity-icon-theme"
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
 
 nux::Tooltip *LauncherIcon::_current_tooltip = 0;
 QuicklistView *LauncherIcon::_current_quicklist = 0;
+
+int LauncherIcon::_current_theme_is_mono = -1;
+GtkIconTheme *LauncherIcon::_unity_theme = NULL;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
@@ -62,7 +67,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-
+  
   _related_windows = 0;
 
   _background_color = nux::Colors::White;
@@ -87,6 +92,11 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
   _time_delay_handle = 0;
+  
+  if (!LauncherIcon::_unity_theme) {
+    LauncherIcon::_unity_theme = gtk_icon_theme_new ();
+    gtk_icon_theme_set_custom_theme (LauncherIcon::_unity_theme, UNITY_THEME_NAME);
+  }
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
@@ -139,6 +149,12 @@ LauncherIcon::~LauncherIcon()
 
   _quicklist->UnReference ();
   _tooltip->UnReference ();
+
+  if (_unity_theme)
+  {
+    g_object_unref (_unity_theme);
+    _unity_theme = NULL;
+  }
 }
 
 bool
@@ -257,19 +273,81 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   glow = nux::Color (r, g, b);
 }
 
+/*
+ * FIXME, all this code (and below), should be put in a facility for IconLoader
+ * to share between launcher and places the same Icon loading logic and not look
+ * having etoomanyimplementationofsamethings.
+ */
+/* static */
+bool LauncherIcon::IsMonoDefaultTheme ()
+{
+
+  if (_current_theme_is_mono != -1)
+    return (bool)_current_theme_is_mono;
+
+  GtkIconTheme *default_theme;
+  GtkIconInfo *info;
+  int size = 48;
+  
+  default_theme = gtk_icon_theme_get_default ();
+  
+  _current_theme_is_mono = (int)false;
+  info = gtk_icon_theme_lookup_icon (default_theme, MONO_TEST_ICON, size, (GtkIconLookupFlags)0);
+
+  if (!info)
+    return (bool)_current_theme_is_mono;
+  
+  // yeah, it's evil, but it's blessed upstream
+  if (g_strrstr (gtk_icon_info_get_filename (info), "ubuntu-mono") != NULL)
+    _current_theme_is_mono = (int)true;
+  
+  gtk_icon_info_free (info);
+  return (bool)_current_theme_is_mono;
+  
+}
+
 nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size, bool update_glow_colors)
 {
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  GtkIconInfo *info;
-  nux::BaseTexture *result;
-  GError *error = NULL;
-  GIcon *icon;
-
+  GtkIconTheme *default_theme;
+  nux::BaseTexture *result = NULL;
+  
   if (!icon_name)
     icon_name = g_strdup (DEFAULT_ICON);
    
-  theme = gtk_icon_theme_get_default ();
+  default_theme = gtk_icon_theme_get_default ();
+  
+  // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
+  // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
+  if (((g_strrstr (icon_name, "user-trash") != NULL) ||
+      (g_strcmp0 (icon_name, "workspace-switcher") == 0)) &&
+      IsMonoDefaultTheme ()) {
+    result = TextureFromSpecificGtkTheme (_unity_theme, icon_name, size, update_glow_colors);
+
+  }
+  
+  if (!result)
+    result = TextureFromSpecificGtkTheme (default_theme, icon_name, size, update_glow_colors, true);
+  
+  if (!result) {
+    if (g_strcmp0 (icon_name, "folder") == 0)
+      result = NULL;
+    else
+      result = TextureFromSpecificGtkTheme (default_theme, "folder", size, update_glow_colors);
+  }
+  
+  return result;
+  
+}
+  
+nux::BaseTexture * LauncherIcon::TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *icon_name, int size, bool update_glow_colors, bool is_default_theme)  
+{
+
+  GdkPixbuf *pbuf;
+  GtkIconInfo *info;  
+  nux::BaseTexture *result = NULL;
+  GError *error = NULL;
+  GIcon *icon;
+  
   icon = g_icon_new_for_string (icon_name, NULL);
 
   if (G_IS_ICON (icon))
@@ -284,6 +362,9 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
+  
+  if (!info && !is_default_theme)
+    return NULL;
 
   if (!info)
   {
@@ -292,7 +373,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-        
+  
   if (gtk_icon_info_get_filename (info) == NULL)
   {
     gtk_icon_info_free (info);
@@ -321,11 +402,6 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                icon_name,
                error ? error->message : "unknown");
     g_error_free (error);
-
-    if (g_strcmp0 (icon_name, "folder") == 0)
-      return NULL;
-    else
-      return TextureFromGtkTheme ("folder", size, update_glow_colors);
   }
   
   return result;
