@@ -419,26 +419,35 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    
-    UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                   (UBusCallback)&Launcher::OnPlaceViewShown,
-                                   this);
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                   this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
-                                   (UBusCallback)&Launcher::OnBFBUpdate,
-                                   this);
+    for (int i = 0; i < LAUNCHER_MAX_UBUS_HANDLES; i++)
+      _ubus_handles[i] = 0;
+
+    UBusServer *ubus = ubus_server_get_default ();
+    _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback) &Launcher::OnPlaceViewShown,
+                                                     this);
+
+    _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_HIDDEN,
+                                                     (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                                     this);
+
+    _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                     (UBusCallback) &Launcher::OnBFBUpdate,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
-                                   (UBusCallback)&Launcher::OnActionDone,
-                                   this);
+    _ubus_handles[3] = ubus_server_register_interest (ubus,
+                                                     UBUS_LAUNCHER_ACTION_DONE,
+                                                     (UBusCallback) &Launcher::OnActionDone,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                   (UBusCallback)&Launcher::OnBFBDndEnter,
-                                   this);
+    _ubus_handles[4] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                                     (UBusCallback) &Launcher::OnBFBDndEnter,
+                                                     this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -554,7 +563,13 @@ Launcher::~Launcher()
     
   if (_launcher_animation_timeout > 0)
     g_source_remove (_launcher_animation_timeout);
-    
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (int i = 0; i < LAUNCHER_MAX_UBUS_HANDLES; i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
 }
 
 /* Introspection */

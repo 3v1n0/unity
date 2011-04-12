@@ -41,6 +41,8 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
+#define SHELL_MAX_UBUS_HANDLES 3
+
 /* base screen class */
 class UnityScreen :
     public Introspectable,
@@ -63,7 +65,7 @@ class UnityScreen :
 	/* We store these  to avoid unecessary calls to ::get */
 	CompScreen      *screen;
 	CompositeScreen *cScreen;
-        GLScreen        *gScreen;
+  GLScreen        *gScreen;
 
 	/* prepares nux for drawing */
 	void
@@ -222,6 +224,7 @@ protected:
   bool                   needsRelayout;
   guint32                relayoutSourceId;
   guint                  _edge_trigger_handle;
+  guint                  _ubus_handles[SHELL_MAX_UBUS_HANDLES];
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

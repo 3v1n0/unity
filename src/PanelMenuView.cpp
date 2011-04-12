@@ -72,7 +72,9 @@ PanelMenuView::PanelMenuView (int padding)
   _we_control_active (false),
   _monitor (0),
   _active_xid (0),
-  _active_moved_id (0)
+  _active_moved_id (0),
+  _place_shown_interest (0),
+  _place_hidden_interest (0)
 {
   WindowManager *win_manager;
 
@@ -169,8 +171,12 @@ PanelMenuView::~PanelMenuView ()
   _window_buttons->UnReference ();
   _panel_titlebar_grab_area->UnReference ();
 
-  ubus_server_unregister_interest (ubus_server_get_default (), _place_shown_interest);
-  ubus_server_unregister_interest (ubus_server_get_default (), _place_hidden_interest);
+  UBusServer* ubus = ubus_server_get_default ();
+  if (_place_shown_interest != 0)
+    ubus_server_unregister_interest (ubus, _place_shown_interest);
+
+  if (_place_hidden_interest != 0)
+    ubus_server_unregister_interest (ubus, _place_hidden_interest);
 }
 
 void
