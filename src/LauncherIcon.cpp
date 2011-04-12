@@ -1001,6 +1001,8 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   
   if (remote->Urgent ())
     OnRemoteUrgentChanged (remote);
+
+  OnRemoteQuicklistChanged (remote);
 }
 
 void 
