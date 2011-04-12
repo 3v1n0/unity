@@ -44,6 +44,8 @@
 #include "UBusMessages.h"
 
 #define DEFAULT_ICON "application-default-icon"
+#define MONO_TEST_ICON "gnome-home"
+#define UNITY_THEME_NAME "unity-icon-theme"
 
 NUX_IMPLEMENT_OBJECT_TYPE (LauncherIcon);
 
@@ -257,19 +259,86 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   glow = nux::Color (r, g, b);
 }
 
+/*
+ * FIXME, all this code (and below), should be put in a facility for IconLoader
+ * to share between launcher and places the same Icon loading logic and not look
+ * having etoomanyimplementationofsamethings.
+ * Also, we can introduce cache, nice optimizations, hot tube…
+ */
+bool LauncherIcon::IsMonoTheme (GtkIconTheme *theme)
+{
+  GIcon *icon;
+  GtkIconInfo *info;
+  int size = 48;
+  bool is_mono = false;
+
+  icon = g_icon_new_for_string (MONO_TEST_ICON, NULL);
+  
+  if (!G_IS_ICON (icon)) {
+    g_object_unref (icon);
+    return false;
+  }
+
+  info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
+  g_object_unref (icon);
+
+  if (!info)
+    return false;
+  
+  // yeah, it's evil, but it's blessed upstream
+  if (g_strrstr (gtk_icon_info_get_filename (info), "ubuntu-mono") != NULL)
+    is_mono = true;
+  
+  gtk_icon_info_free (info);
+  return is_mono;
+  
+}
+
 nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size, bool update_glow_colors)
 {
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  GtkIconInfo *info;
-  nux::BaseTexture *result;
-  GError *error = NULL;
-  GIcon *icon;
-
+  GtkIconTheme *default_theme;
+  GtkIconTheme *unity_theme;
+  nux::BaseTexture *result = NULL;
+  
   if (!icon_name)
     icon_name = g_strdup (DEFAULT_ICON);
    
-  theme = gtk_icon_theme_get_default ();
+  default_theme = gtk_icon_theme_get_default ();
+  
+  // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
+  // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
+  if (((g_strrstr (icon_name, "user-trash") != NULL) ||
+      (g_strcmp0 (icon_name, "workspace-switcher") == 0)) &&
+      IsMonoTheme (default_theme)) {
+    unity_theme = gtk_icon_theme_new ();
+    gtk_icon_theme_set_custom_theme (unity_theme, UNITY_THEME_NAME);
+    result = TextureFromSpecificGtkTheme (unity_theme, icon_name, size, update_glow_colors);
+    g_object_unref (unity_theme);
+  }
+  
+  if (!result)
+    result = TextureFromSpecificGtkTheme (default_theme, icon_name, size, update_glow_colors, true);
+  
+  if (!result) {
+    if (g_strcmp0 (icon_name, "folder") == 0)
+      result = NULL;
+    else
+      result = TextureFromSpecificGtkTheme (default_theme, "folder", size, update_glow_colors);
+  }
+  
+  return result;
+  
+}
+  
+nux::BaseTexture * LauncherIcon::TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *icon_name, int size, bool update_glow_colors, bool is_default_theme)  
+{
+
+  GdkPixbuf *pbuf;
+  GtkIconInfo *info;  
+  nux::BaseTexture *result = NULL;
+  GError *error = NULL;
+  GIcon *icon;
+  
   icon = g_icon_new_for_string (icon_name, NULL);
 
   if (G_IS_ICON (icon))
@@ -284,6 +353,9 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
+  
+  if (!info && !is_default_theme)
+    return NULL;
 
   if (!info)
   {
@@ -292,7 +364,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-        
+  
   if (gtk_icon_info_get_filename (info) == NULL)
   {
     gtk_icon_info_free (info);
@@ -321,11 +393,6 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
                icon_name,
                error ? error->message : "unknown");
     g_error_free (error);
-
-    if (g_strcmp0 (icon_name, "folder") == 0)
-      return NULL;
-    else
-      return TextureFromGtkTheme ("folder", size, update_glow_colors);
   }
   
   return result;

@@ -204,8 +204,10 @@ protected:
     virtual void ActivateLauncherIcon () {}
     virtual void OpenInstanceLauncherIcon () {}
 
-    nux::BaseTexture * TextureFromGtkTheme (const char *name, int size, bool update_glow_colors = true);
-    nux::BaseTexture * TextureFromPath     (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromGtkTheme         (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *name, int size, bool update_glow_colors = true, bool is_default_theme=false);
+    nux::BaseTexture * TextureFromPath             (const char *name, int size, bool update_glow_colors = true);
+    bool               IsMonoTheme                 (GtkIconTheme *theme);
 
     void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
