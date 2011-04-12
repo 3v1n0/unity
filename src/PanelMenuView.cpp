@@ -498,6 +498,7 @@ PanelMenuView::Refresh ()
   char                 *label = GetActiveViewName ();
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
+  GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
   cairo_pattern_t      *linpat;
   char                 *font_description = NULL;
@@ -520,7 +521,11 @@ PanelMenuView::Refresh ()
 
     cr = _util_cg.GetContext ();
 
-    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
+    g_object_get (settings,
+                  "gtk-xft-dpi", &dpi,
+                  NULL);
+
+    font_description = gconf_client_get_string (client, WINDOW_TITLE_FONT_KEY, NULL);
     desc = pango_font_description_from_string (font_description);
 
     layout = pango_cairo_create_layout (cr);
