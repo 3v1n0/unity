@@ -37,6 +37,7 @@
 #include "IndicatorObjectEntryProxy.h"
 
 #include <gio/gdesktopappinfo.h>
+#include <gconf/gconf-client.h>
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
@@ -44,6 +45,7 @@
 #include "UScreen.h"
 
 #define BUTTONS_WIDTH 72
+#define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
@@ -496,7 +498,6 @@ PanelMenuView::Refresh ()
   char                 *label = GetActiveViewName ();
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
-  GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
   cairo_pattern_t      *linpat;
   char                 *font_description = NULL;
@@ -513,17 +514,14 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
+    GConfClient *client = gconf_client_get_default ();
     PangoContext *cxt;
     PangoRectangle log_rect;
 
     cr = _util_cg.GetContext ();
 
-    g_object_get (settings,
-                  "gtk-font-name", &font_description,
-                  "gtk-xft-dpi", &dpi,
-                  NULL);
+    font_description = gconf_client_get_string(client, WINDOW_TITLE_FONT_KEY, NULL);
     desc = pango_font_description_from_string (font_description);
-    pango_font_description_set_weight (desc, PANGO_WEIGHT_BOLD);
 
     layout = pango_cairo_create_layout (cr);
     pango_layout_set_font_description (layout, desc);
@@ -541,6 +539,7 @@ PanelMenuView::Refresh ()
     pango_font_description_free (desc);
     g_free (font_description);
     cairo_destroy (cr);
+    g_object_unref (client);
   }
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
