@@ -1790,6 +1790,7 @@ void Launcher::SetHidden (bool hidden)
     if (hidden)
     {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+      SetStateMouseOverLauncher  (false);
     }
     
     _postreveal_mousemove_delta_x = 0;
