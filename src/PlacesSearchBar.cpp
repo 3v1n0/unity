@@ -50,7 +50,8 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBar);
 PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 :   View (NUX_FILE_LINE_PARAM),
     _entry (NULL),
-    _live_search_timeout (0)
+    _live_search_timeout (0),
+    _ubus_handle (0)
 {
   PlacesStyle      *style = PlacesStyle::GetDefault ();
   nux::BaseTexture *icon = style->GetSearchMagnifyIcon ();
@@ -104,9 +105,10 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
 
   _cursor_moved_conn = _pango_entry->cursor_moved.connect (sigc::mem_fun (this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
 
-  ubus_server_register_interest (ubus_server_get_default (), UBUS_PLACE_VIEW_HIDDEN,
-                                 (UBusCallback)PlacesSearchBar::OnPlacesClosed, this);
-
+  _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
+                                                UBUS_PLACE_VIEW_HIDDEN,
+                                                (UBusCallback) PlacesSearchBar::OnPlacesClosed,
+                                                this);
 }
 
 PlacesSearchBar::~PlacesSearchBar ()
@@ -126,6 +128,9 @@ PlacesSearchBar::~PlacesSearchBar ()
   _combo_changed_conn.disconnect ();
   _menu_conn.disconnect ();
   _cursor_moved_conn.disconnect ();
+
+  if (_ubus_handle != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
 }
 
 const gchar* PlacesSearchBar::GetName ()
@@ -346,6 +351,8 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
 
   self->_combo->GetStaticText ()->SetFontName (font_name);
   self->_combo->GetMenuPage ()->SetFontName (font_name);
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  self->_combo->SetMaximumWidth (style->GetTileWidth ());
 
   desc = pango_font_description_from_string (font_name);
   self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));

@@ -83,6 +83,7 @@ public:
 };
 
 PlacesHomeView::PlacesHomeView ()
+: _ubus_handle (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
@@ -131,9 +132,11 @@ PlacesHomeView::PlacesHomeView ()
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
-  
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, (UBusCallback)&PlacesHomeView::DashVisible, this);
+
+  _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
+                                                UBUS_DASH_EXTERNAL_ACTIVATION,
+                                                (UBusCallback) &PlacesHomeView::DashVisible,
+                                                this);
 
   //In case the GConf key is invalid (e.g. when an app was uninstalled), we
   //rely on a fallback "whitelist" mechanism instead of showing nothing at all
@@ -168,6 +171,9 @@ PlacesHomeView::PlacesHomeView ()
 PlacesHomeView::~PlacesHomeView ()
 {
   g_object_unref (_client);
+
+  if (_ubus_handle != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
 }
 
 void

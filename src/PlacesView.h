@@ -175,8 +175,8 @@ private:
 
   bool  _search_empty;
   bool  _places_connected;
-
   guint _home_button_hover;
+  guint _ubus_handles[4];
 };
 
 #endif // PANEL_HOME_BUTTON_H
