@@ -172,9 +172,9 @@ LauncherIcon::GetName ()
 void
 LauncherIcon::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "x", _center.x);
-  g_variant_builder_add (builder, "{sv}", "y", _center.y);
-  g_variant_builder_add (builder, "{sv}", "z", _center.z);
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (_center.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (_center.y));
+  g_variant_builder_add (builder, "{sv}", "z", g_variant_new_int32 (_center.z));
   g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
   g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
   g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
