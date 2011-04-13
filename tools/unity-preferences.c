@@ -19,7 +19,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
-#include <glib/gi18n-lib.h>
+#include <glib/gi18n.h>
 
 #include "config.h"
 
@@ -34,6 +34,7 @@ main (gint argc, gchar **argv)
   GtkWidget *label, *align, *vbox;
   GtkWidget *edgeradio, *radio;
 
+  textdomain (GETTEXT_PACKAGE);
   bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
