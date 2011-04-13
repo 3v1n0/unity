@@ -203,7 +203,8 @@ PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
   _global_results_model (NULL),
   _global_groups_model (NULL),
   _previous_search (NULL),
-  _previous_section (G_MAXUINT32)
+  _previous_section (G_MAXUINT32),
+  _conn_attempt (false)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -302,8 +303,6 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
     _show_in_launcher = g_key_file_get_boolean (key_file, group, "ShowEntry", NULL);
 
   _valid = true;
-
-  Connect ();
 
   g_debug ("PlaceEntry: %s", _name);
 
@@ -850,15 +849,19 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 void
 PlaceEntryRemote::Connect ()
 {
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            _dbus_name,
-                            _dbus_path,
-                            PLACE_ENTRY_IFACE,
-                            NULL,
-                            on_proxy_ready,
-                            this);
+  if (!_conn_attempt && !G_IS_DBUS_PROXY (_proxy))
+  {
+    g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                              G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                              NULL,
+                              _dbus_name,
+                              _dbus_path,
+                              PLACE_ENTRY_IFACE,
+                              NULL,
+                              on_proxy_ready,
+                              this);
+    _conn_attempt = true;
+  }
 }
 
 void
@@ -869,6 +872,7 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   _proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
   name_owner = g_dbus_proxy_get_name_owner (_proxy);
+  _conn_attempt = false;
 
   if (error || !name_owner)
   {

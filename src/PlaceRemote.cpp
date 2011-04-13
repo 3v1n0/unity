@@ -56,7 +56,8 @@ PlaceRemote::PlaceRemote (const char *path)
   _mime_regex (NULL),
   _valid (false),
   _service_proxy (NULL),
-  _activation_proxy (NULL)
+  _activation_proxy (NULL),
+  _conn_attempt (false)
 {
   GKeyFile *key_file;
   GError   *error = NULL;
@@ -170,8 +171,6 @@ PlaceRemote::PlaceRemote (const char *path)
   LoadKeyFileEntries (key_file);
 
   _valid = true;
-
-  Connect ();
     
   g_key_file_free (key_file);
 }
@@ -213,26 +212,38 @@ PlaceRemote::GetDBusPath ()
 void
 PlaceRemote::Connect ()
 {
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            _dbus_name,
-                            _dbus_path,
-                            PLACE_IFACE,
-                            NULL,
-                            on_service_proxy_ready,
-                            this);
-
-  if (_uri_regex || _mime_regex)
+  if (!_conn_attempt && !G_IS_DBUS_PROXY (_service_proxy))
+  {
     g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
                               G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
                               NULL,
                               _dbus_name,
                               _dbus_path,
-                              ACTIVE_IFACE,
+                              PLACE_IFACE,
                               NULL,
-                              (GAsyncReadyCallback)PlaceRemote::OnActivationProxyReady,
+                              on_service_proxy_ready,
                               this);
+
+    if (_uri_regex || _mime_regex)
+      g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                                G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                                NULL,
+                                _dbus_name,
+                                _dbus_path,
+                                ACTIVE_IFACE,
+                                NULL,
+                                (GAsyncReadyCallback)PlaceRemote::OnActivationProxyReady,
+                                this);
+
+    std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+    for (it = _entries.begin (); it != eit; ++it)
+    {
+      PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+      entry->Connect ();
+    }
+
+    _conn_attempt = true;
+  }
 }
 
 std::vector<PlaceEntry *>&
@@ -293,6 +304,7 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   _service_proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
   name_owner = g_dbus_proxy_get_name_owner (_service_proxy);
+  _conn_attempt = false;
 
   if (error || !name_owner)
   {

@@ -144,6 +144,8 @@ private:
 
   gchar    *_previous_search;
   guint32   _previous_section;
+
+  bool      _conn_attempt;
 };
 
 #endif // PLACE_ENTRY_REMOTE_H

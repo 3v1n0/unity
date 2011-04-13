@@ -31,6 +31,7 @@
 #include "UBusMessages.h"
 
 #include "PlaceFactory.h"
+#include "PlaceRemote.h"
 #include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "PlacesView.h"
@@ -52,7 +53,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _alt_f2_entry (NULL),
   _searching_timeout (0),
   _pending_activation (false),
-  _search_empty (false)
+  _search_empty (false),
+  _places_connected (false)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -128,6 +130,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
                                  (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
                                  this);
+  _home_button_hover = ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                      (UBusCallback)&PlacesView::ConnectPlaces,
+                                                      this);
 
   _icon_loader = IconLoader::GetDefault ();
 
@@ -423,8 +428,34 @@ PlacesView::AboutToShow ()
 }
 
 void
+PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
+{
+  if (!self->_places_connected)
+  {
+    std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();
+    for (it = self->_factory->GetPlaces ().begin (); it != eit; ++it)
+    {
+      PlaceRemote *place = static_cast<PlaceRemote *> (*it);
+      place->Connect ();
+    }
+
+    self->_places_connected = true;
+  }
+
+  if (self->_home_button_hover)
+  {
+    ubus_server_unregister_interest (ubus_server_get_default (), self->_home_button_hover);
+    self->_home_button_hover = 0;
+  }
+}
+
+void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  // Last ditch attempt
+  if (_places_connected)
+    ConnectPlaces (NULL, this);
+
   if (signal)
     entry_changed.emit (entry);
 
