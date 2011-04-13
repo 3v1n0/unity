@@ -942,7 +942,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
 
-  for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
     _ubus_handles[i] = 0;
 
   UBusServer* ubus = ubus_server_get_default ();
@@ -991,7 +991,7 @@ UnityScreen::~UnityScreen ()
   unity_a11y_finalize ();
 
   UBusServer* ubus = ubus_server_get_default ();
-  for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);

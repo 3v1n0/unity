@@ -44,7 +44,7 @@ PlacesController::PlacesController ()
 {
   _need_show = false;
 
-  for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
     _ubus_handles[i] = 0;
 
   // register interest with ubus so that we get activation messages
@@ -102,7 +102,7 @@ PlacesController::~PlacesController ()
   _window->UnReference ();
 
   UBusServer* ubus = ubus_server_get_default ();
-  for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
