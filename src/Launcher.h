@@ -50,8 +50,6 @@
 
 #define MAX_SUPERKEY_LABELS 10
 
-#define LAUNCHER_MAX_UBUS_HANDLES 5
-
 class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
@@ -559,7 +557,7 @@ private:
 
   GSettings *_settings;
 
-  guint _ubus_handles[LAUNCHER_MAX_UBUS_HANDLES];
+  guint _ubus_handles[5];
 };
 
 #endif // LAUNCHER_H

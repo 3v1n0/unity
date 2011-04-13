@@ -34,8 +34,6 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/TimelineEasings.h>
 
-#define PLACES_CONTROLLER_MAX_UBUS_HANDLES 2
-
 class PlacesController : public Introspectable
 {
 public:
@@ -85,7 +83,7 @@ private:
   
   bool              _need_show;
 
-  guint             _ubus_handles[PLACES_CONTROLLER_MAX_UBUS_HANDLES];
+  guint             _ubus_handles[2];
 };
 
 #endif // PLACES_CONTROLLER_H

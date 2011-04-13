@@ -420,7 +420,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-    for (int i = 0; i < LAUNCHER_MAX_UBUS_HANDLES; i++)
+    for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
       _ubus_handles[i] = 0;
 
     UBusServer *ubus = ubus_server_get_default ();
@@ -565,7 +565,7 @@ Launcher::~Launcher()
     g_source_remove (_launcher_animation_timeout);
 
   UBusServer* ubus = ubus_server_get_default ();
-  for (int i = 0; i < LAUNCHER_MAX_UBUS_HANDLES; i++)
+  for (int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);

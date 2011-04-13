@@ -41,8 +41,6 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
-#define SHELL_MAX_UBUS_HANDLES 3
-
 /* base screen class */
 class UnityScreen :
     public Introspectable,
@@ -224,7 +222,7 @@ protected:
   bool                   needsRelayout;
   guint32                relayoutSourceId;
   guint                  _edge_trigger_handle;
-  guint                  _ubus_handles[SHELL_MAX_UBUS_HANDLES];
+  guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

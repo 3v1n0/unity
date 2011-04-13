@@ -44,8 +44,6 @@
 
 #include "IconLoader.h"
 
-#define PLACES_VIEW_MAX_UBUS_HANDLES 4
-
 class PlacesView : public nux::View, public Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
@@ -175,7 +173,7 @@ private:
 
   bool  _search_empty;
 
-  guint _ubus_handles[PLACES_VIEW_MAX_UBUS_HANDLES];
+  guint _ubus_handles[4];
 };
 
 #endif // PANEL_HOME_BUTTON_H
