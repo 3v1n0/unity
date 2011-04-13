@@ -462,6 +462,10 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
 {
   GVariantBuilder *builder;
 
+  // This is valid for a certain case with global search
+  if (!G_IS_DBUS_PROXY (_proxy))
+    return;
+
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
   /* FIXME: I'm ignoring hints because we don't use them currently */
@@ -890,8 +894,30 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   g_signal_connect (_proxy, "g-signal",
                     G_CALLBACK (on_proxy_signal_received), this);
+  g_signal_connect (_proxy, "notify::g-name-owner",
+                    G_CALLBACK (PlaceEntryRemote::OnProxyNameOwnerChanged), this);
 
   g_free (name_owner);
+}
+
+void
+PlaceEntryRemote::OnProxyNameOwnerChanged (GDBusProxy       *proxy,
+                                           GParamSpec       *pspec,
+                                           PlaceEntryRemote *self)
+{
+  gchar *name_owner  = g_dbus_proxy_get_name_owner (proxy);
+
+  if (!name_owner)
+  {
+    // Remote proxy has died
+    g_debug ("Remote PlaceEntryRemote proxy %s no longer exists, reconnecting", self->_dbus_path);
+    g_object_unref (self->_proxy);
+    self->_proxy = NULL;
+
+    self->Connect ();
+  }
+  else
+    g_free (name_owner);
 }
 
 void

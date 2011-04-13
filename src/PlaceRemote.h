@@ -61,7 +61,9 @@ private:
   static void OnActivationResultReceived (GObject      *source,
                                          GAsyncResult *result,
                                          PlaceRemote  *self);
-
+  static void OnProxyNameOwnerChanged (GDBusProxy  *proxy,
+                                       GParamSpec  *pspec,
+                                       PlaceRemote *self);
 private:
   char   *_path;
   char   *_dbus_name;

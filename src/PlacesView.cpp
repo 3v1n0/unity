@@ -31,7 +31,6 @@
 #include "UBusMessages.h"
 
 #include "PlaceFactory.h"
-#include "PlaceRemote.h"
 #include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "PlacesView.h"
@@ -418,6 +417,8 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::AboutToShow ()
 {
+  ConnectPlaces (NULL, this);
+
   _bg_blur_texture.Release ();
   if (_resize_id)
     g_source_remove (_resize_id);
@@ -435,8 +436,7 @@ PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
     std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();
     for (it = self->_factory->GetPlaces ().begin (); it != eit; ++it)
     {
-      PlaceRemote *place = static_cast<PlaceRemote *> (*it);
-      place->Connect ();
+      (*it)->Connect ();
     }
 
     self->_places_connected = true;

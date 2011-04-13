@@ -320,6 +320,8 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   g_signal_connect (_service_proxy, "g-signal",
                     G_CALLBACK (on_service_proxy_signal_received), this);
+  g_signal_connect (_service_proxy, "notify::g-name-owner",
+                    G_CALLBACK (PlaceRemote::OnProxyNameOwnerChanged), this);
   g_dbus_proxy_call (_service_proxy,
                      "GetEntries",
                      NULL,
@@ -330,6 +332,28 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
                      this);
   
   g_free (name_owner);
+}
+
+void
+PlaceRemote::OnProxyNameOwnerChanged (GDBusProxy  *proxy,
+                                      GParamSpec  *pspec,
+                                      PlaceRemote *self)
+{
+  gchar *name_owner  = g_dbus_proxy_get_name_owner (proxy);
+
+  if (!name_owner)
+  {
+    // Remote proxy has died
+    g_debug ("Remote PlaceRemote proxy %s no longer exists, reconnecting", self->_dbus_name);
+    g_object_unref (self->_service_proxy);
+    g_object_unref (self->_activation_proxy);
+    self->_service_proxy = NULL;
+    self->_activation_proxy = NULL;
+
+    self->Connect ();
+  }
+  else
+    g_free (name_owner);
 }
 
 void

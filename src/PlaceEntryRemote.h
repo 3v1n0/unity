@@ -111,6 +111,8 @@ public:
   static void OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
   static void OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
 
+  static void OnProxyNameOwnerChanged (GDBusProxy *proxy, GParamSpec *pspec, PlaceEntryRemote *self);
+
 public:
   // For our parents use, we don't touch it
   bool dirty;
