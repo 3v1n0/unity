@@ -25,11 +25,10 @@ const int PLACES_VSCROLLBAR_HEIGHT = 10;
 const int BLUR_SIZE                =  7;
 
 PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
-  : VScrollBar (NUX_FILE_LINE_PARAM)
+  : VScrollBar (NUX_FILE_LINE_PARAM),
+    _slider (NULL),
+    _track (NULL)
 {
-  _slider = NULL;
-  _track  = NULL;
-
   m_SlideBar->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
                               PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
   m_Track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
@@ -164,7 +163,8 @@ PlacesVScrollBar::UpdateTexture ()
     _slider->UnReference ();
 
   _slider = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _slider->Update (bitmap);
+  if (_slider)
+    _slider->Update (bitmap);
 
   cairo_destroy (cr);
   delete bitmap;
@@ -208,7 +208,8 @@ PlacesVScrollBar::UpdateTexture ()
     _track->UnReference ();
 
   _track = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _track->Update (bitmap);
+  if (_track)
+    _track->Update (bitmap);
 
   cairo_destroy (cr);
   delete bitmap;
