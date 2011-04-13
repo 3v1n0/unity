@@ -74,6 +74,8 @@ public:
     std::vector<PlaceEntry *> entries = place->GetEntries ();
     std::vector<PlaceEntry *>::iterator i;
 
+    place->Connect ();
+    
     for (i = entries.begin (); i != entries.end (); ++i)
     {
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
@@ -91,6 +93,8 @@ public:
       Place *place = static_cast<Place *> (*it);
       std::vector<PlaceEntry *> entries = place->GetEntries ();
       std::vector<PlaceEntry *>::iterator i;
+
+      place->Connect ();
 
       for (i = entries.begin (); i != entries.end (); ++i)
       {
