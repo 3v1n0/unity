@@ -63,7 +63,7 @@ class UnityScreen :
 	/* We store these  to avoid unecessary calls to ::get */
 	CompScreen      *screen;
 	CompositeScreen *cScreen;
-        GLScreen        *gScreen;
+  GLScreen        *gScreen;
 
 	/* prepares nux for drawing */
 	void
@@ -222,6 +222,7 @@ protected:
   bool                   needsRelayout;
   guint32                relayoutSourceId;
   guint                  _edge_trigger_handle;
+  guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

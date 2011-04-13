@@ -172,6 +172,8 @@ private:
   bool  _pending_activation;
 
   bool  _search_empty;
+
+  guint _ubus_handles[4];
 };
 
 #endif // PANEL_HOME_BUTTON_H

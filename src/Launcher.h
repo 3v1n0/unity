@@ -556,6 +556,8 @@ private:
   sigc::connection _on_drag_finish_connection;
 
   GSettings *_settings;
+
+  guint _ubus_handles[5];
 };
 
 #endif // LAUNCHER_H
