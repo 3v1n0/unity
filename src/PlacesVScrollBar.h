@@ -27,46 +27,11 @@
 #include "Nux/VScrollBar.h"
 #include "NuxImage/CairoGraphics.h"
 
-typedef enum
-{
-  STATE_OFF = 0,
-  STATE_OVER,
-  STATE_DOWN,
-  STATE_LAST
-} State;
-
 class PlacesVScrollBar : public nux::VScrollBar
 {
   public:
     PlacesVScrollBar (NUX_FILE_LINE_PROTO);
     ~PlacesVScrollBar ();
-
-    void RecvMouseEnter (int           x,
-                         int           y,
-                         unsigned long button_flags,
-                         unsigned long key_flags);
-
-    void RecvMouseLeave (int           x,
-                         int           y,
-                         unsigned long button_flags,
-                         unsigned long key_flags);
-
-    void RecvMouseDown (int           x,
-                        int           y,
-                        unsigned long button_flags,
-                        unsigned long key_flags);
-
-    void RecvMouseUp (int           x,
-                      int           y,
-                      unsigned long button_flags,
-                      unsigned long key_flags);
-
-    void RecvMouseDrag (int           x,
-                        int           y,
-                        int           dx,
-                        int           dy,
-                        unsigned long button_flags,
-                        unsigned long key_flags);
 
   protected:
     virtual void PreLayoutManagement ();
@@ -79,11 +44,8 @@ class PlacesVScrollBar : public nux::VScrollBar
     void UpdateTexture ();
 
   private:
-    bool                _drag;
-    bool                _entered;
-    State               _state;
-    nux::BaseTexture*   _slider[STATE_LAST];
-    nux::BaseTexture*   _track;
+    nux::BaseTexture* _slider;
+    nux::BaseTexture* _track;
 };
 
 #endif // PLACES_VSCROLLBAR_H

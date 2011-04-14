@@ -44,6 +44,8 @@ public:
 
   virtual void ActivateResult (const char *uri, const char *mimetype) = 0;
 
+  virtual void Connect () = 0;
+
   // Signals
   sigc::signal<void, PlaceEntry *> entry_added;
   sigc::signal<void, PlaceEntry *> entry_removed;

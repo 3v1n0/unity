@@ -165,9 +165,12 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
+
+  // FIXME(loicm): _menu_items stores invalid objects at that point for some
+  //     unknow reasons generating GLib warnings. Also it seems like some items
+  //     are leaked.
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
-
   g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
                                _menu_callbacks["Quit"]);
 

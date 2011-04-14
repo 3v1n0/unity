@@ -635,9 +635,6 @@ UnityMTGrabHandlesWindow::relayout (const CompRect &r, bool hard)
 void
 UnityMTGrabHandlesWindow::grabNotify (int x, int y, unsigned int state, unsigned int mask)
 {
-    if (mHandles)
-	mHandles->hide ();
-
     window->grabNotify (x, y, state, mask);
 }
 
@@ -653,9 +650,6 @@ UnityMTGrabHandlesWindow::moveNotify (int dx, int dy, bool immediate)
 void
 UnityMTGrabHandlesWindow::ungrabNotify ()
 {
-    if (mHandles)
-	mHandles->show ();
-
     window->ungrabNotify ();
 }
 

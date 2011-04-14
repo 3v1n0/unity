@@ -39,7 +39,8 @@
 NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
-: TextureArea (NUX_TRACKER_LOCATION)
+: TextureArea (NUX_TRACKER_LOCATION),
+  _urgent_interest (0)
 {
   _urgent_count = 0;
   _button_width = 66;
@@ -55,10 +56,10 @@ PanelHomeButton::PanelHomeButton ()
   _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
                                             G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
 
-  UBusServer *ubus = ubus_server_get_default ();
-  _urgent_interest = ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
-                                 (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
-                                 this);
+  _urgent_interest = ubus_server_register_interest (ubus_server_get_default (),
+                                                    UBUS_LAUNCHER_ICON_URGENT_CHANGED,
+                                                    (UBusCallback) &PanelHomeButton::OnLauncherIconUrgentChanged,
+                                                    this);
 
   Refresh ();
   
@@ -70,7 +71,9 @@ PanelHomeButton::~PanelHomeButton ()
   if (_theme_changed_id)
     g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
 
-  ubus_server_unregister_interest (ubus_server_get_default (), _urgent_interest);
+  if (_urgent_interest != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (),
+                                     _urgent_interest);
 }
 
 void 
