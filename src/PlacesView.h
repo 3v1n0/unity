@@ -129,6 +129,8 @@ private:
 
   static gboolean OnSearchTimedOut (PlacesView *view);
 
+  static void ConnectPlaces (GVariant *data, PlacesView *self);
+
 private:
   guint _close_idle;
   
@@ -172,7 +174,8 @@ private:
   bool  _pending_activation;
 
   bool  _search_empty;
-
+  bool  _places_connected;
+  guint _home_button_hover;
   guint _ubus_handles[4];
 };
 

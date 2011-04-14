@@ -71,5 +71,6 @@ private:
   int        _last_y;
   
   gulong  _tray_expose_id;
+  gulong  _tray_icon_added_id;
 };
 #endif
