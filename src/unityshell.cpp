@@ -986,8 +986,13 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
-  launcherWindow->UnReference ();
+  delete placesController;
   panelController->UnReference ();
+  delete controller;
+  layout->UnReference ();
+  launcher->UnReference ();
+  launcherWindow->UnReference ();
+
   unity_a11y_finalize ();
 
   UBusServer* ubus = ubus_server_get_default ();
@@ -999,6 +1004,8 @@ UnityScreen::~UnityScreen ()
 
   if (relayoutSourceId != 0)
     g_source_remove (relayoutSourceId);
+
+  delete wt;
 }
 
 /* Start up the launcher */
@@ -1010,23 +1017,21 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
-  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
   self->AddChild (self->launcher);
 
-  nux::HLayout* layout = new nux::HLayout();
-
-  layout->AddView(self->launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
+  self->layout = new nux::HLayout();
+  self->layout->AddView(self->launcher, 1);
+  self->layout->SetContentDistribution(nux::eStackLeft);
+  self->layout->SetVerticalExternalMargin(0);
+  self->layout->SetHorizontalExternalMargin(0);
 
   self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(layout);
+  self->launcherWindow->SetLayout(self->layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);

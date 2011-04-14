@@ -556,6 +556,7 @@ private:
   sigc::connection _on_drag_finish_connection;
 
   GSettings *_settings;
+  guint32 _settings_changed_id;
 
   guint _ubus_handles[5];
 };
