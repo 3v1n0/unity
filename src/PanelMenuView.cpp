@@ -305,7 +305,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    if ((_is_inside || _last_active_view || _show_now_activated) && _entries.size ())
+    bool have_valid_entries = false;
+    std::vector<PanelIndicatorObjectEntryView *>::iterator it, eit = _entries.end ();
+
+    for (it = _entries.begin (); it != eit; ++it)
+    {
+      IndicatorObjectEntryProxy *proxy = (*it)->_proxy;
+
+      if (proxy->icon_visible || proxy->label_visible)
+        have_valid_entries = true;
+    }
+
+    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
       if (_gradient_texture == NULL)
       {
@@ -677,7 +688,7 @@ void
 PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
-  
+ 
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
     PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
@@ -715,6 +726,7 @@ void
 PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
+  _show_now_activated = false;
   _is_maximized = false;
   _active_xid = 0;
   if (_active_moved_id)
