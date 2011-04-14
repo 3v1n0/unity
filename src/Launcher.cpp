@@ -2293,7 +2293,8 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  nux::Geometry geo)
 {
   int markerCenter = (int) arg.render_center.y;
-
+  markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
+  
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
