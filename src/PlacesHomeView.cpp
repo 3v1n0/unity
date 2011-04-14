@@ -48,7 +48,7 @@
 
 #define DESKTOP_DIR  "/desktop/gnome/applications"
 #define BROWSER_DIR  DESKTOP_DIR"/browser"
-#define CALENDAR_DIR DESKTOP_DIR"/calendar"
+#define MAIL_DIR     "/desktop/gnome/url-handlers/mailto"
 #define MEDIA_DIR    DESKTOP_DIR"/media"
 
 enum
@@ -110,7 +110,7 @@ PlacesHomeView::PlacesHomeView ()
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
   gconf_client_add_dir (_client,
-                        CALENDAR_DIR,
+                        MAIL_DIR,
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
   gconf_client_add_dir (_client,
@@ -123,7 +123,7 @@ PlacesHomeView::PlacesHomeView ()
                           this,
                           NULL, NULL);
   gconf_client_notify_add(_client,
-                          CALENDAR_DIR"/exec",
+                          MAIL_DIR"/command",
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
@@ -266,7 +266,9 @@ PlacesHomeView::Refresh ()
   CreateShortcutFromExec ("shotwell", _("View Photos"), _photo_alternatives);
 
   // Email
-  markup = gconf_client_get_string (_client, CALENDAR_DIR"/exec", NULL);
+  markup = gconf_client_get_string (_client, MAIL_DIR"/command", NULL);
+  // get the first word on key (the executable name itself)
+  markup = g_strsplit (markup, " ", 0)[0];
   CreateShortcutFromExec (markup, _("Check Email"), _email_alternatives);
   g_free (markup);
 
