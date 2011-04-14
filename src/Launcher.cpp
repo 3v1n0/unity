@@ -419,26 +419,35 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    
-    UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                   (UBusCallback)&Launcher::OnPlaceViewShown,
-                                   this);
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                   this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
-                                   (UBusCallback)&Launcher::OnBFBUpdate,
-                                   this);
+    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+      _ubus_handles[i] = 0;
+
+    UBusServer *ubus = ubus_server_get_default ();
+    _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback) &Launcher::OnPlaceViewShown,
+                                                     this);
+
+    _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_HIDDEN,
+                                                     (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                                     this);
+
+    _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                     (UBusCallback) &Launcher::OnBFBUpdate,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
-                                   (UBusCallback)&Launcher::OnActionDone,
-                                   this);
+    _ubus_handles[3] = ubus_server_register_interest (ubus,
+                                                     UBUS_LAUNCHER_ACTION_DONE,
+                                                     (UBusCallback) &Launcher::OnActionDone,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                   (UBusCallback)&Launcher::OnBFBDndEnter,
-                                   this);
+    _ubus_handles[4] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                                     (UBusCallback) &Launcher::OnBFBDndEnter,
+                                                     this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -554,7 +563,13 @@ Launcher::~Launcher()
     
   if (_launcher_animation_timeout > 0)
     g_source_remove (_launcher_animation_timeout);
-    
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
 }
 
 /* Introspection */
@@ -1775,6 +1790,7 @@ void Launcher::SetHidden (bool hidden)
     if (hidden)
     {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+      SetStateMouseOverLauncher  (false);
     }
     
     _postreveal_mousemove_delta_x = 0;
@@ -2779,19 +2795,18 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x60000000));
 
-    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
     alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
                         alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
-    GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-    gPainter.PopBackground();
-    GfxContext.PopClippingRectangle();
-    GfxContext.PopClippingRectangle();
+    gPainter.PopBackground ();
+    GfxContext.PopClippingRectangle ();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -3263,6 +3278,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);

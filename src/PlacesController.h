@@ -82,6 +82,8 @@ private:
   GdkRectangle      _monitor_rect;
   
   bool              _need_show;
+
+  guint             _ubus_handles[2];
 };
 
 #endif // PLACES_CONTROLLER_H

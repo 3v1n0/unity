@@ -66,6 +66,8 @@ private:
   std::vector<std::string> _photo_alternatives;
   std::vector<std::string> _email_alternatives;
   std::vector<std::string> _music_alternatives;
+
+  guint _ubus_handle;
 };
 
 

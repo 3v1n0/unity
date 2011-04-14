@@ -114,20 +114,23 @@ PlacesView::PlacesView (PlaceFactory *factory)
     _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.9f), true, rop);
   }
 
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                 (UBusCallback)place_entry_activate_request,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                                 (UBusCallback)&PlacesView::CloseRequest,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                                 (UBusCallback)&PlacesView::OnResultActivated,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
-                                 (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
-                                 this);
+  _ubus_handles[0] = ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                                    (UBusCallback)place_entry_activate_request,
+                                                    this);
+  _ubus_handles[1] = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                                    (UBusCallback)&PlacesView::CloseRequest,
+                                                    this);
+  _ubus_handles[2] = ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                                                    (UBusCallback)&PlacesView::OnResultActivated,
+                                                    this);
+  _ubus_handles[3] = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
+                                                    (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
+                                                    this);
 
   _icon_loader = IconLoader::GetDefault ();
 
@@ -136,6 +139,13 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
 PlacesView::~PlacesView ()
 {
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+
   if (_close_idle != 0)
   {
     g_source_remove (_close_idle);

@@ -107,6 +107,8 @@ private:
   friend class PlacesView;
   PlacesSearchBarSpinner  *_spinner;
   nux::ComboBoxSimple     *_combo;
+
+  guint _ubus_handle;
 };
 
 #endif
