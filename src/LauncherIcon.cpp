@@ -1041,8 +1041,13 @@ LauncherIcon::OnRemoteCountChanged (LauncherEntryRemote *remote)
 {
   if (!remote->CountVisible ())
     return;
-  
-  gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+
+  gchar *text;
+  if (remote->Count() > 9999)
+    text = g_strdup_printf("****");
+  else 
+    text = g_strdup_printf ("%i", (int) remote->Count ());
+
   SetEmblemText (text);
   g_free (text);
 }
