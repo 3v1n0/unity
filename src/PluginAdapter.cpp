@@ -393,6 +393,7 @@ PluginAdapter::IsWindowObscured (guint32 xid)
     for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
       if (sibling->defaultViewport () == window_vp
+          && !sibling->minimized ()
           && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
