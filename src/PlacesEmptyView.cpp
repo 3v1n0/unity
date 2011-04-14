@@ -25,9 +25,12 @@ NUX_IMPLEMENT_OBJECT_TYPE (PlacesEmptyView);
 PlacesEmptyView::PlacesEmptyView ()
 : nux::View (NUX_TRACKER_LOCATION)
 {
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
   SetLayout (new nux::HLayout (NUX_TRACKER_LOCATION));
 
   _text = new nux::StaticCairoText ("");
+  _text->SetMaximumWidth (style->GetTileWidth () * style->GetDefaultNColumns ());
   _text->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _text->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _text->SetTextVerticalAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
