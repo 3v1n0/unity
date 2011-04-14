@@ -171,7 +171,7 @@ PlaceRemote::PlaceRemote (const char *path)
   LoadKeyFileEntries (key_file);
 
   _valid = true;
-    
+
   g_key_file_free (key_file);
 }
 
@@ -212,6 +212,13 @@ PlaceRemote::GetDBusPath ()
 void
 PlaceRemote::Connect ()
 {
+  // We do not connect the entries, or ourselves, to the the daemon automatically at startup to
+  // increase the total login time of the desktop as we then reduce the number of things 
+  // trashing the disk (i.e. zeitgeist/gwibber/etc) and taking CPU time
+  //
+  // What this means in to Unity is that it needs to make sure to have called Connect before
+  // trying to do use the Place or it's PlaceEntry's
+    
   if (!_conn_attempt && !G_IS_DBUS_PROXY (_service_proxy))
   {
     g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
@@ -282,6 +289,7 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
       }
       else
         delete entry;
+
     }
 
     i++;

@@ -45,6 +45,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   _on_active_changed_connection = (sigc::connection) entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
   
   // We're interested in this as it's a great time to Connect () our PlaceEntry. The goal being
+  // to have the PlaceEntry ready-and-connected by the time the user clicks on the icon
   MouseEnter.connect (sigc::mem_fun (this, &PlaceLauncherIcon::RecvMouseEnter));
 }
 
