@@ -1688,6 +1688,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, true);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1705,6 +1706,7 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -2686,7 +2688,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_shortcuts_shown)
+  if (_shortcuts_shown && !_hide_machine->GetQuirk (LauncherHideMachine::PLACES_VISIBLE))
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
