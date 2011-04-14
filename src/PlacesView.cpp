@@ -468,7 +468,7 @@ void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
   // Last ditch attempt
-  if (_places_connected)
+  if (!_places_connected)
     ConnectPlaces (NULL, this);
 
   if (signal)
