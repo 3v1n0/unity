@@ -2795,19 +2795,18 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x60000000));
 
-    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
     alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
                         alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
-    GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-    gPainter.PopBackground();
-    GfxContext.PopClippingRectangle();
-    GfxContext.PopClippingRectangle();
+    gPainter.PopBackground ();
+    GfxContext.PopClippingRectangle ();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
