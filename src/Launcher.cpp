@@ -459,8 +459,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                   NULL);
 
     _settings = g_settings_new ("com.canonical.Unity.Launcher");
-    g_signal_connect (_settings, "changed",
-                      (GCallback)(Launcher::SettingsChanged), this);
+    _settings_changed_id = g_signal_connect (
+        _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
     SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
@@ -493,6 +493,10 @@ Launcher::~Launcher()
     g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
+
+  if (_settings_changed_id != 0)
+    g_signal_handler_disconnect ((gpointer) _settings, _settings_changed_id);
+  g_object_unref (_settings);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -570,6 +574,9 @@ Launcher::~Launcher()
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
+
+  delete _hover_machine;
+  delete _hide_machine;
 }
 
 /* Introspection */
@@ -2191,7 +2198,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
 void Launcher::OnIconAdded (LauncherIcon *icon)
 {
-    icon->Reference ();
     EnsureAnimation();
 
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
@@ -2236,7 +2242,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
     if (icon == _drag_icon)
       _drag_icon = 0;
 
-    icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
 }

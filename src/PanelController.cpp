@@ -151,6 +151,8 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       PanelView       *view;
       nux::HLayout    *layout;
 
+      // FIXME(loicm): Several objects created here are leaked.
+
       layout = new nux::HLayout();
       
       view = new PanelView ();    
