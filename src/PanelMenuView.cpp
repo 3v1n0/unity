@@ -728,7 +728,10 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
     _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
     nux::Geometry geo = WindowManager::Default ()->GetWindowGeometry (xid);
 
-    _we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (_monitor).IsPointInside (geo.x + (geo.width/2), geo.y);
+    if (bamf_window_get_window_type (window) == BAMF_WINDOW_DESKTOP)
+      _we_control_active = true;
+    else
+      _we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (_monitor).IsPointInside (geo.x + (geo.width/2), geo.y);
 
     if (_decor_map.find (xid) == _decor_map.end ())
     {
