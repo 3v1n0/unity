@@ -991,6 +991,7 @@ UnityScreen::~UnityScreen ()
   delete controller;
   layout->UnReference ();
   launcher->UnReference ();
+  launcherWindow->UnReference ();
 
   unity_a11y_finalize ();
 
@@ -1016,7 +1017,6 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
-  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
