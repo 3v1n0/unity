@@ -34,7 +34,11 @@ IconLoader::IconLoader ()
 
 IconLoader::~IconLoader ()
 {
+  std::map<std::string, GdkPixbuf *>::iterator it;
+  
   g_queue_free (_tasks);
+  for (it=_cache.begin() ; it != _cache.end(); it++ )
+    g_object_unref (GDK_PIXBUF ((*it).second));
 }
 
 IconLoader *
@@ -252,13 +256,13 @@ bool
 IconLoader::ProcessIconNameTask (IconLoaderTask *task)
 {
   GdkPixbuf   *pixbuf = NULL;
-  GtkIconInfo *info;
+  GtkIconInfo *info = NULL;
 
   info = gtk_icon_theme_lookup_icon (_theme,
                                      task->data,
                                      task->size,
                                      (GtkIconLookupFlags)0);
-  if (info)
+  if (info != NULL)
   {
     GError *error = NULL;
 
@@ -321,12 +325,12 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
   }
   else if (G_IS_ICON (icon))
   {
-    GtkIconInfo *info;
+    GtkIconInfo *info = NULL;
     info = gtk_icon_theme_lookup_by_gicon (_theme,
                                            icon,
                                            task->size,
                                            (GtkIconLookupFlags)0);
-    if (info)
+    if (info != NULL)
     {
       pixbuf = gtk_icon_info_load_icon (info, &error);
 
