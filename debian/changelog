@@ -1,4 +1,4 @@
-unity (3.8.8-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.8-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - Empty desktop after login (LP: #687660)
@@ -42,7 +42,7 @@ unity (3.8.8-0ubuntu1) UNRELEASED; urgency=low
   * 01_dont_dep_on_latest_geis_grail.patch:
     - not needed anymore
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 14 Apr 2011 21:35:16 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 14 Apr 2011 22:03:42 +0200
 
 unity (3.8.6-0ubuntu1) natty; urgency=low
 
