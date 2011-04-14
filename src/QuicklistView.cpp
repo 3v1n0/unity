@@ -224,6 +224,7 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     // <SPACE>, <RETURN> (activate selected menu-item)          
     case NUX_VK_SPACE:
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       if (_current_item_index >= 0 && _current_item_index < GetNumItems () &&
           GetNthItems (_current_item_index)->GetEnabled ())
       {

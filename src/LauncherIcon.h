@@ -204,8 +204,10 @@ protected:
     virtual void ActivateLauncherIcon () {}
     virtual void OpenInstanceLauncherIcon () {}
 
-    nux::BaseTexture * TextureFromGtkTheme (const char *name, int size, bool update_glow_colors = true);
-    nux::BaseTexture * TextureFromPath     (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromGtkTheme         (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *name, int size, bool update_glow_colors = true, bool is_default_theme=false);
+    nux::BaseTexture * TextureFromPath             (const char *name, int size, bool update_glow_colors = true);
+    static bool        IsMonoDefaultTheme          ();
 
     void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
@@ -232,6 +234,8 @@ protected:
 
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
+    
+    static int _current_theme_is_mono;
 
     DbusmenuClient *_menuclient_dynamic_quicklist;
 
@@ -281,6 +285,8 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
+    
+    static GtkIconTheme *_unity_theme;
 };
 
 #endif // LAUNCHERICON_H

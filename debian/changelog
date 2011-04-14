@@ -1,11 +1,48 @@
-unity (3.8.6-0ubuntu2) UNRELEASED; urgency=low
+unity (3.8.8-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
+    - Empty desktop after login (LP: #687660)
+    - compiz crashed with SIGSEGV in nux::Area::InitiateResizeLayout()
+      (LP: #757709)
+    - compiz crashed on initial load of Java Citrix Client/Inkscape in
+      PrivateWindow::processMap() (LP: #758307)
+    - Sometimes dragging down from the panel just stops working (LP: #750155)
+    - Ensure Unity prioritises icon loading from Unity-icon-theme
+      (LP: #750471)
+    - text truncated in Dash. Empty search from Applications or Files lense
+      returns “Your search did not” due to cut off label (LP: #757362)
+    - should list PlacesGroup.cpp in POTFILES.in (LP: #757663)
+    - Launcher intellhide stuck after edge reveal (LP: #757810)
+    - unity-preferences doesn't load translations (LP: #759682)
+    - dynamic quicklists are not working (LP: #729074)
+    - with second monitor, first monitor does not show nautilus
+      application/global menu when displaying desktop (LP: #743149)
+    - Launcher - The Workspace, File Lens, App Lens and Trash Launcher icons
+      need to be rendered correctly (LP: #745555)
+    - the launcher background gets dimmed after icons dnd (LP: #747304)
+    - Numpad 'Enter' does not work on unity launcher when navigating through
+      keyboard (LP: #760003)
+    - Launcher shouldn't hover when being in the dash (LP: #760770)
+    - Launcher displays key shortcuts while holding Super while the dash is
+      open but the shortcuts are unfunctional (LP: #760728)
+    - Running/active indicators point to space between launcher icons for
+      folded icons (LP: #703067)
+    - user-trash.svg and user-trash-full.svg not lens grayscale versions
+      (LP: #741804)
+    - code-cleanup: unregistered any established ubus-interests (LP: #757588)
+    - dropdown box in places search bar does not resize when font size changes
+      (LP: #759763)
+    - [FFE] Centered layout for expo plugin (LP: #754689)
+    - Unity launcher icons tooltips do not disappear when swiching workspaces
+      (LP: #744795)
+    - Dash - Update Dash scroll bar (LP: #750374)
+    - Letters cut off at the end in the applications window  (LP: #753083)
   * debian/control:
     - build-dep on grail/geis with version bumped
   * 01_dont_dep_on_latest_geis_grail.patch:
     - not needed anymore
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 11 Apr 2011 16:20:08 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 14 Apr 2011 21:35:16 +0200
 
 unity (3.8.6-0ubuntu1) natty; urgency=low
 

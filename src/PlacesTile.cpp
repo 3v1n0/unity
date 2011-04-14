@@ -151,6 +151,7 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   *texture = tex;
 
   delete bitmap;
+  delete cairo_graphics;
 }
 
 void

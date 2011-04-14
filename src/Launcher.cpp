@@ -419,26 +419,35 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    
-    UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                   (UBusCallback)&Launcher::OnPlaceViewShown,
-                                   this);
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                   this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
-                                   (UBusCallback)&Launcher::OnBFBUpdate,
-                                   this);
+    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+      _ubus_handles[i] = 0;
+
+    UBusServer *ubus = ubus_server_get_default ();
+    _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback) &Launcher::OnPlaceViewShown,
+                                                     this);
+
+    _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_HIDDEN,
+                                                     (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                                     this);
+
+    _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                     (UBusCallback) &Launcher::OnBFBUpdate,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
-                                   (UBusCallback)&Launcher::OnActionDone,
-                                   this);
+    _ubus_handles[3] = ubus_server_register_interest (ubus,
+                                                     UBUS_LAUNCHER_ACTION_DONE,
+                                                     (UBusCallback) &Launcher::OnActionDone,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                   (UBusCallback)&Launcher::OnBFBDndEnter,
-                                   this);
+    _ubus_handles[4] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                                     (UBusCallback) &Launcher::OnBFBDndEnter,
+                                                     this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -450,8 +459,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                   NULL);
 
     _settings = g_settings_new ("com.canonical.Unity.Launcher");
-    g_signal_connect (_settings, "changed",
-                      (GCallback)(Launcher::SettingsChanged), this);
+    _settings_changed_id = g_signal_connect (
+        _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
     SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
@@ -484,6 +493,10 @@ Launcher::~Launcher()
     g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
+
+  if (_settings_changed_id != 0)
+    g_signal_handler_disconnect ((gpointer) _settings, _settings_changed_id);
+  g_object_unref (_settings);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -554,7 +567,16 @@ Launcher::~Launcher()
     
   if (_launcher_animation_timeout > 0)
     g_source_remove (_launcher_animation_timeout);
-    
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+
+  delete _hover_machine;
+  delete _hide_machine;
 }
 
 /* Introspection */
@@ -796,6 +818,11 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
     {
       // avoid a race when the BFB doesn't see we are not over the trigger anymore
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
+    }
+    else
+    {
+      // reset if x=0 and go to the bfb and other corner case
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     }
 }
 
@@ -1668,6 +1695,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, true);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1685,6 +1713,7 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1770,6 +1799,7 @@ void Launcher::SetHidden (bool hidden)
     if (hidden)
     {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+      SetStateMouseOverLauncher  (false);
     }
     
     _postreveal_mousemove_delta_x = 0;
@@ -2170,7 +2200,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
 void Launcher::OnIconAdded (LauncherIcon *icon)
 {
-    icon->Reference ();
     EnsureAnimation();
 
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
@@ -2215,7 +2244,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
     if (icon == _drag_icon)
       _drag_icon = 0;
 
-    icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
 }
@@ -2272,7 +2300,8 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  nux::Geometry geo)
 {
   int markerCenter = (int) arg.render_center.y;
-
+  markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
+  
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
@@ -2664,7 +2693,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_shortcuts_shown)
+  if (_shortcuts_shown && !_hide_machine->GetQuirk (LauncherHideMachine::PLACES_VISIBLE))
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2722,7 +2751,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       RenderIconToTexture (GfxContext, _drag_icon, _offscreen_drag_texture);
       _drag_window->ShowWindow (true);
-      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
       
       _render_drag_window = false;
     }
@@ -2775,19 +2803,18 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x60000000));
 
-    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
     alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
                         alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
-    GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-    gPainter.PopBackground();
-    GfxContext.PopClippingRectangle();
-    GfxContext.PopClippingRectangle();
+    gPainter.PopBackground ();
+    GfxContext.PopClippingRectangle ();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -3259,6 +3286,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);

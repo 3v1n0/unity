@@ -46,11 +46,14 @@ private:
   void ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section);
 
   static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
+  
+  void RecvMouseEnter ();
 
 private:
   PlaceEntry *_entry;
   std::list<DbusmenuMenuitem *>  _current_menu;
   sigc::connection _on_active_changed_connection;
+  int _n_sections;
 };
 
 #endif // _PLACE_LAUNCHER_ICON_H__H

@@ -34,6 +34,7 @@ main (gint argc, gchar **argv)
   GtkWidget *label, *align, *vbox;
   GtkWidget *edgeradio, *radio;
 
+  textdomain (GETTEXT_PACKAGE);
   bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 
@@ -46,6 +47,7 @@ main (gint argc, gchar **argv)
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_container_set_border_width (GTK_CONTAINER (window), 12);
   gtk_window_set_title (GTK_WINDOW (window), _("Launcher & Menus"));
+  gtk_window_set_resizable (GTK_WINDOW (window), FALSE);
   g_signal_connect (window, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
 
   main_box = gtk_vbox_new (FALSE, 0);

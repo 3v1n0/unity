@@ -282,7 +282,7 @@ UnityScreen::handleEvent (XEvent *event)
   if (!skip_other_plugins)
     screen->handleEvent (event);
 
-  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "wall", "switcher", "resize", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "switcher", "resize", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
@@ -942,21 +942,24 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
 
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
   UBusServer* ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus,
-                                 UBUS_LAUNCHER_START_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-                                 this);
+  _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_START_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+                                                    this);
 
-  ubus_server_register_interest (ubus,
-                                 UBUS_LAUNCHER_END_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-                                 this);
+  _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                                    this);
 
-  ubus_server_register_interest (ubus,
-                                 UBUS_QUICKLIST_END_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-                                 this);
+  _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                    UBUS_QUICKLIST_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
+                                                    this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
@@ -983,12 +986,26 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
 UnityScreen::~UnityScreen ()
 {
-  launcherWindow->UnReference ();
+  delete placesController;
   panelController->UnReference ();
+  delete controller;
+  layout->UnReference ();
+  launcher->UnReference ();
+  launcherWindow->UnReference ();
+
   unity_a11y_finalize ();
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
 
   if (relayoutSourceId != 0)
     g_source_remove (relayoutSourceId);
+
+  delete wt;
 }
 
 /* Start up the launcher */
@@ -1000,23 +1017,21 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
-  self->launcherWindow->SinkReference ();
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
   self->AddChild (self->launcher);
 
-  nux::HLayout* layout = new nux::HLayout();
-
-  layout->AddView(self->launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
+  self->layout = new nux::HLayout();
+  self->layout->AddView(self->launcher, 1);
+  self->layout->SetContentDistribution(nux::eStackLeft);
+  self->layout->SetVerticalExternalMargin(0);
+  self->layout->SetHorizontalExternalMargin(0);
 
   self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(layout);
+  self->launcherWindow->SetLayout(self->layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
