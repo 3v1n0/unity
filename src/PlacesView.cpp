@@ -120,6 +120,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
+
+  // This is a nice time to Connect () the Places as it's hopefully fast enough to be avaiable
+  // by the time the user starts typing (home screen doesn't require initial connection)
   _home_button_hover = ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
                                                       (UBusCallback)&PlacesView::ConnectPlaces,
                                                       this);
@@ -427,6 +430,7 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::AboutToShow ()
 {
+  // Just in case we aren't ready when we should be (external activation being key here)
   ConnectPlaces (NULL, this);
 
   _bg_blur_texture.Release ();
@@ -452,6 +456,7 @@ PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
     self->_places_connected = true;
   }
 
+  // Once we're connected we're not interested in the hover signal so disconnect
   if (self->_home_button_hover)
   {
     ubus_server_unregister_interest (ubus_server_get_default (), self->_home_button_hover);

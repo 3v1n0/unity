@@ -43,6 +43,8 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   SetIconType (TYPE_PLACE); 
 
   _on_active_changed_connection = (sigc::connection) entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
+  
+  // We're interested in this as it's a great time to Connect () our PlaceEntry. The goal being
   MouseEnter.connect (sigc::mem_fun (this, &PlaceLauncherIcon::RecvMouseEnter));
 }
 
@@ -79,6 +81,7 @@ PlaceLauncherIcon::UpdatePlaceIcon ()
 void
 PlaceLauncherIcon::RecvMouseEnter ()
 {
+  // Connect the parent Place. This is fine to call multiple times.
   if (_entry->GetParent ())
     _entry->GetParent ()->Connect ();
 }
@@ -120,6 +123,8 @@ PlaceLauncherIcon::GetMenus ()
 
   // In the worst case that the PlaceEntry wasn't connected and ready by the time we need to
   // show the menu
+  // FIXME: In Oneric, it would be great to make the quicklists more dynamic so we could fill in
+  // items as they show up in the PlaceEntry even once the QL is open
   if (_n_sections)
   {
     menu_item = dbusmenu_menuitem_new ();
