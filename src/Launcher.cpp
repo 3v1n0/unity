@@ -3279,6 +3279,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);
