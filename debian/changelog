@@ -1,9 +1,9 @@
-unity (3.8.8-0ubuntu2) UNRELEASED; urgency=low
+unity (3.8.8-0ubuntu2) natty; urgency=low
 
   * Cherry pick a lazy activation case not starting the places on demand
     (LP: #761225)
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 15 Apr 2011 12:14:50 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 15 Apr 2011 12:15:40 +0200
 
 unity (3.8.8-0ubuntu1) natty; urgency=low
 
