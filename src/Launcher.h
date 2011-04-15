@@ -345,10 +345,7 @@ private:
                          int running,
                          int active,
                          float alpha,
-                         nux::Geometry geo);
-
-  void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
-                              nux::Geometry        geo);
+                         nux::Geometry& geo);
 
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,

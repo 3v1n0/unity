@@ -114,6 +114,8 @@ public:
     
     bool HasVisibleWindow ();
     
+    virtual bool IsSpacer () { return false; };
+    
     float PresentUrgency ();
     
     float GetProgress ();

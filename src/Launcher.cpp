@@ -1381,7 +1381,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         
         if (GetActionState () == ACTION_DRAG_ICON || 
             (_drag_window && _drag_window->Animating ()) ||
-            dynamic_cast<SpacerLauncherIcon *> (icon))
+            icon->IsSpacer ())
           arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
@@ -2297,7 +2297,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  int running,
                                  int active,
                                  float alpha,
-                                 nux::Geometry geo)
+                                 nux::Geometry& geo)
 {
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
@@ -2420,10 +2420,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
-    s0 = 0.0f;                                  t0 = 0.0f;
-    s1 = 0.0f;                                  t1 = icon->GetHeight();
-    s2 = icon->GetWidth();     t2 = icon->GetHeight();
-    s3 = icon->GetWidth();     t3 = 0.0f;
+    s0 = 0.0f;                 t0 = 0.0f;
+    s1 = 0.0f;                 t1 = icon->GetHeight();
+    s2 = icon->GetWidth();     t2 = t1;
+    s3 = s2;                   t3 = 0.0f;
   }
   else
   {
@@ -2462,8 +2462,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
     DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
 
@@ -2486,12 +2484,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
     // Set the model-view matrix
     CHECKGL (glMatrixMode (GL_MODELVIEW));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLModelViewMatrix ().m));
     
     // Set the projection matrix
     CHECKGL (glMatrixMode (GL_PROJECTION));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLProjectionMatrix ().m));
   }
 
@@ -2754,8 +2750,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       
       _render_drag_window = false;
     }
-
-
+    
     // clear region
     GfxContext.PushClippingRectangle(base);
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
@@ -2768,7 +2763,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     UpdateIconXForm (args, GetGeometry ());
     EventLogic ();
-
+    
     /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
@@ -2782,7 +2777,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
     }
-
+    
     for (it = args.begin(); it != args.end(); it++)
     {
       if ((*it).stick_thingy)
@@ -2795,8 +2790,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-
-
+    
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
                                                                                                     nux::Color(0x00000000), 
