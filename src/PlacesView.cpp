@@ -445,6 +445,9 @@ PlacesView::AboutToShow ()
 void
 PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
 {
+  if (self->_factory->GetPlaces ().size () == 0)
+    return;
+  
   if (!self->_places_connected)
   {
     std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();
@@ -467,13 +470,8 @@ PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
 void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
-  /*
-   * Last ditch attempt (when you press super for the dash or a shortcut)
-   * Note that the first call is done in the constructor by SetActiveEntry (_home_entry, 0, ""); when
-   * the places entry are not ready to be connected ye (but it set the _places_connected flag to true).
-   * It's weird that _entry seems is NULL. Even "&& (_entry != (PlaceEntry *)_home_entry)" doesn't work.
-   */
-  if (!_places_connected && _entry)
+  // Last ditch attempt
+  if (!_places_connected)
     ConnectPlaces (NULL, this);
 
   if (signal)
