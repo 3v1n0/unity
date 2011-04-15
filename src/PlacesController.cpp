@@ -99,6 +99,9 @@ PlacesController::PlacesController ()
 
 PlacesController::~PlacesController ()
 {
+  if (_timeline_id)
+    g_source_remove (_timeline_id);
+
   _window->UnReference ();
 
   UBusServer* ubus = ubus_server_get_default ();
