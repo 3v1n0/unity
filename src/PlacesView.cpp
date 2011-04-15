@@ -445,6 +445,9 @@ PlacesView::AboutToShow ()
 void
 PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
 {
+  if (self->_factory->GetPlaces ().size () == 0)
+    return;
+  
   if (!self->_places_connected)
   {
     std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();
