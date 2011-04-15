@@ -87,9 +87,6 @@ PanelView::~PanelView ()
   _on_synced_connection.disconnect ();
 
   _layout->UnReference ();
-  _home_button->UnReference ();
-  _menu_view->UnReference ();
-  _tray->UnReference ();
   _style->UnReference ();
 
   delete _remote;
