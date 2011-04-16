@@ -72,7 +72,9 @@ PanelMenuView::PanelMenuView (int padding)
   _we_control_active (false),
   _monitor (0),
   _active_xid (0),
-  _active_moved_id (0)
+  _active_moved_id (0),
+  _place_shown_interest (0),
+  _place_hidden_interest (0)
 {
   WindowManager *win_manager;
 
@@ -121,10 +123,10 @@ PanelMenuView::PanelMenuView (int padding)
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
+  _place_shown_interest = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
                                  (UBusCallback)PanelMenuView::OnPlaceViewShown,
                                  this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
+  _place_hidden_interest = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
                                  (UBusCallback)PanelMenuView::OnPlaceViewHidden,
                                  this);
 
@@ -169,6 +171,12 @@ PanelMenuView::~PanelMenuView ()
   _window_buttons->UnReference ();
   _panel_titlebar_grab_area->UnReference ();
 
+  UBusServer* ubus = ubus_server_get_default ();
+  if (_place_shown_interest != 0)
+    ubus_server_unregister_interest (ubus, _place_shown_interest);
+
+  if (_place_hidden_interest != 0)
+    ubus_server_unregister_interest (ubus, _place_hidden_interest);
 }
 
 void
@@ -303,7 +311,18 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    if ((_is_inside || _last_active_view || _show_now_activated) && _entries.size ())
+    bool have_valid_entries = false;
+    std::vector<PanelIndicatorObjectEntryView *>::iterator it, eit = _entries.end ();
+
+    for (it = _entries.begin (); it != eit; ++it)
+    {
+      IndicatorObjectEntryProxy *proxy = (*it)->_proxy;
+
+      if (proxy->icon_visible || proxy->label_visible)
+        have_valid_entries = true;
+    }
+
+    if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
     {
       if (_gradient_texture == NULL)
       {
@@ -372,9 +391,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      gPainter.PushDrawLayer (GfxContext,
-                              geo,
-                              _title_layer);
+      if (_title_layer)
+        gPainter.PushDrawLayer (GfxContext,
+                                geo,
+                                _title_layer);
     }
   }
 
@@ -674,7 +694,7 @@ void
 PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
-  
+ 
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
     PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
@@ -712,6 +732,7 @@ void
 PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
                                       BamfView *new_view)
 {
+  _show_now_activated = false;
   _is_maximized = false;
   _active_xid = 0;
   if (_active_moved_id)
@@ -725,7 +746,10 @@ PanelMenuView::OnActiveWindowChanged (BamfView *old_view,
     _is_maximized = WindowManager::Default ()->IsWindowMaximized (xid);
     nux::Geometry geo = WindowManager::Default ()->GetWindowGeometry (xid);
 
-    _we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (_monitor).IsPointInside (geo.x + (geo.width/2), geo.y);
+    if (bamf_window_get_window_type (window) == BAMF_WINDOW_DESKTOP)
+      _we_control_active = true;
+    else
+      _we_control_active = UScreen::GetDefault ()->GetMonitorGeometry (_monitor).IsPointInside (geo.x + (geo.width/2), geo.y);
 
     if (_decor_map.find (xid) == _decor_map.end ())
     {

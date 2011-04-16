@@ -152,6 +152,7 @@ varying vec4 varyTexCoord0;                                             \n\
                                                                         \n\
 uniform sampler2D TextureObject0;                                       \n\
 uniform vec4 color0;                                                    \n\
+uniform vec4 desat_factor;                                              \n\
 vec4 SampleTexture(sampler2D TexObject, vec4 TexCoord)                  \n\
 {                                                                       \n\
   return texture2D(TexObject, TexCoord.st);                             \n\
@@ -162,9 +163,12 @@ void main()                                                             \n\
   vec4 tex = varyTexCoord0;                                             \n\
   tex.s = tex.s/varyTexCoord0.w;                                        \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
-	                                                                \n\
-  vec4 texel = SampleTexture(TextureObject0, tex);                      \n\
-  gl_FragColor = color0*texel;                                                 \n\
+	                                                                      \n\
+  vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
+  vec4 desat = vec4 (0.30*texel.r + 0.59*texel.g + 0.11*texel.b);       \n\
+  vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
+  final_color.a = texel.a;                                              \n\
+  gl_FragColor = final_color;                                           \n\
 }                                                                       \n\
 ");
 
@@ -190,21 +194,28 @@ nux::NString PerspectiveCorrectVtx = TEXT (
 nux::NString PerspectiveCorrectTexFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
+                            PARAM factor = program.local[1];            \n\
+                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
-                            TEMP temp1;                                 \n\
-                            TEMP recip;                                 \n\
+                            TEMP desat;                                 \n\
+                            TEMP color;                                 \n\
                             MOV pcoord, fragment.texcoord[0].w;         \n\
                             RCP temp, fragment.texcoord[0].w;           \n\
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], 2D;           \n\
-                            MUL result.color, color0, tex0;             \n\
+                            MUL color, color0, tex0;                    \n\
+                            DP4 desat, luma, color;                     \n\
+                            LRP result.color.rgb, factor.x, color, desat;    \n\
+                            MOV result.color.a, color;    \n\
                             END");
 
 nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
+                            PARAM factor = program.local[1];            \n\
+                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
@@ -212,7 +223,10 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             RCP temp, fragment.texcoord[0].w;           \n\
                             MUL pcoord.xy, fragment.texcoord[0], temp;  \n\
                             TEX tex0, pcoord, texture[0], RECT;         \n\
-                            MUL result.color, color0, tex0;     \n\
+                            MUL color, color0, tex0;                    \n\
+                            DP4 desat, luma, color;                     \n\
+                            LRP result.color.rgb, factor.x, color, desat;    \n\
+                            MOV result.color.a, color;    \n\
                             END");
 
 static void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
@@ -238,6 +252,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));    
     _hover_machine = new LauncherHoverMachine ();
     _set_hover_connection = (sigc::connection) _hover_machine->should_hover_changed.connect (sigc::mem_fun (this, &Launcher::SetHover));
+    
+    _launcher_animation_timeout = 0;
 
     m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -403,26 +419,35 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    
-    UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                   (UBusCallback)&Launcher::OnPlaceViewShown,
-                                   this);
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                   this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
-                                   (UBusCallback)&Launcher::OnBFBUpdate,
-                                   this);
+    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+      _ubus_handles[i] = 0;
+
+    UBusServer *ubus = ubus_server_get_default ();
+    _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback) &Launcher::OnPlaceViewShown,
+                                                     this);
+
+    _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_HIDDEN,
+                                                     (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                                     this);
+
+    _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                     (UBusCallback) &Launcher::OnBFBUpdate,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
-                                   (UBusCallback)&Launcher::OnActionDone,
-                                   this);
+    _ubus_handles[3] = ubus_server_register_interest (ubus,
+                                                     UBUS_LAUNCHER_ACTION_DONE,
+                                                     (UBusCallback) &Launcher::OnActionDone,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                   (UBusCallback)&Launcher::OnBFBDndEnter,
-                                   this);
+    _ubus_handles[4] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                                     (UBusCallback) &Launcher::OnBFBDndEnter,
+                                                     this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -432,6 +457,11 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                   OnNameLost,
                                   this,
                                   NULL);
+
+    _settings = g_settings_new ("com.canonical.Unity.Launcher");
+    _settings_changed_id = g_signal_connect (
+        _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
+    SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
 }
@@ -463,6 +493,10 @@ Launcher::~Launcher()
     g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
+
+  if (_settings_changed_id != 0)
+    g_signal_handler_disconnect ((gpointer) _settings, _settings_changed_id);
+  g_object_unref (_settings);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -531,6 +565,18 @@ Launcher::~Launcher()
   if (_on_drag_finish_connection.connected ())
     _on_drag_finish_connection.disconnect ();
     
+  if (_launcher_animation_timeout > 0)
+    g_source_remove (_launcher_animation_timeout);
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+
+  delete _hover_machine;
+  delete _hide_machine;
 }
 
 /* Introspection */
@@ -538,6 +584,13 @@ const gchar *
 Launcher::GetName ()
 {
   return "Launcher";
+}
+
+void
+Launcher::SettingsChanged (GSettings *settings, char *key, Launcher *self)
+{
+  bool show_on_edge = g_settings_get_boolean (settings, "shows-on-edge") ? true : false;
+  self->_hide_machine->SetShowOnEdge (show_on_edge);
 }
 
 nux::BaseTexture*
@@ -760,6 +813,17 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
 {
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+    
+    if (over_launcher)
+    {
+      // avoid a race when the BFB doesn't see we are not over the trigger anymore
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
+    }
+    else
+    {
+      // reset if x=0 and go to the bfb and other corner case
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+    }
 }
 
 void Launcher::SetStateMouseOverBFB (bool over_bfb)
@@ -862,6 +926,7 @@ gboolean Launcher::AnimationTimeout (gpointer data)
 {
     Launcher *self = (Launcher*) data;
     self->NeedRedraw ();
+    self->_launcher_animation_timeout = 0;
     return false;
 }
 
@@ -908,6 +973,10 @@ bool Launcher::IconNeedsAnimation (LauncherIcon *icon, struct timespec const &cu
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
     
+    time = icon->GetQuirkTime (LauncherIcon::QUIRK_DESAT);
+    if (TimeDelta (&current, &time) < ANIM_DURATION_LONG)
+        return true;
+        
     time = icon->GetQuirkTime (LauncherIcon::QUIRK_DROP_PRELIGHT);
     if (TimeDelta (&current, &time) < ANIM_DURATION)
         return true;
@@ -1081,6 +1150,18 @@ float Launcher::IconDropDimValue (LauncherIcon *icon, struct timespec const &cur
       return result;
 }
 
+float Launcher::IconDesatValue (LauncherIcon *icon, struct timespec const &current)
+{
+    struct timespec dim_time = icon->GetQuirkTime (LauncherIcon::QUIRK_DESAT);
+    int ms = TimeDelta (&current, &dim_time);
+    float result = CLAMP ((float) ms / (float) ANIM_DURATION_LONG, 0.0f, 1.0f);
+
+    if (icon->GetQuirk (LauncherIcon::QUIRK_DESAT))
+      return 1.0f - result;
+    else
+      return result;
+}
+
 float Launcher::IconShimmerProgress (LauncherIcon *icon, struct timespec const &current)
 {
     struct timespec shimmer_time = icon->GetQuirkTime (LauncherIcon::QUIRK_SHIMMER);
@@ -1209,6 +1290,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
 {
     arg.icon                = icon;
     arg.alpha               = 1.0f;
+    arg.saturation          = IconDesatValue (icon, current);
     arg.running_arrow       = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
     arg.active_arrow        = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
     arg.running_colored     = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
@@ -1225,10 +1307,20 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
 
     // we dont need to show strays
     if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
+    {
+      if (icon->GetQuirk (LauncherIcon::QUIRK_URGENT))
+      {
+        arg.running_arrow = true;
+        arg.window_indicators = 1;
+      }
+      else
         arg.window_indicators = 0;
+    }
     else
-        arg.window_indicators = icon->RelatedWindows ();
-
+    {
+      arg.window_indicators = icon->RelatedWindows ();
+    }
+    
     arg.backlight_intensity = IconBackgroundIntensity (icon, current);
     arg.shimmer_progress = IconShimmerProgress (icon, current);
 
@@ -1289,7 +1381,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         
         if (GetActionState () == ACTION_DRAG_ICON || 
             (_drag_window && _drag_window->Animating ()) ||
-            dynamic_cast<SpacerLauncherIcon *> (icon))
+            icon->IsSpacer ())
           arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
@@ -1306,7 +1398,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
     float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
     float icon_hide_offset = autohide_offset;
 
-    icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency ());
+    icon_hide_offset *= 1.0f - (present_progress * (_hide_machine->GetShowOnEdge () ? icon->PresentUrgency () : 0.0f));
 
     // icon is crossing threshold, start folding
     center.z += folded_z_distance * folding_progress;
@@ -1603,11 +1695,12 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, true);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
     {
-      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, true);
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DESAT, true);
     }
     
     // hack around issue in nux where leave events dont always come after a grab
@@ -1620,11 +1713,12 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
     {
-      (*it)->SetQuirk (LauncherIcon::QUIRK_DROP_DIM, false);
+      (*it)->SetQuirk (LauncherIcon::QUIRK_DESAT, false);
     }
 }
 
@@ -1703,7 +1797,11 @@ void Launcher::SetHidden (bool hidden)
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
     if (hidden)
+    {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+      SetStateMouseOverLauncher  (false);
+    }
+    
     _postreveal_mousemove_delta_x = 0;
     _postreveal_mousemove_delta_y = 0;
 
@@ -2032,7 +2130,7 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
   nux::Geometry geo = self->GetGeometry ();
 
-  if (!self->_hovered || (self->GetActionState () != ACTION_DRAG_ICON && self->GetActionState () != ACTION_DRAG_EXTERNAL))
+  if (!self->_hovered || self->GetActionState () == ACTION_DRAG_LAUNCHER)
     return TRUE;
   
   if (self->MouseOverTopScrollArea ())
@@ -2051,7 +2149,6 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
   
   self->EnsureAnimation ();
-  self->_autoscroll_handle = 0;
   
   return TRUE;
 }
@@ -2062,7 +2159,7 @@ void Launcher::EnsureScrollTimer ()
   
   if (needed && !_autoscroll_handle)
   {
-    _autoscroll_handle = g_timeout_add (15, &Launcher::OnScrollTimeout, this);
+    _autoscroll_handle = g_timeout_add (20, &Launcher::OnScrollTimeout, this);
   }
   else if (!needed && _autoscroll_handle)
   {
@@ -2103,7 +2200,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
 void Launcher::OnIconAdded (LauncherIcon *icon)
 {
-    icon->Reference ();
     EnsureAnimation();
 
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
@@ -2148,7 +2244,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
     if (icon == _drag_icon)
       _drag_icon = 0;
 
-    icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
 }
@@ -2202,10 +2297,11 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  int running,
                                  int active,
                                  float alpha,
-                                 nux::Geometry geo)
+                                 nux::Geometry& geo)
 {
   int markerCenter = (int) arg.render_center.y;
-
+  markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
+  
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
@@ -2324,10 +2420,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
-    s0 = 0.0f;                                  t0 = 0.0f;
-    s1 = 0.0f;                                  t1 = icon->GetHeight();
-    s2 = icon->GetWidth();     t2 = icon->GetHeight();
-    s3 = icon->GetWidth();     t3 = 0.0f;
+    s0 = 0.0f;                 t0 = 0.0f;
+    s1 = 0.0f;                 t1 = icon->GetHeight();
+    s2 = icon->GetWidth();     t2 = t1;
+    s3 = s2;                   t3 = 0.0f;
   }
   else
   {
@@ -2353,18 +2449,18 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int TextureCoord0Location;
   int VertexColorLocation;
   int FragmentColor;
+  int DesatFactor;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     _shader_program_uv_persp_correction->Begin();
 
-    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation("iColor");
+    TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB ("TextureObject0");
+    VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation  ("iVertex");
+    TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation  ("iTexCoord0");
+    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation  ("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
-
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
+    DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
@@ -2388,12 +2484,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
     // Set the model-view matrix
     CHECKGL (glMatrixMode (GL_MODELVIEW));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLModelViewMatrix ().m));
     
     // Set the projection matrix
     CHECKGL (glMatrixMode (GL_PROJECTION));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLProjectionMatrix ().m));
   }
 
@@ -2418,12 +2512,16 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
     CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glUniform4fARB (DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
+
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
   else
   {
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
+
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
     CHECKGL( glDrawArrays(GL_QUADS, 0, 4) );
   }
@@ -2591,7 +2689,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_shortcuts_shown)
+  if (_shortcuts_shown && !_hide_machine->GetQuirk (LauncherHideMachine::PLACES_VISIBLE))
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2635,8 +2733,8 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     float launcher_alpha = 1.0f;
 
     // rely on the compiz event loop to come back to us in a nice throttling
-    if (AnimationInProgress ())   
-      g_timeout_add (0, &Launcher::AnimationTimeout, this);
+    if (AnimationInProgress ())
+      _launcher_animation_timeout = g_timeout_add (0, &Launcher::AnimationTimeout, this);
 
     nux::ROPConfig ROP;
     ROP.Blend = false;
@@ -2649,12 +2747,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       RenderIconToTexture (GfxContext, _drag_icon, _offscreen_drag_texture);
       _drag_window->ShowWindow (true);
-      nux::GetWindowCompositor ().SetAlwaysOnFrontWindow (_drag_window);
       
       _render_drag_window = false;
     }
-
-
+    
     // clear region
     GfxContext.PushClippingRectangle(base);
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
@@ -2667,7 +2763,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     UpdateIconXForm (args, GetGeometry ());
     EventLogic ();
-
+    
     /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
@@ -2681,7 +2777,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
     }
-
+    
     for (it = args.begin(); it != args.end(); it++)
     {
       if ((*it).stick_thingy)
@@ -2694,27 +2790,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-
-
+    
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x60000000));
 
-    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
     alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
                         alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
-    GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-    gPainter.PopBackground();
-    GfxContext.PopClippingRectangle();
-    GfxContext.PopClippingRectangle();
+    gPainter.PopBackground ();
+    GfxContext.PopClippingRectangle ();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2774,19 +2868,30 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
 void Launcher::StartIconDragRequest (int x, int y)
 {
   LauncherIcon *drag_icon = MouseIconIntersection ((int) (GetGeometry ().x / 2.0f), y);
+  SetActionState (ACTION_DRAG_ICON);
   
   // FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
   // on an internal Launcher property then
   if (drag_icon && (_last_button_press == 1) && _model->IconHasSister (drag_icon))
   {
     StartIconDrag (drag_icon);
-    SetActionState (ACTION_DRAG_ICON);
     UpdateDragWindowPosition (drag_icon->GetCenter ().x, drag_icon->GetCenter ().y);
     if(_initial_drag_animation) {
       _drag_window->SetAnimationTarget (x, y + _drag_window->GetGeometry ().height/2);
       _drag_window->StartAnimation ();
     }
     EnsureAnimation ();
+  }
+  else
+  {
+    _drag_icon = NULL;
+    if (_drag_window)
+    {
+      _drag_window->ShowWindow (false);
+      _drag_window->UnReference ();
+      _drag_window = NULL;
+    }
+  
   } 
 }
 
@@ -2955,6 +3060,10 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
   
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
+  
+  // make sure we actually get a chance to get events before turning this off
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -2977,6 +3086,10 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition (x, y);
+  
+  // make sure we actually get a chance to get events before turning this off
+  if (x > 0)
+    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     
   _postreveal_mousemove_delta_x += dx;
   _postreveal_mousemove_delta_y += dy;
@@ -3070,6 +3183,12 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
   return false;
 }
 
+void 
+Launcher::EdgeRevealTriggered ()
+{
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
+}
+
 void
 Launcher::RecvKeyPressed (unsigned int  key_sym,
                           unsigned long key_code,
@@ -3161,6 +3280,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);

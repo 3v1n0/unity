@@ -37,6 +37,7 @@ class LauncherHoverMachine : public sigc::trackable
       QUICKLIST_OPEN         = 1 << 4, 
       KEY_NAV_ACTIVE         = 1 << 5, 
       LAUNCHER_IN_ACTION     = 1 << 6, 
+      PLACES_VISIBLE         = 1 << 7,
     } HoverQuirk;
   
     LauncherHoverMachine ();

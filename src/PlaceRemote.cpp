@@ -56,7 +56,8 @@ PlaceRemote::PlaceRemote (const char *path)
   _mime_regex (NULL),
   _valid (false),
   _service_proxy (NULL),
-  _activation_proxy (NULL)
+  _activation_proxy (NULL),
+  _conn_attempt (false)
 {
   GKeyFile *key_file;
   GError   *error = NULL;
@@ -171,8 +172,6 @@ PlaceRemote::PlaceRemote (const char *path)
 
   _valid = true;
 
-  Connect ();
-    
   g_key_file_free (key_file);
 }
 
@@ -213,26 +212,45 @@ PlaceRemote::GetDBusPath ()
 void
 PlaceRemote::Connect ()
 {
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            _dbus_name,
-                            _dbus_path,
-                            PLACE_IFACE,
-                            NULL,
-                            on_service_proxy_ready,
-                            this);
-
-  if (_uri_regex || _mime_regex)
+  // We do not connect the entries, or ourselves, to the the daemon automatically at startup to
+  // increase the total login time of the desktop as we then reduce the number of things 
+  // trashing the disk (i.e. zeitgeist/gwibber/etc) and taking CPU time
+  //
+  // What this means in to Unity is that it needs to make sure to have called Connect before
+  // trying to do use the Place or it's PlaceEntry's
+    
+  if (!_conn_attempt && !G_IS_DBUS_PROXY (_service_proxy))
+  {
     g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
                               G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
                               NULL,
                               _dbus_name,
                               _dbus_path,
-                              ACTIVE_IFACE,
+                              PLACE_IFACE,
                               NULL,
-                              (GAsyncReadyCallback)PlaceRemote::OnActivationProxyReady,
+                              on_service_proxy_ready,
                               this);
+
+    if (_uri_regex || _mime_regex)
+      g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                                G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                                NULL,
+                                _dbus_name,
+                                _dbus_path,
+                                ACTIVE_IFACE,
+                                NULL,
+                                (GAsyncReadyCallback)PlaceRemote::OnActivationProxyReady,
+                                this);
+
+    std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+    for (it = _entries.begin (); it != eit; ++it)
+    {
+      PlaceEntryRemote *entry = static_cast<PlaceEntryRemote *> (*it);
+      entry->Connect ();
+    }
+
+    _conn_attempt = true;
+  }
 }
 
 std::vector<PlaceEntry *>&
@@ -271,6 +289,7 @@ PlaceRemote::LoadKeyFileEntries (GKeyFile *key_file)
       }
       else
         delete entry;
+
     }
 
     i++;
@@ -293,6 +312,7 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   _service_proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
   name_owner = g_dbus_proxy_get_name_owner (_service_proxy);
+  _conn_attempt = false;
 
   if (error || !name_owner)
   {
@@ -308,6 +328,8 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   g_signal_connect (_service_proxy, "g-signal",
                     G_CALLBACK (on_service_proxy_signal_received), this);
+  g_signal_connect (_service_proxy, "notify::g-name-owner",
+                    G_CALLBACK (PlaceRemote::OnProxyNameOwnerChanged), this);
   g_dbus_proxy_call (_service_proxy,
                      "GetEntries",
                      NULL,
@@ -318,6 +340,28 @@ PlaceRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
                      this);
   
   g_free (name_owner);
+}
+
+void
+PlaceRemote::OnProxyNameOwnerChanged (GDBusProxy  *proxy,
+                                      GParamSpec  *pspec,
+                                      PlaceRemote *self)
+{
+  gchar *name_owner  = g_dbus_proxy_get_name_owner (proxy);
+
+  if (!name_owner)
+  {
+    // Remote proxy has died
+    g_debug ("Remote PlaceRemote proxy %s no longer exists, reconnecting", self->_dbus_name);
+    g_object_unref (self->_service_proxy);
+    g_object_unref (self->_activation_proxy);
+    self->_service_proxy = NULL;
+    self->_activation_proxy = NULL;
+
+    self->Connect ();
+  }
+  else
+    g_free (name_owner);
 }
 
 void

@@ -63,7 +63,7 @@ class UnityScreen :
 	/* We store these  to avoid unecessary calls to ::get */
 	CompScreen      *screen;
 	CompositeScreen *cScreen;
-        GLScreen        *gScreen;
+  GLScreen        *gScreen;
 
 	/* prepares nux for drawing */
 	void
@@ -127,7 +127,12 @@ class UnityScreen :
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);
-
+                               
+  bool
+  launcherRevealEdgeInitiate (CompAction         *action,
+                              CompAction::State   state,
+                              CompOption::Vector &options);
+  
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
@@ -182,12 +187,18 @@ protected:
 
   static void
   OnExitKeyNav (GVariant* data, void* value);
+  
+  static gboolean
+  OnEdgeTriggerTimeout (gpointer data);
 
   void
   startLauncherKeyNav ();
 
   void
   restartLauncherKeyNav ();
+  
+  void
+  OnLauncherHiddenChanged ();
 
   static void
   OnQuicklistEndKeyNav (GVariant* data, void* value);
@@ -205,11 +216,14 @@ protected:
 	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
+  nux::HLayout           *layout;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
   bool                   needsRelayout;
   guint32                relayoutSourceId;
+  guint                  _edge_trigger_handle;
+  guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

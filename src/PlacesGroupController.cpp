@@ -214,7 +214,8 @@ PlacesGroupController::RemoveResult (PlaceEntryGroup& group, PlaceEntryResult& r
 void
 PlacesGroupController::Clear ()
 {
-
+  if (_group->GetChildLayout ())
+    _group->GetChildLayout ()->Clear ();
 }
 
 void

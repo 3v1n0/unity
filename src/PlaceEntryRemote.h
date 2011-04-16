@@ -111,6 +111,8 @@ public:
   static void OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
   static void OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
 
+  static void OnProxyNameOwnerChanged (GDBusProxy *proxy, GParamSpec *pspec, PlaceEntryRemote *self);
+
 public:
   // For our parents use, we don't touch it
   bool dirty;
@@ -144,6 +146,8 @@ private:
 
   gchar    *_previous_search;
   guint32   _previous_section;
+
+  bool      _conn_attempt;
 };
 
 #endif // PLACE_ENTRY_REMOTE_H

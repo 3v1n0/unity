@@ -46,6 +46,7 @@ LauncherHoverMachine::~LauncherHoverMachine ()
     QUICKLIST_OPEN         = 1 << 4, 16
     KEY_NAV_ACTIVE         = 1 << 5, 32
     LAUNCHER_IN_ACTION     = 1 << 6, 64
+    PLACES_VISIBLE         = 1 << 7, 128
 */
 
 void
@@ -53,7 +54,7 @@ LauncherHoverMachine::EnsureHoverState ()
 {
   bool should_hover;
   
-  if (GetQuirk (LAUNCHER_HIDDEN))
+  if (GetQuirk (LAUNCHER_HIDDEN) || GetQuirk (PLACES_VISIBLE))
   {
     SetShouldHover (false);
     return;

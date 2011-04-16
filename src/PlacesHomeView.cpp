@@ -48,7 +48,7 @@
 
 #define DESKTOP_DIR  "/desktop/gnome/applications"
 #define BROWSER_DIR  DESKTOP_DIR"/browser"
-#define CALENDAR_DIR DESKTOP_DIR"/calendar"
+#define MAIL_DIR     "/desktop/gnome/url-handlers/mailto"
 #define MEDIA_DIR    DESKTOP_DIR"/media"
 
 enum
@@ -83,6 +83,7 @@ public:
 };
 
 PlacesHomeView::PlacesHomeView ()
+: _ubus_handle (0)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
 
@@ -109,7 +110,7 @@ PlacesHomeView::PlacesHomeView ()
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
   gconf_client_add_dir (_client,
-                        CALENDAR_DIR,
+                        MAIL_DIR,
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
   gconf_client_add_dir (_client,
@@ -122,7 +123,7 @@ PlacesHomeView::PlacesHomeView ()
                           this,
                           NULL, NULL);
   gconf_client_notify_add(_client,
-                          CALENDAR_DIR"/exec",
+                          MAIL_DIR"/command",
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
@@ -131,9 +132,11 @@ PlacesHomeView::PlacesHomeView ()
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
-  
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION, (UBusCallback)&PlacesHomeView::DashVisible, this);
+
+  _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
+                                                UBUS_DASH_EXTERNAL_ACTIVATION,
+                                                (UBusCallback) &PlacesHomeView::DashVisible,
+                                                this);
 
   //In case the GConf key is invalid (e.g. when an app was uninstalled), we
   //rely on a fallback "whitelist" mechanism instead of showing nothing at all
@@ -168,6 +171,9 @@ PlacesHomeView::PlacesHomeView ()
 PlacesHomeView::~PlacesHomeView ()
 {
   g_object_unref (_client);
+
+  if (_ubus_handle != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
 }
 
 void
@@ -260,7 +266,9 @@ PlacesHomeView::Refresh ()
   CreateShortcutFromExec ("shotwell", _("View Photos"), _photo_alternatives);
 
   // Email
-  markup = gconf_client_get_string (_client, CALENDAR_DIR"/exec", NULL);
+  markup = gconf_client_get_string (_client, MAIL_DIR"/command", NULL);
+  // get the first word on key (the executable name itself)
+  markup = g_strsplit (markup, " ", 0)[0];
   CreateShortcutFromExec (markup, _("Check Email"), _email_alternatives);
   g_free (markup);
 

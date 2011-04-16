@@ -58,10 +58,11 @@ private:
 private:
   SpinnerState      _state;
 
-  nux::BaseTexture *_search_ready;
-  nux::BaseTexture *_clear_full;
-  nux::BaseTexture *_clear_alone;
-  nux::BaseTexture *_clear_spinner;
+  nux::BaseTexture *_magnify;
+  nux::BaseTexture *_close;
+  nux::BaseTexture *_close_glow;
+  nux::BaseTexture *_spin;
+  nux::BaseTexture *_spin_glow;
 
   nux::Matrix4 _2d_rotate;
   float        _rotation;

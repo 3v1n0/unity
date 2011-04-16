@@ -25,6 +25,10 @@ PluginAdapter * PluginAdapter::_default = 0;
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
 #define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.75
 
+#define MWM_HINTS_FUNCTIONS     (1L << 0)
+#define MWM_HINTS_DECORATIONS   (1L << 1)
+#define _XA_MOTIF_WM_HINTS		"_MOTIF_WM_HINTS"
+
 /* static */
 PluginAdapter *
 PluginAdapter::Default ()
@@ -389,6 +393,7 @@ PluginAdapter::IsWindowObscured (guint32 xid)
     for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
       if (sibling->defaultViewport () == window_vp
+          && !sibling->minimized ()
           && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
@@ -479,6 +484,77 @@ PluginAdapter::GetWindowGeometry (guint32 xid)
     geo.height = window->height ();
   }
   return geo;
+}
+
+void
+PluginAdapter::SetMwmWindowHints (Window xid, MotifWmHints *new_hints)
+{
+  Display *display = m_Screen->dpy ();
+  Atom hints_atom = None;
+  MotifWmHints *data = NULL;
+  MotifWmHints *hints = NULL;
+  Atom type = None;
+  gint format;
+  gulong nitems;
+  gulong bytes_after;
+
+  hints_atom = XInternAtom (display, _XA_MOTIF_WM_HINTS, false);
+
+  XGetWindowProperty (display, 
+                      xid,
+		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
+		                  False, AnyPropertyType, &type, &format, &nitems,
+		                  &bytes_after, (guchar **)&data);
+    
+  if (type != hints_atom || !data)
+  {
+    hints = new_hints;
+  }
+  else
+  {
+    hints = data;
+	
+    if (new_hints->flags & MWM_HINTS_FUNCTIONS)
+    {
+      hints->flags |= MWM_HINTS_FUNCTIONS;
+      hints->functions = new_hints->functions;  
+    }
+    if (new_hints->flags & MWM_HINTS_DECORATIONS)
+    {
+      hints->flags |= MWM_HINTS_DECORATIONS;
+      hints->decorations = new_hints->decorations;
+    }
+  }
+  
+  XChangeProperty (display, 
+                   xid,
+                   hints_atom, hints_atom, 32, PropModeReplace,
+                   (guchar *)hints, sizeof (MotifWmHints)/sizeof (long));
+  
+  if (data)
+    XFree (data);
+}
+
+void
+PluginAdapter::Decorate (guint32 xid)
+{
+  MotifWmHints hints = { 0 };
+    
+  hints.flags = MWM_HINTS_DECORATIONS;
+  hints.decorations = GDK_DECOR_ALL;
+ 
+  SetMwmWindowHints (xid, &hints);
+}
+
+void
+PluginAdapter::Undecorate (guint32 xid)
+{
+  MotifWmHints hints = { 0 };
+    
+  hints.flags = MWM_HINTS_DECORATIONS;
+  hints.decorations = 0;
+ 
+  SetMwmWindowHints (xid, &hints);
 }
 
 bool

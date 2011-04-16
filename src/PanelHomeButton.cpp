@@ -39,7 +39,8 @@
 NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
-: TextureArea (NUX_TRACKER_LOCATION)
+: TextureArea (NUX_TRACKER_LOCATION),
+  _urgent_interest (0)
 {
   _urgent_count = 0;
   _button_width = 66;
@@ -56,10 +57,10 @@ PanelHomeButton::PanelHomeButton ()
   _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
                                             G_CALLBACK (PanelHomeButton::OnIconThemeChanged), this);
 
-  UBusServer *ubus = ubus_server_get_default ();
-  _urgent_interest = ubus_server_register_interest (ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED,
-                                 (UBusCallback)&PanelHomeButton::OnLauncherIconUrgentChanged,
-                                 this);
+  _urgent_interest = ubus_server_register_interest (ubus_server_get_default (),
+                                                    UBUS_LAUNCHER_ICON_URGENT_CHANGED,
+                                                    (UBusCallback) &PanelHomeButton::OnLauncherIconUrgentChanged,
+                                                    this);
 
   ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
                                  (UBusCallback)&PanelHomeButton::OnPlaceShown,
@@ -79,7 +80,9 @@ PanelHomeButton::~PanelHomeButton ()
   if (_theme_changed_id)
     g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
 
-  ubus_server_unregister_interest (ubus_server_get_default (), _urgent_interest);
+  if (_urgent_interest != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (),
+                                     _urgent_interest);
 }
 
 void 
@@ -156,6 +159,16 @@ PanelHomeButton::Refresh ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.1f);
   cairo_rectangle (cr, width-1, 2, 1, height-4);
   cairo_fill (cr);
+  
+  if (_urgent_count)
+  {
+    cairo_set_source_rgba (cr, 0.18f, 0.8f, 0.95f, 1.0f);
+    cairo_move_to (cr, 0, 0);
+    cairo_line_to (cr, 8, 0);
+    cairo_line_to (cr, 0, 8);
+    cairo_line_to (cr, 0, 0);
+    cairo_fill (cr);
+  }
 
   cairo_destroy (cr);
 
@@ -176,7 +189,7 @@ PanelHomeButton::Refresh ()
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            _urgent_count ? nux::Color (0xFF24C5F6) : nux::Colors::White,  // The color used to modulate the texture.
+                                                            nux::Colors::White,  // The color used to modulate the texture.
                                                             true,  // Write the alpha value of the texture to the destination buffer.
                                                             rop     // Use the given raster operation to set the blending when the layer is being rendered.
                                                             );

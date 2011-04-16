@@ -114,6 +114,7 @@ public:
   void SetIconSize(int tile_size, int icon_size);
   
   bool Hidden () { return _hidden; }
+  bool ShowOnEdge () { return _hide_machine->GetShowOnEdge (); }
 
   void SetModel (LauncherModel *model);
   LauncherModel* GetModel ();
@@ -137,6 +138,8 @@ public:
   
   void SetAutoHideAnimation (AutoHideAnimation animation);
   AutoHideAnimation GetAutoHideAnimation ();
+  
+  void EdgeRevealTriggered ();
   
   gboolean CheckSuperShortcutPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string);
   
@@ -215,6 +218,7 @@ private:
     float         y_rotation;
     float         z_rotation;
     float         alpha;
+    float         saturation;
     float         backlight_intensity;
     float         glow_intensity;
     float         shimmer_progress;
@@ -286,6 +290,7 @@ private:
   float DragThresholdProgress        (struct timespec const &current);
   float DragHideProgress             (struct timespec const &current);
   float DragOutProgress              (struct timespec const &current);
+  float IconDesatValue               (LauncherIcon *icon, struct timespec const &current);
   float IconPresentProgress          (LauncherIcon *icon, struct timespec const &current);
   float IconUrgentProgress           (LauncherIcon *icon, struct timespec const &current);
   float IconShimmerProgress          (LauncherIcon *icon, struct timespec const &current);
@@ -340,10 +345,7 @@ private:
                          int running,
                          int active,
                          float alpha,
-                         nux::Geometry geo);
-
-  void RenderKeyNavHighlight (nux::GraphicsEngine& GfxContext,
-                              nux::Geometry        geo);
+                         nux::Geometry& geo);
 
   void RenderIcon (nux::GraphicsEngine& GfxContext,
                    RenderArg const &arg,
@@ -391,6 +393,8 @@ private:
                     int        height);
 
   std::list<char *> StringToUriList (char * input);
+
+  static void SettingsChanged (GSettings *settings, gchar *key, Launcher *self);
 
   nux::HLayout* m_Layout;
   int m_ContentOffsetY;
@@ -501,6 +505,8 @@ private:
   LauncherIcon     *_dnd_hovered_icon;
   
   Atom              _selection_atom;
+  
+  guint             _launcher_animation_timeout;
 
   /* gdbus */
   guint                       _dbus_owner;
@@ -546,6 +552,10 @@ private:
   sigc::connection _on_drag_update_connection;
   sigc::connection _on_drag_finish_connection;
 
+  GSettings *_settings;
+  guint32 _settings_changed_id;
+
+  guint _ubus_handles[5];
 };
 
 #endif // LAUNCHER_H

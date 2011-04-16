@@ -126,14 +126,19 @@ QuicklistView::RecvEndFocus ()
 bool
 QuicklistView::IsMenuItemSeperator (int index)
 {
-  DbusmenuMenuitem* item   = NULL;
-  const gchar*      label  = NULL;
-  bool              result = false;
+  QuicklistMenuItem* menu_item = NULL;
+  DbusmenuMenuitem*  item   = NULL;
+  const gchar*       label  = NULL;
+  bool               result = false;
 
   if (index < 0)
     return false;
 
-  item = GetNthItems (index)->_menuItem;
+  menu_item = GetNthItems (index);
+  if (!menu_item)
+    return false;
+  
+  item = menu_item->_menuItem;
   if (!item)
     return false;
 
@@ -219,6 +224,7 @@ QuicklistView::RecvKeyPressed (unsigned int  key_sym,
     // <SPACE>, <RETURN> (activate selected menu-item)          
     case NUX_VK_SPACE:
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       if (_current_item_index >= 0 && _current_item_index < GetNumItems () &&
           GetNthItems (_current_item_index)->GetEnabled ())
       {

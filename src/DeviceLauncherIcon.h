@@ -37,7 +37,6 @@ public:
   void UpdateVisibility ();
 
 protected:
-  void OnMouseClick (int button);
   std::list<DbusmenuMenuitem *> GetMenus ();
   void UpdateDeviceIcon ();
 

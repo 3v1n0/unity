@@ -29,6 +29,7 @@
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
 #include <X11/Xlib.h>
+#include <algorithm>
 
 #define S_NAME  "com.canonical.Unity.Panel.Service"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
@@ -78,18 +79,33 @@ IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
 IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
 {
   if (G_IS_OBJECT (_proxy))
+  {
+    g_signal_handler_disconnect (_proxy, _proxy_signal_id);
+    g_signal_handler_disconnect (_proxy, _proxy_name_id);
     g_object_unref (_proxy);
+  }
   _proxy = NULL;
 
-  std::vector<IndicatorObjectProxy*>::iterator it;
-  
-  for (it = _indicators.begin(); it != _indicators.end(); it++)
   {
-    IndicatorObjectProxyRemote *remote = static_cast<IndicatorObjectProxyRemote *> (*it);
-    delete remote;
+    std::vector<IndicatorObjectProxy*>::iterator it;
+    for (it = _indicators.begin(); it != _indicators.end(); it++)
+    {
+      IndicatorObjectProxyRemote *remote = static_cast<IndicatorObjectProxyRemote *> (*it);
+      delete remote;
+    }
+    _indicators.erase (_indicators.begin (), _indicators.end ());
   }
 
-  _indicators.erase (_indicators.begin (), _indicators.end ());
+  { // We cancel all our async callbacks from pending Sync() calls
+    std::vector<SyncData *>::iterator it, eit = _sync_cancellables.end ();
+    for (it = _sync_cancellables.begin (); it != eit; ++it)
+    {
+      SyncData *data = (*it);
+      g_cancellable_cancel (data->_cancel);
+      delete data;
+    }
+    _sync_cancellables.erase (_sync_cancellables.begin (), _sync_cancellables.end ());
+  }
 }
 
 std::vector<IndicatorObjectProxy *>&
@@ -134,20 +150,22 @@ IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
     _proxy = proxy;
 
     // Connect to interesting signals
-    g_signal_connect (_proxy, "g-signal",
-                      G_CALLBACK (on_proxy_signal_received), this);
-    g_signal_connect (_proxy, "notify::g-name-owner",
-                      G_CALLBACK (on_proxy_name_owner_changed), this);
+    _proxy_signal_id = g_signal_connect (_proxy, "g-signal",
+                                         G_CALLBACK (on_proxy_signal_received), this);
+    _proxy_name_id = g_signal_connect (_proxy, "notify::g-name-owner",
+                                       G_CALLBACK (on_proxy_name_owner_changed), this);
   }
 
+   SyncData * data = new SyncData (this);
+  _sync_cancellables.push_back (data);
   g_dbus_proxy_call (_proxy,
                      "Sync",
                      NULL,
                      G_DBUS_CALL_FLAGS_NONE,
                      -1,
-                     NULL,
+                     data->_cancel,
                      on_sync_ready_cb,
-                     this);
+                     data);
 }
 
 static gboolean
@@ -518,17 +536,20 @@ on_proxy_signal_received (GDBusProxy *proxy,
   }
   else if (g_strcmp0 (signal_name, "ReSync") == 0)
   {
-    const gchar *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
-    bool sync_one = !g_strcmp0 (id, "") == 0;
+    const gchar  *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
+    bool          sync_one = !g_strcmp0 (id, "") == 0;
 
+    SyncData *data = new SyncData (remote);
+    remote->_sync_cancellables.push_back (data);
+    
     g_dbus_proxy_call (proxy,
                        sync_one ? "SyncOne" : "Sync", 
                        sync_one ? g_variant_new ("(s)", id) : NULL,
                        G_DBUS_CALL_FLAGS_NONE,
                        -1,
-                       NULL,
+                       data->_cancel,
                        on_sync_ready_cb,
-                       remote);
+                       data);
   }
   else if (g_strcmp0 (signal_name, "ActiveMenuPointerMotion") == 0)
   {
@@ -575,7 +596,8 @@ on_sync_ready_cb (GObject      *source,
                   GAsyncResult *res,
                   gpointer      data)
 {
-  IndicatorObjectFactoryRemote *remote = static_cast<IndicatorObjectFactoryRemote *> (data);
+  SyncData     *sync_data = (SyncData *)data;
+  IndicatorObjectFactoryRemote *remote = (IndicatorObjectFactoryRemote*)sync_data->_self;
   GVariant     *args;
   GError       *error = NULL;
 
@@ -590,5 +612,12 @@ on_sync_ready_cb (GObject      *source,
 
   remote->Sync (args);
 
+  std::vector<SyncData *>::iterator it = std::find (remote->_sync_cancellables.begin (),
+                                                    remote->_sync_cancellables.end (),
+                                                    sync_data);
+  if (it != remote->_sync_cancellables.end ())
+    remote->_sync_cancellables.erase (it);
+  
   g_variant_unref (args);
+  delete sync_data;
 }

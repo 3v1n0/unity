@@ -73,6 +73,7 @@ public:
       QUIRK_PROGRESS,
       QUIRK_DROP_PRELIGHT,
       QUIRK_DROP_DIM,
+      QUIRK_DESAT,
       
       QUIRK_LAST,
     } Quirk;
@@ -112,6 +113,8 @@ public:
     int RelatedWindows ();
     
     bool HasVisibleWindow ();
+    
+    virtual bool IsSpacer () { return false; };
     
     float PresentUrgency ();
     
@@ -203,13 +206,17 @@ protected:
     virtual void ActivateLauncherIcon () {}
     virtual void OpenInstanceLauncherIcon () {}
 
-    nux::BaseTexture * TextureFromGtkTheme (const char *name, int size, bool update_glow_colors = true);
-    nux::BaseTexture * TextureFromPath     (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromGtkTheme         (const char *name, int size, bool update_glow_colors = true);
+    nux::BaseTexture * TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *name, int size, bool update_glow_colors = true, bool is_default_theme=false);
+    nux::BaseTexture * TextureFromPath             (const char *name, int size, bool update_glow_colors = true);
+    static bool        IsMonoDefaultTheme          ();
 
     void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
     void OnRemoteProgressChanged  (LauncherEntryRemote *remote);
     void OnRemoteQuicklistChanged (LauncherEntryRemote *remote);
+    
+    void OnRemoteUrgentChanged (LauncherEntryRemote *remote);
 
     void OnRemoteEmblemVisibleChanged   (LauncherEntryRemote *remote);
     void OnRemoteCountVisibleChanged    (LauncherEntryRemote *remote);
@@ -229,6 +236,8 @@ protected:
 
     static nux::Tooltip *_current_tooltip;
     static QuicklistView *_current_quicklist;
+    
+    static int _current_theme_is_mono;
 
     DbusmenuClient *_menuclient_dynamic_quicklist;
 
@@ -262,6 +271,7 @@ private:
     guint            _time_delay_handle;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
+    bool             _remote_urgent;
     
     gint64           _shortcut;
     
@@ -277,6 +287,8 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
+    
+    static GtkIconTheme *_unity_theme;
 };
 
 #endif // LAUNCHERICON_H

@@ -49,6 +49,8 @@ LauncherEntryRemote::LauncherEntryRemote(const gchar *dbus_name, GVariant *val)
   _count_visible = FALSE;
   _progress_visible = FALSE;
 
+  _urgent = FALSE;
+
   g_variant_ref_sink (val);
   g_variant_get (val, "(sa{sv})", &app_uri, &prop_iter);
 
@@ -157,6 +159,12 @@ gboolean
 LauncherEntryRemote::ProgressVisible()
 {
   return _progress_visible;
+}
+
+gboolean
+LauncherEntryRemote::Urgent()
+{
+  return _urgent;
 }
 
 /**
@@ -352,6 +360,16 @@ LauncherEntryRemote::SetProgressVisible(gboolean visible)
   progress_visible_changed.emit (this);
 }
 
+void
+LauncherEntryRemote::SetUrgent (gboolean urgent)
+{
+  if (_urgent == urgent)
+    return;
+  
+  _urgent = urgent;
+  urgent_changed.emit (this);
+}
+
 /**
  * Set all properties from 'other' on 'this'.
  */
@@ -366,6 +384,7 @@ LauncherEntryRemote::Update(LauncherEntryRemote *other)
   SetCount (other->Count ());
   SetProgress (other->Progress ());
   SetQuicklist (other->Quicklist());
+  SetUrgent (other->Urgent ());
 
   SetEmblemVisible (other->EmblemVisible ());
   SetCountVisible(other->CountVisible ());
@@ -402,6 +421,8 @@ LauncherEntryRemote::Update(GVariantIter *prop_iter)
         SetCountVisible (g_variant_get_boolean (prop_value));
       else if (g_str_equal ("progress-visible", prop_key))
         SetProgressVisible (g_variant_get_boolean (prop_value));
+      else if (g_str_equal ("urgent", prop_key))
+        SetUrgent (g_variant_get_boolean (prop_value));
       else if (g_str_equal ("quicklist", prop_key))
         {
           /* The value is the object path of the dbusmenu */

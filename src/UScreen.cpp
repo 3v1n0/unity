@@ -94,6 +94,7 @@ UScreen::Refresh ()
 {
   GdkScreen    *screen;
   int           primary;
+  nux::Geometry last_geo (0, 0, 1, 1);
   
   screen = gdk_screen_get_default ();
   primary = GetPrimaryMonitor ();
@@ -109,6 +110,12 @@ UScreen::Refresh ()
     gdk_screen_get_monitor_geometry (screen, i, &rect);
 
     nux::Geometry geo (rect.x, rect.y, rect.width, rect.height);
+
+    // Check for mirrored displays
+    if (geo == last_geo)
+      continue;
+    last_geo = geo;
+
     _monitors.push_back (geo);
 
     g_print ("  Monitor %d%s\n", i, i == primary ? "(primary)" : "");
