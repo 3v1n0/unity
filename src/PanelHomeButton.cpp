@@ -131,6 +131,7 @@ PanelHomeButton::Refresh ()
   int width = _button_width;
   int height = PANEL_HEIGHT;
   GdkPixbuf *pixbuf;
+  GdkPixbuf *overlay;
 
   SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
@@ -140,9 +141,20 @@ PanelHomeButton::Refresh ()
 
   /* button pressed effect */
   if (_pressed) {
-    cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.3f);
-    cairo_rectangle (cr, 0, 0, width-1, height);
-    cairo_fill (cr);
+    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance ()) {
+      /* loads background panel upside-down */
+      overlay = gdk_pixbuf_flip (PanelStyle::GetDefault ()->GetBackground (width - 2, height), FALSE);
+      if (GDK_IS_PIXBUF (overlay)) {
+        gdk_cairo_set_source_pixbuf (cr, overlay, 0, 0);
+        cairo_paint (cr);
+        g_object_unref (overlay);
+      }
+    } else {
+      /* draws an translucent overlay  */
+      cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.3f);
+      cairo_rectangle (cr, 0, 0, width-1, height);
+      cairo_fill (cr);
+    }
   }
 
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
@@ -157,10 +169,9 @@ PanelHomeButton::Refresh ()
     gdk_cairo_set_source_pixbuf (cr, pixbuf,
                                  (_button_width-gdk_pixbuf_get_width (pixbuf))/2 + offset,
                                  (PANEL_HEIGHT-gdk_pixbuf_get_height (pixbuf))/2);
+    cairo_paint (cr);
     g_object_unref (pixbuf);
   }
-
-  cairo_paint (cr);
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.2f);
   cairo_rectangle (cr, width-2, 2, 1, height-4);
