@@ -69,6 +69,8 @@ private:
   
   gulong _theme_changed_id;
   guint _urgent_interest;
+  guint _shown_interest;
+  guint _hidden_interest;
 };
 
 #endif // PANEL_HOME_BUTTON_H

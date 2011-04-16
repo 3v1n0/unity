@@ -62,13 +62,15 @@ PanelHomeButton::PanelHomeButton ()
                                                     (UBusCallback) &PanelHomeButton::OnLauncherIconUrgentChanged,
                                                     this);
 
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                 (UBusCallback)&PanelHomeButton::OnPlaceShown,
-                                 this);
+  _shown_interest = ubus_server_register_interest (ubus_server_get_default (),
+                                                   UBUS_PLACE_VIEW_SHOWN,
+                                                   (UBusCallback)&PanelHomeButton::OnPlaceShown,
+                                                   this);
 
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                 (UBusCallback)&PanelHomeButton::OnPlaceHidden,
-                                 this);
+  _hidden_interest = ubus_server_register_interest (ubus_server_get_default (),
+                                                    UBUS_PLACE_VIEW_HIDDEN,
+                                                    (UBusCallback)&PanelHomeButton::OnPlaceHidden,
+                                                    this);
 
   Refresh ();
   
@@ -83,6 +85,14 @@ PanelHomeButton::~PanelHomeButton ()
   if (_urgent_interest != 0)
     ubus_server_unregister_interest (ubus_server_get_default (),
                                      _urgent_interest);
+
+  if (_shown_interest != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (),
+                                     _shown_interest);
+
+  if (_hidden_interest != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (),
+                                     _hidden_interest);
 }
 
 void 
