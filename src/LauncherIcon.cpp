@@ -138,6 +138,9 @@ LauncherIcon::~LauncherIcon()
     _superkey_label->UnReference ();
 
   // clean up the whole signal-callback mess
+  if (needs_redraw_connection.connected ())
+    needs_redraw_connection.disconnect ();
+    
   if (on_icon_added_connection.connected ())
     on_icon_added_connection.disconnect ();
 

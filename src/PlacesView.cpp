@@ -147,6 +147,9 @@ PlacesView::PlacesView (PlaceFactory *factory)
 PlacesView::~PlacesView ()
 {
   UBusServer* ubus = ubus_server_get_default ();
+  if (_home_button_hover > 0)
+  	ubus_server_unregister_interest (ubus, _home_button_hover);
+  	
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
