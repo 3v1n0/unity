@@ -153,11 +153,11 @@ PlacesView::~PlacesView ()
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
 
-  if (_close_idle != 0)
-  {
+  if (_close_idle)
     g_source_remove (_close_idle);
-    _close_idle = 0;
-  }
+  if (_resize_id)
+    g_source_remove (_resize_id);
+    
   delete _home_entry;
 }
 
