@@ -291,6 +291,7 @@ bool
 PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
 {
   self->EmitLiveSearch ();
+  self->_live_search_timeout = 0;
 
   return FALSE;
 }
@@ -304,7 +305,6 @@ PlacesSearchBar::EmitLiveSearch ()
 
     _entry->SetSearch (_pango_entry->GetText ().c_str (), hints);
   }
-  _live_search_timeout = 0;
 }
 
 void

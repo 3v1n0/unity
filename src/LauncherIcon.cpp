@@ -671,6 +671,7 @@ LauncherIcon::Unpresent ()
   
   if (_present_time_handle > 0)
     g_source_remove (_present_time_handle);
+  _present_time_handle = 0;
   
   SetQuirk (QUIRK_PRESENTED, false);
 }

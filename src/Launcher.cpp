@@ -489,8 +489,6 @@ Launcher::~Launcher()
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
     g_source_remove (_ignore_repeat_shortcut_handle);
-  if (_super_show_launcher_handle)
-    g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
 
@@ -1644,6 +1642,8 @@ void Launcher::EndKeyShowLauncher ()
       g_source_remove (_super_show_launcher_handle);
     if (_super_show_shortcuts_handle > 0)
       g_source_remove (_super_show_shortcuts_handle);
+    _super_show_launcher_handle = 0;
+    _super_show_shortcuts_handle = 0;
 
     // it's a tap on super and we didn't use any shortcuts
     if (TapOnSuper () && !_latest_shortcut)
