@@ -819,6 +819,11 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
       // avoid a race when the BFB doesn't see we are not over the trigger anymore
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
     }
+    else
+    {
+      // reset state for some corner case like x=0, show dash (leave event not received)
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+    }
 }
 
 void Launcher::SetStateMouseOverBFB (bool over_bfb)
