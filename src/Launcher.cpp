@@ -3216,6 +3216,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
         if (it != (LauncherModel::iterator)NULL) {
+          printf ("RecvKeyPressed, UP\n");
           _current_icon_index = temp_current_icon_index;
           _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
@@ -3238,6 +3239,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
         if (it != (LauncherModel::iterator)NULL) {
+          printf ("RecvKeyPressed, DOWN\n");
           _current_icon_index = temp_current_icon_index;
           _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
