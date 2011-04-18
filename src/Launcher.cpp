@@ -282,6 +282,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_window_hidden_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_hidden.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_resized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_resized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_moved_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_moved.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    _on_window_focuschanged_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_focus_changed.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihideDelayed));
     
     _on_window_mapped_connection = (sigc::connection) PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
     _on_window_unmapped_connection = (sigc::connection) PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
@@ -296,6 +297,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
+    // FIXME: not used, remove (with Get function) in O
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
@@ -536,6 +538,9 @@ Launcher::~Launcher()
   
   if (_on_window_moved_intellihide_connection.connected ())
     _on_window_moved_intellihide_connection.disconnect ();
+    
+  if (_on_window_moved_intellihide_connection.connected ())
+    _on_window_moved_intellihide_connection.disconnect ();
 
   if (_on_window_mapped_connection.connected ())
     _on_window_mapped_connection.disconnect ();
@@ -573,6 +578,8 @@ Launcher::~Launcher()
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
+  
+  g_idle_remove_by_data (this);
 
   delete _hover_machine;
   delete _hide_machine;
@@ -1950,11 +1957,30 @@ Launcher::OnWindowUnmapped (guint32 xid)
   }
 }
 
+// FIXME: remove those 2 for Oneiric
 void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_hidemode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnWindowMaybeIntellihideDelayed (guint32 xid)
+{
+  /*
+   * Delay to let the other window taking the focus first (otherwise focuschanged
+   * is emmited with the root window focus
+   */
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
+    g_idle_add ((GSourceFunc)CheckWindowOverLauncherSync, this);
+}
+
+gboolean
+Launcher::CheckWindowOverLauncherSync (Launcher *self)
+{
+  self->CheckWindowOverLauncher ();
+  return FALSE;
 }
 
 void

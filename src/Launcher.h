@@ -236,6 +236,8 @@ private:
   } RenderArg;
 
   void OnWindowMaybeIntellihide (guint32 xid);
+  void OnWindowMaybeIntellihideDelayed (guint32 xid);
+  static gboolean CheckWindowOverLauncherSync (Launcher *self);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
   
@@ -544,6 +546,7 @@ private:
   sigc::connection _on_window_hidden_intellihide_connection;
   sigc::connection _on_window_resized_intellihide_connection;
   sigc::connection _on_window_moved_intellihide_connection;
+  sigc::connection _on_window_focuschanged_intellihide_connection;
   sigc::connection _on_window_mapped_connection;
   sigc::connection _on_window_unmapped_connection;
   sigc::connection _on_initiate_spread_connection;
