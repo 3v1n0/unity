@@ -721,9 +721,11 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   // move focus to key nav mode when activated
   if (!(self->_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE)))
     return false;
-  
-  if (self->_last_icon_index == -1)
+
+     printf ("MoveFocusToKeyNavModeTimeout\n");  
+  if (self->_last_icon_index == -1) {
      self->_current_icon_index = 0;
+   }
    else
      self->_current_icon_index = self->_last_icon_index;
    self->EnsureAnimation ();
@@ -1340,8 +1342,10 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     LauncherModel::iterator it;
     int i;
     for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-      if (i == _current_icon_index && *it == icon)
+      if (i == _current_icon_index && *it == icon) {
+        printf ("SetupRenderArg tells that's true\n");
         arg.keyboard_nav_hl = true;
+      }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
