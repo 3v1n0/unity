@@ -722,7 +722,6 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   if (!(self->_keynav_activated))
     return false;
 
-     printf ("MoveFocusToKeyNavModeTimeout\n");  
   if (self->_last_icon_index == -1) {
      self->_current_icon_index = 0;
    }
@@ -1354,7 +1353,6 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     int i;
     for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
       if (i == _current_icon_index && *it == icon) {
-        printf ("SetupRenderArg tells that's true\n");
         arg.keyboard_nav_hl = true;
       }
 }
@@ -3234,7 +3232,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
         if (it != (LauncherModel::iterator)NULL) {
-          printf ("RecvKeyPressed, UP\n");
           _current_icon_index = temp_current_icon_index;
           _launcher_drag_delta += (_icon_size + _space_between_icons);
         }
@@ -3257,7 +3254,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         }while (it != (LauncherModel::iterator)NULL && !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE));
       
         if (it != (LauncherModel::iterator)NULL) {
-          printf ("RecvKeyPressed, DOWN\n");
           _current_icon_index = temp_current_icon_index;
           _launcher_drag_delta -= (_icon_size + _space_between_icons);
         }
