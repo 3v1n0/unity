@@ -819,17 +819,16 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
       // avoid a race when the BFB doesn't see we are not over the trigger anymore
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
     }
-    else
-    {
-      // reset if x=0 and go to the bfb and other corner case
-      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
-    }
 }
 
 void Launcher::SetStateMouseOverBFB (bool over_bfb)
 {
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, over_bfb);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_BFB, over_bfb);
+    
+    // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
+    if (over_bfb)
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
