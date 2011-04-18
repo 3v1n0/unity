@@ -258,6 +258,7 @@ private:
   
   void SetStateMouseOverLauncher (bool over_launcher);
   void SetStateMouseOverBFB (bool over_bfb);
+  void SetStateKeyNav (bool keynav_activated);
   
   bool MouseBeyondDragThreshold ();
 
@@ -421,6 +422,7 @@ private:
   
   bool          _shortcuts_shown;  
   bool          _super_pressed;
+  bool          _keynav_activated;
   guint64       _latest_shortcut;
     
   BacklightMode _backlight_mode;

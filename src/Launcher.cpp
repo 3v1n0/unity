@@ -391,6 +391,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _render_drag_window     = false;
     _drag_edge_touching     = false;
+    _keynav_activated       = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
@@ -699,8 +700,7 @@ Launcher::OnDragFinish (GeisAdapter::GeisDragData *data)
 void
 Launcher::startKeyNavMode ()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+  SetStateKeyNav (true);
   _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   GrabKeyboard ();
@@ -719,7 +719,7 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
       
   // move focus to key nav mode when activated
-  if (!(self->_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE)))
+  if (!(self->_keynav_activated))
     return false;
 
      printf ("MoveFocusToKeyNavModeTimeout\n");  
@@ -757,13 +757,12 @@ Launcher::leaveKeyNavMode (bool preserve_focus)
 void
 Launcher::exitKeyNavMode ()
 {
-  if (!_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (!_keynav_activated)
     return;
   
   UnGrabKeyboard ();
   UnGrabPointer ();
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+  SetStateKeyNav (false);
 
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
@@ -834,6 +833,14 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
     // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
     if (over_bfb)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+}
+
+void Launcher::SetStateKeyNav (bool keynav_activated)
+{
+    _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, keynav_activated);
+    _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, keynav_activated);
+  
+    _keynav_activated = keynav_activated;
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
@@ -2075,7 +2082,7 @@ Launcher::SetActionState (LauncherActionState actionstate)
   
   _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_IN_ACTION, (actionstate != ACTION_NONE));
   
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -2989,7 +2996,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 
 void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -3205,6 +3212,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
   LauncherModel::iterator it;
 
+  /*
+   * all key events below are related to keynavigation. Make an additional
+   * check that we are in a keynav mode when we inadvertadly receive the focus
+   */
+  if (!_keynav_activated)
+    return;
+   
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
@@ -3213,7 +3227,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (_current_icon_index > 0)
       {
         int temp_current_icon_index = _current_icon_index;
-
         do
         {
           temp_current_icon_index --;
