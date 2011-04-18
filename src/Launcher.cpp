@@ -282,6 +282,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_window_hidden_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_hidden.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_resized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_resized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_moved_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_moved.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    _on_window_focuschanged_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_focus_changed.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihideDelayed));
     
     _on_window_mapped_connection = (sigc::connection) PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
     _on_window_unmapped_connection = (sigc::connection) PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
@@ -296,6 +297,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
+    // FIXME: not used, remove (with Get function) in O
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
@@ -391,6 +393,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _render_drag_window     = false;
     _drag_edge_touching     = false;
+    _keynav_activated       = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
@@ -489,8 +492,6 @@ Launcher::~Launcher()
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
     g_source_remove (_ignore_repeat_shortcut_handle);
-  if (_super_show_launcher_handle)
-    g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
 
@@ -537,6 +538,9 @@ Launcher::~Launcher()
   
   if (_on_window_moved_intellihide_connection.connected ())
     _on_window_moved_intellihide_connection.disconnect ();
+    
+  if (_on_window_moved_intellihide_connection.connected ())
+    _on_window_moved_intellihide_connection.disconnect ();
 
   if (_on_window_mapped_connection.connected ())
     _on_window_mapped_connection.disconnect ();
@@ -574,6 +578,8 @@ Launcher::~Launcher()
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
+  
+  g_idle_remove_by_data (this);
 
   delete _hover_machine;
   delete _hide_machine;
@@ -701,8 +707,7 @@ Launcher::OnDragFinish (GeisAdapter::GeisDragData *data)
 void
 Launcher::startKeyNavMode ()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+  SetStateKeyNav (true);
   _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   GrabKeyboard ();
@@ -721,11 +726,12 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
       
   // move focus to key nav mode when activated
-  if (!(self->_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE)))
+  if (!(self->_keynav_activated))
     return false;
-  
-  if (self->_last_icon_index == -1)
+
+  if (self->_last_icon_index == -1) {
      self->_current_icon_index = 0;
+   }
    else
      self->_current_icon_index = self->_last_icon_index;
    self->EnsureAnimation ();
@@ -757,13 +763,12 @@ Launcher::leaveKeyNavMode (bool preserve_focus)
 void
 Launcher::exitKeyNavMode ()
 {
-  if (!_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (!_keynav_activated)
     return;
   
   UnGrabKeyboard ();
   UnGrabPointer ();
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+  SetStateKeyNav (false);
 
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
@@ -821,7 +826,7 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
     }
     else
     {
-      // reset if x=0 and go to the bfb and other corner case
+      // reset state for some corner case like x=0, show dash (leave event not received)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     }
 }
@@ -830,6 +835,18 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
 {
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, over_bfb);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_BFB, over_bfb);
+    
+    // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
+    if (over_bfb)
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+}
+
+void Launcher::SetStateKeyNav (bool keynav_activated)
+{
+    _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, keynav_activated);
+    _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, keynav_activated);
+  
+    _keynav_activated = keynav_activated;
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
@@ -1342,8 +1359,9 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     LauncherModel::iterator it;
     int i;
     for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-      if (i == _current_icon_index && *it == icon)
+      if (i == _current_icon_index && *it == icon) {
         arg.keyboard_nav_hl = true;
+      }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -1644,6 +1662,8 @@ void Launcher::EndKeyShowLauncher ()
       g_source_remove (_super_show_launcher_handle);
     if (_super_show_shortcuts_handle > 0)
       g_source_remove (_super_show_shortcuts_handle);
+    _super_show_launcher_handle = 0;
+    _super_show_shortcuts_handle = 0;
 
     // it's a tap on super and we didn't use any shortcuts
     if (TapOnSuper () && !_latest_shortcut)
@@ -1937,11 +1957,30 @@ Launcher::OnWindowUnmapped (guint32 xid)
   }
 }
 
+// FIXME: remove those 2 for Oneiric
 void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_hidemode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnWindowMaybeIntellihideDelayed (guint32 xid)
+{
+  /*
+   * Delay to let the other window taking the focus first (otherwise focuschanged
+   * is emmited with the root window focus
+   */
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
+    g_idle_add ((GSourceFunc)CheckWindowOverLauncherSync, this);
+}
+
+gboolean
+Launcher::CheckWindowOverLauncherSync (Launcher *self)
+{
+  self->CheckWindowOverLauncher ();
+  return FALSE;
 }
 
 void
@@ -2067,7 +2106,7 @@ Launcher::SetActionState (LauncherActionState actionstate)
   
   _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_IN_ACTION, (actionstate != ACTION_NONE));
   
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -2981,7 +3020,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 
 void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -3197,6 +3236,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
   LauncherModel::iterator it;
 
+  /*
+   * all key events below are related to keynavigation. Make an additional
+   * check that we are in a keynav mode when we inadvertadly receive the focus
+   */
+  if (!_keynav_activated)
+    return;
+   
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
@@ -3205,7 +3251,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (_current_icon_index > 0)
       {
         int temp_current_icon_index = _current_icon_index;
-
         do
         {
           temp_current_icon_index --;

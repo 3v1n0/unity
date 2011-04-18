@@ -1053,6 +1053,7 @@ BamfLauncherIcon::OnDndHoveredTimeout (gpointer data)
   if (self->_dnd_hovered && bamf_view_is_running (BAMF_VIEW (self->m_App)))
     self->Spread (CompAction::StateInitEdgeDnd, true);
   
+  self->_dnd_hover_timer = 0;
   return false;
 }
 

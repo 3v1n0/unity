@@ -236,6 +236,8 @@ private:
   } RenderArg;
 
   void OnWindowMaybeIntellihide (guint32 xid);
+  void OnWindowMaybeIntellihideDelayed (guint32 xid);
+  static gboolean CheckWindowOverLauncherSync (Launcher *self);
   void OnWindowMapped (guint32 xid);
   void OnWindowUnmapped (guint32 xid);
   
@@ -258,6 +260,7 @@ private:
   
   void SetStateMouseOverLauncher (bool over_launcher);
   void SetStateMouseOverBFB (bool over_bfb);
+  void SetStateKeyNav (bool keynav_activated);
   
   bool MouseBeyondDragThreshold ();
 
@@ -421,6 +424,7 @@ private:
   
   bool          _shortcuts_shown;  
   bool          _super_pressed;
+  bool          _keynav_activated;
   guint64       _latest_shortcut;
     
   BacklightMode _backlight_mode;
@@ -542,6 +546,7 @@ private:
   sigc::connection _on_window_hidden_intellihide_connection;
   sigc::connection _on_window_resized_intellihide_connection;
   sigc::connection _on_window_moved_intellihide_connection;
+  sigc::connection _on_window_focuschanged_intellihide_connection;
   sigc::connection _on_window_mapped_connection;
   sigc::connection _on_window_unmapped_connection;
   sigc::connection _on_initiate_spread_connection;

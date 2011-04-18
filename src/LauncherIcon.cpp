@@ -321,12 +321,8 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (((g_strrstr (icon_name, "user-trash") != NULL) ||
-      (g_strcmp0 (icon_name, "workspace-switcher") == 0)) &&
-      IsMonoDefaultTheme ()) {
+  if ((g_strcmp0 (icon_name, "workspace-switcher") == 0) && IsMonoDefaultTheme ())
     result = TextureFromSpecificGtkTheme (_unity_theme, icon_name, size, update_glow_colors);
-
-  }
   
   if (!result)
     result = TextureFromSpecificGtkTheme (default_theme, icon_name, size, update_glow_colors, true);
@@ -674,6 +670,7 @@ LauncherIcon::Unpresent ()
   
   if (_present_time_handle > 0)
     g_source_remove (_present_time_handle);
+  _present_time_handle = 0;
   
   SetQuirk (QUIRK_PRESENTED, false);
 }

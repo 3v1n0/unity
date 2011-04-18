@@ -169,6 +169,9 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
     case CompWindowNotifyReparent:
       MaximizeIfBigEnough (window);
       break;
+    case CompWindowNotifyFocusChange:
+      WindowManager::window_focus_changed.emit (window->id ());
+      break;
     default:
       break;
   }
