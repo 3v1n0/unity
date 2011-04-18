@@ -334,12 +334,15 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
   {
     GList *list = NULL, *l;
     for (it = uris.begin (); it != uris.end (); it++)
-      list = g_list_prepend (list, g_filename_from_uri (*it, NULL, NULL));
-    
+    {
+      GFile *file = g_file_new_for_uri (*it);
+      list = g_list_prepend (list, file);
+    }
     g_app_info_launch (G_APP_INFO (appInfo), list, NULL, &error);
     
     for (l = list; l; l = l->next)
-      g_free (l->data);
+      g_object_unref (G_FILE (list->data));
+      
     g_list_free (list);
   }
   else
