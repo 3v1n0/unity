@@ -57,8 +57,6 @@ PanelTray::PanelTray ()
 
     gtk_container_add (GTK_CONTAINER (_window), GTK_WIDGET (_tray));
     gtk_widget_show (GTK_WIDGET (_tray));
-
-    gtk_widget_show_all (_window);
   }
 }
 
