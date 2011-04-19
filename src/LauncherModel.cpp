@@ -59,12 +59,14 @@ bool LauncherModel::CompareIcons (LauncherIcon *first, LauncherIcon *second)
   return first->SortPriority () < second->SortPriority ();
 }
 
-void
+bool
 LauncherModel::Populate ()
 {
+  Base copy = _inner;
+  
   _inner.clear ();
   
-  iterator it;
+  iterator it, it2;
   
   int i = 0;
   for (it = main_begin (); it != main_end (); it++)
@@ -78,6 +80,8 @@ LauncherModel::Populate ()
     _inner.push_back (*it);
     (*it)->SetSortPriority (i++);
   }
+  
+  return !std::equal (begin (), end (), copy.begin ());
 }
 
 void 
@@ -144,8 +148,8 @@ LauncherModel::Sort ()
   _inner_shelf.sort (&LauncherModel::CompareIcons);
   _inner_main.sort (&LauncherModel::CompareIcons);
   
-  Populate ();
-  order_changed.emit ();
+  if (Populate ())
+    order_changed.emit ();
 }
 
 bool

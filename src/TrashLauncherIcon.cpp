@@ -39,6 +39,8 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_TRASH);
   SetShortcut ('t');
+  _confirm_dialog = NULL;
+  _on_confirm_dialog_close_id = 0;
 
   m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
 					     G_FILE_MONITOR_NONE,
@@ -60,6 +62,12 @@ TrashLauncherIcon::~TrashLauncherIcon()
                                   _on_trash_changed_handler_id);
 
   g_object_unref (m_TrashMonitor);
+  
+  if (_on_confirm_dialog_close_id)
+    g_signal_handler_disconnect ((gpointer) _confirm_dialog, _on_confirm_dialog_close_id);
+
+  if (_confirm_dialog)
+    gtk_widget_destroy (_confirm_dialog);
 }
 
 nux::Color 
@@ -107,12 +115,33 @@ TrashLauncherIcon::ActivateLauncherIcon ()
     g_error_free (error);
 }
 
+void
+TrashLauncherIcon::OnConfirmDialogClose (GtkDialog *dialog,
+                                         gint response,
+                                         gpointer user_data)
+{
+  TrashLauncherIcon *self = (TrashLauncherIcon*)user_data;
+  
+  if (response == GTK_RESPONSE_OK)
+    g_thread_create ((GThreadFunc)&TrashLauncherIcon::EmptyTrashAction, NULL, FALSE, NULL);
+
+  if (self->_confirm_dialog)
+    gtk_widget_destroy (GTK_WIDGET(self->_confirm_dialog));
+
+  self->_confirm_dialog = NULL;
+  self->_on_confirm_dialog_close_id = 0;
+}
+
 void 
 TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem *item, int time, TrashLauncherIcon *self)
 {
   GConfClient *client;
-  GtkWidget   *dialog;
   bool        ask_confirmation;
+  
+  if (self->_confirm_dialog != NULL) {
+    gtk_window_present_with_time (GTK_WINDOW (self->_confirm_dialog), time);
+    return;
+  }
 
   client = gconf_client_get_default ();
   ask_confirmation = gconf_client_get_bool (client, ASK_CONFIRMATION_KEY, NULL);
@@ -120,27 +149,24 @@ TrashLauncherIcon::OnEmptyTrash(DbusmenuMenuitem *item, int time, TrashLauncherI
 
   if (ask_confirmation)
   {
-    dialog = gtk_message_dialog_new (NULL, GTK_DIALOG_MODAL,
-                                     GTK_MESSAGE_WARNING,
-                                     GTK_BUTTONS_CANCEL,
-                                     NULL);
+    self->_confirm_dialog = gtk_message_dialog_new (NULL, GtkDialogFlags(0),
+                                                    GTK_MESSAGE_WARNING,
+                                                    GTK_BUTTONS_CANCEL,
+                                                    NULL);
 
-    g_object_set (GTK_DIALOG (dialog),
+    g_object_set (GTK_DIALOG (self->_confirm_dialog),
 		  "text", _("Empty all items from Trash?"),
 		  "secondary-text", _("All items in the Trash will be permanently deleted."),
 		  NULL);
-    gtk_dialog_add_button (GTK_DIALOG (dialog), _("Empty Trash"), GTK_RESPONSE_OK );
+    gtk_dialog_add_button (GTK_DIALOG (self->_confirm_dialog), _("Empty Trash"), GTK_RESPONSE_OK);
+    self->_on_confirm_dialog_close_id = g_signal_connect (self->_confirm_dialog, "response", (GCallback)&TrashLauncherIcon::OnConfirmDialogClose, self);
+    gtk_widget_show_all (self->_confirm_dialog);
   }
 
   QuicklistManager::Default ()->HideQuicklist (self->_quicklist);
 
-  if (!ask_confirmation || gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK) 
-  {
+  if (!ask_confirmation) 
     g_thread_create ((GThreadFunc)&TrashLauncherIcon::EmptyTrashAction, NULL, FALSE, NULL);
-  }
-
-  if (ask_confirmation)
-    gtk_widget_destroy (dialog);
 
 }
 
@@ -217,6 +243,7 @@ TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
   GIcon *icon;
   gchar *icon_name;
 
+  // FIXME: should use the generic LoadIcon function (not taking from the unity theme)
   info = g_file_query_info_finish (G_FILE (source), res, NULL);
 
   if (info != NULL) {

@@ -147,17 +147,20 @@ PlacesView::PlacesView (PlaceFactory *factory)
 PlacesView::~PlacesView ()
 {
   UBusServer* ubus = ubus_server_get_default ();
+  if (_home_button_hover > 0)
+  	ubus_server_unregister_interest (ubus, _home_button_hover);
+  	
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
 
-  if (_close_idle != 0)
-  {
+  if (_close_idle)
     g_source_remove (_close_idle);
-    _close_idle = 0;
-  }
+  if (_resize_id)
+    g_source_remove (_resize_id);
+    
   delete _home_entry;
 }
 
@@ -445,6 +448,9 @@ PlacesView::AboutToShow ()
 void
 PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
 {
+  if (self->_factory->GetPlaces ().size () == 0)
+    return;
+  
   if (!self->_places_connected)
   {
     std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();

@@ -29,6 +29,7 @@ public:
   SpacerLauncherIcon  (Launcher *launcher);
   ~SpacerLauncherIcon ();
   
+  bool IsSpacer () { return true; }
 protected:
 
 private:
