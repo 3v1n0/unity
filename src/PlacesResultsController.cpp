@@ -111,11 +111,8 @@ PlacesResultsController::Clear ()
       (it->second)->UnReference ();
   }
 
-  if (_id_to_group)
-    _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
-
-  if (_groups)
-    _groups.erase (_groups.begin (), _groups.end ());
+  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
+  _groups.erase (_groups.begin (), _groups.end ());
 
   if (_results_view)
     _results_view->Clear ();
