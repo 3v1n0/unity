@@ -40,8 +40,10 @@ protected:
 
 private:
   gulong _on_trash_changed_handler_id;
+  gulong _on_confirm_dialog_close_id;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
+  GtkWidget   *_confirm_dialog;
 
   void ActivateLauncherIcon ();
   std::list<DbusmenuMenuitem *> GetMenus ();
@@ -50,6 +52,7 @@ private:
   static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,
                               GFileMonitorEvent event_type, gpointer data);
   static void OnEmptyTrash (DbusmenuMenuitem *item, int time, TrashLauncherIcon *self);
+  static void OnConfirmDialogClose (GtkDialog *dialog, gint response, gpointer user_data);
   static void EmptyTrashAction ();
   static void RecursiveDelete (GFile *location);
 
