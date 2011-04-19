@@ -46,6 +46,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   _padding = padding;
 
+  _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
+
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
@@ -58,6 +60,7 @@ PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
   _on_indicator_activate_changed_connection.disconnect ();
   _on_indicator_updated_connection.disconnect ();
   _on_panelstyle_changed_connection.disconnect ();
+  g_signal_handler_disconnect (gtk_settings_get_default (), _on_font_changed_connection);
 }
 
 void
@@ -429,4 +432,12 @@ bool
 PanelIndicatorObjectEntryView::GetShowNow ()
 {
   return _proxy ? _proxy->show_now : false;
+}
+
+void
+PanelIndicatorObjectEntryView::OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data)
+{
+  PanelIndicatorObjectEntryView *self = (PanelIndicatorObjectEntryView*) data;
+
+  self->Refresh();
 }
