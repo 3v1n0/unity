@@ -82,7 +82,7 @@ private:
     sigc::connection _on_mouse_down_connection;
     sigc::connection _on_mouse_up_connection;
     
-    void Populate ();
+    bool Populate ();
     
     bool IconShouldShelf (LauncherIcon *icon);
     

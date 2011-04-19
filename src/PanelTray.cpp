@@ -57,8 +57,6 @@ PanelTray::PanelTray ()
 
     gtk_container_add (GTK_CONTAINER (_window), GTK_WIDGET (_tray));
     gtk_widget_show (GTK_WIDGET (_tray));
-
-    gtk_widget_show_all (_window);
   }
 }
 
@@ -67,7 +65,6 @@ PanelTray::~PanelTray ()
   if (_tray)
   {
     g_signal_handler_disconnect (na_tray_get_manager (_tray), _tray_icon_added_id);
-    g_object_unref (_tray);
     _tray = NULL;
   }
 
@@ -109,6 +106,11 @@ PanelTray::Sync ()
     SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
     QueueRelayout ();
     QueueDraw ();
+
+    if (_n_children)
+      gtk_widget_show (_window);
+    else
+      gtk_widget_hide (_window);
   }
 }
 

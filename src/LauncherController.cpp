@@ -283,6 +283,7 @@ LauncherController::BamfTimerCallback (void *data)
 
   self->SetupBamf ();
   
+  self->_bamf_timer_handler_id = 0;
   return false;
 }
 
