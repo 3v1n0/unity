@@ -1,6 +1,49 @@
 unity (3.8.10-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Application windows can sometimes fail to display and will mask regions
+      of the screen (LP: #709461)
+    - Launcher appears _under_ application windows (LP: #743834)
+    - Unity Launcher Temporarily Appears Broken at Login (LP: #756951)
+    - compiz crashed with signal 7 in g_file_get_uri() (LP: #728319)
+    - Only with few windows (and one maximized) or Dodge active window - When
+      re-focusing on maximised window Unity launcher does not hide
+      (LP: #734681)
+    - UIFe: Unity Dash button does not give adequate feedback (LP: #748676)
+    - Focus problem with Thunderbird (LP: #753951)
+    - compiz crashed with SIGSEGV in PrivateWindow::updateStartupId()
+      (LP: #759363)
+    - unity places don't start up on login. (LP: #761225)
+    - unity crashes when emptying trash twice (LP: #761643)
+    - compiz crashed with SIGSEGV in PlacesResultsController::Clear()
+      (LP: #761211)
+    - compiz crashed with SIGSEGV in PanelView::~PanelView() (LP: #761634)
+    - compiz crashed with SIGSEGV in SimpleLauncherIcon::SetIconName()
+      (LP: #763560)
+    - compiz crashed with SIGSEGV in PlacesView::ConnectPlaces() (LP: #761942)
+    - Intellihide stuck with in x=0 on the bfb (LP: #764643)
+    - compiz crashed with SIGSEGV in PlacesView::OnResizeFrame() (LP: #763800)
+    - unity crashed with GError in reset_unity_compiz_profile(): Failed to
+      contact configuration server; the most common cause is a missing or
+      misconfigured D-Bus session bus daemon. See
+      http://projects.gnome.org/gconf/ for information. (Details -  1: Failed
+      to get connection to session: Command line `dbus-launch
+      --autolaunch=f0af37ac055f6f348acd417f00000008 --binary-syntax --close-
+      stderr' exited with non-zero exit status 1: No protocol
+      specified\nAutolaunch error: X11 initialization failed.\n) (LP: #753528)
+    - Chromium fullscreen + Alt-TAB confuses the launcher (LP: #757434)
+    - Cannot click on left-most indicator on panel if a non-indicator icon
+      appears (LP: #761409)
+    - vim.gnome window is invisible (LP: #719001)
+    - Trash/ws switcher icon in unity resets to default icon theme on the
+      event of a deletion or emptying the trash or after an upgrade
+      (LP: #761289)
+    - Incorrect keynav hilight/opened Quicklist without any request
+      (LP: #764730)
+    - indicator font does not update when changing font in Appearance
+      Preferences. (LP: #759886)
+    - In dash search filter drop box, black text is on a black background when
+      item is selected (LP: #761201)
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 19 Apr 2011 19:12:14 +0200
 
