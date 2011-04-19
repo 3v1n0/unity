@@ -352,7 +352,10 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
   self->_combo->GetStaticText ()->SetFontName (font_name);
   self->_combo->GetMenuPage ()->SetFontName (font_name);
   PlacesStyle *style = PlacesStyle::GetDefault ();
-  self->_combo->SetMaximumWidth (style->GetTileWidth ());
+  int text_height, text_width;
+  self->_combo->GetStaticText()->GetTextSize (text_width, text_height);
+  self->_combo->SetMaximumSize (style->GetTileWidth(), text_height);
+  self->_combo->SetBaseHeight (text_height);
 
   desc = pango_font_description_from_string (font_name);
   self->_pango_entry->SetFontFamily (pango_font_description_get_family (desc));
