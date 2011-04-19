@@ -138,6 +138,9 @@ LauncherIcon::~LauncherIcon()
     _superkey_label->UnReference ();
 
   // clean up the whole signal-callback mess
+  if (needs_redraw_connection.connected ())
+    needs_redraw_connection.disconnect ();
+    
   if (on_icon_added_connection.connected ())
     on_icon_added_connection.disconnect ();
 
@@ -172,9 +175,9 @@ LauncherIcon::GetName ()
 void
 LauncherIcon::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "x", _center.x);
-  g_variant_builder_add (builder, "{sv}", "y", _center.y);
-  g_variant_builder_add (builder, "{sv}", "z", _center.z);
+  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (_center.x));
+  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (_center.y));
+  g_variant_builder_add (builder, "{sv}", "z", g_variant_new_int32 (_center.z));
   g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
   g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
   g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
@@ -318,12 +321,8 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (((g_strrstr (icon_name, "user-trash") != NULL) ||
-      (g_strcmp0 (icon_name, "workspace-switcher") == 0)) &&
-      IsMonoDefaultTheme ()) {
+  if ((g_strcmp0 (icon_name, "workspace-switcher") == 0) && IsMonoDefaultTheme ())
     result = TextureFromSpecificGtkTheme (_unity_theme, icon_name, size, update_glow_colors);
-
-  }
   
   if (!result)
     result = TextureFromSpecificGtkTheme (default_theme, icon_name, size, update_glow_colors, true);
@@ -671,6 +670,7 @@ LauncherIcon::Unpresent ()
   
   if (_present_time_handle > 0)
     g_source_remove (_present_time_handle);
+  _present_time_handle = 0;
   
   SetQuirk (QUIRK_PRESENTED, false);
 }
@@ -1001,6 +1001,8 @@ LauncherIcon::InsertEntryRemote (LauncherEntryRemote *remote)
   
   if (remote->Urgent ())
     OnRemoteUrgentChanged (remote);
+
+  OnRemoteQuicklistChanged (remote);
 }
 
 void 
@@ -1039,8 +1041,13 @@ LauncherIcon::OnRemoteCountChanged (LauncherEntryRemote *remote)
 {
   if (!remote->CountVisible ())
     return;
-  
-  gchar *text = g_strdup_printf ("%i", (int) remote->Count ());
+
+  gchar *text;
+  if (remote->Count() > 9999)
+    text = g_strdup_printf("****");
+  else 
+    text = g_strdup_printf ("%i", (int) remote->Count ());
+
   SetEmblemText (text);
   g_free (text);
 }

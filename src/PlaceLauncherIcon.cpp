@@ -21,6 +21,7 @@
 
 #include "PlaceLauncherIcon.h"
 
+#include "Place.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
@@ -30,7 +31,8 @@
 
 PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
 : SimpleLauncherIcon(launcher),
-  _entry (entry)
+  _entry (entry),
+  _n_sections (0)
 {
   SetTooltipText (entry->GetName ());
   SetShortcut (entry->GetShortcut());
@@ -41,6 +43,10 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   SetIconType (TYPE_PLACE); 
 
   _on_active_changed_connection = (sigc::connection) entry->active_changed.connect (sigc::mem_fun (this, &PlaceLauncherIcon::OnActiveChanged));
+  
+  // We're interested in this as it's a great time to Connect () our PlaceEntry. The goal being
+  // to have the PlaceEntry ready-and-connected by the time the user clicks on the icon
+  MouseEnter.connect (sigc::mem_fun (this, &PlaceLauncherIcon::RecvMouseEnter));
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()
@@ -74,6 +80,14 @@ PlaceLauncherIcon::UpdatePlaceIcon ()
 }
 
 void
+PlaceLauncherIcon::RecvMouseEnter ()
+{
+  // Connect the parent Place. This is fine to call multiple times.
+  if (_entry->GetParent ())
+    _entry->GetParent ()->Connect ();
+}
+
+void
 PlaceLauncherIcon::ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section)
 {
   DbusmenuMenuitem              *menu_item;
@@ -92,6 +106,8 @@ PlaceLauncherIcon::ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection&
                     G_CALLBACK (&PlaceLauncherIcon::OnOpen),
                     this);
 
+  _n_sections++;
+
   g_free (temp);
 }
 
@@ -100,16 +116,24 @@ PlaceLauncherIcon::GetMenus ()
 {
   DbusmenuMenuitem              *menu_item;
   char * temp;
-  
+ 
   _current_menu.erase (_current_menu.begin (), _current_menu.end ());
 
+  _n_sections = 0;
   _entry->ForeachSection (sigc::mem_fun (this, &PlaceLauncherIcon::ForeachSectionCallback));
-  
-  menu_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
-  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  _current_menu.push_back (menu_item);
+
+  // In the worst case that the PlaceEntry wasn't connected and ready by the time we need to
+  // show the menu
+  // FIXME: In Oneric, it would be great to make the quicklists more dynamic so we could fill in
+  // items as they show up in the PlaceEntry even once the QL is open
+  if (_n_sections)
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    _current_menu.push_back (menu_item);
+  }
 
   temp = g_markup_escape_text (_entry->GetName (), -1);
   menu_item = dbusmenu_menuitem_new ();
@@ -128,6 +152,9 @@ PlaceLauncherIcon::GetMenus ()
 void
 PlaceLauncherIcon::ActivatePlace (guint section_id, const char *search_string)
 {
+  if (_entry->GetParent ())
+    _entry->GetParent ()->Connect ();
+
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                             g_variant_new ("(sus)",

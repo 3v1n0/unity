@@ -73,6 +73,8 @@ private:
     sigc::connection _on_remote_model_entry_added_connection;
     sigc::connection _on_remote_model_entry_removed_connection;
 
+    guint32 _on_view_opened_id;
+
     void SortAndSave ();
 
     void OnIconAdded (LauncherIcon *icon);

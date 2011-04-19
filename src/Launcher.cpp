@@ -68,6 +68,11 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
+// halfed lumin values to provide darkening while desaturating in shader
+#define LUMIN_R "0.15"
+#define LUMIN_G "0.295"
+#define LUMIN_B "0.055"
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -165,7 +170,7 @@ void main()                                                             \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
 	                                                                      \n\
   vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
-  vec4 desat = vec4 (0.30*texel.r + 0.59*texel.g + 0.11*texel.b);       \n\
+  vec4 desat = vec4 ("LUMIN_R"*texel.r + "LUMIN_G"*texel.g + "LUMIN_B"*texel.b);       \n\
   vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
   final_color.a = texel.a;                                              \n\
   gl_FragColor = final_color;                                           \n\
@@ -195,7 +200,7 @@ nux::NString PerspectiveCorrectTexFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
                             PARAM factor = program.local[1];            \n\
-                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
+                            PARAM luma = {"LUMIN_R", "LUMIN_G", "LUMIN_B", 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
@@ -215,7 +220,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
                             PARAM factor = program.local[1];            \n\
-                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
+                            PARAM luma = {"LUMIN_R", "LUMIN_G", "LUMIN_B", 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
@@ -282,6 +287,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_window_hidden_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_hidden.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_resized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_resized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
     _on_window_moved_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_moved.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    _on_window_focuschanged_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_focus_changed.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihideDelayed));
     
     _on_window_mapped_connection = (sigc::connection) PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
     _on_window_unmapped_connection = (sigc::connection) PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
@@ -296,6 +302,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
+    // FIXME: not used, remove (with Get function) in O
     m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
@@ -391,6 +398,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _hidden                 = false;
     _render_drag_window     = false;
     _drag_edge_touching     = false;
+    _keynav_activated       = false;
     _backlight_mode         = BACKLIGHT_NORMAL;
     _last_button_press      = 0;
     _selection_atom         = 0;
@@ -419,26 +427,35 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
     _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    
-    UBusServer *ubus = ubus_server_get_default ();
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
-                                   (UBusCallback)&Launcher::OnPlaceViewShown,
-                                   this);
-    ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_HIDDEN,
-                                   (UBusCallback)&Launcher::OnPlaceViewHidden,
-                                   this);
 
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
-                                   (UBusCallback)&Launcher::OnBFBUpdate,
-                                   this);
+    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+      _ubus_handles[i] = 0;
+
+    UBusServer *ubus = ubus_server_get_default ();
+    _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback) &Launcher::OnPlaceViewShown,
+                                                     this);
+
+    _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                     UBUS_PLACE_VIEW_HIDDEN,
+                                                     (UBusCallback)&Launcher::OnPlaceViewHidden,
+                                                     this);
+
+    _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                     (UBusCallback) &Launcher::OnBFBUpdate,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_LAUNCHER_ACTION_DONE,
-                                   (UBusCallback)&Launcher::OnActionDone,
-                                   this);
+    _ubus_handles[3] = ubus_server_register_interest (ubus,
+                                                     UBUS_LAUNCHER_ACTION_DONE,
+                                                     (UBusCallback) &Launcher::OnActionDone,
+                                                     this);
                                    
-    ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_DND_ENTER,
-                                   (UBusCallback)&Launcher::OnBFBDndEnter,
-                                   this);
+    _ubus_handles[4] = ubus_server_register_interest (ubus,
+                                                     UBUS_HOME_BUTTON_BFB_DND_ENTER,
+                                                     (UBusCallback) &Launcher::OnBFBDndEnter,
+                                                     this);
     
     _dbus_owner = g_bus_own_name (G_BUS_TYPE_SESSION,
                                   S_DBUS_NAME,
@@ -450,8 +467,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
                                   NULL);
 
     _settings = g_settings_new ("com.canonical.Unity.Launcher");
-    g_signal_connect (_settings, "changed",
-                      (GCallback)(Launcher::SettingsChanged), this);
+    _settings_changed_id = g_signal_connect (
+        _settings, "changed", (GCallback)(Launcher::SettingsChanged), this);
     SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
@@ -480,10 +497,12 @@ Launcher::~Launcher()
     g_source_remove (_start_dragicon_handle);
   if (_ignore_repeat_shortcut_handle)
     g_source_remove (_ignore_repeat_shortcut_handle);
-  if (_super_show_launcher_handle)
-    g_source_remove (_super_show_launcher_handle);
   if (_super_hide_launcher_handle)
     g_source_remove (_super_hide_launcher_handle);
+
+  if (_settings_changed_id != 0)
+    g_signal_handler_disconnect ((gpointer) _settings, _settings_changed_id);
+  g_object_unref (_settings);
 
   // disconnect the huge number of signal-slot callbacks
   if (_set_hidden_connection.connected ())
@@ -524,6 +543,9 @@ Launcher::~Launcher()
   
   if (_on_window_moved_intellihide_connection.connected ())
     _on_window_moved_intellihide_connection.disconnect ();
+    
+  if (_on_window_moved_intellihide_connection.connected ())
+    _on_window_moved_intellihide_connection.disconnect ();
 
   if (_on_window_mapped_connection.connected ())
     _on_window_mapped_connection.disconnect ();
@@ -554,7 +576,18 @@ Launcher::~Launcher()
     
   if (_launcher_animation_timeout > 0)
     g_source_remove (_launcher_animation_timeout);
-    
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+  
+  g_idle_remove_by_data (this);
+
+  delete _hover_machine;
+  delete _hide_machine;
 }
 
 /* Introspection */
@@ -679,8 +712,7 @@ Launcher::OnDragFinish (GeisAdapter::GeisDragData *data)
 void
 Launcher::startKeyNavMode ()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, true);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, true);
+  SetStateKeyNav (true);
   _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   
   GrabKeyboard ();
@@ -699,11 +731,12 @@ Launcher::MoveFocusToKeyNavModeTimeout (gpointer data)
   Launcher *self = (Launcher*) data;
       
   // move focus to key nav mode when activated
-  if (!(self->_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE)))
+  if (!(self->_keynav_activated))
     return false;
-  
-  if (self->_last_icon_index == -1)
+
+  if (self->_last_icon_index == -1) {
      self->_current_icon_index = 0;
+   }
    else
      self->_current_icon_index = self->_last_icon_index;
    self->EnsureAnimation ();
@@ -735,13 +768,12 @@ Launcher::leaveKeyNavMode (bool preserve_focus)
 void
 Launcher::exitKeyNavMode ()
 {
-  if (!_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (!_keynav_activated)
     return;
   
   UnGrabKeyboard ();
   UnGrabPointer ();
-  _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, false);
-  _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, false);
+  SetStateKeyNav (false);
 
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
@@ -799,7 +831,7 @@ void Launcher::SetStateMouseOverLauncher (bool over_launcher)
     }
     else
     {
-      // reset if x=0 and go to the bfb and other corner case
+      // reset state for some corner case like x=0, show dash (leave event not received)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
     }
 }
@@ -808,6 +840,18 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
 {
     _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_BFB, over_bfb);
     _hover_machine->SetQuirk (LauncherHoverMachine::MOUSE_OVER_BFB, over_bfb);
+    
+    // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
+    if (over_bfb)
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+}
+
+void Launcher::SetStateKeyNav (bool keynav_activated)
+{
+    _hide_machine->SetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE, keynav_activated);
+    _hover_machine->SetQuirk (LauncherHoverMachine::KEY_NAV_ACTIVE, keynav_activated);
+  
+    _keynav_activated = keynav_activated;
 }
 
 bool Launcher::MouseBeyondDragThreshold ()
@@ -1320,8 +1364,9 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     LauncherModel::iterator it;
     int i;
     for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
-      if (i == _current_icon_index && *it == icon)
+      if (i == _current_icon_index && *it == icon) {
         arg.keyboard_nav_hl = true;
+      }
 }
 
 void Launcher::FillRenderArg (LauncherIcon *icon,
@@ -1359,7 +1404,7 @@ void Launcher::FillRenderArg (LauncherIcon *icon,
         
         if (GetActionState () == ACTION_DRAG_ICON || 
             (_drag_window && _drag_window->Animating ()) ||
-            dynamic_cast<SpacerLauncherIcon *> (icon))
+            icon->IsSpacer ())
           arg.skip = true;
         size_modifier *= DragThresholdProgress (current);
     }
@@ -1622,6 +1667,8 @@ void Launcher::EndKeyShowLauncher ()
       g_source_remove (_super_show_launcher_handle);
     if (_super_show_shortcuts_handle > 0)
       g_source_remove (_super_show_shortcuts_handle);
+    _super_show_launcher_handle = 0;
+    _super_show_shortcuts_handle = 0;
 
     // it's a tap on super and we didn't use any shortcuts
     if (TapOnSuper () && !_latest_shortcut)
@@ -1673,6 +1720,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, true);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, true);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1690,6 +1738,7 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     LauncherModel::iterator it;
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
+    self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1775,6 +1824,7 @@ void Launcher::SetHidden (bool hidden)
     if (hidden)
     {
       _hide_machine->SetQuirk (LauncherHideMachine::MT_DRAG_OUT, false);
+      SetStateMouseOverLauncher  (false);
     }
     
     _postreveal_mousemove_delta_x = 0;
@@ -1912,11 +1962,30 @@ Launcher::OnWindowUnmapped (guint32 xid)
   }
 }
 
+// FIXME: remove those 2 for Oneiric
 void
 Launcher::OnWindowMaybeIntellihide (guint32 xid)
 {
   if (_hidemode != LAUNCHER_HIDE_NEVER)
     CheckWindowOverLauncher ();
+}
+
+void
+Launcher::OnWindowMaybeIntellihideDelayed (guint32 xid)
+{
+  /*
+   * Delay to let the other window taking the focus first (otherwise focuschanged
+   * is emmited with the root window focus
+   */
+  if (_hidemode != LAUNCHER_HIDE_NEVER)
+    g_idle_add ((GSourceFunc)CheckWindowOverLauncherSync, this);
+}
+
+gboolean
+Launcher::CheckWindowOverLauncherSync (Launcher *self)
+{
+  self->CheckWindowOverLauncher ();
+  return FALSE;
 }
 
 void
@@ -2042,7 +2111,7 @@ Launcher::SetActionState (LauncherActionState actionstate)
   
   _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_IN_ACTION, (actionstate != ACTION_NONE));
   
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -2175,7 +2244,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
 void Launcher::OnIconAdded (LauncherIcon *icon)
 {
-    icon->Reference ();
     EnsureAnimation();
 
     icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
@@ -2220,7 +2288,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
     if (icon == _drag_icon)
       _drag_icon = 0;
 
-    icon->UnReference ();
     EnsureAnimation();
     RemoveChild (icon);
 }
@@ -2274,10 +2341,11 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                  int running,
                                  int active,
                                  float alpha,
-                                 nux::Geometry geo)
+                                 nux::Geometry& geo)
 {
   int markerCenter = (int) arg.render_center.y;
-
+  markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
+  
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
@@ -2396,10 +2464,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
-    s0 = 0.0f;                                  t0 = 0.0f;
-    s1 = 0.0f;                                  t1 = icon->GetHeight();
-    s2 = icon->GetWidth();     t2 = icon->GetHeight();
-    s3 = icon->GetWidth();     t3 = 0.0f;
+    s0 = 0.0f;                 t0 = 0.0f;
+    s1 = 0.0f;                 t1 = icon->GetHeight();
+    s2 = icon->GetWidth();     t2 = t1;
+    s3 = s2;                   t3 = 0.0f;
   }
   else
   {
@@ -2438,8 +2506,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
     DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
-    nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
-
     if(TextureObjectLocation != -1)
       CHECKGL( glUniform1iARB (TextureObjectLocation, 0) );
 
@@ -2462,12 +2528,10 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
     // Set the model-view matrix
     CHECKGL (glMatrixMode (GL_MODELVIEW));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLModelViewMatrix ().m));
     
     // Set the projection matrix
     CHECKGL (glMatrixMode (GL_PROJECTION));
-    CHECKGL (glLoadIdentity ());
     CHECKGL (glLoadMatrixf ((float*) GfxContext.GetOpenGLProjectionMatrix ().m));
   }
 
@@ -2669,7 +2733,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (_shortcuts_shown)
+  if (_shortcuts_shown && !_hide_machine->GetQuirk (LauncherHideMachine::PLACES_VISIBLE))
   {
     guint64 shortcut = arg.icon->GetShortcut ();
 
@@ -2730,8 +2794,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       
       _render_drag_window = false;
     }
-
-
+    
     // clear region
     GfxContext.PushClippingRectangle(base);
     gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
@@ -2744,7 +2807,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     UpdateIconXForm (args, GetGeometry ());
     EventLogic ();
-
+    
     /* draw launcher */
     for (rev_it = args.rbegin (); rev_it != args.rend (); rev_it++)
     {
@@ -2758,7 +2821,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
     }
-
+    
     for (it = args.begin(); it != args.end(); it++)
     {
       if ((*it).stick_thingy)
@@ -2771,27 +2834,25 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-
-
+    
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
     gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x00000000), 
                                                                                                     nux::Color(0x60000000));
 
-    // FIXME: can be removed for a bgk_box->SetAlpha once implemented    
+    // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
     nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
     alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
                         alpha_mask.B () * launcher_alpha, launcher_alpha);
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
     
-    GfxContext.GetRenderStates().SetColorMask (true, true, true, true);
-    GfxContext.GetRenderStates ().SetBlend (false);
+    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
-    gPainter.PopBackground();
-    GfxContext.PopClippingRectangle();
-    GfxContext.PopClippingRectangle();
+    gPainter.PopBackground ();
+    GfxContext.PopClippingRectangle ();
 }
 
 void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -2970,7 +3031,7 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
 
 void Launcher::RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (_hide_machine->GetQuirk (LauncherHideMachine::KEY_NAV_ACTIVE))
+  if (_keynav_activated)
     exitKeyNavMode ();
 }
 
@@ -3186,6 +3247,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
   LauncherModel::iterator it;
 
+  /*
+   * all key events below are related to keynavigation. Make an additional
+   * check that we are in a keynav mode when we inadvertadly receive the focus
+   */
+  if (!_keynav_activated)
+    return;
+   
   switch (key_sym)
   {
     // up (move selection up or go to global-menu if at top-most icon)
@@ -3194,7 +3262,6 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (_current_icon_index > 0)
       {
         int temp_current_icon_index = _current_icon_index;
-
         do
         {
           temp_current_icon_index --;
@@ -3269,6 +3336,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
 
     // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
       {
         // start currently selected icon
         it = _model->at (_current_icon_index);

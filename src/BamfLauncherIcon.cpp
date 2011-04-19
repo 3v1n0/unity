@@ -165,9 +165,12 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
+
+  // FIXME(loicm): _menu_items stores invalid objects at that point for some
+  //     unknow reasons generating GLib warnings. Also it seems like some items
+  //     are leaked.
   g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
                                _menu_callbacks["Pin"]);
-
   g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
                                _menu_callbacks["Quit"]);
 
@@ -331,12 +334,15 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
   {
     GList *list = NULL, *l;
     for (it = uris.begin (); it != uris.end (); it++)
-      list = g_list_prepend (list, g_filename_from_uri (*it, NULL, NULL));
-    
+    {
+      GFile *file = g_file_new_for_uri (*it);
+      list = g_list_prepend (list, file);
+    }
     g_app_info_launch (G_APP_INFO (appInfo), list, NULL, &error);
     
     for (l = list; l; l = l->next)
-      g_free (l->data);
+      g_object_unref (G_FILE (list->data));
+      
     g_list_free (list);
   }
   else
@@ -1047,6 +1053,7 @@ BamfLauncherIcon::OnDndHoveredTimeout (gpointer data)
   if (self->_dnd_hovered && bamf_view_is_running (BAMF_VIEW (self->m_App)))
     self->Spread (CompAction::StateInitEdgeDnd, true);
   
+  self->_dnd_hover_timer = 0;
   return false;
 }
 

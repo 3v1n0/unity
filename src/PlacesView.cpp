@@ -52,7 +52,8 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _alt_f2_entry (NULL),
   _searching_timeout (0),
   _pending_activation (false),
-  _search_empty (false)
+  _search_empty (false),
+  _places_connected (false)
 {
   LoadPlaces ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlacesView::OnPlaceAdded));
@@ -114,20 +115,29 @@ PlacesView::PlacesView (PlaceFactory *factory)
     _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.9f), true, rop);
   }
 
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
   // Register for all the events
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                 (UBusCallback)place_entry_activate_request,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                                 (UBusCallback)&PlacesView::CloseRequest,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
-                                 (UBusCallback)&PlacesView::OnResultActivated,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
-                                 (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
-                                 this);
+
+  // This is a nice time to Connect () the Places as it's hopefully fast enough to be avaiable
+  // by the time the user starts typing (home screen doesn't require initial connection)
+  _home_button_hover = ubus_server_register_interest (ubus, UBUS_HOME_BUTTON_BFB_UPDATE,
+                                                      (UBusCallback)&PlacesView::ConnectPlaces,
+                                                      this);
+  _ubus_handles[0] = ubus_server_register_interest (ubus, UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                                    (UBusCallback)place_entry_activate_request,
+                                                    this);
+  _ubus_handles[1] = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                                    (UBusCallback)&PlacesView::CloseRequest,
+                                                    this);
+  _ubus_handles[2] = ubus_server_register_interest (ubus, UBUS_PLACE_TILE_ACTIVATE_REQUEST,
+                                                    (UBusCallback)&PlacesView::OnResultActivated,
+                                                    this);
+  _ubus_handles[3] = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_QUEUE_DRAW,
+                                                    (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
+                                                    this);
 
   _icon_loader = IconLoader::GetDefault ();
 
@@ -136,11 +146,21 @@ PlacesView::PlacesView (PlaceFactory *factory)
 
 PlacesView::~PlacesView ()
 {
-  if (_close_idle != 0)
+  UBusServer* ubus = ubus_server_get_default ();
+  if (_home_button_hover > 0)
+  	ubus_server_unregister_interest (ubus, _home_button_hover);
+  	
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
-    g_source_remove (_close_idle);
-    _close_idle = 0;
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
+
+  if (_close_idle)
+    g_source_remove (_close_idle);
+  if (_resize_id)
+    g_source_remove (_resize_id);
+    
   delete _home_entry;
 }
 
@@ -413,6 +433,9 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 void
 PlacesView::AboutToShow ()
 {
+  // Just in case we aren't ready when we should be (external activation being key here)
+  ConnectPlaces (NULL, this);
+
   _bg_blur_texture.Release ();
   if (_resize_id)
     g_source_remove (_resize_id);
@@ -423,8 +446,37 @@ PlacesView::AboutToShow ()
 }
 
 void
+PlacesView::ConnectPlaces (GVariant *data, PlacesView *self)
+{
+  if (self->_factory->GetPlaces ().size () == 0)
+    return;
+  
+  if (!self->_places_connected)
+  {
+    std::vector<Place *>::iterator it, eit = self->_factory->GetPlaces ().end ();
+    for (it = self->_factory->GetPlaces ().begin (); it != eit; ++it)
+    {
+      (*it)->Connect ();
+    }
+
+    self->_places_connected = true;
+  }
+
+  // Once we're connected we're not interested in the hover signal so disconnect
+  if (self->_home_button_hover)
+  {
+    ubus_server_unregister_interest (ubus_server_get_default (), self->_home_button_hover);
+    self->_home_button_hover = 0;
+  }
+}
+
+void
 PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string, bool signal)
 {
+  // Last ditch attempt
+  if (!_places_connected)
+    ConnectPlaces (NULL, this);
+
   if (signal)
     entry_changed.emit (entry);
 

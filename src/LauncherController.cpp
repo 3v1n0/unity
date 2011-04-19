@@ -85,9 +85,13 @@ LauncherController::~LauncherController()
   if (_on_remote_model_entry_removed_connection.connected ())
     _on_remote_model_entry_removed_connection.disconnect ();
 
+  if (_matcher != NULL && _on_view_opened_id != 0)
+    g_signal_handler_disconnect ((gpointer) _matcher, _on_view_opened_id);
+
   _favorite_store->UnReference ();
   delete _place_section;
   delete _device_section;
+  delete _model;
 }
 
 void
@@ -279,6 +283,7 @@ LauncherController::BamfTimerCallback (void *data)
 
   self->SetupBamf ();
   
+  self->_bamf_timer_handler_id = 0;
   return false;
 }
 
@@ -357,7 +362,7 @@ LauncherController::SetupBamf ()
   }
   
   apps = bamf_matcher_get_applications (_matcher);
-  g_signal_connect (_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
+  _on_view_opened_id = g_signal_connect (_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
   
   for (l = apps; l; l = l->next)
   {

@@ -38,6 +38,14 @@ PanelController::PanelController ()
 PanelController::~PanelController ()
 {
   _on_screen_change_connection.disconnect ();
+
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    (*it)->UnReference ();
+  }
+
 }
 
 void
@@ -150,6 +158,8 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       nux::BaseWindow *window;
       PanelView       *view;
       nux::HLayout    *layout;
+
+      // FIXME(loicm): Several objects created here are leaked.
 
       layout = new nux::HLayout();
       

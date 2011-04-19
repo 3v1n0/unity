@@ -61,6 +61,8 @@ private:
   sigc::connection _on_indicator_updated_connection;
   sigc::connection _on_panelstyle_changed_connection;
 
+  gulong _on_font_changed_connection;
+  static void OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data);
 };
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

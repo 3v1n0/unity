@@ -43,7 +43,7 @@ well_known_local_path = ("%s/share/unity" % supported_prefix,
                          "%s/bin/*unity*"  % supported_prefix,
                          "%s/share/man/man1/*unity*"  % supported_prefix,
                          "%s/lib/*nux*"  % supported_prefix,
-                         "%s/pkgconfig/nux*"  % supported_prefix,
+                         "%s/lib/pkgconfig/nux*"  % supported_prefix,
                          "%s/include/Nux*"  % supported_prefix
                          )
 
@@ -70,7 +70,11 @@ def reset_unity_compiz_profile ():
     # as compiz is setting that as a default key schema each time you
     # change the profile, the key isn't straightforward to get and set
     # as compiz set a new schema instead of a value..
-    current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
+    try:
+        current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
+    except GError, e:
+        print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
+        return
     
     # default value to not force reset if current_profile is unset
     current_profile_gconfvalue = ""

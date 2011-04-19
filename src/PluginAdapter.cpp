@@ -86,6 +86,17 @@ PluginAdapter::OnScreenUngrabbed ()
 {
   if (_spread_state && !screen->grabExist ("scale"))
   {
+    // restore windows to their pre-spread minimized state
+    for (std::list<guint32>::iterator itr = m_SpreadedWindows.begin (); itr != m_SpreadedWindows.end (); ++itr)
+    {
+      if (*itr != m_Screen->activeWindow ())
+      {
+        CompWindow* window = m_Screen->findWindow (*itr);
+        if (window)
+          window->minimize ();
+      }
+    }
+    m_SpreadedWindows.clear ();
     _spread_state = false;
     terminate_spread.emit ();
   }
@@ -157,6 +168,9 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
       break;
     case CompWindowNotifyReparent:
       MaximizeIfBigEnough (window);
+      break;
+    case CompWindowNotifyFocusChange:
+      WindowManager::window_focus_changed.emit (window->id ());
       break;
     default:
       break;
@@ -275,7 +289,6 @@ PluginAdapter::InitiateScale (std::string *match, int state)
 {
   CompOption::Vector argument;
   CompMatch	     m (*match);
-  std::list <guint32> xids;
 
   argument.resize (1);
   argument[0].setName ("match", CompOption::TypeMatch);
@@ -286,16 +299,18 @@ PluginAdapter::InitiateScale (std::string *match, int state)
   {
     if (m.evaluate (w))
     {
-      if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) == m_SpreadedWindows.end ())
-        m_SpreadedWindows.push_back (w->id ());
       /* FIXME:
          just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only 
          called if you click on the launcher, not on any icon. More generally, we should hook up InitiateScale and TerminateScale
          to a Scale plugin signal as the shortcut will have a different behaviour then.
       */
       if (w->minimized ())
+      {
+        // keep track of windows that were unminimzed to restore their state after the spread
+        if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) == m_SpreadedWindows.end ())
+          m_SpreadedWindows.push_back (w->id ());
         w->unminimize ();
-      xids.push_back (w->id ());
+      }
     }
   }
 
@@ -306,8 +321,6 @@ void
 PluginAdapter::TerminateScale ()
 {
   CompOption::Vector argument (0);
-
-  m_SpreadedWindows.clear ();
   m_ScaleActionList.TerminateAll (argument);
 }
 
@@ -393,6 +406,7 @@ PluginAdapter::IsWindowObscured (guint32 xid)
     for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
       if (sibling->defaultViewport () == window_vp
+          && !sibling->minimized ()
           && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }

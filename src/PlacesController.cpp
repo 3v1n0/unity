@@ -43,15 +43,20 @@ PlacesController::PlacesController ()
   _timeline_id (0)
 {
   _need_show = false;
-  
+
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_register_interest (ubus, UBUS_DASH_EXTERNAL_ACTIVATION,
-                                 (UBusCallback)&PlacesController::ExternalActivation,
-                                 this);
-  ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                                 (UBusCallback)&PlacesController::CloseRequest,
-                                 this);
+  _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                    UBUS_DASH_EXTERNAL_ACTIVATION,
+                                                    (UBusCallback) &PlacesController::ExternalActivation,
+                                                    this);
+  _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                    UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                                                    (UBusCallback) &PlacesController::CloseRequest,
+                                                    this);
 
   _factory = PlaceFactory::GetDefault ();
 
@@ -94,7 +99,17 @@ PlacesController::PlacesController ()
 
 PlacesController::~PlacesController ()
 {
+  if (_timeline_id)
+    g_source_remove (_timeline_id);
+
   _window->UnReference ();
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
 }
 
 void

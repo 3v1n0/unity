@@ -23,8 +23,10 @@
 
 PanelTray::PanelTray ()
 : _n_children (0),
+  _tray (NULL),
   _last_x (0),
-  _last_y (0)
+  _last_y (0),
+  _tray_icon_added_id (0)
 {
   _settings = g_settings_new (SETTINGS_NAME);
   _whitelist = g_settings_get_strv (_settings, "systray-whitelist");
@@ -50,22 +52,28 @@ PanelTray::PanelTray ()
                                     GTK_ORIENTATION_HORIZONTAL,
                                     (NaTrayFilterCallback)FilterTrayCallback,
                                     this);
-    g_signal_connect (na_tray_get_manager (_tray), "tray_icon_removed",
-                      G_CALLBACK (PanelTray::OnTrayIconRemoved), this);
+    _tray_icon_added_id = g_signal_connect (na_tray_get_manager (_tray), "tray_icon_removed",
+                                            G_CALLBACK (PanelTray::OnTrayIconRemoved), this);
 
     gtk_container_add (GTK_CONTAINER (_window), GTK_WIDGET (_tray));
     gtk_widget_show (GTK_WIDGET (_tray));
-
-    gtk_widget_show_all (_window);
   }
 }
 
 PanelTray::~PanelTray ()
 {
+  if (_tray)
+  {
+    g_signal_handler_disconnect (na_tray_get_manager (_tray), _tray_icon_added_id);
+    _tray = NULL;
+  }
+
+  g_idle_remove_by_data (this);
+ 
   if (_tray_expose_id)
     g_signal_handler_disconnect (_window, _tray_expose_id);
-  g_idle_remove_by_data (this);
   
+  gtk_widget_destroy (_window);
   g_strfreev (_whitelist);
   g_object_unref (_settings);
 }
@@ -93,9 +101,17 @@ PanelTray::GetTrayWindow ()
 void
 PanelTray::Sync ()
 {
-  SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
-  QueueRelayout ();
-  QueueDraw ();
+  if (_tray)
+  {
+    SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
+    QueueRelayout ();
+    QueueDraw ();
+
+    if (_n_children)
+      gtk_widget_show (_window);
+    else
+      gtk_widget_hide (_window);
+  }
 }
 
 gboolean

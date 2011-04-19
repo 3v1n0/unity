@@ -168,8 +168,7 @@ PanelStyle::GetWindowButton (WindowButtonType type, WindowState state)
   // I wish there was a magic bullet here, but not all themes actually set the panel to be
   // the same style as the window titlebars (e.g. Clearlooks) so we can just grab the 
   // metacity window buttons as that would look horrible
-  if (g_strcmp0 (_theme_name, "Ambiance") == 0
-      || g_strcmp0 (_theme_name, "Radiance") == 0)
+  if (IsAmbianceOrRadiance ())
   {
     char      *filename;
     GdkPixbuf *pixbuf;
@@ -196,6 +195,11 @@ PanelStyle::GetWindowButton (WindowButtonType type, WindowState state)
   }
 
   return texture;
+}
+
+bool
+PanelStyle::IsAmbianceOrRadiance() {
+  return g_strcmp0 (_theme_name, "Ambiance") == 0 || g_strcmp0 (_theme_name, "Radiance") == 0;
 }
 
 nux::BaseTexture *

@@ -62,6 +62,8 @@ class PanelStyle : public nux::Object
 
     sigc::signal<void> changed;
 
+    bool IsAmbianceOrRadiance ();
+
   private:
     void        Refresh ();
     static void OnStyleChanged (GObject*    gobject,

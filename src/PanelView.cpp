@@ -85,8 +85,9 @@ PanelView::~PanelView ()
   _on_entry_activate_request_connection.disconnect ();
   _on_entry_activated_connection.disconnect ();
   _on_synced_connection.disconnect ();
-  
+
   _style->UnReference ();
+
   delete _remote;
   delete _bg_layer;
 }
@@ -127,6 +128,8 @@ PanelView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEve
 void
 PanelView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  UpdateBackground ();
+
   GfxContext.PushClippingRectangle (GetGeometry() );
 
   gPainter.PushDrawLayer (GfxContext, GetGeometry (), _bg_layer);
@@ -164,9 +167,6 @@ PanelView::PreLayoutManagement ()
 long
 PanelView::PostLayoutManagement (long LayoutResult)
 {
-  // I'm imagining this is a good as time as any to update the background
-  UpdateBackground ();
-
   return nux::View::PostLayoutManagement (LayoutResult);
 }
 
