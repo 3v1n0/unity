@@ -1,4 +1,4 @@
-unity (3.8.10-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.10-0ubuntu1) natty; urgency=low
 
   * New upstream release.
     - Application windows can sometimes fail to display and will mask regions
@@ -45,7 +45,7 @@ unity (3.8.10-0ubuntu1) UNRELEASED; urgency=low
     - In dash search filter drop box, black text is on a black background when
       item is selected (LP: #761201)
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 19 Apr 2011 19:12:14 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 19 Apr 2011 19:30:20 +0200
 
 unity (3.8.8-0ubuntu2) natty; urgency=low
 
