@@ -106,12 +106,19 @@ PlacesResultsController::Clear ()
   std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
   
   for (it = _id_to_group.begin (); it != eit; ++it)
-    (it->second)->UnReference ();
+  {
+    if (it->second)
+      (it->second)->UnReference ();
+  }
 
-  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
-  _groups.erase (_groups.begin (), _groups.end ());
+  if (_id_to_group)
+    _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
 
-  _results_view->Clear ();
+  if (_groups)
+    _groups.erase (_groups.begin (), _groups.end ());
+
+  if (_results_view)
+    _results_view->Clear ();
 }
 
 bool
