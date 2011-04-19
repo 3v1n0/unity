@@ -68,6 +68,11 @@
 #define NUX_KP_LEFT  0xFF96
 #define NUX_KP_RIGHT 0xFF98
 
+// halfed lumin values to provide darkening while desaturating in shader
+#define LUMIN_R "0.15"
+#define LUMIN_G "0.295"
+#define LUMIN_B "0.055"
+
 NUX_IMPLEMENT_OBJECT_TYPE (Launcher);
 
 int
@@ -165,7 +170,7 @@ void main()                                                             \n\
   tex.t = tex.t/varyTexCoord0.w;                                        \n\
 	                                                                      \n\
   vec4 texel = color0 * SampleTexture(TextureObject0, tex);             \n\
-  vec4 desat = vec4 (0.30*texel.r + 0.59*texel.g + 0.11*texel.b);       \n\
+  vec4 desat = vec4 ("LUMIN_R"*texel.r + "LUMIN_G"*texel.g + "LUMIN_B"*texel.b);       \n\
   vec4 final_color = (vec4 (1.0, 1.0, 1.0, 1.0) - desat_factor) * desat + desat_factor * texel;   \n\
   final_color.a = texel.a;                                              \n\
   gl_FragColor = final_color;                                           \n\
@@ -195,7 +200,7 @@ nux::NString PerspectiveCorrectTexFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
                             PARAM factor = program.local[1];            \n\
-                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
+                            PARAM luma = {"LUMIN_R", "LUMIN_G", "LUMIN_B", 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
@@ -215,7 +220,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             "!!ARBfp1.0                                 \n\
                             PARAM color0 = program.local[0];            \n\
                             PARAM factor = program.local[1];            \n\
-                            PARAM luma = {0.30, 0.59, 0.11, 0.0};       \n\
+                            PARAM luma = {"LUMIN_R", "LUMIN_G", "LUMIN_B", 0.0};       \n\
                             TEMP temp;                                  \n\
                             TEMP pcoord;                                \n\
                             TEMP tex0;                                  \n\
