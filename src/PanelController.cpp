@@ -38,6 +38,14 @@ PanelController::PanelController ()
 PanelController::~PanelController ()
 {
   _on_screen_change_connection.disconnect ();
+
+  std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
+
+  for (it = _windows.begin (); it != eit; ++it)
+  {
+    (*it)->UnReference ();
+  }
+
 }
 
 void
