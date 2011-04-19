@@ -109,6 +109,11 @@ PanelTray::Sync ()
     SetMinMaxSize ((_n_children * 24) + (PADDING * 2), 24);
     QueueRelayout ();
     QueueDraw ();
+
+    if (_n_children)
+      gtk_widget_show (_window);
+    else
+      gtk_widget_hide (_window);
   }
 }
 
