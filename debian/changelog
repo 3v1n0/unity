@@ -1,3 +1,15 @@
+unity (3.8.10-0ubuntu2) UNRELEASED; urgency=low
+
+  * Cherry-pick some fixes before freeze:
+    - Fix tooltip stays stuck next to the launcher (LP: #751077)
+    - Trash/ws switcher icon in unity resets to default icon theme on the event
+      of a deletion or emptying the trash or after an upgrade (LP: #761289)
+    - double clicks should be disabled on bfb/Place launcher icon/double key
+      press (LP: #766776)
+    - Intellihide can be puzzled by dash (LP: #767250)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 20 Apr 2011 17:23:52 +0200
+
 unity (3.8.10-0ubuntu1) natty; urgency=low
 
   * New upstream release.

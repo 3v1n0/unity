@@ -303,7 +303,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
     // FIXME: not used, remove (with Get function) in O
-    m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
 
@@ -844,6 +843,10 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
     // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
     if (over_bfb)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+    // event not received like: mouse over trigger, press super -> dash here, put mouse away from trigger,
+    // click to close
+    else
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
 }
 
 void Launcher::SetStateKeyNav (bool keynav_activated)
@@ -1726,6 +1729,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
     {
       (*it)->SetQuirk (LauncherIcon::QUIRK_DESAT, true);
+      (*it)->HideTooltip ();
     }
     
     // hack around issue in nux where leave events dont always come after a grab
@@ -1739,6 +1743,10 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
+    
+    // as the leave event is no more received when the place is opened
+    self->SetStateMouseOverLauncher (false);
+    self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -2275,8 +2283,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon == _current_icon)
       _current_icon = 0;
-    if (icon == m_ActiveTooltipIcon)
-      m_ActiveTooltipIcon = 0;
     if (icon == m_ActiveMenuIcon)
       m_ActiveMenuIcon = 0;
     if (icon == m_LastSpreadIcon)
@@ -3121,7 +3127,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
     return;
 
   SetMousePosition (x, y);
-  SetStateMouseOverLauncher  (false);
+  SetStateMouseOverLauncher (false);
 
   EventLogic ();
   EnsureAnimation ();

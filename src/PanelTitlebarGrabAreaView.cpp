@@ -90,11 +90,11 @@ void PanelTitlebarGrabArea::RecvMouseUp (int x, int y, unsigned long button_flag
   clock_gettime(CLOCK_MONOTONIC, &event_time);
   delta = time_diff (_last_click_time, event_time);
 
-  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
-    RecvMouseDoubleClick (x, y, button_flags, key_flags);
-  
   _last_click_time.tv_sec = event_time.tv_sec;
   _last_click_time.tv_nsec = event_time.tv_nsec;
+
+  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
+    RecvMouseDoubleClick (x, y, button_flags, key_flags);
 }
 
 struct timespec PanelTitlebarGrabArea::time_diff (struct timespec start, struct timespec end)

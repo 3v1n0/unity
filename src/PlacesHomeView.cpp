@@ -51,6 +51,8 @@
 #define MAIL_DIR     "/desktop/gnome/url-handlers/mailto"
 #define MEDIA_DIR    DESKTOP_DIR"/media"
 
+#define DELTA_DOUBLE_REQUEST 500000000
+
 enum
 {
   TYPE_PLACE=0,
@@ -132,6 +134,9 @@ PlacesHomeView::PlacesHomeView ()
                           (GConfClientNotifyFunc)OnKeyChanged,
                           this,
                           NULL, NULL);
+                          
+  _last_activate_time.tv_sec = 0;
+  _last_activate_time.tv_nsec = 0;
 
   _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
                                                 UBUS_DASH_EXTERNAL_ACTIVATION,
@@ -180,7 +185,19 @@ void
 PlacesHomeView::DashVisible (GVariant *data, void *val)
 {
   PlacesHomeView *self = (PlacesHomeView*)val;
-  self->Refresh ();
+  
+  struct timespec event_time, delta;
+  clock_gettime(CLOCK_MONOTONIC, &event_time);
+  delta = self->time_diff (self->_last_activate_time, event_time);
+
+  self->_last_activate_time.tv_sec = event_time.tv_sec;
+  self->_last_activate_time.tv_nsec = event_time.tv_nsec;
+
+  // FIXME: this should be handled by ubus (not sending the request twice
+  // for some selected ones). Too intrusive for now.
+  if (!((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_DOUBLE_REQUEST)))
+    self->Refresh ();
+
 }
 
 void
@@ -403,4 +420,18 @@ void PlacesHomeView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+}
+
+// TODO: put that in some "util" toolbox
+struct timespec PlacesHomeView::time_diff (struct timespec start, struct timespec end)
+{
+  struct timespec temp;
+  if ((end.tv_nsec - start.tv_nsec) < 0) {
+    temp.tv_sec = end.tv_sec - start.tv_sec-1;
+    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec - start.tv_sec;
+    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+  }
+  return temp;
 }
