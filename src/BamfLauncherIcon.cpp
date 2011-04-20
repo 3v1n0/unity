@@ -166,13 +166,16 @@ BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
 
-  // FIXME(loicm): _menu_items stores invalid objects at that point for some
-  //     unknow reasons generating GLib warnings. Also it seems like some items
-  //     are leaked.
-  g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
-                               _menu_callbacks["Pin"]);
-  g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
-                               _menu_callbacks["Quit"]);
+  // We might not have created the menu items yet
+  if (_menu_items.find ("Pin") != _menu_items.end ()) {
+    g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
+                                 _menu_callbacks["Pin"]);
+  }
+
+  if (_menu_items.find ("Quit") != _menu_items.end ()) {
+    g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
+                                 _menu_callbacks["Quit"]);
+  }
 
   if (_on_desktop_file_changed_handler_id != 0)
     g_signal_handler_disconnect ((gpointer) _desktop_file_monitor,
