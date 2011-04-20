@@ -303,7 +303,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
     // FIXME: not used, remove (with Get function) in O
-    m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
 
@@ -1726,6 +1725,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
     {
       (*it)->SetQuirk (LauncherIcon::QUIRK_DESAT, true);
+      (*it)->HideTooltip ();
     }
     
     // hack around issue in nux where leave events dont always come after a grab
@@ -2275,8 +2275,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon == _current_icon)
       _current_icon = 0;
-    if (icon == m_ActiveTooltipIcon)
-      m_ActiveTooltipIcon = 0;
     if (icon == m_ActiveMenuIcon)
       m_ActiveMenuIcon = 0;
     if (icon == m_LastSpreadIcon)
