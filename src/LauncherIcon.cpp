@@ -93,10 +93,6 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _center_stabilize_handle = 0;
   _time_delay_handle = 0;
   
-  if (!LauncherIcon::_unity_theme) {
-    LauncherIcon::_unity_theme = gtk_icon_theme_new ();
-    gtk_icon_theme_set_custom_theme (LauncherIcon::_unity_theme, UNITY_THEME_NAME);
-  }
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
@@ -309,6 +305,18 @@ bool LauncherIcon::IsMonoDefaultTheme ()
   
 }
 
+GtkIconTheme* LauncherIcon::GetUnityTheme ()
+{
+    // The theme object is invalid as soon as you add a new icon to change the theme.
+    // invalidate the cache then and rebuild the theme the first time after a icon theme update.
+    if (!_unity_theme)
+    {
+      _unity_theme =  gtk_icon_theme_new ();
+      gtk_icon_theme_set_custom_theme (_unity_theme, UNITY_THEME_NAME);
+    }
+    return _unity_theme;
+}
+
 nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme *default_theme;
@@ -322,7 +330,7 @@ nux::BaseTexture * LauncherIcon::TextureFromGtkTheme (const char *icon_name, int
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
   if ((g_strcmp0 (icon_name, "workspace-switcher") == 0) && IsMonoDefaultTheme ())
-    result = TextureFromSpecificGtkTheme (_unity_theme, icon_name, size, update_glow_colors);
+    result = TextureFromSpecificGtkTheme (GetUnityTheme (), icon_name, size, update_glow_colors);
   
   if (!result)
     result = TextureFromSpecificGtkTheme (default_theme, icon_name, size, update_glow_colors, true);

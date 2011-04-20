@@ -132,7 +132,10 @@ SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
     return;
   
   // invalidate the current cache
-  LauncherIcon::_current_theme_is_mono = -1;
+  _current_theme_is_mono = -1;
+  if (_unity_theme)
+    g_object_unref (_unity_theme);
+  _unity_theme = NULL;
 
   self = (SimpleLauncherIcon*) data;
   
