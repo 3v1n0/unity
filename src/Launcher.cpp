@@ -1827,7 +1827,10 @@ void Launcher::SetHidden (bool hidden)
     _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
 
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
+    if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE))
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+    else
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
     if (hidden)
     {
@@ -3237,6 +3240,7 @@ void
 Launcher::EdgeRevealTriggered ()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
 void
