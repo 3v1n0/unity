@@ -239,7 +239,6 @@ protected:
     static QuicklistView *_current_quicklist;
     
     static int _current_theme_is_mono;
-    static GtkIconTheme *_unity_theme;
 
     DbusmenuClient *_menuclient_dynamic_quicklist;
 
@@ -281,6 +280,8 @@ private:
     nux::Point3      _last_stable;
     nux::Point3      _saved_center;
     IconType         _icon_type;
+    
+    static GtkIconTheme *_unity_theme;
     
     nux::BaseTexture* _emblem;
     nux::BaseTexture* _superkey_label;
