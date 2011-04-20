@@ -843,6 +843,10 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
     // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
     if (over_bfb)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+    // event not received like: mouse over trigger, press super -> dash here, put mouse away from trigger,
+    // click to close
+    else
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
 }
 
 void Launcher::SetStateKeyNav (bool keynav_activated)
@@ -1739,6 +1743,10 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
+    
+    // as the leave event is no more received when the place is opened
+    self->SetStateMouseOverLauncher (false);
+    self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -3119,7 +3127,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
     return;
 
   SetMousePosition (x, y);
-  SetStateMouseOverLauncher  (false);
+  SetStateMouseOverLauncher (false);
 
   EventLogic ();
   EnsureAnimation ();
