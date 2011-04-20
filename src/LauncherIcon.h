@@ -210,6 +210,7 @@ protected:
     nux::BaseTexture * TextureFromSpecificGtkTheme (GtkIconTheme *theme, const char *name, int size, bool update_glow_colors = true, bool is_default_theme=false);
     nux::BaseTexture * TextureFromPath             (const char *name, int size, bool update_glow_colors = true);
     static bool        IsMonoDefaultTheme          ();
+    GtkIconTheme     * GetUnityTheme               ();
 
     void OnRemoteEmblemChanged    (LauncherEntryRemote *remote);
     void OnRemoteCountChanged     (LauncherEntryRemote *remote);
@@ -280,6 +281,8 @@ private:
     nux::Point3      _saved_center;
     IconType         _icon_type;
     
+    static GtkIconTheme *_unity_theme;
+    
     nux::BaseTexture* _emblem;
     nux::BaseTexture* _superkey_label;
     
@@ -288,7 +291,6 @@ private:
     
     std::list<LauncherEntryRemote *> _entry_list;
     
-    static GtkIconTheme *_unity_theme;
 };
 
 #endif // LAUNCHERICON_H
