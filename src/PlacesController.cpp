@@ -34,6 +34,7 @@
 #include "PlacesController.h"
 
 #define PANEL_HEIGHT 24
+#define DELTA_DOUBLE_REQUEST 500000000
 
 int PlacesController::_launcher_size = 66;
 
@@ -47,6 +48,8 @@ PlacesController::PlacesController ()
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
     _ubus_handles[i] = 0;
 
+  _last_activate_time.tv_sec = 0;
+  _last_activate_time.tv_nsec = 0;
   // register interest with ubus so that we get activation messages
   UBusServer *ubus = ubus_server_get_default ();
   _ubus_handles[0] = ubus_server_register_interest (ubus,
@@ -311,30 +314,53 @@ PlacesController::OnDashFullscreenRequest ()
                                        height));
 }
 
+bool PlacesController::IsActivationValid ()
+{
+  struct timespec event_time, delta;
+  clock_gettime(CLOCK_MONOTONIC, &event_time);
+  delta = time_diff (_last_activate_time, event_time);
+
+  _last_activate_time.tv_sec = event_time.tv_sec;
+  _last_activate_time.tv_nsec = event_time.tv_nsec;
+
+  // FIXME: this should be handled by ubus (not sending the request twice
+  // for some selected ones). Too intrusive for now.
+  if (!((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_DOUBLE_REQUEST)))
+    return true;
+  return false;
+}
+
 void
 PlacesController::ExternalActivation (GVariant *data, void *val)
 {
   PlacesController *self = (PlacesController*)val;
-  self->ToggleShowHide ();
+
+  if (self->IsActivationValid ())
+    self->ToggleShowHide ();
+
 }
 
 void
 PlacesController::CloseRequest (GVariant *data, void *val)
 {
   PlacesController *self = (PlacesController*)val;
-  self->Hide ();
+  
+  if (self->IsActivationValid ())
+    self->Hide ();
 }
 
 void
 PlacesController::RecvMouseDownOutsideOfView  (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  Hide ();
+  if (IsActivationValid ())
+    Hide ();
 }
 
 void
 PlacesController::OnActivePlaceEntryChanged (PlaceEntry *entry)
 {
-  entry ? Show () : Hide ();
+  if (IsActivationValid ())
+    entry ? Show () : Hide ();
 }
 
 void
@@ -360,4 +386,18 @@ void
 PlacesController::OnSettingsChanged (PlacesSettings *settings)
 {
   // We don't need to do anything just yet over here, it's a placeholder for when we do
+}
+
+// TODO: put that in some "util" toolbox
+struct timespec PlacesController::time_diff (struct timespec start, struct timespec end)
+{
+  struct timespec temp;
+  if ((end.tv_nsec - start.tv_nsec) < 0) {
+    temp.tv_sec = end.tv_sec - start.tv_sec-1;
+    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec - start.tv_sec;
+    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+  }
+  return temp;
 }

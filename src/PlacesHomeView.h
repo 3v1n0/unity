@@ -33,6 +33,7 @@
 #include "PlacesGroup.h"
 
 #include <gconf/gconf-client.h>
+#include <time.h>
 
 class PlacesHomeView : public Introspectable, public PlacesGroup
 {
@@ -66,6 +67,9 @@ private:
   std::vector<std::string> _photo_alternatives;
   std::vector<std::string> _email_alternatives;
   std::vector<std::string> _music_alternatives;
+  
+  struct timespec time_diff (struct timespec start, struct timespec end);
+  struct timespec _last_activate_time;
 
   guint _ubus_handle;
 };
