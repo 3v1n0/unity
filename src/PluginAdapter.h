@@ -27,6 +27,14 @@
 
 #include "WindowManager.h"
 
+typedef struct {
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    long input_mode;
+    unsigned long status;
+} MotifWmHints, MwmHints;
+
 class MultiActionList
 {
 public:
@@ -60,6 +68,10 @@ public:
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
+    
+    void SetShowHandlesAction (CompAction *action) { _grab_show_action = action; }
+    void SetHideHandlesAction (CompAction *action) { _grab_hide_action = action; }
+    void SetToggleHandlesAction (CompAction *action) { _grab_toggle_action = action; }
 
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
@@ -69,30 +81,55 @@ public:
     bool IsScaleActive ();
     
     void InitiateExpo ();
+    bool IsExpoActive ();
+    
+    void ShowGrabHandles (CompWindow *window, bool use_timer);
+    void HideGrabHandles (CompWindow *window);
+    void ToggleGrabHandles (CompWindow *window);
 
     void Notify (CompWindow *window, CompWindowNotify notify);
     void NotifyMoved (CompWindow *window, int x, int y);
     void NotifyResized (CompWindow *window, int x, int y, int w, int h);
     void NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state);
     
+    void Decorate   (guint32 xid);
+    void Undecorate (guint32 xid);
+    
     // WindowManager implementation
     bool IsWindowMaximized (guint xid);
     bool IsWindowDecorated (guint xid);
+    bool IsWindowOnCurrentDesktop (guint xid);
+    bool IsWindowObscured (guint xid);
     void Restore (guint32 xid);
     void Minimize (guint32 xid);
     void Close (guint32 xid);
+    void Activate (guint32 xid);
+    void Raise (guint32 xid);
     void Lower (guint32 xid);
+    
+    bool IsScreenGrabbed ();
 
     void MaximizeIfBigEnough (CompWindow *window);
+
+    nux::Geometry GetWindowGeometry (guint32 xid);
     
 protected:
     PluginAdapter(CompScreen *screen);
 
 private:
+    void SetMwmWindowHints (Window xid, MotifWmHints *new_hints);
+
     CompScreen *m_Screen;
     MultiActionList m_ExpoActionList;
     MultiActionList m_ScaleActionList;
     std::list <guint32> m_SpreadedWindows;
+    
+    bool _spread_state;
+    bool _expo_state;
+    
+    CompAction *_grab_show_action;
+    CompAction *_grab_hide_action;
+    CompAction *_grab_toggle_action;
     
     static PluginAdapter *_default;
 };

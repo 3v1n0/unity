@@ -23,7 +23,6 @@
  * #UnityRootAccessible is the root object of the accessibility
  * tree-like hierarchy, exposing the application level.
  *
- * Implementation notes: FIXME, RIGHT NOW IS JUST A DUMMY IMPLEMENTATION
  */
 
 #include "unity-root-accessible.h"
@@ -41,6 +40,8 @@ static gint       unity_root_accessible_get_n_children (AtkObject *obj);
 static AtkObject *unity_root_accessible_ref_child      (AtkObject *obj,
                                                         gint i);
 static AtkObject *unity_root_accessible_get_parent     (AtkObject *obj);
+/* private */
+static void       explore_children                     (AtkObject *obj);
 
 
 #define UNITY_ROOT_ACCESSIBLE_GET_PRIVATE(obj)                          \
@@ -118,7 +119,7 @@ unity_root_accessible_initialize (AtkObject *accessible,
   // FIXME: compiz doesn't set the program name using g_set_prgname,
   // and AFAIK, there isn't a way to get it. Requires further investigation.
   // accessible->name = g_get_prgname();
-  atk_object_set_name (accessible, "Unity");
+  atk_object_set_name (accessible, "unity");
   atk_object_set_parent (accessible, NULL);
 
   ATK_OBJECT_CLASS (unity_root_accessible_parent_class)->initialize (accessible, data);
@@ -170,17 +171,72 @@ unity_root_accessible_get_parent (AtkObject *obj)
  * temporal. This method should be a internal root method, as part of
  * a basewindow::show callback, as in the case of gail
  */
-void
+AtkObject *
 unity_root_accessible_add_window (UnityRootAccessible *self,
                                   nux::BaseWindow *window)
 {
   AtkObject *window_accessible = NULL;
+  gint index = 0;
 
-  g_return_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self));
+  g_return_val_if_fail (UNITY_IS_ROOT_ACCESSIBLE (self), NULL);
 
   window_accessible =
     unity_a11y_get_accessible (window);
 
   self->priv->window_list =
     g_slist_append (self->priv->window_list, window_accessible);
+
+  index = g_slist_index (self->priv->window_list, window_accessible);
+
+  explore_children (window_accessible);
+
+  g_signal_emit_by_name (self, "children-changed::add",
+                         index, window_accessible, NULL);
+
+  return window_accessible;
+}
+
+/* private */
+/*
+ * FIXME: temporal solution
+ *
+ * Normally not all the accessible objects on the hierarchy are
+ * available from the beginning, and they are being created by demand
+ * due the request on the AT (ie: orca) side
+ *
+ * It usually follows a top-down approach. Top objects emits a signal
+ * of interest, so AT apps get interest on it, and request their
+ * children. One example is the signal "window::activate". AT receives
+ * a signal meaning that a top level object is activated, so request
+ * their children (and gran-children).
+ *
+ * Due technical reasons, right now it is hard to find a suitable way
+ * to emit the signal "activate" on the BaseWindow. That means that
+ * objects on the bottom of the hierarchy are not created, so Orca
+ * doesn't react to changes on sections like the Launcher.
+ *
+ * So in order to prevent that, we make a manual exploration of the
+ * hierarchy in order to ensure that those objects are there.
+ *
+ * NOTE: this manual exploration is not required with at-spi2, just
+ * with at-spi.
+ *
+ */
+static void
+explore_children (AtkObject *obj)
+{
+  gint num = 0;
+  gint i = 0;
+  AtkObject *atk_child = NULL;
+
+  g_return_if_fail (ATK_IS_OBJECT (obj));
+
+  num = atk_object_get_n_accessible_children (obj);
+
+  for (i = 0; i < num; i++)
+    {
+      atk_child = atk_object_ref_accessible_child (obj, i);
+      explore_children (atk_child);
+      g_object_unref (atk_child);
+    }
 }

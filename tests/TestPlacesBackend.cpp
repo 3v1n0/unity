@@ -36,6 +36,10 @@ public:
 
     _vbox = gtk_vbox_new (FALSE, 12);
     gtk_container_add (GTK_CONTAINER (_window), _vbox);
+
+    _entry = gtk_entry_new ();
+    gtk_box_pack_start (GTK_BOX (_vbox), _entry, FALSE, FALSE, 0);
+    g_signal_connect (_entry, "changed", G_CALLBACK (OnEntryChanged), this);
       
     _combo = gtk_combo_box_text_new ();
     gtk_box_pack_start (GTK_BOX (_vbox), _combo, FALSE, FALSE, 0);
@@ -47,6 +51,8 @@ public:
     _factory = new PlaceFactoryFile ();
     PopulateEntries ();
     _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
+
+    gtk_combo_box_set_active (GTK_COMBO_BOX (_combo), 0);
 
     gtk_widget_show_all (_window);
   }
@@ -66,6 +72,8 @@ public:
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
       gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
     }
+
+    gtk_combo_box_set_active (GTK_COMBO_BOX (_combo), 0);
   }
 
   void PopulateEntries ()
@@ -84,6 +92,16 @@ public:
         PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
         gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
       }
+    }
+  }
+
+  static void OnEntryChanged (GtkEditable *editable, TestApp *self)
+  {
+    if (self->_active)
+    {
+      std::map<gchar*, gchar*> hints;
+      self->_active->SetSearch (gtk_entry_get_text (GTK_ENTRY (self->_entry)),
+                                hints);
     }
   }
 
@@ -110,30 +128,7 @@ public:
       for (i = entries.begin (); i != entries.end (); ++i)
       {
         PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-
-        if (g_strcmp0 (txt, entry->GetName ()) == 0)
-        {
-          DeeModel *sections = entry->GetSectionsModel ();
-          DeeModelIter *iter;
-
-          // Update the sections
-
-          for (gint i = 0; i < _n_secs; i++)
-          {
-            gtk_combo_box_remove_text (GTK_COMBO_BOX (_seccombo), 0);
-          }
-
-          iter = dee_model_get_first_iter (sections);
-          while (!dee_model_is_last(sections, iter))
-          {
-            gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_seccombo), dee_model_get_string (sections, iter, 0));
-            _n_secs++;
-
-            iter = dee_model_next (sections, iter);
-          }
-
-          gtk_combo_box_set_active (GTK_COMBO_BOX (_seccombo), 0);
-        }
+        _active = entry;
       }
     }
 
@@ -144,9 +139,12 @@ public:
 
   GtkWidget *_window;
   GtkWidget *_vbox;
+  GtkWidget *_entry;
   GtkWidget *_combo;
   GtkWidget *_seccombo;
   gint       _n_secs;
+
+  PlaceEntry *_active;
 };
 
 

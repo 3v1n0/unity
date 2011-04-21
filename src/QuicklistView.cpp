@@ -38,6 +38,16 @@
 
 #include "Introspectable.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
+// FIXME: key-code defines for Up/Down/Left/Right of numeric keypad - needs to
+// be moved to the correct place in NuxGraphics-headers
+#define NUX_KP_DOWN  0xFF99
+#define NUX_KP_UP    0xFF97
+#define NUX_KP_LEFT  0xFF96
+#define NUX_KP_RIGHT 0xFF98
+
 NUX_IMPLEMENT_OBJECT_TYPE (QuicklistView);
 
 QuicklistView::QuicklistView ()
@@ -91,10 +101,147 @@ QuicklistView::QuicklistView ()
   OnMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseClick));
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
-  
+  OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
+  OnStartFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
+  OnEndFocus.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
+
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
   _compute_blur_bkg = true;
+
+  _current_item_index = 0;
+}
+
+void
+QuicklistView::RecvStartFocus ()
+{
+  PushToFront ();
+}
+
+void
+QuicklistView::RecvEndFocus ()
+{
+}
+
+bool
+QuicklistView::IsMenuItemSeperator (int index)
+{
+  QuicklistMenuItem* menu_item = NULL;
+  DbusmenuMenuitem*  item   = NULL;
+  const gchar*       label  = NULL;
+  bool               result = false;
+
+  if (index < 0)
+    return false;
+
+  menu_item = GetNthItems (index);
+  if (!menu_item)
+    return false;
+  
+  item = menu_item->_menuItem;
+  if (!item)
+    return false;
+
+  label = dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL);
+  if (!label)
+    result = true;
+  else
+    result = false;
+
+  return result;
+}
+
+void
+QuicklistView::RecvKeyPressed (unsigned int  key_sym,
+                               unsigned long key_code,
+                               unsigned long key_state)
+{
+  switch (key_sym)
+  {
+    // up (highlight previous menu-item)
+    case NUX_VK_UP:
+    case NUX_KP_UP:
+      // protect against edge-case of first item being a separator 
+      if (_current_item_index == 1 && IsMenuItemSeperator (0))
+        break;
+
+      if (_current_item_index > 0)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index--;
+
+        while (IsMenuItemSeperator (_current_item_index))
+          _current_item_index--;
+
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // down (highlight next menu-item)
+    case NUX_VK_DOWN:
+    case NUX_KP_DOWN:
+      // protect against edge-case of last item being a separator 
+      if (_current_item_index == (GetNumItems () - 1) && IsMenuItemSeperator (GetNumItems ()))
+        break;
+
+      if (_current_item_index < GetNumItems () - 1)
+      {
+        GetNthItems (_current_item_index)->_prelight = false;
+        _current_item_index++;
+
+        while (IsMenuItemSeperator (_current_item_index))
+          _current_item_index++;
+
+        GetNthItems (_current_item_index)->_prelight = true;
+        QueueDraw ();
+      }
+    break;
+
+    // left (close quicklist, go back to laucher key-nav)
+    case NUX_VK_LEFT:
+    case NUX_KP_LEFT:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+      // inform Launcher we switch back to Launcher key-nav
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_QUICKLIST_END_KEY_NAV,
+                                NULL);
+    break;
+
+    // esc (close quicklist, exit key-nav)
+    case NUX_VK_ESCAPE:
+      _current_item_index = 0;
+      GetNthItems (_current_item_index)->_prelight = true;
+      Hide ();
+      // inform UnityScreen we leave key-nav completely
+      ubus_server_send_message (ubus_server_get_default (),
+                                UBUS_LAUNCHER_END_KEY_NAV,
+                                NULL);
+    break;
+
+    // <SPACE>, <RETURN> (activate selected menu-item)          
+    case NUX_VK_SPACE:
+    case NUX_VK_ENTER:
+    case NUX_KP_ENTER:
+      if (_current_item_index >= 0 && _current_item_index < GetNumItems () &&
+          GetNthItems (_current_item_index)->GetEnabled ())
+      {
+
+        dbusmenu_menuitem_handle_event (GetNthItems (_current_item_index)->_menuItem,
+                                        "clicked",
+                                        NULL,
+                                        0);
+        _current_item_index = 0;
+        GetNthItems (_current_item_index)->_prelight = true;
+        Hide ();
+      }
+    break;
+
+    default:
+    break;
+  }
 }
 
 QuicklistView::~QuicklistView ()
@@ -185,10 +332,12 @@ void QuicklistView::Show ()
   {
     // FIXME: ShowWindow shouldn't need to be called first
     ShowWindow (true);
-    EnableInputWindow (true, "quicklist", true);
+    PushToFront ();
+    //EnableInputWindow (true, "quicklist", false, true);
+    //SetInputFocus ();
     GrabPointer ();
-    NeedRedraw ();
-
+    GrabKeyboard ();
+    QueueDraw ();
     _compute_blur_bkg = true;
   }
 }
@@ -201,7 +350,8 @@ void QuicklistView::Hide ()
     CaptureMouseDownAnyWhereElse (false);
     ForceStopFocus (1, 1);
     UnGrabPointer ();
-    EnableInputWindow (false);
+    UnGrabKeyboard ();
+    //EnableInputWindow (false);
     ShowWindow (false);
   }
 }
@@ -256,6 +406,8 @@ long QuicklistView::ProcessEvent (nux::IEvent& ievent, long TraverseInfo, long P
     return nux::eMouseEventSolved;
   }
 
+  ret = OnEvent (ievent, ret, ProcessEventInfo);
+
   return ret;    
 }
 
@@ -277,7 +429,7 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
     nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_texture = gfxContext.CreateTextureFromBackBuffer (base.x, base.y, base.width, base.height);
 
     nux::TexCoordXForm texxform_bkg;
-    bkg_blur_texture = gfxContext.QRP_GetBlurTexture (0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::Color::White, 1.0f, 3);
+    bkg_blur_texture = gfxContext.QRP_GetBlurTexture (0, 0, base.width, base.height, bkg_texture, texxform_bkg, nux::Colors::White, 1.0f, 3);
 
     if (current_fbo.IsValid ())
     { 
@@ -320,10 +472,10 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
       base.height,
       bkg_blur_texture,
       texxform_blur_bkg,
-      nux::Color::White,
+      nux::Colors::White,
       _texture_mask->GetDeviceTexture(),
       texxform_mask,
-      nux::Color::White);
+      nux::Colors::White);
   }
 
   nux::GetGraphicsEngine ().GetRenderStates ().SetBlend (true);
@@ -511,7 +663,7 @@ void QuicklistView::RecvCairoTextColorChanged (QuicklistMenuItem* cairo_text)
 void QuicklistView::RecvItemMouseClick (QuicklistMenuItem* item, int x, int y)
 {
   _mouse_down = false;
-  if (IsVisible ())
+  if (IsVisible () && item->GetEnabled ())
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
@@ -566,7 +718,7 @@ void QuicklistView::RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y)
   _mouse_down = false;
   
   
-  if (IsVisible ())
+  if (IsVisible () && item->GetEnabled ())
   {
     // Check if the mouse was released over an item and emit the signal
     CheckAndEmitItemSignal (x + item->GetBaseX (), y + item->GetBaseY ());
@@ -785,192 +937,14 @@ std::list<QuicklistMenuItem*> QuicklistView::GetChildren ()
   return l;
 }
 
-static inline void ql_blurinner (guchar* pixel,
-  gint   *zR,
-  gint   *zG,
-  gint   *zB,
-  gint   *zA,
-  gint    alpha,
-  gint    aprec,
-  gint    zprec)
+void QuicklistView::DefaultToFirstItem ()
 {
-  gint R;
-  gint G;
-  gint B;
-  guchar A;
-
-  R = *pixel;
-  G = *(pixel + 1);
-  B = *(pixel + 2);
-  A = *(pixel + 3);
-
-  *zR += (alpha * ((R << zprec) - *zR)) >> aprec;
-  *zG += (alpha * ((G << zprec) - *zG)) >> aprec;
-  *zB += (alpha * ((B << zprec) - *zB)) >> aprec;
-  *zA += (alpha * ((A << zprec) - *zA)) >> aprec;
-
-  *pixel       = *zR >> zprec;
-  *(pixel + 1) = *zG >> zprec;
-  *(pixel + 2) = *zB >> zprec;
-  *(pixel + 3) = *zA >> zprec;
+  if (GetNumItems () >= 1)
+  {
+    GetNthItems (0)->_prelight= true;
+    QueueDraw ();
+  }
 }
-
-static inline void ql_blurrow (guchar* pixels,
-  gint    width,
-  gint    height,
-  gint    channels,
-  gint    line,
-  gint    alpha,
-  gint    aprec,
-  gint    zprec)
-{
-  gint    zR;
-  gint    zG;
-  gint    zB;
-  gint    zA;
-  gint    index;
-  guchar* scanline;
-
-  scanline = &(pixels[line * width * channels]);
-
-  zR = *scanline << zprec;
-  zG = *(scanline + 1) << zprec;
-  zB = *(scanline + 2) << zprec;
-  zA = *(scanline + 3) << zprec;
-
-  for (index = 0; index < width; index ++)
-    ql_blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
-    zprec);
-
-  for (index = width - 2; index >= 0; index--)
-    ql_blurinner (&scanline[index * channels], &zR, &zG, &zB, &zA, alpha, aprec,
-    zprec);
-}
-
-static inline void ql_blurcol (guchar* pixels,
-  gint    width,
-  gint    height,
-  gint    channels,
-  gint    x,
-  gint    alpha,
-  gint    aprec,
-  gint    zprec)
-{
-  gint zR;
-  gint zG;
-  gint zB;
-  gint zA;
-  gint index;
-  guchar* ptr;
-
-  ptr = pixels;
-
-  ptr += x * channels;
-
-  zR = *((guchar*) ptr    ) << zprec;
-  zG = *((guchar*) ptr + 1) << zprec;
-  zB = *((guchar*) ptr + 2) << zprec;
-  zA = *((guchar*) ptr + 3) << zprec;
-
-  for (index = width; index < (height - 1) * width; index += width)
-    ql_blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
-    aprec, zprec);
-
-  for (index = (height - 2) * width; index >= 0; index -= width)
-    ql_blurinner ((guchar*) &ptr[index * channels], &zR, &zG, &zB, &zA, alpha,
-    aprec, zprec);
-}
-
-//
-// pixels   image-data
-// width    image-width
-// height   image-height
-// channels image-channels
-//
-// in-place blur of image 'img' with kernel of approximate radius 'radius'
-//
-// blurs with two sided exponential impulse response
-//
-// aprec = precision of alpha parameter in fixed-point format 0.aprec
-//
-// zprec = precision of state parameters zR,zG,zB and zA in fp format 8.zprec
-//
-void ql_expblur (guchar* pixels,
-  gint    width,
-  gint    height,
-  gint    channels,
-  gint    radius,
-  gint    aprec,
-  gint    zprec)
-{
-  gint alpha;
-  gint row = 0;
-  gint col = 0;
-
-  if (radius < 1)
-    return;
-
-  // calculate the alpha such that 90% of 
-  // the kernel is within the radius.
-  // (Kernel extends to infinity)
-  alpha = (gint) ((1 << aprec) * (1.0f - expf (-2.3f / (radius + 1.f))));
-
-  for (; row < height; row++)
-    ql_blurrow (pixels, width, height, channels, row, alpha, aprec, zprec);
-
-  for(; col < width; col++)
-    ql_blurcol (pixels, width, height, channels, col, alpha, aprec, zprec);
-
-  return;
-}
-
-/**
-* ctk_surface_blur:
-* @surface: pointer to a cairo image-surface
-* @radius: unsigned integer acting as the blur-radius to apply
-*
-* Applies an exponential blur on the passed surface executed on the CPU. Not as
-* nice as a real gaussian blur, but much faster.
-**/
-void ql_surface_blur (cairo_surface_t* surface,
-                guint            radius)
-{
-guchar*        pixels;
-guint          width;
-guint          height;
-cairo_format_t format;
-
-// before we mess with the surface execute any pending drawing
-cairo_surface_flush (surface);
-
-pixels = cairo_image_surface_get_data (surface);
-width  = cairo_image_surface_get_width (surface);
-height = cairo_image_surface_get_height (surface);
-format = cairo_image_surface_get_format (surface);
-
-switch (format)
-{
-  case CAIRO_FORMAT_ARGB32:
-    ql_expblur (pixels, width, height, 4, radius, 16, 7);
-  break;
-
-  case CAIRO_FORMAT_RGB24:
-    ql_expblur (pixels, width, height, 3, radius, 16, 7);
-  break;
-
-  case CAIRO_FORMAT_A8:
-    ql_expblur (pixels, width, height, 1, radius, 16, 7);
-  break;
-
-  default :
-    // do nothing
-  break;
-}
-
-// inform cairo we altered the surfaces contents
-cairo_surface_mark_dirty (surface);	
-}
-
   
 void ql_tint_dot_hl (cairo_t* cr,
   gint    width,
@@ -1338,7 +1312,9 @@ void
     padding_size);
 
   ql_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
-  ql_surface_blur (surf, blur_coeff);
+  nux::CairoGraphics* dummy = new nux::CairoGraphics (CAIRO_FORMAT_A1, 1, 1);
+  dummy->BlurSurface (blur_coeff, surf);
+  delete dummy;
   ql_compute_mask (cr);
   ql_compute_outline (cr, line_width, rgba_line, width);
 }

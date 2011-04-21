@@ -47,13 +47,17 @@ public:
  void LoadFromFilename    (const char        *filename,
                            guint              size,
                            IconLoaderCallback slot);
+
+ void LoadFromURI         (const char        *uri,
+                           guint              size,
+                           IconLoaderCallback slot);
 private:
 
   enum IconLoaderRequestType
   {
     REQUEST_TYPE_ICON_NAME=0,
     REQUEST_TYPE_GICON_STRING,
-    REQUEST_TYPE_FILENAME
+    REQUEST_TYPE_URI,
   };
 
   struct IconLoaderTask
@@ -80,8 +84,8 @@ private:
   bool   ProcessTask (IconLoaderTask *task);
   bool   ProcessIconNameTask (IconLoaderTask *task);
   bool   ProcessGIconTask (IconLoaderTask *task);
-  bool   ProcessFilenameTask (IconLoaderTask *task);
-  void   ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsize length);
+  bool   ProcessURITask (IconLoaderTask *task);
+  void   ProcessURITaskReady (IconLoaderTask *task, char *contents, gsize length);
   bool   Iteration ();
   void   FreeTask (IconLoaderTask *task);
 

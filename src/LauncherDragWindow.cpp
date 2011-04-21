@@ -38,6 +38,9 @@ LauncherDragWindow::~LauncherDragWindow ()
 {
   if (_anim_handle)
     g_source_remove (_anim_handle);
+
+  if (on_anim_completed.connected ())
+    on_anim_completed.disconnect ();
 }
 
 bool 
@@ -112,7 +115,7 @@ LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool force_dra
                             _icon->GetHeight(),
                             _icon,
                             texxform,
-                            nux::Color::White);
+                            nux::Colors::White);
   
   GfxContext.PopClippingRectangle ();
 }

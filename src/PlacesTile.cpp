@@ -19,43 +19,76 @@
  *
  */
 
+#include "config.h"
+
+#include "TextureCache.h"
 #include "Nux/Nux.h"
 #include "PlacesTile.h"
-PlacesTile::PlacesTile (NUX_FILE_LINE_DECL) :
-View (NUX_FILE_LINE_PARAM),
-_hilight_background (NULL),
-_hilight_layer (NULL),
-_last_width (0),
-_last_height (0)
-{
-  _state = STATE_DEFAULT;
 
+#define PADDING 8
+#define BLUR_SIZE 6
+
+PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
+  View (NUX_FILE_LINE_PARAM),
+  _id (id),
+  _hilight_background (NULL),
+  _hilight_layer (NULL),
+  _last_width (0),
+  _last_height (0)
+{
   OnMouseDown.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseDown));
   OnMouseUp.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseUp));
   OnMouseClick.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseClick));
-  OnMouseMove.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseMove));
-  //OnMouseDrag.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseDrag));
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
-  _hilight_view = this;
+  FocusChanged.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
+  FocusActivated.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
+  _can_pass_focus_to_composite_layout = false;
 }
 
 PlacesTile::~PlacesTile ()
 {
+  if (_hilight_background)
+  {
+    _hilight_background->UnReference ();
+    _hilight_background = NULL;
+    con_obj.disconnect ();
+  }
+
+  if (_hilight_layer)
+  {
+    delete _hilight_layer;
+    _hilight_layer = NULL;
+  }
+}
+
+const void *
+PlacesTile::GetId ()
+{
+  return _id;
 }
 
 void
-PlacesTile::UpdateBackground ()
+PlacesTile::OnFocusChanged (nux::Area *area)
+{
+  QueueDraw ();
+}
+
+nux::Geometry
+PlacesTile::GetHighlightGeometry ()
+{
+  return GetGeometry ();
+}
+
+void
+PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture)
 {
   nux::Geometry base = GetGeometry ();
-
-  if ((base.width == _last_width) && (base.height == _last_height))
-    return;
-
-  _last_width = base.width;
-  _last_height = base.height;
-
-  nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, base.width, base.height);
+  nux::Geometry highlight_geo = GetHighlightGeometry ();
+  
+  nux::CairoGraphics *cairo_graphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
+                                                               highlight_geo.width + PADDING + (BLUR_SIZE*3),
+                                                               highlight_geo.height + PADDING + (BLUR_SIZE*3));
   cairo_t *cr = cairo_graphics->GetContext();
 
   cairo_scale (cr, 1.0f, 1.0f);
@@ -63,31 +96,108 @@ PlacesTile::UpdateBackground ()
   cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
+  
+  int bg_width = highlight_geo.width + PADDING + 1;
+  int bg_height = highlight_geo.height + PADDING +1;
+ 	int bg_x = BLUR_SIZE-1;
+ 	int bg_y = BLUR_SIZE-1;
+	
+  // draw the glow
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_line_width (cr, 1.0f);
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.75f);
+  cairo_graphics->DrawRoundedRectangle (cr,
+                                       1.0f,
+                                       bg_x,
+                                       bg_y,
+                                       5.0,
+                                       bg_width,
+                                       bg_height,
+                                       true);
+  cairo_fill (cr);
+  cairo_graphics->BlurSurface (BLUR_SIZE - 2);
+
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+  cairo_graphics->DrawRoundedRectangle (cr,
+                                        1.0,
+                                        bg_x,
+                                        bg_y,
+                                        5.0,
+                                        bg_width,
+                                        bg_height,
+                                        true);
+  cairo_clip (cr);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-  DrawRoundedRectangle (cr, 1.0, 6.0, 6.0, 15.0, base.width - 12 , base.height - 12);
-  cairo_set_source_rgba (cr, 0.25, 0.25, 0.25, 0.25);
+  cairo_graphics->DrawRoundedRectangle (cr,
+                                        1.0,
+                                        bg_x,
+                                        bg_y,
+                                        5.0,
+                                        bg_width,
+                                        bg_height,
+                                        true);
+  cairo_set_source_rgba (cr, 240/255.0f, 240/255.0f, 240/255.0f, 1.0f);
   cairo_fill_preserve (cr);
-  cairo_set_source_rgba (cr, 1, 1, 1, 1.0);
-  cairo_set_line_width (cr, 1.0);
-  cairo_stroke (cr);
 
+  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0);
+  cairo_stroke (cr); 
+  
   cairo_destroy (cr);
 
-  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
-  
-  if (_hilight_background)
-    _hilight_background->UnReference ();
+  nux::NBitmapData *bitmap =  cairo_graphics->GetBitmap();
+  nux::BaseTexture *tex = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  tex->Update (bitmap);
+  *texture = tex;
 
-  _hilight_background = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
-  _hilight_background->Update (bitmap);
   delete bitmap;
+  delete cairo_graphics;
+}
 
-  nux::ROPConfig rop; 
+void
+PlacesTile::OnDestroyNotify (nux::Trackable *Object)
+{
+  g_warning ("Texture destroyed before we were ready");
+  _hilight_background = NULL;
+  UpdateBackground ();
+}
+
+
+void
+PlacesTile::UpdateBackground ()
+{
+  nux::Geometry base = GetGeometry ();
+  nux::Geometry highlight_geo = GetHighlightGeometry ();
+
+  if ((base.width == _last_width) && (base.height == _last_height))
+    return;
+
+  _last_width = base.width;
+  _last_height = base.height;
+
+  // try and get a texture from the texture cache
+  TextureCache *cache = TextureCache::GetDefault ();
+  nux::BaseTexture * hilight_tex = cache->FindTexture ("PlacesTile.HilightTexture",
+                                                       highlight_geo.width, highlight_geo.height,
+                                                       sigc::mem_fun (this, &PlacesTile::DrawHighlight));
+
+  if (_hilight_background)
+  {
+    _hilight_background->UnReference ();
+    _hilight_background = NULL;
+    con_obj.disconnect ();
+  }
+
+  con_obj = hilight_tex->OnDestroyed.connect (sigc::mem_fun (this, &PlacesTile::OnDestroyNotify));
+
+  _hilight_background = hilight_tex;
+  _hilight_background->Reference ();
+
+  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  
+
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -96,190 +206,107 @@ PlacesTile::UpdateBackground ()
     delete _hilight_layer;
 
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
-                                     texxform,
-                                     nux::Color::White,
-                                     true,
-                                     rop);
-  _hilight_background->UnReference ();
-  _hilight_background = NULL;
-  delete cairo_graphics;
+                                          texxform,
+                                          nux::Colors::White,
+                                          true,
+                                          rop);
 }
 
-static inline double
-_align (double val)
+long
+PlacesTile::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  double fract = val - (int) val;
-  if (fract != 0.5f)
-    return (double) ((int) val + 0.5f);
-  else
-    return val;
+  return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
 }
 
 void
-PlacesTile::DrawRoundedRectangle (cairo_t* cr,
-                                  double   aspect,
-                                  double   x,
-                                  double   y,
-                                  double   cornerRadius,
-                                  double   width,
-                                  double   height)
-{
-  double radius = cornerRadius / aspect;
-
-  // top-left, right of the corner
-  cairo_move_to (cr, _align (x + radius), _align (y));
-
-  // top-right, left of the corner
-  cairo_line_to (cr, _align (x + width - radius), _align (y));
-
-  // top-right, below the corner
-  cairo_arc (cr,
-             _align (x + width - radius),
-             _align (y + radius),
-             radius,
-             -90.0f * G_PI / 180.0f,
-             0.0f * G_PI / 180.0f);
-
-  // bottom-right, above the corner
-  cairo_line_to (cr, _align (x + width), _align (y + height - radius));
-
-  // bottom-right, left of the corner
-  cairo_arc (cr,
-             _align (x + width - radius),
-             _align (y + height - radius),
-             radius,
-             0.0f * G_PI / 180.0f,
-             90.0f * G_PI / 180.0f);
-
-  // bottom-left, right of the corner
-  cairo_line_to (cr, _align (x + radius), _align (y + height));
-
-  // bottom-left, above the corner
-  cairo_arc (cr,
-             _align (x + radius),
-             _align (y + height - radius),
-             radius,
-             90.0f * G_PI / 180.0f,
-             180.0f * G_PI / 180.0f);
-
-  // top-left, right of the corner
-  cairo_arc (cr,
-             _align (x + radius),
-             _align (y + radius),
-             radius,
-             180.0f * G_PI / 180.0f,
-             270.0f * G_PI / 180.0f);
-}
-
-
-long PlacesTile::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
-{
-  long ret = TraverseInfo;
-  ret = PostProcessEvent2 (ievent, ret, ProcessEventInfo);
-  return ret;
-}
-
-void PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
+PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
 {
-  UpdateBackground ();
-
   nux::Geometry base = GetGeometry ();
+
+  nux::GetPainter ().PaintBackground (gfxContext, base);
+
   gfxContext.PushClippingRectangle (base);
 
-  nux::GetPainter ().PaintBackground (gfxContext, GetGeometry ());
-
-  if (_state == STATE_HOVER)
+  if (GetFocused () || IsMouseInside ())
   {
-    gPainter.PushDrawLayer (gfxContext, GetGeometry (), _hilight_layer);
-    gPainter.PopBackground ();
+    UpdateBackground ();
+    nux::Geometry hl_geo = GetHighlightGeometry ();
+    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE,
+                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE,
+                                                       hl_geo.width + PADDING + BLUR_SIZE*2,
+                                                       hl_geo.height + PADDING + BLUR_SIZE*2);
+
+    _hilight_layer->SetGeometry (total_highlight_geo);
+    nux::GetPainter ().RenderSinglePaintLayer (gfxContext, total_highlight_geo, _hilight_layer);
   }
 
   gfxContext.PopClippingRectangle ();
 }
 
-void PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+void
+PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  UpdateBackground ();
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry base = GetGeometry ();
 
-  if (_state == STATE_HOVER)
-    nux::GetPainter ().PushLayer (GfxContext, GetGeometry (), _hilight_layer);
+  GfxContext.PushClippingRectangle (base);
 
-  _layout->ProcessDraw (GfxContext, force_draw);
-  
-  if (_state == STATE_HOVER)
+  if (GetFocused () || IsMouseInside ())
+  {
+    UpdateBackground ();
+
+    nux::Geometry hl_geo = GetHighlightGeometry ();
+    nux::Geometry total_highlight_geo = nux::Geometry (base.x + hl_geo.x - (PADDING)/2 - BLUR_SIZE,
+                                                       base.y + hl_geo.y - (PADDING)/2 - BLUR_SIZE,
+                                                       hl_geo.width + PADDING + BLUR_SIZE*2,
+                                                       hl_geo.height + PADDING + BLUR_SIZE*2);
+
+    nux::GetPainter ().PushLayer (GfxContext, total_highlight_geo, _hilight_layer);
+  }
+
+  if (GetCompositionLayout ())
+    GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
+
+  if (IsMouseInside () || GetFocused ())
     nux::GetPainter ().PopBackground ();
 
   GfxContext.PopClippingRectangle();
 }
 
-void PlacesTile::PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw)
+void
+PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-
+  if (nux::GetEventButton (button_flags) == 1)
+    sigClick.emit (this);
+  QueueDraw ();
 }
 
 void
-PlacesTile::PreLayoutManagement ()
+PlacesTile::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  nux::View::PreLayoutManagement ();
+  QueueDraw ();
 }
 
-long
-PlacesTile::PostLayoutManagement (long LayoutResult)
+void
+PlacesTile::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  return nux::View::PostLayoutManagement (LayoutResult);
+  QueueDraw ();
 }
 
-void PlacesTile::SetState (TileState state)
+void
+PlacesTile::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  _state = state;
-  NeedRedraw ();
+  QueueDraw ();
 }
 
-PlacesTile::TileState PlacesTile::GetState ()
+void
+PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  return _state;
+  QueueDraw ();
 }
 
-void PlacesTile::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+void
+PlacesTile::OnFocusActivated (nux::Area *area)
 {
-  sigClick.emit(this);
-
-  NeedRedraw();
-  _layout->NeedRedraw ();
+  sigClick.emit (this);
 }
-
-void PlacesTile::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  NeedRedraw();
-  _layout->NeedRedraw ();
-}
-
-void PlacesTile::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  _state = STATE_PRESSED;
-  NeedRedraw();
-  _layout->NeedRedraw ();
-}
-
-void PlacesTile::RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-
-}
-
-void PlacesTile::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  SetState (STATE_HOVER);
-  NeedRedraw();
-  _layout->NeedRedraw ();
-}
-
-void PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  SetState (STATE_DEFAULT);
-  NeedRedraw();
-  _layout->NeedRedraw ();
-}
-
-

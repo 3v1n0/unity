@@ -30,6 +30,8 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
+#include "PlacesSettings.h"
+#include "GeisAdapter.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
 #include "unityshell.h"
@@ -38,6 +40,7 @@
 #include <dbus/dbus-glib.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include <core/atoms.h>
 
@@ -107,12 +110,80 @@ UnityScreen::nuxEpilogue ()
 }
 
 void
+UnityScreen::OnLauncherHiddenChanged ()
+{
+  if (launcher->Hidden ())
+    screen->addAction (&optionGetLauncherRevealEdge ());
+  else
+    screen->removeAction (&optionGetLauncherRevealEdge ());
+}
+
+void
+UnityScreen::paintPanelShadow (const GLMatrix &matrix)
+{
+  if (PluginAdapter::Default ()->IsExpoActive ())
+    return;
+  
+  nuxPrologue ();
+  
+  CompOutput *output = _last_output;
+  float vc[4];
+  float h = 20.0f;
+  float w = 1.0f;
+  float panel_h = 24.0f;
+  
+  float x1 = output->x ();
+  float y1 = panel_h;
+  float x2 = x1 + output->width ();
+  float y2 = y1 + h; 
+  
+  vc[0] = x1;
+  vc[1] = x2;
+  vc[2] = y1;
+  vc[3] = y2;
+  
+  foreach (GLTexture *tex, _shadow_texture)
+  {
+    glEnable (GL_BLEND);
+    glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
+    
+    GL::activeTexture (GL_TEXTURE0_ARB);
+    tex->enable (GLTexture::Fast);
+    
+    glTexParameteri (tex->target (), GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+    glBegin (GL_QUADS);
+    {
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), 0));
+      glVertex2f(vc[0], vc[2]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), 0), COMP_TEX_COORD_Y (tex->matrix (), h));
+      glVertex2f(vc[0], vc[3]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), h));
+      glVertex2f(vc[1], vc[3]);
+      
+      glTexCoord2f(COMP_TEX_COORD_X (tex->matrix (), w), COMP_TEX_COORD_Y (tex->matrix (), 0));
+      glVertex2f(vc[1], vc[2]);
+    }
+    glEnd ();
+    
+    tex->disable ();
+    glDisable (GL_BLEND);
+  }
+  nuxEpilogue ();
+}
+
+void
 UnityScreen::paintDisplay (const CompRegion &region)
 {
   nuxPrologue ();
-  wt->RenderInterfaceFromForeignCmd ();
+  CompOutput *output = _last_output;
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
+  
+  wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
-
+  
   doShellRepaint = false;
 }
 
@@ -128,7 +199,8 @@ UnityScreen::glPaintOutput (const GLScreenPaintAttrib   &attrib,
 
   doShellRepaint = true;
   allowWindowPaint = true;
-
+  _last_output = output;
+  
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput (attrib, transform, region, output, mask);
 
@@ -180,6 +252,8 @@ UnityScreen::damageNuxRegions ()
 void
 UnityScreen::handleEvent (XEvent *event)
 {
+  bool skip_other_plugins = false;
+  
   switch (event->type)
   {
     case FocusIn:
@@ -188,16 +262,54 @@ UnityScreen::handleEvent (XEvent *event)
         PluginAdapter::Default ()->OnScreenGrabbed ();
       else if (event->xfocus.mode == NotifyUngrab)
         PluginAdapter::Default ()->OnScreenUngrabbed ();
-
+        cScreen->damageScreen (); // evil hack
+        if (_key_nav_mode_requested)
+          launcher->startKeyNavMode ();
+        _key_nav_mode_requested = false;
+      break;
+    case KeyPress:
+      KeySym key_sym;
+      char key_string[2];
+      int result;
+      if ((result = XLookupString (&(event->xkey), key_string, 2, &key_sym, 0)) > 0) {
+        key_string[result] = 0;
+        skip_other_plugins = launcher->CheckSuperShortcutPressed (key_sym, event->xkey.keycode, event->xkey.state, key_string);
+      }
       break;
   }
 
-  screen->handleEvent (event);
+  // avoid further propagation (key conflict for instance)
+  if (!skip_other_plugins)
+    screen->handleEvent (event);
 
-  if (screen->otherGrabExist ("deco", "move", "wall", "switcher", NULL))
+  if (!skip_other_plugins && screen->otherGrabExist ("deco", "move", "switcher", "resize", NULL))
   {
     wt->ProcessForeignEvent (event, NULL);
   }
+}
+
+void
+UnityScreen::handleCompizEvent (const char          *plugin,
+                                const char          *event,
+                                CompOption::Vector  &option)
+{
+
+  /*
+   *  don't take into account window over launcher state during
+   *  the ws switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  if (strcmp (event, "start_viewport_switch") == 0)
+    launcher->EnableCheckWindowOverLauncher (false);
+  else if (strcmp (event, "end_viewport_switch") == 0)
+  {
+    // compute again the list of all window on the new viewport
+    // to decide if we should or not hide the launcher
+    launcher->EnableCheckWindowOverLauncher (true);
+    launcher->CheckWindowOverLauncher ();
+  }
+  screen->handleCompizEvent (plugin, event, option);
+  
 }
 
 bool
@@ -223,9 +335,92 @@ UnityScreen::showLauncherKeyTerminate (CompAction         *action,
 }
 
 bool
-UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
-                                          CompAction::State  state,
-                                          CompOption::Vector &options)
+UnityScreen::showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                            CompAction::State   state,
+                                            CompOption::Vector &options)
+{
+  // to receive the Terminate event
+  if (state & CompAction::StateInitKey)
+    action->setState (action->state () | CompAction::StateTermKey);
+  
+  panelController->StartFirstMenuShow ();
+  return false;
+}
+
+bool
+UnityScreen::showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                             CompAction::State   state,
+                                             CompOption::Vector &options)
+{
+  panelController->EndFirstMenuShow ();
+  return false;
+}
+
+gboolean
+UnityScreen::OnEdgeTriggerTimeout (gpointer data)
+{
+  UnityScreen *self = static_cast<UnityScreen *> (data);
+  
+  Window root_r, child_r;
+  int root_x_r, root_y_r, win_x_r, win_y_r;
+  unsigned int mask;
+  XQueryPointer (self->screen->dpy (), self->screen->root (), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
+  
+  if (root_x_r == 0)
+    self->launcher->EdgeRevealTriggered ();
+  
+  self->_edge_trigger_handle = 0;
+  return false;
+}
+
+bool
+UnityScreen::launcherRevealEdgeInitiate (CompAction         *action,
+                                         CompAction::State   state,
+                                         CompOption::Vector &options)
+{
+  if (screen->grabbed ())
+    return false;
+
+  if (_edge_trigger_handle)
+    g_source_remove (_edge_trigger_handle);
+    
+  _edge_trigger_handle = g_timeout_add (500, &UnityScreen::OnEdgeTriggerTimeout, this);
+  return false;
+}
+
+void
+UnityScreen::SendExecuteCommand ()
+{
+  ubus_server_send_message (ubus_server_get_default (),
+                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                            g_variant_new ("(sus)",
+                                           "/com/canonical/unity/applicationsplace/runner",
+                                           0,
+                                           ""));
+}
+
+bool
+UnityScreen::executeCommand (CompAction         *action,
+                             CompAction::State   state,
+                             CompOption::Vector &options)
+{
+  SendExecuteCommand ();
+  return false;
+}
+
+void
+UnityScreen::restartLauncherKeyNav ()
+{
+  // set input-focus on launcher-window and start key-nav mode
+  if (newFocusedWindow != NULL)
+  {
+    newFocusedWindow->moveInputFocusTo ();
+    launcher->startKeyNavMode ();
+  }
+}
+
+void
+UnityScreen::startLauncherKeyNav ()
 {
   // get CompWindow* of launcher-window
   newFocusedWindow = screen->findWindow (launcherWindow->GetInputWindowId ());
@@ -237,22 +432,59 @@ UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
   // set input-focus on launcher-window and start key-nav mode
   if (newFocusedWindow != NULL)
   {
+    // Put the launcher BaseWindow at the top of the BaseWindow stack. The input focus coming
+    // from the XinputWindow will be processed by the launcher BaseWindow only. Then the Launcher
+    // BaseWindow will decide which View will get the input focus.
+    launcherWindow->PushToFront ();
     newFocusedWindow->moveInputFocusTo ();
-    launcher->startKeyNavMode ();
   }
+}
+
+bool
+UnityScreen::setKeyboardFocusKeyInitiate (CompAction         *action,
+                                          CompAction::State  state,
+                                          CompOption::Vector &options)
+{
+  _key_nav_mode_requested = true;
 
   return false;
 }
 
 void
-UnityScreen::OnExitKeyNav (GVariant* data, void* value)
+UnityScreen::OnLauncherStartKeyNav (GVariant* data, void* value)
 {
   UnityScreen *self = (UnityScreen*) value;
 
+  self->startLauncherKeyNav ();
+}
+
+void
+UnityScreen::OnLauncherEndKeyNav (GVariant* data, void* value)
+{
+  UnityScreen* self           = (UnityScreen*) value;
+  bool         preserve_focus = false;
+
+  if (data)
+  {
+    preserve_focus = g_variant_get_boolean (data);
+  }
+
   // return input-focus to previously focused window (before key-nav-mode was
   // entered)
-  if (self->lastFocusedWindow != NULL)
-    self->lastFocusedWindow->moveInputFocusTo ();
+  if (preserve_focus)
+  {
+    if (self->lastFocusedWindow != NULL)
+      self->lastFocusedWindow->moveInputFocusTo ();
+  }
+}
+
+void
+UnityScreen::OnQuicklistEndKeyNav (GVariant* data,
+                                   void*     value)
+{
+  UnityScreen *self = (UnityScreen*) value;
+
+  self->restartLauncherKeyNav ();
 }
 
 gboolean
@@ -312,6 +544,21 @@ UnityScreen::initPluginActions (gpointer data)
     }
     
     PluginAdapter::Default ()->SetScaleAction (scaleActions);
+  }
+
+  p = CompPlugin::find ("unitymtgrabhandles");
+
+  if (p)
+  {
+    foreach (CompOption &option, p->vTable->getOptions ())
+    {
+      if (option.name () == "show_handles_key")
+        PluginAdapter::Default ()->SetShowHandlesAction (&option.value ().action ());
+      else if (option.name () == "hide_handles_key")
+        PluginAdapter::Default ()->SetHideHandlesAction (&option.value ().action ());
+      else if (option.name () == "toggle_handles_key")
+        PluginAdapter::Default ()->SetToggleHandlesAction (&option.value ().action ());
+    }
   }
 
   return FALSE;
@@ -389,6 +636,11 @@ UnityWindow::glDraw (const GLMatrix     &matrix,
 
   bool ret = gWindow->glDraw (matrix, attrib, region, mask);
 
+  if (window->type () == CompWindowTypeDesktopMask)
+  {
+    uScreen->paintPanelShadow (matrix);
+  }
+
   return ret;
 }
 
@@ -421,19 +673,38 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+bool
+UnityWindow::place (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
+  
+  bool result = window->place (pos);
+
+  switch (hideMode)
+  {
+    case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
+    case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
+      if (pos.x () <= geo.width && window->width () + geo.width + 1< screen->workArea ().width ())
+        {
+          pos.setX (geo.width + 1);
+        }
+      break;
+    default:
+      break;
+  }
+
+  return result;
+}
+
 /* Configure callback for the launcher window */
 void
 UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
 {
-  int OurWindowHeight = WindowHeight - 24;
-  geo = nux::Geometry(0, 24, geo.width, OurWindowHeight);
-}
-
-/* Configure callback for the panel window */
-void
-UnityScreen::panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void *user_data)
-{
-  geo = nux::Geometry(0, 0, WindowWidth, 24);
+  UnityScreen *self = static_cast<UnityScreen *> (user_data);
+  geo = nux::Geometry(self->_primary_monitor.x, self->_primary_monitor.y + 24,
+                      geo.width, self->_primary_monitor.height - 24);
 }
 
 /* Start up nux after OpenGL is initialized */
@@ -473,9 +744,89 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::UrgentAnimation:
       launcher->SetUrgentAnimation ((Launcher::UrgentAnimation) optionGetUrgentAnimation ());
       break;
+    case UnityshellOptions::PanelOpacity:
+      panelController->SetOpacity (optionGetPanelOpacity ());
+      break;
+    case UnityshellOptions::IconSize:
+      panelController->SetBFBSize (optionGetIconSize()+18);
+      launcher->SetIconSize (optionGetIconSize()+6, optionGetIconSize());
+      PlacesController::SetLauncherSize (optionGetIconSize()+18);
+      
+      break;
+    case UnityshellOptions::AutohideAnimation:
+      launcher->SetAutoHideAnimation ((Launcher::AutoHideAnimation) optionGetAutohideAnimation ());
+      break;
+
+    case UnityshellOptions::DashBlurExperimental:
+      PlacesSettings::GetDefault ()->SetDashBlurType ((PlacesSettings::DashBlurType)optionGetDashBlurExperimental ());
+      break;
     default:
       break;
   }
+}
+
+void
+UnityScreen::NeedsRelayout ()
+{
+  needsRelayout = true;
+}
+
+void
+UnityScreen::ScheduleRelayout (guint timeout)
+{
+  if (relayoutSourceId == 0)
+    relayoutSourceId = g_timeout_add (timeout, &UnityScreen::RelayoutTimeout, this);
+}
+
+void
+UnityScreen::Relayout ()
+{
+  GdkScreen *scr;
+  GdkRectangle rect;
+  nux::Geometry lCurGeom;
+  gint primary_monitor;
+  int panel_height = 24;
+
+  if (!needsRelayout)
+    return;
+
+  scr = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (scr);
+  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
+  _primary_monitor = rect;
+
+  wt->SetWindowSize (rect.width, rect.height);
+
+  lCurGeom = launcherWindow->GetGeometry(); 
+  launcher->SetMaximumHeight(rect.height - panel_height);
+
+  g_debug ("Setting to primary screen rect: x=%d y=%d w=%d h=%d",
+           rect.x,
+           rect.y,
+           rect.width,
+           rect.height);
+
+  launcherWindow->SetGeometry(nux::Geometry(rect.x,
+					rect.y + panel_height,
+					lCurGeom.width,
+					rect.height - panel_height));
+  launcher->SetGeometry(nux::Geometry(rect.x,
+					rect.y + panel_height,
+					lCurGeom.width,
+					rect.height - panel_height));
+  needsRelayout = false;
+}
+
+gboolean
+UnityScreen::RelayoutTimeout (gpointer data)
+{
+  UnityScreen *uScr = (UnityScreen*) data;
+
+  uScr->NeedsRelayout ();
+  uScr->Relayout();
+  uScr->relayoutSourceId = 0;
+
+  return FALSE;
 }
 
 /* Handle changes in the number of workspaces by showing the switcher
@@ -503,14 +854,33 @@ write_logger_data_to_disk (gpointer data)
   return FALSE;
 }
 
+void
+OnMonitorChanged (GdkScreen* screen,
+                  gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->ScheduleRelayout (500);
+}
+
+void
+OnSizeChanged (GdkScreen* screen,
+               gpointer   data)
+{
+  UnityScreen* uscreen = (UnityScreen*) data;
+  uscreen->ScheduleRelayout (500);
+}
+
 UnityScreen::UnityScreen (CompScreen *screen) :
     PluginClassHandler <UnityScreen, CompScreen> (screen),
     screen (screen),
     cScreen (CompositeScreen::get (screen)),
     gScreen (GLScreen::get (screen)),
+    relayoutSourceId (0),
+    _edge_trigger_handle (0),
     doShellRepaint (false)
 {
   START_FUNCTION ();
+  _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
 
@@ -541,7 +911,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
 
-  unity_a11y_init ();
+  unity_a11y_init (wt);
 
   newFocusedWindow  = NULL;
   lastFocusedWindow = NULL;
@@ -555,45 +925,87 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   debugger = new DebugDBusInterface (this);
 
-  optionSetLauncherHideModeNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify   (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
 
-  ubus_server_register_interest (ubus_server_get_default (),
-                                 UBUS_LAUNCHER_EXIT_KEY_NAV,
-                                 (UBusCallback)&UnityScreen::OnExitKeyNav,
-                                 this);
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
+  UBusServer* ubus = ubus_server_get_default ();
+  _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_START_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+                                                    this);
+
+  _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                                    this);
+
+  _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                    UBUS_QUICKLIST_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
+                                                    this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
+
+  g_signal_connect (gdk_screen_get_default (),
+                    "monitors-changed",
+                     G_CALLBACK (OnMonitorChanged),
+                     this);
+  g_signal_connect (gdk_screen_get_default (),
+                    "size-changed",
+                    G_CALLBACK (OnSizeChanged),
+                    this);
+
+  GeisAdapter::Default (screen)->Run ();
+  gestureEngine = new GestureEngine (screen);
+  
+  CompString name (PKGDATADIR"/panel-shadow.png");
+  CompString pname ("unityshell");
+  CompSize size (1, 20);
+  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
+
   END_FUNCTION ();
 }
 
 UnityScreen::~UnityScreen ()
 {
+  delete placesController;
+  panelController->UnReference ();
+  delete controller;
+  layout->UnReference ();
+  launcher->UnReference ();
+  launcherWindow->UnReference ();
+
   unity_a11y_finalize ();
-}
 
-/* Can't create windows until after we have initialized everything */
-gboolean UnityScreen::strutHackTimeout (gpointer data)
-{
-  UnityScreen *self = (UnityScreen*) data;
-
-  if (self->launcher->GetHideMode () == Launcher::LAUNCHER_HIDE_NEVER)
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
-    self->launcherWindow->InputWindowEnableStruts(false);
-    self->launcherWindow->InputWindowEnableStruts(true);
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
   }
 
-  self->panelWindow->InputWindowEnableStruts(false);
-  self->panelWindow->InputWindowEnableStruts(true);
+  if (relayoutSourceId != 0)
+    g_source_remove (relayoutSourceId);
 
-  return FALSE;
+  delete wt;
 }
 
 /* Start up the launcher */
@@ -604,25 +1016,27 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   UnityScreen *self = (UnityScreen*) InitData;
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
-  self->launcherWindow = new nux::BaseWindow(TEXT(""));
+  self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
+  
   self->AddChild (self->launcher);
 
-  nux::HLayout* layout = new nux::HLayout();
-
-  layout->AddView(self->launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
+  self->layout = new nux::HLayout();
+  self->layout->AddView(self->launcher, 1);
+  self->layout->SetContentDistribution(nux::eStackLeft);
+  self->layout->SetVerticalExternalMargin(0);
+  self->layout->SetHorizontalExternalMargin(0);
 
   self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(layout);
+  self->launcherWindow->SetLayout(self->layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
-  self->launcherWindow->EnableInputWindow(true, "launcher");
+  self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
+  self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
@@ -635,40 +1049,28 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   /* Setup panel */
   LOGGER_START_PROCESS ("initLauncher-Panel");
-  self->panelView = new PanelView ();
-  self->AddChild (self->panelView);
-
-  layout = new nux::HLayout();
-
-  self->panelView->SetMaximumHeight(24);
-  layout->AddView(self->panelView, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
-  layout->SetVerticalExternalMargin(0);
-  layout->SetHorizontalExternalMargin(0);
-
-  self->panelWindow = new nux::BaseWindow("");
-
-  self->panelWindow->SetConfigureNotifyCallback(&UnityScreen::panelWindowConfigureCallback, self);
-  self->panelWindow->SetLayout(layout);
-  self->panelWindow->SetBackgroundColor(nux::Color(0x00000000));
-  self->panelWindow->ShowWindow(true);
-  self->panelWindow->EnableInputWindow(true, "panel");
-  self->panelWindow->InputWindowEnableStruts(true);
-
-  /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
-  if (unity_a11y_initialized () == TRUE)
-    unity_util_accessible_add_window (self->panelWindow);
-
+  self->panelController = new PanelController ();
+  self->AddChild (self->panelController);
   LOGGER_END_PROCESS ("initLauncher-Panel");
 
   /* Setup Places */
   self->placesController = new PlacesController ();
 
+  /* FIXME: this should not be manual, should be managed with a
+     show/hide callback like in GAIL*/
+  if (unity_a11y_initialized () == TRUE)
+    {
+      AtkObject *atk_obj = NULL;
+
+      atk_obj = unity_util_accessible_add_window (self->placesController->GetWindow ());
+
+      atk_object_set_name (atk_obj, _("Places"));
+    }
+
   self->launcher->SetHideMode (Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
-  g_timeout_add (2000, &UnityScreen::strutHackTimeout, self);
+  self->ScheduleRelayout (0);
 
   END_FUNCTION ();
 }
@@ -685,18 +1087,122 @@ UnityWindow::UnityWindow (CompWindow *window) :
 
 UnityWindow::~UnityWindow ()
 {
+  UnityScreen *us = UnityScreen::get (screen);
+  if (us->newFocusedWindow && (UnityWindow::get (us->newFocusedWindow) == this))
+    us->newFocusedWindow = NULL;
+  if (us->lastFocusedWindow && (UnityWindow::get (us->lastFocusedWindow) == this))
+    us->lastFocusedWindow = NULL;
 }
+
+namespace {
+
+/* Checks whether an extension is supported by the GLX or OpenGL implementation
+ * given the extension name and the list of supported extensions. */
+gboolean
+is_extension_supported (const gchar *extensions, const gchar *extension)
+{
+  if (extensions != NULL && extension != NULL)
+  {
+    const gsize len = strlen (extension);
+    gchar* p = (gchar*) extensions;
+    gchar* end = p + strlen (p);
+
+    while (p < end)
+    {
+      const gsize size = strcspn (p, " ");
+      if (len == size && strncmp (extension, p, size) == 0)
+        return TRUE;
+      p += size + 1;
+    }
+  }
+
+  return FALSE;
+}
+
+/* Gets the OpenGL version as a floating-point number given the string. */
+gfloat
+get_opengl_version_f32 (const gchar *version_string)
+{
+  gfloat version = 0.0f;
+  gint32 i;
+
+  for (i = 0; isdigit (version_string[i]); i++)
+    version = version * 10.0f + (version_string[i] - 48);
+
+  if (version_string[i++] == '.')
+  {
+    version = version * 10.0f + (version_string[i] - 48);
+    return (version + 0.1f) * 0.1f;
+  }
+  else
+    return 0.0f;
+}
+
+} /* anonymous namespace */
 
 /* vtable init */
 bool
 UnityPluginVTable::init ()
 {
+  gfloat version;
+  gchar* extensions;
+
   if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
     return false;
   if (!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI))
     return false;
   if (!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
     return false;
+
+  /* Ensure OpenGL version is 1.4+. */
+  version = get_opengl_version_f32 ((const gchar*) glGetString (GL_VERSION));
+  if (version < 1.4f)
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "OpenGL 1.4+ not supported\n");
+    return false;
+  }
+
+  /* Ensure OpenGL extensions required by the Unity plugin are available. */
+  extensions = (gchar*) glGetString (GL_EXTENSIONS);
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_fragment_program"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_fragment_program not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_vertex_buffer_object"))
+  {
+    compLogMessage ("unityshell", CompLogLevelError,
+                    "GL_ARB_vertex_buffer_object not supported\n");
+    return false;
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_framebuffer_object"))
+  {
+    if (!is_extension_supported (extensions, "GL_EXT_framebuffer_object"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_framebuffer_object or GL_EXT_framebuffer_object "
+                      "not supported\n");
+      return false;
+    }
+  }
+  if (!is_extension_supported (extensions, "GL_ARB_texture_non_power_of_two"))
+  {
+    if (!is_extension_supported (extensions, "GL_ARB_texture_rectangle"))
+    {
+      compLogMessage ("unityshell", CompLogLevelError,
+                      "GL_ARB_texture_non_power_of_two or "
+                      "GL_ARB_texture_rectangle not supported\n");
+      return false;
+    }
+  }
 
   return true;
 }

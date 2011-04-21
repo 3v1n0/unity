@@ -49,7 +49,7 @@ PanelTitlebarGrabArea::PanelTitlebarGrabArea ()
   // right now and we need jay to focus on other things
   /*InputArea::EnableDoubleClick (true);
   InputArea::OnMouseDoubleClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseDoubleClick));*/
-  InputArea::OnMouseClick.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseClick));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelTitlebarGrabArea::RecvMouseUp));
   _last_click_time.tv_sec = 0;
   _last_click_time.tv_nsec = 0;
   
@@ -75,21 +75,27 @@ void PanelTitlebarGrabArea::RecvMouseDown (int x, int y, unsigned long button_fl
 
 void PanelTitlebarGrabArea::RecvMouseDoubleClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  int button = nux::GetEventButton (button_flags);
+  if (button == 1)
+  {
+    mouse_doubleleftclick.emit ();
+    return;
+  }
   mouse_doubleclick.emit ();
 }
 
 // TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
-void PanelTitlebarGrabArea::RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags)
+void PanelTitlebarGrabArea::RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   struct timespec event_time, delta;
   clock_gettime(CLOCK_MONOTONIC, &event_time);
   delta = time_diff (_last_click_time, event_time);
 
-  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
-    RecvMouseDoubleClick (x, y, button_flags, key_flags);
-  
   _last_click_time.tv_sec = event_time.tv_sec;
   _last_click_time.tv_nsec = event_time.tv_nsec;
+
+  if ((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_MOUSE_DOUBLE_CLICK))
+    RecvMouseDoubleClick (x, y, button_flags, key_flags);
 }
 
 struct timespec PanelTitlebarGrabArea::time_diff (struct timespec start, struct timespec end)

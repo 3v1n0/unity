@@ -43,7 +43,7 @@ public:
   void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
   void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
-
+  
   nux::HLayout *_layout;
 
 protected:
@@ -53,6 +53,11 @@ protected:
 
   IndicatorObjectProxy *_proxy;
   std::vector<PanelIndicatorObjectEntryView *> _entries;
+
+private:
+  sigc::connection _on_entry_added_connection;
+  sigc::connection _on_entry_moved_connection;
+  sigc::connection _on_entry_removed_connection;
 };
 
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H

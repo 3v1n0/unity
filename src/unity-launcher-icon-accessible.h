@@ -34,13 +34,13 @@ G_BEGIN_DECLS
 
 typedef struct _UnityLauncherIconAccessible        UnityLauncherIconAccessible;
 typedef struct _UnityLauncherIconAccessibleClass   UnityLauncherIconAccessibleClass;
-typedef struct _UnityLauncherIconAccessiblePrivate UnityLauncherIconAccessiblePrivate;
+typedef struct _UnityLauncherIconAccessiblePrivate   UnityLauncherIconAccessiblePrivate;
 
 struct _UnityLauncherIconAccessible
 {
   NuxObjectAccessible parent;
 
-  /* < private > */
+  /*< private >*/
   UnityLauncherIconAccessiblePrivate *priv;
 };
 
@@ -51,6 +51,9 @@ struct _UnityLauncherIconAccessibleClass
 
 GType      unity_launcher_icon_accessible_get_type (void);
 AtkObject *unity_launcher_icon_accessible_new      (nux::Object *object);
+
+void       unity_launcher_icon_accessible_set_index (UnityLauncherIconAccessible *self,
+                                                     gint index);
 
 G_END_DECLS
 

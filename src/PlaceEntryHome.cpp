@@ -21,31 +21,56 @@
 #include "PlaceEntryHome.h"
 
 #include <glib/gi18n-lib.h>
+#include <algorithm>
+
+class PlaceEntryGroupHome : public PlaceEntryGroup
+{
+public:
+  PlaceEntryGroupHome (PlaceEntry *entry)
+  : _entry (entry)
+  {
+  }
+
+  PlaceEntryGroupHome (const PlaceEntryGroupHome& b)
+  {
+    _entry = b._entry;
+  }
+
+  const void * GetId () const
+  {
+    return _entry;
+  }
+
+  const char * GetRenderer () const
+  {
+    return NULL;
+  }
+
+  const char * GetName () const
+  {
+    return _entry->GetName ();
+  }
+
+  const char * GetIcon () const
+  {
+    return _entry->GetIcon ();
+  }
+
+private:
+  PlaceEntry *_entry;
+};
+
 
 PlaceEntryHome::PlaceEntryHome (PlaceFactory *factory)
 : _factory (factory),
-  _sections_model (NULL),
-  _groups_model (NULL),
-  _results_model (NULL)
+  _n_searches_done (0)
 {
-  _sections_model = dee_sequence_model_new ();
-  dee_model_set_schema (_sections_model, "s", "s", NULL);
-
-  _groups_model = dee_sequence_model_new ();
-  dee_model_set_schema (_groups_model, "s", "s", "s", NULL);
-
-  _results_model = dee_sequence_model_new ();
-  dee_model_set_schema (_results_model, "s", "s", "u", "s", "s", "s", NULL);
-
   LoadExistingEntries ();
   _factory->place_added.connect (sigc::mem_fun (this, &PlaceEntryHome::OnPlaceAdded));
 }
 
 PlaceEntryHome::~PlaceEntryHome ()
 {
-  g_object_unref (_sections_model);
-  g_object_unref (_groups_model);
-  g_object_unref (_results_model);
 }
 
 void
@@ -72,33 +97,37 @@ PlaceEntryHome::OnPlaceAdded (Place *place)
     PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
     OnPlaceEntryAdded (entry);
   }
+
+  place->entry_removed.connect (sigc::mem_fun (this, &PlaceEntryHome::OnPlaceEntryRemoved));
+}
+
+void
+PlaceEntryHome::OnPlaceEntryRemoved (PlaceEntry *entry)
+{
+  std::vector<PlaceEntry *>::iterator it;
+
+  it = std::find (_entries.begin (), _entries.end (), entry);
+  if (it != _entries.end ())
+  {
+    _entries.erase (it);
+  }
 }
 
 void
 PlaceEntryHome::OnPlaceEntryAdded (PlaceEntry *entry)
 {
-  if (entry->GetGlobalResultsModel ())
-  {
-    DeeModelIter *iter;
-    gchar        *text = g_markup_escape_text (entry->GetName (), -1);
+  PlaceEntryGroupHome group (entry);
 
-    _entries.push_back (entry);
+  if (!entry->ShowInGlobal ())
+    return;
 
-    iter = dee_model_append (_groups_model, "", text, entry->GetIcon ());
-    _model_to_group[entry->GetGlobalResultsModel ()] = dee_model_get_position (_groups_model,
-                                                                               iter);
+  _entries.push_back (entry);
 
-    g_signal_connect (entry->GetGlobalResultsModel (), "row-added",
-                      (GCallback)&PlaceEntryHome::OnResultAdded, this);
-    g_signal_connect (entry->GetGlobalResultsModel (), "row-removed",
-                      (GCallback)&PlaceEntryHome::OnResultRemoved, this);
+  entry->global_result_added.connect (sigc::mem_fun (this, &PlaceEntryHome::OnResultAdded));
+  entry->global_result_removed.connect (sigc::mem_fun (this, &PlaceEntryHome::OnResultRemoved));
+  entry->search_finished.connect (sigc::mem_fun (this, &PlaceEntryHome::OnSearchFinished));
 
-    g_free (text);
-  }
-  else
-  {
-    entry->global_renderer_changed.connect (sigc::mem_fun (this, &PlaceEntryHome::RefreshEntry));
-  }
+  group_added.emit (this, group);
 }
 
 void
@@ -108,38 +137,24 @@ PlaceEntryHome::RefreshEntry (PlaceEntry *entry)
 }
 
 void
-PlaceEntryHome::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self)
+PlaceEntryHome::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  dee_model_append (self->_results_model,
-                    dee_model_get_string (model, iter, RESULT_URI),
-                    dee_model_get_string (model, iter, RESULT_ICON),
-                    self->_model_to_group[model],
-                    dee_model_get_string (model, iter, RESULT_MIMETYPE),
-                    dee_model_get_string (model, iter, RESULT_NAME),
-                    dee_model_get_string (model, iter, RESULT_COMMENT));
+  PlaceEntryGroupHome our_group (entry);
+
+  _id_to_entry[result.GetId ()] = entry;
+
+  result_added.emit (this, our_group, result);
 }
  
 
 void
-PlaceEntryHome::OnResultRemoved (DeeModel *model, DeeModelIter *it, PlaceEntryHome *self)
+PlaceEntryHome::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult &result)
 {
-  DeeModelIter *iter, *end;
-  const char   *uri;
+  PlaceEntryGroupHome our_group (entry);
 
-  uri = dee_model_get_string (model, it, RESULT_URI);
+  _id_to_entry.erase (result.GetId ());
 
-  iter = dee_model_get_first_iter (self->_results_model);
-  end = dee_model_get_last_iter (self->_results_model);
-  while (iter != end)
-  {
-    if (g_strcmp0 (dee_model_get_string (self->_results_model, iter, RESULT_URI), uri) == 0)
-    {
-      dee_model_remove (self->_results_model, iter);
-      break;
-    }
-
-    iter = dee_model_next (self->_results_model, iter);
-  }
+  result_removed (this, our_group, result);
 }
 
 /* Overrides */
@@ -152,7 +167,13 @@ PlaceEntryHome::GetId ()
 const gchar *
 PlaceEntryHome::GetName ()
 {
-  return _("Global Search");
+  return "";
+}
+
+const gchar *
+PlaceEntryHome::GetSearchHint ()
+{
+  return _("Search"); 
 }
 
 const gchar *
@@ -165,6 +186,12 @@ const gchar *
 PlaceEntryHome::GetDescription ()
 {
   return _("Search across all places");
+}
+
+guint64
+PlaceEntryHome::GetShortcut ()
+{
+  return 0;
 }
 
 guint32
@@ -219,6 +246,9 @@ PlaceEntryHome::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hints)
 {
   std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
 
+  _n_searches_done = 0;
+  _last_search = search;
+
   for (it = _entries.begin (); it != eit; ++it)
   {
     (*it)->SetGlobalSearch (search, hints);
@@ -235,20 +265,75 @@ PlaceEntryHome::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>& 
 {
 }
 
-DeeModel *
-PlaceEntryHome::GetSectionsModel ()
+void
+PlaceEntryHome::ForeachGroup (GroupForeachCallback slot)
 {
-  return _sections_model;
+  std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  for (it = _entries.begin (); it != eit; ++it)
+  {
+    PlaceEntryGroupHome group (*it);
+    slot (this, group);
+  }
 }
 
-DeeModel *
-PlaceEntryHome::GetGroupsModel ()
+void
+PlaceEntryHome::ForeachResult (ResultForeachCallback slot)
 {
-  return _groups_model;
+  std::vector<PlaceEntry *>::iterator it, eit = _entries.end ();
+
+  _foreach_callback = slot;
+
+  for (it = _entries.begin (); it != eit; ++it)
+  {
+    (*it)->ForeachGlobalResult (sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
+  }
 }
 
-DeeModel *
-PlaceEntryHome::GetResultsModel ()
+void
+PlaceEntryHome::OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  return _results_model;
+  PlaceEntryGroupHome our_group (entry);
+
+  _foreach_callback (this, our_group, result);
 }
+
+void
+PlaceEntryHome::GetResult (const void *id, ResultForeachCallback slot)
+{
+  PlaceEntry *entry = _id_to_entry[id];
+  
+  _foreach_callback = slot;
+
+  if (entry)
+  {
+    entry->GetGlobalResult (id, sigc::mem_fun (this, &PlaceEntryHome::OnForeachResult));
+  }
+}
+
+void
+PlaceEntryHome::ActivateResult (const void *id)
+{
+  PlaceEntry *entry = _id_to_entry[id];
+  
+  if (entry)
+  {
+    entry->ActivateGlobalResult (id);
+  }
+}
+
+void
+PlaceEntryHome::OnSearchFinished (const char                           *search_string,
+                                  guint32                               section_id,
+                                  std::map<const char *, const char *>& hints)
+{
+  if (_last_search == search_string)
+  {
+    _n_searches_done++;
+    if (_n_searches_done == _entries.size ())
+    {
+      search_finished.emit (search_string, section_id, hints);
+    }
+  }
+}
+

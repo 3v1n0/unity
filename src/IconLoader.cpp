@@ -34,7 +34,11 @@ IconLoader::IconLoader ()
 
 IconLoader::~IconLoader ()
 {
+  std::map<std::string, GdkPixbuf *>::iterator it;
+  
   g_queue_free (_tasks);
+  for (it=_cache.begin() ; it != _cache.end(); it++ )
+    g_object_unref (GDK_PIXBUF ((*it).second));
 }
 
 IconLoader *
@@ -109,7 +113,8 @@ IconLoader::LoadFromFilename (const char        *filename,
                               guint              size,
                               IconLoaderCallback slot)
 {
-  char      *key;
+  GFile *file;
+  gchar *uri;
 
   g_return_if_fail (filename);
   g_return_if_fail (size > 1);
@@ -117,15 +122,37 @@ IconLoader::LoadFromFilename (const char        *filename,
   if (_no_load)
     return;
 
-  key = Hash (filename, size);
+  file = g_file_new_for_path (filename);
+  uri = g_file_get_uri (file);
 
-  if (CacheLookup (key, filename, size, slot))
+  LoadFromURI (uri, size, slot);
+
+  g_free (uri);
+  g_object_unref (file);
+}
+
+void
+IconLoader::LoadFromURI (const char        *uri,
+                         guint              size,
+                         IconLoaderCallback slot)
+{
+  char      *key;
+
+  g_return_if_fail (uri);
+  g_return_if_fail (size > 1);
+
+  if (_no_load)
+    return;
+
+  key = Hash (uri, size);
+
+  if (CacheLookup (key, uri, size, slot))
   {
     g_free (key);
     return;
   }
 
-  QueueTask (key, filename, size, slot, REQUEST_TYPE_FILENAME);
+  QueueTask (key, uri, size, slot, REQUEST_TYPE_URI);
 
   g_free (key);
 }
@@ -207,9 +234,9 @@ IconLoader::ProcessTask (IconLoaderTask *task)
   {
     task_complete = ProcessGIconTask (task);
   }
-  else if (task->type == REQUEST_TYPE_FILENAME)
+  else if (task->type == REQUEST_TYPE_URI)
   {
-    task_complete = ProcessFilenameTask (task);
+    task_complete = ProcessURITask (task);
   }
   else
   {
@@ -229,13 +256,13 @@ bool
 IconLoader::ProcessIconNameTask (IconLoaderTask *task)
 {
   GdkPixbuf   *pixbuf = NULL;
-  GtkIconInfo *info;
+  GtkIconInfo *info = NULL;
 
   info = gtk_icon_theme_lookup_icon (_theme,
                                      task->data,
                                      task->size,
                                      (GtkIconLookupFlags)0);
-  if (info)
+  if (info != NULL)
   {
     GError *error = NULL;
 
@@ -271,8 +298,11 @@ bool
 IconLoader::ProcessGIconTask (IconLoaderTask *task)
 {
   GdkPixbuf   *pixbuf = NULL;
-  GIcon       *icon;
-  GError      *error = NULL;
+  GIcon       *icon   = NULL;
+  GError      *error  = NULL;
+
+  if (!task)
+    return false;
 
   icon = g_icon_new_for_string (task->data, &error);
   
@@ -285,9 +315,9 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
     file = g_file_icon_get_file (G_FILE_ICON (icon));
 
     g_free (task->data);
-    task->type = REQUEST_TYPE_FILENAME;
-    task->data = g_file_get_path (file);
-    ret = ProcessFilenameTask (task);
+    task->type = REQUEST_TYPE_URI;
+    task->data = g_file_get_uri (file);
+    ret = ProcessURITask (task);
 
     g_object_unref (icon);
 
@@ -295,12 +325,12 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
   }
   else if (G_IS_ICON (icon))
   {
-    GtkIconInfo *info;
+    GtkIconInfo *info = NULL;
     info = gtk_icon_theme_lookup_by_gicon (_theme,
                                            icon,
                                            task->size,
                                            (GtkIconLookupFlags)0);
-    if (info)
+    if (info != NULL)
     {
       pixbuf = gtk_icon_info_load_icon (info, &error);
 
@@ -362,11 +392,11 @@ IconLoader::ProcessGIconTask (IconLoaderTask *task)
 }
 
 bool
-IconLoader::ProcessFilenameTask (IconLoaderTask *task)
+IconLoader::ProcessURITask (IconLoaderTask *task)
 {
   GFile *file;
 
-  file = g_file_new_for_path (task->data);
+  file = g_file_new_for_uri (task->data);
 
   g_file_load_contents_async (file,
                               NULL,
@@ -378,7 +408,7 @@ IconLoader::ProcessFilenameTask (IconLoaderTask *task)
 }
 
 void
-IconLoader::ProcessFilenameTaskReady (IconLoaderTask *task, char *contents, gsize length)
+IconLoader::ProcessURITaskReady (IconLoaderTask *task, char *contents, gsize length)
 {
   GdkPixbuf    *pixbuf = NULL;
   GInputStream *stream;
@@ -470,7 +500,7 @@ IconLoader::LoadContentsReady (GObject *obj, GAsyncResult *res, IconLoaderTask *
 
   if (g_file_load_contents_finish (G_FILE (obj), res, &contents, &length, NULL, &error))
   {
-    task->self->ProcessFilenameTaskReady (task, contents, length);
+    task->self->ProcessURITaskReady (task, contents, length);
 
     g_free (contents);
   }

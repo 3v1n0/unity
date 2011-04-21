@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2010-11-02 23:58+0000\n"
+"POT-Creation-Date: 2011-04-08 13:47-0400\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Bulgarian\n"
@@ -16,69 +16,79 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Eject"
+msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
-msgid "Email & Chat"
+msgid "Browse the Web"
+msgstr ""
+
+msgid "Check Email"
+msgstr ""
+
+msgid "Eject"
 msgstr ""
 
 msgid "Empty Trash"
 msgstr ""
 
-msgid "Files & Folders"
+msgid "Empty Trash..."
 msgstr ""
 
-#. i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason
-#, c-format
-msgid "Files in trash: %d"
+msgid "Empty all items from Trash?"
 msgstr ""
 
-msgid "Games"
+#. Find Files
+msgid "Find Files"
 msgstr ""
 
-msgid "Get New Apps"
+#. Internet Apps
+msgid "Internet Apps"
 msgstr ""
 
 #, fuzzy
-msgid "Keep in Launcher"
+msgid "Keep In Launcher"
 msgstr "Остави в програмата за стартиране"
 
-msgid "Music"
+msgid "Listen to Music"
 msgstr ""
 
-msgid "Office"
+#. Media Apps
+msgid "Media Apps"
+msgstr ""
+
+#. More Apps
+msgid "More Apps"
 msgstr ""
 
 msgid "Open"
 msgstr ""
 
-msgid "Photos & Videos"
-msgstr ""
-
 msgid "Quit"
 msgstr "Излез"
 
-#, fuzzy
-msgid "Remove from launcher"
-msgstr "Премахни от програмата за стартиране"
+msgid "Safely Remove"
+msgstr ""
 
 msgid "Search"
 msgstr ""
 
-#. i18n: This is meant to be used like Search $PLACES_NAME, so eg.
-#. * 'Search Applications'
-#.
-#, c-format
-msgid "Search %s"
+msgid "Search across all places"
 msgstr ""
 
-#, c-format
-msgid "See %u more results"
+msgid "Shortcuts"
 msgstr ""
 
 msgid "Trash"
 msgstr ""
 
-#. Load up the world
-msgid "Web"
+#. Photos
+#. FIXME: Need to figure out the default
+msgid "View Photos"
 msgstr ""
+
+msgid "Workspace Switcher"
+msgstr ""
+
+#, fuzzy
+#~ msgid "Remove from launcher"
+#~ msgstr "Премахни от програмата за стартиране"

@@ -59,9 +59,8 @@ void TestRunner::Init ()
 {
   layout = new nux::VLayout ();
   PlacesGroup *group1 = new PlacesGroup ();
-  group1->SetTitle ("Hello World!");
-  group1->SetItemDetail (100, 5);
-
+  group1->SetName ("Hello World!");
+  
   nux::GridHLayout *group_content = new nux::GridHLayout (NUX_TRACKER_LOCATION);
   for (int i = 0; i < 60; i++)
   {
@@ -111,7 +110,7 @@ void TestRunner::Init ()
   group_content->SetHorizontalInternalMargin (4);
   group_content->SetHeightMatchContent (true);
 
-  group1->AddLayout (group_content);
+  group1->SetChildLayout (group_content);
   group1->SetVisible (false);
 
 
@@ -134,8 +133,9 @@ ControlThread (nux::NThread* thread,
   nux::SleepForMilliseconds (3000);
   printf ("ControlThread successfully started\n");
 
-  nux::WindowThread* mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*,
-                                                         data);
+  nux::WindowThread* mainWindowThread;
+  
+  mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 
 

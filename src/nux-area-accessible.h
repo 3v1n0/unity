@@ -40,7 +40,7 @@ struct _NuxAreaAccessible
 {
   NuxObjectAccessible parent;
 
-  /* < private > */
+  /*< private >*/
   NuxAreaAccessiblePrivate *priv;
 };
 

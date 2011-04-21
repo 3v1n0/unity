@@ -43,7 +43,7 @@ struct _NuxViewAccessible
 {
   NuxAreaAccessible parent;
 
-  /* < private > */
+  /*< private >*/
   NuxViewAccessiblePrivate *priv;
 };
 

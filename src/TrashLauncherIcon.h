@@ -33,23 +33,26 @@ public:
   virtual nux::Color GlowColor ();
 
 protected:
-  void OnMouseClick (int button);
   void UpdateTrashIcon ();
   
   nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
   void OnAcceptDrop (std::list<char *> uris);
 
 private:
-  std::map<std::string, DbusmenuMenuitem *> _menu_items;
+  gulong _on_trash_changed_handler_id;
+  gulong _on_confirm_dialog_close_id;
   GFileMonitor *m_TrashMonitor;
   gboolean _empty;
+  GtkWidget   *_confirm_dialog;
 
-  void EnsureMenuItemsReady ();
+  void ActivateLauncherIcon ();
+  std::list<DbusmenuMenuitem *> GetMenus ();
 
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
   static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,
                               GFileMonitorEvent event_type, gpointer data);
   static void OnEmptyTrash (DbusmenuMenuitem *item, int time, TrashLauncherIcon *self);
+  static void OnConfirmDialogClose (GtkDialog *dialog, gint response, gpointer user_data);
   static void EmptyTrashAction ();
   static void RecursiveDelete (GFile *location);
 

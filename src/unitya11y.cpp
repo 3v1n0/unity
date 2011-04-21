@@ -20,8 +20,10 @@
 #include <gio/gio.h>
 #include <gmodule.h>
 #include <stdio.h>
+#include <gconf/gconf-client.h>
 
 #include "unitya11y.h"
+#include "unitya11ytests.h"
 #include "unity-util-accessible.h"
 
 /* nux accessible objects */
@@ -32,16 +34,25 @@
 /* unity accessible objects */
 #include "Launcher.h"
 #include "LauncherIcon.h"
+#include "SimpleLauncherIcon.h"
 #include "PanelView.h"
+#include "PlacesView.h"
 #include "unity-launcher-accessible.h"
 #include "unity-launcher-icon-accessible.h"
 #include "unity-panel-view-accessible.h"
 #include "unity-panel-home-button-accessible.h"
+#include "unity-places-view-accessible.h"
+#include "unity-search-bar-accessible.h"
 
 static GHashTable *accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
 
 static gboolean a11y_initialized = FALSE;
+
+#define INIT_METHOD "gnome_accessibility_module_init"
+#define A11Y_GCONF_KEY "/desktop/gnome/interface/accessibility"
+#define AT_SPI_SCHEMA "org.a11y.atspi"
+#define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
 static void
 unity_a11y_restore_environment (void)
@@ -51,16 +62,11 @@ unity_a11y_restore_environment (void)
 }
 
 static void
-load_unity_atk_util ()
+load_unity_atk_util (nux::WindowThread *wt)
 {
+  unity_util_accessible_set_window_thread (wt);
   g_type_class_unref (g_type_class_ref (UNITY_TYPE_UTIL_ACCESSIBLE));
 }
-
-#define INIT_METHOD "gnome_accessibility_module_init"
-#define DESKTOP_SCHEMA "org.gnome.desktop.interface"
-#define ACCESSIBILITY_ENABLED_KEY "accessibility"
-#define AT_SPI_SCHEMA "org.a11y.atspi"
-#define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
 static gboolean
 has_gsettings_schema (const gchar *schema)
@@ -87,16 +93,19 @@ has_gsettings_schema (const gchar *schema)
 static gboolean
 should_enable_a11y (void)
 {
-  GSettings *desktop_settings = NULL;
+  GConfClient *client = NULL;
   gboolean value = FALSE;
+  GError *error = NULL;
 
-  if (!has_gsettings_schema (DESKTOP_SCHEMA))
-    return FALSE;
-   
-  desktop_settings = g_settings_new (DESKTOP_SCHEMA);
-  value = g_settings_get_boolean (desktop_settings, ACCESSIBILITY_ENABLED_KEY);
-
-  g_object_unref (desktop_settings);
+  client = gconf_client_get_default ();
+  value = gconf_client_get_bool (client, A11Y_GCONF_KEY, &error);
+  if (error != NULL)
+    {
+      g_warning ("Error getting gconf variable %s, a11y disabled by default",
+                 A11Y_GCONF_KEY);
+      g_error_free (error);
+    }
+  g_object_unref (client);
 
   return value;
 }
@@ -176,7 +185,7 @@ unity_a11y_preset_environment (void)
  *  * Loads the proper AtkUtil implementation
  */
 void
-unity_a11y_init (void)
+unity_a11y_init (nux::WindowThread *wt)
 {
   gchar *bridge_path = NULL;
 
@@ -187,7 +196,7 @@ unity_a11y_init (void)
   if (!should_enable_a11y ())
     return;
 
-  load_unity_atk_util ();
+  load_unity_atk_util (wt);
 
   bridge_path = get_atk_bridge_path ();
 
@@ -199,6 +208,12 @@ unity_a11y_init (void)
     }
 
   g_free (bridge_path);
+
+ // NOTE: we run manually the unit tests while developing by
+ // uncommenting this. Take a look to the explanation on
+ // unitya11ytests.h header for more information
+
+ //  unity_run_a11y_unit_tests ();
 }
 
 /*
@@ -252,6 +267,12 @@ unity_a11y_create_accessible (nux::Object *object)
   if (object->Type().IsDerivedFromType (PanelHomeButton::StaticObjectType))
     return unity_panel_home_button_accessible_new (object);
 
+  if (object->Type().IsDerivedFromType (PlacesView::StaticObjectType))
+    return unity_places_view_accessible_new (object);
+
+  if (object->Type().IsDerivedFromType (PlacesSearchBar::StaticObjectType))
+    return unity_search_bar_accessible_new (object);
+
   /* NUX classes  */
   if (object->Type().IsDerivedFromType (nux::BaseWindow::StaticObjectType))
     return nux_base_window_accessible_new (object);
@@ -266,6 +287,30 @@ unity_a11y_create_accessible (nux::Object *object)
     return nux_area_accessible_new (object);
 
   return nux_object_accessible_new (object);
+}
+
+static void
+on_object_destroy_cb (nux::Object *base_object,
+                      AtkObject *accessible_object)
+{
+  /* NOTE: the pair key:value (base_object:accessible_object) could be
+     already removed on on_accessible_destroy_cb. That just mean that
+     g_hash_table_remove would return FALSE. We don't add a
+     debug/warning message to avoid being too verbose */
+
+  g_hash_table_remove (accessible_table, base_object);
+}
+
+static void
+on_accessible_destroy_cb (gpointer data,
+                          GObject *where_the_object_was)
+{
+  /* NOTE: the pair key:value (base_object:accessible_object) could be
+     already removed on on_object_destroy_cb. That just mean that
+     g_hash_table_remove would return FALSE. We don't add a
+     debug/warning message to avoid being too verbose */
+
+  g_hash_table_remove (accessible_table, data);
 }
 
 /*
@@ -299,6 +344,17 @@ unity_a11y_get_accessible (nux::Object *object)
       accessible_object = unity_a11y_create_accessible (object);
 
       g_hash_table_insert (accessible_table, object, accessible_object);
+
+      /* there are two reasons the object should be removed from the
+       * table: base object destroyed, or accessible object
+       * destroyed
+       */
+      g_object_weak_ref (G_OBJECT (accessible_object),
+                         on_accessible_destroy_cb,
+                         object);
+
+      object->OnDestroyed.connect (sigc::bind(sigc::ptr_fun (on_object_destroy_cb),
+                                              accessible_object));
     }
 
   return accessible_object;
@@ -310,4 +366,11 @@ unity_a11y_get_accessible (nux::Object *object)
 gboolean unity_a11y_initialized (void)
 {
   return a11y_initialized;
+}
+
+/* Returns the accessible_table. Just for unit testing purposes, you
+   should not require to use it */
+GHashTable *_unity_a11y_get_accessible_table ()
+{
+  return accessible_table;
 }

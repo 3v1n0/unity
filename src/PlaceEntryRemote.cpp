@@ -36,12 +36,159 @@ static void on_proxy_signal_received (GDBusProxy *proxy,
                                               GVariant   *parameters,
                                               gpointer    user_data);
 
-PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
+enum
+{
+  SECTION_NAME,
+  SECTION_ICON
+};
+
+enum
+{
+  GROUP_RENDERER,
+  GROUP_NAME,
+  GROUP_ICON
+};
+
+enum
+{
+  RESULT_URI,
+  RESULT_ICON,
+  RESULT_GROUP_ID,
+  RESULT_MIMETYPE,
+  RESULT_NAME,
+  RESULT_COMMENT
+};
+
+class PlaceEntrySectionRemote : public PlaceEntrySection
+{
+public:
+  PlaceEntrySectionRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntrySectionRemote (const PlaceEntrySectionRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, SECTION_NAME);
+  }
+
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, SECTION_ICON);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
+};
+
+class PlaceEntryGroupRemote : public PlaceEntryGroup
+{
+public:
+  PlaceEntryGroupRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntryGroupRemote (const PlaceEntryGroupRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const void * GetId () const
+  {
+    return _iter;
+  }
+
+  const char * GetRenderer () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_RENDERER);
+  }
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_NAME); 
+  }
+
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, GROUP_ICON);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
+};
+
+class PlaceEntryResultRemote : public PlaceEntryResult
+{
+public:
+  
+  PlaceEntryResultRemote (DeeModel *model, DeeModelIter *iter)
+  : _model (model),
+    _iter (iter)
+  {
+  }
+
+  PlaceEntryResultRemote (PlaceEntryResultRemote& b)
+  {
+    _model = b._model;
+    _iter = b._iter;
+  }
+
+  const void * GetId () const
+  {
+    return _iter; 
+  };
+
+  const char * GetName () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_NAME);
+  }
+  const char * GetIcon () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_ICON);
+  }
+
+  const char * GetMimeType () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_MIMETYPE);
+  }
+
+  const char * GetURI () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_URI);
+  }
+
+  const char * GetComment () const
+  {
+    return dee_model_get_string (_model, _iter, RESULT_COMMENT);
+  }
+
+private:
+  DeeModel     *_model;
+  DeeModelIter *_iter;
+};
+
+
+PlaceEntryRemote::PlaceEntryRemote (Place *parent, const gchar *dbus_name)
 : dirty (false),
+  _parent (parent),
   _dbus_path (NULL),
   _name (NULL),
   _icon (NULL),
   _description (NULL),
+  _searchhint (_("Search")),
+  _shortcut (0),
   _position (0),
   _mimetypes (NULL),
   _sensitive (true),
@@ -54,8 +201,10 @@ PlaceEntryRemote::PlaceEntryRemote (const gchar *dbus_name)
   _groups_model (NULL),
   _results_model (NULL),
   _global_results_model (NULL),
+  _global_groups_model (NULL),
   _previous_search (NULL),
-  _previous_section (G_MAXUINT32)
+  _previous_section (G_MAXUINT32),
+  _conn_attempt (false)
 {
   _dbus_name = g_strdup (dbus_name);
 }
@@ -75,6 +224,7 @@ PlaceEntryRemote::~PlaceEntryRemote ()
   g_object_unref (_groups_model);
   g_object_unref (_results_model);
   g_object_unref (_global_results_model);
+  g_object_unref (_global_groups_model);
 }
 
 void
@@ -85,6 +235,8 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   gchar  *domain;
   gchar  *name;
   gchar  *description;
+  gchar  *shortcut_entry;
+  gchar  *searchhint;
 
   _dbus_path = g_key_file_get_string (key_file, group, DBUS_PATH, &error);
   if (_dbus_path == NULL
@@ -115,16 +267,32 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
   name = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_NAME, NULL);
   _icon = g_key_file_get_string (key_file, group, G_KEY_FILE_DESKTOP_KEY_ICON, NULL);
   description = g_key_file_get_string (key_file, group, "Description", NULL);
+  searchhint = g_key_file_get_string (key_file, group, "SearchHint", NULL);
 
+  
   if (domain)
   {
     _name = g_strdup (dgettext (domain, name));
     _description = g_strdup (dgettext (domain, description));
+    if (searchhint)
+      _searchhint = g_strdup (dgettext (domain, searchhint));
   }
   else
   {
     _name = g_strdup (name);
     _description = g_strdup (description);
+    if (searchhint)
+      _searchhint = g_strdup (searchhint);
+  }
+  
+  if (g_key_file_has_key (key_file, group, "Shortcut", NULL))
+  {
+    shortcut_entry = g_key_file_get_string(key_file, group, "Shortcut", NULL);
+    if (strlen (shortcut_entry) == 1)
+      _shortcut = shortcut_entry[0];
+    else
+      g_warning ("Place %s has an uncompatible shortcut: %s", name, shortcut_entry);    
+    g_free (shortcut_entry);
   }
 
   /* Finally the two that should default to true */
@@ -136,8 +304,6 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 
   _valid = true;
 
-  Connect ();
-
   g_debug ("PlaceEntry: %s", _name);
 
   g_free (name);
@@ -145,6 +311,12 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 }
 
 /* Overrides */
+Place *
+PlaceEntryRemote::GetParent ()
+{
+  return _parent;
+}
+  
 const gchar *
 PlaceEntryRemote::GetId ()
 {
@@ -167,6 +339,18 @@ const gchar *
 PlaceEntryRemote::GetDescription ()
 {
   return _description;
+}
+
+const gchar *
+PlaceEntryRemote::GetSearchHint ()
+{
+  return _searchhint;
+}
+
+guint64
+PlaceEntryRemote::GetShortcut ()
+{
+  return _shortcut;
 }
 
 guint32
@@ -238,6 +422,9 @@ PlaceEntryRemote::SetSearch (const gchar *search, std::map<gchar*, gchar*>& hint
   g_free (_previous_search);
   _previous_search = g_strdup (search);
   
+  // To make kamstrup's evil little mind happy
+  SetActive (true);
+  
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
   /* FIXME: I'm ignoring hints because we don't use them currently */
@@ -275,6 +462,10 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
 {
   GVariantBuilder *builder;
 
+  // This is valid for a certain case with global search
+  if (!G_IS_DBUS_PROXY (_proxy))
+    return;
+
   builder = g_variant_builder_new (G_VARIANT_TYPE ("a{ss}"));
 
   /* FIXME: I'm ignoring hints because we don't use them currently */
@@ -289,28 +480,196 @@ PlaceEntryRemote::SetGlobalSearch (const gchar *search, std::map<gchar*, gchar*>
   g_variant_builder_unref (builder);
 }
 
-DeeModel *
-PlaceEntryRemote::GetSectionsModel ()
+void
+PlaceEntryRemote::ForeachSection (SectionForeachCallback slot)
 {
-  return _sections_model;
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_sections_model);
+  eiter = dee_model_get_last_iter (_sections_model);
+  while (iter != eiter)
+  {
+    PlaceEntrySectionRemote section (_sections_model, iter);
+    slot (this, section);
+
+    iter = dee_model_next (_sections_model, iter);
+  }
 }
 
-DeeModel *
-PlaceEntryRemote::GetGroupsModel ()
+void
+PlaceEntryRemote::ForeachGroup (GroupForeachCallback slot)
 {
-  return _groups_model;
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_groups_model);
+  eiter = dee_model_get_last_iter (_groups_model);
+  while (iter != eiter)
+  {
+    PlaceEntryGroupRemote group (_groups_model, iter);
+    slot (this, group);
+
+    iter = dee_model_next (_groups_model, iter);
+  }
 }
 
-DeeModel *
-PlaceEntryRemote::GetResultsModel ()
+void
+PlaceEntryRemote::ForeachResult (ResultForeachCallback slot)
 {
-  return _results_model;
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_results_model);
+  eiter = dee_model_get_last_iter (_results_model);
+
+  while (iter != eiter)
+  {
+    guint         n_group;
+    DeeModelIter *group_iter;
+
+    n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
+    group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
+   
+    if (!group_iter)
+    {
+      g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                  G_STRFUNC,
+                  dee_model_get_string (_results_model, iter, RESULT_URI),
+                  n_group);
+
+      iter = dee_model_next (_results_model, iter);
+      continue;
+    }
+
+    PlaceEntryGroupRemote group (_groups_model, group_iter);
+    PlaceEntryResultRemote result (_results_model, iter);
+
+    slot (this, group, result);
+
+    iter = dee_model_next (_results_model, iter);
+  }
 }
 
-DeeModel *
-PlaceEntryRemote::GetGlobalResultsModel ()
+
+void
+PlaceEntryRemote::ForeachGlobalGroup (GroupForeachCallback slot)
 {
-  return _global_results_model;
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_global_groups_model);
+  eiter = dee_model_get_last_iter (_global_groups_model);
+  while (iter != eiter)
+  {
+    PlaceEntryGroupRemote group (_global_groups_model, iter);
+    slot (this, group);
+
+    iter = dee_model_next (_global_groups_model, iter);
+  }
+}
+
+void
+PlaceEntryRemote::ForeachGlobalResult (ResultForeachCallback slot)
+{
+  DeeModelIter *iter, *eiter;
+
+  iter = dee_model_get_first_iter (_global_results_model);
+  eiter = dee_model_get_last_iter (_global_results_model);
+
+  while (iter != eiter)
+  {
+    guint         n_group;
+    DeeModelIter *group_iter;
+
+    n_group = dee_model_get_uint32 (_global_results_model, iter, RESULT_GROUP_ID);
+    group_iter = dee_model_get_iter_at_row (_global_groups_model, n_group);
+   
+    if (!group_iter)
+    {
+      g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                  G_STRFUNC,
+                  dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                  n_group);
+
+      iter = dee_model_next (_global_results_model, iter);
+      continue;
+    }
+
+    PlaceEntryGroupRemote group (_global_groups_model, group_iter);
+    PlaceEntryResultRemote result (_global_results_model, iter);
+
+    slot (this, group, result);
+
+    iter = dee_model_next (_global_results_model, iter);
+  }
+}
+
+void
+PlaceEntryRemote::GetResult (const void *id, ResultForeachCallback slot)
+{
+  guint         n_group;
+  DeeModelIter *iter = (DeeModelIter *)id;
+  DeeModelIter *group_iter;
+
+  if (iter == NULL || dee_model_is_last (_results_model, iter))
+    return;
+
+  n_group = dee_model_get_uint32 (_results_model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (_results_model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (_groups_model, group_iter);
+  PlaceEntryResultRemote result (_results_model, iter);
+
+  slot (this, group, result);
+}
+
+void
+PlaceEntryRemote::GetGlobalResult (const void *id, ResultForeachCallback slot)
+{
+  guint         n_group;
+  DeeModelIter *iter = (DeeModelIter *)id;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (_global_results_model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (_global_results_model, iter);
+
+  slot (this, group, result);
+}
+
+void
+PlaceEntryRemote::ActivateResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_results_model, iter, RESULT_MIMETYPE));
+}
+
+void
+PlaceEntryRemote::ActivateGlobalResult (const void *id)
+{
+  DeeModelIter *iter = (DeeModelIter *)id;
+
+  _parent->ActivateResult (dee_model_get_string (_global_results_model, iter, RESULT_URI),
+                           dee_model_get_string (_global_results_model, iter, RESULT_MIMETYPE));
 }
 
 /* Other methods */
@@ -361,7 +720,7 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _state_changed = true;
   }
   
-  if (g_strcmp0 (_icon, icon) != 0)
+  if (g_strcmp0 ("", icon) != 0 && g_strcmp0 (_icon, icon) != 0)
   {
     g_free (_icon);
     _icon = g_strdup (icon);
@@ -411,6 +770,9 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _groups_model = dee_shared_model_new (entry_groups_model);
     dee_model_set_schema (_groups_model, "s", "s", "s", NULL);
 
+    g_signal_connect (_groups_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGroupAdded, this);
+
     _entry_renderer_changed = true;
   }
 
@@ -423,6 +785,11 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
     _results_model = dee_shared_model_new (entry_results_model);
     dee_model_set_schema (_results_model, "s", "s", "u", "s", "s", "s", NULL);
 
+    g_signal_connect (_results_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnResultAdded, this);
+    g_signal_connect (_results_model, "row-removed",
+                      (GCallback)PlaceEntryRemote::OnResultRemoved, this);
+    
     _entry_renderer_changed = true;
   }
 
@@ -431,7 +798,20 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
   // FIXME: Spec says if global_renderer == "", then ShowInGlobal () == false, but currently
   //        both places return ""
 
-  // FIXME: Handle global groups model name
+  if (!DEE_IS_SHARED_MODEL (_global_groups_model) ||
+      g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_global_groups_model)), global_groups_model) != 0)
+  {
+    if (DEE_IS_SHARED_MODEL (_global_groups_model))
+      g_object_unref (_global_groups_model);
+
+    _global_groups_model = dee_shared_model_new (global_groups_model);
+    dee_model_set_schema (_global_groups_model, "s", "s", "s", NULL);
+
+    g_signal_connect (_global_groups_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGlobalGroupAdded, this);
+
+    _global_renderer_changed = true;
+  }
 
   if (!DEE_IS_SHARED_MODEL (_global_results_model) ||
       g_strcmp0 (dee_shared_model_get_swarm_name (DEE_SHARED_MODEL (_global_results_model)), global_results_model) != 0)
@@ -441,6 +821,11 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 
     _global_results_model = dee_shared_model_new (global_results_model);
     dee_model_set_schema (_global_results_model, "s", "s", "u", "s", "s", "s", NULL);
+
+    g_signal_connect (_global_results_model, "row-added",
+                      (GCallback)PlaceEntryRemote::OnGlobalResultAdded, this);
+    g_signal_connect (_global_results_model, "row-removed",
+                      (GCallback)PlaceEntryRemote::OnGlobalResultRemoved, this);
 
     _global_renderer_changed = true;
   }
@@ -468,15 +853,19 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
 void
 PlaceEntryRemote::Connect ()
 {
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            _dbus_name,
-                            _dbus_path,
-                            PLACE_ENTRY_IFACE,
-                            NULL,
-                            on_proxy_ready,
-                            this);
+  if (!_conn_attempt && !G_IS_DBUS_PROXY (_proxy))
+  {
+    g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
+                              G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                              NULL,
+                              _dbus_name,
+                              _dbus_path,
+                              PLACE_ENTRY_IFACE,
+                              NULL,
+                              on_proxy_ready,
+                              this);
+    _conn_attempt = true;
+  }
 }
 
 void
@@ -487,6 +876,7 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   _proxy = g_dbus_proxy_new_for_bus_finish (result, &error);
   name_owner = g_dbus_proxy_get_name_owner (_proxy);
+  _conn_attempt = false;
 
   if (error || !name_owner)
   {
@@ -504,10 +894,144 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
 
   g_signal_connect (_proxy, "g-signal",
                     G_CALLBACK (on_proxy_signal_received), this);
+  g_signal_connect (_proxy, "notify::g-name-owner",
+                    G_CALLBACK (PlaceEntryRemote::OnProxyNameOwnerChanged), this);
 
   g_free (name_owner);
 }
 
+void
+PlaceEntryRemote::OnProxyNameOwnerChanged (GDBusProxy       *proxy,
+                                           GParamSpec       *pspec,
+                                           PlaceEntryRemote *self)
+{
+  gchar *name_owner  = g_dbus_proxy_get_name_owner (proxy);
+
+  if (!name_owner)
+  {
+    // Remote proxy has died
+    g_debug ("Remote PlaceEntryRemote proxy %s no longer exists, reconnecting", self->_dbus_path);
+    g_object_unref (self->_proxy);
+    self->_proxy = NULL;
+
+    self->Connect ();
+  }
+  else
+    g_free (name_owner);
+}
+
+void
+PlaceEntryRemote::OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  PlaceEntryGroupRemote group (model, iter);
+  
+  self->group_added.emit (self, group);
+}
+
+void
+PlaceEntryRemote::OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->result_added.emit (self, group, result);
+}
+
+void
+PlaceEntryRemote::OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->result_removed.emit (self, group, result);
+}
+
+
+void
+PlaceEntryRemote::OnGlobalGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  PlaceEntryGroupRemote group (model, iter);
+  
+  self->global_group_added.emit (self, group);
+}
+
+void
+PlaceEntryRemote::OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->global_result_added.emit (self, group, result);
+}
+
+void
+PlaceEntryRemote::OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self)
+{
+  guint         n_group;
+  DeeModelIter *group_iter;
+
+  n_group = dee_model_get_uint32 (model, iter, RESULT_GROUP_ID);
+  group_iter = dee_model_get_iter_at_row (self->_global_groups_model, n_group);
+ 
+  if (!group_iter)
+  {
+    g_warning ("%s: Result %s does not have a valid group (%d). This is not a good thing.",
+                G_STRFUNC,
+                dee_model_get_string (model, iter, RESULT_URI),
+                n_group);
+    return;
+  }
+
+  PlaceEntryGroupRemote group (self->_global_groups_model, group_iter);
+  PlaceEntryResultRemote result (model, iter);
+
+  self->global_result_removed.emit (self, group, result);
+}
 
 /*
  * C -> C++ glue
@@ -531,5 +1055,17 @@ on_proxy_signal_received (GDBusProxy *proxy,
 { 
   PlaceEntryRemote *self = static_cast<PlaceEntryRemote *> (user_data);  
 
-  g_debug ("%p: %s", self, sender_name);
+  if (g_strcmp0 (signal_name, "SearchFinished") == 0)
+  {
+    guint32       section = 0;
+    gchar        *search_string = NULL;
+    GVariantIter *iter;
+    std::map<const char *, const char*> hints;
+
+    g_variant_get (parameters, "(usa{ss})", &section, &search_string, &iter);
+    self->search_finished.emit (search_string, section, hints);
+    
+    g_free (search_string);
+    g_variant_iter_free (iter);
+  }
 }

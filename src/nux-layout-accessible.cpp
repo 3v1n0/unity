@@ -43,34 +43,31 @@ static gint       nux_layout_accessible_get_n_children (AtkObject *obj);
 static AtkObject *nux_layout_accessible_ref_child      (AtkObject *obj,
                                                         gint i);
 
-
-#define NUX_LAYOUT_ACCESSIBLE_GET_PRIVATE(obj)                          \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_LAYOUT_ACCESSIBLE, NuxLayoutAccessiblePrivate))
+/* private */
+static void       on_view_changed_cb                   (nux::Layout *layout,
+                                                        nux::Area *area,
+                                                        AtkObject *acccessible,
+                                                        gboolean is_add);
+static int        search_for_child                     (AtkObject *accessible,
+                                                        nux::Layout *layout,
+                                                        nux::Area *area);
 
 G_DEFINE_TYPE (NuxLayoutAccessible, nux_layout_accessible,  NUX_TYPE_AREA_ACCESSIBLE)
-
-struct _NuxLayoutAccessiblePrivate
-{
-};
 
 static void
 nux_layout_accessible_class_init (NuxLayoutAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = nux_layout_accessible_initialize;
   atk_class->ref_child = nux_layout_accessible_ref_child;
   atk_class->get_n_children = nux_layout_accessible_get_n_children;
-
-  g_type_class_add_private (gobject_class, sizeof (NuxLayoutAccessiblePrivate));
 }
 
 static void
 nux_layout_accessible_init (NuxLayoutAccessible *layout_accessible)
 {
-  layout_accessible->priv = NUX_LAYOUT_ACCESSIBLE_GET_PRIVATE (layout_accessible);
 }
 
 AtkObject*
@@ -92,9 +89,21 @@ static void
 nux_layout_accessible_initialize (AtkObject *accessible,
                                   gpointer data)
 {
+  nux::Object *nux_object = NULL;
+  nux::Layout *layout = NULL;
+
   ATK_OBJECT_CLASS (nux_layout_accessible_parent_class)->initialize (accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  layout = dynamic_cast<nux::Layout *>(nux_object);
+
+  layout->ViewAdded.connect (sigc::bind (sigc::ptr_fun (on_view_changed_cb),
+                                         accessible, TRUE));
+
+  layout->ViewRemoved.connect (sigc::bind (sigc::ptr_fun (on_view_changed_cb),
+                                           accessible, FALSE));
 }
 
 static gint
@@ -150,4 +159,66 @@ nux_layout_accessible_ref_child (AtkObject *obj,
   g_object_ref (child_accessible);
 
   return child_accessible;
+}
+
+/* private */
+static void
+on_view_changed_cb (nux::Layout *layout,
+                    nux::Area *area,
+                    AtkObject *accessible,
+                    gboolean is_add)
+{
+  const gchar *signal_name = NULL;
+  AtkObject *atk_child = NULL;
+  gint index;
+
+  g_return_if_fail (NUX_IS_LAYOUT_ACCESSIBLE (accessible));
+
+  atk_child = unity_a11y_get_accessible (area);
+
+  if (is_add)
+    {
+      signal_name = "children-changed::add";
+      index = nux_layout_accessible_get_n_children (accessible) - 1;
+    }
+  else
+    {
+      signal_name = "children-changed::remove";
+      index = search_for_child (accessible, layout, area);
+    }
+
+  g_debug ("[a11y][layout] view change. parent=(%p:%s), child=(%p:%s) at (%i) added=(%i)",
+           accessible, atk_object_get_name (accessible),
+           atk_child, atk_object_get_name (atk_child),
+           index, is_add);
+
+  g_signal_emit_by_name (accessible, signal_name, index, atk_child, NULL);
+}
+
+static int
+search_for_child (AtkObject *accessible,
+                  nux::Layout *layout,
+                  nux::Area *area)
+{
+  std::list<nux::Area *> element_list;
+  std::list<nux::Area *>::iterator it;
+  nux::Area *current_area = NULL;
+  gint result = 0;
+  gboolean found = FALSE;
+
+  element_list = layout->GetChildren ();
+
+  for (it = element_list.begin (); it != element_list.end (); it++,result++)
+    {
+      current_area = *it;
+      if (current_area == area)
+        {
+          found = TRUE;
+          break;
+        }
+    }
+
+  if (!found) result = -1;
+
+  return result;
 }

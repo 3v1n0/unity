@@ -26,6 +26,7 @@
 #include "Nux/WindowCompositor.h"
 
 #include "PanelIndicatorObjectEntryView.h"
+#include "PanelStyle.h"
 #include "Variant.h"
 
 #include <glib.h>
@@ -42,18 +43,25 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _proxy (proxy),
   _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
 {
-  _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
-  _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_indicator_activate_changed_connection = _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   _padding = padding;
+
+  _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
-  
+
+  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
 PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
 {
+  _on_indicator_activate_changed_connection.disconnect ();
+  _on_indicator_updated_connection.disconnect ();
+  _on_panelstyle_changed_connection.disconnect ();
+  g_signal_handler_disconnect (gtk_settings_get_default (), _on_font_changed_connection);
 }
 
 void
@@ -71,8 +79,8 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
   if ((_proxy->label_visible && _proxy->label_sensitive)
       || (_proxy->icon_visible && _proxy->icon_sensitive))
   {
-    _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation
-                      PANEL_HEIGHT,
+    _proxy->ShowMenu (GetAbsoluteGeometry ().x + 1, //cairo translation
+                      GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
   }
@@ -87,8 +95,8 @@ PanelIndicatorObjectEntryView::OnMouseWheel (int x, int y, int delta, unsigned l
 void
 PanelIndicatorObjectEntryView::Activate ()
 {
-  _proxy->ShowMenu (GetGeometry ().x + 1, //cairo translation FIXME: Make this into one function
-                    PANEL_HEIGHT,
+  _proxy->ShowMenu (GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
+                    GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                     time (NULL),
                     1);
 }
@@ -125,9 +133,10 @@ void
 PanelIndicatorObjectEntryView::Refresh ()
 {
   GdkPixbuf            *pixbuf = _proxy->GetPixbuf ();
-  char                 *label = fix_string (_proxy->GetLabel ());
+  char                 *label = NULL;
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
+  PangoAttrList        *attrs = NULL;
   GtkSettings          *settings = gtk_settings_get_default ();
   cairo_t              *cr;
   char                 *font_description = NULL;
@@ -142,6 +151,28 @@ PanelIndicatorObjectEntryView::Refresh ()
   int  text_width = 0;
   int  text_height = 0;
 
+  PanelStyle *style = PanelStyle::GetDefault ();
+  nux::Color  textcol = style->GetTextColor ();
+  nux::Color  textshadowcol = style->GetTextShadow ();
+
+  if (_proxy->show_now)
+  {
+    if (!pango_parse_markup (_proxy->GetLabel (),
+                             -1,
+                             '_',
+                             &attrs,
+                             &label,
+                             NULL,
+                             NULL))
+    {
+      label = g_strdup (_proxy->GetLabel ());
+      g_debug ("failed");
+    }
+  }
+  else
+  {
+    label = fix_string (_proxy->GetLabel ());
+  }
 
   // First lets figure out our size
   if (pixbuf && _proxy->icon_visible)
@@ -165,6 +196,12 @@ PanelIndicatorObjectEntryView::Refresh ()
     pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
 
     layout = pango_cairo_create_layout (cr);
+    if (attrs)
+    {
+      pango_layout_set_attributes (layout, attrs);
+      pango_attr_list_unref (attrs);
+    }
+
     pango_layout_set_font_description (layout, desc);
     pango_layout_set_text (layout, label, -1);
     
@@ -195,6 +232,11 @@ PanelIndicatorObjectEntryView::Refresh ()
   cr = cairo_graphics.GetContext();
   cairo_set_line_width (cr, 1);
 
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint (cr);
+
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+
   if (_proxy->GetActive ())
     draw_menu_bg (cr, width, height);
 
@@ -203,7 +245,7 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   if (_proxy->GetPixbuf () && _proxy->icon_visible)
   {
-    gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (height - gdk_pixbuf_get_height (pixbuf))/2);
+    gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
@@ -216,15 +258,22 @@ PanelIndicatorObjectEntryView::Refresh ()
     pango_cairo_update_layout (cr, layout);
 
     // Once for the homies that couldn't be here
-    cairo_set_source_rgb (cr, 50/255.0f, 50/255.0f, 45/255.0f);
-    cairo_move_to (cr, x, ((height - text_height)/2)-1);
+    cairo_set_source_rgba (cr,
+                           textshadowcol.GetRed (),
+                           textshadowcol.GetGreen (),
+                           textshadowcol.GetBlue (),
+                           1.0f - textshadowcol.GetRed ());
+    cairo_move_to (cr, x, (int)(((height - text_height)/2)+1));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
-    cairo_set_source_rgba (cr, 223/255.0f, 219/255.0f, 210/255.0f,
-                           _proxy->label_sensitive ? 1.0f : 0.0f);
-    cairo_move_to (cr, x, (height - text_height)/2);
+    cairo_set_source_rgba (cr,
+                           textcol.GetRed (),
+                           textcol.GetGreen (),
+                           textcol.GetBlue (),
+                           _proxy->label_sensitive ? 1.0f : 0.5f);
+    cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
   }
@@ -245,23 +294,17 @@ PanelIndicatorObjectEntryView::Refresh ()
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   
   nux::ROPConfig rop; 
-  rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
-  rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                                            texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            nux::Color::White,  // The color used to modulate the texture.
-                                                            false,  // Write the alpha value of the texture to the destination buffer.
-                                                            rop     // Use the given raster operation to set the blending when the layer is being rendered.
-                                                            );
-
+                                                            texxform,
+                                                            nux::Colors::White,
+                                                            true,
+                                                            rop);
   SetPaintLayer (texture_layer);
     
-  // We don't need the texture anymore. Since it hasn't been reference, it ref count should still be 1.
-  // UnReference it and it will be destroyed.
   texture2D->UnReference ();
-
-  // The texture layer has been cloned by this object when calling SetPaintLayer. It is safe to delete it now.
   delete texture_layer;
 
   NeedRedraw ();
@@ -282,6 +325,11 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   /* FIXME */
   double mpi = 3.14159265358979323846;
 
+  PanelStyle *style = PanelStyle::GetDefault ();
+  nux::Color bgtop = style->GetBackgroundTop ();
+  nux::Color bgbot = style->GetBackgroundBottom ();
+  nux::Color line = style->GetLineColor ();
+
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
   cairo_set_line_width (cr, 1.0);
@@ -295,15 +343,31 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
 
   cairo_pattern_t * pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 83/255.0f, 82/255.0f, 78/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 66/255.0f, 65/255.0f, 63/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     bgtop.GetRed (),
+                                     bgtop.GetGreen (),
+                                     bgtop.GetBlue (),
+                                     1.0f - bgbot.GetRed ());
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f - bgtop.GetRed ());
   cairo_set_source (cr, pat);
   cairo_fill_preserve (cr);
   cairo_pattern_destroy (pat);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 62/255.0f, 61/255.0f, 58/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 54/255.0f, 54/255.0f, 52/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     line.GetRed (),
+                                     line.GetGreen (),
+                                     line.GetBlue (),
+                                     1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     line.GetRed (),
+                                     line.GetGreen (),
+                                     line.GetBlue (),
+                                     1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);
@@ -319,8 +383,16 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+3);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0, 92/255.0f, 90/255.0f, 85/255.0f, 1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0, 70/255.0f, 69/255.0f, 66/255.0f, 1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 0.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f);
+  cairo_pattern_add_color_stop_rgba (pat, 1.0,
+                                     bgbot.GetRed (),
+                                     bgbot.GetGreen (),
+                                     bgbot.GetBlue (),
+                                     1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
   cairo_pattern_destroy (pat);
@@ -348,4 +420,18 @@ PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
     .add("icon_sensitive", _proxy->icon_sensitive)
     .add("icon_visible", _proxy->icon_visible)
     .add("active", _proxy->GetActive());
+}
+
+bool
+PanelIndicatorObjectEntryView::GetShowNow ()
+{
+  return _proxy ? _proxy->show_now : false;
+}
+
+void
+PanelIndicatorObjectEntryView::OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data)
+{
+  PanelIndicatorObjectEntryView *self = (PanelIndicatorObjectEntryView*) data;
+
+  self->Refresh();
 }

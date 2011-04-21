@@ -27,8 +27,6 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include <dee.h>
-
 #include "PlaceFactory.h"
 #include "PlaceEntry.h"
 
@@ -39,10 +37,14 @@ public:
   ~PlaceEntryHome ();
 
    /* Overrides */
+  Place * GetParent () { return NULL; }
+
   const gchar * GetId          ();
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
+  guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
@@ -59,32 +61,45 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  DeeModel * GetSectionsModel ();
-  DeeModel * GetGroupsModel ();
-  DeeModel * GetResultsModel ();
+  void ForeachSection (SectionForeachCallback slot) {};
 
-  DeeModel * GetGlobalResultsModel () { return NULL; };
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
+
+  void ForeachGlobalGroup  (GroupForeachCallback slot) {};
+  void ForeachGlobalResult (ResultForeachCallback slot) {};
+
+  void GetResult (const void *id, ResultForeachCallback slot);
+  void GetGlobalResult (const void *id, ResultForeachCallback slot) {};
+
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id) {};
 
 private:
   void LoadExistingEntries ();
   void OnPlaceAdded (Place *place);
   void OnPlaceEntryAdded (PlaceEntry *entry);
+  void OnPlaceEntryRemoved (PlaceEntry *entry);
   void RefreshEntry (PlaceEntry *entry);
 
-  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
-  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryHome *self);
+  void OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnForeachResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void OnSearchFinished (const char                           *search_string,
+                         guint32                               section_id,
+                         std::map<const char *, const char *>& hints);
 
-  // FIXME: I know this is horrible but I can't fix it this week, have a much better plan for next
 public:
   PlaceFactory *_factory;
-  DeeModel     *_sections_model;
-  DeeModel     *_groups_model;
-  DeeModel     *_results_model;
 
   std::map<char *, gchar *> _hints;
-
-  std::map<DeeModel *, int> _model_to_group;
   std::vector<PlaceEntry *> _entries;
+  std::map<const void *, PlaceEntry *> _id_to_entry;
+
+  ResultForeachCallback _foreach_callback;
+
+  guint       _n_searches_done;
+  std::string _last_search;
 };
 
 #endif // PLACE_ENTRY_HOME_H

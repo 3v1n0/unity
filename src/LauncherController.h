@@ -65,11 +65,22 @@ private:
     SimpleLauncherIcon*    _expoIcon;
     int                    _num_workspaces;
 
+    sigc::connection _on_launcher_add_request_connection;
+    sigc::connection _on_launcher_remove_request_connection;
+    sigc::connection _on_place_section_icon_added_connection;
+    sigc::connection _on_device_section_icon_added_connection;
+    guint            _bamf_timer_handler_id;
+    sigc::connection _on_remote_model_entry_added_connection;
+    sigc::connection _on_remote_model_entry_removed_connection;
+
+    guint32 _on_view_opened_id;
+
     void SortAndSave ();
 
     void OnIconAdded (LauncherIcon *icon);
     
-    void OnLauncherDropped (char *path, LauncherIcon *before);
+    void OnLauncherAddRequest (char *path, LauncherIcon *before);
+    void OnLauncherRemoveRequest (LauncherIcon *icon);
 
     void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
     void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
@@ -85,13 +96,15 @@ private:
 
     void SetupBamf ();
 
-    void OnExpoClicked (int button);
+    void OnExpoActivated ();
     
     /* statics */
     
     static bool BamfTimerCallback (void *data);
 
     static void OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer data);
+    
+    sigc::connection _on_expoicon_activate_connection;
 };
 
 #endif // LAUNCHERCONTROLLER_H

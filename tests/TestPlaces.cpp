@@ -36,27 +36,31 @@
 #include "Place.h"
 #include "PlaceEntry.h"
 
-class TestApp 
+class TestApp
 {
 public:
   TestApp ()
-  {   
+  {
     nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
     _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
     _combo->SetMinimumWidth (150);
     _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
+    _combo->SetCanFocus (false);
+    g_debug ("can we focus? %s", _combo->CanFocus () ? "yes :(" : "no! :D");
     layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
 
     _factory = PlaceFactory::GetDefault ();
     PopulateEntries ();
     _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
-    
+
     PlacesView *view = new PlacesView (_factory);
-    view->SetMinMaxSize(938, 500);
+    view->SetMinMaxSize(1024, 768);
     layout->AddView(view, 1, nux::eCenter, nux::eFix);
+    view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
 
     layout->SetContentDistribution(nux::eStackCenter);
+    layout->SetFocused (true);
     nux::GetGraphicsThread()->SetLayout (layout);
   }
 
@@ -70,6 +74,8 @@ public:
     std::vector<PlaceEntry *> entries = place->GetEntries ();
     std::vector<PlaceEntry *>::iterator i;
 
+    place->Connect ();
+    
     for (i = entries.begin (); i != entries.end (); ++i)
     {
       PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
@@ -87,6 +93,8 @@ public:
       Place *place = static_cast<Place *> (*it);
       std::vector<PlaceEntry *> entries = place->GetEntries ();
       std::vector<PlaceEntry *>::iterator i;
+
+      place->Connect ();
 
       for (i = entries.begin (); i != entries.end (); ++i)
       {
@@ -148,9 +156,9 @@ int main(int argc, char **argv)
   nux::NuxInitialize(0);
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
-                                                938, 500, 0, &ThreadWidgetInit, 0);
+                                                1024, 768, 0, &ThreadWidgetInit, 0);
   app = new TestApp ();
-  
+
   wt->Run(NULL);
   delete wt;
   return 0;

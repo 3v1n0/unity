@@ -74,6 +74,10 @@ IndicatorObjectProxyRemote::AddEntry (const gchar *entry_id,
                                       bool         image_sensitive,
                                       bool         image_visible)
 {
+  // sanity check
+  if (!entry_id || !label || !image_data)
+    return;
+
   IndicatorObjectEntryProxyRemote *remote = NULL;
   std::vector<IndicatorObjectEntryProxy*>::iterator it;
   
@@ -149,7 +153,7 @@ IndicatorObjectProxyRemote::OnShowMenuRequestReceived (const char *entry_id,
 
 void
 IndicatorObjectProxyRemote::OnScrollReceived (const char *entry_id,
-                                                          int        delta)
+                                              int        delta)
 {
   OnScroll.emit(entry_id, delta);
 }

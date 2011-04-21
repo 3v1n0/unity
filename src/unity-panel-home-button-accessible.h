@@ -34,14 +34,10 @@ G_BEGIN_DECLS
 
 typedef struct _UnityPanelHomeButtonAccessible        UnityPanelHomeButtonAccessible;
 typedef struct _UnityPanelHomeButtonAccessibleClass   UnityPanelHomeButtonAccessibleClass;
-typedef struct _UnityPanelHomeButtonAccessiblePrivate UnityPanelHomeButtonAccessiblePrivate;
 
 struct _UnityPanelHomeButtonAccessible
 {
   NuxViewAccessible parent;
-
-  /* < private > */
-  UnityPanelHomeButtonAccessiblePrivate *priv;
 };
 
 struct _UnityPanelHomeButtonAccessibleClass

@@ -112,8 +112,8 @@ class Mouse(object):
 class UnityTests(object):
     '''Runs a series of unity actions, triggering GL calls'''
 
-    _bfb_x = 24
-    _bfb_y = 10
+    _bfb_x = 0
+    _bfb_y = 0
 	
     # this is totally lame. This should not be hard coded, but until I can get
     # unity to run in gdb and debug why introspection is crashing and hardlocking

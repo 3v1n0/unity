@@ -1,4 +1,4 @@
-/*
+  /*
  * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -21,11 +21,14 @@
 #include <config.h>
 #endif
 
+#include "panel-marshal.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+
+#include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -67,6 +70,8 @@ enum
   RE_SYNC,
   ACTIVE_MENU_POINTER_MOTION,
   ENTRY_ACTIVATE_REQUEST,
+  ENTRY_SHOW_NOW_CHANGED,
+  GEOMETRIES_CHANGED,
 
   LAST_SIGNAL
 };
@@ -179,6 +184,25 @@ panel_service_class_init (PanelServiceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+ _service_signals[GEOMETRIES_CHANGED] =
+    g_signal_new ("geometries-changed",
+      G_OBJECT_CLASS_TYPE (obj_class),
+      G_SIGNAL_RUN_LAST,
+      0,
+      NULL, NULL,
+      panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+      G_TYPE_NONE, 6,
+      G_TYPE_OBJECT, G_TYPE_POINTER,
+      G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+
+ _service_signals[ENTRY_SHOW_NOW_CHANGED] =
+    g_signal_new ("entry-show-now-changed",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  panel_marshal_VOID__STRING_BOOLEAN,
+                  G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
@@ -486,6 +510,19 @@ on_entry_removed (IndicatorObject      *object,
                   IndicatorObjectEntry *entry,
                   PanelService         *self)
 {
+  PanelServicePrivate *priv;
+  gchar *id;
+
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (entry != NULL);
+
+  priv = self->priv;
+
+  id = g_strdup_printf ("%p", entry);
+  g_hash_table_remove (priv->entry2indicator_hash, entry);
+  g_hash_table_remove (priv->id2entry_hash, id);
+  g_free (id);
+
   notify_object (object);
 }
 
@@ -515,11 +552,37 @@ on_indicator_menu_show (IndicatorObject      *object,
 }
 
 static void
+on_indicator_menu_show_now_changed (IndicatorObject      *object,
+                                    IndicatorObjectEntry *entry,
+                                    gboolean              show_now_changed,
+                                    PanelService         *self)
+{
+  gchar *entry_id;
+  
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+
+  entry_id = g_strdup_printf ("%p", entry);
+
+  g_signal_emit (self, _service_signals[ENTRY_SHOW_NOW_CHANGED], 0, entry_id, show_now_changed);
+
+  g_free (entry_id);
+}
+
+static const gchar * indicator_environment[] = {
+  "unity",
+  "unity-3d",
+  "unity-panel-service",
+  NULL
+};
+
+static void
 load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
 {
   PanelServicePrivate *priv = self->priv;
   gchar *name;
   GList *entries, *entry;
+
+  indicator_object_set_environment(object, (const GStrv)indicator_environment);
 
   if (_name != NULL)
     name = g_strdup (_name);
@@ -538,6 +601,8 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
                     G_CALLBACK (on_entry_moved), self);
   g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_MENU_SHOW,
                     G_CALLBACK (on_indicator_menu_show), self);
+  g_signal_connect (object, INDICATOR_OBJECT_SIGNAL_SHOW_NOW_CHANGED,
+                    G_CALLBACK (on_indicator_menu_show_now_changed), self);
 
   entries = indicator_object_get_entries (object);
   for (entry = entries; entry != NULL; entry = entry->next)
@@ -592,16 +657,16 @@ load_indicators (PanelService *self)
 static gint
 name2order (const gchar * name)
 {
-	int i;
+  int i;
 
-	for (i = 0; indicator_order[i] != NULL; i++)
+  for (i = 0; indicator_order[i] != NULL; i++)
     {
-		  if (g_strcmp0(name, indicator_order[i]) == 0)
+      if (g_strcmp0(name, indicator_order[i]) == 0)
         {
-		  	  return i;
-    		}
-	  }
-	return -1;
+          return i;
+        }
+    }
+  return -1;
 }
 
 static int
@@ -848,6 +913,45 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   return g_variant_builder_end (&b);
 }
 
+void
+panel_service_sync_geometry (PanelService *self,
+           const gchar *indicator_id,
+           const gchar *entry_id,
+           gint x,
+           gint y,
+           gint width,
+           gint height)
+{
+  PanelServicePrivate *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
+}
+
+static gboolean
+should_skip_menu (IndicatorObjectEntry *entry)
+{
+  gboolean label_ok = FALSE;
+  gboolean image_ok = FALSE;
+
+  g_return_val_if_fail (entry != NULL, TRUE);
+
+  if (GTK_IS_LABEL (entry->label))
+    {
+      label_ok = gtk_widget_get_visible (GTK_WIDGET (entry->label))
+        && gtk_widget_is_sensitive (GTK_WIDGET (entry->label));
+    }
+
+  if (GTK_IS_IMAGE (entry->image))
+    {
+      image_ok = gtk_widget_get_visible (GTK_WIDGET (entry->image))
+        && gtk_widget_is_sensitive (GTK_WIDGET (entry->image));
+    }
+
+  return !label_ok && !image_ok;
+}
+
 static void
 activate_next_prev_menu (PanelService         *self,
                          IndicatorObject      *object,
@@ -860,9 +964,11 @@ activate_next_prev_menu (PanelService         *self,
   gint    n_entries;
   IndicatorObjectEntry *new_entry;
   gchar  *id;
- 
+
   entries = indicator_object_get_entries (object);
   n_entries = g_list_length (entries);
+  // all of these are for switching between independant indicators (for example, sound to messaging. 
+  // As opposed to batter to appmenu)
   if (n_entries == 1
       || (g_list_index (entries, entry) == 0 && direction == GTK_MENU_DIR_PARENT)
       || (g_list_index (entries, entry) == n_entries - 1 && direction == GTK_MENU_DIR_CHILD))
@@ -873,10 +979,12 @@ activate_next_prev_menu (PanelService         *self,
       
       n_indicators = g_slist_length (priv->indicators);
 
+      // changing from first indicator to last indicator
       if (g_slist_index (indicators, object) == 0 && direction == GTK_MENU_DIR_PARENT)
         {
           new_object = g_slist_nth_data (indicators, n_indicators - 1);
         }
+      // changing from last indicator to first indicator
       else if (g_slist_index (indicators, object) == n_indicators -1 && direction == GTK_MENU_DIR_CHILD)
         {
           new_object = g_slist_nth_data (indicators, 0);
@@ -888,21 +996,47 @@ activate_next_prev_menu (PanelService         *self,
           new_object = g_slist_nth_data (indicators, new_object_index);
         }
 
+      if (!INDICATOR_IS_OBJECT (new_object))
+        return;
       new_entries = indicator_object_get_entries (new_object);
+      // if the indicator has no entries, move to the next/prev one until we find one with entries
+      while (new_entries == NULL)
+        {
+          gint cur_object_index = g_slist_index (indicators, new_object);
+          gint new_object_index = cur_object_index + (direction == GTK_MENU_DIR_CHILD ? 1 : -1);
+          new_object = g_slist_nth_data (indicators, new_object_index);
+          if (!INDICATOR_IS_OBJECT (new_object))
+            return;
+          new_entries = indicator_object_get_entries (new_object);
+        }
+
       new_entry = g_list_nth_data (new_entries, direction == GTK_MENU_DIR_PARENT ? g_list_length (new_entries) - 1 : 0);
 
+      g_list_free (entries);
       g_list_free (new_entries);
+
+      if (should_skip_menu (new_entry))
+        {	  
+          activate_next_prev_menu (self, new_object, new_entry, direction);
+      	  return;
+        }
     }
+  // changing within a group of indicators (for example, entries within appmenu)
   else
     {
       new_entry = g_list_nth_data (entries, g_list_index (entries, entry) + (direction == GTK_MENU_DIR_CHILD ? 1 : -1));
+      g_list_free (entries);
+
+      if (should_skip_menu (new_entry))
+        { 
+          activate_next_prev_menu (self, object, new_entry, direction);
+          return;
+        }
     }
-  
+
   id = g_strdup_printf ("%p", new_entry);
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATE_REQUEST], 0, id);
-
   g_free (id);
-  g_list_free (entries);
 }
 
 static void
@@ -963,10 +1097,13 @@ panel_service_show_entry (PanelService *self,
 {
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
-  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  IndicatorObject      *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+  GtkWidget            *last_menu;
 
   if (priv->last_entry == entry)
     return;
+
+  last_menu = GTK_WIDGET (priv->last_menu);
   
   if (GTK_IS_MENU (priv->last_menu))
     {
@@ -975,7 +1112,6 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
       g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-      gtk_menu_popdown (GTK_MENU (priv->last_menu));
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
@@ -1016,6 +1152,13 @@ panel_service_show_entry (PanelService *self,
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
+
+  /* We popdown the old one last so we don't accidently send key focus back to the
+   * active application (which will make it change colour (as state changes), which
+   * then looks like flickering to the user.
+   */
+  if (GTK_MENU (last_menu))
+    gtk_menu_popdown (GTK_MENU (last_menu));
 }
 
 void

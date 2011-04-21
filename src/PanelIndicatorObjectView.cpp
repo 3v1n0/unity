@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -18,6 +18,7 @@
  */
 
 #include "Nux/Nux.h"
+#include "Nux/Area.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 
@@ -33,6 +34,7 @@
 
 PanelIndicatorObjectView::PanelIndicatorObjectView ()
 : View (NUX_TRACKER_LOCATION),
+  _layout (NULL),
   _proxy (NULL),
   _entries ()
 {
@@ -52,34 +54,39 @@ PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
   // so redefining the minimum value for them.
   SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
  
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
+  _on_entry_added_connection = _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
+  _on_entry_moved_connection = _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
+  _on_entry_removed_connection = _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
 }
 
 PanelIndicatorObjectView::~PanelIndicatorObjectView ()
 {
+  _on_entry_added_connection.disconnect ();
+  _on_entry_moved_connection.disconnect ();
+  _on_entry_removed_connection.disconnect ();
 }
 
 long
 PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+
+  if (_layout)
+    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
 void
 PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-
 }
 
 void
 PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-  _layout->ProcessDraw (GfxContext, force_draw);
+  if (_layout)
+    _layout->ProcessDraw (GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 
@@ -94,8 +101,8 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 
   AddChild (view);
 
-  this->ComputeChildLayout ();
-  NeedRedraw ();  
+  QueueRelayout();
+  QueueDraw ();
 }
 
 void
@@ -122,8 +129,8 @@ PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
       }
   }
 
-  this->ComputeChildLayout (); 
-  NeedRedraw ();
+  QueueRelayout ();
+  QueueDraw ();
 }
 
 const gchar *
@@ -149,3 +156,4 @@ PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
+

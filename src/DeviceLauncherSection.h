@@ -24,6 +24,7 @@
 
 #include "Launcher.h"
 #include "LauncherIcon.h"
+#include "DevicesSettings.h"
 
 #include <gio/gio.h>
 
@@ -40,10 +41,22 @@ private:
   static void OnVolumeAdded (GVolumeMonitor        *monitor,
                              GVolume               *volume,
                              DeviceLauncherSection *self);
-
+  static void OnVolumeRemoved (GVolumeMonitor        *monitor,
+                               GVolume               *volume,
+                               DeviceLauncherSection *self);
+  static void OnMountAdded (GVolumeMonitor        *monitor,
+                            GMount                *mount,
+                            DeviceLauncherSection *self);
 public:
   Launcher       *_launcher;
   GVolumeMonitor *_monitor;
+  GHashTable     *_ht;
+
+private:
+  gulong _on_volume_added_handler_id;
+  gulong _on_volume_removed_handler_id;
+  gulong _on_mount_added_handler_id;
+  gulong _on_device_populate_entry_id;
 };
 
 #endif // _DEVICE_LAUNCHER_SECTION_H_

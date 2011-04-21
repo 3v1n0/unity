@@ -20,8 +20,11 @@
 #ifndef PLACES_SEARCH_BAR_H
 #define PLACES_SEARCH_BAR_H
 
+#include <Nux/LayeredLayout.h>
+#include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
+#include <Nux/ComboBoxSimple.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include "Introspectable.h"
@@ -29,7 +32,14 @@
 #include "Nux/EditTextBox.h"
 #include "Nux/TextEntry.h"
 
+#include "PlacesSearchBarSpinner.h"
+
 #include "PlaceEntry.h"
+
+class PlacesView;
+#include <gtk/gtk.h>
+
+#include "StaticCairoText.h"
 
 class PlacesSearchBar : public Introspectable, public nux::View
 {
@@ -42,34 +52,63 @@ public:
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
-
-  void SetActiveEntry (PlaceEntry *entry, guint section_id, const char *search_string);
+  void SetActiveEntry (PlaceEntry *entry,
+                       guint       section_id,
+                       const char *search_string);
+  void OnSearchFinished ();
 
   sigc::signal<void, const char *> search_changed;
-  
+  sigc::signal<void> activated;
+
+  nux::TextEntry* GetTextEntry ()
+  {
+    return _pango_entry;
+  }
+
 protected:
   // Introspectable methods
   const gchar * GetName ();
-  const gchar * GetChildsName (); 
+  const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:
   void UpdateBackground ();
   void OnSearchChanged (nux::TextEntry *text_entry);
   void EmitLiveSearch ();
+  void OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section);
+  void OnComboChanged (nux::ComboBoxSimple *simple);
+  void OnMenuClosing (nux::MenuPage *menu, int x, int y);
+  void OnEntryActivated ();
+  void OnLayeredLayoutQueueDraw (int i);
 
   static bool OnLiveSearchTimeout (PlacesSearchBar *self);
+  static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
+  static void OnPlacesClosed (GVariant *variant, PlacesSearchBar *self); 
 
 private:
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
+  nux::LayeredLayout      *_layered_layout;
+  nux::StaticCairoText    *_hint;
   nux::TextEntry          *_pango_entry;
   int _last_width;
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
+  sigc::connection         _spinner_mouse_click_conn;
+  sigc::connection         _text_changed_conn;
+  sigc::connection         _entry_activated_conn;
+  sigc::connection         _combo_changed_conn;
+  sigc::connection         _menu_conn;
+  guint32                  _font_changed_id;
+  sigc::connection         _cursor_moved_conn;
+
+  friend class PlacesView;
+  PlacesSearchBarSpinner  *_spinner;
+  nux::ComboBoxSimple     *_combo;
+
+  guint _ubus_handle;
 };
 
 #endif

@@ -20,6 +20,8 @@
 #ifndef PANEL_HOME_BUTTON_H
 #define PANEL_HOME_BUTTON_H
 
+#include <gtk/gtk.h>
+
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <NuxImage/CairoGraphics.h>
@@ -34,24 +36,41 @@ public:
   PanelHomeButton ();
   ~PanelHomeButton ();
 
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags); 
   void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
   void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  void SetButtonWidth (int button_width);
 
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
+  
+  void ProcessDndEnter ();
+  void ProcessDndLeave ();
+  void ProcessDndMove (int x, int y, std::list<char *> mimes);
+  void ProcessDndDrop (int x, int y);
 
 private:
   void Refresh ();
+  static void OnIconThemeChanged (GtkIconTheme *icon_theme, gpointer data);
+  
+  static void OnLauncherIconUrgentChanged (GVariant *data, gpointer user_data);
+  static void OnPlaceShown (GVariant *data, gpointer user_data);
+  static void OnPlaceHidden (GVariant *data, gpointer user_data);
 
 private:
-  nux::CairoGraphics _util_cg;
-  GdkPixbuf *_pixbuf;
+  int _button_width;
+  int _urgent_count;
+  bool _pressed;
+  
+  gulong _theme_changed_id;
+  guint _urgent_interest;
+  guint _shown_interest;
+  guint _hidden_interest;
 };
 
 #endif // PANEL_HOME_BUTTON_H

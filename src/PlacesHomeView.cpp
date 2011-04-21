@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "config.h"
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
@@ -31,126 +33,373 @@
 
 #include <glib.h>
 #include <glib/gi18n-lib.h>
-
+#include <gio/gdesktopappinfo.h>
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "PlacesHomeView.h"
 
+#include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
+#include "PlacesStyle.h"
 #include "Variant.h"
 
-typedef struct
+#include <string>
+#include <vector>
+
+#define DESKTOP_DIR  "/desktop/gnome/applications"
+#define BROWSER_DIR  DESKTOP_DIR"/browser"
+#define MAIL_DIR     "/desktop/gnome/url-handlers/mailto"
+#define MEDIA_DIR    DESKTOP_DIR"/media"
+
+#define DELTA_DOUBLE_REQUEST 500000000
+
+enum
 {
-  gchar *name;
-  gchar *icon;
-  gchar *exec;
-
-} TileInfo;
-
-static TileInfo tile_infos[] = {
-  {
-    (gchar*)_("Find Media Apps"),
-    (gchar*)"applications-multimedia",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Internet Apps"),
-    (gchar*)"applications-internet",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find More Apps"),
-    (gchar*)"find",
-    (gchar*)"xdg-open /usr/share/applications"
-  },
-  {
-    (gchar*)_("Find Files"),
-    (gchar*)"folder-saved-search",
-    (gchar*)"xdg-open ~"
-  },
-  {
-    (gchar*)_("Browse the Web"),
-    (gchar*)"firefox",
-    (gchar*)"firefox"
-  },
-  {
-    (gchar*)_("View Photos"),
-    (gchar*)"shotwell",
-    (gchar*)"shotwell"
-  },
-  {
-    (gchar*)_("Check Email"),
-    (gchar*)"evolution",
-    (gchar*)"evolution"
-  },
-  {
-    (gchar*)_("Listen to Music"),
-    (gchar*)"media-player-banshee",
-    (gchar*)"banshee"
-  }
+  TYPE_PLACE=0,
+  TYPE_EXEC
 };
 
-PlacesHomeView::PlacesHomeView (NUX_FILE_LINE_DECL)
-:   View (NUX_FILE_LINE_PARAM)
+class Shortcut : public PlacesSimpleTile
 {
-  _bg_layer = new nux::ColorLayer (nux::Color (0xff999893), true);
-
-  _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
-  SetCompositionLayout (_layout);
- 
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
+public:
+  Shortcut (const char *icon, const char *name, int size)
+  : PlacesSimpleTile (icon, name, size),
+    _id (0),
+    _place_id (NULL),
+    _place_section (0),
+    _exec (NULL)
   {
-    gchar *markup = g_strdup_printf ("<big><b>%s</b></big>", tile_infos[i].name);
-
-    PlacesSimpleTile *tile = new PlacesSimpleTile (tile_infos[i].icon,
-                                                   markup,
-                                                   96);
-    _layout->AddView (tile, 1, nux::eLeft, nux::eFull);
-
-    tile->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnTileClicked));
-
-    g_free (markup);
+    SetDndEnabled (false, false);
   }
 
-  _layout->ForceChildrenSize (true);
-  _layout->SetChildrenSize (186, 186);
-  _layout->EnablePartialVisibility (false);
+  ~Shortcut ()
+  {
+    g_free (_place_id);
+    g_free (_exec);
+  }
 
-  _layout->SetVerticalExternalMargin (48);
-  _layout->SetHorizontalExternalMargin (48);
+  int      _id;
+  gchar   *_place_id;
+  guint32  _place_section;
+  char    *_exec;
+};
+
+PlacesHomeView::PlacesHomeView ()
+: _ubus_handle (0)
+{
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+
+  SetName (_("Shortcuts"));
+  SetIcon (PKGDATADIR"/shortcuts_group_icon.png");
+  
+  _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  SetChildLayout (_layout);
+ 
+  _layout->ForceChildrenSize (true);
+  _layout->SetChildrenSize (style->GetHomeTileWidth (), style->GetHomeTileHeight ());
+  _layout->EnablePartialVisibility (false);
+  _layout->SetHeightMatchContent (true);
+  _layout->SetVerticalExternalMargin (32);
+  _layout->SetHorizontalExternalMargin (32);
   _layout->SetVerticalInternalMargin (32);
   _layout->SetHorizontalInternalMargin (32);
+  _layout->SetMinMaxSize ((style->GetHomeTileWidth () * 4) + (32 * 5),
+                          (style->GetHomeTileHeight () * 2) + (32 *3));
+
+  _client = gconf_client_get_default ();
+  gconf_client_add_dir (_client,
+                        BROWSER_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_add_dir (_client,
+                        MAIL_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_add_dir (_client,
+                        MEDIA_DIR,
+                        GCONF_CLIENT_PRELOAD_NONE,
+                        NULL);
+  gconf_client_notify_add(_client,
+                          BROWSER_DIR"/exec", 
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+  gconf_client_notify_add(_client,
+                          MAIL_DIR"/command",
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+  gconf_client_notify_add(_client,
+                          MEDIA_DIR"/exec",
+                          (GConfClientNotifyFunc)OnKeyChanged,
+                          this,
+                          NULL, NULL);
+                          
+  _last_activate_time.tv_sec = 0;
+  _last_activate_time.tv_nsec = 0;
+
+  _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
+                                                UBUS_DASH_EXTERNAL_ACTIVATION,
+                                                (UBusCallback) &PlacesHomeView::DashVisible,
+                                                this);
+
+  //In case the GConf key is invalid (e.g. when an app was uninstalled), we
+  //rely on a fallback "whitelist" mechanism instead of showing nothing at all
+  _browser_alternatives.push_back("firefox");
+  _browser_alternatives.push_back("chromium-browser");
+  _browser_alternatives.push_back("epiphany-browser");
+  _browser_alternatives.push_back("midori");
+  
+  _photo_alternatives.push_back("shotwell");
+  _photo_alternatives.push_back("f-spot");
+  _photo_alternatives.push_back("gthumb");
+  _photo_alternatives.push_back("gwenview");
+  _photo_alternatives.push_back("eog");
+  
+  _email_alternatives.push_back("evolution");
+  _email_alternatives.push_back("thunderbird");
+  _email_alternatives.push_back("claws-mail");
+  _email_alternatives.push_back("kmail");
+  
+  _music_alternatives.push_back("banshee-1");
+  _music_alternatives.push_back("rhythmbox");
+  _music_alternatives.push_back("totem");
+  _music_alternatives.push_back("vlc");
+
+  expanded.connect (sigc::mem_fun (this, &PlacesHomeView::Refresh));
+
+  SetExpanded (PlacesSettings::GetDefault ()->GetHomeExpanded ());
+  if (GetExpanded ())
+    Refresh ();
 }
 
 PlacesHomeView::~PlacesHomeView ()
 {
-  delete _bg_layer;
+  g_object_unref (_client);
+
+  if (_ubus_handle != 0)
+    ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
 }
 
 void
-PlacesHomeView::OnTileClicked (PlacesTile *_tile)
+PlacesHomeView::DashVisible (GVariant *data, void *val)
 {
-  PlacesSimpleTile *tile = static_cast<PlacesSimpleTile *> (_tile);
+  PlacesHomeView *self = (PlacesHomeView*)val;
   
-  for (guint i = 0; i < G_N_ELEMENTS (tile_infos); i++)
-  {
-    if (g_strcmp0 (tile->GetIcon (), tile_infos[i].icon) == 0)
-    {
-      GError *error = NULL;
+  struct timespec event_time, delta;
+  clock_gettime(CLOCK_MONOTONIC, &event_time);
+  delta = self->time_diff (self->_last_activate_time, event_time);
 
-      g_spawn_command_line_async (tile_infos[i].exec, &error);
-      if (error)
-      {
-        g_warning ("Unable to launch tile: %s", error->message);
-        g_error_free (error);
-      }
+  self->_last_activate_time.tv_sec = event_time.tv_sec;
+  self->_last_activate_time.tv_nsec = event_time.tv_nsec;
+
+  // FIXME: this should be handled by ubus (not sending the request twice
+  // for some selected ones). Too intrusive for now.
+  if (!((delta.tv_sec == 0) && (delta.tv_nsec < DELTA_DOUBLE_REQUEST)))
+    self->Refresh ();
+
+}
+
+void
+PlacesHomeView::OnKeyChanged (GConfClient    *client,
+                              guint           cnxn_id,
+                              GConfEntry     *entry,
+                              PlacesHomeView *self)
+{
+  self->Refresh ();
+}
+
+void
+PlacesHomeView::Refresh ()
+{
+  PlacesStyle *style = PlacesStyle::GetDefault ();
+  Shortcut   *shortcut = NULL;
+  gchar      *markup = NULL;
+  const char *temp = "<big>%s</big>";
+  int         icon_size = style->GetHomeTileIconSize ();
+
+  _layout->Clear ();
+
+  PlacesSettings::GetDefault ()->SetHomeExpanded (GetExpanded ());
+
+  if (!GetExpanded ())
+    return;
+
+  // Media Apps
+  markup = g_strdup_printf (temp, _("Media Apps"));
+  shortcut = new Shortcut (PKGDATADIR"/find_media_apps.png",
+                           markup,
+                           icon_size);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 9;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Internet Apps
+  markup = g_strdup_printf (temp, _("Internet Apps"));
+  shortcut = new Shortcut (PKGDATADIR"/find_internet_apps.png",
+                           markup,
+                           icon_size);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 8;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // More Apps
+  markup = g_strdup_printf (temp, _("More Apps"));
+  shortcut = new Shortcut (PKGDATADIR"/find_more_apps.png",
+                           markup,
+                           icon_size);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/applicationsplace/applications");
+  shortcut->_place_section = 0;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Find Files
+  markup = g_strdup_printf (temp, _("Find Files"));
+  shortcut = new Shortcut (PKGDATADIR"/find_files.png",
+                           markup,
+                           icon_size);
+  shortcut->_id = TYPE_PLACE;
+  shortcut->_place_id = g_strdup ("/com/canonical/unity/filesplace/files");
+  shortcut->_place_section = 0;
+  _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+  shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+  g_free (markup);
+
+  // Browser
+  markup = gconf_client_get_string (_client, BROWSER_DIR"/exec", NULL);
+  CreateShortcutFromExec (markup, _("Browse the Web"), _browser_alternatives);
+  g_free (markup);
+
+  // Photos
+  // FIXME: Need to figure out the default
+  CreateShortcutFromExec ("shotwell", _("View Photos"), _photo_alternatives);
+
+  // Email
+  markup = gconf_client_get_string (_client, MAIL_DIR"/command", NULL);
+  // get the first word on key (the executable name itself)
+  markup = g_strsplit (markup, " ", 0)[0];
+  CreateShortcutFromExec (markup, _("Check Email"), _email_alternatives);
+  g_free (markup);
+
+  // Music
+  markup = gconf_client_get_string (_client, MEDIA_DIR"/exec", NULL);
+  CreateShortcutFromExec (markup, _("Listen to Music"), _music_alternatives);
+  g_free (markup);
+
+  QueueDraw ();
+  _layout->QueueDraw ();
+  QueueRelayout ();
+}
+
+void
+PlacesHomeView::CreateShortcutFromExec (const char *exec,
+                                        const char *name,
+                                        std::vector<std::string>& alternatives)
+{
+  PlacesStyle     *style = PlacesStyle::GetDefault ();
+  Shortcut        *shortcut = NULL;
+  gchar           *id;
+  gchar           *markup;
+  gchar           *icon;
+  gchar           *real_exec;
+  GDesktopAppInfo *info;
+
+  markup = g_strdup_printf ("<big>%s</big>", name);
+
+  // We're going to try and create a desktop id from a exec string. Now, this is hairy at the
+  // best of times but the following is the closest best-guess without having to do D-Bus
+  // roundtrips to BAMF.
+  if (exec)
+  {
+    char *basename;
+
+    if (exec[0] == '/')
+      basename = g_path_get_basename (exec);
+    else
+      basename = g_strdup (exec);
+
+    id = g_strdup_printf ("%s.desktop", basename);
+
+    g_free (basename);
+  }
+  else
+  {
+    id = g_strdup_printf ("%s.desktop", alternatives[0].c_str());
+  }
+  
+  info = g_desktop_app_info_new (id);
+  std::vector<std::string>::iterator iter = alternatives.begin();
+  while (iter != alternatives.end())
+  {
+    if (!G_IS_DESKTOP_APP_INFO (info))
+    {
+      id = g_strdup_printf ("%s.desktop", (*iter).c_str());
+      info = g_desktop_app_info_new (id);
+      iter++;    
+    }
+  
+    if (G_IS_DESKTOP_APP_INFO (info))
+    {
+      icon = g_icon_to_string (g_app_info_get_icon (G_APP_INFO (info)));
+      real_exec = g_strdup (g_app_info_get_executable (G_APP_INFO (info)));
+      
+      shortcut = new Shortcut (icon, markup, style->GetHomeTileIconSize ());
+      shortcut->_id = TYPE_EXEC;
+      shortcut->_exec = real_exec;
+      _layout->AddView (shortcut, 1, nux::eLeft, nux::eFull);
+      shortcut->sigClick.connect (sigc::mem_fun (this, &PlacesHomeView::OnShortcutClicked));
+      
+      g_free (icon);
+      
+      break;
     }
   }
+  
+  g_free (id);
+  g_free (markup);
+}
 
-  ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                            NULL);
+void
+PlacesHomeView::OnShortcutClicked (PlacesTile *tile)
+{
+  Shortcut *shortcut = static_cast<Shortcut *> (tile);
+  int id = shortcut->_id;
+
+  if (id == TYPE_PLACE)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new ("(sus)",
+                                             shortcut->_place_id,
+                                             shortcut->_place_section,
+                                             ""));
+  }
+  else if (id == TYPE_EXEC)
+  {
+    GError *error = NULL;
+
+    if (!g_spawn_command_line_async (shortcut->_exec, &error))
+    {
+      g_warning ("%s: Unable to launch %s: %s",
+                 G_STRFUNC,
+                 shortcut->_exec,
+                 error->message);
+      g_error_free (error);
+    }
+    
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                              NULL);
+  }
 }
 
 const gchar* PlacesHomeView::GetName ()
@@ -169,166 +418,16 @@ void PlacesHomeView::AddProperties (GVariantBuilder *builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-long
-PlacesHomeView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+// TODO: put that in some "util" toolbox
+struct timespec PlacesHomeView::time_diff (struct timespec start, struct timespec end)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  long ret = TraverseInfo;
-  ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
-
-  return ret;
-}
-
-void
-PlacesHomeView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  UpdateBackground ();
-
-  _bg_layer->SetGeometry (GetGeometry ());
-  nux::GetPainter().PushDrawLayer (GfxContext, GetGeometry(), _bg_layer);
-  nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
-{
-  nux::GetPainter().PushLayer (GfxContext, GetGeometry(), _bg_layer);
-  _layout->ProcessDraw (GfxContext, force_draw);
-  nux::GetPainter().PopBackground ();
-}
-
-void
-PlacesHomeView::PreLayoutManagement ()
-{
-  nux::View::PreLayoutManagement ();
-}
-
-long
-PlacesHomeView::PostLayoutManagement (long LayoutResult)
-{
-  // I'm imagining this is a good as time as any to update the background
-
-  return nux::View::PostLayoutManagement (LayoutResult);
-}
-
-void
-PlacesHomeView::DrawRoundedRectangle (cairo_t* cr,
-                                      double   aspect,
-                                      double   x,
-                                      double   y,
-                                      double   cornerRadius,
-                                      double   width,
-                                      double   height)
-{
-    double radius = cornerRadius / aspect;
-
-    // top-left, right of the corner
-    cairo_move_to (cr, x + radius, y);
-
-    // top-right, left of the corner
-    cairo_line_to (cr, x + width - radius, y);
-
-    // top-right, below the corner
-    cairo_arc (cr,
-               x + width - radius,
-               y + radius,
-               radius,
-               -90.0f * G_PI / 180.0f,
-               0.0f * G_PI / 180.0f);
-
-    // bottom-right, above the corner
-    cairo_line_to (cr, x + width, y + height - radius);
-
-    // bottom-right, left of the corner
-    cairo_arc (cr,
-               x + width - radius,
-               y + height - radius,
-               radius,
-               0.0f * G_PI / 180.0f,
-               90.0f * G_PI / 180.0f);
-
-    // bottom-left, right of the corner
-    cairo_line_to (cr, x + radius, y + height);
-
-    // bottom-left, above the corner
-    cairo_arc (cr,
-               x + radius,
-               y + height - radius,
-               radius,
-               90.0f * G_PI / 180.0f,
-               180.0f * G_PI / 180.0f);
-
-    // top-left, right of the corner
-    cairo_arc (cr,
-               x + radius,
-               y + radius,
-               radius,
-               180.0f * G_PI / 180.0f,
-               270.0f * G_PI / 180.0f);
-}
-
-void
-PlacesHomeView::UpdateBackground ()
-{
-#define PADDING 24
-#define RADIUS  6
-  int x, y, width, height;
-  nux::Geometry geo = GetGeometry ();
-
-  if (geo.width == _last_width && geo.height == _last_height)
-    return;
-
-  _last_width = geo.width;
-  _last_height = geo.height;
-
-  x = y = PADDING;
-  width = _last_width - (2*PADDING);
-  height = _last_height - (2*PADDING);
-
-  nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, _last_width, _last_height);
-  cairo_t *cr = cairo_graphics.GetContext();
-
-  cairo_translate (cr, 0.5, 0.5);
-  cairo_set_line_width (cr, 1.0);
-
-  cairo_set_source_rgba (cr, 0.5f, 0.5f, 0.5f, 0.2f);
-
-  DrawRoundedRectangle (cr, 1.0f, x, y, RADIUS, width, height);
-
-  cairo_close_path (cr);
-
-  cairo_fill_preserve (cr);
-
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 0.2f);
-  cairo_stroke (cr);
-
-  cairo_destroy (cr);
-
-  nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
-  texture2D->Update(bitmap);
-  delete bitmap;
-
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  if (_bg_layer)
-    delete _bg_layer;
-
-  nux::ROPConfig rop; 
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  
-  _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                     texxform,
-                                     nux::Color::White,
-                                     false,
-                                     rop);
-
-  texture2D->UnReference ();
-
-  NeedRedraw ();
+  struct timespec temp;
+  if ((end.tv_nsec - start.tv_nsec) < 0) {
+    temp.tv_sec = end.tv_sec - start.tv_sec-1;
+    temp.tv_nsec = 1000000000 + end.tv_nsec - start.tv_nsec;
+  } else {
+    temp.tv_sec = end.tv_sec - start.tv_sec;
+    temp.tv_nsec = end.tv_nsec - start.tv_nsec;
+  }
+  return temp;
 }

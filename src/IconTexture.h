@@ -30,23 +30,42 @@
 class IconTexture : public nux::TextureArea, public Introspectable
 {
 public:
-  IconTexture (const char *icon_name, unsigned int size);
+  IconTexture (nux::BaseTexture *texture, guint width, guint height);
+  IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading=false);
   ~IconTexture ();
 
   void SetByIconName (const char *icon_name, unsigned int size);
   void SetByFilePath (const char *file_path, unsigned int size);
+  void GetTextureSize (int *width, int *height);
+  
+  void LoadIcon ();
+
+  void SetOpacity (float opacity);
+  void SetTexture (nux::BaseTexture *texture);
 
 protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
-
+  virtual bool DoCanFocus ();
+  
 private:
-  void LoadIcon ();
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  void CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture);
   void Refresh (GdkPixbuf *pixbuf);
   void IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf);
 
   char *_icon_name;
   unsigned int _size;
+
+  GdkPixbuf        *_pixbuf_cached;
+  nux::BaseTexture *_texture_cached;
+  int               _texture_width;
+  int               _texture_height;
+
+  bool _loading;
+
+  float _opacity;
 };
 
 #endif // ICON_TEXTURE_H

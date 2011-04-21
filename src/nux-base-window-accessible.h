@@ -43,7 +43,7 @@ struct _NuxBaseWindowAccessible
 {
   NuxViewAccessible parent;
 
-  /* < private > */
+  /*< private >*/
   NuxBaseWindowAccessiblePrivate *priv;
 };
 

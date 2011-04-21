@@ -42,6 +42,7 @@ public:
   bool Animating ();
   
   sigc::signal<void> anim_completed;
+  sigc::connection on_anim_completed;
 
 private:
   

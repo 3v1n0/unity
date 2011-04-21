@@ -69,6 +69,7 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
+#if 0
   controller = new PlacesResultsController ();
   view = new PlacesResultsView ();
 
@@ -117,8 +118,8 @@ void TestRunner::Init ()
   }
 
   nux::GetGraphicsThread()->SetLayout (layout);
-
-  g_timeout_add_seconds (2, (GSourceFunc)remove_timeout, controller);
+#endif
+  g_timeout_add_seconds (2, (GSourceFunc)remove_timeout, NULL);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
@@ -135,8 +136,9 @@ ControlThread (nux::NThread* thread,
   nux::SleepForMilliseconds (3000);
   printf ("ControlThread successfully started\n");
 
-  nux::WindowThread* mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*,
-                                                         data);
+  nux::WindowThread* mainWindowThread;
+  
+  mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 
 

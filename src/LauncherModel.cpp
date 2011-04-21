@@ -33,6 +33,15 @@ LauncherModel::LauncherModel()
 
 LauncherModel::~LauncherModel()
 {
+  for (iterator it = _inner_shelf.begin (); it != _inner_shelf.end (); ++it)
+    reinterpret_cast<LauncherIcon*> (*it)->UnReference ();
+  _inner_shelf.clear ();
+
+  for (iterator it = _inner_main.begin (); it != _inner_main.end (); ++it)
+    reinterpret_cast<LauncherIcon*> (*it)->UnReference ();
+  _inner_main.clear ();
+
+  _inner.clear ();
 }
 
 bool LauncherModel::IconShouldShelf (LauncherIcon *icon)
@@ -50,12 +59,14 @@ bool LauncherModel::CompareIcons (LauncherIcon *first, LauncherIcon *second)
   return first->SortPriority () < second->SortPriority ();
 }
 
-void
+bool
 LauncherModel::Populate ()
 {
+  Base copy = _inner;
+  
   _inner.clear ();
   
-  iterator it;
+  iterator it, it2;
   
   int i = 0;
   for (it = main_begin (); it != main_end (); it++)
@@ -69,6 +80,8 @@ LauncherModel::Populate ()
     _inner.push_back (*it);
     (*it)->SetSortPriority (i++);
   }
+  
+  return !std::equal (begin (), end (), copy.begin ());
 }
 
 void 
@@ -84,7 +97,10 @@ LauncherModel::AddIcon (LauncherIcon *icon)
   Sort ();
   
   icon_added.emit (icon);
-  icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
+
+  if (icon->on_icon_removed_connection.connected ())
+    icon->on_icon_removed_connection.disconnect ();
+  icon->on_icon_removed_connection = (sigc::connection) icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
 }
 
 void
@@ -132,8 +148,8 @@ LauncherModel::Sort ()
   _inner_shelf.sort (&LauncherModel::CompareIcons);
   _inner_main.sort (&LauncherModel::CompareIcons);
   
-  Populate ();
-  order_changed.emit ();
+  if (Populate ())
+    order_changed.emit ();
 }
 
 bool
@@ -276,6 +292,22 @@ LauncherModel::end ()
   return _inner.end ();
 }
 
+LauncherModel::iterator 
+LauncherModel::at (int index)
+{
+  LauncherModel::iterator it;
+  int i;
+
+  // start currently selected icon
+  for (it = _inner.begin (), i = 0; it != _inner.end (); it++, i++)
+  {
+    if (i == index)
+      return it;
+  }
+      
+  return (LauncherModel::iterator)NULL;
+}
+      
 LauncherModel::reverse_iterator 
 LauncherModel::rbegin ()
 {

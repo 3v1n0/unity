@@ -39,7 +39,10 @@ well_known_local_path = ("%s/share/unity" % supported_prefix,
                          "%s/lib/*unity*"  % supported_prefix,
                          "%s/share/dbus-1/services/*Unity*"  % supported_prefix,
                          "%s/bin/*unity*"  % supported_prefix,
-                         "%s/share/man/man1/*unity*"  % supported_prefix
+                         "%s/share/man/man1/*unity*"  % supported_prefix,
+                         "%s/lib/*nux*"  % supported_prefix,
+                         "%s/lib/pkgconfig/nux*"  % supported_prefix,
+                         "%s/include/Nux*"  % supported_prefix
                          )
 
 
@@ -66,7 +69,11 @@ def reset_unity_compiz_profile ():
     # as compiz is setting that as a default key schema each time you
     # change the profile, the key isn't straightforward to get and set
     # as compiz set a new schema instead of a value..
-    current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
+    try:
+        current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
+    except GError, e:
+        print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
+        return
     
     # default value to not force reset if current_profile is unset
     current_profile_gconfvalue = ""
@@ -84,7 +91,10 @@ def reset_unity_compiz_profile ():
         # the python binding doesn't recursive-unset right
         subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compiz-1"]).communicate()
     subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compizconfig-1/profiles/unity"]).communicate()
-    
+
+def reset_launcher_icons ():
+    '''Reset the default launcher icon and restart it.'''
+    subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"]) 
 
 def process_and_start_unity (verbose, debug, compiz_args, log_file):
     '''launch unity under compiz (replace the current shell in any case)'''
@@ -146,10 +156,10 @@ def reset_to_distro():
 			try:
 				shutil.rmtree(elem)
 			except OSError, e:
-				if os.path.isfile(elem):
+				if os.path.isfile(elem) or os.path.islink(elem):
 					os.remove(elem)
 				else:
-					print "ERROR: Cannot remove %s", e
+					print "ERROR: Cannot remove %s: %s" % (elem, e)
 					error = True
 	
 	if error:
@@ -172,7 +182,9 @@ if __name__ == '__main__':
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
-                      help="Reset the unity profile in compiz and restart it.")    
+                      help="Reset the unity profile in compiz and restart it.")  
+    parser.add_option("--reset-icons", action="store_true",
+                      help="Reset the default launcher icon.")  
     parser.add_option("-v", "--verbose", action="store_true",
                       help="Get additional debug output from unity.")
     (options, args) = parser.parse_args()
@@ -184,6 +196,9 @@ if __name__ == '__main__':
     
     if options.reset:
         reset_unity_compiz_profile ()
+    
+    if options.reset_icons:
+        reset_launcher_icons ()
 	
 	if options.replace:
 		print ("WARNING: This is for compatibility with other desktop interfaces please use unity without --replace")

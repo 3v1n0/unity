@@ -41,13 +41,17 @@ public:
 
     const char* DesktopFile ();
     bool IsSticky ();
+    void UnStick ();
+
+    void ActivateLauncherIcon ();
 
 protected:
-    void OnMouseClick (int button);
     std::list<DbusmenuMenuitem *> GetMenus ();
 
     void UpdateIconGeometries (nux::Point3 center);
     void OnCenterStabilized (nux::Point3 center);
+    
+    void OnLauncherHiddenChanged ();
 
     void AddProperties (GVariantBuilder *builder);
     
@@ -58,20 +62,32 @@ protected:
     void OnDndEnter ();
     void OnDndLeave ();
     
-    void ActivateLauncherIcon ();
     void OpenInstanceLauncherIcon ();
     
     std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
 
+    const char* BamfName ();
+
 private:
     BamfApplication *m_App;
     CompScreen *m_Screen;
+    Launcher *_launcher;
     std::map<std::string, DbusmenuClient *> _menu_clients;
     std::map<std::string, DbusmenuMenuitem *> _menu_items;
+    std::map<std::string, gulong> _menu_callbacks;
     DbusmenuMenuitem *_menu_desktop_shortcuts;
     gchar *_remote_uri;
     bool _dnd_hovered;
     guint _dnd_hover_timer;
+    sigc::connection _on_window_minimized_connection;
+    sigc::connection _hidden_changed_connection;
+
+    gchar *_cached_desktop_file;
+    gchar *_cached_name;
+
+
+    GFileMonitor *_desktop_file_monitor;
+    gulong _on_desktop_file_changed_handler_id;
 
     void EnsureWindowState ();
 
@@ -97,7 +113,13 @@ private:
     static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
     static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
-    
+
+    static void OnDesktopFileChanged (GFileMonitor        *monitor,
+                                      GFile               *file,
+                                      GFile               *other_file,
+                                      GFileMonitorEvent    event_type,
+                                      gpointer             data);
+
     static gboolean OnDndHoveredTimeout (gpointer data);
 };
 

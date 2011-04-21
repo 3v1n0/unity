@@ -35,16 +35,20 @@
 class PlaceEntryRemote : public PlaceEntry
 {
 public:
-  PlaceEntryRemote (const gchar *dbus_name);
+  PlaceEntryRemote (Place *parent, const gchar *dbus_name);
   ~PlaceEntryRemote ();
 
   void InitFromKeyFile (GKeyFile *key_file, const gchar *group);
   
   /* Overrides */
+  Place * GetParent ();
+
   const gchar * GetId          ();
   const gchar * GetName        ();
   const gchar * GetIcon        ();
   const gchar * GetDescription ();
+  const gchar * GetSearchHint  ();
+  guint64       GetShortcut    ();
 
   guint32        GetPosition  ();
   const gchar ** GetMimetypes ();
@@ -61,11 +65,19 @@ public:
   void SetActiveSection (guint32 section_id);
   void SetGlobalSearch  (const gchar *search, std::map<gchar*, gchar*>& hints);
 
-  DeeModel * GetSectionsModel ();
-  DeeModel * GetGroupsModel ();
-  DeeModel * GetResultsModel ();
+  void ForeachSection (SectionForeachCallback slot);
 
-  DeeModel * GetGlobalResultsModel ();
+  void ForeachGroup  (GroupForeachCallback slot);
+  void ForeachResult (ResultForeachCallback slot);
+
+  void ForeachGlobalGroup  (GroupForeachCallback slot);
+  void ForeachGlobalResult (ResultForeachCallback slot);
+
+  void GetResult (const void *id, ResultForeachCallback slot);
+  void GetGlobalResult (const void *id, ResultForeachCallback slot);
+
+  void ActivateResult (const void *id);
+  void ActivateGlobalResult (const void *id);
 
   /* Other methods */
   bool          IsValid ();
@@ -91,16 +103,29 @@ public:
                const gchar  *global_results_model,
                GVariantIter *global_hints);
 
+  static void OnGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
+  static void OnGlobalGroupAdded  (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultAdded (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+  static void OnGlobalResultRemoved (DeeModel *model, DeeModelIter *iter, PlaceEntryRemote *self);
+
+  static void OnProxyNameOwnerChanged (GDBusProxy *proxy, GParamSpec *pspec, PlaceEntryRemote *self);
+
 public:
   // For our parents use, we don't touch it
   bool dirty;
 
 private:
+  Place   *_parent;
   gchar   *_dbus_name;
   gchar   *_dbus_path;
   gchar   *_name;
   gchar   *_icon;
   gchar   *_description;
+  gchar   *_searchhint;
+  guint64  _shortcut;
   guint32  _position;
   gchar  **_mimetypes;
   std::map<gchar *, gchar *> _hints;
@@ -117,9 +142,12 @@ private:
   DeeModel *_results_model;
 
   DeeModel *_global_results_model;
+  DeeModel *_global_groups_model;
 
   gchar    *_previous_search;
   guint32   _previous_section;
+
+  bool      _conn_attempt;
 };
 
 #endif // PLACE_ENTRY_REMOTE_H

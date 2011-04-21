@@ -24,10 +24,14 @@
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include "PanelHomeButton.h"
-#include "PanelMenuView.h"
+#include <gdk/gdkx.h>
+
 #include "IndicatorObjectFactoryRemote.h"
 #include "Introspectable.h"
+#include "PanelHomeButton.h"
+#include "PanelMenuView.h"
+#include "PanelTray.h"
+#include "PanelStyle.h"
 
 class PanelView : public Introspectable, public nux::View
 {
@@ -36,19 +40,31 @@ public:
   PanelView (NUX_FILE_LINE_PROTO);
   ~PanelView ();
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
+  void PreLayoutManagement ();
+  long PostLayoutManagement (long LayoutResult);
   
   void OnObjectAdded (IndicatorObjectProxy *proxy);
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
+  void OnSynced ();
+
+  void SetPrimary (bool primary);
+  bool GetPrimary ();
+  void SetMonitor (int monitor);
   
-  PanelHomeButton * HomeButton ();
+  PanelHomeButton * GetHomeButton ();
+
+  void StartFirstMenuShow ();
+  void EndFirstMenuShow ();
+
+  Window GetTrayWindow ();
+
+  void SetOpacity (float opacity);
 
 protected:
   // Introspectable methods
@@ -58,17 +74,34 @@ protected:
 
 private:
   void UpdateBackground ();
+  void ForceUpdateBackground ();
+  void SyncGeometries ();
 
 private:
   IndicatorObjectFactoryRemote *_remote;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
+  PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-
+  
   int _last_width;
   int _last_height;
+
+  PanelStyle *_style;
+  bool        _is_dirty;
+  float       _opacity;
+  bool        _needs_geo_sync;
+  bool        _is_primary;
+  int         _monitor;
+  
+  sigc::connection _on_panel_style_changed_connection;
+  sigc::connection _on_object_added_connection;
+  sigc::connection _on_menu_pointer_moved_connection;
+  sigc::connection _on_entry_activate_request_connection;
+  sigc::connection _on_entry_activated_connection;
+  sigc::connection _on_synced_connection;
 };
 
 #endif // PANEL_VIEW_H

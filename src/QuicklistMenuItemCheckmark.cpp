@@ -178,7 +178,7 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[1]->GetDeviceTexture ();
     }
 
-    _color = nux::Color::White;
+    _color = nux::Colors::White;
   }
   else
   {
@@ -191,7 +191,7 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[0]->GetDeviceTexture ();
     }
 
-    _color = nux::Color::DarkGray;
+    _color = nux::Color (0.8f, 0.8f, 0.8f, 1.0f);
   }
   
   gfxContext.QRP_1Tex (base.x,
@@ -236,7 +236,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, nux::Colors::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -245,6 +245,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
+  delete bitmap;
 
   // draw normal, checked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -277,7 +278,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_restore (cr);
 
-  DrawText (cr, width, height, nux::Color::White);
+  DrawText (cr, width, height, nux::Colors::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
@@ -286,6 +287,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   _normalTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _normalTexture[1]->Update (bitmap);
+  delete bitmap;
 
   // draw active/prelight, unchecked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -296,13 +298,13 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        0.5f,
-                        0.5f,
-                        ITEM_CORNER_RADIUS_ABS,
-                        width - 1.0f,
-                        height - 1.0f);
+  _cairoGraphics->DrawRoundedRectangle (cr,
+                                        1.0f,
+                                        0.5f,
+                                        0.5f,
+                                        ITEM_CORNER_RADIUS_ABS,
+                                        width - 1.0f,
+                                        height - 1.0f);
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -316,6 +318,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
+  delete bitmap;
 
   // draw active/prelight, checked version
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -326,13 +329,13 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawRoundedRectangle (cr,
-                        1.0f,
-                        0.5f,
-                        0.5f,
-                        ITEM_CORNER_RADIUS_ABS,
-                        width - 1.0f,
-                        height - 1.0f);
+  _cairoGraphics->DrawRoundedRectangle (cr,
+                                        1.0f,
+                                        0.5f,
+                                        0.5f,
+                                        ITEM_CORNER_RADIUS_ABS,
+                                        width - 1.0f,
+                                        height - 1.0f);
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -366,6 +369,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   _prelightTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
   _prelightTexture[1]->Update (bitmap);
+  delete bitmap;
 
   // finally clean up
   delete _cairoGraphics;

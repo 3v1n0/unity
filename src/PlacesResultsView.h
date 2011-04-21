@@ -42,37 +42,20 @@ public:
   PlacesResultsView (NUX_FILE_LINE_PROTO);
   ~PlacesResultsView ();
 
-  sigc::signal<void, char *> sigClick; // returns ID of item clicked
-  sigc::signal<void> sigToggled;
-  sigc::signal<void, bool> sigStateChanged;
-
-  void AddGroup (PlacesGroup *group);
+  void AddGroup    (PlacesGroup *group);
   void RemoveGroup (PlacesGroup *group);
+  void Clear       ();
 
-  /* I am going to remove this API, its just temporary till nux is fixed */
-  void ReJiggyGroups ();
-
-protected:
-  virtual void ScrollLeft (float stepx, int mousedx);
-  virtual void ScrollRight (float stepx, int mousedx);
-  virtual void ScrollUp (float stepy, int mousedy);
-  virtual void ScrollDown (float stepy, int mousedy);
+  nux::Layout * GetLayout ()
+  {
+    return _layout;
+  }
 
 private:
   nux::Layout *_layout;
   std::list<PlacesGroup *> _groups;
-
-protected:
-
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual void PostDraw (nux::GraphicsEngine &GfxContext, bool force_draw);
-
-  virtual void PreLayoutManagement ();
-  virtual long PostLayoutManagement (long LayoutResult);
-  virtual void PositionChildLayout (float offsetX, float offsetY);
-
+  uint _idle_id;
+  static gboolean OnIdleFocus (PlacesResultsView *self);
 };
 
 #endif // PLACE_RESULTS_VIEW_H

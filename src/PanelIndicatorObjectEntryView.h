@@ -43,6 +43,7 @@ public:
   void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void Activate ();
   void OnActiveChanged (bool is_active);
+  bool GetShowNow ();
 
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
@@ -55,6 +56,13 @@ public:
 private:
   nux::CairoGraphics _util_cg;
   int _padding;
+  
+  sigc::connection _on_indicator_activate_changed_connection;
+  sigc::connection _on_indicator_updated_connection;
+  sigc::connection _on_panelstyle_changed_connection;
+
+  gulong _on_font_changed_connection;
+  static void OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data);
 };
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

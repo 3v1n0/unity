@@ -30,20 +30,18 @@
 #include <Nux/GridHLayout.h>
 
 #include "PlacesTile.h"
+#include "PlacesGroup.h"
 
-class PlacesHomeView : public Introspectable, public nux::View
+#include <gconf/gconf-client.h>
+#include <time.h>
+
+class PlacesHomeView : public Introspectable, public PlacesGroup
 {
 public:
-  PlacesHomeView (NUX_FILE_LINE_PROTO);
+  PlacesHomeView ();
   ~PlacesHomeView ();
 
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-
-  void PreLayoutManagement ();
-  long PostLayoutManagement (long LayoutResult);
-  void OnTileClicked (PlacesTile *tile);
+  void Refresh ();
   
 protected:
   // Introspectable methods
@@ -52,20 +50,28 @@ protected:
   void AddProperties (GVariantBuilder *builder);
 
 private:
-  void UpdateBackground ();
-  void DrawRoundedRectangle (cairo_t* cr,
-                             double   aspect,
-                             double   x,
-                             double   y,
-                             double   cornerRadius,
-                             double   width,
-                             double   height);
+  static void DashVisible (GVariant *data, void *val);
+  void OnShortcutClicked (PlacesTile *_tile);
+  static void OnKeyChanged (GConfClient    *client,
+                            guint           cnxn_id,
+                            GConfEntry     *entry,
+                            PlacesHomeView *self);
+  void CreateShortcutFromExec (const char *exec, 
+                               const char *name,
+                               std::vector<std::string>& alternatives);
 
 private:
-  nux::AbstractPaintLayer *_bg_layer;
   nux::GridHLayout        *_layout;
-  int _last_width;
-  int _last_height;
+  GConfClient *_client;
+  std::vector<std::string> _browser_alternatives;
+  std::vector<std::string> _photo_alternatives;
+  std::vector<std::string> _email_alternatives;
+  std::vector<std::string> _music_alternatives;
+  
+  struct timespec time_diff (struct timespec start, struct timespec end);
+  struct timespec _last_activate_time;
+
+  guint _ubus_handle;
 };
 
 

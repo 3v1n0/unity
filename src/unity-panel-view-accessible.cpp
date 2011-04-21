@@ -44,33 +44,22 @@ static void         unity_panel_view_accessible_initialize     (AtkObject *acces
 static gint         unity_panel_view_accessible_get_n_children (AtkObject *accessible);
 static AtkObject   *unity_panel_view_accessible_ref_child      (AtkObject *accessible, gint i);
 
-#define UNITY_PANEL_VIEW_ACCESSIBLE_GET_PRIVATE(obj)                      \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PANEL_VIEW_ACCESSIBLE, UnityPanelViewAccessiblePrivate))
-
 G_DEFINE_TYPE (UnityPanelViewAccessible, unity_panel_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
-
-struct _UnityPanelViewAccessiblePrivate
-{
-};
 
 static void
 unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = unity_panel_view_accessible_initialize;
   atk_class->get_n_children = unity_panel_view_accessible_get_n_children;
   atk_class->ref_child = unity_panel_view_accessible_ref_child;
-
-  g_type_class_add_private (gobject_class, sizeof (UnityPanelViewAccessiblePrivate));
 }
 
 static void
 unity_panel_view_accessible_init (UnityPanelViewAccessible *self)
 {
-  self->priv = UNITY_PANEL_VIEW_ACCESSIBLE_GET_PRIVATE (self);
 }
 
 AtkObject *
@@ -110,7 +99,7 @@ unity_panel_view_accessible_get_n_children (AtkObject *accessible)
     return 0;
 
   panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->HomeButton ()) != NULL)
+  if ((home_button = panel->GetHomeButton ()) != NULL)
     rc = 1;
 
   return rc;
@@ -131,7 +120,7 @@ unity_panel_view_accessible_ref_child (AtkObject *accessible, gint i)
     return NULL;
 
   panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->HomeButton ()) != NULL)
+  if ((home_button = panel->GetHomeButton ()) != NULL)
     {
       nux::Object *child = NULL;
 

@@ -33,8 +33,10 @@
 #include "Introspectable.h"
 #include "Launcher.h"
 #include "LauncherController.h"
-#include "PanelView.h"
+#include "PanelController.h"
+#include "UScreen.h"
 #include "PlacesController.h"
+#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
@@ -61,7 +63,7 @@ class UnityScreen :
 	/* We store these  to avoid unecessary calls to ::get */
 	CompScreen      *screen;
 	CompositeScreen *cScreen;
-        GLScreen        *gScreen;
+  GLScreen        *gScreen;
 
 	/* prepares nux for drawing */
 	void
@@ -73,6 +75,8 @@ class UnityScreen :
 
 	/* nux draw wrapper */
 	void paintDisplay (const CompRegion 	&region);
+	
+	void paintPanelShadow (const GLMatrix &matrix);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -94,6 +98,9 @@ class UnityScreen :
 
 	/* handle X11 events */
 	void handleEvent (XEvent *);
+    void handleCompizEvent (const char          *plugin,
+                            const char          *event,
+                            CompOption::Vector  &option);
 	
 	bool
 	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
@@ -103,11 +110,29 @@ class UnityScreen :
 	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
                               CompOption::Vector &options);
 
+    bool
+    showPanelFirstMenuKeyInitiate (CompAction         *action,
+                                   CompAction::State   state,
+                                   CompOption::Vector &options);
+  bool
+  showPanelFirstMenuKeyTerminate (CompAction         *action,
+                                  CompAction::State   state,
+                                  CompOption::Vector &options);
+                                  
+  bool
+  executeCommand (CompAction*         action,
+                  CompAction::State   state,
+                  CompOption::Vector& options);
   bool
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);
-
+                               
+  bool
+  launcherRevealEdgeInitiate (CompAction         *action,
+                              CompAction::State   state,
+                              CompOption::Vector &options);
+  
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
@@ -120,13 +145,19 @@ class UnityScreen :
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
 
-    protected:
+  void NeedsRelayout ();
+
+  void ScheduleRelayout (guint timeout);
+
+protected:
 
 	const gchar* GetName ();
 
 	void AddProperties (GVariantBuilder *builder);
 
     private:
+
+  void SendExecuteCommand ();
 
 	static gboolean
 	initPluginActions (gpointer data);
@@ -139,41 +170,76 @@ class UnityScreen :
 
 	void
 	onRedrawRequested ();
+	
+	void Relayout ();
+
+	static gboolean
+	RelayoutTimeout (gpointer data);
 
 	static void
 	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
 
 	static void
-	panelWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
-
-	static void
 	initUnity(nux::NThread* thread, void* InitData);
 
-	static gboolean
-	strutHackTimeout (gpointer data);
+  static void
+  OnStartKeyNav (GVariant* data, void* value);
 
   static void
   OnExitKeyNav (GVariant* data, void* value);
-            
+  
+  static gboolean
+  OnEdgeTriggerTimeout (gpointer data);
+
+  void
+  startLauncherKeyNav ();
+
+  void
+  restartLauncherKeyNav ();
+  
+  void
+  OnLauncherHiddenChanged ();
+
+  static void
+  OnQuicklistEndKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherStartKeyNav (GVariant* data, void* value);
+
+  static void
+  OnLauncherEndKeyNav (GVariant* data, void* value);
+
 	Launcher               *launcher;
 	LauncherController     *controller;
-	PanelView              *panelView;
+  PanelController        *panelController;
 	PlacesController 			 *placesController;
+	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
+  nux::HLayout           *layout;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
+  bool                   needsRelayout;
+  guint32                relayoutSourceId;
+  guint                  _edge_trigger_handle;
+  guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
+  
+  GLTexture::List _shadow_texture;
 
 	/* handle paint order */
 	bool	  doShellRepaint;
 	bool    allowWindowPaint;
 	bool    damaged;
+	bool    _key_nav_mode_requested;
+	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
+
+  GdkRectangle _primary_monitor;
 
 	friend class UnityWindow;
 };
@@ -207,6 +273,8 @@ class UnityWindow :
   void resizeNotify (int x, int y, int w, int h);
   
   void stateChangeNotify (unsigned int lastState);
+
+  bool place (CompPoint &pos);
 };
 
 #define EX_SCREEN (screen) \
