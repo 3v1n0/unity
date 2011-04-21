@@ -28,7 +28,7 @@ BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
 
 BuilderWrapper& BuilderWrapper::add(char const* name, bool value)
 {
-  g_variant_builder_add(builder, "{sv}", name, g_variant_new_boolean(value));
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_boolean(value));
   return *this;
 }
 
@@ -40,14 +40,14 @@ BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
 
 BuilderWrapper& BuilderWrapper::add(char const* name, int value)
 {
-  g_variant_builder_add(builder, "{sv}", name, g_variant_new_int32(value));
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, float value)
 {
   // floats get promoted to doubles automatically
-  g_variant_builder_add(builder, "{sv}", name, g_variant_new_double(value));
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
   return *this;
 }
 

@@ -418,7 +418,7 @@ void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
     .add("x", GetBaseX())
     .add("y", GetBaseY())
     .add("width", GetBaseWidth())
-    .add("height", GetBaseHeight))
+    .add("height", GetBaseHeight())
     .add("enabled", GetEnabled())
     .add("active", GetActive())
     .add("visible", GetVisible());
