@@ -3106,11 +3106,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
-  // FIXME: Ugly workaround for nux sending mouse enter signal on super key release or keynav enter
-  if (x < 0)
-    return;
-  
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
   
@@ -3124,11 +3119,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-
-  // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
-  if (x < 0)
-    return;
-
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (false);
 
