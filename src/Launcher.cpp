@@ -3239,7 +3239,6 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
 void 
 Launcher::EdgeRevealTriggered ()
 {
-  _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
