@@ -580,7 +580,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 {
   XClassHint   classHint;
   Status       status;
-  char*        win_wmclass = NULL;
+  std::string  win_wmclass;
   int          num_monitor;
   CompOutput   screen;
   int          screen_width;
@@ -597,7 +597,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   status = XGetClassHint (m_Screen->dpy (), window->id (), &classHint);
   if (status && classHint.res_class)
   {
-    win_wmclass = strdup (classHint.res_class);
+	win_wmclass = classHint.res_class;
     XFree (classHint.res_class);
   }
   else
@@ -617,18 +617,17 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
+  const XSizeHints& hints = window->sizeHints ();
   covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
-  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0))
+  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0) ||
+      (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
-    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
+    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass.c_str());
     return;
   }
 
   Undecorate (window->id ());
   window->maximize (MAXIMIZE_STATE);
-
-  if (win_wmclass)
-    free (win_wmclass);
 }
 
 void 
