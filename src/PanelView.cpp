@@ -423,6 +423,8 @@ PanelView::SetOpacity (float opacity)
     return;
 
   _opacity = opacity;
+
+  _home_button->SetOpacity (opacity);
   
   ForceUpdateBackground ();
 }

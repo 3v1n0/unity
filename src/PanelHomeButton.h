@@ -44,6 +44,7 @@ public:
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
   void SetButtonWidth (int button_width);
+  void SetOpacity (float opacity);
 
 protected:
   const gchar* GetName ();
@@ -66,6 +67,7 @@ private:
   int _button_width;
   int _urgent_count;
   bool _pressed;
+  float _opacity;
   
   gulong _theme_changed_id;
   guint _urgent_interest;
