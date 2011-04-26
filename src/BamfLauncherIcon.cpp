@@ -497,10 +497,9 @@ BamfLauncherIcon::Spread (int state, bool force)
 
   if (windowList.size () > 1 || (windowList.size () > 0 && force))
   {
-    std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    std::string match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
     _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
     PluginAdapter::Default ()->InitiateScale (match, state);
-    delete match;
     g_list_free (children);
     return true;
   }
