@@ -144,6 +144,8 @@ class UnityScreen :
 
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
+	
+	void outputChangeNotify ();
 
   void NeedsRelayout ();
 
