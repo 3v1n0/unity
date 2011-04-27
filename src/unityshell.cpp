@@ -72,7 +72,7 @@ UnityScreen::nuxPrologue ()
   glDisable (GL_LIGHTING);
 
   /* reset matrices */
-  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
+  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
@@ -121,6 +121,9 @@ UnityScreen::OnLauncherHiddenChanged ()
 void
 UnityScreen::paintPanelShadow (const GLMatrix &matrix)
 {
+  if (relayoutSourceId > 0)
+    return;
+    
   if (PluginAdapter::Default ()->IsExpoActive ())
     return;
   
@@ -183,7 +186,7 @@ UnityScreen::paintDisplay (const CompRegion &region)
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
-  
+
   doShellRepaint = false;
 }
 
@@ -825,6 +828,8 @@ UnityScreen::RelayoutTimeout (gpointer data)
   uScr->NeedsRelayout ();
   uScr->Relayout();
   uScr->relayoutSourceId = 0;
+  
+  uScr->cScreen->damageScreen ();
 
   return FALSE;
 }
@@ -854,20 +859,10 @@ write_logger_data_to_disk (gpointer data)
   return FALSE;
 }
 
-void
-OnMonitorChanged (GdkScreen* screen,
-                  gpointer   data)
+void 
+UnityScreen::outputChangeNotify ()
 {
-  UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->ScheduleRelayout (500);
-}
-
-void
-OnSizeChanged (GdkScreen* screen,
-               gpointer   data)
-{
-  UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->ScheduleRelayout (500);
+  ScheduleRelayout (500);
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -963,15 +958,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
-
-  g_signal_connect (gdk_screen_get_default (),
-                    "monitors-changed",
-                     G_CALLBACK (OnMonitorChanged),
-                     this);
-  g_signal_connect (gdk_screen_get_default (),
-                    "size-changed",
-                    G_CALLBACK (OnSizeChanged),
-                    this);
 
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);

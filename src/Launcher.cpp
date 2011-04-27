@@ -303,7 +303,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
     // FIXME: not used, remove (with Get function) in O
-    m_ActiveTooltipIcon = NULL;
     m_ActiveMenuIcon = NULL;
     m_LastSpreadIcon = NULL;
 
@@ -844,6 +843,10 @@ void Launcher::SetStateMouseOverBFB (bool over_bfb)
     // the case where it's x=0 isn't important here as OnBFBUpdate() isn't triggered
     if (over_bfb)
       _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, false);
+    // event not received like: mouse over trigger, press super -> dash here, put mouse away from trigger,
+    // click to close
+    else
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_TRIGGER, false);
 }
 
 void Launcher::SetStateKeyNav (bool keynav_activated)
@@ -1726,6 +1729,7 @@ void Launcher::OnPlaceViewShown (GVariant *data, void *val)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
     {
       (*it)->SetQuirk (LauncherIcon::QUIRK_DESAT, true);
+      (*it)->HideTooltip ();
     }
     
     // hack around issue in nux where leave events dont always come after a grab
@@ -1739,6 +1743,10 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     
     self->_hide_machine->SetQuirk (LauncherHideMachine::PLACES_VISIBLE, false);
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
+    
+    // as the leave event is no more received when the place is opened
+    self->SetStateMouseOverLauncher (false);
+    self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
     for (it = self->_model->begin (); it != self->_model->end (); it++)
@@ -1765,7 +1773,7 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
   g_variant_get (data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
   self->_bfb_mouse_position = nux::Point2 (x, y);
   
-  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS);
+  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS) && x >= 0 && y >= 0;
   /*
    * if we are currently hidden and we are over the trigger, prepare the change
    * from a position-based move to a time-based one
@@ -1813,13 +1821,16 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-
+    
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
 
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
-    _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
+    if (_hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE))
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
+    else
+      _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     
     if (hidden)
     {
@@ -2275,8 +2286,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon == _current_icon)
       _current_icon = 0;
-    if (icon == m_ActiveTooltipIcon)
-      m_ActiveTooltipIcon = 0;
     if (icon == m_ActiveMenuIcon)
       m_ActiveMenuIcon = 0;
     if (icon == m_LastSpreadIcon)
@@ -3097,11 +3106,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
-  // FIXME: Ugly workaround for nux sending mouse enter signal on super key release or keynav enter
-  if (x < 0)
-    return;
-  
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
   
@@ -3115,13 +3119,8 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-
-  // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
-  if (x < 0)
-    return;
-
   SetMousePosition (x, y);
-  SetStateMouseOverLauncher  (false);
+  SetStateMouseOverLauncher (false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -3231,6 +3230,7 @@ void
 Launcher::EdgeRevealTriggered ()
 {
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
+  _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
 
 void

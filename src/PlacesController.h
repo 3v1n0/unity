@@ -31,6 +31,8 @@
 #include "PlacesView.h"
 #include "Introspectable.h"
 
+#include <time.h>
+
 #include <Nux/BaseWindow.h>
 #include <Nux/TimelineEasings.h>
 
@@ -80,6 +82,10 @@ private:
   float             _last_opacity;
   gint64            _start_time;
   GdkRectangle      _monitor_rect;
+  
+  bool IsActivationValid ();
+  struct timespec time_diff (struct timespec start, struct timespec end);
+  struct timespec _last_activate_time;
   
   bool              _need_show;
 
