@@ -1773,7 +1773,7 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
   g_variant_get (data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
   self->_bfb_mouse_position = nux::Point2 (x, y);
   
-  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS);
+  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS) && x >= 0 && y >= 0;
   /*
    * if we are currently hidden and we are over the trigger, prepare the change
    * from a position-based move to a time-based one
@@ -1821,7 +1821,7 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-
+    
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
@@ -3106,11 +3106,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
-  // FIXME: Ugly workaround for nux sending mouse enter signal on super key release or keynav enter
-  if (x < 0)
-    return;
-  
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
   
@@ -3124,11 +3119,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-
-  // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
-  if (x < 0)
-    return;
-
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (false);
 
