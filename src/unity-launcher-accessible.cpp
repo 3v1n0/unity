@@ -78,8 +78,6 @@ struct _UnityLauncherAccessiblePrivate
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-
-  gboolean focused;
 };
 
 
@@ -256,9 +254,6 @@ unity_launcher_accessible_ref_state_set (AtkObject *obj)
 
   /* The Launcher is always focusable */
   atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
-
-  if (self->priv->focused)
-    atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
   return state_set;
 }

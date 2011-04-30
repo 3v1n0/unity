@@ -249,7 +249,9 @@ check_focus (NuxViewAccessible *self,
              gboolean focus_in)
 {
 
- FIXME: investigate to make check_focus virtual, and change key_focused with the on_start_cb methods, and using a "pending_notification" boolean
+  // FIXME: investigate to make check_focus virtual, and change
+  // key_focused with the on_start_cb methods, and using a
+  // "pending_notification" boolean
 
   if (self->priv->key_focused != focus_in)
     {

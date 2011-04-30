@@ -47,10 +47,18 @@ struct _NuxAreaAccessible
 struct _NuxAreaAccessibleClass
 {
   NuxObjectAccessibleClass parent_class;
+
+  /*
+   * Virtual method to check the focus after a relevant event
+   */
+  gboolean (*check_focus_change)       (NuxAreaAccessible *self);
+
 };
 
 GType      nux_area_accessible_get_type (void);
 AtkObject *nux_area_accessible_new      (nux::Object *object);
+
+gboolean   nux_area_accessible_check_focus_change  (NuxAreaAccessible *self);
 
 G_END_DECLS
 
