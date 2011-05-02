@@ -49,16 +49,18 @@ struct _NuxAreaAccessibleClass
   NuxObjectAccessibleClass parent_class;
 
   /*
-   * Virtual method to check the focus after a relevant event
+   * Virtual method to check if there is any pending state change notification
    */
-  gboolean (*check_focus_change)       (NuxAreaAccessible *self);
+  gboolean (*check_pending_notification)       (NuxAreaAccessible *self);
 
 };
 
 GType      nux_area_accessible_get_type (void);
 AtkObject *nux_area_accessible_new      (nux::Object *object);
 
-gboolean   nux_area_accessible_check_focus_change  (NuxAreaAccessible *self);
+gboolean   nux_area_accessible_check_pending_notification (NuxAreaAccessible *self);
+gboolean   nux_area_accessible_parent_window_active       (NuxAreaAccessible *self);
+AtkObject* nux_area_accessible_get_parent_window          (NuxAreaAccessible *self);
 
 G_END_DECLS
 

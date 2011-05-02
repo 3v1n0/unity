@@ -22,7 +22,17 @@
  * @short_description: Implementation of the ATK interfaces for #nux::BaseWindow
  * @see_also: nux::BaseWindow
  *
- * Right now it is only here to expose the child of BaseWindow (the layout)
+ * Right now it is used to:
+ *  * Expose the child of BaseWindow (the layout)
+ *  * Window event notification (activate, deactivate, and so on)
+ *
+ * BTW: a window can be active if receive the focus via
+ * InputArea::OnStartFocus, or if one of their children is the
+ * FocusInputArea (BaseWindow::SetEnterFocusInputArea) and receive
+ * those signals.
+ *
+ *  HasKeyboardFocus is not a reliable here:
+ *  see bug https://bugs.launchpad.net/nux/+bug/745049
  *
  * #NuxBaseWindowAccessible implements the required ATK interfaces of
  * nux::BaseWindow, exposing as a child the BaseWindow layout
@@ -63,6 +73,10 @@ struct _NuxBaseWindowAccessiblePrivate
 {
   /* Cached values (used to avoid extra notifications) */
   gboolean active;
+
+  gboolean key_focused;
+  gboolean child_key_focused;
+  /* so active = key_focused || child_key_focused */
 };
 
 #define NUX_BASE_WINDOW_ACCESSIBLE_GET_PRIVATE(obj) \
@@ -192,6 +206,8 @@ nux_base_window_accessible_ref_state_set (AtkObject *obj)
 
   atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
 
+  /* HasKeyboardFocus is not a reliable here:
+     see bug https://bugs.launchpad.net/nux/+bug/745049 */
   if (self->priv->active)
     {
       atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
@@ -203,6 +219,32 @@ nux_base_window_accessible_ref_state_set (AtkObject *obj)
 
 /* private */
 static void
+check_active (NuxBaseWindowAccessible *self)
+{
+  gint signal_id;
+  gboolean is_active;
+
+  is_active = (self->priv->key_focused || self->priv->child_key_focused);
+
+  if (self->priv->active != is_active)
+    {
+      self->priv->active = is_active;
+
+      if (is_active)
+        signal_id = ACTIVATE;
+      else
+        signal_id = DEACTIVATE;
+
+      g_debug ("[a11y][bwindow] check_active activate events (%p:%s:%i)",
+               self, atk_object_get_name (ATK_OBJECT (self)), is_active);
+
+      atk_object_notify_state_change (ATK_OBJECT (self),
+                                      ATK_STATE_ACTIVE, is_active);
+      g_signal_emit (self, signals [signal_id], 0);
+    }
+}
+
+static void
 on_change_focus_cb (AtkObject *object,
                     gboolean focus_in)
 {
@@ -212,23 +254,24 @@ on_change_focus_cb (AtkObject *object,
      has the key focus (see nux::InputArea) */
   self = NUX_BASE_WINDOW_ACCESSIBLE (object);
 
-  if (self->priv->active != focus_in)
+  if (self->priv->key_focused != focus_in)
     {
-      gint signal_id;
+      self->priv->key_focused = focus_in;
 
-      self->priv->active = focus_in;
+      check_active (self);
+    }
+}
 
-      atk_object_notify_state_change (ATK_OBJECT (self),
-                                      ATK_STATE_ACTIVE, focus_in);
+/* public */
+void
+nux_base_window_set_child_key_focused (NuxBaseWindowAccessible *self,
+                                       gboolean value)
+{
+  g_return_if_fail (NUX_IS_BASE_WINDOW_ACCESSIBLE (self));
 
-      if (focus_in)
-        signal_id = ACTIVATE;
-      else
-        signal_id = DEACTIVATE;
-
-      g_debug ("[a11y][bwindow] on_focus_event activate events (%p:%s:%i)",
-               object, atk_object_get_name (object), focus_in);
-
-      g_signal_emit (self, signals [signal_id], 0);
+  if (self->priv->child_key_focused != value)
+    {
+      self->priv->child_key_focused = value;
+      check_active (self);
     }
 }
