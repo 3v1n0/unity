@@ -49,6 +49,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
@@ -82,7 +83,15 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
                       GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
+  } else {
+	  Refresh();
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseUp (int x, int y, long button_flags, long key_flags)
+{
+  Refresh();
 }
 
 void
