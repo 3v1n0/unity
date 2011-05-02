@@ -1,3 +1,10 @@
+unity (3.8.12-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - depends on compiz for some people upgrading (LP: #773253)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 May 2011 15:30:40 +0200
+
 unity (3.8.12-0ubuntu1) natty-proposed; urgency=low
 
   * New upstream release.
