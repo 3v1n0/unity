@@ -26,13 +26,15 @@
  *  * Expose the child of BaseWindow (the layout)
  *  * Window event notification (activate, deactivate, and so on)
  *
- * BTW: a window can be active if receive the focus via
- * InputArea::OnStartFocus, or if one of their children is the
- * FocusInputArea (BaseWindow::SetEnterFocusInputArea) and receive
- * those signals.
+ * BTW: we consider that one window is active if it has directly the
+ * keyboard focus, or if one of his child has the keyboard focus (ie:
+ * the Launcher via GrabKeyboardFocus)
  *
- *  HasKeyboardFocus is not a reliable here:
+ * HasKeyboardFocus is not a reliable to check that:
  *  see bug https://bugs.launchpad.net/nux/+bug/745049
+ *
+ * So we need to update the state of the objects using the information
+ * from the signals OnStartFocus and OnEndFocus
  *
  * #NuxBaseWindowAccessible implements the required ATK interfaces of
  * nux::BaseWindow, exposing as a child the BaseWindow layout
