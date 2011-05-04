@@ -104,7 +104,6 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  LauncherIcon* GetActiveTooltipIcon() {return m_ActiveTooltipIcon;}
   LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
   LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
   void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
