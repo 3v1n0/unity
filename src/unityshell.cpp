@@ -1014,7 +1014,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->layout->SetVerticalExternalMargin(0);
   self->layout->SetHorizontalExternalMargin(0);
 
-  self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
+  self->controller = new LauncherController (self->launcher, self->screen);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(self->layout);
