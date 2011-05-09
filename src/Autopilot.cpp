@@ -37,7 +37,7 @@ TestFinished (void *arg)
   g_dbus_connection_emit_signal (_dbus,
                                  NULL,
                                  "/com/canonical/Unity/Debug",
-                                 "com.canonical.Unity.Autopilot",
+                                 "com.canonical.Unity.Debug.Autopilot",
                                  "TestFinished",
                                  result,
                                  &error);
