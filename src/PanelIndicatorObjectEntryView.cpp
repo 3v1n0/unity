@@ -291,18 +291,18 @@ PanelIndicatorObjectEntryView::Refresh ()
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  
-  nux::ROPConfig rop; 
+
+  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,
-                                                            nux::Colors::White,
+                                                            nux::color::White,
                                                             true,
                                                             rop);
   SetPaintLayer (texture_layer);
-    
+
   texture2D->UnReference ();
   delete texture_layer;
 

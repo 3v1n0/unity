@@ -2354,16 +2354,16 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 {
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
-  
+
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
+    nux::Color color = nux::color::LightGrey;
 
     if (arg.running_colored)
-      color = nux::Colors::SkyBlue;
-      
+      color = nux::color::SkyBlue;
+
     color.SetRGBA (color.R () * alpha, color.G () * alpha,
                    color.B () * alpha, alpha);
 
@@ -2413,7 +2413,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
+    nux::Color color = nux::color::LightGrey;
     color.SetRGBA (color.R () * alpha, color.G () * alpha,
                    color.B () * alpha, alpha);
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
@@ -2659,7 +2659,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   RenderIcon (GfxContext,
               arg,
               arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
-              nux::Colors::White,
+              nux::color::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"]);
 
@@ -2669,7 +2669,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _icon_shine_texture->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2718,7 +2718,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _offscreen_progress_texture,
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2728,7 +2728,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
@@ -3837,33 +3837,32 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // FIXME
   glClear (GL_COLOR_BUFFER_BIT);
   nux::TexCoordXForm texxform;
-  
+
   fill_width *= progress_fill;
 
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-                            
-  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);  
-
-  GfxContext.PopClippingRectangle (); 
-
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height,
+                       _progress_bar_trough->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.PopClippingRectangle ();
 
   // right door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.PopClippingRectangle (); 
+  GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
+                      progress_width, progress_height,
+                      _progress_bar_trough->GetDeviceTexture (), texxform,
+                      nux::color::White);
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y,
+                       fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
 
-  
+  GfxContext.PopClippingRectangle();
+
   RestoreSystemRenderTarget ();
 }
 

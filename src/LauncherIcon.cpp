@@ -67,12 +67,12 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-  
+
   _related_windows = 0;
 
-  _background_color = nux::Colors::White;
-  _glow_color = nux::Colors::White;
-  
+  _background_color = nux::color::White;
+  _glow_color = nux::color::White;
+
   _remote_urgent = false;
   _mouse_inside = false;
   _has_visible_window = false;

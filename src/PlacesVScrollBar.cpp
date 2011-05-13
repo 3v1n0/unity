@@ -64,7 +64,7 @@ PlacesVScrollBar::PostLayoutManagement (long LayoutResult)
 void
 PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
 {
-  nux::Color         color = nux::Colors::White;
+  nux::Color         color = nux::color::White;
   nux::Geometry      base  = GetGeometry ();
   nux::TexCoordXForm texxform;
 
