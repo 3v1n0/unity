@@ -2364,13 +2364,12 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
     if (arg.running_colored)
       color = nux::color::SkyBlue;
 
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+    color = color * alpha;
 
     nux::BaseTexture *texture;
 
     std::vector<int> markers;
-    
+
     /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
@@ -2413,9 +2412,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::color::LightGrey;
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+    nux::Color color = nux::color::LightGrey * alpha;
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
                               markerCenter - (_arrow_rtl->GetHeight () / 2),
                               (float) _arrow_rtl->GetWidth(),
@@ -2553,18 +2550,11 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-//   if(VertexColorLocation != -1)
-//   {
-//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
-//   }
-
-  bkg_color.SetRGBA (bkg_color.R () * alpha, bkg_color.G () * alpha,
-                     bkg_color.B () * alpha, alpha);
+  nux::Color bg_color = bkg_color * alpha;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
-    CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glUniform4fARB (FragmentColor, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glUniform4fARB (DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2572,7 +2562,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
   else
   {
-    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2837,26 +2827,33 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         gPainter.Paint2DQuadColor (GfxContext, 
                                    nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
                                    nux::Color(0xAAAAAAAA));
-                                   
       if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-    
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x60000000));
+
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                                            bkg_box.y,
+                                            1,
+                                            bkg_box.height),
+                              nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            20),
+                              nux::Color(0x60000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x60000000));
 
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
-    nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
-    alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
-                        alpha_mask.B () * launcher_alpha, launcher_alpha);
+    nux::Color alpha_mask = nux::Color(0xFFAAAAAA) * launcher_alpha;
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
-    
+
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 

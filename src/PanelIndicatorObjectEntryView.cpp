@@ -258,19 +258,19 @@ PanelIndicatorObjectEntryView::Refresh ()
 
     // Once for the homies that couldn't be here
     cairo_set_source_rgba (cr,
-                           textshadowcol.GetRed (),
-                           textshadowcol.GetGreen (),
-                           textshadowcol.GetBlue (),
-                           1.0f - textshadowcol.GetRed ());
+                           textshadowcol.red,
+                           textshadowcol.green,
+                           textshadowcol.blue,
+                           1.0f - textshadowcol.red);
     cairo_move_to (cr, x, (int)(((height - text_height)/2)+1));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
     cairo_set_source_rgba (cr,
-                           textcol.GetRed (),
-                           textcol.GetGreen (),
-                           textcol.GetBlue (),
+                           textcol.red,
+                           textcol.green,
+                           textcol.blue,
                            _proxy->label_sensitive ? 1.0f : 0.5f);
     cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
@@ -343,29 +343,29 @@ draw_menu_bg (cairo_t *cr, int width, int height)
 
   cairo_pattern_t * pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgtop.GetRed (),
-                                     bgtop.GetGreen (),
-                                     bgtop.GetBlue (),
-                                     1.0f - bgbot.GetRed ());
+                                     bgtop.red,
+                                     bgtop.green,
+                                     bgtop.blue,
+                                     1.0f - bgbot.red);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
-                                     1.0f - bgtop.GetRed ());
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
+                                     1.0f - bgtop.red);
   cairo_set_source (cr, pat);
   cairo_fill_preserve (cr);
   cairo_pattern_destroy (pat);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     line.GetRed (),
-                                     line.GetGreen (),
-                                     line.GetBlue (),
+                                     line.red,
+                                     line.green,
+                                     line.blue,
                                      1.0f);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     line.GetRed (),
-                                     line.GetGreen (),
-                                     line.GetBlue (),
+                                     line.red,
+                                     line.green,
+                                     line.blue,
                                      1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
@@ -383,14 +383,14 @@ draw_menu_bg (cairo_t *cr, int width, int height)
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+3);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
                                      1.0f);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
                                      1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);

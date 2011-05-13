@@ -32,11 +32,11 @@ namespace {
 
 PanelStyle *_style = NULL;
 
-Color ColorFromGdkColor(GdkColor const& gc)
+nux::Color ColorFromGdkColor(GdkColor const& gc)
 {
-  return Color(gc.red / static_cast<float>(0xffff),
-               gc.green / static_cast<float>(0xffff),
-               gc.blue / static_cast<float>(0xffff));
+  return nux::Color(gc.red / static_cast<float>(0xffff),
+                    gc.green / static_cast<float>(0xffff),
+                    gc.blue / static_cast<float>(0xffff));
 }
 
 }
@@ -209,7 +209,7 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
     main = main * 1.2f;
   else if (state == WINDOW_STATE_PRESSED)
     main = main * 0.8f;
-  
+
   cr  = cairo_graphics.GetContext();
   cairo_translate (cr, 0.5, 0.5);
   cairo_set_line_width (cr, 1.5f);
@@ -218,8 +218,8 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   cairo_paint (cr);
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  
-  cairo_set_source_rgba (cr, main.GetRed (), main.GetGreen (), main.GetBlue (), main.GetAlpha ());
+
+  cairo_set_source_rgba (cr, main.red, main.green, main.blue, main.alpha);
 
   cairo_arc (cr, width/2.0f, height/2.0f, (width - 2)/2.0f, 0.0f, 360 * (M_PI/180));
   cairo_stroke (cr);
@@ -248,7 +248,7 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   cairo_stroke (cr);
 
   cairo_destroy (cr);
-  
+
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
   texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
   texture->Update(bitmap);

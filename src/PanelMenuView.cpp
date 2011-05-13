@@ -577,8 +577,10 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
-    nux::Color col = PanelStyle::GetDefault ()->GetTextColor ();
-    float red = col.GetRed (), blue = col.GetBlue (), green = col.GetGreen ();
+    nux::Color const& col = PanelStyle::GetDefault ()->GetTextColor();
+    float red = col.red;
+    float green = col.green;
+    float blue = col.blue;
 
     pango_cairo_update_layout (cr, layout);
 
