@@ -18,5 +18,32 @@
 
 #include "TimeMe.h"
 
-gint64 _____last_time_____ = 0;
-gint64 _____start_time_____ = 0;
+#include <ostream>
+
+namespace unity {
+namespace logger {
+
+Timer::Timer(std::string const& name, std::ostream& out)
+  : name_(name)
+  , out_(out)
+  , start_time_(g_get_monotonic_time())
+{
+  out_ << "STARTED (" << name_ << ")" << "\n";
+}
+
+Timer::~Timer()
+{
+  gint64 end = g_get_monotonic_time();
+  out_ << ((end - start_time_) / 1000.0) << ": FINISHED ("
+       << name_ << ")" << "\n";
+}
+
+void Timer::log(std::string const& message)
+{
+  gint64 now = g_get_monotonic_time();
+  out_ << ((now - start_time_) / 1000.0) << ": " << message
+       << " (" << name_ << ")" << "\n";
+}
+
+}
+}
