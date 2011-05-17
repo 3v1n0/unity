@@ -2551,6 +2551,8 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
 
   nux::Color bg_color = bkg_color * alpha;
+  // Since we don't know want the alpha was, reset the alpha channel of the color.
+  bkg_color.alpha = alpha;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
