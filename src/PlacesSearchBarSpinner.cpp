@@ -76,7 +76,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                        _spin_glow->GetHeight (),
                        _spin_glow->GetDeviceTexture (),
                        texxform,
-                       nux::Colors::White);
+                       nux::color::White);
 
   if (_state == STATE_READY)
   {
@@ -86,7 +86,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _magnify->GetHeight (),
                          _magnify->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
   }
   else if (_state == STATE_SEARCHING)
   {
@@ -109,7 +109,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          spin_geo.height,
                          _spin->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
 
     GfxContext.PopModelViewMatrix ();
     GfxContext.PopModelViewMatrix ();
@@ -124,7 +124,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _spin->GetHeight (),
                          _spin->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
     texxform.FlipVCoord (false);
 
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin->GetWidth ())/2),
@@ -133,7 +133,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _spin->GetHeight (),
                          _spin->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
 
 
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _close_glow->GetWidth ())/2),
@@ -142,7 +142,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _close_glow->GetHeight (),
                          _close_glow->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
 
     GfxContext.QRP_1Tex (geo.x + ((geo.width - _close->GetWidth ())/2),
                          geo.y + ((geo.height - _close->GetHeight ())/2),
@@ -150,7 +150,7 @@ PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                          _close->GetHeight (),
                          _close->GetDeviceTexture (),
                          texxform,
-                         nux::Colors::White);
+                         nux::color::White);
   }
 
   GfxContext.PopClippingRectangle ();
