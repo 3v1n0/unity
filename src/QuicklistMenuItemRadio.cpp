@@ -17,15 +17,22 @@
  * Authored by: Mirco Müller <mirco.mueller@canonical.com>
  */
 
-#include "QuicklistMenuItemRadio.h"
-
-#include <cmath>
-
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
 #include "Nux/Nux.h"
+#include "QuicklistMenuItemRadio.h"
 
+static double
+_align (double val)
+{
+  double fract = val - (int) val;
+
+  if (fract != 0.5f)
+    return (double) ((int) val + 0.5f);
+  else
+    return val;
+}
 
 QuicklistMenuItemRadio::QuicklistMenuItemRadio (DbusmenuMenuitem* item,
                                                 NUX_FILE_LINE_DECL) :
@@ -251,8 +258,8 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  double x      = std::floor((ITEM_INDENT_ABS + ITEM_MARGIN) / 2.0f + 0.5);
-  double y      = std::floor(height / 2.0f + 0.5);
+  double x      = _align ((ITEM_INDENT_ABS + ITEM_MARGIN) / 2.0f);
+  double y      = _align ((double) height / 2.0f);
   double radius = 3.5f;
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
