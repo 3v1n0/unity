@@ -44,13 +44,16 @@ private:
   void ActivateLauncherIcon ();
   void ShowMount (GMount *mount);
   void Eject ();
+  void Unmount ();
   void StopDrive ();
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnUnmount (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnRemoved (GVolume *volume, DeviceLauncherIcon *self);
   static void OnChanged (GVolume *volume, DeviceLauncherIcon *self);
   static void OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnEjectReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  static void OnUnmountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnStopDriveReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   void OnSettingsChanged (DevicesSettings *settings);
