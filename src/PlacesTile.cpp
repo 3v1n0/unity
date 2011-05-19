@@ -207,7 +207,7 @@ PlacesTile::UpdateBackground ()
 
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
                                           texxform,
-                                          nux::Colors::White,
+                                          nux::color::White,
                                           true,
                                           rop);
 }

@@ -40,19 +40,19 @@ class PanelStyle : public nux::Object
       WINDOW_STATE_NORMAL,
       WINDOW_STATE_PRELIGHT,
       WINDOW_STATE_PRESSED
-    
+
     } WindowState;
-    
+
     static PanelStyle * GetDefault ();
 
     PanelStyle ();
     ~PanelStyle ();
 
-    nux::Color& GetTextColor ();
-    nux::Color& GetBackgroundTop ();
-    nux::Color& GetBackgroundBottom ();
-    nux::Color& GetTextShadow ();
-    nux::Color& GetLineColor ();
+    nux::Color const& GetTextColor() const;
+    nux::Color const& GetBackgroundTop() const;
+    nux::Color const& GetBackgroundBottom() const;
+    nux::Color const& GetTextShadow() const;
+    nux::Color const& GetLineColor() const;
 
     GdkPixbuf * GetBackground (int width, int height);
 
@@ -78,7 +78,7 @@ class PanelStyle : public nux::Object
     nux::Color         _bg_bottom;
     nux::Color         _text_shadow;
     nux::Color         _line;
-    
+
     gulong            _gtk_theme_changed_id;
 };
 

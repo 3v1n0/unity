@@ -28,7 +28,18 @@
 
 #include "PanelStyle.h"
 
-static PanelStyle *_style = NULL;
+namespace {
+
+PanelStyle *_style = NULL;
+
+nux::Color ColorFromGdkColor(GdkColor const& gc)
+{
+  return nux::Color(gc.red / static_cast<float>(0xffff),
+                    gc.green / static_cast<float>(0xffff),
+                    gc.blue / static_cast<float>(0xffff));
+}
+
+}
 
 PanelStyle::PanelStyle ()
 : _theme_name (NULL)
@@ -77,63 +88,39 @@ PanelStyle::Refresh ()
 
   _theme_name = NULL;
   g_object_get (gtk_settings_get_default (), "gtk-theme-name", &_theme_name, NULL);
-  
+
   style = gtk_widget_get_style (_offscreen);
 
-  _text.SetRed ((float) style->text[0].red / (float) 0xffff);
-  _text.SetGreen ((float) style->text[0].green / (float) 0xffff);
-  _text.SetBlue ((float) style->text[0].blue / (float) 0xffff);
-  _text.SetAlpha (1.0f);
-
-  _text_shadow.SetRed ((float) style->text[3].red / (float) 0xffff);
-  _text_shadow.SetGreen ((float) style->text[3].green / (float) 0xffff);
-  _text_shadow.SetBlue ((float) style->text[3].blue / (float) 0xffff);
-  _text_shadow.SetAlpha (1.0f);
-
-  _line.SetRed ((float) style->dark[0].red / (float) 0xffff);
-  _line.SetGreen ((float) style->dark[0].green / (float) 0xffff);
-  _line.SetBlue ((float) style->dark[0].blue / (float) 0xffff);
-  _line.SetAlpha (1.0f);
-
-  _bg_top.SetRed ((float) style->bg[1].red / (float) 0xffff);
-  _bg_top.SetGreen ((float) style->bg[1].green / (float) 0xffff);
-  _bg_top.SetBlue ((float) style->bg[1].blue / (float) 0xffff);
-  _bg_top.SetAlpha (1.0f);
-
-  _bg_bottom.SetRed ((float) style->bg[0].red / (float) 0xffff);
-  _bg_bottom.SetGreen ((float) style->bg[0].green / (float) 0xffff);
-  _bg_bottom.SetBlue ((float) style->bg[0].blue / (float) 0xffff);
-  _bg_bottom.SetAlpha (1.0f);
+  _text = ColorFromGdkColor(style->text[0]);
+  _text_shadow = ColorFromGdkColor(style->text[3]);
+  _line = ColorFromGdkColor(style->dark[0]);
+  _bg_top = ColorFromGdkColor(style->bg[1]);
+  _bg_bottom = ColorFromGdkColor(style->bg[0]);
 
   changed.emit ();
 }
 
-nux::Color&
-PanelStyle::GetTextColor ()
+nux::Color const& PanelStyle::GetTextColor() const
 {
   return _text;
 }
 
-nux::Color&
-PanelStyle::GetBackgroundTop ()
+nux::Color const& PanelStyle::GetBackgroundTop() const
 {
   return _bg_top;
 }
 
-nux::Color&
-PanelStyle::GetBackgroundBottom ()
+nux::Color const& PanelStyle::GetBackgroundBottom() const
 {
   return _bg_bottom;
 }
 
-nux::Color&
-PanelStyle::GetTextShadow ()
+nux::Color const& PanelStyle::GetTextShadow() const
 {
   return _text_shadow;
 }
 
-nux::Color&
-PanelStyle::GetLineColor ()
+nux::Color const& PanelStyle::GetLineColor() const
 {
   return _line;
 }
@@ -222,7 +209,7 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
     main = main * 1.2f;
   else if (state == WINDOW_STATE_PRESSED)
     main = main * 0.8f;
-  
+
   cr  = cairo_graphics.GetContext();
   cairo_translate (cr, 0.5, 0.5);
   cairo_set_line_width (cr, 1.5f);
@@ -231,8 +218,8 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   cairo_paint (cr);
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  
-  cairo_set_source_rgba (cr, main.GetRed (), main.GetGreen (), main.GetBlue (), main.GetAlpha ());
+
+  cairo_set_source_rgba (cr, main.red, main.green, main.blue, main.alpha);
 
   cairo_arc (cr, width/2.0f, height/2.0f, (width - 2)/2.0f, 0.0f, 360 * (M_PI/180));
   cairo_stroke (cr);
@@ -261,7 +248,7 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   cairo_stroke (cr);
 
   cairo_destroy (cr);
-  
+
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
   texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
   texture->Update(bitmap);
