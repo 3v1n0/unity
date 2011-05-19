@@ -37,6 +37,9 @@ public:
   Object(Object const&);
   ~Object();
 
+  Object& operator=(T* val);
+  Object& operator=(Object const& other);
+
   operator T*();
   operator bool();
   T* operator->();

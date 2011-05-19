@@ -49,6 +49,24 @@ Object<T>::~Object()
 }
 
 template <typename T>
+Object<T>& Object<T>::operator=(T* val)
+{
+  if (object_)
+    g_object_unref(object_);
+  object_ = val;
+}
+
+template <typename T>
+Object<T>& Object<T>operator=(Object const& other)
+{
+  if (object_)
+    g_object_unref(object_);
+  object_ = val;
+  if (object_)
+    g_object_ref(object_);
+}
+
+template <typename T>
 Object<T>::operator T*()
 {
   return object_;
