@@ -48,8 +48,9 @@ public:
 private:
   void Init();
   void Refresh();
+  void SaveFavorites(FavoriteList const& favorites);
 
-  FavoriteList favourites_;
+  FavoriteList favorites_;
   glib::Object<GSettings> settings_;
   bool ignore_signals_;
 };

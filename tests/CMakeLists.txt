@@ -57,6 +57,9 @@ add_executable (test-unit
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
+                ../src/GLibWrapper.h
+                ../src/GLibWrapper-inl.h
+                ../src/GLibWrapper.cpp
                 ../src/Introspectable.cpp
                 ../src/PlaceEntryRemote.cpp
                 ../src/PlaceEntryRemote.h

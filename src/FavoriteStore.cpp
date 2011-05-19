@@ -29,7 +29,7 @@ FavoriteStore::~FavoriteStore()
 
 FavoriteStore& FavoriteStore::GetDefault()
 {
-  static FavoriteStoreGSettings instance;
+  static internal::FavoriteStoreGSettings instance;
   return instance;
 }
 

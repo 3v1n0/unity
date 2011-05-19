@@ -21,6 +21,7 @@
 #define UNITY_GLIB_WRAPPER_H
 
 #include <glib.h>
+#include <string>
 
 namespace unity {
 namespace glib {
@@ -35,7 +36,11 @@ public:
   ~Object();
 
   operator T*();
+  operator bool();
   T* operator->();
+  T* RawPtr();
+  // Release ownership of the object. No unref will occur.
+  T* Release();
 
 private:
   T* object_;

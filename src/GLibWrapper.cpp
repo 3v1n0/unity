@@ -84,6 +84,3 @@ std::string String::Str() const
 }
 }
 
-
-
-#endif

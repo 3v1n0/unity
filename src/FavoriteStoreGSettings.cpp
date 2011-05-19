@@ -19,28 +19,35 @@
 
 #include "FavoriteStoreGSettings.h"
 
+#include <algorithm>
 #include <iostream>
 
 #include <gio/gdesktopappinfo.h>
 
 #include "config.h"
 
+/**
+ * Internally the favorite store keeps the full path to the application, but
+ * when saving, only the desktop file id is saved if the favorite is in one of
+ * the system directories.  If the favorite isn't in one of the system
+ * directories, the full path is saved in the settings.
+ */
+
 namespace unity {
 namespace internal {
 
 namespace {
 
-const char* SETTINGS_NAME "com.canonical.Unity.Launcher";
-const char* LATEST_SETTINGS_MIGRATION "3.2.10";
+const char* SETTINGS_NAME = "com.canonical.Unity.Launcher";
+const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
 
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
-                         FavoriteStoreGSettings* self)
-{
-  if (settings and key) {
-    self->Changed(key);
-  }
-}
+                         FavoriteStoreGSettings* self);
+
+std::string get_basename_or_path(std::string const& desktop_path);
+
+char* exhaustive_desktopfile_lookup(char *desktop_file);
 
 }
 
@@ -48,14 +55,14 @@ FavoriteStoreGSettings::FavoriteStoreGSettings()
   : settings_(g_settings_new(SETTINGS_NAME))
   , ignore_signals_(false)
 {
-  Init ();
+  Init();
 }
 
 FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend *backend)
-  : settings_(g_settings_new_with_backend(SETTINGS_NAME, backend));
+  : settings_(g_settings_new_with_backend(SETTINGS_NAME, backend))
   , ignore_signals_(false)
 {
-  Init ();
+  Init();
 }
 
 void FavoriteStoreGSettings::Init()
@@ -86,10 +93,198 @@ void FavoriteStoreGSettings::Init()
   }
 
   g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
-
-  Refresh ();
+  Refresh();
 }
 
+
+void FavoriteStoreGSettings::Refresh()
+{
+  favorites_.clear();
+
+  gchar **favs = g_settings_get_strv (settings_, "favorites");
+
+  for (int i = 0; favs[i] != NULL; ++i)
+  {
+    // We will be storing either full /path/to/desktop/files or foo.desktop id's
+    if (favs[i][0] == '/')
+    {
+      if (g_file_test(favs[i], G_FILE_TEST_EXISTS))
+      {
+        favorites_.push_back(favs[i]);
+      }
+      else
+      {
+        g_warning("Unable to load desktop file: %s", favs[i]);
+      }
+    }
+    else
+    {
+      glib::Object<GDesktopAppInfo> info(g_desktop_app_info_new(favs[i]));
+      const char* filename = 0;
+      if (info)
+        filename = g_desktop_app_info_get_filename(info);
+
+      if (filename)
+      {
+        favorites_.push_back(filename);
+      }
+      else
+      {
+        g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
+        glib::String exhaustive_path(exhaustive_desktopfile_lookup(favs[i]));
+        if (exhaustive_path.Value() == NULL)
+        {
+          g_warning ("Desktop file '%s' Does not exist anywhere we can find it", favs[i]);
+        }
+        else
+        {
+          favorites_.push_back(exhaustive_path.Str());
+        }
+      }
+    }
+  }
+
+  g_strfreev (favs);
+}
+
+FavoriteList const&  FavoriteStoreGSettings::GetFavorites()
+{
+  return favorites_;
+}
+
+void FavoriteStoreGSettings::AddFavorite(std::string const& desktop_path, int position)
+{
+  int size = favorites_.size();
+  if (desktop_path.empty() || position > size)
+    return;
+
+  if (position < 0)
+  {
+    // It goes on the end.
+    favorites_.push_back(desktop_path);
+  }
+  else
+  {
+    FavoriteList::iterator pos = favorites_.begin();
+    std::advance(pos, position);
+    favorites_.insert(pos, desktop_path);
+  }
+
+  SaveFavorites(favorites_);
+  Refresh();
+}
+
+void FavoriteStoreGSettings::RemoveFavorite(std::string const& desktop_path)
+{
+  if (desktop_path.empty() || desktop_path[0] != '/')
+    return;
+
+  FavoriteList::iterator pos = std::find(favorites_.begin(), favorites_.end(), desktop_path);
+  if (pos == favorites_.end()) {
+    return;
+  }
+
+  favorites_.erase(pos);
+  SaveFavorites(favorites_);
+  Refresh();
+}
+
+void FavoriteStoreGSettings::MoveFavorite(std::string const& desktop_path, int position)
+{
+  int size = favorites_.size();
+  if (desktop_path.empty() || position > size)
+    return;
+
+  FavoriteList::iterator pos = std::find(favorites_.begin(), favorites_.end(), desktop_path);
+  if (pos == favorites_.end()) {
+    return;
+  }
+
+  favorites_.erase(pos);
+  if (position < 0)
+  {
+    // It goes on the end.
+    favorites_.push_back(desktop_path);
+  }
+  else
+  {
+    FavoriteList::iterator insert_pos = favorites_.begin();
+    std::advance(insert_pos, position);
+    favorites_.insert(insert_pos, desktop_path);
+  }
+
+  SaveFavorites(favorites_);
+  Refresh();
+}
+
+void FavoriteStoreGSettings::SetFavorites(FavoriteList const& favorites)
+{
+  SaveFavorites(favorites);
+  Refresh();
+}
+
+void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
+{
+  const int size = favorites.size();
+  const char* favs[size + 1];
+  favs[size] = NULL;
+
+  int index = 0;
+  FavoriteList values;
+  for (FavoriteList::const_iterator i = favorites.begin(), end = favorites.end();
+       i != end; ++i, ++index)
+  {
+    FavoriteList::iterator iter = values.insert(values.end(), get_basename_or_path(*i));
+    favs[index] = iter->c_str();
+  }
+
+  ignore_signals_ = true;
+  if (!g_settings_set_strv(settings_, "favorites", favs))
+    g_warning("Saving favorites failed.");
+  ignore_signals_ = false;
+}
+
+void FavoriteStoreGSettings::Changed(std::string const& key)
+{
+  if (ignore_signals_)
+    return;
+
+  // We shouldn't really be using g_print here.  Logging FTW.
+  g_print("Changed: %s\n", key.c_str());
+}
+
+namespace {
+
+void on_settings_updated(GSettings* settings,
+                         const gchar* key,
+                         FavoriteStoreGSettings* self)
+{
+  if (settings and key) {
+    self->Changed(key);
+  }
+}
+
+std::string get_basename_or_path(std::string const& desktop_path)
+{
+  const gchar* const* dirs = g_get_system_data_dirs();
+
+  /* We check to see if the desktop file belongs to one of the system data
+   * directories. If so, then we store it's desktop id, otherwise we store
+   * it's full path. We're clever like that.
+   */
+  for (int i = 0; dirs[i]; ++i)
+  {
+    std::string dir(dirs[i]);
+
+    if (desktop_path.find(dir) == 0)
+    {
+      // Would prefer boost::filesystem here.
+      glib::String basename(g_path_get_basename(desktop_path.c_str()));
+      return basename.Str();
+    }
+  }
+  return desktop_path;
+}
 
 /* If the desktop file exists, we *will* find it dang it
  * Returns null if we failed =(
@@ -193,306 +388,7 @@ char *exhaustive_desktopfile_lookup (char *desktop_file)
   return path;
 }
 
-void FavoriteStoreGSettings::Refresh()
-{
-  int     i = 0;
-  gchar **favs;
+} // anonymous namespace
 
-  g_slist_foreach (m_favorites, (GFunc)g_free, NULL);
-  g_slist_free (m_favorites);
-  m_favorites = NULL;
-
-  favs = g_settings_get_strv (settings_, "favorites");
-
-  while (favs[i] != NULL)
-    {
-      /*
-       * We will be storing either full /path/to/desktop/files or foo.desktop id's
-       */
-      if (favs[i][0] == '/')
-        {
-          if (g_file_test (favs[i], G_FILE_TEST_EXISTS))
-            {
-              m_favorites = g_slist_append (m_favorites, g_strdup (favs[i]));
-            }
-          else
-            {
-              g_warning ("Unable to load desktop file: %s", favs[i]);
-            }
-        }
-      else
-        {
-          GDesktopAppInfo *info;
-
-          info = g_desktop_app_info_new (favs[i]);
-          
-          if (info == NULL || g_desktop_app_info_get_filename (info) == NULL)
-            {
-              g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
-              char *exhaustive_path;
-
-              exhaustive_path = exhaustive_desktopfile_lookup (favs[i]);
-              if (exhaustive_path == NULL)
-                {
-                  g_warning ("Desktop file '%s' Does not exist anywhere we can find it", favs[i]);
-                }
-              else
-                {
-                  m_favorites = g_slist_append (m_favorites, exhaustive_path);
-                }
-            }
-          else
-            {
-              m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
-            }
-
-          g_object_unref (info);
-        }
-
-      i++;
-    }
-
-  g_strfreev (favs);
-}
-
-GSList *
-FavoriteStoreGSettings::GetFavorites ()
-{
-  return m_favorites;
-}
-
-static gchar *
-get_basename_or_path (const gchar *desktop_path)
-{
-  const gchar * const * dirs;
-  const gchar * dir;
-  gint          i = 0;
-
-  dirs = g_get_system_data_dirs ();
-
-  /* We check to see if the desktop file belongs to one of the system data
-   * directories. If so, then we store it's desktop id, otherwise we store
-   * it's full path. We're clever like that.
-   */
-  while ((dir = dirs[i]))
-    {
-      if (g_str_has_prefix (desktop_path, dir))
-        {
-          return g_path_get_basename (desktop_path);
-        }
-      i++;
-    }
-
-  return g_strdup (desktop_path);
-}
-
-void
-FavoriteStoreGSettings::AddFavorite (const char *desktop_path,
-                                     gint        position)
-{
-  int     n_total_favs;
-  GSList *f;
-  gint    i = 0;
-  
-  g_return_if_fail (desktop_path);
-  g_return_if_fail (position < (gint)g_slist_length (m_favorites));
-  
-  n_total_favs = g_slist_length (m_favorites) + 1;
-  
-  char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
-
-  for (f = m_favorites; f; f = f->next)
-    {
-      if (i == position)
-        {
-          favs[i] = get_basename_or_path (desktop_path);
-          i++;
-        }
-      
-      favs[i] = get_basename_or_path ((char *)f->data);
-
-      i++;
-    }
-
-  /* Add it to the end of the list */
-  if (position == -1)
-    {
-      favs[i] = get_basename_or_path (desktop_path);
-    }
-
-  m_ignore_signals = true;
-  if (!g_settings_set_strv (settings_, "favorites", favs))
-    g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
-  m_ignore_signals = false;
-
-  i = 0;
-  while (favs[i] != NULL)
-    {
-      g_free (favs[i]);
-      favs[i] = NULL;
-      i++;
-    }
-
-  Refresh ();
-}
- 
-void
-FavoriteStoreGSettings::RemoveFavorite (const char *desktop_path)
-{
-  int     n_total_favs;
-  GSList *f;
-  int     i = 0;
-  bool    found = false;
-
-  g_return_if_fail (desktop_path);
-  g_return_if_fail (desktop_path[0] == '/');
-
-  n_total_favs = g_slist_length (m_favorites);
-  
-  char *favs[n_total_favs + 1];
-  
-  for (i = 0; i < n_total_favs + 1; i++)
-    favs[i] = NULL;
-
-  i = 0;
-  for (f = m_favorites; f; f = f->next)
-    {
-      if (g_strcmp0 ((char *)f->data, desktop_path) != 0)
-        {
-          favs[i] = get_basename_or_path ((char *)f->data);
-          i++;
-        }
-      else
-        {
-          found = true;
-        }
-    }
-    
-  if (!found)
-    {
-      g_warning ("Unable to remove favorite '%s': Does not exist in favorites",
-                 desktop_path);
-    }
-
-  m_ignore_signals = true;
-  if (!g_settings_set_strv (settings_, "favorites", favs))
-    g_warning ("Unable to remove favorite '%s'", desktop_path);
-  m_ignore_signals = false;
-
-  i = 0;
-  while (favs[i] != NULL)
-    {
-      g_free (favs[i]);
-      favs[i] = NULL;
-      i++;
-    }
-
-  Refresh ();
-}
-
-void
-FavoriteStoreGSettings::MoveFavorite (const char *desktop_path,
-                                      gint        position)
-{
-  int     n_total_favs;
-  GSList *f;
-  gint    i = 0;
-
-  g_return_if_fail (desktop_path);
-  g_return_if_fail (position < (gint)g_slist_length (m_favorites));
-  
-  n_total_favs = g_slist_length (m_favorites);
-  
-  char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
-
-  for (f = m_favorites; f; f = f->next)
-    {
-      if (i == position)
-        {
-          favs[i] = get_basename_or_path (desktop_path);
-          i++;
-        }
-
-      if (g_strcmp0 (desktop_path, (char *)f->data) != 0)
-        {
-          favs[i] = get_basename_or_path ((char *)f->data);
-          i++;
-        }
-    }
-
-  /* Add it to the end of the list */
-  if (position == -1)
-    {
-      favs[i] = get_basename_or_path (desktop_path);
-      i++;
-    }
-  favs[i] = NULL;
-
-  m_ignore_signals = true;
-  if (!g_settings_set_strv (settings_, "favorites", favs))
-    g_warning ("Unable to add a new favorite '%s' at position '%u'", desktop_path, position);
-  m_ignore_signals = false;
-
-  i = 0;
-  while (favs[i] != NULL)
-    {
-      g_free (favs[i]);
-      favs[i] = NULL;
-      i++;
-    }
-
-  Refresh ();
-}
-
-void 
-FavoriteStoreGSettings::SetFavorites (std::list<const char *> desktop_paths)
-{
-  char *favs[desktop_paths.size () + 1];
-  favs[desktop_paths.size ()] = NULL;  
-  
-  int i = 0;
-  std::list<const char*>::iterator it;
-  for (it = desktop_paths.begin (); it != desktop_paths.end (); it++)
-  {
-    favs[i] = get_basename_or_path (*it);
-    i++;
-  }
-  
-  m_ignore_signals = true;
-  if (!g_settings_set_strv (settings_, "favorites", favs))
-    g_warning ("Unable to set favorites from list");
-  m_ignore_signals = false;
-  
-  i = 0;
-  while (favs[i] != NULL)
-  {
-    g_free (favs[i]);
-    favs[i] = NULL;
-    i++;
-  }
-  
-  Refresh ();
-}
-
-void
-FavoriteStoreGSettings::Changed (const gchar *key)
-{
-  if (m_ignore_signals)
-    return;
-
-  g_print ("Changed: %s\n", key);
-}
-
-/*
- * These are just callbacks chaining to real class functions
- */
-static void
-on_settings_updated (GSettings *settings, const gchar *key, FavoriteStoreGSettings *self)
-{
-  g_return_if_fail (key != NULL);
-  g_return_if_fail (self != NULL);
-
-  self->Changed (key);
-}
+} // namespace internal
+} // namespace unity

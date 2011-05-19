@@ -60,6 +60,26 @@ T* Object<T>::operator->()
   return object_;
 }
 
+template <typename T>
+Object<T>::operator bool()
+{
+  return bool(object_);
+}
+
+template <typename T>
+T* Object<T>::RawPtr()
+{
+  return object_;
+}
+
+template <typename T>
+T* Object<T>::Release()
+{
+  T* result = object_;
+  object_ = 0;
+  return result;
+}
+
 
 }
 }

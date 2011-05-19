@@ -21,6 +21,8 @@
 
 #include "config.h"
 
+#include <algorithm>
+
 #include <gio/gio.h>
 #define G_SETTINGS_ENABLE_BACKEND
 #include <gio/gsettingsbackend.h>
@@ -34,53 +36,50 @@
 #define BASE_STORE_CONTENTS "[desktop/unity/launcher]\n" \
                             "favorites=['evolution.desktop', 'firefox.desktop', '%s']"
 
-static const char *base_store_favs[] = { "evolution.desktop",
-                                          "firefox.desktop",
-                                          CUSTOM_DESKTOP,
-                                          NULL };
-static int         n_base_store_favs = G_N_ELEMENTS (base_store_favs) - 1; /* NULL */
+namespace {
 
-static void TestAllocation   (void);
-static void TestGetFavorites (void);
+const char *base_store_favs[] = { "evolution.desktop",
+                                  "firefox.desktop",
+                                  CUSTOM_DESKTOP,
+                                  NULL };
+const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
 
-static void TestAddFavorite  (void);
-static void TestAddFavoritePosition (void);
-static void TestAddFavoriteLast (void);
-static void TestAddFavoriteOutOfRange (void);
+void TestAllocation();
+void TestGetFavorites();
 
-static void TestRemoveFavorite (void);
-static void TestRemoveFavoriteBad (void);
+void TestAddFavorite();
+void TestAddFavoritePosition();
+void TestAddFavoriteLast();
+void TestAddFavoriteOutOfRange();
 
-static void TestMoveFavorite (void);
-static void TestMoveFavoriteBad (void);
+void TestRemoveFavorite();
+void TestRemoveFavoriteBad();
 
-static void TestSignalAdded (void);
-
-void
-TestFavoriteStoreGSettingsCreateSuite ()
-{
-#define _DOMAIN "/Unit/FavoriteStoreGSettings"
-
-  g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
-  
-  g_test_add_func (_DOMAIN"/GetFavorites", TestGetFavorites);
-  
-  g_test_add_func (_DOMAIN"/AddFavorite", TestAddFavorite);
-  g_test_add_func (_DOMAIN"/AddFavoritePosition", TestAddFavoritePosition);
-  g_test_add_func (_DOMAIN"/AddFavoriteLast", TestAddFavoriteLast);
-  g_test_add_func (_DOMAIN"/AddFavoriteOutOfRange", TestAddFavoriteOutOfRange);
-
-  g_test_add_func (_DOMAIN"/RemoveFavorite", TestRemoveFavorite);
-  g_test_add_func (_DOMAIN"/RemoveFavoriteBad", TestRemoveFavoriteBad);
-
-  g_test_add_func (_DOMAIN"/MoveFavorite", TestMoveFavorite);
-  g_test_add_func (_DOMAIN"/MoveFavoriteBad", TestMoveFavoriteBad);
-
-  g_test_add_func (_DOMAIN"/SignalAdded", TestSignalAdded);
+void TestMoveFavorite();
+void TestMoveFavoriteBad();
 }
 
-static GSettingsBackend *
-CreateDefaultKeyFileBackend ()
+using namespace unity;
+
+void TestFavoriteStoreGSettingsCreateSuite()
+{
+#define TEST_DOMAIN "/Unit/FavoriteStoreGSettings"
+  g_test_add_func (TEST_DOMAIN"/Allocation", TestAllocation);
+  g_test_add_func (TEST_DOMAIN"/GetFavorites", TestGetFavorites);
+  g_test_add_func (TEST_DOMAIN"/AddFavorite", TestAddFavorite);
+  g_test_add_func (TEST_DOMAIN"/AddFavoritePosition", TestAddFavoritePosition);
+  g_test_add_func (TEST_DOMAIN"/AddFavoriteLast", TestAddFavoriteLast);
+  g_test_add_func (TEST_DOMAIN"/AddFavoriteOutOfRange", TestAddFavoriteOutOfRange);
+  g_test_add_func (TEST_DOMAIN"/RemoveFavorite", TestRemoveFavorite);
+  g_test_add_func (TEST_DOMAIN"/RemoveFavoriteBad", TestRemoveFavoriteBad);
+  g_test_add_func (TEST_DOMAIN"/MoveFavorite", TestMoveFavorite);
+  g_test_add_func (TEST_DOMAIN"/MoveFavoriteBad", TestMoveFavoriteBad);
+#undef TEST_DOMAIN
+}
+
+namespace {
+
+GSettingsBackend* CreateDefaultKeyFileBackend()
 {
   GSettingsBackend *b;
   GError *error = NULL;
@@ -100,277 +99,152 @@ CreateDefaultKeyFileBackend ()
   return b;
 }
 
-static void
-TestAllocation ()
+bool ends_with(std::string const& value, std::string const& suffix)
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
-
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  settings->UnReference ();
+  std::string::size_type pos = value.rfind(suffix);
+  if (pos == std::string::npos)
+    return false;
+  else
+    return (pos + suffix.size()) == value.size();
 }
 
-static void
-TestGetFavorites ()
+std::string const& at(FavoriteList const& favs, int index)
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList *favs, *f;
-  int     i = 0;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
-
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  favs = settings->GetFavorites ();
-
-  g_assert_cmpint (g_slist_length (favs), ==, n_base_store_favs);
-
-  for (f = favs; f; f = f->next, i++)
-    {
-      gchar *basename;
-      
-      basename = g_path_get_basename ((char*)f->data);
-      if (g_strcmp0 (basename, "update-manager.desktop") == 0)
-        g_assert_cmpstr (CUSTOM_DESKTOP, ==, base_store_favs[i]);
-      else
-        g_assert_cmpstr (basename, ==, base_store_favs[i]);
-
-      g_free (basename);
-    }
-
-  settings->UnReference ();
+  FavoriteList::const_iterator iter = favs.begin();
+  std::advance(iter, index);
+  return *iter;
 }
 
-static void
-TestAddFavorite ()
+void TestAllocation()
 {
-#define OTHER_DESKTOP "/usr/share/applications/nautilus.desktop"
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList                 *favs;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
-
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  settings->AddFavorite (OTHER_DESKTOP, 0);
-
-  favs = settings->GetFavorites ();
-  g_assert_cmpstr ((const gchar *)g_slist_nth_data (favs, 0), ==, OTHER_DESKTOP);
-
-  settings->UnReference ();
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  g_assert(G_IS_SETTINGS_BACKEND(backend.RawPtr()));
 }
 
-static void
-TestAddFavoritePosition ()
+void TestGetFavorites()
 {
-#define OTHER_DESKTOP "/usr/share/applications/nautilus.desktop"
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList                 *favs;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  settings->AddFavorite (OTHER_DESKTOP, 2);
-
-  favs = settings->GetFavorites ();
-  g_assert_cmpstr ((const gchar *)g_slist_nth_data (favs, 2), ==, OTHER_DESKTOP);
-
-  settings->UnReference ();
+  FavoriteList const& favs = settings.GetFavorites();
+  g_assert_cmpint(favs.size(), ==, 3);
+  g_assert(ends_with(at(favs, 0), base_store_favs[0]));
+  g_assert(ends_with(at(favs, 1), base_store_favs[1]));
+  g_assert(at(favs, 2) == base_store_favs[2]);
 }
 
-static void
-TestAddFavoriteLast ()
+void TestAddFavorite()
 {
-#define OTHER_DESKTOP "/usr/share/applications/nautilus.desktop"
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList                 *favs;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
+  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  settings->AddFavorite (OTHER_DESKTOP, -1);
-
-  favs = settings->GetFavorites ();
-  g_assert_cmpstr ((const gchar *)g_slist_nth_data (favs, n_base_store_favs), ==, OTHER_DESKTOP);
-
-  settings->UnReference ();
+  settings.AddFavorite(other_desktop, 0);
+  FavoriteList const& favs = settings.GetFavorites();
+  g_assert(other_desktop == at(favs, 0));
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
 }
 
-static void
-TestAddFavoriteOutOfRange ()
+void TestAddFavoritePosition()
 {
-#define OTHER_DESKTOP "/usr/share/applications/nautilus.desktop"
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-   
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
+  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->AddFavorite (OTHER_DESKTOP, n_base_store_favs + 1);
-    }
-  g_test_trap_assert_stderr ("*g_slist_length*");
-
-  settings->UnReference ();
+  settings.AddFavorite(other_desktop, 2);
+  FavoriteList const& favs = settings.GetFavorites();
+  g_assert(other_desktop == at(favs, 2));
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
 }
 
-
-static void
-TestRemoveFavorite ()
+void TestAddFavoriteLast()
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList                 *favs;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
+  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  favs = settings->GetFavorites ();
-
-  settings->RemoveFavorite ((const gchar *)g_slist_nth_data (favs, 0));
-  favs = settings->GetFavorites ();
-  g_assert_cmpint (g_slist_length (favs), ==, n_base_store_favs - 1);
-  g_assert (g_str_has_suffix ((const gchar *)g_slist_nth_data (favs, 0), base_store_favs[1]));
-
-  settings->RemoveFavorite ((const char *)g_slist_nth_data (favs, 1));
-  favs = settings->GetFavorites ();
-  g_assert_cmpint (g_slist_length (favs), ==, n_base_store_favs - 2);
-  g_assert (g_str_has_suffix ((const gchar *)g_slist_nth_data (favs, 0), base_store_favs[1]));
-
-  settings->UnReference ();
+  settings.AddFavorite(other_desktop, -1);
+  FavoriteList const& favs = settings.GetFavorites();
+  g_assert(other_desktop == favs.back());
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
 }
 
-static void
-TestRemoveFavoriteBad ()
+void TestAddFavoriteOutOfRange()
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
+  std::string other_desktop("/usr/share/applications/nautilus.desktop");
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
-
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->RemoveFavorite (NULL);
-    }
-  g_test_trap_assert_stderr ("*");
-
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->RemoveFavorite ("foo.desktop");
-    }
-  g_test_trap_assert_stderr ("*[0]*");
-
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->RemoveFavorite ("/this/desktop/doesnt/exist/hopefully.desktop");
-    }
-  g_test_trap_assert_stderr ("*Unable to remove favorite*");
-  
-  settings->UnReference ();
+  FavoriteList const& favs = settings.GetFavorites();
+  settings.AddFavorite(other_desktop, n_base_store_favs + 1);
+  // size didn't change
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  // didn't get inserted
+  FavoriteList::const_iterator iter = std::find(favs.begin(), favs.end(), other_desktop);
+  g_assert(iter == favs.end());
 }
 
-static void
-TestMoveFavorite ()
+void TestRemoveFavorite()
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
-  GSList                 *favs;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
+  FavoriteList const& favs = settings.GetFavorites();
+  settings.RemoveFavorite(at(favs, 0));
 
-  settings->MoveFavorite (base_store_favs[2], 0);
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs - 1);
+  g_assert(ends_with(at(favs, 0), base_store_favs[1]));
 
-  favs = settings->GetFavorites ();
-  g_assert_cmpstr ((const gchar *)favs->data, ==, base_store_favs[2]);
-  g_assert (g_str_has_suffix ((const gchar *)g_slist_nth_data (favs, 1), base_store_favs[0]));
-  g_assert (g_str_has_suffix ((const gchar *)g_slist_nth_data (favs, 2), base_store_favs[1]));
-
-  settings->UnReference ();
+  settings.RemoveFavorite(at(favs, 1));
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs - 2);
+  g_assert(ends_with(at(favs, 0), base_store_favs[1]));
 }
 
-static void
-TestMoveFavoriteBad ()
+void TestRemoveFavoriteBad()
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
+  FavoriteList const& favs = settings.GetFavorites();
+  settings.RemoveFavorite("");
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
 
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->MoveFavorite (NULL, 0);
-    }
-  g_test_trap_assert_stderr ("*desktop_path*");
+  settings.RemoveFavorite("foo.desktop");
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
 
-  if (g_test_trap_fork (0, (GTestTrapFlags)(G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR)))
-    {
-      settings->MoveFavorite (CUSTOM_DESKTOP, 100);
-    }
-  g_test_trap_assert_stderr ("*g_slist_length*");
-
-  settings->UnReference ();
+  settings.RemoveFavorite("/this/desktop/doesnt/exist/hopefully.desktop");
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
 }
 
-static void
-TestSignalAdded ()
+void TestMoveFavorite()
 {
-  GSettingsBackend       *backend;
-  FavoriteStoreGSettings *settings;
- 
-  backend = CreateDefaultKeyFileBackend ();
-  g_assert (G_IS_SETTINGS_BACKEND (backend));
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
 
-  settings = new FavoriteStoreGSettings (backend);
-  g_assert (settings != NULL);
-  g_object_unref (backend);
+  FavoriteList const& favs = settings.GetFavorites();
 
-  settings->UnReference ();
+  settings.MoveFavorite(base_store_favs[2], 0);
+
+  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert(at(favs, 0) == base_store_favs[2]);
+  g_assert(ends_with(at(favs, 1), base_store_favs[0]));
+  g_assert(ends_with(at(favs, 2), base_store_favs[1]));
 }
+
+void TestMoveFavoriteBad()
+{
+  glib::Object<GSettingsBackend> backend(CreateDefaultKeyFileBackend());
+  internal::FavoriteStoreGSettings settings(backend.Release());
+
+  FavoriteList const& favs = settings.GetFavorites();
+
+  settings.MoveFavorite("", 0);
+  settings.MoveFavorite(at(favs, 0), 100);
+
+  g_assert_cmpint(favs.size(), ==, 3);
+  g_assert(ends_with(at(favs, 0), base_store_favs[0]));
+  g_assert(ends_with(at(favs, 1), base_store_favs[1]));
+  g_assert(at(favs, 2) == base_store_favs[2]);
+}
+
+} // anon namespace
