@@ -20,8 +20,10 @@
 #ifndef UNITY_GLIB_WRAPPER_H
 #define UNITY_GLIB_WRAPPER_H
 
-#include <glib.h>
 #include <string>
+
+#include <boost/utility.hpp>
+#include <glib.h>
 
 namespace unity {
 namespace glib {
@@ -46,7 +48,7 @@ private:
   T* object_;
 };
 
-class Error
+class Error : boost::noncopyable
 {
 public:
   Error();
@@ -60,11 +62,11 @@ private:
   GError* error_;
 };
 
-class String
+class String : boost::noncopyable
 {
 public:
   String();
-  String(gchar* str);
+  explicit String(gchar* str);
   ~String();
 
   gchar** AsOutParam();
