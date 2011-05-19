@@ -230,10 +230,17 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
   favs[size] = NULL;
 
   int index = 0;
+  // Since we don't always save the full path, we store the values we are
+  // actually going to save in a different list.
   FavoriteList values;
   for (FavoriteList::const_iterator i = favorites.begin(), end = favorites.end();
        i != end; ++i, ++index)
   {
+    // By using insert we get the iterator to the newly inserted string value.
+    // That way we can use the c_str() method to access the const char* for
+    // the string that we are going to save.  This way we know that the pointer
+    // is valid for the lifetime of the favs array usage in the method call to
+    // set the settings, and that we aren't referencing a temporary.
     FavoriteList::iterator iter = values.insert(values.end(), get_basename_or_path(*i));
     favs[index] = iter->c_str();
   }
