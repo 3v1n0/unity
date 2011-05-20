@@ -111,6 +111,12 @@ compiz_plugin (unityshell
 compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
 
 #
+# Dialog things
+#
+
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/dialog")
+
+#
 # GSettings Schema
 #
 SET (UNITY_SCHEMAS "com.canonical.Unity.gschema.xml")
