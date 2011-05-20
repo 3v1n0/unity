@@ -281,7 +281,11 @@ add_executable (test-places-backend
 enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(test-gtest test_timeme.cpp)
+add_executable(test-gtest
+               test_timeme.cpp
+               ../src/TimeMe.h
+               ../src/TimeMe.cpp
+               )
 target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
 add_test(UnityGTests test-gtest)
 
@@ -292,6 +296,7 @@ set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
+add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 
