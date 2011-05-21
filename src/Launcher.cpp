@@ -1503,6 +1503,9 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
     }
+    
+    if (sum - _space_between_icons <= launcher_height)
+      folding_threshold = launcher_height;
 
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
