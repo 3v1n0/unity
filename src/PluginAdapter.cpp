@@ -18,6 +18,7 @@
  */
  
 #include <glib.h>
+#include <sstream>
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
@@ -263,32 +264,29 @@ PluginAdapter::SetScaleAction (MultiActionList &scale)
 {
   m_ScaleActionList = scale;
 }
-    
-std::string *
+
+std::string
 PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 {
-  char *string;
-  std::string *result = new std::string ("any & (");
-    
+  std::ostringstream sout;
+
+  sout << "any & (";
+
   std::list<Window>::iterator it;
-    
-  for (it = windows->begin (); it != windows->end (); it++)
+  for (it = windows->begin (); it != windows->end (); ++it)
   {
-    string = g_strdup_printf ("| xid=%i ", (int) *it);
-    result->append (string);
-    g_free (string);
+    sout << "| xid=" << static_cast<int>(*it) << " ";
   }
-    
-  result->append (")");
-    
-  return result;
+  sout << ")";
+
+  return sout.str();
 }
-    
-void 
-PluginAdapter::InitiateScale (std::string *match, int state)
+
+void
+PluginAdapter::InitiateScale (std::string const& match, int state)
 {
   CompOption::Vector argument;
-  CompMatch	     m (*match);
+  CompMatch	     m (match);
 
   argument.resize (1);
   argument[0].setName ("match", CompOption::TypeMatch);
