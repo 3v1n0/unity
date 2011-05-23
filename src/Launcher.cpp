@@ -1893,6 +1893,9 @@ Launcher::CheckWindowOverLauncher ()
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
   CompWindow *window = NULL;
+  CompWindow *parent = NULL;
+  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask 
+                     | CompWindowTypeUtilMask;
 
   bool any = false;
   bool active = false;
@@ -1902,7 +1905,11 @@ Launcher::CheckWindowOverLauncher ()
     return;
 
   window = _screen->findWindow (_screen->activeWindow ());
-  if (CheckIntersectWindow (window))
+
+  if (window && (window->type () & type_dialogs))
+    parent = _screen->findWindow (window->transientFor ());
+
+  if (CheckIntersectWindow (window) || CheckIntersectWindow (parent))
   {
     any = true;
     active = true;
