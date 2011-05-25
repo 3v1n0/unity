@@ -676,11 +676,26 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+CompPoint
+UnityWindow::tryNotIntersectLauncher (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  CompRect launcherGeo (geo.x, geo.y, geo.width, geo.height);
+
+  if (launcherGeo.contains (pos))
+  {
+    if (screen->workArea ().contains (CompRect (launcherGeo.right () + 1, pos.y (), window->width (), window->height ())))
+      pos.setX (launcherGeo.right () + 1);
+  }
+  
+  return pos;
+}
+
 bool
 UnityWindow::place (CompPoint &pos)
 {
   UnityScreen *us = UnityScreen::get (screen);
-  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
   Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
   
   bool result = window->place (pos);
@@ -689,11 +704,9 @@ UnityWindow::place (CompPoint &pos)
   {
     case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
     case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width && window->width () + geo.width + 1< screen->workArea ().width ())
-        {
-          pos.setX (geo.width + 1);
-        }
+      pos = tryNotIntersectLauncher (pos);
       break;
+    
     default:
       break;
   }
