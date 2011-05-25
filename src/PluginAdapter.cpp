@@ -687,5 +687,4 @@ PluginAdapter::ToggleGrabHandles (CompWindow *window)
 void
 PluginAdapter::SetCoverageAreaBeforeAutomaximize (float area) {
   _coverage_area_before_automaximize = area;
-  g_debug ("hey! value: %f", area);
 }
