@@ -1057,6 +1057,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   self->ScheduleRelayout (0);
+  
+  self->OnLauncherHiddenChanged ();
 
   END_FUNCTION ();
 }
