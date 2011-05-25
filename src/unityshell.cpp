@@ -763,6 +763,9 @@ UnityScreen::optionChanged (CompOption            *opt,
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault ()->SetDashBlurType ((PlacesSettings::DashBlurType)optionGetDashBlurExperimental ());
       break;
+    case UnityshellOptions::AutomaximizeValue:
+      PluginAdapter::Default ()->SetCoverageAreaBeforeAutomaximize (optionGetAutomaximizeValue () / 100.0f);
+      break;
     default:
       break;
   }
@@ -936,6 +939,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
     _ubus_handles[i] = 0;
