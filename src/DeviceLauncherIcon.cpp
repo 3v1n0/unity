@@ -107,7 +107,6 @@ DeviceLauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *>  result;
   DbusmenuMenuitem              *menu_item;
   GDrive                        *drive;
-  GMount                        *mount;
 
   menu_item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
@@ -144,20 +143,23 @@ DeviceLauncherIcon::GetMenus ()
     g_object_unref (drive);
   }
 
-  mount = g_volume_get_mount (_volume);
-  if (mount && g_mount_can_unmount (mount))
+  if (!g_volume_can_eject (_volume))  // Don't need Unmount if can Eject
   {
-    menu_item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                      G_CALLBACK (&DeviceLauncherIcon::OnUnmount), this);
-    result.push_back (menu_item);
-  }
-  if (mount)
-  {
-    g_object_unref (mount);
+    GMount *mount = g_volume_get_mount (_volume);
+    if (mount && g_mount_can_unmount (mount))
+    {
+      menu_item = dbusmenu_menuitem_new ();
+      dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
+      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+      g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                        G_CALLBACK (&DeviceLauncherIcon::OnUnmount), this);
+      result.push_back (menu_item);
+    }
+    if (mount)
+    {
+      g_object_unref (mount);
+    }
   }
 
   return result;
