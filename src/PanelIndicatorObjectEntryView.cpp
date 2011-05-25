@@ -242,14 +242,12 @@ PanelIndicatorObjectEntryView::Refresh ()
   x = _padding;
   y = 0;
 
-  if (_proxy->GetPixbuf () && _proxy->icon_visible)
+  if (pixbuf && _proxy->icon_visible)
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)
@@ -311,6 +309,8 @@ PanelIndicatorObjectEntryView::Refresh ()
   refreshed.emit (this);
   if (label)
     g_free (label);
+  if (pixbuf)
+    g_object_unref (pixbuf);
 }
 
 static void
