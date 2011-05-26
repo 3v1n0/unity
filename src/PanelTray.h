@@ -36,7 +36,6 @@
 class PanelTray : public PanelIndicatorObjectView
 {
 public:
-
   PanelTray ();
   ~PanelTray ();
 
@@ -46,9 +45,9 @@ public:
 
   void Sync ();
 
-  void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
-  void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
-  void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
 
 public:
   int        _n_children;

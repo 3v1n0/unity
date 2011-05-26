@@ -47,9 +47,19 @@ std::string const& IndicatorEntry::label() const;
   return label_;
 }
 
+bool IndicatorEntry::image_visible() const
+{
+  return image_visible_;
+}
+
 bool IndicatorEntry::image_sensitive() const
 {
   return image_sensitive_;
+}
+
+bool IndicatorEntry::label_visible() const
+{
+  return label_visible_;
 }
 
 bool IndicatorEntry::label_sensitive() const

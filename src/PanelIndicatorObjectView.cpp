@@ -28,7 +28,7 @@
 
 #include "PanelIndicatorObjectView.h"
 
-#include "IndicatorObjectEntryProxy.h"
+#include "IndicatorEntry.h"
 
 #include <glib.h>
 
@@ -115,9 +115,9 @@ void PanelIndicatorObjectView::OnEntryRemoved(indicator::Entry::Ptr proxy)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
 
-  for (it = _entries.begin(); it != _entries.end(); it++)
+  for (it = _entries.begin(); it != _entries.end(); ++it)
   {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
+    PanelIndicatorObjectEntryView *view = *it;
     if (view->_proxy == proxy)
     {
       RemoveChild (view);

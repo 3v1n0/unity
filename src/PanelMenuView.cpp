@@ -43,6 +43,8 @@
 
 #define BUTTONS_WIDTH 72
 
+using namespace unity;
+
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
                                       BamfView      *new_view,
@@ -80,6 +82,8 @@ PanelMenuView::PanelMenuView (int padding)
   _activate_window_changed_id = g_signal_connect (_matcher, "active-window-changed",
                                                   G_CALLBACK (on_active_window_changed), this);
 
+  // TODO: kill _menu_layout - should just use the _layout defined
+  // in the base class.
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _menu_layout->SetParentObject (this);
 
@@ -185,8 +189,7 @@ PanelMenuView::FullRedraw ()
   NeedRedraw ();
 }
 
-void
-PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
+void PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
 {
   _proxy = proxy;
 
@@ -314,9 +317,9 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (it = _entries.begin (); it != eit; ++it)
     {
-      IndicatorObjectEntryProxy *proxy = (*it)->_proxy;
+      indicator::Entry::Ptr const& proxy = (*it)->_proxy;
 
-      if (proxy->icon_visible || proxy->label_visible)
+      if (proxy->icon_visible() || proxy->label_visible())
         have_valid_entries = true;
     }
 
@@ -665,47 +668,18 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
   FullRedraw ();
 }
 
-void
-PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
-  view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
-  view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
-  proxy->show_now_changed.connect (sigc::mem_fun (this, &PanelMenuView::UpdateShowNow));
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView(proxy, 6);
+  view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
+  view->refreshed.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryRefreshed));
+  proxy->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
   _entries.push_back (view);
 
   AddChild (view);
-
-  QueueRelayout ();
-  QueueDraw ();
-}
-
-void
-PanelMenuView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
-{
-  printf ("ERROR: Moving IndicatorObjectEntry not supported\n");
-}
-
-void
-PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
-{
-  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
- 
-  for (it = _entries.begin(); it != _entries.end(); it++)
-  {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
-    if (view->_proxy == proxy)
-      {
-        RemoveChild (view);
-        _entries.erase (it);
-        _menu_layout->RemoveChildObject (view);
-
-        break;
-      }
-  }
 
   QueueRelayout ();
   QueueDraw ();

@@ -25,7 +25,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include "IndicatorObjectEntryProxy.h"
+#include "IndicatorEntry.h"
 
 #include "Introspectable.h"
 
@@ -35,8 +35,9 @@
 class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
 {
 public:
-  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding = 3);
-  ~PanelIndicatorObjectEntryView ();
+  PanelIndicatorObjectEntryView(unity::indicator::Entry::Ptr const& proxy,
+                                int padding = 3);
+  ~PanelIndicatorObjectEntryView();
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
@@ -52,7 +53,8 @@ public:
   sigc::signal<void, PanelIndicatorObjectEntryView *> refreshed;
 
 public:
-  IndicatorObjectEntryProxy *_proxy;
+  unity::indicator::Entry::Ptr _proxy;
+
 private:
   nux::CairoGraphics _util_cg;
   int _padding;

@@ -33,14 +33,17 @@
 #include <gtk/gtk.h>
 #include <time.h>
 
+using namespace unity;
 
 static void draw_menu_bg (cairo_t *cr, int width, int height);
 
 
-PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding)
-: TextureArea (NUX_TRACKER_LOCATION),
-  _proxy (proxy),
-  _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
+PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
+    indicator::Entry::Ptr const& proxy,
+    int padding)
+  : TextureArea (NUX_TRACKER_LOCATION)
+  , _proxy(proxy)
+  , _util_cg(CAIRO_FORMAT_ARGB32, 1, 1)
 {
   _on_indicator_activate_changed_connection = _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
   _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));

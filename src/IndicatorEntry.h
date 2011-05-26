@@ -38,7 +38,9 @@ public:
 
   std::string const& id() const;
   std::string const& label() const;
+  bool image_visible() const;
   bool image_sensitive() const;
+  bool label_visible() const;
   bool label_sensitive() const;
 
   // Call g_object_unref on the returned pixbuf

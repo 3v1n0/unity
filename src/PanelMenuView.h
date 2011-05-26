@@ -61,8 +61,6 @@ public:
   void SetProxy (IndicatorObjectProxy *proxy);
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
@@ -159,7 +157,7 @@ private:
   sigc::connection _on_window_unmapped_connection;
   sigc::connection _on_window_moved_connection;
   sigc::connection _on_panelstyle_changed_connection;
-  
+
   gulong _activate_window_changed_id;
 
   guint32 _place_shown_interest;
