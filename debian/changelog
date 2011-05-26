@@ -1,4 +1,4 @@
-unity (3.8.14-0ubuntu1) UNRELEASED; urgency=low
+unity (3.8.14-0ubuntu1) oneiric; urgency=low
 
   * New upstream bug-fix release.
     - In a dual monitor setup with different resolutions, Unity places windows
