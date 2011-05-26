@@ -3323,7 +3323,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (it != (LauncherModel::iterator)NULL)
       {
         if ((*it)->OpenQuicklist (true))
-          leaveKeyNavMode ();
+          leaveKeyNavMode (true);
       }
     break;
 
