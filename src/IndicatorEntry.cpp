@@ -24,6 +24,7 @@
 namespace unity {
 namespace indicator {
 
+std::string const Entry::UNUSED_ID("|");
 
 Entry::Entry()
   : label_visible_(false)

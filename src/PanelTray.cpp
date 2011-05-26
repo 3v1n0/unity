@@ -217,15 +217,7 @@ PanelTray::OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray)
 //
 // We don't use these
 //
-void PanelTray::OnEntryAdded(indicator::Entry::Ptr proxy)
-{
-}
-
-void PanelTray::OnEntryMoved(indicator::Entry::Ptr proxy)
-{
-}
-
-void PanelTray::OnEntryRemoved(indicator::Entry::Ptr proxy)
+void PanelTray::OnEntryAdded(indicator::Entry::Ptr const& proxy)
 {
 }
 

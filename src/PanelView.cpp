@@ -38,7 +38,7 @@
 #include "IndicatorEntry.h"
 #include "PanelIndicatorObjectView.h"
 
-using namespace unity;
+namespace unity {
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
@@ -243,7 +243,7 @@ PanelView::ForceUpdateBackground ()
 //
 // Signals
 //
-void PanelView::OnObjectAdded(IndicatorObjectProxy *proxy)
+void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
@@ -502,3 +502,4 @@ PanelView::SetMonitor (int monitor)
   _menu_view->SetMonitor (monitor);
 }
 
+} // namespace unity

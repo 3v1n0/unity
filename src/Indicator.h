@@ -40,25 +40,24 @@ public:
 
   Indicator(std::string const& name);
 
-  // The name of the indicator that this proxy represents
   std::string const& name() const;
 
   void Sync(Entries const& new_entries);
 
-  void OnEntryShowMenu(std::string const& id, int x, int y, int timestamp, int button);
-  void OnEntryScroll(std::string const& id, int delta);
+  void OnEntryShowMenu(std::string const& entry_id, int x, int y, int timestamp, int button);
+  void OnEntryScroll(std::string const& entry_id, int delta);
 
   // Signals
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
-  sigc::signal<void, Entry::Ptr const&> on_entry_removed;
-  sigc::signal<void, Entry::Ptr const&> on_entry_moved;
-
   sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
   sigc::signal<void, std::string const&, int> on_scroll;
 
 private:
   Entries entries_;
-  std::string _name;
+  std::string name_;
 };
+
+}
+}
 
 #endif // INDICATOR_OBJECT_PROXY_REMOTE_H

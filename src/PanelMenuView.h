@@ -33,6 +33,8 @@
 
 #include <libbamf/libbamf.h>
 
+namespace unity {
+
 class PanelMenuView : public PanelIndicatorObjectView
 {
 public:
@@ -58,9 +60,9 @@ public:
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
 
-  void SetProxy (IndicatorObjectProxy *proxy);
+  void SetProxy(indicator::Proxy::Ptr const& proxy);
 
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
@@ -83,7 +85,7 @@ public:
 
   void Refresh ();
   void AllMenusClosed ();
-  
+
   void OnCloseClicked ();
   void OnMinimizeClicked ();
   void OnRestoreClicked ();
@@ -104,7 +106,7 @@ private:
   static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
   void UpdateShowNow (bool ignore);
   static gboolean UpdateActiveWindowPosition (PanelMenuView *self);
-  
+
 private:
   BamfMatcher* _matcher;
 
@@ -116,7 +118,7 @@ private:
 
   bool _is_inside;
   bool _is_grabbed;
-  bool _is_maximized; 
+  bool _is_maximized;
   bool _is_own_window;
   PanelIndicatorObjectEntryView *_last_active_view;
 
@@ -140,7 +142,7 @@ private:
   guint32 _active_xid;
   guint32 _active_moved_id;
   nux::Geometry _monitor_geo;
-  
+
   sigc::connection _on_winbutton_close_clicked_connection;
   sigc::connection _on_winbutton_minimize_clicked_connection;
   sigc::connection _on_winbutton_restore_clicked_connection;
@@ -163,4 +165,7 @@ private:
   guint32 _place_shown_interest;
   guint32 _place_hidden_interest;
 };
+
+}
+
 #endif

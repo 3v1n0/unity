@@ -24,7 +24,7 @@
 
 #include <gdk/gdkx.h>
 
-#include "IndicatorObjectProxy.h"
+#include "Indicator.h"
 #include "IndicatorEntry.h"
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
@@ -32,6 +32,8 @@
 #include <unity-misc/na-tray.h>
 #include <unity-misc/na-tray-child.h>
 #include <unity-misc/na-tray-manager.h>
+
+namespace unity {
 
 class PanelTray : public PanelIndicatorObjectView
 {
@@ -45,9 +47,7 @@ public:
 
   void Sync ();
 
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
 
 public:
   int        _n_children;
@@ -73,4 +73,7 @@ private:
   gulong  _tray_expose_id;
   gulong  _tray_icon_added_id;
 };
+
+}
+
 #endif

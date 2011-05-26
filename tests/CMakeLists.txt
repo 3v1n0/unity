@@ -98,11 +98,10 @@ add_executable (test-panel
                 ../src/PanelTray.cpp
                 ../src/PanelTray.h
                 ../src/IndicatorObjectFactory.h
-                ../src/IndicatorObjectProxy.h
                 ../src/IndicatorObjectFactoryRemote.cpp
                 ../src/IndicatorObjectFactoryRemote.h
-                ../src/IndicatorObjectProxyRemote.cpp
-                ../src/IndicatorObjectProxyRemote.h
+                ../src/Indicator.cpp
+                ../src/Indicator.h
                 ../src/IndicatorEntry.cpp
                 ../src/IndicatorEntry.h
                 ../src/Introspectable.cpp

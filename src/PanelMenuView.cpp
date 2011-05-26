@@ -43,7 +43,7 @@
 
 #define BUTTONS_WIDTH 72
 
-using namespace unity;
+namespace unity {
 
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
@@ -189,13 +189,10 @@ PanelMenuView::FullRedraw ()
   NeedRedraw ();
 }
 
-void PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
+void PanelMenuView::SetProxy(indicator::Proxy::Ptr const& proxy)
 {
-  _proxy = proxy;
-
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRemoved));
+  proxy_ = proxy;
+  on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryAdded));
 }
 
 long
@@ -668,7 +665,7 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
   FullRedraw ();
 }
 
-void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr proxy)
+void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView(proxy, 6);
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
@@ -1040,7 +1037,7 @@ PanelMenuView::UpdateShowNow (bool ignore)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
   _show_now_activated = false;
-  
+
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
     PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
@@ -1069,3 +1066,5 @@ PanelMenuView::HasOurWindowFocused ()
 {
   return _is_own_window;
 }
+
+} // namespace unity

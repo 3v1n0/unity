@@ -22,7 +22,7 @@
 
 #include <Nux/View.h>
 
-#include "IndicatorObjectProxy.h"
+#include "Indicator.h"
 #include "IndicatorEntry.h"
 #include "PanelIndicatorObjectEntryView.h"
 
@@ -30,35 +30,33 @@
 
 #define MINIMUM_INDICATOR_WIDTH 12
 
+namespace unity {
+
 class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:
-  PanelIndicatorObjectView ();
-  PanelIndicatorObjectView (IndicatorObjectProxy *proxy);
-  ~PanelIndicatorObjectView ();
+  PanelIndicatorObjectView();
+  PanelIndicatorObjectView(indicator::Indicator::Ptr const& proxy);
+  ~PanelIndicatorObjectView();
 
   virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
-  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
-
-  nux::HLayout *_layout;
+  virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
 
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
-  IndicatorObjectProxy *_proxy;
-  std::vector<PanelIndicatorObjectEntryView *> _entries;
+  nux::HLayout* layout_;
+  indicator::Indicator::Ptr proxy_;
+  std::vector<PanelIndicatorObjectEntryView *> entries_;
 
-private:
-  sigc::connection _on_entry_added_connection;
-  sigc::connection _on_entry_moved_connection;
-  sigc::connection _on_entry_removed_connection;
+  sigc::connection on_entry_added_connection_;
 };
+
+}
 
 #endif // PANEL_INDICATOR_OBJECT_VIEW_H

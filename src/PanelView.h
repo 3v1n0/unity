@@ -33,6 +33,8 @@
 #include "PanelTray.h"
 #include "PanelStyle.h"
 
+namespace unity {
+
 class PanelView : public Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PanelView, nux::View);
@@ -46,8 +48,8 @@ public:
 
   void PreLayoutManagement ();
   long PostLayoutManagement (long LayoutResult);
-  
-  void OnObjectAdded (IndicatorObjectProxy *proxy);
+
+  void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnMenuPointerMoved (int x, int y);
   void OnEntryActivateRequest (const char *entry_id);
   void OnEntryActivated (const char *entry_id);
@@ -56,7 +58,7 @@ public:
   void SetPrimary (bool primary);
   bool GetPrimary ();
   void SetMonitor (int monitor);
-  
+
   PanelHomeButton * GetHomeButton ();
 
   void StartFirstMenuShow ();
@@ -69,7 +71,7 @@ public:
 protected:
   // Introspectable methods
   const gchar * GetName ();
-  const gchar * GetChildsName (); 
+  const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:
@@ -95,7 +97,7 @@ private:
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
-  
+
   sigc::connection _on_panel_style_changed_connection;
   sigc::connection _on_object_added_connection;
   sigc::connection _on_menu_pointer_moved_connection;
@@ -103,5 +105,7 @@ private:
   sigc::connection _on_entry_activated_connection;
   sigc::connection _on_synced_connection;
 };
+
+}
 
 #endif // PANEL_VIEW_H
