@@ -130,6 +130,9 @@ namespace nux
     
     // Introspection
     gchar *_name;
+
+    sigc::connection _on_text_changed_connection;
+    sigc::connection _on_font_changed_connection;
   };
 }
 
