@@ -190,9 +190,9 @@ PanelView::UpdateBackground ()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::Color col = nux::Colors::White;
-  col.SetAlpha (_opacity);
-  
+  nux::Color col = nux::color::White;
+  col.alpha = _opacity;
+
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,
                                      col,
@@ -418,6 +418,8 @@ PanelView::SetOpacity (float opacity)
     return;
 
   _opacity = opacity;
+
+  _home_button->SetOpacity (opacity);
   
   ForceUpdateBackground ();
 }

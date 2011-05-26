@@ -377,10 +377,10 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.QRP_2TexMod(geo.x, geo.y,
                              geo.width, geo.height,
                              _gradient_texture, texxform0,
-                             nux::Colors::White,
+                             nux::color::White,
                              _title_tex->GetDeviceTexture (),
                              texxform1,
-                             nux::Colors::White);
+                             nux::color::White);
 
       GfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
       // The previous blend is too aggressive on the texture and therefore there
@@ -577,8 +577,10 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
-    nux::Color col = PanelStyle::GetDefault ()->GetTextColor ();
-    float red = col.GetRed (), blue = col.GetBlue (), green = col.GetGreen ();
+    nux::Color const& col = PanelStyle::GetDefault ()->GetTextColor();
+    float red = col.red;
+    float green = col.green;
+    float blue = col.blue;
 
     pango_cairo_update_layout (cr, layout);
 
@@ -621,18 +623,17 @@ PanelMenuView::Refresh ()
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  
-  nux::ROPConfig rop; 
+
+  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   _title_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                         texxform,
-                                        nux::Colors::White,
-                                        true, 
+                                        nux::color::White,
+                                        true,
                                         rop);
 
-  
   if (_title_tex)
     _title_tex->UnReference ();
 

@@ -72,6 +72,9 @@ private:
   struct timespec _last_activate_time;
 
   guint _ubus_handle;
+  guint _browser_gconf_notify;
+  guint _mail_gconf_notify;
+  guint _media_gconf_notify;
 };
 
 

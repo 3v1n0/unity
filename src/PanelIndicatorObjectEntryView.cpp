@@ -50,6 +50,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
@@ -83,7 +84,15 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
                       GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
+  } else {
+	  Refresh();
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseUp (int x, int y, long button_flags, long key_flags)
+{
+  Refresh();
 }
 
 void
@@ -243,14 +252,12 @@ PanelIndicatorObjectEntryView::Refresh ()
   x = _padding;
   y = 0;
 
-  if (_proxy->GetPixbuf () && _proxy->icon_visible)
+  if (pixbuf && _proxy->icon_visible)
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)
@@ -259,19 +266,19 @@ PanelIndicatorObjectEntryView::Refresh ()
 
     // Once for the homies that couldn't be here
     cairo_set_source_rgba (cr,
-                           textshadowcol.GetRed (),
-                           textshadowcol.GetGreen (),
-                           textshadowcol.GetBlue (),
-                           1.0f - textshadowcol.GetRed ());
+                           textshadowcol.red,
+                           textshadowcol.green,
+                           textshadowcol.blue,
+                           1.0f - textshadowcol.red);
     cairo_move_to (cr, x, (int)(((height - text_height)/2)+1));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
 
     // Once again for the homies that could
     cairo_set_source_rgba (cr,
-                           textcol.GetRed (),
-                           textcol.GetGreen (),
-                           textcol.GetBlue (),
+                           textcol.red,
+                           textcol.green,
+                           textcol.blue,
                            _proxy->label_sensitive ? 1.0f : 0.5f);
     cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
@@ -292,18 +299,18 @@ PanelIndicatorObjectEntryView::Refresh ()
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  
-  nux::ROPConfig rop; 
+
+  nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                                             texxform,
-                                                            nux::Colors::White,
+                                                            nux::color::White,
                                                             true,
                                                             rop);
   SetPaintLayer (texture_layer);
-    
+
   texture2D->UnReference ();
   delete texture_layer;
 
@@ -312,6 +319,8 @@ PanelIndicatorObjectEntryView::Refresh ()
   refreshed.emit (this);
   if (label)
     g_free (label);
+  if (pixbuf)
+    g_object_unref (pixbuf);
 }
 
 static void
@@ -344,29 +353,29 @@ draw_menu_bg (cairo_t *cr, int width, int height)
 
   cairo_pattern_t * pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgtop.GetRed (),
-                                     bgtop.GetGreen (),
-                                     bgtop.GetBlue (),
-                                     1.0f - bgbot.GetRed ());
+                                     bgtop.red,
+                                     bgtop.green,
+                                     bgtop.blue,
+                                     1.0f - bgbot.red);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
-                                     1.0f - bgtop.GetRed ());
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
+                                     1.0f - bgtop.red);
   cairo_set_source (cr, pat);
   cairo_fill_preserve (cr);
   cairo_pattern_destroy (pat);
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     line.GetRed (),
-                                     line.GetGreen (),
-                                     line.GetBlue (),
+                                     line.red,
+                                     line.green,
+                                     line.blue,
                                      1.0f);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     line.GetRed (),
-                                     line.GetGreen (),
-                                     line.GetBlue (),
+                                     line.red,
+                                     line.green,
+                                     line.blue,
                                      1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);
@@ -384,14 +393,14 @@ draw_menu_bg (cairo_t *cr, int width, int height)
 
   pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+3);
   cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
                                      1.0f);
   cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.GetRed (),
-                                     bgbot.GetGreen (),
-                                     bgbot.GetBlue (),
+                                     bgbot.red,
+                                     bgbot.green,
+                                     bgbot.blue,
                                      1.0f);
   cairo_set_source (cr, pat);
   cairo_stroke (cr);

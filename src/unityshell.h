@@ -144,6 +144,8 @@ class UnityScreen :
 
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
+	
+	void outputChangeNotify ();
 
   void NeedsRelayout ();
 
@@ -275,6 +277,8 @@ class UnityWindow :
   void stateChangeNotify (unsigned int lastState);
 
   bool place (CompPoint &pos);
+  
+  CompPoint tryNotIntersectLauncher (CompPoint &pos);
 };
 
 #define EX_SCREEN (screen) \

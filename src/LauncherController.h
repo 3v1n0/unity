@@ -24,7 +24,6 @@
 #include <core/core.h>
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 
 #include "BamfLauncherIcon.h"
 #include "LauncherModel.h"
@@ -46,7 +45,7 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-    LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window);
+    LauncherController(Launcher* launcher, CompScreen *screen);
     ~LauncherController();
 
     void UpdateNumWorkspaces (int workspaces);
@@ -56,7 +55,6 @@ private:
     CompScreen*            _screen;
     Launcher*              _launcher;
     LauncherModel*         _model;
-    nux::BaseWindow*       _window;
     FavoriteStore*         _favorite_store;
     int                    _sort_priority;
     PlaceLauncherSection*  _place_section;

@@ -14,6 +14,7 @@ try:
     import gconf
     import glob
     import gobject
+    from gobject import GError
     import os
     import subprocess
     from xdg import BaseDirectory

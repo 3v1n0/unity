@@ -40,6 +40,7 @@ public:
 
   void Refresh ();
   void OnMouseDown (int x, int y, long button_flags, long key_flags);
+  void OnMouseUp (int x, int y, long button_flags, long key_flags);
   void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
   void Activate ();
   void OnActiveChanged (bool is_active);

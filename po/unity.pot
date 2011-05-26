@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-04-08 13:47-0400\n"
+"POT-Creation-Date: 2011-05-27 10:39+1200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -39,6 +39,9 @@ msgid "Search"
 msgstr ""
 
 msgid "Search across all places"
+msgstr ""
+
+msgid "See fewer results"
 msgstr ""
 
 msgid "Shortcuts"
@@ -74,6 +77,9 @@ msgstr ""
 msgid "Listen to Music"
 msgstr ""
 
+msgid "Drop To Add Application"
+msgstr ""
+
 msgid "Trash"
 msgstr ""
 
@@ -87,4 +93,16 @@ msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
 msgid "Empty Trash"
+msgstr ""
+
+msgid "Launcher & Menus"
+msgstr ""
+
+msgid "<b>Show the launcher when the pointer:</b>"
+msgstr ""
+
+msgid "Pushes the left edge of the screen"
+msgstr ""
+
+msgid "Touches the top left corner of the screen"
 msgstr ""

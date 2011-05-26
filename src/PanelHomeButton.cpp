@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
+  _opacity (1.0f),
   _urgent_interest (0)
 {
   _urgent_count = 0;
@@ -142,7 +143,7 @@ PanelHomeButton::Refresh ()
 
   /* button pressed effect */
   if (_pressed) {
-    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance ()) {
+    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance () && _opacity == 1.0f) {
       /* loads background panel upside-down */
       overlay = gdk_pixbuf_flip (PanelStyle::GetDefault ()->GetBackground (width - 2, height), FALSE);
       if (GDK_IS_PIXBUF (overlay)) {
@@ -210,12 +211,12 @@ PanelHomeButton::Refresh ()
   rop.Blend = true;                       // Enable the blending. By default rop.Blend is false.
   rop.SrcBlend = GL_ONE;                  // Set the source blend factor.
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;  // Set the destination blend factor.
-  nux::TextureLayer* texture_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
-                                                            texxform,           // The Oject that defines the texture wraping and coordinate transformation.
-                                                            nux::Colors::White,  // The color used to modulate the texture.
-                                                            true,  // Write the alpha value of the texture to the destination buffer.
-                                                            rop     // Use the given raster operation to set the blending when the layer is being rendered.
-                                                            );
+  nux::TextureLayer* texture_layer = new nux::TextureLayer(
+      texture2D->GetDeviceTexture(),
+      texxform, // The Oject that defines the texture wraping and coordinate transformation.
+      nux::color::White,  // The color used to modulate the texture.
+      true,  // Write the alpha value of the texture to the destination buffer.
+      rop);  // Use the given raster operation to set the blending when the layer is being rendered.
 
   SetPaintLayer(texture_layer);
 
@@ -373,4 +374,9 @@ PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
 void 
 PanelHomeButton::ProcessDndDrop (int x, int y)
 {
+}
+
+void
+PanelHomeButton::SetOpacity (float opacity) {
+  _opacity = opacity;
 }

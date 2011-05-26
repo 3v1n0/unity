@@ -68,12 +68,12 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-  
+
   _related_windows = 0;
 
-  _background_color = nux::Colors::White;
-  _glow_color = nux::Colors::White;
-  
+  _background_color = nux::color::White;
+  _glow_color = nux::color::White;
+
   _remote_urgent = false;
   _mouse_inside = false;
   _has_visible_window = false;
@@ -226,13 +226,12 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
   unsigned int width = gdk_pixbuf_get_width (pixbuf);
   unsigned int height = gdk_pixbuf_get_height (pixbuf);
   unsigned int row_bytes = gdk_pixbuf_get_rowstride (pixbuf);
-  
+
   long int rtotal = 0, gtotal = 0, btotal = 0;
   float total = 0.0f;
-  
-  
+
   guchar *img = gdk_pixbuf_get_pixels (pixbuf);
-  
+
   for (unsigned int i = 0; i < width; i++)
   {
     for (unsigned int j = 0; j < height; j++)
@@ -242,35 +241,31 @@ void LauncherIcon::ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux:
       guchar g = *(pixels + 1);
       guchar b = *(pixels + 2);
       guchar a = *(pixels + 3);
-      
+
       float saturation = (MAX (r, MAX (g, b)) - MIN (r, MIN (g, b))) / 255.0f;
       float relevance = .1 + .9 * (a / 255.0f) * saturation;
-      
+
       rtotal += (guchar) (r * relevance);
       gtotal += (guchar) (g * relevance);
       btotal += (guchar) (b * relevance);
-      
+
       total += relevance * 255;
     }
   }
-  
-  float r, g, b, h, s, v;
-  r = rtotal / total;
-  g = gtotal / total;
-  b = btotal / total;
-  
-  nux::RGBtoHSV (r, g, b, h, s, v);
-  
-  if (s > .15f)
-    s = 0.65f;
-  v = 0.90f;
-  
-  nux::HSVtoRGB (r, g, b, h, s, v);
-  background = nux::Color (r, g, b);
-  
-  v = 1.0f;
-  nux::HSVtoRGB (r, g, b, h, s, v);
-  glow = nux::Color (r, g, b);
+
+  nux::color::RedGreenBlue rgb(rtotal / total,
+                               gtotal / total,
+                               btotal / total);
+  nux::color::HueSaturationValue hsv(rgb);
+
+  if (hsv.saturation > 0.15f)
+    hsv.saturation = 0.65f;
+
+  hsv.value = 0.90f;
+  background = nux::Color(nux::color::RedGreenBlue(hsv));
+
+  hsv.value = 1.0f;
+  glow = nux::Color(nux::color::RedGreenBlue(hsv));
 }
 
 /*
@@ -521,6 +516,11 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
     
     const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    gboolean prop_visible = dbusmenu_menuitem_property_get_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
+    
+    // Skip this item, it is invisible right now.
+    if (!prop_visible)
+      continue;
 
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {

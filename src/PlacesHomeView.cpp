@@ -120,21 +120,21 @@ PlacesHomeView::PlacesHomeView ()
                         MEDIA_DIR,
                         GCONF_CLIENT_PRELOAD_NONE,
                         NULL);
-  gconf_client_notify_add(_client,
-                          BROWSER_DIR"/exec", 
-                          (GConfClientNotifyFunc)OnKeyChanged,
-                          this,
-                          NULL, NULL);
-  gconf_client_notify_add(_client,
-                          MAIL_DIR"/command",
-                          (GConfClientNotifyFunc)OnKeyChanged,
-                          this,
-                          NULL, NULL);
-  gconf_client_notify_add(_client,
-                          MEDIA_DIR"/exec",
-                          (GConfClientNotifyFunc)OnKeyChanged,
-                          this,
-                          NULL, NULL);
+  _browser_gconf_notify = gconf_client_notify_add(_client,
+                                                  BROWSER_DIR"/exec", 
+                                                  (GConfClientNotifyFunc)OnKeyChanged,
+                                                  this,
+                                                  NULL, NULL);
+  _mail_gconf_notify =  gconf_client_notify_add(_client,
+                                                MAIL_DIR"/command",
+                                                (GConfClientNotifyFunc)OnKeyChanged,
+                                                this,
+                                                NULL, NULL);
+  _media_gconf_notify = gconf_client_notify_add(_client,
+                                                MEDIA_DIR"/exec",
+                                                (GConfClientNotifyFunc)OnKeyChanged,
+                                                this,
+                                                NULL, NULL);
                           
   _last_activate_time.tv_sec = 0;
   _last_activate_time.tv_nsec = 0;
@@ -180,6 +180,16 @@ PlacesHomeView::~PlacesHomeView ()
 
   if (_ubus_handle != 0)
     ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
+    
+  if (_browser_gconf_notify)
+    gconf_client_notify_remove (_client, _browser_gconf_notify);
+  if (_mail_gconf_notify)
+    gconf_client_notify_remove (_client, _mail_gconf_notify);
+  if (_media_gconf_notify)
+    gconf_client_notify_remove (_client, _media_gconf_notify);
+  gconf_client_remove_dir (_client, BROWSER_DIR, NULL);
+  gconf_client_remove_dir (_client, MAIL_DIR, NULL);
+  gconf_client_remove_dir (_client, MEDIA_DIR, NULL);
 }
 
 void

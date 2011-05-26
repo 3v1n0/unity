@@ -72,7 +72,7 @@ UnityScreen::nuxPrologue ()
   glDisable (GL_LIGHTING);
 
   /* reset matrices */
-  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
+  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
@@ -121,6 +121,9 @@ UnityScreen::OnLauncherHiddenChanged ()
 void
 UnityScreen::paintPanelShadow (const GLMatrix &matrix)
 {
+  if (relayoutSourceId > 0)
+    return;
+    
   if (PluginAdapter::Default ()->IsExpoActive ())
     return;
   
@@ -183,7 +186,7 @@ UnityScreen::paintDisplay (const CompRegion &region)
   
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
-  
+
   doShellRepaint = false;
 }
 
@@ -673,11 +676,26 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+CompPoint
+UnityWindow::tryNotIntersectLauncher (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  CompRect launcherGeo (geo.x, geo.y, geo.width, geo.height);
+
+  if (launcherGeo.contains (pos))
+  {
+    if (screen->workArea ().contains (CompRect (launcherGeo.right () + 1, pos.y (), window->width (), window->height ())))
+      pos.setX (launcherGeo.right () + 1);
+  }
+  
+  return pos;
+}
+
 bool
 UnityWindow::place (CompPoint &pos)
 {
   UnityScreen *us = UnityScreen::get (screen);
-  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
   Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
   
   bool result = window->place (pos);
@@ -686,11 +704,9 @@ UnityWindow::place (CompPoint &pos)
   {
     case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
     case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width && window->width () + geo.width + 1< screen->workArea ().width ())
-        {
-          pos.setX (geo.width + 1);
-        }
+      pos = tryNotIntersectLauncher (pos);
       break;
+    
     default:
       break;
   }
@@ -825,6 +841,8 @@ UnityScreen::RelayoutTimeout (gpointer data)
   uScr->NeedsRelayout ();
   uScr->Relayout();
   uScr->relayoutSourceId = 0;
+  
+  uScr->cScreen->damageScreen ();
 
   return FALSE;
 }
@@ -854,20 +872,10 @@ write_logger_data_to_disk (gpointer data)
   return FALSE;
 }
 
-void
-OnMonitorChanged (GdkScreen* screen,
-                  gpointer   data)
+void 
+UnityScreen::outputChangeNotify ()
 {
-  UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->ScheduleRelayout (500);
-}
-
-void
-OnSizeChanged (GdkScreen* screen,
-               gpointer   data)
-{
-  UnityScreen* uscreen = (UnityScreen*) data;
-  uscreen->ScheduleRelayout (500);
+  ScheduleRelayout (500);
 }
 
 UnityScreen::UnityScreen (CompScreen *screen) :
@@ -964,15 +972,6 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
   g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
 
-  g_signal_connect (gdk_screen_get_default (),
-                    "monitors-changed",
-                     G_CALLBACK (OnMonitorChanged),
-                     this);
-  g_signal_connect (gdk_screen_get_default (),
-                    "size-changed",
-                    G_CALLBACK (OnSizeChanged),
-                    this);
-
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);
   
@@ -1028,7 +1027,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->layout->SetVerticalExternalMargin(0);
   self->layout->SetHorizontalExternalMargin(0);
 
-  self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
+  self->controller = new LauncherController (self->launcher, self->screen);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
   self->launcherWindow->SetLayout(self->layout);
@@ -1071,6 +1070,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   self->ScheduleRelayout (0);
+  
+  self->OnLauncherHiddenChanged ();
 
   END_FUNCTION ();
 }

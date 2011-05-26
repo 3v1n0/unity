@@ -29,10 +29,9 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-LauncherController::LauncherController(Launcher* launcher, CompScreen *screen, nux::BaseWindow* window)
+LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
 {
   _launcher = launcher;
-  _window = window;
   _screen = screen;
   _model = new LauncherModel ();
   _sort_priority = 0;

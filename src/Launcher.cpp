@@ -1504,6 +1504,9 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
     }
+    
+    if (sum - _space_between_icons <= launcher_height)
+      folding_threshold = launcher_height;
 
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
@@ -1774,7 +1777,7 @@ void Launcher::OnBFBUpdate (GVariant *data, gpointer user_data)
   g_variant_get (data, "(iiiia{sv})", &x, &y, &bfb_width, &bfb_height, &prop_iter);
   self->_bfb_mouse_position = nux::Point2 (x, y);
   
-  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS);
+  bool inside_trigger_area = (pow (x, 2) + pow (y, 2) < TRIGGER_SQR_RADIUS) && x >= 0 && y >= 0;
   /*
    * if we are currently hidden and we are over the trigger, prepare the change
    * from a position-based move to a time-based one
@@ -1822,7 +1825,7 @@ void Launcher::SetHidden (bool hidden)
 {
     if (hidden == _hidden)
         return;
-
+    
     _hidden = hidden;
     _hide_machine->SetQuirk (LauncherHideMachine::LAUNCHER_HIDDEN, hidden);
     _hover_machine->SetQuirk (LauncherHoverMachine::LAUNCHER_HIDDEN, hidden);
@@ -1894,6 +1897,9 @@ Launcher::CheckWindowOverLauncher ()
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
   CompWindow *window = NULL;
+  CompWindow *parent = NULL;
+  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask 
+                     | CompWindowTypeUtilMask;
 
   bool any = false;
   bool active = false;
@@ -1903,7 +1909,11 @@ Launcher::CheckWindowOverLauncher ()
     return;
 
   window = _screen->findWindow (_screen->activeWindow ());
-  if (CheckIntersectWindow (window))
+
+  if (window && (window->type () & type_dialogs))
+    parent = _screen->findWindow (window->transientFor ());
+
+  if (CheckIntersectWindow (window) || CheckIntersectWindow (parent))
   {
     any = true;
     active = true;
@@ -2355,23 +2365,22 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 {
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
-  
+
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
+    nux::Color color = nux::color::LightGrey;
 
     if (arg.running_colored)
-      color = nux::Colors::SkyBlue;
-      
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+      color = nux::color::SkyBlue;
+
+    color = color * alpha;
 
     nux::BaseTexture *texture;
 
     std::vector<int> markers;
-    
+
     /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
@@ -2414,9 +2423,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+    nux::Color color = nux::color::LightGrey * alpha;
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
                               markerCenter - (_arrow_rtl->GetHeight () / 2),
                               (float) _arrow_rtl->GetWidth(),
@@ -2554,18 +2561,13 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-//   if(VertexColorLocation != -1)
-//   {
-//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
-//   }
-
-  bkg_color.SetRGBA (bkg_color.R () * alpha, bkg_color.G () * alpha,
-                     bkg_color.B () * alpha, alpha);
+  nux::Color bg_color = bkg_color * alpha;
+  // Since we don't know want the alpha was, reset the alpha channel of the color.
+  bkg_color.alpha = alpha;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
-    CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glUniform4fARB (FragmentColor, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glUniform4fARB (DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2573,7 +2575,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
   else
   {
-    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2660,7 +2662,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   RenderIcon (GfxContext,
               arg,
               arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
-              nux::Colors::White,
+              nux::color::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"]);
 
@@ -2670,7 +2672,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _icon_shine_texture->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2719,7 +2721,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _offscreen_progress_texture,
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2729,7 +2731,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
@@ -2838,26 +2840,33 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         gPainter.Paint2DQuadColor (GfxContext, 
                                    nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
                                    nux::Color(0xAAAAAAAA));
-                                   
       if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-    
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x60000000));
+
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                                            bkg_box.y,
+                                            1,
+                                            bkg_box.height),
+                              nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            20),
+                              nux::Color(0x60000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x60000000));
 
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
-    nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
-    alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
-                        alpha_mask.B () * launcher_alpha, launcher_alpha);
+    nux::Color alpha_mask = nux::Color(0xFFAAAAAA) * launcher_alpha;
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
-    
+
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
@@ -3107,11 +3116,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  
-  // FIXME: Ugly workaround for nux sending mouse enter signal on super key release or keynav enter
-  if (x < 0)
-    return;
-  
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (true);
   
@@ -3125,11 +3129,6 @@ void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-
-  // FIXME: Ugly workaround for nux sending mouse leave signal on super key release or keynav exit
-  if (x < 0)
-    return;
-
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (false);
 
@@ -3324,7 +3323,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (it != (LauncherModel::iterator)NULL)
       {
         if ((*it)->OpenQuicklist (true))
-          leaveKeyNavMode ();
+          leaveKeyNavMode (true);
       }
     break;
 
@@ -3848,33 +3847,32 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // FIXME
   glClear (GL_COLOR_BUFFER_BIT);
   nux::TexCoordXForm texxform;
-  
+
   fill_width *= progress_fill;
 
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-                            
-  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);  
-
-  GfxContext.PopClippingRectangle (); 
-
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height,
+                       _progress_bar_trough->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.PopClippingRectangle ();
 
   // right door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.PopClippingRectangle (); 
+  GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
+                      progress_width, progress_height,
+                      _progress_bar_trough->GetDeviceTexture (), texxform,
+                      nux::color::White);
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y,
+                       fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
 
-  
+  GfxContext.PopClippingRectangle();
+
   RestoreSystemRenderTarget ();
 }
 

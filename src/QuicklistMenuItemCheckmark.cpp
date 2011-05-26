@@ -178,7 +178,7 @@ QuicklistMenuItemCheckmark::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[1]->GetDeviceTexture ();
     }
 
-    _color = nux::Colors::White;
+    _color = nux::color::White;
   }
   else
   {
@@ -236,7 +236,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, nux::Colors::White);
+  DrawText (cr, width, height, nux::color::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
@@ -278,7 +278,7 @@ QuicklistMenuItemCheckmark::UpdateTexture ()
 
   cairo_restore (cr);
 
-  DrawText (cr, width, height, nux::Colors::White);
+  DrawText (cr, width, height, nux::color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 

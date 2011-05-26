@@ -12,7 +12,7 @@ subdirs (services tests tools doc)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 3)
 set (UNITY_MINOR 8)
-set (UNITY_MICRO 10)
+set (UNITY_MICRO 12)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "3.0")
 
