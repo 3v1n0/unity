@@ -31,7 +31,7 @@
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  PanelView *view = new PanelView ();
+  unity::PanelView *view = new PanelView ();
 
   //view->SetMinMaxSize(1024, 24);
   layout->AddView(view, 1, nux::eCenter, nux::eFull);
