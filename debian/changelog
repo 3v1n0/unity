@@ -18,6 +18,7 @@ unity (3.8.14-0ubuntu1) oneiric; urgency=low
       (LP: #759174)
     - Opening quicklist with launcher keynav returns focus to previous window
       (LP: #750781)
+    - window's title does not fade in the right position (LP: #722178)
   * debian/control:
     - depends on compiz for some people upgrading (LP: #773253)
   * debian/patches/01_add_scp_to_systray.patch:
