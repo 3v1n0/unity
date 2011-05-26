@@ -119,12 +119,11 @@ class UnityMTGrabHandlesScreen :
 			  CompAction::State  state,
 			  CompOption::Vector &options);
 
-  
-  bool showHandles (CompAction         *action,
+  	bool showHandles (CompAction         *action,
 			  CompAction::State  state,
 			  CompOption::Vector &options);  
 
-  bool hideHandles (CompAction         *action,
+	bool hideHandles (CompAction         *action,
 			  CompAction::State  state,
 			  CompOption::Vector &options);  
 
@@ -191,16 +190,17 @@ class UnityMTGrabHandlesWindow :
 		     const CompRegion &,
 		     unsigned int);
 
-  bool    handlesVisible ();
+ 	bool    handlesVisible ();
 	void    hideHandles ();
 	void    showHandles (bool use_timer);
 	void    restackHandles ();
 
-  void resetTimer ();
-  void disableTimer ();
+	void resetTimer ();
+	void disableTimer ();
+
     private:
   
-  static gboolean onHideTimeout (gpointer data);
+	static gboolean onHideTimeout (gpointer data);
 
 	Unity::MT::GrabHandleGroup *mHandles;
 	UnityMTGrabHandlesScreen *_mt_screen;
