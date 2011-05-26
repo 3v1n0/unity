@@ -1,9 +1,29 @@
-unity (3.8.12-0ubuntu2) UNRELEASED; urgency=low
+unity (3.8.14-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream bug-fix release.
+    - In a dual monitor setup with different resolutions, Unity places windows
+      in the "dead zone" (LP: #752098)
+    - Left pixel of launcher is not clickable on session start (LP: #758026)
+    - unity crashed with AttributeError in reset_unity_compiz_profile(): 'str'
+      object has no attribute 'get_string' (LP: #737320)
+    - unity --reset crashes with NameError (LP: #774280)
+    - Bottom icon on launcher tilts when it maybe shouldn't if icons fill
+      launcher nearly exactly (LP: #728949)
+    - Dodge active window - launcher should not show when modal dialog is
+      opened (LP: #718185)
+    - Unity maximizes windows that don't support resize on launch (LP: #769781)
+    - compiz crashed with SIGSEGV in sigc::signal_base::impl() (LP: #762801)
+    - inactive menus becomes brighter on sub-sequent clicks (LP: #733740)
+    - Unity crashes when dynamic quicklist dbusmenu contains a hidden menuitem.
+      (LP: #759174)
+    - Opening quicklist with launcher keynav returns focus to previous window
+      (LP: #750781)
   * debian/control:
     - depends on compiz for some people upgrading (LP: #773253)
+  * debian/patches/01_add_scp_to_systray.patch:
+    - remove, upstream now
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 May 2011 15:30:40 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 26 May 2011 17:41:14 +0200
 
 unity (3.8.12-0ubuntu1) natty-proposed; urgency=low
 

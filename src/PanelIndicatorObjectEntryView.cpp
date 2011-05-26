@@ -49,6 +49,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
@@ -82,7 +83,15 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
                       GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
+  } else {
+	  Refresh();
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseUp (int x, int y, long button_flags, long key_flags)
+{
+  Refresh();
 }
 
 void
@@ -242,14 +251,12 @@ PanelIndicatorObjectEntryView::Refresh ()
   x = _padding;
   y = 0;
 
-  if (_proxy->GetPixbuf () && _proxy->icon_visible)
+  if (pixbuf && _proxy->icon_visible)
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)
@@ -311,6 +318,8 @@ PanelIndicatorObjectEntryView::Refresh ()
   refreshed.emit (this);
   if (label)
     g_free (label);
+  if (pixbuf)
+    g_object_unref (pixbuf);
 }
 
 static void

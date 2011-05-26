@@ -907,6 +907,9 @@ UnityMTGrabHandlesWindow::UnityMTGrabHandlesWindow (CompWindow *w) :
 
 UnityMTGrabHandlesWindow::~UnityMTGrabHandlesWindow ()
 {
+    if (_timer_handle)
+	g_source_remove (_timer_handle);
+
     if (mHandles)
     {
 	UnityMTGrabHandlesScreen::get (screen)->removeHandles (mHandles);
