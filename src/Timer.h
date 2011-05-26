@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -29,15 +30,28 @@ namespace logger {
 class Timer
 {
 public:
-    Timer(std::string const& name, std::ostream& out);
-    ~Timer();
+  Timer();
 
-    void log(std::string const& message);
+  void Reset();
+  float ElapsedSeconds();
 
 private:
-    std::string name_;
-    std::ostream& out_;
-    gint64 start_time_;
+  gint64 start_time_;
+};
+
+
+class BlockTimer
+{
+public:
+  BlockTimer(std::string const& name, std::ostream& out);
+  ~BlockTimer();
+
+  void log(std::string const& message);
+
+private:
+  Timer timer_;
+  std::string name_;
+  std::ostream& out_;
 };
 
 }
