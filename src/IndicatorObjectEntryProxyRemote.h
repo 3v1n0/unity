@@ -17,37 +17,33 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef INDICATOR_OBJECT_ENTRY_PROXY_REMOTE_H
-#define INDICATOR_OBJECT_ENTRY_PROXY_REMOTE_H
+#ifndef UNITY_INDICATOR_ENTRY_H
+#define UNITY_INDICATOR_ENTRY_H
 
 #include <string>
 #include <gio/gio.h>
 
-#include "IndicatorObjectEntryProxy.h"
+#include <boost/utility.hpp>
 
-// Represents an IndicatorObjectEntry over DBus through the panel service
-// Basically wraps the DeeModelIter, trying to keep as much info inside 
-// that as possible to avoid duplication
+namespace unity {
+namespace indicator {
 
-class IndicatorObjectEntryProxyRemote : public IndicatorObjectEntryProxy
+class Entry : boost::noncopyable
 {
 public:
+  Entry();
 
-  IndicatorObjectEntryProxyRemote  ();
-  ~IndicatorObjectEntryProxyRemote ();
-
-  virtual const char * GetId ();
-
-  virtual const char * GetLabel ();
+  std::string const& id() const;
+  std::string const& label() const;
 
   // Call g_object_unref on the returned pixbuf
-  virtual GdkPixbuf  * GetPixbuf ();
+  GdkPixbuf* GetPixbuf();
 
-  virtual void         SetActive (bool active);
-  virtual bool         GetActive ();
+  void set_active(bool active);
+  bool is_active() const;
 
-  virtual void         ShowMenu (int x, int y, guint32 timestamp, guint32 button);
-  virtual void         Scroll (int delta);
+  void ShowMenu(int x, int y, int timestamp, int button);
+  void Scroll(int delta);
 
   void Refresh (const char *__id,
                 const char *__label,
@@ -61,17 +57,31 @@ public:
   void OnShowNowChanged (bool show_now_state);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
-  sigc::signal<void, const char *, int> OnScroll;
+  sigc::signal<void> updated;
+  sigc::signal<void, bool> active_changed;
+  sigc::signal<void, bool> show_now_changed;
 
-public:
-  bool     _dirty;
-  bool     _active;
+  sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
+  sigc::signal<void, std::string const&, int> on_scroll;
 
-  char    *_id;
-  char    *_label;
-  guint32  _image_type;
-  char    *_image_data;
+private:
+  std::string id_;
+
+  std::string label_;
+  bool label_sensitive_;
+  bool label_visible_;
+
+  int image_type_;
+  std::string image_data_;
+  bool image_visible_;
+  bool image_sensitive_;
+
+  bool show_now_;
+  bool dirty_;
+  bool active_;
 };
 
-#endif // INDICATOR_OBJECT_ENTRY_PROXY_REMOTE_H
+}
+}
+
+#endif
