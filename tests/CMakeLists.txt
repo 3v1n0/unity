@@ -112,8 +112,8 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
-                ../src/TimeMe.cpp
-                ../src/TimeMe.h
+                ../src/Timer.cpp
+                ../src/Timer.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
                 ../src/WindowButtons.cpp
@@ -146,8 +146,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/PlacesSimpleTile.h
                           ../src/TextureCache.h
                           ../src/TextureCache.cpp
-                          ../src/TimeMe.cpp
-                          ../src/TimeMe.h
+                          ../src/Timer.cpp
+                          ../src/Timer.h
                           ../src/StaticCairoText.cpp
                           ../src/StaticCairoText.h
                           ../src/UBusMessages.h
@@ -282,9 +282,9 @@ enable_testing()
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(test-gtest
-               test_timeme.cpp
-               ../src/TimeMe.h
-               ../src/TimeMe.cpp
+               test_timer.cpp
+               ../src/Timer.h
+               ../src/Timer.cpp
                )
 target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
 add_test(UnityGTests test-gtest)

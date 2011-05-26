@@ -16,34 +16,31 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "TimeMe.h"
+#ifndef UNITY_TIMER_H
+#define UNITY_TIMER_H
 
-#include <ostream>
+#include <iosfwd>
+#include <string>
+#include <glib.h>
 
 namespace unity {
 namespace logger {
 
-Timer::Timer(std::string const& name, std::ostream& out)
-  : name_(name)
-  , out_(out)
-  , start_time_(g_get_monotonic_time())
+class Timer
 {
-  out_ << "STARTED (" << name_ << ")" << "\n";
-}
+public:
+    Timer(std::string const& name, std::ostream& out);
+    ~Timer();
 
-Timer::~Timer()
-{
-  gint64 end = g_get_monotonic_time();
-  out_ << ((end - start_time_) / 1000.0) << ": FINISHED ("
-       << name_ << ")" << "\n";
-}
+    void log(std::string const& message);
 
-void Timer::log(std::string const& message)
-{
-  gint64 now = g_get_monotonic_time();
-  out_ << ((now - start_time_) / 1000.0) << ": " << message
-       << " (" << name_ << ")" << "\n";
-}
+private:
+    std::string name_;
+    std::ostream& out_;
+    gint64 start_time_;
+};
 
 }
 }
+
+#endif

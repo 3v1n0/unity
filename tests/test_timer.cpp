@@ -1,4 +1,4 @@
-#include "TimeMe.h"
+#include "Timer.h"
 
 #include <sstream>
 #include <string>
@@ -21,7 +21,7 @@ pair<float, string> get_elapsed_time_and_message(string const& line)
   return result;
 }
 
-TEST(TestTimeMe, TestOutput) {
+TEST(TestTimer, TestOutput) {
   stringstream sout;
   {
     unity::logger::Timer t("My timer", sout);
@@ -37,7 +37,7 @@ TEST(TestTimeMe, TestOutput) {
   EXPECT_EQ(finished.second, ": FINISHED (My timer)");
 }
 
-TEST(TestTimeMe, TestMultipleWithMessage) {
+TEST(TestTimer, TestMultipleWithMessage) {
   stringstream sout;
   {
     unity::logger::Timer first("first", sout);
