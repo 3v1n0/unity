@@ -85,6 +85,8 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/DBusIndicators.cpp
+                ../src/DBusIndicators.h
                 ../src/PanelStyle.cpp
                 ../src/PanelStyle.h
                 ../src/PanelView.cpp
@@ -93,13 +95,12 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
-            		../src/PanelTitlebarGrabAreaView.h
-            		../src/PanelTitlebarGrabAreaView.cpp
+            	../src/PanelTitlebarGrabAreaView.h
+            	../src/PanelTitlebarGrabAreaView.cpp
                 ../src/PanelTray.cpp
                 ../src/PanelTray.h
-                ../src/IndicatorObjectFactory.h
-                ../src/IndicatorObjectFactoryRemote.cpp
-                ../src/IndicatorObjectFactoryRemote.h
+                ../src/Indicators.cpp
+                ../src/Indicators.h
                 ../src/Indicator.cpp
                 ../src/Indicator.h
                 ../src/IndicatorEntry.cpp

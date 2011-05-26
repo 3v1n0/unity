@@ -26,7 +26,7 @@
 
 #include <gdk/gdkx.h>
 
-#include "IndicatorObjectFactoryRemote.h"
+#include "DBusIndicators.h"
 #include "Introspectable.h"
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
@@ -80,14 +80,14 @@ private:
   void SyncGeometries ();
 
 private:
-  IndicatorObjectFactoryRemote *_remote;
+  indicators::DBusIndicators::Ptr _remote;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
   PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-  
+
   int _last_width;
   int _last_height;
 

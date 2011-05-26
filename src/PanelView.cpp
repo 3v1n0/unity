@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
+#include "PanelView.h"
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -31,11 +32,7 @@
 
 #include <glib.h>
 
-#include "PanelView.h"
 #include "PanelStyle.h"
-
-#include "IndicatorObjectFactoryRemote.h"
-#include "IndicatorEntry.h"
 #include "PanelIndicatorObjectView.h"
 
 namespace unity {
@@ -71,7 +68,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    _layout->AddView (_tray, 0, nux::eCenter, nux::eFull);
    AddChild (_tray);
 
-  _remote = new IndicatorObjectFactoryRemote ();
+   _remote = new indicators::DBusIndicators();
   _on_object_added_connection = _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
   _on_menu_pointer_moved_connection = _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
   _on_entry_activate_request_connection = _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
@@ -90,7 +87,6 @@ PanelView::~PanelView ()
 
   _style->UnReference ();
 
-  delete _remote;
   delete _bg_layer;
 }
 
