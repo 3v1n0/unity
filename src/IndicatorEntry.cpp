@@ -25,9 +25,9 @@ namespace unity {
 namespace indicator {
 
 
-IndicatorEntry::IndicatorEntry ()
-  : label_sensitive_(false)
-  , label_visible_(false)
+Entry::Entry()
+  : label_visible_(false)
+  , label_sensitive_(false)
   , image_type_(0)
   , image_visible_(false)
   , image_sensitive_(false)
@@ -37,37 +37,59 @@ IndicatorEntry::IndicatorEntry ()
 {
 }
 
-std::string const& IndicatorEntry::id() const
+Entry::Entry(std::string const& id,
+             std::string const& label,
+             bool label_sensitive,
+             bool label_visible,
+             int  image_type,
+             std::string const& image_data,
+             bool image_sensitive,
+             bool image_visible)
+  : id_(id)
+  , label_(label)
+  , label_visible_(label_visible)
+  , label_sensitive_(label_sensitive)
+  , image_type_(image_type)
+  , image_data_(image_data)
+  , image_visible_(image_visible)
+  , image_sensitive_(image_sensitive)
+  , show_now_(false)
+  , dirty_(false)
+  , active_(false)
+{
+}
+
+std::string const& Entry::id() const
 {
   return id_;
 }
 
-std::string const& IndicatorEntry::label() const;
+std::string const& Entry::label() const;
 {
   return label_;
 }
 
-bool IndicatorEntry::image_visible() const
+bool Entry::image_visible() const
 {
   return image_visible_;
 }
 
-bool IndicatorEntry::image_sensitive() const
+bool Entry::image_sensitive() const
 {
   return image_sensitive_;
 }
 
-bool IndicatorEntry::label_visible() const
+bool Entry::label_visible() const
 {
   return label_visible_;
 }
 
-bool IndicatorEntry::label_sensitive() const
+bool Entry::label_sensitive() const
 {
   return label_sensitive_;
 }
 
-GdkPixbuf* IndicatorEntry::GetPixbuf()
+GdkPixbuf* Entry::GetPixbuf() const
 {
   GdkPixbuf* ret = NULL;
 
@@ -109,7 +131,7 @@ GdkPixbuf* IndicatorEntry::GetPixbuf()
   return ret;
 }
 
-void IndicatorEntry::set_active(bool active)
+void Entry::set_active(bool active)
 {
   if (active_ == active)
     return;
@@ -119,38 +141,31 @@ void IndicatorEntry::set_active(bool active)
   updated.emit();
 }
 
-bool IndicatorEntry::active()
+bool Entry::active()
 {
   return active_;
 }
 
-void IndicatorEntry::Refresh(std::string const& id,
-                             std::string const& label,
-                             bool label_sensitive,
-                             bool label_visible,
-                             int  image_type,
-                             std::string const& image_data,
-                             bool image_sensitive,
-                             bool image_visible)
+Entry& Entry::operator=(Entry const& rhs)
 {
-  id_ = id;
-  label_ = label;
-  label_sensitive_ = label_sensitive;
-  label_visible_ = label_visible;
-  image_type_ = image_type;
-  image_data_ = image_data;
-  image_sensitive_ = image_sensitive;
-  image_visible_ = image_visible;
+  id_ = rhs.id_;
+  label_ = rhs.label_;
+  label_sensitive_ = rhs.label_sensitive_;
+  label_visible_ = rhs.label_visible_;
+  image_type_ = rhs.image_type_;
+  image_data_ = rhs.image_data_;
+  image_sensitive_ = rhs.image_sensitive_;
+  image_visible_ = rhs.image_visible_;
 
   updated.emit ();
 }
 
-bool IndicatorEntry::show_now() const
+bool Entry::show_now() const
 {
   return show_now_;
 }
 
-void IndicatorEntry::set_show_now(bool show_now)
+void Entry::set_show_now(bool show_now)
 {
   // TODO: check to see if we need to emit for every setting, or only
   // if the value actually changes.
@@ -159,12 +174,12 @@ void IndicatorEntry::set_show_now(bool show_now)
   updated.emit();
 }
 
-void IndicatorEntry::ShowMenu(int x, int y, int timestamp, int button)
+void Entry::ShowMenu(int x, int y, int timestamp, int button)
 {
   on_show_menu.emit(id_, x, y, timestamp, button);
 }
 
-void IndicatorEntry::Scroll(int delta)
+void Entry::Scroll(int delta)
 {
   on_scroll.emit(id_, delta);
 }

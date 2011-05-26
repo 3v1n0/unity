@@ -17,46 +17,47 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef INDICATOR_OBJECT_PROXY_REMOTE_H
-#define INDICATOR_OBJECT_PROXY_REMOTE_H
+#ifndef UNITY_INDICATOR_H
+#define UNITY_INDICATOR_H
 
 #include <string>
 #include <gio/gio.h>
 #include <dee.h>
 
-#include "IndicatorObjectProxy.h"
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
-// Represents an IndicatorObject over DBus through the panel service
+#include "IndicatorEntry.h"
 
-class IndicatorObjectProxyRemote : public IndicatorObjectProxy
+namespace unity {
+namespace indicator {
+
+class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
+  typedef boost::shared_ptr<Indicator> Ptr;
+  typedef std::vector<Entry::Ptr> Entries;
 
-  IndicatorObjectProxyRemote  (const char *name);
-  ~IndicatorObjectProxyRemote ();
-  
-  virtual std::string& GetName ();
-  virtual std::vector<IndicatorObjectEntryProxy *>& GetEntries ();
+  Indicator(std::string const& name);
 
-  void BeginSync ();
-  void AddEntry  (const gchar *entry_id,
-                  const gchar *label,
-                  bool         label_sensitive,
-                  bool         label_visible,
-                  guint32      image_type,
-                  const gchar *image_data,
-                  bool         image_sensitive,
-                  bool         image_visible);
-  void EndSync   ();
+  // The name of the indicator that this proxy represents
+  std::string const& name() const;
 
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
-  void OnScrollReceived (const char *id, int delta);
+  void Sync(Entries const& new_entries);
+
+  void OnEntryShowMenu(std::string const& id, int x, int y, int timestamp, int button);
+  void OnEntryScroll(std::string const& id, int delta);
 
   // Signals
-  sigc::signal<void, const char *, int, int, guint32, guint32> OnShowMenuRequest;
-  sigc::signal<void, const char *, int> OnScroll;
+  sigc::signal<void, Entry::Ptr const&> on_entry_added;
+  sigc::signal<void, Entry::Ptr const&> on_entry_removed;
+  sigc::signal<void, Entry::Ptr const&> on_entry_moved;
+
+  sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
+  sigc::signal<void, std::string const&, int> on_scroll;
 
 private:
+  Entries entries_;
   std::string _name;
 };
 

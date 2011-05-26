@@ -23,18 +23,30 @@
 #include <string>
 #include <gio/gio.h>
 
+#include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 namespace unity {
 namespace indicator {
 
-class Entry : boost::noncopyable
+class Entry
 {
 public:
   typedef boost::shared_ptr<Entry> Ptr;
 
   Entry();
+  Entry(std::string const& id,
+        std::string const& label,
+        bool label_sensitive,
+        bool label_visible,
+        int  image_type,
+        std::string const& image_data,
+        bool image_sensitive,
+        bool image_visible);
+
+  // Assignment emits updated event.
+  Entry& operator=(Entry const& rhs);
 
   std::string const& id() const;
   std::string const& label() const;
@@ -44,22 +56,13 @@ public:
   bool label_sensitive() const;
 
   // Call g_object_unref on the returned pixbuf
-  GdkPixbuf* GetPixbuf();
+  GdkPixbuf* GetPixbuf() const;
 
   void set_active(bool active);
   bool active() const;
 
   void ShowMenu(int x, int y, int timestamp, int button);
   void Scroll(int delta);
-
-  void Refresh(std::string const& id,
-               std::string const& label,
-               bool label_sensitive,
-               bool label_visible,
-               int  image_type,
-               std::string const& image_data,
-               bool image_sensitive,
-               bool image_visible);
 
   bool show_now() const;
   void set_show_now(bool show_now);
@@ -76,8 +79,8 @@ private:
   std::string id_;
 
   std::string label_;
-  bool label_sensitive_;
   bool label_visible_;
+  bool label_sensitive_;
 
   int image_type_;
   std::string image_data_;
