@@ -23,6 +23,7 @@
 #include <Nux/View.h>
 
 #include "IndicatorObjectProxy.h"
+#include "IndicatorEntry.h"
 #include "PanelIndicatorObjectEntryView.h"
 
 #include "Introspectable.h"
@@ -40,10 +41,10 @@ public:
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
-  void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
-  void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
-  
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
+
   nux::HLayout *_layout;
 
 protected:

@@ -34,8 +34,6 @@
 
 #include "WindowManager.h"
 
-#include "IndicatorObjectEntryProxy.h"
-
 #include <gio/gdesktopappinfo.h>
 
 #include "ubus-server.h"

@@ -25,6 +25,7 @@
 #include <gdk/gdkx.h>
 
 #include "IndicatorObjectProxy.h"
+#include "IndicatorEntry.h"
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
 
@@ -40,14 +41,14 @@ public:
   ~PanelTray ();
 
   void Draw (nux::GraphicsEngine& gfx_content, bool force_draw);
-  
+
   Window GetTrayWindow ();
 
   void Sync ();
 
-  void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
-  void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
-  void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
+  void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
+  void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
+  void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
 
 public:
   int        _n_children;

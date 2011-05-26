@@ -35,8 +35,10 @@
 #include "PanelStyle.h"
 
 #include "IndicatorObjectFactoryRemote.h"
-#include "IndicatorObjectEntryProxy.h"
+#include "IndicatorEntry.h"
 #include "PanelIndicatorObjectView.h"
+
+using namespace unity;
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
@@ -241,28 +243,23 @@ PanelView::ForceUpdateBackground ()
 //
 // Signals
 //
-void
-PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
+void PanelView::OnObjectAdded(IndicatorObjectProxy *proxy)
 {
-  PanelIndicatorObjectView *view;
-  
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
   if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
   {
-    view = _menu_view;
-    _menu_view->SetProxy (proxy);
+    _menu_view->SetProxy(proxy);
   }
   else
   {
-    view = new PanelIndicatorObjectView (proxy);
-
-    _layout->AddView (view, 0, nux::eCenter, nux::eFull);
-    AddChild (view);
+    PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
+    _layout->AddView(view, 0, nux::eCenter, nux::eFull);
+    AddChild(view);
   }
 
   _layout->SetContentDistribution (nux::eStackLeft);
-  
+
   ComputeChildLayout ();
   NeedRedraw ();
 }
@@ -390,7 +387,7 @@ PanelView::EndFirstMenuShow ()
     PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
 
     if (view->_layout == NULL
-        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))       
+        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
       continue;
 
     std::list<Area *>::iterator it2;
@@ -399,9 +396,9 @@ PanelView::EndFirstMenuShow ()
     for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
     {
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-      IndicatorObjectEntryProxy *proxy = entry->_proxy;
+      indicator::Entry::Ptr proxy = entry->_proxy;
 
-      if (proxy != NULL && !proxy->label_sensitive && !proxy->icon_sensitive)
+      if (proxy && !proxy->label_sensitive() && !proxy->icon_sensitive())
         continue;
 
       entry->Activate ();

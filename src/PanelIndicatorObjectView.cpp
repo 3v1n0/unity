@@ -32,6 +32,8 @@
 
 #include <glib.h>
 
+using namespace unity;
+
 PanelIndicatorObjectView::PanelIndicatorObjectView ()
 : View (NUX_TRACKER_LOCATION),
   _layout (NULL),
@@ -90,8 +92,7 @@ PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool for
   GfxContext.PopClippingRectangle();
 }
 
-void
-PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+void PanelIndicatorObjectView::OnEntryAdded(indicator::Entry::Ptr proxy)
 {
   PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
   _layout->AddView (view, 0, nux::eCenter, nux::eFull);
@@ -105,28 +106,26 @@ PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
   QueueDraw ();
 }
 
-void
-PanelIndicatorObjectView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
+void PanelIndicatorObjectView::OnEntryMoved(indicator::Entry::Ptr proxy)
 {
-  printf ("ERROR: Moving IndicatorObjectEntry not supported\n");
+  printf ("ERROR: Moving indicator::Entry not supported\n");
 }
 
-void
-PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
+void PanelIndicatorObjectView::OnEntryRemoved(indicator::Entry::Ptr proxy)
 {
   std::vector<PanelIndicatorObjectEntryView *>::iterator it;
-  
+
   for (it = _entries.begin(); it != _entries.end(); it++)
   {
     PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
     if (view->_proxy == proxy)
-      {
-        RemoveChild (view);
-        _entries.erase (it);
-        _layout->RemoveChildObject (view);
+    {
+      RemoveChild (view);
+      _entries.erase (it);
+      _layout->RemoveChildObject (view);
 
-        break;
-      }
+      break;
+    }
   }
 
   QueueRelayout ();

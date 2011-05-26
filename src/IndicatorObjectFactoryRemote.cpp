@@ -30,6 +30,9 @@
 #include "NuxGraphics/GLWindowManager.h"
 #include <X11/Xlib.h>
 #include <algorithm>
+#include <iostream>
+
+#include "TimeMe.h"
 
 #define S_NAME  "com.canonical.Unity.Panel.Service"
 #define S_PATH  "/com/canonical/Unity/Panel/Service"
@@ -526,6 +529,8 @@ on_proxy_signal_received (GDBusProxy *proxy,
                           GVariant   *parameters,
                           IndicatorObjectFactoryRemote *remote)
 {
+  unity::logger::Timer t("on_proxy_signal_received", std::cerr);
+
   if (g_strcmp0 (signal_name, "EntryActivated") == 0)
   {
     remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
@@ -596,6 +601,7 @@ on_sync_ready_cb (GObject      *source,
                   GAsyncResult *res,
                   gpointer      data)
 {
+  unity::logger::Timer t("on_sync_ready_cb", std::cerr);
   SyncData     *sync_data = (SyncData *)data;
   IndicatorObjectFactoryRemote *remote = (IndicatorObjectFactoryRemote*)sync_data->_self;
   GVariant     *args;

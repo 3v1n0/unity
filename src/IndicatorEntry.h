@@ -23,6 +23,7 @@
 #include <string>
 #include <gio/gio.h>
 
+#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 namespace unity {
@@ -31,30 +32,35 @@ namespace indicator {
 class Entry : boost::noncopyable
 {
 public:
+  typedef boost::shared_ptr<Entry> Ptr;
+
   Entry();
 
   std::string const& id() const;
   std::string const& label() const;
+  bool image_sensitive() const;
+  bool label_sensitive() const;
 
   // Call g_object_unref on the returned pixbuf
   GdkPixbuf* GetPixbuf();
 
   void set_active(bool active);
-  bool is_active() const;
+  bool active() const;
 
   void ShowMenu(int x, int y, int timestamp, int button);
   void Scroll(int delta);
 
-  void Refresh (const char *__id,
-                const char *__label,
-                bool        __label_sensitive,
-                bool        __label_visible,
-                guint32     __image_type,
-                const char *__image_data,
-                bool        __image_sensitive,
-                bool        __image_visible);
+  void Refresh(std::string const& id,
+               std::string const& label,
+               bool label_sensitive,
+               bool label_visible,
+               int  image_type,
+               std::string const& image_data,
+               bool image_sensitive,
+               bool image_visible);
 
-  void OnShowNowChanged (bool show_now_state);
+  bool show_now() const;
+  void set_show_now(bool show_now);
 
   // Signals
   sigc::signal<void> updated;

@@ -57,12 +57,12 @@ public:
   virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
-  
+
   void SetProxy (IndicatorObjectProxy *proxy);
- 
-  void OnEntryAdded (IndicatorObjectEntryProxy *proxy);
-  void OnEntryMoved (IndicatorObjectEntryProxy *proxy);
-  void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
+
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryMoved(unity::indicator::Entry::Ptr proxy);
+  virtual void OnEntryRemoved(unity::indicator::Entry::Ptr proxy);
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
   void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
   void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
@@ -76,7 +76,7 @@ public:
   void OnWindowMaximized (guint32 xid);
   void OnWindowRestored  (guint32 xid);
   void OnWindowMoved (guint32 xid);
-  
+
   guint32 GetMaximizedWindow ();
 
   void OnMaximizedGrab (int x, int y);
