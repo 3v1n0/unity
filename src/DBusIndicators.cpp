@@ -17,13 +17,9 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "DBusIndicators.h"
+
 #include "config.h"
-
-#include "IndicatorObjectFactoryRemote.h"
-
-#include "IndicatorObjectProxyRemote.h"
-#include "IndicatorObjectEntryProxyRemote.h"
-#include "IndicatorObjectEntryProxy.h"
 
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
@@ -34,9 +30,95 @@
 
 #include "TimeMe.h"
 
-#define S_NAME  "com.canonical.Unity.Panel.Service"
-#define S_PATH  "/com/canonical/Unity/Panel/Service"
-#define S_IFACE "com.canonical.Unity.Panel.Service"
+namespace unity {
+namespace indicator {
+
+const char* const S_NAME = "com.canonical.Unity.Panel.Service";
+const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
+const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
+
+namespace {
+// This anonymous namespace holds the DBus callback methods.
+
+
+void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
+{
+  DBusIndicators* remote = reinterpret_cast<DBusIndicators*>(data);
+  GError* error = NULL;
+  GDBusProxy* proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
+
+  static bool force_tried = false;
+  char       *name_owner;
+
+  name_owner = g_dbus_proxy_get_name_owner (proxy);
+
+  if (G_IS_DBUS_PROXY (proxy) && name_owner)
+  {
+    remote->OnRemoteProxyReady (G_DBUS_PROXY (proxy));
+    g_free (name_owner);
+    return;
+  }
+  else
+  {
+    if (force_tried)
+    {
+      printf ("\nWARNING: Unable to connect to the unity-panel-service %s\n",
+              error ? error->message : "Unknown");
+      if (error)
+        g_error_free (error);
+    }
+    else
+    {
+      force_tried = true;
+      run_local_panel_service ();
+
+      g_timeout_add_seconds (2, reconnect_to_service, remote);
+    }
+  }
+
+  g_object_unref (proxy);
+}
+
+// Initialise DBus for the panel service, and let us know when it is
+// ready.  The unused bool return is to fit with the GSourceFunc.
+bool reconnect_to_service(gpointer data)
+{
+  g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION,
+                           G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                           NULL,
+                           S_NAME,
+                           S_PATH,
+                           S_IFACE,
+                           NULL,
+                           on_proxy_ready_cb,
+                           data);
+  return false;
+}
+
+}
+
+
+class SyncData
+{
+public:
+  SyncData (IndicatorObjectFactory *self)
+  : _self (self),
+    _cancel (g_cancellable_new ())
+  {
+  }
+
+  ~SyncData ()
+  {
+    g_object_unref (_cancel);
+    _cancel = NULL;
+    _self = NULL;
+  }
+
+  IndicatorObjectFactory *_self;
+  GCancellable *_cancel;
+};
+
+
 
 typedef struct
 {
@@ -70,33 +152,24 @@ static void on_sync_ready_cb (GObject      *source,
                               gpointer      data);
 
 static bool run_local_panel_service ();
-static bool reconnect_to_service (gpointer data);
+
+
+
 
 // Public Methods
-IndicatorObjectFactoryRemote::IndicatorObjectFactoryRemote ()
-: _proxy (NULL)
+DBusIndicators::DBusIndicators()
+: proxy_(NULL)
 {
-  Reconnect ();
+  Reconnect();
 }
 
-IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
+DBusIndicators::~DBusIndicators()
 {
-  if (G_IS_OBJECT (_proxy))
+  if (G_IS_OBJECT (proxy_))
   {
-    g_signal_handler_disconnect (_proxy, _proxy_signal_id);
-    g_signal_handler_disconnect (_proxy, _proxy_name_id);
-    g_object_unref (_proxy);
-  }
-  _proxy = NULL;
-
-  {
-    std::vector<IndicatorObjectProxy*>::iterator it;
-    for (it = _indicators.begin(); it != _indicators.end(); it++)
-    {
-      IndicatorObjectProxyRemote *remote = static_cast<IndicatorObjectProxyRemote *> (*it);
-      delete remote;
-    }
-    _indicators.erase (_indicators.begin (), _indicators.end ());
+    g_signal_handler_disconnect(proxy_, proxy_signal_id_);
+    g_signal_handler_disconnect(proxy_, proxy_name_id_);
+    g_object_unref(proxy_);
   }
 
   { // We cancel all our async callbacks from pending Sync() calls
@@ -111,26 +184,15 @@ IndicatorObjectFactoryRemote::~IndicatorObjectFactoryRemote ()
   }
 }
 
-std::vector<IndicatorObjectProxy *>&
-IndicatorObjectFactoryRemote::GetIndicatorObjects ()
+void DBusIndicators::Reconnect()
 {
-  return _indicators;
-}
-
-void
-IndicatorObjectFactoryRemote::ForceRefresh ()
-{
-}
-
-void
-IndicatorObjectFactoryRemote::Reconnect ()
-{
-  g_spawn_command_line_sync ("killall unity-panel-service", NULL, NULL, NULL, NULL);
+  g_spawn_command_line_sync("killall unity-panel-service",
+                            NULL, NULL, NULL, NULL);
 
   if (g_getenv ("PANEL_USE_LOCAL_SERVICE"))
   {
-    run_local_panel_service ();
-    g_timeout_add_seconds (1, (GSourceFunc)reconnect_to_service, this);
+    run_local_panel_service();
+    g_timeout_add_seconds(1, reconnect_to_service, this);
   }
   else
   {
@@ -139,29 +201,30 @@ IndicatorObjectFactoryRemote::Reconnect ()
   }
 }
 
-void
-IndicatorObjectFactoryRemote::OnRemoteProxyReady (GDBusProxy *proxy)
+void DBusIndicators::OnRemoteProxyReady(GDBusProxy *proxy)
 {
-  if (_proxy)
+  if (proxy_)
   {
     // We've been connected before; We don't need new proxy, just continue
     // rocking with the old one.
-    g_object_unref (proxy);
+    g_object_unref(proxy);
   }
   else
   {
-    _proxy = proxy;
+    proxy_ = proxy;
 
     // Connect to interesting signals
-    _proxy_signal_id = g_signal_connect (_proxy, "g-signal",
-                                         G_CALLBACK (on_proxy_signal_received), this);
-    _proxy_name_id = g_signal_connect (_proxy, "notify::g-name-owner",
-                                       G_CALLBACK (on_proxy_name_owner_changed), this);
+    proxy_signal_id_ = g_signal_connect(proxy_, "g-signal",
+                                        G_CALLBACK(on_proxy_signal_received),
+                                        this);
+    proxy_name_id_ = g_signal_connect(proxy_, "notify::g-name-owner",
+                                      G_CALLBACK(on_proxy_name_owner_changed),
+                                      this);
   }
 
-   SyncData * data = new SyncData (this);
+  SyncData * data = new SyncData (this);
   _sync_cancellables.push_back (data);
-  g_dbus_proxy_call (_proxy,
+  g_dbus_proxy_call (proxy_,
                      "Sync",
                      NULL,
                      G_DBUS_CALL_FLAGS_NONE,
@@ -215,7 +278,7 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
   ShowEntryData *data = g_slice_new0 (ShowEntryData);
-  data->proxy = _proxy;
+  data->proxy = proxy_;
   data->entry_id = g_strdup (entry_id);
   data->x = x;
   data->y = y;
@@ -251,7 +314,7 @@ void
 IndicatorObjectFactoryRemote::OnScrollReceived (const char *entry_id,
                                                        int delta)
 {
-  g_dbus_proxy_call (_proxy,
+  g_dbus_proxy_call (proxy_,
                      "ScrollEntry",
                      g_variant_new ("(si)",
                                     entry_id,
@@ -418,7 +481,7 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
   gchar *name = NULL;
   gchar *uname = NULL;
   
-  g_object_get (_proxy,
+  g_object_get (proxy_,
                 "g-name", &name,
                 "g-name-owner", &uname,
                 NULL);
@@ -435,69 +498,14 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
 GDBusProxy *
 IndicatorObjectFactoryRemote::GetRemoteProxy ()
 {
-  return _proxy;
+  return proxy_;
 }
   
 //
 // C callbacks, they just link to class methods and aren't interesting
 //
 
-static bool
-reconnect_to_service (gpointer data)
-{
-  g_dbus_proxy_new_for_bus (G_BUS_TYPE_SESSION,
-                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                            NULL,
-                            S_NAME,
-                            S_PATH,
-                            S_IFACE,
-                            NULL,
-                            on_proxy_ready_cb,
-                            data);
 
-  return false;
-}
-
-static void
-on_proxy_ready_cb (GObject      *source,
-                   GAsyncResult *res,
-                   gpointer      data)
-{
-  IndicatorObjectFactoryRemote *remote = static_cast<IndicatorObjectFactoryRemote *> (data);
-  GDBusProxy *proxy;
-  GError     *error = NULL;
-  static bool force_tried = false;
-  char       *name_owner;
-
-  proxy = g_dbus_proxy_new_for_bus_finish (res, &error);
-  name_owner = g_dbus_proxy_get_name_owner (proxy);
-
-  if (G_IS_DBUS_PROXY (proxy) && name_owner)
-  {
-    remote->OnRemoteProxyReady (G_DBUS_PROXY (proxy));
-    g_free (name_owner);
-    return;
-  }
-  else
-  {
-    if (force_tried)
-    {
-      printf ("\nWARNING: Unable to connect to the unity-panel-service %s\n",
-              error ? error->message : "Unknown");
-      if (error)
-        g_error_free (error);
-    }
-    else
-    {
-      force_tried = true;
-      run_local_panel_service ();
-
-      g_timeout_add_seconds (2, (GSourceFunc)reconnect_to_service, remote);
-    }
-  }
-
-  g_object_unref (proxy);
-}
 
 static bool
 run_local_panel_service ()
@@ -627,3 +635,6 @@ on_sync_ready_cb (GObject      *source,
   g_variant_unref (args);
   delete sync_data;
 }
+
+} // namespace indicator
+} // namespace unity

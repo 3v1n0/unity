@@ -17,48 +17,25 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef INDICATOR_OBJECT_FACTORY_REMOTE_H
-#define INDICATOR_OBJECT_FACTORY_REMOTE_H
+#ifndef UNITY_DBUSINDICATORS_H
+#define UNITY_DBUSINDICATORS_H
 
 #include <string>
 #include <gio/gio.h>
 #include <dee.h>
 
-#include "IndicatorObjectFactory.h"
-#include "IndicatorObjectProxyRemote.h"
+#include "Indicators.h"
 
-class SyncData
-{
-public:
-  SyncData (IndicatorObjectFactory *self)
-  : _self (self),
-    _cancel (g_cancellable_new ())
-  {
-  }
-
-  ~SyncData ()
-  {
-    g_object_unref (_cancel);
-    _cancel = NULL;
-    _self = NULL;
-  }
-
-  IndicatorObjectFactory *_self;
-  GCancellable *_cancel;
-};
-
+namespace unity {
+namespace indicator {
 
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
-class IndicatorObjectFactoryRemote : public IndicatorObjectFactory
+class DBusIndicators : public Indicators
 {
 public:
-
-  IndicatorObjectFactoryRemote  ();
-  ~IndicatorObjectFactoryRemote ();
-  
-  virtual std::vector<IndicatorObjectProxy *> &GetIndicatorObjects ();
-  virtual void ForceRefresh ();
+  DBusIndicators();
+  ~DBusIndicators();
 
   void OnRemoteProxyReady (GDBusProxy *proxy);
   void OnEntryActivated   (const char *entry_id);
@@ -83,4 +60,7 @@ private:
   guint32       _proxy_name_id;
 };
 
-#endif // INDICATOR_OBJECT_FACTORY_REMOTE_H
+}
+}
+
+#endif

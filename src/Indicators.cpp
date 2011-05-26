@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,26 +15,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Tim Penhey <tim.penhey@canonical.com>
  */
+#include "Indicators.h"
 
-#ifndef UNITY_INDICATORS_H
-#define UNITY_INDICATORS_H
-
-#include <string>
 #include <vector>
-#include <sigc++/signal.h>
-#include <sigc++/trackable.h>
-#include "Indicator.h"
 
 namespace unity {
 namespace indicator {
 
-class IndicatorsImpl;
-
-class Indicators : public sigc::trackable, boost::noncopyable
+class IndicatorsImpl
 {
 public:
-  Indicators();
+  typedef std::vector<Indicator::Ptr> Collection;
+
+  IndicatorsImpl(Indicators* owner)
+    : owner_(owner)
+    {}
+
+private:
+  Indicators* owner_;
+  Collection indicators_;
+};
+
+
+Indicators::Indicators()
+  : pimpl_(new IndicatorsImpl(this))
+{
+
+}
 
   // For adding factory-specific properties
   virtual void AddProperties(GVariantBuilder *builder) = 0;
@@ -51,7 +60,7 @@ private:
   boost::scoped_ptr<IndicatorsImpl> pimpl_;
 };
 
-}
-}
 
-#endif // INDICATOR_OBJECT_FACTORY_H
+
+} // namespace indicator
+} // namespace unity
