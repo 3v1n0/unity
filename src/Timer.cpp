@@ -37,10 +37,7 @@ void Timer::Reset()
 float Timer::ElapsedSeconds()
 {
   gint64 end = g_get_monotonic_time();
-  // Even though the documentation for the time function says it returns
-  // milliseconds, it appears to be returning nanoseconds, which matches
-  // the clock_gettime method that the doc says this function thinly wraps.
-  return (end - start_time_) / 1000000.0;
+  return (end - start_time_) / 1e6;
 }
 
 
