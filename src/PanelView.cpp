@@ -69,11 +69,11 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    AddChild (_tray);
 
    _remote = new indicators::DBusIndicators();
-  _on_object_added_connection = _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
-  _on_menu_pointer_moved_connection = _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
-  _on_entry_activate_request_connection = _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
-  _on_entry_activated_connection = _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
-  _on_synced_connection = _remote->IndicatorObjectFactory::OnSynced.connect (sigc::mem_fun (this, &PanelView::OnSynced));
+  _on_object_added_connection = _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+  _on_menu_pointer_moved_connection = _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
+  _on_entry_activate_request_connection = _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
+  _on_entry_activated_connection = _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
+  _on_synced_connection = _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
 }
 
 PanelView::~PanelView ()
@@ -260,15 +260,14 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   NeedRedraw ();
 }
 
-void
-PanelView::OnMenuPointerMoved (int x, int y)
+void PanelView::OnMenuPointerMoved(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry ();
   nux::Geometry hgeo = _home_button->GetAbsoluteGeometry ();
 
   if (x <= (hgeo.x + hgeo.width))
-    return; 
-  
+    return;
+
   if (x >= geo.x && x <= (geo.x + geo.width)
       && y >= geo.y && y <= (geo.y + geo.height))
   {
@@ -278,7 +277,7 @@ PanelView::OnMenuPointerMoved (int x, int y)
     for (it = my_children.begin(); it != my_children.end(); it++)
     {
       PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-      
+
       if (view->_layout == NULL
           || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
         continue;
@@ -308,8 +307,7 @@ PanelView::OnMenuPointerMoved (int x, int y)
   }
 }
 
-void
-PanelView::OnEntryActivateRequest (const char *entry_id)
+void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
   std::list<Area *>::iterator it;
 
@@ -331,9 +329,9 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
     {
       PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
 
-      if (g_strcmp0 (entry->GetName (), entry_id) == 0)
+      if (entry_id == entry->GetName())
       {
-        g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
+        g_debug ("%s: Activating: %s", G_STRFUNC, entry_id.c_str());
         entry->Activate ();
         break;
       }
@@ -341,15 +339,13 @@ PanelView::OnEntryActivateRequest (const char *entry_id)
   }
 }
 
-void
-PanelView::OnEntryActivated (const char *entry_id)
+void PanelView::OnEntryActivated(std::string const& entry_id)
 {
-  if (g_strcmp0 (entry_id, "") == 0)
+  if (entry_id == "")
     _menu_view->AllMenusClosed ();
 }
 
-void
-PanelView::OnSynced ()
+void PanelView::OnSynced()
 {
   _needs_geo_sync = true;
 }
@@ -357,8 +353,7 @@ PanelView::OnSynced ()
 //
 // Useful Public Methods
 //
-PanelHomeButton * 
-PanelView::GetHomeButton ()
+PanelHomeButton* PanelView::GetHomeButton()
 {
   return _home_button;
 }

@@ -28,14 +28,20 @@ class IndicatorsImpl
 {
 public:
   typedef std::vector<Indicator::Ptr> Collection;
+  typedef std::map<std::string, Entry::Ptr> EntryMap;
 
   IndicatorsImpl(Indicators* owner)
     : owner_(owner)
     {}
 
+  void ActivateEntry(std::string const& entry_id);
+  void SetEntryShowNow(std::string const& entry_id, bool show_now);
+
 private:
   Indicators* owner_;
   Collection indicators_;
+  EntryMap entries_;
+  Entry::Ptr active_entry_;
 };
 
 
@@ -44,6 +50,39 @@ Indicators::Indicators()
 {
 
 }
+
+void Indicators::ActivateEntry(std::string const& entry_id)
+{
+  pimpl_->ActivateEntry(entry_id);
+  on_entry_activated.emit(entry_id);
+}
+
+void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
+{
+  pimpl->SetEntryShowNow(std::string const& entry_id, bool show_now);
+}
+
+
+  std::vector<IndicatorObjectProxy*>::iterator it;
+  
+  for (it = _indicators.begin(); it != _indicators.end(); ++it)
+  {
+    IndicatorObjectProxyRemote *object = static_cast<IndicatorObjectProxyRemote *> (*it);
+    std::vector<IndicatorObjectEntryProxy*>::iterator it2;
+  
+    for (it2 = object->GetEntries ().begin(); it2 != object->GetEntries ().end(); ++it2)
+    {
+      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it2);
+
+      if (g_strcmp0 (entry_id, entry->GetId ()) == 0)
+      {
+        entry->OnShowNowChanged (show_now_state);
+        return;
+      }
+    }
+  }
+}
+
 
   // For adding factory-specific properties
   virtual void AddProperties(GVariantBuilder *builder) = 0;
@@ -61,6 +100,26 @@ private:
 };
 
 
+void IndicatorsImpl::ActivateEntry(std::string const& entry_id)
+{
+  if (active_entry_)
+    active_entry_->SetActive(false);
+  EntryMap::iterator i = entries_.find(entry_id);
+  if (i != entries_.end())
+  {
+    active_entry_ = i->second;
+    active_entry_->set_active(true);
+  }
+}
+
+void IndicatorsImpl::SetEntryShowNow(std::string const& entry_id, bool show_now)
+{
+  EntryMap::iterator i = entries_.find(entry_id);
+  if (i != entries_.end())
+  {
+    i->second->set_show_now(show_now);
+  }
+}
 
 } // namespace indicator
 } // namespace unity

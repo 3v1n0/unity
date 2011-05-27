@@ -36,8 +36,12 @@ class Indicators : public sigc::trackable, boost::noncopyable
 public:
   Indicators();
 
+  void ActivateEntry(std::string const& entry_id);
+  void SetEntryShowNow(std::string const& entry_id, bool show_now);
+
   // For adding factory-specific properties
   virtual void AddProperties(GVariantBuilder *builder) = 0;
+  virtual void OnScrollReceived(std::string const& entry_id, int delta) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;

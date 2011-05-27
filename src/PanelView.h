@@ -51,8 +51,8 @@ public:
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnMenuPointerMoved (int x, int y);
-  void OnEntryActivateRequest (const char *entry_id);
-  void OnEntryActivated (const char *entry_id);
+  void OnEntryActivateRequest(std::string const& entry_id);
+  void OnEntryActivated(std::string const& entry_id);
   void OnSynced ();
 
   void SetPrimary (bool primary);

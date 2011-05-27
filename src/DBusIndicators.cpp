@@ -28,7 +28,8 @@
 #include <algorithm>
 #include <iostream>
 
-#include "TimeMe.h"
+using std::cout;
+using std::endl;
 
 namespace unity {
 namespace indicator {
@@ -40,60 +41,15 @@ const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 namespace {
 // This anonymous namespace holds the DBus callback methods.
 
+bool run_local_panel_service();
+bool reconnect_to_service(gpointer data);
+void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
+void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
+                                 DBusIndicators* remote);
+void on_proxy_signal_received(GDBusProxy* proxy,
+                              char* sender_name, char* signal_name,
+                              GVariant* parameters, DBusIndicators* remote);
 
-void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
-{
-  DBusIndicators* remote = reinterpret_cast<DBusIndicators*>(data);
-  GError* error = NULL;
-  GDBusProxy* proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
-
-  static bool force_tried = false;
-  char       *name_owner;
-
-  name_owner = g_dbus_proxy_get_name_owner (proxy);
-
-  if (G_IS_DBUS_PROXY (proxy) && name_owner)
-  {
-    remote->OnRemoteProxyReady (G_DBUS_PROXY (proxy));
-    g_free (name_owner);
-    return;
-  }
-  else
-  {
-    if (force_tried)
-    {
-      printf ("\nWARNING: Unable to connect to the unity-panel-service %s\n",
-              error ? error->message : "Unknown");
-      if (error)
-        g_error_free (error);
-    }
-    else
-    {
-      force_tried = true;
-      run_local_panel_service ();
-
-      g_timeout_add_seconds (2, reconnect_to_service, remote);
-    }
-  }
-
-  g_object_unref (proxy);
-}
-
-// Initialise DBus for the panel service, and let us know when it is
-// ready.  The unused bool return is to fit with the GSourceFunc.
-bool reconnect_to_service(gpointer data)
-{
-  g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION,
-                           G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-                           NULL,
-                           S_NAME,
-                           S_PATH,
-                           S_IFACE,
-                           NULL,
-                           on_proxy_ready_cb,
-                           data);
-  return false;
-}
 
 }
 
@@ -137,21 +93,12 @@ static void on_proxy_ready_cb (GObject      *source,
                                GAsyncResult *res,
                                gpointer      data);
 
-static void on_proxy_signal_received (GDBusProxy *proxy,
-                                      gchar      *sender_name,
-                                      gchar      *signal_name,
-                                      GVariant   *parameters,
-                                      IndicatorObjectFactoryRemote *remote);
 
-static void on_proxy_name_owner_changed (GDBusProxy *proxy,
-                                         GParamSpec *pspec,
-                                         IndicatorObjectFactoryRemote *remote);
 
 static void on_sync_ready_cb (GObject      *source,
                               GAsyncResult *res,
                               gpointer      data);
 
-static bool run_local_panel_service ();
 
 
 
@@ -197,7 +144,7 @@ void DBusIndicators::Reconnect()
   else
   {
     // We want to grab the Panel Service object. This is async, which is fine
-    reconnect_to_service (this);
+    reconnect_to_service(this);
   }
 }
 
@@ -310,48 +257,12 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
   // --------------------------------------------------------------------------
 }
 
-void
-IndicatorObjectFactoryRemote::OnScrollReceived (const char *entry_id,
-                                                       int delta)
+void DBusIndicators::OnScrollReceived(std::string const& entry_id, int delta)
 {
-  g_dbus_proxy_call (proxy_,
-                     "ScrollEntry",
-                     g_variant_new ("(si)",
-                                    entry_id,
-                                    delta),
-                     G_DBUS_CALL_FLAGS_NONE,
-                     -1,
-                     NULL,
-                     NULL,
-                     NULL);
-}
-
-// We need to unset the last active entry and set the new one as active
-void
-IndicatorObjectFactoryRemote::OnEntryActivated (const char *entry_id)
-{
-  std::vector<IndicatorObjectProxy*>::iterator it;
-  
-  for (it = _indicators.begin(); it != _indicators.end(); ++it)
-  {
-    IndicatorObjectProxyRemote *object = static_cast<IndicatorObjectProxyRemote *> (*it);
-    std::vector<IndicatorObjectEntryProxy*>::iterator it2;
-  
-    for (it2 = object->GetEntries ().begin(); it2 != object->GetEntries ().end(); ++it2)
-    {
-      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it2);
-
-      entry->SetActive (g_strcmp0 (entry_id, entry->GetId ()) == 0);
-    }
-  }
-
-  IndicatorObjectFactory::OnEntryActivated.emit (entry_id);
-}
-
-void
-IndicatorObjectFactoryRemote::OnEntryActivateRequestReceived (const gchar *entry_id)
-{
-  OnEntryActivateRequest.emit (entry_id);
+  g_dbus_proxy_call(proxy_, "ScrollEntry",
+                    g_variant_new("(si)", entry_id.c_str(), delta),
+                    G_DBUS_CALL_FLAGS_NONE,
+                    -1, NULL, NULL, NULL);
 }
 
 void
@@ -500,63 +411,122 @@ IndicatorObjectFactoryRemote::GetRemoteProxy ()
 {
   return proxy_;
 }
-  
-//
-// C callbacks, they just link to class methods and aren't interesting
-//
 
+namespace {
 
-
-static bool
-run_local_panel_service ()
+// Initialise DBus for the panel service, and let us know when it is
+// ready.  The unused bool return is to fit with the GSourceFunc.
+bool reconnect_to_service(gpointer data)
 {
-  GError *error = NULL;
+  g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION,
+                           G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+                           NULL,
+                           S_NAME,
+                           S_PATH,
+                           S_IFACE,
+                           NULL,
+                           on_proxy_ready_cb,
+                           data);
+  return false;
+}
+
+// Make sure the proxy object exists and has a name, and if so, pass
+// that on to the DBusIndicators.
+void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
+{
+  DBusIndicators* remote = reinterpret_cast<DBusIndicators*>(data);
+  GError* error = NULL;
+  GDBusProxy* proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
+
+  static bool force_tried = false;
+  char* name_owner = g_dbus_proxy_get_name_owner(proxy);
+
+  if (G_IS_DBUS_PROXY(proxy) && name_owner)
+  {
+    remote->OnRemoteProxyReady(G_DBUS_PROXY(proxy));
+    g_free(name_owner);
+    return;
+  }
+  else
+  {
+    if (force_tried)
+    {
+      printf ("\nWARNING: Unable to connect to the unity-panel-service %s\n",
+              error ? error->message : "Unknown");
+      if (error)
+        g_error_free (error);
+    }
+    else
+    {
+      force_tried = true;
+      run_local_panel_service();
+      g_timeout_add_seconds (2, reconnect_to_service, remote);
+    }
+  }
+
+  g_object_unref (proxy);
+}
+
+
+bool run_local_panel_service()
+{
+  GError* error = NULL;
 
   // This is obviously hackish, but this part of the code is mostly hackish...
   // Let's attempt to run it from where we expect it to be
-  char *cmd = g_strdup_printf ("%s/lib/unity/unity-panel-service", PREFIXDIR);
-  printf ("\nWARNING: Couldn't load panel from installed services, so trying to"
-          "load panel from known location: %s\n", cmd);
+  std::string cmd = PREFIXDIR + std::string("/lib/unity/unity-panel-service");
+  std::cerr << "\nWARNING: Couldn't load panel from installed services, "
+            << "so trying to load panel from known location: "
+            << cmd << "\n";
 
-  g_spawn_command_line_async (cmd, &error);
-  g_free (cmd);
-  
+  g_spawn_command_line_async(cmd.c_str(), &error);
   if (error)
   {
-    printf ("\nWARNING: Unable to launch remote service manually: %s\n", error->message);
-    g_error_free (error);
+    std::cerr << "\nWARNING: Unable to launch remote service manually: "
+              << error->message << "\n";
+    g_error_free(error);
     return false;
   }
   return true;
 }
 
-static void
-on_proxy_signal_received (GDBusProxy *proxy,
-                          gchar      *sender_name,
-                          gchar      *signal_name,
-                          GVariant   *parameters,
-                          IndicatorObjectFactoryRemote *remote)
+void on_proxy_signal_received(GDBusProxy* proxy,
+                              char* sender_name, char* signal_name_,
+                              GVariant* parameters, DBusIndicators* remote)
 {
-  unity::logger::Timer t("on_proxy_signal_received", std::cerr);
-
-  if (g_strcmp0 (signal_name, "EntryActivated") == 0)
+  std::string signal_name(signal_name_);
+  if (signal_name == "EntryActivated")
   {
-    remote->OnEntryActivated (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
+    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    if (entry_name) {
+      remote->ActivateEntry(entry_name);
+      cout << "DBusSignal: EntryActivated: \"" << entry_name << "\"" << endl;
+    }
+    else {
+      cout << "DBusSignal: EntryActivated: passed NULL" << endl;
+    }
   }
-  else if (g_strcmp0 (signal_name, "EntryActivateRequest") == 0)
+  else if (signal_name == "EntryActivateRequest")
   {
-    remote->OnEntryActivateRequestReceived (g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL));
+    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    if (entry_name) {
+      remote->on_entry_activate_request.emit(entry_name);
+      cout << "DBusSignal: EntryActivateRequest: \"" << entry_name << "\"" << endl;
+    }
+    else {
+      cout << "DBusSignal: EntryActivateRequest: passed NULL" << endl;
+    }
   }
-  else if (g_strcmp0 (signal_name, "ReSync") == 0)
+  else if (signal_name == "ReSync")
   {
     const gchar  *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
     bool          sync_one = !g_strcmp0 (id, "") == 0;
 
     SyncData *data = new SyncData (remote);
     remote->_sync_cancellables.push_back (data);
-    
+
     g_dbus_proxy_call (proxy,
-                       sync_one ? "SyncOne" : "Sync", 
+                       sync_one ? "SyncOne" : "Sync",
                        sync_one ? g_variant_new ("(s)", id) : NULL,
                        G_DBUS_CALL_FLAGS_NONE,
                        -1,
@@ -564,41 +534,36 @@ on_proxy_signal_received (GDBusProxy *proxy,
                        on_sync_ready_cb,
                        data);
   }
-  else if (g_strcmp0 (signal_name, "ActiveMenuPointerMotion") == 0)
+  else if (signal_name == "ActiveMenuPointerMotion")
   {
-    int x=0, y=0;
-
+    int x = 0;
+    int y = 0;
     g_variant_get (parameters, "(ii)", &x, &y);
-
-    remote->OnMenuPointerMoved.emit (x, y);
+    remote->on_menu_pointer_moved.emit(x, y);
   }
-  else if (g_strcmp0 (signal_name, "EntryShowNowChanged") == 0)
+  else if (signal_name == "EntryShowNowChanged")
   {
     gchar    *id = NULL;
-    gboolean  show_now_state;
+    gboolean  show_now;
 
-    g_variant_get (parameters, "(sb)", &id, &show_now_state);
-
-    remote->OnEntryShowNowChanged (id, show_now_state ? true : false);
+    g_variant_get (parameters, "(sb)", &id, &show_now);
+    remote->SetEntryShowNow(id, show_now);
 
     g_free (id);
   }
 }
 
-static void
-on_proxy_name_owner_changed (GDBusProxy *proxy,
-                             GParamSpec *pspec,
-                             IndicatorObjectFactoryRemote *remote)
+void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
+                                 DBusIndicators* remote)
 {
-  char *name_owner;
-
-  name_owner = g_dbus_proxy_get_name_owner (proxy);
+  char* name_owner = g_dbus_proxy_get_name_owner(proxy);
 
   if (name_owner == NULL)
   {
-    // The panel service has stopped for some reason.  Restart it if not in dev mode
-    if (! g_getenv ("UNITY_DEV_MODE"))
-      remote->Reconnect ();
+    // The panel service has stopped for some reason.  Restart it if not in
+    // dev mode
+    if (!g_getenv("UNITY_DEV_MODE"))
+      remote->Reconnect();
   }
 
   g_free (name_owner);

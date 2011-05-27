@@ -37,14 +37,15 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  void OnRemoteProxyReady (GDBusProxy *proxy);
-  void OnEntryActivated   (const char *entry_id);
+  void OnRemoteProxyReady(GDBusProxy *proxy);
+  vod OnEntryActivated(std::string const& entry_id);
+
+
   void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
   void OnScrollReceived (const char *id, int delta);
   void Sync (GVariant *args);
   void OnEntryActivateRequestReceived (const char *entry_id);
   void Reconnect ();
-  void OnEntryShowNowChanged (const char *entry_id, bool show_now_state);
 
   void AddProperties (GVariantBuilder *builder);
 
