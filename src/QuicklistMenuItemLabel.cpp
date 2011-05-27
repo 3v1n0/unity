@@ -216,7 +216,7 @@ QuicklistMenuItemLabel::UpdateTexture ()
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
-  _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
   delete bitmap;
 
@@ -247,7 +247,7 @@ QuicklistMenuItemLabel::UpdateTexture ()
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference ();
 
-  _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _prelightTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
   delete bitmap;
 

@@ -314,17 +314,17 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
     {
-      _shader_program_uv_persp_correction = nux::GetThreadGLDeviceFactory()->CreateShaderProgram();
+      _shader_program_uv_persp_correction = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateShaderProgram();
       _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
       _shader_program_uv_persp_correction->Link();
     }
     else
     {
-      _AsmShaderProg = nux::GetThreadGLDeviceFactory()->CreateAsmShaderProgram();
+      _AsmShaderProg = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateAsmShaderProgram();
       _AsmShaderProg->LoadVertexShader (TCHAR_TO_ANSI (*PerspectiveCorrectVtx) );
 
-      if ((nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
-        (nux::GetThreadGLDeviceFactory()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE () || nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE ()))
+      if ((nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
+        (nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE () || nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE ()))
       {
         // No support for non power of two textures but support for rectangle textures
         _AsmShaderProg->LoadPixelShader (TCHAR_TO_ANSI (*PerspectiveCorrectTexRectFrg) );
@@ -424,8 +424,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     }
     
     _drag_window = NULL;
-    _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_drag_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_progress_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 
     for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
       _ubus_handles[i] = 0;
@@ -653,7 +653,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   pango_cairo_show_layout (cr, layout);
 
   nux::NBitmapData* bitmap = cg->GetBitmap ();
-  texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture->Update (bitmap);
   delete bitmap;
   delete cg;
@@ -2714,7 +2714,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
   {
     if (_offscreen_progress_texture->GetWidth () != _icon_size || _offscreen_progress_texture->GetHeight () != _icon_size)
-      _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+      _offscreen_progress_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
     RenderProgressToTexture (GfxContext, _offscreen_progress_texture, arg.progress, arg.progress_bias);
     
     RenderIcon(GfxContext,
@@ -2972,7 +2972,7 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window = NULL;
   }
   
-  _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+  _offscreen_drag_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
   _drag_window->SinkReference ();
   
@@ -3881,14 +3881,14 @@ Launcher::SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> te
   int width = texture->GetWidth ();
   int height = texture->GetHeight ();
   
-  nux::GetThreadGLDeviceFactory ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
-  nux::GetThreadGLDeviceFactory ()->ActivateFrameBuffer ();
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->ActivateFrameBuffer ();
 
-  nux::GetThreadGraphicsContext ()->SetContext   (0, 0, width, height);
-  nux::GetThreadGraphicsContext ()->SetViewport  (0, 0, width, height);
-  nux::GetThreadGraphicsContext ()->Push2DWindow (width, height);
-  nux::GetThreadGraphicsContext ()->EmptyClippingRegion();
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetContext   (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetViewport  (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->Push2DWindow (width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->EmptyClippingRegion();
 }
 
 void 
