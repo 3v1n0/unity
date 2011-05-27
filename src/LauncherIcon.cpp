@@ -495,7 +495,7 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   
   if (!self->_quicklist->IsVisible ())
   {
-    self->_tooltip->ShowWindow (true);
+    self->_tooltip->ShowWindow (!self->m_TooltipText.IsEmpty ());
     _skip_tooltip_delay = true;
   }
   
