@@ -3130,6 +3130,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (false);
+  LauncherIcon::SetSkipTooltipDelay (false);
 
   EventLogic ();
   EnsureAnimation ();
