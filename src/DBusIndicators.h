@@ -29,6 +29,9 @@
 namespace unity {
 namespace indicator {
 
+struct SyncData;
+typedef boost::shared_ptr<SyncData> SyncDataPtr;
+
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
 class DBusIndicators : public Indicators
@@ -38,27 +41,24 @@ public:
   ~DBusIndicators();
 
   void OnRemoteProxyReady(GDBusProxy *proxy);
-  vod OnEntryActivated(std::string const& entry_id);
+  void Reconnect();
+  void RequestSyncAll();
+  void RequestSyncIndicator(std::string const& name);
+  void Sync(GVariant *args, SyncData* data);
 
+  virtual void AddProperties(GVariantBuilder *builder);
+  virtual void OnEntryScroll(std::string const& entry_id, int delta);
+  virtual void OnEntryShowMenu(std::string const& entry_id,
+                               int x, int y, int timestamp, int button);
 
-  void OnShowMenuRequestReceived (const char *id, int x, int y, guint timestamp, guint32 button);
-  void OnScrollReceived (const char *id, int delta);
-  void Sync (GVariant *args);
-  void OnEntryActivateRequestReceived (const char *entry_id);
-  void Reconnect ();
-
-  void AddProperties (GVariantBuilder *builder);
-
-  GDBusProxy * GetRemoteProxy ();
-
-  std::vector<SyncData*> _sync_cancellables;
+  GDBusProxy* GetRemoteProxy();
 
 private:
-  IndicatorObjectProxyRemote* IndicatorForID (const char *id);
-private:
-  GDBusProxy   *_proxy;
-  guint32       _proxy_signal_id;
-  guint32       _proxy_name_id;
+  GDBusProxy* proxy_;
+  guint32 proxy_signal_id_;
+  guint32 proxy_name_id_;
+  typedef std::vector<SyncDataPtr> PendingSyncs;
+  PendingSyncs pending_syncs_;
 };
 
 }

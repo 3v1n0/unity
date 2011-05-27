@@ -41,6 +41,44 @@ const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 namespace {
 // This anonymous namespace holds the DBus callback methods.
 
+struct SyncData
+{
+  SyncData(DBusIndicators* self_)
+  : self(self_)
+  , cancel(g_cancellable_new())
+  {
+  }
+
+  ~SyncData()
+  {
+    if (cancel) {
+      g_cancellable_cancel(cancel);
+      g_object_unref(cancel);
+    }
+  }
+
+  void SyncComplete()
+  {
+    if (cancel) {
+     g_object_unref(cancel);
+    }
+    cancel = NULL;
+  }
+
+  DBusIndicators* self;
+  GCancellable* cancel;
+};
+
+struct ShowEntryData
+{
+  GDBusProxy* proxy;
+  std::string entry_id;
+  int x;
+  int y;
+  guint timestamp;
+  guint32 button;
+};
+
 bool run_local_panel_service();
 bool reconnect_to_service(gpointer data);
 void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
@@ -49,58 +87,12 @@ void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
 void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name,
                               GVariant* parameters, DBusIndicators* remote);
+void request_sync(GDBusProxy* proxy, char* method, GVariant* name, SyncData* data)
+void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 
+bool send_show_entry(ShowEntryData *data);
 
 }
-
-
-class SyncData
-{
-public:
-  SyncData (IndicatorObjectFactory *self)
-  : _self (self),
-    _cancel (g_cancellable_new ())
-  {
-  }
-
-  ~SyncData ()
-  {
-    g_object_unref (_cancel);
-    _cancel = NULL;
-    _self = NULL;
-  }
-
-  IndicatorObjectFactory *_self;
-  GCancellable *_cancel;
-};
-
-
-
-typedef struct
-{
-  GDBusProxy *proxy;
-  gchar *entry_id;
-  int x;
-  int y;
-  guint timestamp;
-  guint32 button;
-
-} ShowEntryData;
-
-
-// Forwards
-static void on_proxy_ready_cb (GObject      *source,
-                               GAsyncResult *res,
-                               gpointer      data);
-
-
-
-static void on_sync_ready_cb (GObject      *source,
-                              GAsyncResult *res,
-                              gpointer      data);
-
-
-
 
 
 // Public Methods
@@ -117,17 +109,6 @@ DBusIndicators::~DBusIndicators()
     g_signal_handler_disconnect(proxy_, proxy_signal_id_);
     g_signal_handler_disconnect(proxy_, proxy_name_id_);
     g_object_unref(proxy_);
-  }
-
-  { // We cancel all our async callbacks from pending Sync() calls
-    std::vector<SyncData *>::iterator it, eit = _sync_cancellables.end ();
-    for (it = _sync_cancellables.begin (); it != eit; ++it)
-    {
-      SyncData *data = (*it);
-      g_cancellable_cancel (data->_cancel);
-      delete data;
-    }
-    _sync_cancellables.erase (_sync_cancellables.begin (), _sync_cancellables.end ());
   }
 }
 
@@ -159,7 +140,6 @@ void DBusIndicators::OnRemoteProxyReady(GDBusProxy *proxy)
   else
   {
     proxy_ = proxy;
-
     // Connect to interesting signals
     proxy_signal_id_ = g_signal_connect(proxy_, "g-signal",
                                         G_CALLBACK(on_proxy_signal_received),
@@ -168,71 +148,45 @@ void DBusIndicators::OnRemoteProxyReady(GDBusProxy *proxy)
                                       G_CALLBACK(on_proxy_name_owner_changed),
                                       this);
   }
-
-  SyncData * data = new SyncData (this);
-  _sync_cancellables.push_back (data);
-  g_dbus_proxy_call (proxy_,
-                     "Sync",
-                     NULL,
-                     G_DBUS_CALL_FLAGS_NONE,
-                     -1,
-                     data->_cancel,
-                     on_sync_ready_cb,
-                     data);
+  RequestSyncAll();
 }
 
-static gboolean
-send_show_entry (ShowEntryData *data)
+void DBusIndicators::RequestSyncAll()
 {
-  g_return_val_if_fail (data != NULL, FALSE);
-  g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
-  
-  /* Re-flush 'cos X is crap like that */
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
-  XFlush (d);
-  
-  g_dbus_proxy_call (data->proxy,
-                     "ShowEntry",
-                     g_variant_new ("(suiii)",
-                                    data->entry_id,
-                                    0,
-                                    data->x,
-                                    data->y,
-                                    data->button),
-                     G_DBUS_CALL_FLAGS_NONE,
-                     -1,
-                     NULL,
-                     NULL,
-                     NULL);
-
-  g_free (data->entry_id);
-  g_slice_free (ShowEntryData, data);
-  return FALSE;
+  SyncDataPtr data(new SyncData(this));
+  pending_syncs_.push_back(data);
+  request_sync(proxy_, "Sync", NULL, data.get());
 }
 
-void
-IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
-                                                         int         x,
-                                                         int         y,
-                                                         guint       timestamp,
-                                                         guint32     button)
+void DBusIndicators::RequestSyncIndicator(std::string const& name)
+{
+  SyncDataPtr data(new SyncData(this));
+  pending_syncs_.push_back(data);
+  // The ownership of this variant is taken by the g_dbus_proxy_call.
+  GVariant* name = g_variant_new("(s)", name.c_str());
+  request_sync(proxy_, "SyncOne", name, data.get());
+}
+
+
+void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
+                                     int x, int y, int timestamp, int button)
 {
   Display* d = nux::GetThreadGLWindow()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
-  XFlush (d);
+  XFlush(d);
 
-  // We have to do this because on certain systems X won't have time to 
+  // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
-  ShowEntryData *data = g_slice_new0 (ShowEntryData);
+  ShowEntryData* data = new ShowEntryData();
   data->proxy = proxy_;
-  data->entry_id = g_strdup (entry_id);
+  data->entry_id = entry_id;
   data->x = x;
   data->y = y;
   data->timestamp = timestamp;
   data->button = button;
 
-  g_timeout_add (0, (GSourceFunc)send_show_entry, data);
+  g_timeout_add(0, (GSourceFunc)send_show_entry, data);
 
   // --------------------------------------------------------------------------
   // FIXME: This is a workaround until the non-paired events issue is fixed in
@@ -265,66 +219,8 @@ void DBusIndicators::OnScrollReceived(std::string const& entry_id, int delta)
                     -1, NULL, NULL, NULL);
 }
 
-void
-IndicatorObjectFactoryRemote::OnEntryShowNowChanged (const char *entry_id, bool show_now_state)
+void DBusIndicators::Sync(GVariant *args, SyncData* data)
 {
-  std::vector<IndicatorObjectProxy*>::iterator it;
-  
-  for (it = _indicators.begin(); it != _indicators.end(); ++it)
-  {
-    IndicatorObjectProxyRemote *object = static_cast<IndicatorObjectProxyRemote *> (*it);
-    std::vector<IndicatorObjectEntryProxy*>::iterator it2;
-  
-    for (it2 = object->GetEntries ().begin(); it2 != object->GetEntries ().end(); ++it2)
-    {
-      IndicatorObjectEntryProxyRemote *entry = static_cast<IndicatorObjectEntryProxyRemote *> (*it2);
-
-      if (g_strcmp0 (entry_id, entry->GetId ()) == 0)
-      {
-        entry->OnShowNowChanged (show_now_state);
-        return;
-      }
-    }
-  }
-}
-
-IndicatorObjectProxyRemote *
-IndicatorObjectFactoryRemote::IndicatorForID (const char *id)
-{
-  IndicatorObjectProxyRemote *remote = NULL;
-  std::vector<IndicatorObjectProxy*>::iterator it;
-  
-  for (it = _indicators.begin(); it != _indicators.end(); it++)
-  {
-    IndicatorObjectProxyRemote *r = static_cast<IndicatorObjectProxyRemote *> (*it);
-
-    if (g_strcmp0 (id, r->GetName ().c_str ()) == 0)
-      {
-        remote = r;
-        break;
-      }
-  }
-
-  if (remote == NULL)
-    {
-      // Create one
-      remote = new IndicatorObjectProxyRemote (id);
-      remote->OnShowMenuRequest.connect (sigc::mem_fun (this,
-                                                        &IndicatorObjectFactoryRemote::OnShowMenuRequestReceived));
-      remote->OnScroll.connect (sigc::mem_fun (this,
-                                                &IndicatorObjectFactoryRemote::OnScrollReceived));
-
-      _indicators.push_back (remote);
-
-      OnObjectAdded.emit (remote);
-    }
-
-  return remote;
-}
-
-void
-IndicatorObjectFactoryRemote::Sync (GVariant *args)
-{    
   GVariantIter *iter            = NULL;
   gchar        *indicator_id    = NULL;
   gchar        *entry_id        = NULL;
@@ -335,12 +231,14 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
   gchar        *image_data      = NULL;
   gboolean      image_sensitive = false;
   gboolean      image_visible   = false;
-  IndicatorObjectProxyRemote *current_proxy = NULL;
-  gchar                      *current_proxy_id = NULL;
 
   // sanity check
   if (!args)
     return;
+
+  std::map<std::string, Indicator::Entries> indicators;
+  // We need to make sure they are added in the order they arrive.
+  std::vector<std::string> indicator_order;
 
   g_variant_get (args, "(a(sssbbusbb))", &iter);
   while (g_variant_iter_loop (iter, "(sssbbusbb)",
@@ -353,41 +251,57 @@ IndicatorObjectFactoryRemote::Sync (GVariant *args)
                               &image_data,
                               &image_sensitive,
                               &image_visible))
+  {
+    // NULL entries (entry_id == "") are just padding
+    std::string entry(entry_id);
+    if (entry != "")
     {
-      if (g_strcmp0 (current_proxy_id, indicator_id) != 0)
-        {
-          if (current_proxy)
-            current_proxy->EndSync ();
-          g_free (current_proxy_id);
-
-          current_proxy_id = g_strdup (indicator_id);
-          current_proxy = IndicatorForID (indicator_id);
-          current_proxy->BeginSync ();
-        }
-
-      /* NULL entries (id == "") are just padding */
-      if (g_strcmp0 (entry_id, "") != 0)
-        current_proxy->AddEntry (entry_id,
-                                 label,
-                                 label_sensitive,
-                                 label_visible,
-                                 image_type,
-                                 image_data,
-                                 image_sensitive,
-                                 image_visible);
+      indicator_order.push_back(indicator_id);
+      Indicator::Entries& entries = indicators[indicator_id];
+      Entry::Ptr e(new Entry(entry,
+                             label,
+                             label_sensitive,
+                             label_visible,
+                             image_type,
+                             image_data,
+                             image_sensitive,
+                             image_visible));
+      entries.push_back(e);
     }
-  if (current_proxy)
-    current_proxy->EndSync ();
-  
-  g_free (current_proxy_id);
-  g_variant_iter_free (iter);
+  }
+  g_variant_iter_free(iter);
 
-  /* Notify listeners we have new data */
-  OnSynced.emit ();
+  // Now update each of the entries.
+  std::string curr_indicator;
+  for (std::vector<std::string>::iterator i = indicator_order.begin, end = indicator_order.end();
+       i != end; ++i)
+  {
+    std::string const& indicator_name = *i;
+    if (curr_indicator != indicator_name) {
+      curr_indicator = indicator_name;
+      GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
+    }
+  }
+
+  // Clean up the SyncData.  NOTE: don't use find when passing in a raw
+  // pointer due to explicit construction of the shared pointer.  Could write
+  // a predicate, but often a for loop is easier to understand.
+  data->SyncComplete();
+  for (PendingSyncs::iterator i = pending_syncs_.begin(), end = pending_syncs_.end();
+       i != end; ++i)
+  {
+    if (i->get() == data)
+    {
+      pending_syncs_.erase(i);
+      break;
+    }
+  }
+
+  // Notify listeners we have new data
+  on_synced.emit();
 }
 
-void
-IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
+void DBusIndicators::AddProperties(GVariantBuilder *builder)
 {
   gchar *name = NULL;
   gchar *uname = NULL;
@@ -406,8 +320,7 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
   g_free (uname);
 }
 
-GDBusProxy *
-IndicatorObjectFactoryRemote::GetRemoteProxy ()
+GDBusProxy* DBusIndicators::GetRemoteProxy()
 {
   return proxy_;
 }
@@ -519,20 +432,13 @@ void on_proxy_signal_received(GDBusProxy* proxy,
   }
   else if (signal_name == "ReSync")
   {
-    const gchar  *id = g_variant_get_string (g_variant_get_child_value (parameters, 0), NULL);
-    bool          sync_one = !g_strcmp0 (id, "") == 0;
+    const char* id = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    bool sync_one = !g_strcmp0 (id, "") == 0;
 
-    SyncData *data = new SyncData (remote);
-    remote->_sync_cancellables.push_back (data);
-
-    g_dbus_proxy_call (proxy,
-                       sync_one ? "SyncOne" : "Sync",
-                       sync_one ? g_variant_new ("(s)", id) : NULL,
-                       G_DBUS_CALL_FLAGS_NONE,
-                       -1,
-                       data->_cancel,
-                       on_sync_ready_cb,
-                       data);
+    if (sync_one)
+      remote->RequestSyncIndicator(id);
+    else
+      remote->RequestSyncAll();
   }
   else if (signal_name == "ActiveMenuPointerMotion")
   {
@@ -569,37 +475,58 @@ void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
   g_free (name_owner);
 }
 
-static void
-on_sync_ready_cb (GObject      *source,
-                  GAsyncResult *res,
-                  gpointer      data)
+void request_sync(GDBusProxy* proxy, char* method, GVariant* name, SyncData* data)
 {
-  unity::logger::Timer t("on_sync_ready_cb", std::cerr);
-  SyncData     *sync_data = (SyncData *)data;
-  IndicatorObjectFactoryRemote *remote = (IndicatorObjectFactoryRemote*)sync_data->_self;
-  GVariant     *args;
-  GError       *error = NULL;
+  g_dbus_proxy_call(proxy, method, name, G_DBUS_CALL_FLAGS_NONE,
+                    -1, data->cancel, on_sync_ready_cb, data);
+}
 
-  args = g_dbus_proxy_call_finish ((GDBusProxy*)source, res, &error);
+void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
+{
+  SyncData* sync_data = reinterpret_cast<SyncData*>(data);
+  GError* error = NULL;
+
+  GVariant* args = g_dbus_proxy_call_finish((GDBusProxy*)source, res, &error);
 
   if (args == NULL)
-    {
-      g_warning ("Unable to perform Sync() on panel service: %s", error->message);
-      g_error_free (error);
-      return;
-    }
+  {
+    g_warning("Unable to perform Sync() on panel service: %s", error->message);
+    g_error_free(error);
+    return;
+  }
 
-  remote->Sync (args);
-
-  std::vector<SyncData *>::iterator it = std::find (remote->_sync_cancellables.begin (),
-                                                    remote->_sync_cancellables.end (),
-                                                    sync_data);
-  if (it != remote->_sync_cancellables.end ())
-    remote->_sync_cancellables.erase (it);
-  
-  g_variant_unref (args);
-  delete sync_data;
+  remote->Sync(args, sync_data);
+  g_variant_unref(args);
 }
+
+bool send_show_entry(ShowEntryData *data)
+{
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
+
+  /* Re-flush 'cos X is crap like that */
+  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  XFlush (d);
+  
+  g_dbus_proxy_call(data->proxy,
+                     "ShowEntry",
+                     g_variant_new("(suiii)",
+                                    data->entry_id,
+                                    0,
+                                    data->x,
+                                    data->y,
+                                    data->button),
+                     G_DBUS_CALL_FLAGS_NONE,
+                     -1,
+                     NULL,
+                     NULL,
+                     NULL);
+
+  g_free (data->entry_id);
+  g_slice_free (ShowEntryData, data);
+  return FALSE;
+}
+
 
 } // namespace indicator
 } // namespace unity

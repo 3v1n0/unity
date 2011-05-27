@@ -41,7 +41,10 @@ public:
 
   // For adding factory-specific properties
   virtual void AddProperties(GVariantBuilder *builder) = 0;
-  virtual void OnScrollReceived(std::string const& entry_id, int delta) = 0;
+
+  virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
+  virtual void OnEntryShowMenu(std::string const& entry_id,
+                               int x, int y, int timestamp, int button) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
@@ -51,8 +54,11 @@ public:
   sigc::signal<void, std::string const&> on_entry_activated;
   sigc::signal<void> on_synced;
 
+protected:
+  Indicator& GetIndicator(std::string const& name);
+
 private:
-  boost::scoped_ptr<IndicatorsImpl> pimpl_;
+  boost::scoped_ptr<IndicatorsImpl> pimpl;
 };
 
 }
