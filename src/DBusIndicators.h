@@ -37,6 +37,8 @@ typedef boost::shared_ptr<SyncData> SyncDataPtr;
 class DBusIndicators : public Indicators
 {
 public:
+  typedef boost::shared_ptr<DBusIndicators> Ptr;
+
   DBusIndicators();
   ~DBusIndicators();
 

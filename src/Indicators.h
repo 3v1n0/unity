@@ -25,6 +25,7 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 #include "Indicator.h"
+#include <boost/smart_ptr.hpp>
 
 namespace unity {
 namespace indicator {

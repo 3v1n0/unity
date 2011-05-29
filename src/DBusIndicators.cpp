@@ -38,9 +38,6 @@ const char* const S_NAME = "com.canonical.Unity.Panel.Service";
 const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
 const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 
-namespace {
-// This anonymous namespace holds the DBus callback methods.
-
 struct SyncData
 {
   SyncData(DBusIndicators* self_)
@@ -69,6 +66,9 @@ struct SyncData
   GCancellable* cancel;
 };
 
+namespace {
+// This anonymous namespace holds the DBus callback methods.
+
 struct ShowEntryData
 {
   GDBusProxy* proxy;
@@ -80,19 +80,19 @@ struct ShowEntryData
 };
 
 bool run_local_panel_service();
-bool reconnect_to_service(gpointer data);
+gboolean reconnect_to_service(gpointer data);
 void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
                                  DBusIndicators* remote);
 void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name,
                               GVariant* parameters, DBusIndicators* remote);
-void request_sync(GDBusProxy* proxy, char* method, GVariant* name, SyncData* data)
+void request_sync(GDBusProxy* proxy, const char* method, GVariant* name, SyncData* data);
 void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 
 bool send_show_entry(ShowEntryData *data);
 
-}
+} // anonymous namespace
 
 
 // Public Methods
@@ -163,8 +163,8 @@ void DBusIndicators::RequestSyncIndicator(std::string const& name)
   SyncDataPtr data(new SyncData(this));
   pending_syncs_.push_back(data);
   // The ownership of this variant is taken by the g_dbus_proxy_call.
-  GVariant* name = g_variant_new("(s)", name.c_str());
-  request_sync(proxy_, "SyncOne", name, data.get());
+  GVariant* v_name = g_variant_new("(s)", name.c_str());
+  request_sync(proxy_, "SyncOne", v_name, data.get());
 }
 
 
@@ -211,7 +211,7 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
   // --------------------------------------------------------------------------
 }
 
-void DBusIndicators::OnScrollReceived(std::string const& entry_id, int delta)
+void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
 {
   g_dbus_proxy_call(proxy_, "ScrollEntry",
                     g_variant_new("(si)", entry_id.c_str(), delta),
@@ -273,7 +273,7 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
 
   // Now update each of the entries.
   std::string curr_indicator;
-  for (std::vector<std::string>::iterator i = indicator_order.begin, end = indicator_order.end();
+  for (std::vector<std::string>::iterator i = indicator_order.begin(), end = indicator_order.end();
        i != end; ++i)
   {
     std::string const& indicator_name = *i;
@@ -329,7 +329,7 @@ namespace {
 
 // Initialise DBus for the panel service, and let us know when it is
 // ready.  The unused bool return is to fit with the GSourceFunc.
-bool reconnect_to_service(gpointer data)
+gboolean reconnect_to_service(gpointer data)
 {
   g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION,
                            G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
@@ -475,13 +475,13 @@ void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
   g_free (name_owner);
 }
 
-void request_sync(GDBusProxy* proxy, char* method, GVariant* name, SyncData* data)
+void request_sync(GDBusProxy* proxy, const char* method, GVariant* name, SyncData* data)
 {
   g_dbus_proxy_call(proxy, method, name, G_DBUS_CALL_FLAGS_NONE,
                     -1, data->cancel, on_sync_ready_cb, data);
 }
 
-void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
+void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 {
   SyncData* sync_data = reinterpret_cast<SyncData*>(data);
   GError* error = NULL;
@@ -495,7 +495,7 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
     return;
   }
 
-  remote->Sync(args, sync_data);
+  sync_data->self->Sync(args, sync_data);
   g_variant_unref(args);
 }
 
@@ -507,11 +507,11 @@ bool send_show_entry(ShowEntryData *data)
   /* Re-flush 'cos X is crap like that */
   Display* d = nux::GetThreadGLWindow()->GetX11Display();
   XFlush (d);
-  
+
   g_dbus_proxy_call(data->proxy,
                      "ShowEntry",
                      g_variant_new("(suiii)",
-                                    data->entry_id,
+                                   data->entry_id.c_str(),
                                     0,
                                     data->x,
                                     data->y,
@@ -521,12 +521,11 @@ bool send_show_entry(ShowEntryData *data)
                      NULL,
                      NULL,
                      NULL);
-
-  g_free (data->entry_id);
-  g_slice_free (ShowEntryData, data);
+  delete data;
   return FALSE;
 }
 
+} // anonymous namespace
 
 } // namespace indicator
 } // namespace unity

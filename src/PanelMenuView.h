@@ -23,7 +23,6 @@
 #include <map>
 #include <set>
 
-#include "IndicatorObjectProxy.h"
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
 #include "StaticCairoText.h"
@@ -60,7 +59,7 @@ public:
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
 
-  void SetProxy(indicator::Proxy::Ptr const& proxy);
+  void SetProxy(indicator::Indicator::Ptr const& proxy);
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
   void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);

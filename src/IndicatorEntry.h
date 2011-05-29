@@ -21,7 +21,7 @@
 #define UNITY_INDICATOR_ENTRY_H
 
 #include <string>
-#include <gio/gio.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>

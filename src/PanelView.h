@@ -80,7 +80,7 @@ private:
   void SyncGeometries ();
 
 private:
-  indicators::DBusIndicators::Ptr _remote;
+  indicator::DBusIndicators::Ptr _remote;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
