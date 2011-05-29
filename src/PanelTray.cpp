@@ -38,6 +38,7 @@ PanelTray::PanelTray ()
   gtk_window_set_skip_pager_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_set_skip_taskbar_hint (GTK_WINDOW (_window), TRUE);
   gtk_window_resize (GTK_WINDOW (_window), 1, 24);
+  SetMinMaxSize (1, 24);
   gtk_window_move (GTK_WINDOW (_window), 200, 12);
   gtk_widget_set_name (_window, "UnityPanelApplet");
   gtk_widget_set_colormap (_window, gdk_screen_get_rgba_colormap (gdk_screen_get_default ())); 

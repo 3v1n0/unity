@@ -515,6 +515,11 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
     
     const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    gboolean prop_visible = dbusmenu_menuitem_property_get_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
+    
+    // Skip this item, it is invisible right now.
+    if (!prop_visible)
+      continue;
 
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {

@@ -64,7 +64,7 @@ public:
 
     ~PluginAdapter();
     
-    std::string * MatchStringForXids (std::list<Window> *windows);
+    std::string MatchStringForXids (std::list<Window> *windows);
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
@@ -76,7 +76,7 @@ public:
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
 
-    void InitiateScale (std::string *match, int state = 0);
+    void InitiateScale (std::string const& match, int state = 0);
     void TerminateScale ();
     bool IsScaleActive ();
     

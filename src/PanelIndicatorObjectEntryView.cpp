@@ -48,17 +48,18 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
   : TextureArea (NUX_TRACKER_LOCATION)
   , proxy_(proxy)
   , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
+  , padding_(padding)
 {
   on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnActiveChanged));
   on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
-  padding_ = padding;
 
   on_font_changed_connection_ = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect(sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
-  on_panelstyle_changed_connection_ = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  _on_panelstyle_changed_connection = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
@@ -88,7 +89,14 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
                      GetAbsoluteGeometry().y + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
+  } else {
+	  Refresh();
   }
+}
+
+void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
+{
+  Refresh();
 }
 
 void PanelIndicatorObjectEntryView::OnMouseWheel(int x, int y, int delta,
@@ -226,8 +234,6 @@ void PanelIndicatorObjectEntryView::Refresh()
     cairo_paint_with_alpha (cr, proxy_->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
   if (!label.empty() && proxy_->label_visible())
@@ -287,6 +293,8 @@ void PanelIndicatorObjectEntryView::Refresh()
   NeedRedraw ();
 
   refreshed.emit(this);
+  if (pixbuf)
+    g_object_unref (pixbuf);
 }
 
 namespace {

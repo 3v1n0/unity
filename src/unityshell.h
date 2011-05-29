@@ -277,6 +277,8 @@ class UnityWindow :
   void stateChangeNotify (unsigned int lastState);
 
   bool place (CompPoint &pos);
+  
+  CompPoint tryNotIntersectLauncher (CompPoint &pos);
 };
 
 #define EX_SCREEN (screen) \
