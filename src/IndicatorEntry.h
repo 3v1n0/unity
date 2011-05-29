@@ -62,11 +62,12 @@ public:
   void set_active(bool active);
   bool active() const;
 
-  void ShowMenu(int x, int y, int timestamp, int button);
-  void Scroll(int delta);
-
   bool show_now() const;
   void set_show_now(bool show_now);
+
+  void MarkUnused();
+  void ShowMenu(int x, int y, int timestamp, int button);
+  void Scroll(int delta);
 
   // Signals
   sigc::signal<void> updated;

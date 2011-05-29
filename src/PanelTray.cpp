@@ -21,6 +21,9 @@
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3
 
+namespace unity
+{
+
 PanelTray::PanelTray ()
 : _n_children (0),
   _tray (NULL),
@@ -240,3 +243,4 @@ PanelTray::AddProperties (GVariantBuilder *builder)
 
 }
 
+} // namespace unity

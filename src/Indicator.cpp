@@ -57,7 +57,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
   }
 
   // Mark any other entries as not used.
-  for (std::size_t size = entries_size(); curr_index < size; ++curr_index)
+  for (std::size_t size = entries_.size(); curr_index < size; ++curr_index)
   {
     entries_[curr_index]->MarkUnused();
   }
@@ -70,7 +70,7 @@ void Indicator::OnEntryShowMenu(std::string const& entry_id,
   on_show_menu.emit(entry_id, x, y, timestamp, button);
 }
 
-void Indicator::OnScrollReceived(std::string const& entry_id, int delta)
+void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
 {
   on_scroll.emit(entry_id, delta);
 }

@@ -19,18 +19,19 @@
  */
 #include "Indicators.h"
 
+#include <map>
 #include <vector>
 
 namespace unity {
 namespace indicator {
 
-class IndicatorsImpl
+class Indicators::Impl
 {
 public:
   typedef std::map<std::string, Indicator::Ptr> IndicatorMap;
   typedef std::map<std::string, Entry::Ptr> EntryMap;
 
-  IndicatorsImpl(Indicators* owner)
+  Impl(Indicators* owner)
     : owner_(owner)
     {}
 
@@ -50,8 +51,13 @@ private:
 
 
 Indicators::Indicators()
-  : pimpl(new IndicatorsImpl(this))
+  : pimpl(new Impl(this))
 {
+}
+
+Indicators::~Indicators()
+{
+  delete pimpl;
 }
 
 void Indicators::ActivateEntry(std::string const& entry_id)
@@ -62,7 +68,7 @@ void Indicators::ActivateEntry(std::string const& entry_id)
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
 {
-  pimpl->SetEntryShowNow(std::string const& entry_id, bool show_now);
+  pimpl->SetEntryShowNow(entry_id, show_now);
 }
 
 Indicator& Indicators::GetIndicator(std::string const& name)
@@ -70,10 +76,10 @@ Indicator& Indicators::GetIndicator(std::string const& name)
   return pimpl->GetIndicator(name);
 }
 
-void IndicatorsImpl::ActivateEntry(std::string const& entry_id)
+void Indicators::Impl::ActivateEntry(std::string const& entry_id)
 {
   if (active_entry_)
-    active_entry_->SetActive(false);
+    active_entry_->set_active(false);
   EntryMap::iterator i = entries_.find(entry_id);
   if (i != entries_.end())
   {
@@ -82,7 +88,7 @@ void IndicatorsImpl::ActivateEntry(std::string const& entry_id)
   }
 }
 
-void IndicatorsImpl::SetEntryShowNow(std::string const& entry_id, bool show_now)
+void Indicators::Impl::SetEntryShowNow(std::string const& entry_id, bool show_now)
 {
   EntryMap::iterator i = entries_.find(entry_id);
   if (i != entries_.end())
@@ -91,7 +97,7 @@ void IndicatorsImpl::SetEntryShowNow(std::string const& entry_id, bool show_now)
   }
 }
 
-Indicator& IndicatorsImpl::GetIndicator(std::string const& name)
+Indicator& Indicators::Impl::GetIndicator(std::string const& name)
 {
   IndicatorMap::iterator i = indicators_.find(name);
   if (i != indicators_.end())
@@ -100,16 +106,16 @@ Indicator& IndicatorsImpl::GetIndicator(std::string const& name)
   // Make a new one
   Indicator::Ptr indicator(new Indicator(name));
   // The implementation class is interested in new entries.
-  indicator->on_entry_added.connect(sigc::mem_fun(this, &IndicatorsImpl::OnEntryAdded));
+  indicator->on_entry_added.connect(sigc::mem_fun(this, &Indicators::Impl::OnEntryAdded));
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
   indicators_[name] = indicator;
-  on_object_added.emit(indicator);
+  owner_->on_object_added.emit(indicator);
   return *indicator;
 }
 
-void IndicatorsImpl::OnEntryAdded(Entry::Ptr const& entry)
+void Indicators::Impl::OnEntryAdded(Entry::Ptr const& entry)
 {
   entries_[entry->id()] = entry;
 }

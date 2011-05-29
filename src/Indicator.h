@@ -21,6 +21,8 @@
 #define UNITY_INDICATOR_H
 
 #include <string>
+#include <vector>
+
 #include <gio/gio.h>
 #include <dee.h>
 

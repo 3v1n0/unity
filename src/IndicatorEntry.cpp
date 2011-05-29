@@ -175,6 +175,18 @@ void Entry::set_show_now(bool show_now)
   updated.emit();
 }
 
+void Entry::MarkUnused()
+{
+  id_ = "|";;
+  label_ = "";
+  label_sensitive_ = false;
+  label_visible_ = false;
+  image_type_ = 0;
+  image_data_ = "";
+  image_sensitive_ = false;
+  image_visible_ = false;
+}
+
 void Entry::ShowMenu(int x, int y, int timestamp, int button)
 {
   on_show_menu.emit(id_, x, y, timestamp, button);

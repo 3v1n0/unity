@@ -25,17 +25,15 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 #include "Indicator.h"
-#include <boost/smart_ptr.hpp>
 
 namespace unity {
 namespace indicator {
-
-class IndicatorsImpl;
 
 class Indicators : public sigc::trackable, boost::noncopyable
 {
 public:
   Indicators();
+  virtual ~Indicators();
 
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
@@ -59,7 +57,8 @@ protected:
   Indicator& GetIndicator(std::string const& name);
 
 private:
-  boost::scoped_ptr<IndicatorsImpl> pimpl;
+  class Impl;
+  Impl* pimpl;
 };
 
 }
