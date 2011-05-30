@@ -171,7 +171,7 @@ void DBusIndicators::RequestSyncIndicator(std::string const& name)
 void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
                                      int x, int y, int timestamp, int button)
 {
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
   XFlush(d);
 
@@ -518,7 +518,7 @@ bool send_show_entry(ShowEntryData *data)
   g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
 
   /* Re-flush 'cos X is crap like that */
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XFlush (d);
 
   g_dbus_proxy_call(data->proxy,

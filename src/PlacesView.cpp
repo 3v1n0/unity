@@ -242,8 +242,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_bg_blur_texture.IsValid () && paint_blur)
   {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
-    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay ()->GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
     
     GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
     GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());

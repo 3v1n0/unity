@@ -330,7 +330,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         BYTE *dest;
         int num_row;
 
-       _gradient_texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
+       _gradient_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
 
         _gradient_texture->LockRect (0, &lockrect, 0);
 
@@ -610,8 +610,8 @@ PanelMenuView::Refresh ()
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
-  // The Texture is created with a reference count of 1. 
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  // The Texture is created with a reference count of 1.
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
 
