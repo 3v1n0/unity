@@ -58,7 +58,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    // Home button - not an indicator view
    _home_button = new PanelHomeButton();
    _layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
-   AddChild(child);
+   AddChild(_home_button);
 
    _menu_view = new PanelMenuView ();
    AddPanelView(_menu_view, 1);
@@ -66,9 +66,9 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    // Pannel tray shouldn't be an indicator view
    _tray = new PanelTray ();
    _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
-   AddChild(child);
+   AddChild(_tray);
 
-   _remote = new indicator::DBusIndicators();
+   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
   _on_object_added_connection = _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   _on_menu_pointer_moved_connection = _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
   _on_entry_activate_request_connection = _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
@@ -219,7 +219,7 @@ void PanelView::ForceUpdateBackground()
   _is_dirty = true;
   UpdateBackground ();
 
-  for (Children::iterator i = children_.begin(), end = children_.end(), i != end; ++i)
+  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
     (*i)->QueueDraw();
   }
@@ -236,7 +236,7 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
+  if (proxy->name().find("appmenu") != std::string::npos)
   {
     _menu_view->SetProxy(proxy);
   }
@@ -262,7 +262,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
   if (geo.IsPointInside(x, y))
   {
-    for (Children::iterator i = children_.begin(), end = children_.end(), i != end; ++i)
+    for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
     {
       PanelIndicatorObjectView* view = *i;
 
@@ -284,9 +284,9 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!_menu_view->GetControlsActive ())
     return;
 
-  bool activated = false
-  for (Children::iterator i = children_.begin(), end = children_.end(),
-         i != end && !activated; ++i)
+  bool activated = false;
+  for (Children::iterator i = children_.begin(), end = children_.end();
+       i != end && !activated; ++i)
   {
     PanelIndicatorObjectView* view = *i;
     activated = view->ActivateEntry(entry_id);
@@ -321,9 +321,9 @@ void PanelView::EndFirstMenuShow()
   if (!_menu_view->GetControlsActive())
     return;
 
-  bool activated = false
-  for (Children::iterator i = children_.begin(), end = children_.end(),
-         i != end && !activated; ++i)
+  bool activated = false;
+  for (Children::iterator i = children_.begin(), end = children_.end();
+       i != end && !activated; ++i)
   {
     PanelIndicatorObjectView* view = *i;
     activated = view->ActivateIfSensitive();
@@ -362,61 +362,20 @@ PanelView::SetPrimary (bool primary)
   _home_button->SetVisible (primary);
 }
 
-void
-PanelView::SyncGeometries ()
+void PanelView::SyncGeometries()
 {
   GVariantBuilder b;
-  GDBusProxy     *bus_proxy;
-  GVariant       *method_args;
-  std::list<Area *>::iterator it;
-
   g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
   g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
 
-  std::list<Area *> my_children = _layout->GetChildren ();
-  for (it = my_children.begin(); it != my_children.end(); it++)
+  char const* name = GetName();
+  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
-    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-
-    if (view->_layout == NULL)
-      continue;
-
-    std::list<Area *>::iterator it2;
-
-    std::list<Area *> its_children = view->_layout->GetChildren ();
-    for (it2 = its_children.begin (); it2 != its_children.end (); it2++)
-    {
-      nux::Geometry geo;
-      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-      if (entry == NULL)
-        continue;
-
-      geo = entry->GetAbsoluteGeometry ();
-      g_variant_builder_add (&b, "(ssiiii)",
-			     GetName (),
-			     entry->_proxy->GetId (),
-			     geo.x,
-			     geo.y,
-			     geo.GetWidth (),
-			     geo.GetHeight ());
-    }
+    (*i)->GetGeometries(&b, name);
   }
 
   g_variant_builder_close (&b);
-  method_args = g_variant_builder_end (&b);
-
-  // Send geometries to the panel service
-  bus_proxy =_remote->GetRemoteProxy ();
-  if (bus_proxy != NULL)
-  {
-    g_dbus_proxy_call (bus_proxy, "SyncGeometries", method_args,
-                       G_DBUS_CALL_FLAGS_NONE,
-                       -1,
-                       NULL,
-                       NULL,
-                       NULL);
-  }
+  _remote->SyncGeometries(g_variant_builder_end(&b));
 }
 
 void

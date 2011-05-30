@@ -45,9 +45,10 @@ public:
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
 
-  void OnPointerMoved(x, y);
+  void OnPointerMoved(int x, int y);
   bool ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
+  void GetGeometries(GVariantBuilder* builder, const char* name);
 
 protected:
   const gchar * GetName ();

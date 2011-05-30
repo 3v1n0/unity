@@ -301,11 +301,24 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
   on_synced.emit();
 }
 
+void DBusIndicators::SyncGeometries(GVariant* args)
+{
+  if (proxy_) {
+    g_dbus_proxy_call(proxy_, "SyncGeometries", args,
+                      G_DBUS_CALL_FLAGS_NONE,
+                      -1,
+                    NULL,
+                      NULL,
+                      NULL);
+  }
+}
+
+
 void DBusIndicators::AddProperties(GVariantBuilder *builder)
 {
   gchar *name = NULL;
   gchar *uname = NULL;
-  
+
   g_object_get (proxy_,
                 "g-name", &name,
                 "g-name-owner", &uname,

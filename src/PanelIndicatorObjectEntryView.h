@@ -51,6 +51,7 @@ public:
   void OnActiveChanged(bool is_active);
   bool GetShowNow();
 
+  void GetGeometry(GVariantBuilder* builder, const char* name);
   bool IsEntryValid() const;
   bool IsSensitive() const;
 

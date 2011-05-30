@@ -46,7 +46,8 @@ public:
   void Reconnect();
   void RequestSyncAll();
   void RequestSyncIndicator(std::string const& name);
-  void Sync(GVariant *args, SyncData* data);
+  void Sync(GVariant* args, SyncData* data);
+  void SyncGeometries(GVariant* args);
 
   virtual void AddProperties(GVariantBuilder *builder);
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
