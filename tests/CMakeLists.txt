@@ -112,8 +112,8 @@ add_executable (test-panel
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
-                ../src/TimeMe.cpp
-                ../src/TimeMe.h
+                ../src/Timer.cpp
+                ../src/Timer.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
                 ../src/WindowButtons.cpp
@@ -146,8 +146,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/PlacesSimpleTile.h
                           ../src/TextureCache.h
                           ../src/TextureCache.cpp
-                          ../src/TimeMe.cpp
-                          ../src/TimeMe.h
+                          ../src/Timer.cpp
+                          ../src/Timer.h
                           ../src/StaticCairoText.cpp
                           ../src/StaticCairoText.h
                           ../src/UBusMessages.h
@@ -274,13 +274,29 @@ add_executable (test-places-backend
                 ../src/PlaceRemote.h
                 ../src/Place.h
                 )
+
+#
+# GTest tests
+#
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(test-gtest
+               test_timer.cpp
+               ../src/Timer.h
+               ../src/Timer.cpp
+               )
+target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+add_test(UnityGTests test-gtest)
+
 #
 # check target
 #
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit)
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
+set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
+add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 
