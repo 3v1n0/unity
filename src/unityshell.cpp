@@ -988,7 +988,6 @@ UnityScreen::~UnityScreen ()
   delete placesController;
   panelController->UnReference ();
   delete controller;
-  //layout->UnReference ();
   launcher->UnReference ();
   launcherWindow->UnReference ();
 
