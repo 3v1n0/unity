@@ -414,7 +414,23 @@ void PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
 
 bool PanelIndicatorObjectEntryView::GetShowNow()
 {
-  return proxy_ ? proxy_->show_now() : false;
+  return proxy_.get() ? proxy_->show_now() : false;
+}
+
+bool PanelIndicatorObjectEntryView::IsEntryValid() const
+{
+  if (proxy_.get()) {
+    return proxy_->image_visible() || proxy_->label_visible()
+  }
+  return false;
+}
+
+bool PanelIndicatorObjectEntryView::IsSensitive() const
+{
+  if (proxy_.get()) {
+    return proxy_->image_sensitive() || proxy_->label_sensitive()
+  }
+  return false;
 }
 
 void PanelIndicatorObjectEntryView::OnFontChanged(GObject *gobject,

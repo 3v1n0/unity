@@ -76,6 +76,64 @@ PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw
 {
 }
 
+void PanelIndicatorObjectView::QueueDraw()
+{
+  nux::View::QueueDraw();
+  for (Entries::iterator i = entries_.begin(), end = entries_.end(); i != end; ++i)
+  {
+    (*i)->QueueDraw();
+  }
+}
+
+bool PanelIndicatorObjectView::ActivateEntry(std::string const& entry_id)
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+
+    if (entry_id == view->GetName())
+    {
+      g_debug ("%s: Activating: %s", G_STRFUNC, entry_id.c_str());
+      view->Activate();
+      return true;
+    }
+  }
+  return false;
+}
+
+bool PanelIndicatorObjectView::ActivateIfSensitive()
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+    if (view->IsSensitive())
+    {
+      view->Activate();
+      return true;
+    }
+  }
+  return false;
+}
+
+
+void PanelIndicatorObjectView::OnPointerMoved(int x, int y)
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+
+    nux::Geometry geo = view->GetAbsoluteGeometry();
+    if (geo.IsPointInside(x, y))
+    {
+      view->OnMouseDown(x, y, 0, 0);
+      break;
+    }
+  }
+}
+
 void
 PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {

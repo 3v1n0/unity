@@ -20,6 +20,8 @@
 #ifndef PANEL_VIEW_H
 #define PANEL_VIEW_H
 
+#include <vector>
+
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
@@ -78,9 +80,14 @@ private:
   void UpdateBackground ();
   void ForceUpdateBackground ();
   void SyncGeometries ();
+  void AddPanelView(PanelIndicatorObjectView* child,
+                    unsigned int stretchFactor);
 
 private:
   indicator::DBusIndicators::Ptr _remote;
+  // No ownership is taken for these views, that is done by the AddChild method.
+  typedef std::vector<PanelIndicatorObjectView*> Children;
+  Children children_;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;

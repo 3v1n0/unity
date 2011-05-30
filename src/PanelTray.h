@@ -35,6 +35,8 @@
 
 namespace unity {
 
+// NOTE: Why does this inherit from PanelIndicatorObjectView?
+// It doesn't ever get any indicator object.
 class PanelTray : public PanelIndicatorObjectView
 {
 public:

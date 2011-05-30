@@ -45,6 +45,10 @@ public:
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
 
+  void OnPointerMoved(x, y);
+  bool ActivateEntry(std::string const& entry_id);
+  bool ActivateIfSensitive();
+
 protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
@@ -52,7 +56,8 @@ protected:
 
   nux::HLayout* layout_;
   indicator::Indicator::Ptr proxy_;
-  std::vector<PanelIndicatorObjectEntryView *> entries_;
+  typedef std::vector<PanelIndicatorObjectEntryView*> Entries;
+  Entries entries_;
 
   sigc::connection on_entry_added_connection_;
 };

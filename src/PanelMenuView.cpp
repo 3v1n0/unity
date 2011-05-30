@@ -90,7 +90,7 @@ PanelMenuView::PanelMenuView (int padding)
   /* This is for our parent and for PanelView to read indicator entries, we
    * shouldn't touch this again
    */
-  _layout = _menu_layout;
+  layout_ = _menu_layout;
 
   _padding = padding;
   _name_changed_callback_instance = NULL;
@@ -189,7 +189,7 @@ PanelMenuView::FullRedraw ()
   NeedRedraw ();
 }
 
-void PanelMenuView::SetProxy(indicator::Proxy::Ptr const& proxy)
+void PanelMenuView::SetProxy(indicator::Indicator::Ptr const& proxy)
 {
   proxy_ = proxy;
   on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryAdded));
@@ -310,14 +310,14 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   else
   {
     bool have_valid_entries = false;
-    std::vector<PanelIndicatorObjectEntryView *>::iterator it, eit = _entries.end ();
+    Entries::iterator it, eit = entries_.end ();
 
-    for (it = _entries.begin (); it != eit; ++it)
+    for (it = entries_.begin (); it != eit; ++it)
     {
-      indicator::Entry::Ptr const& proxy = (*it)->_proxy;
-
-      if (proxy->icon_visible() || proxy->label_visible())
+      if ((*it)->IsEntryValid()) {
         have_valid_entries = true;
+        break;
+      }
     }
 
     if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
@@ -329,7 +329,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         nux::SURFACE_LOCKED_RECT lockrect;
         BYTE *dest;
         int num_row;
-            
+
        _gradient_texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
 
         _gradient_texture->LockRect (0, &lockrect, 0);
@@ -412,7 +412,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   {
     if (_is_inside || _last_active_view || _show_now_activated)
     {
-      _layout->ProcessDraw (GfxContext, force_draw);
+      layout_->ProcessDraw (GfxContext, force_draw);
     }
 
     if (_is_maximized)
@@ -674,7 +674,7 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
-  _entries.push_back (view);
+  entries_.push_back (view);
 
   AddChild (view);
 
@@ -1035,12 +1035,11 @@ PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
 void
 PanelMenuView::UpdateShowNow (bool ignore)
 {
-  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
   _show_now_activated = false;
 
-  for (it = _entries.begin(); it != _entries.end(); it++)
+  for (Entries::iterator it = entries_.begin(); it != entries_.end(); ++it)
   {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
+    PanelIndicatorObjectEntryView *view = *it;
     if (view->GetShowNow ())
       _show_now_activated = true;
 
