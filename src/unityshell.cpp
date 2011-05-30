@@ -988,7 +988,7 @@ UnityScreen::~UnityScreen ()
   delete placesController;
   panelController->UnReference ();
   delete controller;
-  layout->UnReference ();
+  //layout->UnReference ();
   launcher->UnReference ();
   launcherWindow->UnReference ();
 
@@ -1016,9 +1016,14 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
+
   self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher->SinkReference ();
+
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
+
   self->AddChild (self->launcher);
 
   self->layout = new nux::HLayout();
@@ -1035,6 +1040,7 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
+  
   self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a
