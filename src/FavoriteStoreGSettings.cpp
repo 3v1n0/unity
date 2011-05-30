@@ -239,7 +239,8 @@ FavoriteStoreGSettings::Refresh ()
               m_favorites = g_slist_append (m_favorites, g_strdup (g_desktop_app_info_get_filename (info)));
             }
 
-          g_object_unref (info);
+          if (info)
+            g_object_unref (info);
         }
 
       i++;
