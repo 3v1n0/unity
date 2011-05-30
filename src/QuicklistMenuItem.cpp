@@ -23,6 +23,7 @@
 
 #include "Nux/Nux.h"
 #include "QuicklistMenuItem.h"
+#include "Variant.h"
 
 #include <X11/Xlib.h>
 
@@ -412,13 +413,13 @@ const gchar* QuicklistMenuItem::GetName ()
 
 void QuicklistMenuItem::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "text", g_variant_new_string (_text));
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32  (GetBaseX ()));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32  (GetBaseY ()));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (GetBaseWidth ()));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
-  g_variant_builder_add (builder, "{sv}", "enabled", g_variant_new_boolean (GetEnabled ()));
-  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (GetActive ()));
-  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (GetVisible ()));
-  
+  unity::variant::BuilderWrapper(builder)
+    .add("text", _text)
+    .add("x", GetBaseX())
+    .add("y", GetBaseY())
+    .add("width", GetBaseWidth())
+    .add("height", GetBaseHeight())
+    .add("enabled", GetEnabled())
+    .add("active", GetActive())
+    .add("visible", GetVisible());
 }

@@ -27,6 +27,7 @@
 
 #include "PanelIndicatorObjectEntryView.h"
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #include <glib.h>
 #include <pango/pangocairo.h>
@@ -420,21 +421,14 @@ PanelIndicatorObjectEntryView::GetName ()
 void
 PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-
-  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (_proxy->GetLabel ()));
-  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (_proxy->label_sensitive));
-  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (_proxy->label_visible));
-
-  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (_proxy->icon_sensitive));
-  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
-
-  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
+  unity::variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("label", _proxy->GetLabel())
+    .add("label_sensitive", _proxy->label_sensitive)
+    .add("label_visible", _proxy->label_visible)
+    .add("icon_sensitive", _proxy->icon_sensitive)
+    .add("icon_visible", _proxy->icon_visible)
+    .add("active", _proxy->GetActive());
 }
 
 bool

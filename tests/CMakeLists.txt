@@ -80,6 +80,8 @@ add_executable (test-unit
                 ../src/QuicklistMenuItemSeparator.h
                 ../src/QuicklistView.cpp
                 ../src/QuicklistView.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 ../src/
                 )
 
@@ -124,6 +126,8 @@ add_executable (test-panel
                 ../src/UScreen.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
@@ -151,6 +155,8 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/StaticCairoText.cpp
                           ../src/StaticCairoText.h
                           ../src/UBusMessages.h
+                          ../src/Variant.cpp
+                          ../src/Variant.h
                           )
 add_executable (test-places
                 TestPlaces.cpp
@@ -237,6 +243,8 @@ add_executable (test-quicklist
                 ../src/QuicklistView.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 add_executable (test-quicklist-visuals
@@ -259,6 +267,8 @@ add_executable (test-quicklist-visuals
                 ../src/QuicklistView.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 add_executable (test-places-backend
@@ -273,6 +283,8 @@ add_executable (test-places-backend
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
                 ../src/Place.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 #

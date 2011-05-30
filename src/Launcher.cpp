@@ -43,13 +43,19 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#define URGENT_BLINKS       3
-#define WIGGLE_CYCLES       6
+#include "Variant.h"
 
-#define MAX_STARTING_BLINKS 5
-#define STARTING_BLINK_LAMBDA 3
+namespace {
 
-#define BACKLIGHT_STRENGTH  0.9f
+const int URGENT_BLINKS = 3;
+const int WIGGLE_CYCLES = 6;
+
+const int MAX_STARTING_BLINKS = 5;
+const int STARTING_BLINK_LAMBDA = 3;
+
+const float BACKLIGHT_STRENGTH = 0.9f;
+
+}
 
 #define TRIGGER_SQR_RADIUS 25
 
@@ -786,25 +792,20 @@ Launcher::exitKeyNavMode ()
 void
 Launcher::AddProperties (GVariantBuilder *builder)
 {
-  struct timespec current;
+  timespec current;
   clock_gettime (CLOCK_MONOTONIC, &current);
-  char* hidequirks_mask = _hide_machine->DebugHideQuirks ();
-  char* hoverquirks_mask = _hover_machine->DebugHoverQuirks ();
-  
-  g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
-  g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
-  g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
 
-  g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
-  g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
-  g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
-  g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
-  g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "hide-quirks", g_variant_new_string (hidequirks_mask));
-  g_variant_builder_add (builder, "{sv}", "hover-quirks", g_variant_new_string (hoverquirks_mask));
-
-  g_free (hidequirks_mask);
-  g_free (hoverquirks_mask);
+  unity::variant::BuilderWrapper(builder)
+    .add("hover-progress", GetHoverProgress(current))
+    .add("dnd-exit-progress", DnDExitProgress(current))
+    .add("autohide-progress", AutohideProgress(current))
+    .add("dnd-delta", _dnd_delta_y)
+    .add("floating", _floating)
+    .add("hovered", _hovered)
+    .add("hidemode", _hidemode)
+    .add("hidden", _hidden)
+    .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
+    .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
 }
 
 void Launcher::SetMousePosition (int x, int y)

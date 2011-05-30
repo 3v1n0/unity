@@ -37,6 +37,7 @@
 #include "IndicatorObjectFactoryRemote.h"
 #include "IndicatorObjectEntryProxy.h"
 #include "PanelIndicatorObjectView.h"
+#include "Variant.h"
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
@@ -105,16 +106,10 @@ PanelView::GetChildsName ()
 
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
   /* First add some properties from the backend */
   _remote->AddProperties (builder);
 
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 long

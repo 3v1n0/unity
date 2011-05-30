@@ -35,6 +35,7 @@
 #include "WindowManager.h"
 
 #include "IndicatorObjectEntryProxy.h"
+#include "Variant.h"
 
 #include <gio/gdesktopappinfo.h>
 
@@ -43,7 +44,6 @@
 
 #include "UScreen.h"
 
-#define BUTTONS_WIDTH 72
 
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
@@ -1019,13 +1019,7 @@ PanelMenuView::GetChildsName ()
 void
 PanelMenuView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*
