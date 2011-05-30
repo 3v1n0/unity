@@ -631,21 +631,21 @@ namespace nux
 
     if (_texture_bg)
       _texture_bg->UnReference ();
-    _texture_bg = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_bg = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_bg->Update(bitmap);
     delete bitmap;
 
     bitmap = cairo_mask->GetBitmap();
     if (_texture_mask)
       _texture_mask->UnReference ();
-    _texture_mask = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_mask = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_mask->Update(bitmap);
     delete bitmap;
 
     bitmap = cairo_outline->GetBitmap();
     if (_texture_outline)
       _texture_outline->UnReference ();
-    _texture_outline = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_outline = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_outline->Update(bitmap);
     delete bitmap;
 

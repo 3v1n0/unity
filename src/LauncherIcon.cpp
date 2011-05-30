@@ -961,7 +961,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   nux::NBitmapData* bitmap = cg->GetBitmap ();
 
-  emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  emblem = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
   delete bitmap;
 

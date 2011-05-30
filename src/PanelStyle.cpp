@@ -250,7 +250,7 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
   cairo_destroy (cr);
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture->Update(bitmap);
   delete bitmap;
 

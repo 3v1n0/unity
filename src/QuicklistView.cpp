@@ -419,8 +419,8 @@ void QuicklistView::Draw (nux::GraphicsEngine& gfxContext, bool forceDraw)
   // Get the background of the QuicklistView and apply some 
   if (_compute_blur_bkg /* Refresh the blurred background*/)
   {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
-    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay ()->GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
   
     gfxContext.SetViewport (0, 0, gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
     gfxContext.SetScissor (0, 0, gfxContext.GetWindowWidth (), gfxContext.GetWindowHeight ());
@@ -1455,21 +1455,21 @@ void QuicklistView::UpdateTexture ()
 
   if (_texture_bg)
     _texture_bg->UnReference ();
-  _texture_bg = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _texture_bg = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _texture_bg->Update(bitmap);
   delete bitmap;
 
   bitmap = cairo_mask->GetBitmap();
   if (_texture_mask)
     _texture_mask->UnReference ();
-  _texture_mask = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _texture_mask = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _texture_mask->Update(bitmap);
   delete bitmap;
 
   bitmap = cairo_outline->GetBitmap();
   if (_texture_outline)
     _texture_outline->UnReference ();
-  _texture_outline = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _texture_outline = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _texture_outline->Update(bitmap);
   delete bitmap;
 

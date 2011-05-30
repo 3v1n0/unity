@@ -483,7 +483,7 @@ void StaticCairoText::UpdateTexture ()
     _texture2D = NULL;
   }
 
-  _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _texture2D = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 
   delete bitmap;

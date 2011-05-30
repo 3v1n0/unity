@@ -105,7 +105,7 @@ void
 WindowManager::StartMove (guint32 xid, int x, int y)
 {
   XEvent ev;
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay ()->GetX11Display();
 
   /* We first need to ungrab the pointer. FIXME: Evil */
 
