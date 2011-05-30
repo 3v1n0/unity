@@ -65,7 +65,7 @@ std::string const& Entry::id() const
   return id_;
 }
 
-std::string const& Entry::label() const;
+std::string const& Entry::label() const
 {
   return label_;
 }
@@ -142,7 +142,7 @@ void Entry::set_active(bool active)
   updated.emit();
 }
 
-bool Entry::active()
+bool Entry::active() const
 {
   return active_;
 }
@@ -159,6 +159,7 @@ Entry& Entry::operator=(Entry const& rhs)
   image_visible_ = rhs.image_visible_;
 
   updated.emit ();
+  return *this;
 }
 
 bool Entry::show_now() const

@@ -44,7 +44,7 @@ PanelIndicatorObjectView::PanelIndicatorObjectView(indicator::Indicator::Ptr con
   : View(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
 {
-  g_debug ("IndicatorAdded: %s", proxy_->GetName ().c_str ());
+  g_debug ("IndicatorAdded: %s", proxy_->name().c_str ());
   layout_ = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   SetCompositionLayout (layout_);
@@ -122,7 +122,7 @@ void PanelIndicatorObjectView::GetGeometries(GVariantBuilder* builder, const cha
   for (Entries::iterator i = entries_.begin(), end = entries_.end();
        i != end; ++i)
   {
-    (*i)->GetGeometry(builder, name);
+    (*i)->GetGeometryForSync(builder, name);
   }
 }
 
@@ -167,7 +167,7 @@ void PanelIndicatorObjectView::OnEntryAdded(indicator::Entry::Ptr const& proxy)
 
 const gchar* PanelIndicatorObjectView::GetName()
 {
-  return proxy_->GetName().c_str();
+  return proxy_->name().c_str();
 }
 
 const gchar* PanelIndicatorObjectView::GetChildsName()

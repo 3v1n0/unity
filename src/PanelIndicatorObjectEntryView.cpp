@@ -59,7 +59,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
   InputArea::OnMouseUp.connect(sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
-  _on_panelstyle_changed_connection = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
+  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
@@ -83,7 +83,7 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
     return;
 
   if ((proxy_->label_visible() && proxy_->label_sensitive()) ||
-      (proxy_->icon_visible() && proxy_->icon_sensitive()))
+      (proxy_->image_visible() && proxy_->image_sensitive()))
   {
     proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation
                      GetAbsoluteGeometry().y + PANEL_HEIGHT,
@@ -160,7 +160,7 @@ void PanelIndicatorObjectEntryView::Refresh()
   boost::erase_all(label, "_");
 
   // First lets figure out our size
-  if (pixbuf && proxy_->icon_visible())
+  if (pixbuf && proxy_->image_visible())
   {
     width = gdk_pixbuf_get_width (pixbuf);
     icon_width = width;
@@ -222,16 +222,16 @@ void PanelIndicatorObjectEntryView::Refresh()
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-  if (proxy_->GetActive ())
+  if (proxy_->active())
     draw_menu_bg (cr, width, height);
 
   x = padding_;
   y = 0;
 
-  if (pixbuf && proxy_->icon_visible)
+  if (pixbuf && proxy_->image_visible())
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
-    cairo_paint_with_alpha (cr, proxy_->icon_sensitive ? 1.0 : 0.5);
+    cairo_paint_with_alpha (cr, proxy_->image_sensitive() ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
   }
@@ -402,12 +402,12 @@ void PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 
-  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (proxy_->lable()));
+  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (proxy_->label().c_str()));
   g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (proxy_->label_sensitive()));
   g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (proxy_->label_visible()));
 
-  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (proxy_->icon_sensitive()));
-  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (proxy_->icon_visible()));
+  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (proxy_->image_sensitive()));
+  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (proxy_->image_visible()));
 
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (proxy_->active()));
 }
@@ -417,13 +417,13 @@ bool PanelIndicatorObjectEntryView::GetShowNow()
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
-void PanelIndicatorObjectEntryView::GetGeometry(GVariantBuilder* builder,
-                                                const char* name)
+void PanelIndicatorObjectEntryView::GetGeometryForSync(GVariantBuilder* builder,
+                                                       const char* name)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
-  g_variant_builder_add(&b, "(ssiiii)",
+  g_variant_builder_add(builder, "(ssiiii)",
                         name,
-                        proxy_->GetId (),
+                        proxy_->id().c_str(),
                         geo.x,
                         geo.y,
                         geo.GetWidth(),
@@ -433,7 +433,7 @@ void PanelIndicatorObjectEntryView::GetGeometry(GVariantBuilder* builder,
 bool PanelIndicatorObjectEntryView::IsEntryValid() const
 {
   if (proxy_.get()) {
-    return proxy_->image_visible() || proxy_->label_visible()
+    return proxy_->image_visible() || proxy_->label_visible();
   }
   return false;
 }
@@ -441,7 +441,7 @@ bool PanelIndicatorObjectEntryView::IsEntryValid() const
 bool PanelIndicatorObjectEntryView::IsSensitive() const
 {
   if (proxy_.get()) {
-    return proxy_->image_sensitive() || proxy_->label_sensitive()
+    return proxy_->image_sensitive() || proxy_->label_sensitive();
   }
   return false;
 }

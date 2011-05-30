@@ -44,6 +44,7 @@ public:
   virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
+  virtual void QueueDraw();
 
   void OnPointerMoved(int x, int y);
   bool ActivateEntry(std::string const& entry_id);
