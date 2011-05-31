@@ -36,6 +36,11 @@
 #include "PanelIndicatorObjectView.h"
 #include "Variant.h"
 
+#include "Timer.h"
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace unity {
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
@@ -229,14 +234,17 @@ void PanelView::ForceUpdateBackground()
 //
 void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
+  cout << "PanelView::OnObjectAdded: " << proxy->name() << endl;
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
   if (proxy->name().find("appmenu") != std::string::npos)
   {
+    cout << "\tmenu" << endl;
     _menu_view->SetProxy(proxy);
   }
   else
   {
+    cout << "\tcreate new view" << endl;
     PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
     AddPanelView(view, 0);
   }
@@ -276,6 +284,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
 void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
+  logger::BlockTimer t("PanelView::OnEntryActivateRequest", std::cout);
   if (!_menu_view->GetControlsActive ())
     return;
 

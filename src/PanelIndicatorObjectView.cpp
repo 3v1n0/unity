@@ -30,6 +30,11 @@
 
 #include "IndicatorEntry.h"
 
+#include "Timer.h"
+#include <iostream>
+using std::cout;
+using std::endl;
+
 #include <glib.h>
 
 namespace unity {
@@ -87,12 +92,13 @@ void PanelIndicatorObjectView::QueueDraw()
 
 bool PanelIndicatorObjectView::ActivateEntry(std::string const& entry_id)
 {
+  logger::BlockTimer t("PanelIndicatorObjectView::ActivateEntry", cout);
+  cout << "\t" << GetName() << endl;
   for (Entries::iterator i = entries_.begin(), end = entries_.end();
        i != end; ++i)
   {
     PanelIndicatorObjectEntryView* view = *i;
-
-    if (entry_id == view->GetName())
+    if (view->IsEntryValid() && entry_id == view->GetName())
     {
       g_debug ("%s: Activating: %s", G_STRFUNC, entry_id.c_str());
       view->Activate();

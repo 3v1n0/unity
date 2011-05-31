@@ -386,12 +386,10 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
 
 const gchar* PanelIndicatorObjectEntryView::GetName()
 {
-  std::string const& name = proxy_->id();
-
-  if (name == indicator::Entry::UNUSED_ID)
+  if (proxy_->IsUnused())
     return NULL;
   else
-    return name.c_str();
+    return proxy_->id().c_str();
 }
 
 void PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
@@ -414,6 +412,9 @@ bool PanelIndicatorObjectEntryView::GetShowNow()
 void PanelIndicatorObjectEntryView::GetGeometryForSync(GVariantBuilder* builder,
                                                        const char* name)
 {
+  if (proxy_->IsUnused())
+    return;
+
   nux::Geometry geo = GetAbsoluteGeometry();
   g_variant_builder_add(builder, "(ssiiii)",
                         name,

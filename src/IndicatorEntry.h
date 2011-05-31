@@ -66,6 +66,8 @@ public:
   void set_show_now(bool show_now);
 
   void MarkUnused();
+  bool IsUnused() const;
+
   void ShowMenu(int x, int y, int timestamp, int button);
   void Scroll(int delta);
 

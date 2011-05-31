@@ -22,6 +22,10 @@
 #include <map>
 #include <vector>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace unity {
 namespace indicator {
 
@@ -117,6 +121,7 @@ Indicator& Indicators::Impl::GetIndicator(std::string const& name)
 
 void Indicators::Impl::OnEntryAdded(Entry::Ptr const& entry)
 {
+  cout << "Indicators::Impl::OnEntryAdded: " << entry->id() << endl;
   entries_[entry->id()] = entry;
 }
 

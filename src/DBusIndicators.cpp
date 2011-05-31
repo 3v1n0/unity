@@ -28,6 +28,7 @@
 #include "NuxGraphics/GLWindowManager.h"
 
 #include "config.h"
+#include "Timer.h"
 #include "Variant.h"
 
 using std::cout;
@@ -258,6 +259,7 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
     std::string entry(entry_id);
     if (entry != "")
     {
+      cout << "Sync: " << indicator_id << ", " << entry_id << endl;
       indicator_order.push_back(indicator_id);
       Indicator::Entries& entries = indicators[indicator_id];
       Entry::Ptr e(new Entry(entry,
@@ -280,6 +282,7 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
   {
     std::string const& indicator_name = *i;
     if (curr_indicator != indicator_name) {
+      cout << "Indicator::Sync: " << indicator_name << endl;
       curr_indicator = indicator_name;
       GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
     }
@@ -424,13 +427,19 @@ void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name_,
                               GVariant* parameters, DBusIndicators* remote)
 {
+  logger::BlockTimer timer("on_proxy_signal_received", cout);
+  if (signal_name_)
+    cout << signal_name_ << endl;
+  else
+    cout << "signal_name_ is null" << endl;
+
   std::string signal_name(signal_name_);
   if (signal_name == "EntryActivated")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->ActivateEntry(entry_name);
       cout << "DBusSignal: EntryActivated: \"" << entry_name << "\"" << endl;
+      remote->ActivateEntry(entry_name);
     }
     else {
       cout << "DBusSignal: EntryActivated: passed NULL" << endl;
@@ -440,8 +449,8 @@ void on_proxy_signal_received(GDBusProxy* proxy,
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->on_entry_activate_request.emit(entry_name);
       cout << "DBusSignal: EntryActivateRequest: \"" << entry_name << "\"" << endl;
+      remote->on_entry_activate_request.emit(entry_name);
     }
     else {
       cout << "DBusSignal: EntryActivateRequest: passed NULL" << endl;
@@ -452,10 +461,14 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     const char* id = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     bool sync_one = !g_strcmp0 (id, "") == 0;
 
-    if (sync_one)
+    if (sync_one) {
+      cout << "ReSync: " << id << endl;
       remote->RequestSyncIndicator(id);
-    else
+    }
+    else {
+      cout << "ReSync all" << endl;
       remote->RequestSyncAll();
+    }
   }
   else if (signal_name == "ActiveMenuPointerMotion")
   {

@@ -178,7 +178,7 @@ void Entry::set_show_now(bool show_now)
 
 void Entry::MarkUnused()
 {
-  id_ = "|";;
+  id_ = UNUSED_ID;
   label_ = "";
   label_sensitive_ = false;
   label_visible_ = false;
@@ -186,6 +186,11 @@ void Entry::MarkUnused()
   image_data_ = "";
   image_sensitive_ = false;
   image_visible_ = false;
+}
+
+bool Entry::IsUnused() const
+{
+  return id_ == UNUSED_ID;
 }
 
 void Entry::ShowMenu(int x, int y, int timestamp, int button)

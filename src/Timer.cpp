@@ -45,7 +45,7 @@ BlockTimer::BlockTimer(std::string const& name, std::ostream& out)
   : name_(name)
   , out_(out)
 {
-  out_ << "STARTED (" << name_ << ")" << "\n";
+  out_ << "         STARTED (" << name_ << ")" << "\n";
 }
 
 BlockTimer::~BlockTimer()
