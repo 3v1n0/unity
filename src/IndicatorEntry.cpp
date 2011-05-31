@@ -186,6 +186,7 @@ void Entry::MarkUnused()
   image_data_ = "";
   image_sensitive_ = false;
   image_visible_ = false;
+  updated.emit();
 }
 
 bool Entry::IsUnused() const
