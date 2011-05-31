@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-04-08 13:47-0400\n"
+"POT-Creation-Date: 2011-05-31 12:02+1200\n"
 "PO-Revision-Date: 2010-03-02 12:37-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Chinese (simplified)\n"
@@ -16,6 +16,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "<b>Show the launcher when the pointer:</b>"
+msgstr ""
+
 msgid "All items in the Trash will be permanently deleted."
 msgstr ""
 
@@ -23,6 +26,9 @@ msgid "Browse the Web"
 msgstr ""
 
 msgid "Check Email"
+msgstr ""
+
+msgid "Drop To Add Application"
 msgstr ""
 
 msgid "Eject"
@@ -49,6 +55,9 @@ msgstr ""
 msgid "Keep In Launcher"
 msgstr "保留在启动程序中"
 
+msgid "Launcher & Menus"
+msgstr ""
+
 msgid "Listen to Music"
 msgstr ""
 
@@ -63,6 +72,9 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+msgid "Pushes the left edge of the screen"
+msgstr ""
+
 msgid "Quit"
 msgstr "退出"
 
@@ -75,7 +87,13 @@ msgstr ""
 msgid "Search across all places"
 msgstr ""
 
+msgid "See fewer results"
+msgstr ""
+
 msgid "Shortcuts"
+msgstr ""
+
+msgid "Touches the top left corner of the screen"
 msgstr ""
 
 msgid "Trash"

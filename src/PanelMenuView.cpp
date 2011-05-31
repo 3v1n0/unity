@@ -31,6 +31,7 @@
 
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #include "WindowManager.h"
 
@@ -985,16 +986,9 @@ PanelMenuView::GetChildsName ()
   return "entries";
 }
 
-void
-PanelMenuView::AddProperties (GVariantBuilder *builder)
+void PanelMenuView::AddProperties(GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*

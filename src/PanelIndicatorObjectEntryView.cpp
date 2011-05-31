@@ -27,6 +27,7 @@
 
 #include "PanelIndicatorObjectEntryView.h"
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -395,21 +396,14 @@ const gchar* PanelIndicatorObjectEntryView::GetName()
 
 void PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-
-  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (proxy_->label().c_str()));
-  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (proxy_->label_sensitive()));
-  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (proxy_->label_visible()));
-
-  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (proxy_->image_sensitive()));
-  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (proxy_->image_visible()));
-
-  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (proxy_->active()));
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("label", proxy_->label())
+    .add("label_sensitive", proxy_->label_sensitive())
+    .add("label_visible", proxy_->label_visible())
+    .add("icon_sensitive", proxy_->image_sensitive())
+    .add("icon_visible", proxy_->image_visible())
+    .add("active", proxy_->active());
 }
 
 bool PanelIndicatorObjectEntryView::GetShowNow()

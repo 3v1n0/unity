@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -16,32 +17,46 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "TimeMe.h"
+#include "Timer.h"
 
 #include <ostream>
 
 namespace unity {
 namespace logger {
 
-Timer::Timer(std::string const& name, std::ostream& out)
+Timer::Timer()
+  : start_time_(g_get_monotonic_time())
+{
+}
+
+void Timer::Reset()
+{
+  start_time_ = g_get_monotonic_time();
+}
+
+float Timer::ElapsedSeconds()
+{
+  gint64 end = g_get_monotonic_time();
+  return (end - start_time_) / 1e6;
+}
+
+
+BlockTimer::BlockTimer(std::string const& name, std::ostream& out)
   : name_(name)
   , out_(out)
-  , start_time_(g_get_monotonic_time())
 {
   out_ << "STARTED (" << name_ << ")" << "\n";
 }
 
-Timer::~Timer()
+BlockTimer::~BlockTimer()
 {
-  gint64 end = g_get_monotonic_time();
-  out_ << ((end - start_time_) / 1000.0) << ": FINISHED ("
+  out_ << timer_.ElapsedSeconds() << "s: FINISHED ("
        << name_ << ")" << "\n";
 }
 
-void Timer::log(std::string const& message)
+void BlockTimer::log(std::string const& message)
 {
-  gint64 now = g_get_monotonic_time();
-  out_ << ((now - start_time_) / 1000.0) << ": " << message
+  out_ << timer_.ElapsedSeconds() << "s: " << message
        << " (" << name_ << ")" << "\n";
 }
 

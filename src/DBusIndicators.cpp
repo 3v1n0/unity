@@ -19,14 +19,16 @@
 
 #include "DBusIndicators.h"
 
-#include "config.h"
+#include <algorithm>
+#include <iostream>
 
+#include <X11/Xlib.h>
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
-#include <X11/Xlib.h>
-#include <algorithm>
-#include <iostream>
+
+#include "config.h"
+#include "Variant.h"
 
 using std::cout;
 using std::endl;
@@ -324,10 +326,12 @@ void DBusIndicators::AddProperties(GVariantBuilder *builder)
                 "g-name-owner", &uname,
                 NULL);
 
-  g_variant_builder_add (builder, "{sv}", "backend", g_variant_new_string ("remote"));
-  g_variant_builder_add (builder, "{sv}", "service-name", g_variant_new_string (name));
-  g_variant_builder_add (builder, "{sv}", "service-unique-name", g_variant_new_string (uname));
-  g_variant_builder_add (builder, "{sv}", "using-local-service", g_variant_new_boolean (g_getenv ("PANEL_USE_LOCAL_SERVICE") == NULL ? FALSE : TRUE));
+  bool using_local_service = g_getenv ("PANEL_USE_LOCAL_SERVICE") != NULL;
+  variant::BuilderWrapper(builder)
+    .add("backend", "remote")
+    .add("service-name", name)
+    .add("service-unique-name", uname)
+    .add("using-local-service", using_local_service);
 
   g_free (name);
   g_free (uname);

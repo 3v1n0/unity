@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,31 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
-#ifndef UNITY_TIME_ME_H
-#define UNITY_TIME_ME_H
+#ifndef UNITY_VARIANT_H
+#define UNITY_VARIANT_H
 
-#include <iosfwd>
 #include <string>
 #include <glib.h>
 
-namespace unity {
-namespace logger {
+#include <NuxCore/Rect.h>
 
-class Timer
+namespace unity {
+namespace variant {
+
+class BuilderWrapper
 {
 public:
-    Timer(std::string const& name, std::ostream& out);
-    ~Timer();
+  BuilderWrapper(GVariantBuilder* builder);
 
-    void log(std::string const& message);
+  BuilderWrapper& add(char const* name, bool value);
+  BuilderWrapper& add(char const* name, char const* value);
+  BuilderWrapper& add(char const* name, std::string const& value);
+  BuilderWrapper& add(char const* name, int value);
+  BuilderWrapper& add(char const* name, float value);
+  BuilderWrapper& add(nux::Rect const& value);
 
 private:
-    std::string name_;
-    std::ostream& out_;
-    gint64 start_time_;
+  GVariantBuilder* builder_;
 };
 
 }
