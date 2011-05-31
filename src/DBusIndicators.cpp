@@ -255,12 +255,15 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
                               &image_sensitive,
                               &image_visible))
   {
-    // NULL entries (entry_id == "") are just padding
+    // NULL entries (entry_id == "") are just padding.
     std::string entry(entry_id);
+    // The reason for the padding is to provide the ordering for the
+    // indicators... so we must record the order of the indicators provided
+    // even if they only have padding entries.
+    indicator_order.push_back(indicator_id);
     if (entry != "")
     {
       cout << "Sync: " << indicator_id << ", " << entry_id << endl;
-      indicator_order.push_back(indicator_id);
       Indicator::Entries& entries = indicators[indicator_id];
       Entry::Ptr e(new Entry(entry,
                              label,
