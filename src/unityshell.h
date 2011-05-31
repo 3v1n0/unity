@@ -218,7 +218,6 @@ protected:
 	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
 	nux::BaseWindow        *launcherWindow;
-  nux::HLayout           *layout;
 	nux::BaseWindow        *panelWindow;
 	nux::Geometry           lastTooltipArea;
 	DebugDBusInterface 		 *debugger;
