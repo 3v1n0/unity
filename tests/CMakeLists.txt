@@ -294,6 +294,9 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(test-gtest
                test_timer.cpp
+               test_indicator_entry.cpp
+               ../src/IndicatorEntry.h
+               ../src/IndicatorEntry.cpp
                ../src/Timer.h
                ../src/Timer.cpp
                )
