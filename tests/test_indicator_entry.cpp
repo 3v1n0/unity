@@ -52,6 +52,35 @@ struct ChangeRecorder : sigc::trackable
   ChangedValues changed_values;
 };
 
+TEST(TestIndicatorEntry, TestAssignment) {
+
+  indicator::Entry entry("id", "label", true, true,
+                         0, "some icon", false, true);
+  indicator::Entry other_entry("other_id", "other_label", false, false,
+                         2, "other icon", true, false);
+
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+
+  entry = other_entry;
+
+  EXPECT_EQ(entry.id(), "other_id");
+  EXPECT_EQ(entry.label(), "other_label");
+  EXPECT_FALSE(entry.label_sensitive());
+  EXPECT_FALSE(entry.label_visible());
+  EXPECT_TRUE(entry.image_sensitive());
+  EXPECT_FALSE(entry.image_visible());
+  EXPECT_EQ(counter.count, 1);
+}
+
+TEST(TestIndicatorEntry, TestUnused) {
+
+  indicator::Entry entry("id", "label", true, true,
+                         0, "some icon", false, true);
+
+  entry.MarkUnused();
+  EXPECT_TRUE(entry.IsUnused());
+}
 
 TEST(TestIndicatorEntry, TestShowNowEvents) {
 
