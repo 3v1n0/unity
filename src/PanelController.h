@@ -42,7 +42,7 @@ protected:
   void          AddProperties (GVariantBuilder *builder);
 
 private:
-  PanelView * ViewForWindow (nux::BaseWindow *window);
+  unity::PanelView * ViewForWindow (nux::BaseWindow *window);
   void OnScreenChanged (int primary_monitor, std::vector<nux::Geometry>& monitors);
   
   static void WindowConfigureCallback (int            window_width,

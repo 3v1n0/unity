@@ -44,6 +44,8 @@
 #include "unity-places-view-accessible.h"
 #include "unity-search-bar-accessible.h"
 
+using namespace unity;
+
 static GHashTable *accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
 

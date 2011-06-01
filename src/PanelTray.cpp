@@ -21,6 +21,9 @@
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3
 
+namespace unity
+{
+
 PanelTray::PanelTray ()
 : _n_children (0),
   _tray (NULL),
@@ -218,22 +221,8 @@ PanelTray::OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray)
 //
 // We don't use these
 //
-void
-PanelTray::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+void PanelTray::OnEntryAdded(indicator::Entry::Ptr const& proxy)
 {
-
-}
-
-void
-PanelTray::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
-{
-
-}
-
-void
-PanelTray::OnEntryRemoved (IndicatorObjectEntryProxy *proxy)
-{
-
 }
 
 const gchar *
@@ -254,3 +243,4 @@ PanelTray::AddProperties (GVariantBuilder *builder)
 
 }
 
+} // namespace unity

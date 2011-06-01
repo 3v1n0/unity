@@ -31,11 +31,9 @@
 
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #include "WindowManager.h"
-
-#include "IndicatorObjectEntryProxy.h"
-#include "Variant.h"
 
 #include <gio/gdesktopappinfo.h>
 #include <gconf/gconf-client.h>
@@ -46,6 +44,8 @@
 #include "UScreen.h"
 
 #define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
+
+namespace unity {
 
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
@@ -84,13 +84,15 @@ PanelMenuView::PanelMenuView (int padding)
   _activate_window_changed_id = g_signal_connect (_matcher, "active-window-changed",
                                                   G_CALLBACK (on_active_window_changed), this);
 
+  // TODO: kill _menu_layout - should just use the _layout defined
+  // in the base class.
   _menu_layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   _menu_layout->SetParentObject (this);
 
   /* This is for our parent and for PanelView to read indicator entries, we
    * shouldn't touch this again
    */
-  _layout = _menu_layout;
+  layout_ = _menu_layout;
 
   _padding = padding;
   _name_changed_callback_instance = NULL;
@@ -137,7 +139,6 @@ PanelMenuView::PanelMenuView (int padding)
 
 PanelMenuView::~PanelMenuView ()
 {
-  
   _on_winbutton_close_clicked_connection.disconnect ();
   _on_winbutton_minimize_clicked_connection.disconnect ();
   _on_winbutton_restore_clicked_connection.disconnect ();
@@ -152,9 +153,9 @@ PanelMenuView::~PanelMenuView ()
   _on_window_maximized_connection.disconnect ();
   _on_window_restored_connection.disconnect ();
   _on_window_unmapped_connection.disconnect ();
-  _on_window_moved_connection.disconnect ();  
+  _on_window_moved_connection.disconnect ();
   _on_panelstyle_changed_connection.disconnect ();
-  
+
   if (_name_changed_callback_id)
       g_signal_handler_disconnect (_name_changed_callback_instance,
                                    _name_changed_callback_id);
@@ -162,8 +163,8 @@ PanelMenuView::~PanelMenuView ()
       g_signal_handler_disconnect (_matcher,
                                    _activate_window_changed_id);
   if (_active_moved_id)
-    g_source_remove (_active_moved_id);                                   
-  
+    g_source_remove (_active_moved_id);
+
   if (_title_layer)
     delete _title_layer;
   if (_title_tex)
@@ -189,14 +190,10 @@ PanelMenuView::FullRedraw ()
   NeedRedraw ();
 }
 
-void
-PanelMenuView::SetProxy (IndicatorObjectProxy *proxy)
+void PanelMenuView::SetProxy(indicator::Indicator::Ptr const& proxy)
 {
-  _proxy = proxy;
-
-  _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryAdded));
-  _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryMoved));
-  _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRemoved));
+  proxy_ = proxy;
+  on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryAdded));
 }
 
 long
@@ -314,14 +311,14 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   else
   {
     bool have_valid_entries = false;
-    std::vector<PanelIndicatorObjectEntryView *>::iterator it, eit = _entries.end ();
+    Entries::iterator it, eit = entries_.end ();
 
-    for (it = _entries.begin (); it != eit; ++it)
+    for (it = entries_.begin (); it != eit; ++it)
     {
-      IndicatorObjectEntryProxy *proxy = (*it)->_proxy;
-
-      if (proxy->icon_visible || proxy->label_visible)
+      if ((*it)->IsEntryValid()) {
         have_valid_entries = true;
+        break;
+      }
     }
 
     if ((_is_inside || _last_active_view || _show_now_activated) && have_valid_entries)
@@ -333,7 +330,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         nux::SURFACE_LOCKED_RECT lockrect;
         BYTE *dest;
         int num_row;
-            
+
        _gradient_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
 
         _gradient_texture->LockRect (0, &lockrect, 0);
@@ -416,7 +413,7 @@ PanelMenuView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   {
     if (_is_inside || _last_active_view || _show_now_activated)
     {
-      _layout->ProcessDraw (GfxContext, force_draw);
+      layout_->ProcessDraw (GfxContext, force_draw);
     }
 
     if (_is_maximized)
@@ -548,7 +545,7 @@ PanelMenuView::Refresh ()
     layout = pango_cairo_create_layout (cr);
     pango_layout_set_font_description (layout, desc);
     pango_layout_set_text (layout, label, -1);
-    
+
     cxt = pango_layout_get_context (layout);
     pango_cairo_context_set_font_options (cxt, gdk_screen_get_font_options (screen));
     pango_cairo_context_set_resolution (cxt, (float)dpi/(float)PANGO_SCALE);
@@ -616,7 +613,7 @@ PanelMenuView::Refresh ()
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
-  // The Texture is created with a reference count of 1. 
+  // The Texture is created with a reference count of 1.
   nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
@@ -671,17 +668,16 @@ PanelMenuView::OnActiveChanged (PanelIndicatorObjectEntryView *view,
   FullRedraw ();
 }
 
-void
-PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy, 6);
-  view->active_changed.connect (sigc::mem_fun (this, &PanelMenuView::OnActiveChanged));
-  view->refreshed.connect (sigc::mem_fun (this, &PanelMenuView::OnEntryRefreshed));
-  proxy->show_now_changed.connect (sigc::mem_fun (this, &PanelMenuView::UpdateShowNow));
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView(proxy, 6);
+  view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
+  view->refreshed.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryRefreshed));
+  proxy->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
   _menu_layout->AddView (view, 0, nux::eCenter, nux::eFull);
   _menu_layout->SetContentDistribution (nux::eStackLeft);
 
-  _entries.push_back (view);
+  entries_.push_back (view);
 
   AddChild (view);
 
@@ -690,36 +686,11 @@ PanelMenuView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
 }
 
 void
-PanelMenuView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
-{
-  printf ("ERROR: Moving IndicatorObjectEntry not supported\n");
-}
-
-void
-PanelMenuView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
-{
-  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
- 
-  for (it = _entries.begin(); it != _entries.end(); it++)
-  {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
-    if (view->_proxy == proxy)
-      {
-        RemoveChild (view);
-        _entries.erase (it);
-        _menu_layout->RemoveChildObject (view);
-
-        break;
-      }
-  }
-
-  QueueRelayout ();
-  QueueDraw ();
-}
-
-void
 PanelMenuView::AllMenusClosed ()
 {
+  // NOTE: this is causing the menus to dissapear when the menu heading is
+  // clicked a second time to hide the menu, causing all menus to dissapear
+  // and reappear as soon as the user moves the mouse slightly.
   _is_inside = false;
   _last_active_view = false;
 
@@ -1020,10 +991,9 @@ PanelMenuView::GetChildsName ()
   return "entries";
 }
 
-void
-PanelMenuView::AddProperties (GVariantBuilder *builder)
+void PanelMenuView::AddProperties(GVariantBuilder *builder)
 {
-  unity::variant::BuilderWrapper(builder).add(GetGeometry());
+  variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*
@@ -1061,16 +1031,18 @@ PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
   self->QueueDraw ();
 }
 
-void
-PanelMenuView::UpdateShowNow (bool ignore)
+void PanelMenuView::UpdateShowNow(bool ignore)
 {
-  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
+  // NOTE: This is sub-optimal.  We are getting a dbus event for every menu,
+  // and every time that is setting the show now status of an indicator entry,
+  // we are getting the event raised, and we are ignoring the status, and
+  // looking through all the entries to see if any are shown.
   _show_now_activated = false;
-  
-  for (it = _entries.begin(); it != _entries.end(); it++)
+
+  for (Entries::iterator it = entries_.begin(); it != entries_.end(); ++it)
   {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
-    if (view->GetShowNow ())
+    PanelIndicatorObjectEntryView* view = *it;
+    if (view->GetShowNow())
       _show_now_activated = true;
 
   }
@@ -1095,3 +1067,5 @@ PanelMenuView::HasOurWindowFocused ()
 {
   return _is_own_window;
 }
+
+} // namespace unity

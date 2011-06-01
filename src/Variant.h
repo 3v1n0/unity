@@ -20,6 +20,7 @@
 #ifndef UNITY_VARIANT_H
 #define UNITY_VARIANT_H
 
+#include <string>
 #include <glib.h>
 
 #include <NuxCore/Rect.h>
@@ -34,6 +35,7 @@ public:
 
   BuilderWrapper& add(char const* name, bool value);
   BuilderWrapper& add(char const* name, char const* value);
+  BuilderWrapper& add(char const* name, std::string const& value);
   BuilderWrapper& add(char const* name, int value);
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(nux::Rect const& value);

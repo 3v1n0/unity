@@ -90,6 +90,8 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/DBusIndicators.cpp
+                ../src/DBusIndicators.h
                 ../src/PanelStyle.cpp
                 ../src/PanelStyle.h
                 ../src/PanelView.cpp
@@ -98,19 +100,16 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
-            		../src/PanelTitlebarGrabAreaView.h
-            		../src/PanelTitlebarGrabAreaView.cpp
+            	../src/PanelTitlebarGrabAreaView.h
+            	../src/PanelTitlebarGrabAreaView.cpp
                 ../src/PanelTray.cpp
                 ../src/PanelTray.h
-                ../src/IndicatorObjectFactory.h
-                ../src/IndicatorObjectProxy.h
-                ../src/IndicatorObjectEntryProxy.h
-                ../src/IndicatorObjectFactoryRemote.cpp
-                ../src/IndicatorObjectFactoryRemote.h
-                ../src/IndicatorObjectProxyRemote.cpp
-                ../src/IndicatorObjectProxyRemote.h
-                ../src/IndicatorObjectEntryProxyRemote.cpp
-                ../src/IndicatorObjectEntryProxyRemote.h
+                ../src/Indicators.cpp
+                ../src/Indicators.h
+                ../src/Indicator.cpp
+                ../src/Indicator.h
+                ../src/IndicatorEntry.cpp
+                ../src/IndicatorEntry.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
@@ -298,6 +297,9 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(test-gtest
                test_timer.cpp
+               test_indicator_entry.cpp
+               ../src/IndicatorEntry.h
+               ../src/IndicatorEntry.cpp
                ../src/Timer.h
                ../src/Timer.cpp
                )

@@ -38,6 +38,13 @@ BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
+{
+  g_variant_builder_add(builder_, "{sv}", name,
+                        g_variant_new_string(value.c_str()));
+  return *this;
+}
+
 BuilderWrapper& BuilderWrapper::add(char const* name, int value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));

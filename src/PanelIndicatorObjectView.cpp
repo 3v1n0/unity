@@ -28,42 +28,37 @@
 
 #include "PanelIndicatorObjectView.h"
 
-#include "IndicatorObjectEntryProxy.h"
+#include "IndicatorEntry.h"
 
 #include <glib.h>
 
-PanelIndicatorObjectView::PanelIndicatorObjectView ()
-: View (NUX_TRACKER_LOCATION),
-  _layout (NULL),
-  _proxy (NULL),
-  _entries ()
+namespace unity {
+
+PanelIndicatorObjectView::PanelIndicatorObjectView()
+  : View (NUX_TRACKER_LOCATION)
+  , layout_ (NULL)
 {
 }
 
-PanelIndicatorObjectView::PanelIndicatorObjectView (IndicatorObjectProxy *proxy)
-: View (NUX_TRACKER_LOCATION),
-  _proxy (proxy),
-  _entries ()
+PanelIndicatorObjectView::PanelIndicatorObjectView(indicator::Indicator::Ptr const& proxy)
+  : View(NUX_TRACKER_LOCATION)
+  , proxy_(proxy)
 {
-  g_debug ("IndicatorAdded: %s", _proxy->GetName ().c_str ());
-  _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  g_debug ("IndicatorAdded: %s", proxy_->name().c_str ());
+  layout_ = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
-  SetCompositionLayout (_layout);
-  
+  SetCompositionLayout (layout_);
+
   // default in Nux is 32, we have some PanelIndicatorObjectEntryView which are smaller than that.
   // so redefining the minimum value for them.
   SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
- 
-  _on_entry_added_connection = _proxy->OnEntryAdded.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryAdded));
-  _on_entry_moved_connection = _proxy->OnEntryMoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryMoved));
-  _on_entry_removed_connection = _proxy->OnEntryRemoved.connect (sigc::mem_fun (this, &PanelIndicatorObjectView::OnEntryRemoved));
+
+  on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorObjectView::OnEntryAdded));
 }
 
-PanelIndicatorObjectView::~PanelIndicatorObjectView ()
+PanelIndicatorObjectView::~PanelIndicatorObjectView()
 {
-  _on_entry_added_connection.disconnect ();
-  _on_entry_moved_connection.disconnect ();
-  _on_entry_removed_connection.disconnect ();
+  on_entry_added_connection_.disconnect();
 }
 
 long
@@ -71,8 +66,8 @@ PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
 {
   long ret = TraverseInfo;
 
-  if (_layout)
-    ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
+  if (layout_)
+    ret = layout_->ProcessEvent (ievent, ret, ProcessEventInfo);
   return ret;
 }
 
@@ -81,66 +76,100 @@ PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw
 {
 }
 
+void PanelIndicatorObjectView::QueueDraw()
+{
+  nux::View::QueueDraw();
+  for (Entries::iterator i = entries_.begin(), end = entries_.end(); i != end; ++i)
+  {
+    (*i)->QueueDraw();
+  }
+}
+
+bool PanelIndicatorObjectView::ActivateEntry(std::string const& entry_id)
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+    if (view->IsEntryValid() && entry_id == view->GetName())
+    {
+      g_debug ("%s: Activating: %s", G_STRFUNC, entry_id.c_str());
+      view->Activate();
+      return true;
+    }
+  }
+  return false;
+}
+
+bool PanelIndicatorObjectView::ActivateIfSensitive()
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+    if (view->IsSensitive())
+    {
+      view->Activate();
+      return true;
+    }
+  }
+  return false;
+}
+
+void PanelIndicatorObjectView::GetGeometries(GVariantBuilder* builder, const char* name)
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    (*i)->GetGeometryForSync(builder, name);
+  }
+}
+
+void PanelIndicatorObjectView::OnPointerMoved(int x, int y)
+{
+  for (Entries::iterator i = entries_.begin(), end = entries_.end();
+       i != end; ++i)
+  {
+    PanelIndicatorObjectEntryView* view = *i;
+
+    nux::Geometry geo = view->GetAbsoluteGeometry();
+    if (geo.IsPointInside(x, y))
+    {
+      view->OnMouseDown(x, y, 0, 0);
+      break;
+    }
+  }
+}
+
 void
 PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle (GetGeometry() );
-  if (_layout)
-    _layout->ProcessDraw (GfxContext, force_draw);
+  if (layout_)
+    layout_->ProcessDraw (GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 
-void
-PanelIndicatorObjectView::OnEntryAdded (IndicatorObjectEntryProxy *proxy)
+void PanelIndicatorObjectView::OnEntryAdded(indicator::Entry::Ptr const& proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView (proxy);
-  _layout->AddView (view, 0, nux::eCenter, nux::eFull);
-  _layout->SetContentDistribution (nux::eStackRight);
+  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView(proxy);
+  layout_->AddView (view, 0, nux::eCenter, nux::eFull);
+  layout_->SetContentDistribution (nux::eStackRight);
 
-  _entries.push_back (view);
+  entries_.push_back (view);
 
-  AddChild (view);
+  AddChild(view);
 
   QueueRelayout();
-  QueueDraw ();
+  QueueDraw();
 }
 
-void
-PanelIndicatorObjectView::OnEntryMoved (IndicatorObjectEntryProxy *proxy)
+const gchar* PanelIndicatorObjectView::GetName()
 {
-  printf ("ERROR: Moving IndicatorObjectEntry not supported\n");
+  return proxy_->name().c_str();
 }
 
-void
-PanelIndicatorObjectView::OnEntryRemoved(IndicatorObjectEntryProxy *proxy)
-{
-  std::vector<PanelIndicatorObjectEntryView *>::iterator it;
-  
-  for (it = _entries.begin(); it != _entries.end(); it++)
-  {
-    PanelIndicatorObjectEntryView *view = static_cast<PanelIndicatorObjectEntryView *> (*it);
-    if (view->_proxy == proxy)
-      {
-        RemoveChild (view);
-        _entries.erase (it);
-        _layout->RemoveChildObject (view);
-
-        break;
-      }
-  }
-
-  QueueRelayout ();
-  QueueDraw ();
-}
-
-const gchar *
-PanelIndicatorObjectView::GetName ()
-{
-  return _proxy->GetName ().c_str ();
-}
-
-const gchar *
-PanelIndicatorObjectView::GetChildsName ()
+const gchar* PanelIndicatorObjectView::GetChildsName()
 {
   return "entries";
 }
@@ -157,3 +186,4 @@ PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
 
+} // namespace unity
