@@ -30,11 +30,6 @@
 
 #include "IndicatorEntry.h"
 
-#include "Timer.h"
-#include <iostream>
-using std::cout;
-using std::endl;
-
 #include <glib.h>
 
 namespace unity {

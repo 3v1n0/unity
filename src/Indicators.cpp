@@ -22,9 +22,6 @@
 #include <map>
 #include <vector>
 
-#include <iostream>
-using std::cout;
-using std::endl;
 
 namespace unity {
 namespace indicator {
@@ -89,7 +86,6 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id)
   if (active_entry_)
   {
     active_entry_->set_active(true);
-    cout << "Indicators::Impl::ActivateEntry: " << *active_entry_ << endl;
   }
 }
 
@@ -100,7 +96,6 @@ void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
   if (entry)
   {
     entry->set_show_now(show_now);
-    cout << "Indicators::Impl::SetEntryShowNow: " << *entry << endl;
   }
 }
 

@@ -437,19 +437,12 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     if (entry_name) {
       remote->ActivateEntry(entry_name);
     }
-    else {
-      cout << "DBusSignal: EntryActivated: passed NULL" << endl;
-    }
   }
   else if (signal_name == "EntryActivateRequest")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      cout << "DBusSignal: EntryActivateRequest: \"" << entry_name << "\"" << endl;
       remote->on_entry_activate_request.emit(entry_name);
-    }
-    else {
-      cout << "DBusSignal: EntryActivateRequest: passed NULL" << endl;
     }
   }
   else if (signal_name == "ReSync")
