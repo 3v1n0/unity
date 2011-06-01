@@ -92,8 +92,6 @@ void PanelIndicatorObjectView::QueueDraw()
 
 bool PanelIndicatorObjectView::ActivateEntry(std::string const& entry_id)
 {
-  logger::BlockTimer t("PanelIndicatorObjectView::ActivateEntry", cout);
-  cout << "\t" << GetName() << endl;
   for (Entries::iterator i = entries_.begin(), end = entries_.end();
        i != end; ++i)
   {

@@ -27,6 +27,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
+#include <iosfwd>
+
 namespace unity {
 namespace indicator {
 
@@ -92,9 +94,10 @@ private:
   bool image_sensitive_;
 
   bool show_now_;
-  bool dirty_;
   bool active_;
 };
+
+std::ostream& operator<<(std::ostream& out, Entry const& e);
 
 }
 }

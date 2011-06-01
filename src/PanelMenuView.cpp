@@ -1026,15 +1026,18 @@ PanelMenuView::OnPlaceViewHidden (GVariant *data, PanelMenuView *self)
   self->QueueDraw ();
 }
 
-void
-PanelMenuView::UpdateShowNow (bool ignore)
+void PanelMenuView::UpdateShowNow(bool ignore)
 {
+  // NOTE: This is sub-optimal.  We are getting a dbus event for every menu,
+  // and every time that is setting the show now status of an indicator entry,
+  // we are getting the event raised, and we are ignoring the status, and
+  // looking through all the entries to see if any are shown.
   _show_now_activated = false;
 
   for (Entries::iterator it = entries_.begin(); it != entries_.end(); ++it)
   {
-    PanelIndicatorObjectEntryView *view = *it;
-    if (view->GetShowNow ())
+    PanelIndicatorObjectEntryView* view = *it;
+    if (view->GetShowNow())
       _show_now_activated = true;
 
   }

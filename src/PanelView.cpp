@@ -284,7 +284,6 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
 void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
-  logger::BlockTimer t("PanelView::OnEntryActivateRequest", std::cout);
   if (!_menu_view->GetControlsActive ())
     return;
 

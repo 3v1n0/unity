@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <iosfwd>
 
 #include <gio/gio.h>
 #include <dee.h>
@@ -45,6 +46,7 @@ public:
   std::string const& name() const;
 
   void Sync(Entries const& new_entries);
+  Entry::Ptr GetEntry(std::string const& entry_id) const;
 
   void OnEntryShowMenu(std::string const& entry_id, int x, int y, int timestamp, int button);
   void OnEntryScroll(std::string const& entry_id, int delta);
@@ -57,7 +59,10 @@ public:
 private:
   Entries entries_;
   std::string name_;
+
+  friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
 };
+
 
 }
 }

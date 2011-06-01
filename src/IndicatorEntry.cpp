@@ -33,7 +33,6 @@ Entry::Entry()
   , image_visible_(false)
   , image_sensitive_(false)
   , show_now_(false)
-  , dirty_(false)
   , active_(false)
 {
 }
@@ -55,7 +54,6 @@ Entry::Entry(std::string const& id,
   , image_visible_(image_visible)
   , image_sensitive_(image_sensitive)
   , show_now_(false)
-  , dirty_(false)
   , active_(false)
 {
 }
@@ -202,6 +200,18 @@ void Entry::ShowMenu(int x, int y, int timestamp, int button)
 void Entry::Scroll(int delta)
 {
   on_scroll.emit(id_, delta);
+}
+
+std::ostream& operator<<(std::ostream& out, Entry const& e)
+{
+  out << "<indicator::Entry " << e.id()
+      << std::boolalpha
+      << " \"" << e.label() << "\" ("
+      << e.label_sensitive() << ", " << e.label_visible() << ") image ("
+      << e.image_sensitive() << ", " << e.image_visible() << ") "
+      << (e.active() ? "active" : "not-active") << " "
+      << (e.show_now() ? "show" : "dont-show" ) <<" >";
+  return out;
 }
 
 

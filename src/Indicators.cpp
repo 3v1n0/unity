@@ -46,10 +46,11 @@ public:
 
   void OnEntryAdded(Entry::Ptr const& entry);
 
+  Entry::Ptr GetEntry(std::string const& entry_id);
+
 private:
   Indicators* owner_;
   IndicatorMap indicators_;
-  EntryMap entries_;
   Entry::Ptr active_entry_;
 };
 
@@ -84,20 +85,22 @@ void Indicators::Impl::ActivateEntry(std::string const& entry_id)
 {
   if (active_entry_)
     active_entry_->set_active(false);
-  EntryMap::iterator i = entries_.find(entry_id);
-  if (i != entries_.end())
+  active_entry_ = GetEntry(entry_id);
+  if (active_entry_)
   {
-    active_entry_ = i->second;
     active_entry_->set_active(true);
+    cout << "Indicators::Impl::ActivateEntry: " << *active_entry_ << endl;
   }
 }
 
-void Indicators::Impl::SetEntryShowNow(std::string const& entry_id, bool show_now)
+void Indicators::Impl::SetEntryShowNow(std::string const& entry_id,
+                                       bool show_now)
 {
-  EntryMap::iterator i = entries_.find(entry_id);
-  if (i != entries_.end())
+  Entry::Ptr entry = GetEntry(entry_id);
+  if (entry)
   {
-    i->second->set_show_now(show_now);
+    entry->set_show_now(show_now);
+    cout << "Indicators::Impl::SetEntryShowNow: " << *entry << endl;
   }
 }
 
@@ -109,8 +112,6 @@ Indicator& Indicators::Impl::GetIndicator(std::string const& name)
 
   // Make a new one
   Indicator::Ptr indicator(new Indicator(name));
-  // The implementation class is interested in new entries.
-  indicator->on_entry_added.connect(sigc::mem_fun(this, &Indicators::Impl::OnEntryAdded));
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
@@ -119,10 +120,18 @@ Indicator& Indicators::Impl::GetIndicator(std::string const& name)
   return *indicator;
 }
 
-void Indicators::Impl::OnEntryAdded(Entry::Ptr const& entry)
+Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)
 {
-  cout << "Indicators::Impl::OnEntryAdded: " << entry->id() << endl;
-  entries_[entry->id()] = entry;
+  // Since we reuse Entry objects but change the value that they are keyed on,
+  // we need to traverse through the Indicators asking them if they have this
+  // entry_id.
+  Entry::Ptr result;
+  for (IndicatorMap::iterator i = indicators_.begin(), end = indicators_.end();
+       i != end && !result; ++i)
+  {
+    result = i->second->GetEntry(entry_id);
+  }
+  return result;
 }
 
 

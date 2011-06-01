@@ -430,18 +430,11 @@ void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name_,
                               GVariant* parameters, DBusIndicators* remote)
 {
-  logger::BlockTimer timer("on_proxy_signal_received", cout);
-  if (signal_name_)
-    cout << signal_name_ << endl;
-  else
-    cout << "signal_name_ is null" << endl;
-
   std::string signal_name(signal_name_);
   if (signal_name == "EntryActivated")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      cout << "DBusSignal: EntryActivated: \"" << entry_name << "\"" << endl;
       remote->ActivateEntry(entry_name);
     }
     else {
@@ -465,11 +458,9 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     bool sync_one = !g_strcmp0 (id, "") == 0;
 
     if (sync_one) {
-      cout << "ReSync: " << id << endl;
       remote->RequestSyncIndicator(id);
     }
     else {
-      cout << "ReSync all" << endl;
       remote->RequestSyncAll();
     }
   }

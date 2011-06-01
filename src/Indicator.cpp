@@ -19,6 +19,10 @@
 
 #include "Indicator.h"
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 namespace unity {
 namespace indicator {
 
@@ -44,6 +48,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       Entry& our_entry = *(entries_[curr_index]);
       Entry const& new_entry = *(new_entries[new_index]);
       our_entry = new_entry;
+      cout << our_entry << endl;
     }
     else
     {
@@ -53,6 +58,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
       new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
       on_entry_added.emit(new_entry);
+      cout << *new_entry << endl;
     }
   }
 
@@ -61,6 +67,17 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
   {
     entries_[curr_index]->MarkUnused();
   }
+}
+
+Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
+{
+  for (Entries::const_iterator i = entries_.begin(),
+         end = entries_.end(); i != end; ++i)
+  {
+    if ((*i)->id() == entry_id)
+      return *i;
+  }
+  return Entry::Ptr();
 }
 
 void Indicator::OnEntryShowMenu(std::string const& entry_id,
@@ -74,6 +91,19 @@ void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
 {
   on_scroll.emit(entry_id, delta);
 }
+
+std::ostream& operator<<(std::ostream& out, Indicator const& i)
+{
+  out << "<Indicator " << i.name() << endl;
+  for (Indicator::Entries::const_iterator iter = i.entries_.begin(),
+         end = i.entries_.end(); iter != end; ++iter)
+  {
+    out << "\t" << **iter << endl;
+  }
+  out << "\t>" << endl;
+  return out;
+}
+
 
 } // namespace indicator
 } // namespace unity
