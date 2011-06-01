@@ -57,11 +57,11 @@ Object<T>& Object<T>::operator=(T* val)
 }
 
 template <typename T>
-Object<T>& Object<T>operator=(Object const& other)
+Object<T>& Object<T>::operator=(Object const& other)
 {
   if (object_)
     g_object_unref(object_);
-  object_ = val;
+  object_ = other;
   if (object_)
     g_object_ref(object_);
 }
