@@ -138,7 +138,6 @@ PanelMenuView::PanelMenuView (int padding)
 
 PanelMenuView::~PanelMenuView ()
 {
-  
   _on_winbutton_close_clicked_connection.disconnect ();
   _on_winbutton_minimize_clicked_connection.disconnect ();
   _on_winbutton_restore_clicked_connection.disconnect ();
@@ -153,9 +152,9 @@ PanelMenuView::~PanelMenuView ()
   _on_window_maximized_connection.disconnect ();
   _on_window_restored_connection.disconnect ();
   _on_window_unmapped_connection.disconnect ();
-  _on_window_moved_connection.disconnect ();  
+  _on_window_moved_connection.disconnect ();
   _on_panelstyle_changed_connection.disconnect ();
-  
+
   if (_name_changed_callback_id)
       g_signal_handler_disconnect (_name_changed_callback_instance,
                                    _name_changed_callback_id);
@@ -163,8 +162,8 @@ PanelMenuView::~PanelMenuView ()
       g_signal_handler_disconnect (_matcher,
                                    _activate_window_changed_id);
   if (_active_moved_id)
-    g_source_remove (_active_moved_id);                                   
-  
+    g_source_remove (_active_moved_id);
+
   if (_title_layer)
     delete _title_layer;
   if (_title_tex)
@@ -686,6 +685,9 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 void
 PanelMenuView::AllMenusClosed ()
 {
+  // NOTE: this is causing the menus to dissapear when the menu heading is
+  // clicked a second time to hide the menu, causing all menus to dissapear
+  // and reappear as soon as the user moves the mouse slightly.
   _is_inside = false;
   _last_active_view = false;
 
