@@ -3318,6 +3318,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
+    case XK_Menu:
       // open quicklist of currently selected icon
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
