@@ -34,6 +34,8 @@
 #include <core/core.h>
 #include <core/atoms.h>
 
+using unity::FavoriteStore;
+
 struct _ShortcutData
 {
   BamfLauncherIcon *self;
@@ -735,7 +737,7 @@ BamfLauncherIcon::UnStick (void)
     this->Remove ();
 
   if (desktop_file && strlen (desktop_file) > 0)
-    FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 
 void
@@ -754,7 +756,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
     bamf_view_set_sticky (view, true);
 
     if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->AddFavorite (desktop_file, -1); //self->SortPriority ());
+      FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
   }
 }
 

@@ -23,34 +23,39 @@
 #include <gio/gio.h>
 
 #include "FavoriteStore.h"
+#include "GLibWrapper.h"
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session
+namespace unity {
+namespace internal {
 
 class FavoriteStoreGSettings : public FavoriteStore
 {
 public:
+  FavoriteStoreGSettings();
+  FavoriteStoreGSettings(GSettingsBackend *backend);
 
-  FavoriteStoreGSettings ();
-  FavoriteStoreGSettings (GSettingsBackend *backend);
-  ~FavoriteStoreGSettings ();
+  virtual FavoriteList const& GetFavorites();
+  virtual void AddFavorite(std::string const& desktop_path, int position);
+  virtual void RemoveFavorite(std::string const& desktop_path);
+  virtual void MoveFavorite(std::string const& desktop_path, int position);
+  virtual void SetFavorites(FavoriteList const& desktop_paths);
 
   //Methods
-  GSList * GetFavorites ();
-  void     AddFavorite    (const char *desktop_path, gint    position);
-  void     RemoveFavorite (const char *desktop_path);
-  void     MoveFavorite   (const char *desktop_path, gint position);
-  void     SetFavorites   (std::list<const char *> desktop_paths);
-
-  void     Changed        (const char *key);
+  void Changed(std::string const& key);
 
 private:
-  void Init    ();
-  void Refresh ();
+  void Init();
+  void Refresh();
+  void SaveFavorites(FavoriteList const& favorites);
 
-  GSList    *m_favorites;
-  GSettings *m_settings;
-  bool       m_ignore_signals;
+  FavoriteList favorites_;
+  glib::Object<GSettings> settings_;
+  bool ignore_signals_;
 };
+
+}
+}
 
 #endif // FAVORITE_STORE_GSETTINGS_H
