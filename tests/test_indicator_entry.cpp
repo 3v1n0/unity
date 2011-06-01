@@ -130,5 +130,64 @@ TEST(TestIndicatorEntry, TestActiveEvents) {
   EXPECT_TRUE(recorder.changed_values[0]);
 }
 
+struct ScrollRecorder : public ChangeRecorder<int>
+{
+  ScrollRecorder(std::string const& name) : entry_name(name) {}
+
+  void OnScroll(std::string const& name, int delta)
+    {
+      EXPECT_EQ(name, entry_name);
+      value_changed(delta);
+    }
+
+  std::string entry_name;
+};
+
+TEST(TestIndicatorEntry, TestOnScroll) {
+
+  indicator::Entry entry("id", "label", true, true,
+                         0, "some icon", false, true);
+
+  ScrollRecorder recorder("id");
+  entry.on_scroll.connect(sigc::mem_fun(recorder, &ScrollRecorder::OnScroll));
+
+  entry.Scroll(10);
+  entry.Scroll(-20);
+
+  ASSERT_EQ(recorder.changed_values.size(), 2);
+  EXPECT_EQ(recorder.changed_values[0], 10);
+  EXPECT_EQ(recorder.changed_values[1], -20);
+}
+
+struct ShowMenuRecorder
+{
+  void OnShowMenu(std::string const& a, int b, int c, int d, int e)
+    {
+      name = a;
+      x = b;
+      y = c;
+      timestamp = d;
+      button = e;
+    }
+  std::string name;
+  int x, y, timestamp, button;
+};
+
+TEST(TestIndicatorEntry, TestOnShowMenu) {
+
+  indicator::Entry entry("id", "label", true, true,
+                         0, "some icon", false, true);
+
+  ShowMenuRecorder recorder;
+  entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
+
+  entry.ShowMenu(10, 20, 12345, 1);
+  EXPECT_EQ(recorder.name, "id");
+  EXPECT_EQ(recorder.x, 10);
+  EXPECT_EQ(recorder.y, 20);
+  EXPECT_EQ(recorder.timestamp, 12345);
+  EXPECT_EQ(recorder.button, 1);
+}
+
 
 }
