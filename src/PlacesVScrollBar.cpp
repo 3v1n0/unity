@@ -162,7 +162,7 @@ PlacesVScrollBar::UpdateTexture ()
   if (_slider)
     _slider->UnReference ();
 
-  _slider = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _slider = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   if (_slider)
     _slider->Update (bitmap);
 
@@ -207,7 +207,7 @@ PlacesVScrollBar::UpdateTexture ()
   if (_track)
     _track->UnReference ();
 
-  _track = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _track = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   if (_track)
     _track->Update (bitmap);
 

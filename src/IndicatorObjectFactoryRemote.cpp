@@ -24,6 +24,7 @@
 #include "IndicatorObjectProxyRemote.h"
 #include "IndicatorObjectEntryProxyRemote.h"
 #include "IndicatorObjectEntryProxy.h"
+#include "Variant.h"
 
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
@@ -175,7 +176,7 @@ send_show_entry (ShowEntryData *data)
   g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
   
   /* Re-flush 'cos X is crap like that */
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XFlush (d);
   
   g_dbus_proxy_call (data->proxy,
@@ -204,7 +205,7 @@ IndicatorObjectFactoryRemote::OnShowMenuRequestReceived (const char *entry_id,
                                                          guint       timestamp,
                                                          guint32     button)
 {
-  Display* d = nux::GetThreadGLWindow()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
   XFlush (d);
 
@@ -420,10 +421,12 @@ IndicatorObjectFactoryRemote::AddProperties (GVariantBuilder *builder)
                 "g-name-owner", &uname,
                 NULL);
 
-  g_variant_builder_add (builder, "{sv}", "backend", g_variant_new_string ("remote"));
-  g_variant_builder_add (builder, "{sv}", "service-name", g_variant_new_string (name));
-  g_variant_builder_add (builder, "{sv}", "service-unique-name", g_variant_new_string (uname));
-  g_variant_builder_add (builder, "{sv}", "using-local-service", g_variant_new_boolean (g_getenv ("PANEL_USE_LOCAL_SERVICE") == NULL ? FALSE : TRUE));
+  bool using_local_service = g_getenv ("PANEL_USE_LOCAL_SERVICE") != NULL;
+  unity::variant::BuilderWrapper(builder)
+    .add("backend", "remote")
+    .add("service-name", name)
+    .add("service-unique-name", uname)
+    .add("using-local-service", using_local_service);
 
   g_free (name);
   g_free (uname);

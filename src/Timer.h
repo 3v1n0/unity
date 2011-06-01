@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -16,7 +17,44 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "TimeMe.h"
+#ifndef UNITY_TIMER_H
+#define UNITY_TIMER_H
 
-gint64 _____last_time_____ = 0;
-gint64 _____start_time_____ = 0;
+#include <iosfwd>
+#include <string>
+#include <glib.h>
+
+namespace unity {
+namespace logger {
+
+class Timer
+{
+public:
+  Timer();
+
+  void Reset();
+  float ElapsedSeconds();
+
+private:
+  gint64 start_time_;
+};
+
+
+class BlockTimer
+{
+public:
+  BlockTimer(std::string const& name, std::ostream& out);
+  ~BlockTimer();
+
+  void log(std::string const& message);
+
+private:
+  Timer timer_;
+  std::string name_;
+  std::ostream& out_;
+};
+
+}
+}
+
+#endif

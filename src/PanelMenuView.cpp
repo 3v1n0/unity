@@ -35,15 +35,17 @@
 #include "WindowManager.h"
 
 #include "IndicatorObjectEntryProxy.h"
+#include "Variant.h"
 
 #include <gio/gdesktopappinfo.h>
+#include <gconf/gconf-client.h>
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
 #include "UScreen.h"
 
-#define BUTTONS_WIDTH 72
+#define WINDOW_TITLE_FONT_KEY "/apps/metacity/general/titlebar_font"
 
 static void on_active_window_changed (BamfMatcher   *matcher,
                                       BamfView      *old_view,
@@ -332,7 +334,7 @@ PanelMenuView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
         BYTE *dest;
         int num_row;
             
-       _gradient_texture = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
+       _gradient_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (texture_data.GetWidth (), texture_data.GetHeight (), 1, texture_data.GetFormat ());
 
         _gradient_texture->LockRect (0, &lockrect, 0);
 
@@ -530,17 +532,18 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
+    GConfClient *client = gconf_client_get_default ();
     PangoContext *cxt;
     PangoRectangle log_rect;
 
     cr = _util_cg.GetContext ();
 
     g_object_get (settings,
-                  "gtk-font-name", &font_description,
                   "gtk-xft-dpi", &dpi,
                   NULL);
+
+    font_description = gconf_client_get_string (client, WINDOW_TITLE_FONT_KEY, NULL);
     desc = pango_font_description_from_string (font_description);
-    pango_font_description_set_weight (desc, PANGO_WEIGHT_BOLD);
 
     layout = pango_cairo_create_layout (cr);
     pango_layout_set_font_description (layout, desc);
@@ -558,6 +561,7 @@ PanelMenuView::Refresh ()
     pango_font_description_free (desc);
     g_free (font_description);
     cairo_destroy (cr);
+    g_object_unref (client);
   }
 
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, width, height);
@@ -613,7 +617,7 @@ PanelMenuView::Refresh ()
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
   // The Texture is created with a reference count of 1. 
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
 
@@ -1019,13 +1023,7 @@ PanelMenuView::GetChildsName ()
 void
 PanelMenuView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 /*

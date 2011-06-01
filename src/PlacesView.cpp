@@ -34,6 +34,7 @@
 #include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "PlacesView.h"
+#include "Variant.h"
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 
@@ -242,8 +243,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_bg_blur_texture.IsValid () && paint_blur)
   {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
-    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay ()->GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
     
     GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
     GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
@@ -1006,12 +1007,7 @@ PlacesView::GetName ()
 void
 PlacesView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 //

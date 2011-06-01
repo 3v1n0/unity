@@ -27,6 +27,7 @@
 
 #include "PanelIndicatorObjectEntryView.h"
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #include <glib.h>
 #include <pango/pangocairo.h>
@@ -49,6 +50,7 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEnt
   _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
   InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
   InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
@@ -82,7 +84,15 @@ PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, lon
                       GetAbsoluteGeometry ().y + PANEL_HEIGHT,
                       time (NULL),
                       nux::GetEventButton (button_flags));
+  } else {
+	  Refresh();
   }
+}
+
+void
+PanelIndicatorObjectEntryView::OnMouseUp (int x, int y, long button_flags, long key_flags)
+{
+  Refresh();
 }
 
 void
@@ -242,14 +252,12 @@ PanelIndicatorObjectEntryView::Refresh ()
   x = _padding;
   y = 0;
 
-  if (_proxy->GetPixbuf () && _proxy->icon_visible)
+  if (pixbuf && _proxy->icon_visible)
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
     cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
   if (label && _proxy->label_visible)
@@ -284,7 +292,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
   // The Texture is created with a reference count of 1. 
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
   
@@ -311,6 +319,8 @@ PanelIndicatorObjectEntryView::Refresh ()
   refreshed.emit (this);
   if (label)
     g_free (label);
+  if (pixbuf)
+    g_object_unref (pixbuf);
 }
 
 static void
@@ -411,21 +421,14 @@ PanelIndicatorObjectEntryView::GetName ()
 void
 PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
-
-  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (_proxy->GetLabel ()));
-  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (_proxy->label_sensitive));
-  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (_proxy->label_visible));
-
-  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (_proxy->icon_sensitive));
-  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
-
-  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
+  unity::variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("label", _proxy->GetLabel())
+    .add("label_sensitive", _proxy->label_sensitive)
+    .add("label_visible", _proxy->label_visible)
+    .add("icon_sensitive", _proxy->icon_sensitive)
+    .add("icon_visible", _proxy->icon_visible)
+    .add("active", _proxy->GetActive());
 }
 
 bool

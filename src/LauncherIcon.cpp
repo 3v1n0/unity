@@ -42,6 +42,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include "Variant.h"
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"
@@ -171,19 +172,19 @@ LauncherIcon::GetName ()
 void
 LauncherIcon::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (_center.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (_center.y));
-  g_variant_builder_add (builder, "{sv}", "z", g_variant_new_int32 (_center.z));
-  g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
-  g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
-  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
-  
-  g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
-  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (QUIRK_ACTIVE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (QUIRK_VISIBLE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (QUIRK_URGENT)));
-  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (QUIRK_RUNNING)));
-  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
+  unity::variant::BuilderWrapper(builder)
+    .add("x", _center.x)
+    .add("y", _center.y)
+    .add("z", _center.z)
+    .add("related-windows", _related_windows)
+    .add("icon-type", _icon_type)
+    .add("tooltip-text", m_TooltipText.GetTCharPtr ())
+    .add("sort-priority", _sort_priority)
+    .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
+    .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
+    .add("quirk-urgent", GetQuirk (QUIRK_URGENT))
+    .add("quirk-running", GetQuirk (QUIRK_RUNNING))
+    .add("quirk-presented", GetQuirk (QUIRK_PRESENTED));
 }
 
 void
@@ -515,6 +516,11 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
     
     const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    gboolean prop_visible = dbusmenu_menuitem_property_get_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
+    
+    // Skip this item, it is invisible right now.
+    if (!prop_visible)
+      continue;
 
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
@@ -956,7 +962,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   nux::NBitmapData* bitmap = cg->GetBitmap ();
 
-  emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  emblem = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
   delete bitmap;
 

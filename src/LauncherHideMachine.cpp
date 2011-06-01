@@ -16,7 +16,9 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
- 
+
+#include <boost/lexical_cast.hpp>
+
 #include "LauncherHideMachine.h"
 
 LauncherHideMachine::LauncherHideMachine ()
@@ -265,8 +267,10 @@ LauncherHideMachine::EmitShouldHideChanged (gpointer data)
   return false;
 }
 
-char*
+std::string
 LauncherHideMachine::DebugHideQuirks ()
 {
-  return g_strdup_printf ("%d", _quirks);
+  // Although I do wonder why we are returning a string representation
+  // of the enum value as an integer anyway.
+  return boost::lexical_cast<std::string>(_quirks);
 }
