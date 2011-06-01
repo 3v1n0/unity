@@ -156,8 +156,9 @@ bool Entry::show_now() const
 
 void Entry::set_show_now(bool show_now)
 {
-  // TODO: check to see if we need to emit for every setting, or only
-  // if the value actually changes.
+  if (show_now_ == show_now)
+    return;
+
   show_now_ = show_now;
   show_now_changed.emit(show_now);
   updated.emit();

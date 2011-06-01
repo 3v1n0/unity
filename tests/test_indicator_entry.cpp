@@ -53,6 +53,30 @@ struct ChangeRecorder : sigc::trackable
 };
 
 
+TEST(TestIndicatorEntry, TestShowNowEvents) {
+
+  indicator::Entry entry("id", "label", true, true,
+                         0, "some icon", false, true);
+
+  ChangeRecorder<bool> recorder;
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+  entry.show_now_changed.connect(sigc::mem_fun(recorder, &ChangeRecorder<bool>::value_changed));
+
+  // Setting show_now to the same value doesn't emit any events.
+  entry.set_show_now(false);
+  EXPECT_FALSE(entry.show_now());
+  EXPECT_EQ(counter.count, 0);
+  EXPECT_EQ(recorder.changed_values.size(), 0);
+
+  // Setting to a different value does emit the events.
+  entry.set_show_now(true);
+  EXPECT_TRUE(entry.show_now());
+  EXPECT_EQ(counter.count, 1);
+  ASSERT_EQ(recorder.changed_values.size(), 1);
+  EXPECT_TRUE(recorder.changed_values[0]);
+}
+
 TEST(TestIndicatorEntry, TestActiveEvents) {
 
   indicator::Entry entry("id", "label", true, true,
@@ -75,8 +99,7 @@ TEST(TestIndicatorEntry, TestActiveEvents) {
   EXPECT_EQ(counter.count, 1);
   ASSERT_EQ(recorder.changed_values.size(), 1);
   EXPECT_TRUE(recorder.changed_values[0]);
-
-
 }
+
 
 }
