@@ -26,17 +26,6 @@ namespace indicator {
 
 std::string const Entry::UNUSED_ID("|");
 
-Entry::Entry()
-  : label_visible_(false)
-  , label_sensitive_(false)
-  , image_type_(0)
-  , image_visible_(false)
-  , image_sensitive_(false)
-  , show_now_(false)
-  , active_(false)
-{
-}
-
 Entry::Entry(std::string const& id,
              std::string const& label,
              bool label_sensitive,

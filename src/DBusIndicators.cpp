@@ -20,7 +20,6 @@
 #include "DBusIndicators.h"
 
 #include <algorithm>
-#include <iostream>
 
 #include <X11/Xlib.h>
 #include "Nux/Nux.h"
@@ -28,11 +27,8 @@
 #include "NuxGraphics/GLWindowManager.h"
 
 #include "config.h"
-#include "Timer.h"
 #include "Variant.h"
 
-using std::cout;
-using std::endl;
 
 namespace unity {
 namespace indicator {
@@ -263,7 +259,6 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
     indicator_order.push_back(indicator_id);
     if (entry != "")
     {
-      cout << "Sync: " << indicator_id << ", " << entry_id << endl;
       Indicator::Entries& entries = indicators[indicator_id];
       Entry::Ptr e(new Entry(entry,
                              label,
@@ -285,7 +280,6 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
   {
     std::string const& indicator_name = *i;
     if (curr_indicator != indicator_name) {
-      cout << "Indicator::Sync: " << indicator_name << endl;
       curr_indicator = indicator_name;
       GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
     }

@@ -38,7 +38,6 @@ public:
   typedef boost::shared_ptr<Entry> Ptr;
   static std::string const UNUSED_ID;
 
-  Entry();
   Entry(std::string const& id,
         std::string const& label,
         bool label_sensitive,
