@@ -34,10 +34,6 @@
 namespace unity {
 namespace indicator {
 
-const char* const S_NAME = "com.canonical.Unity.Panel.Service";
-const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
-const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
-
 struct SyncData
 {
   SyncData(DBusIndicators* self_)
@@ -68,6 +64,10 @@ struct SyncData
 
 namespace {
 // This anonymous namespace holds the DBus callback methods.
+
+const char* const S_NAME = "com.canonical.Unity.Panel.Service";
+const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
+const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 
 struct ShowEntryData
 {
