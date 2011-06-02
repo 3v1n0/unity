@@ -115,7 +115,8 @@ public:
   void RequestSyncAll();
   void RequestSyncIndicator(std::string const& name);
   void Sync(GVariant* args, SyncData* data);
-  void SyncGeometries(GVariant* args);
+  void SyncGeometries(std::string const& name,
+                      EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
@@ -344,16 +345,37 @@ void DBusIndicators::Impl::Sync(GVariant *args, SyncData* data)
   owner_->on_synced.emit();
 }
 
-void DBusIndicators::Impl::SyncGeometries(GVariant* args)
+void DBusIndicators::Impl::SyncGeometries(std::string const& name,
+                                          EntryLocationMap const& locations)
 {
-  if (proxy_) {
-    g_dbus_proxy_call(proxy_, "SyncGeometries", args,
-                      G_DBUS_CALL_FLAGS_NONE,
-                      -1,
-                    NULL,
-                      NULL,
-                      NULL);
+  if (!proxy_)
+    return;
+
+  GVariantBuilder b;
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
+
+  for (EntryLocationMap::const_iterator i = locations.begin(), end = locations.end();
+       i != end; ++i)
+  {
+    nux::Rect const& rect = i->second;
+    g_variant_builder_add(&b, "(ssiiii)",
+                          name.c_str(),
+                          i->first.c_str(),
+                          rect.x,
+                          rect.y,
+                          rect.width,
+                          rect.height);
   }
+
+  g_variant_builder_close (&b);
+  g_dbus_proxy_call(proxy_, "SyncGeometries",
+                    g_variant_builder_end(&b),
+                    G_DBUS_CALL_FLAGS_NONE,
+                    -1,
+                    NULL,
+                    NULL,
+                    NULL);
 }
 
 std::string DBusIndicators::Impl::name() const
@@ -390,9 +412,10 @@ DBusIndicators::~DBusIndicators()
   delete pimpl;
 }
 
-void DBusIndicators::SyncGeometries(GVariant* args)
+void DBusIndicators::SyncGeometries(std::string const& name,
+                                    EntryLocationMap const& locations)
 {
-  pimpl->SyncGeometries(args);
+  pimpl->SyncGeometries(name, locations);
 }
 
 void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)

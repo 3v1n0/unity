@@ -361,18 +361,12 @@ PanelView::SetPrimary (bool primary)
 
 void PanelView::SyncGeometries()
 {
-  GVariantBuilder b;
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
-
-  char const* name = GetName();
+  indicator::EntryLocationMap locations;
   for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
-    (*i)->GetGeometries(&b, name);
+    (*i)->GetGeometryForSync(locations);
   }
-
-  g_variant_builder_close (&b);
-  _remote->SyncGeometries(g_variant_builder_end(&b));
+  _remote->SyncGeometries(GetName(), locations);
 }
 
 void

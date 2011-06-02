@@ -20,9 +20,7 @@
 #ifndef UNITY_INDICATOR_H
 #define UNITY_INDICATOR_H
 
-#include <string>
 #include <vector>
-#include <iosfwd>
 
 #include <gio/gio.h>
 #include <dee.h>

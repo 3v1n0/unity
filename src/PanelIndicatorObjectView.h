@@ -32,6 +32,8 @@
 
 namespace unity {
 
+class PanelIndicatorObjectEntryView;
+
 class PanelIndicatorObjectView : public nux::View, public Introspectable
 {
 public:
@@ -49,7 +51,7 @@ public:
   void OnPointerMoved(int x, int y);
   bool ActivateEntry(std::string const& entry_id);
   bool ActivateIfSensitive();
-  void GetGeometries(GVariantBuilder* builder, const char* name);
+  void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
 protected:
   const gchar * GetName ();

@@ -20,7 +20,10 @@
 #ifndef UNITY_DBUSINDICATORS_H
 #define UNITY_DBUSINDICATORS_H
 
+#include <map>
 #include <string>
+
+#include <NuxCore/Rect.h>
 
 #include "Indicators.h"
 
@@ -37,7 +40,8 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  void SyncGeometries(GVariant* args);
+  void SyncGeometries(std::string const& name,
+                      EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,

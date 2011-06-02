@@ -20,15 +20,21 @@
 #ifndef UNITY_INDICATOR_ENTRY_H
 #define UNITY_INDICATOR_ENTRY_H
 
+#include <iosfwd>
+#include <map>
 #include <string>
 
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
 
-#include <iosfwd>
+#include "NuxCore/Rect.h"
 
 namespace unity {
 namespace indicator {
+
+// The EntryLocationMap is used to map the entry name to the
+// physical location on the screen.
+typedef std::map<std::string, nux::Rect> EntryLocationMap;
 
 class Entry
 {

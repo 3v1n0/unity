@@ -329,20 +329,12 @@ bool PanelIndicatorObjectEntryView::GetShowNow()
   return proxy_.get() ? proxy_->show_now() : false;
 }
 
-void PanelIndicatorObjectEntryView::GetGeometryForSync(GVariantBuilder* builder,
-                                                       const char* name)
+void PanelIndicatorObjectEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
   if (proxy_->IsUnused())
     return;
 
-  nux::Geometry geo = GetAbsoluteGeometry();
-  g_variant_builder_add(builder, "(ssiiii)",
-                        name,
-                        proxy_->id().c_str(),
-                        geo.x,
-                        geo.y,
-                        geo.GetWidth(),
-                        geo.GetHeight());
+  locations[proxy_->id()] = GetAbsoluteGeometry();
 }
 
 bool PanelIndicatorObjectEntryView::IsEntryValid() const

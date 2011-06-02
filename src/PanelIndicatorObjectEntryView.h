@@ -51,7 +51,7 @@ public:
   void OnActiveChanged(bool is_active);
   bool GetShowNow();
 
-  void GetGeometryForSync(GVariantBuilder* builder, const char* name);
+  void GetGeometryForSync(indicator::EntryLocationMap& locations);
   bool IsEntryValid() const;
   bool IsSensitive() const;
 
