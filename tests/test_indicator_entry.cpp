@@ -63,6 +63,8 @@ TEST(TestIndicatorEntry, TestAssignment) {
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
+  EXPECT_EQ(entry.image_type(), 2);
+  EXPECT_EQ(entry.image_data(), "other icon");
   EXPECT_TRUE(entry.image_sensitive());
   EXPECT_FALSE(entry.image_visible());
   EXPECT_EQ(counter.count, 1);
