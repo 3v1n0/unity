@@ -112,6 +112,8 @@ public:
     void MaximizeIfBigEnough (CompWindow *window);
 
     nux::Geometry GetWindowGeometry (guint32 xid);
+
+    void SetCoverageAreaBeforeAutomaximize (float area);
     
 protected:
     PluginAdapter(CompScreen *screen);
@@ -130,7 +132,9 @@ private:
     CompAction *_grab_show_action;
     CompAction *_grab_hide_action;
     CompAction *_grab_toggle_action;
-    
+
+    float _coverage_area_before_automaximize;
+
     static PluginAdapter *_default;
 };
 

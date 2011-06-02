@@ -24,7 +24,6 @@
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
-#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.75
 
 #define MWM_HINTS_FUNCTIONS     (1L << 0)
 #define MWM_HINTS_DECORATIONS   (1L << 1)
@@ -57,6 +56,7 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
   _grab_show_action = 0;
   _grab_hide_action = 0;
   _grab_toggle_action = 0;
+  _coverage_area_before_automaximize = 0;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -617,7 +617,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   // not mapped yet
   const XSizeHints& hints = window->sizeHints ();
   covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
-  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0) ||
+  if ((covering_part < _coverage_area_before_automaximize) || (covering_part > 1.0) ||
       (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
     g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass.c_str());
@@ -682,4 +682,9 @@ PluginAdapter::ToggleGrabHandles (CompWindow *window)
 
   /* Initiate the first available action with the arguments */
   _grab_toggle_action->initiate () (_grab_toggle_action, 0, argument);
+}
+
+void
+PluginAdapter::SetCoverageAreaBeforeAutomaximize (float area) {
+  _coverage_area_before_automaximize = area;
 }
