@@ -112,10 +112,12 @@ PanelView::GetChildsName ()
 
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
-  // First add some properties from the backend
-  _remote->AddProperties (builder);
-
-  variant::BuilderWrapper(builder).add(GetGeometry());
+  variant::BuilderWrapper(builder)
+    .add("backend", "remote")
+    .add("service-name", _remote->name())
+    .add("service-unique-name", _remote->owner_name())
+    .add("using-local-service", _remote->using_local_service())
+    .add(GetGeometry());
 }
 
 long

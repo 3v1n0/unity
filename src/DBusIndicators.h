@@ -49,12 +49,15 @@ public:
   void Sync(GVariant* args, SyncData* data);
   void SyncGeometries(GVariant* args);
 
-  virtual void AddProperties(GVariantBuilder *builder);
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
 
   GDBusProxy* GetRemoteProxy();
+
+  std::string name() const;
+  std::string owner_name() const;
+  bool using_local_service() const;
 
 private:
   GDBusProxy* proxy_;

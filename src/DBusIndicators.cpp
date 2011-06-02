@@ -27,6 +27,7 @@
 #include "NuxGraphics/GLWindowManager.h"
 
 #include "config.h"
+#include "GLibWrapper.h"
 #include "Variant.h"
 
 
@@ -315,26 +316,27 @@ void DBusIndicators::SyncGeometries(GVariant* args)
   }
 }
 
-
-void DBusIndicators::AddProperties(GVariantBuilder *builder)
+std::string DBusIndicators::name() const
 {
-  gchar *name = NULL;
-  gchar *uname = NULL;
+  glib::String name;
+  g_object_get(proxy_,
+               "g-name", name.AsOutParam(),
+               NULL);
+  return name.Str();
+}
 
-  g_object_get (proxy_,
-                "g-name", &name,
-                "g-name-owner", &uname,
-                NULL);
+std::string DBusIndicators::owner_name() const
+{
+  glib::String owner_name;
+  g_object_get(proxy_,
+               "g-name-owner", owner_name.AsOutParam(),
+               NULL);
+  return owner_name.Str();
+}
 
-  bool using_local_service = g_getenv ("PANEL_USE_LOCAL_SERVICE") != NULL;
-  variant::BuilderWrapper(builder)
-    .add("backend", "remote")
-    .add("service-name", name)
-    .add("service-unique-name", uname)
-    .add("using-local-service", using_local_service);
-
-  g_free (name);
-  g_free (uname);
+bool DBusIndicators::using_local_service() const
+{
+  return g_getenv("PANEL_USE_LOCAL_SERVICE") != NULL;
 }
 
 GDBusProxy* DBusIndicators::GetRemoteProxy()

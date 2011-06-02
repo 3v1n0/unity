@@ -38,9 +38,6 @@ public:
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
-  // For adding factory-specific properties
-  virtual void AddProperties(GVariantBuilder *builder) = 0;
-
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button) = 0;
