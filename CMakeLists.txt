@@ -48,7 +48,6 @@ set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
-set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 

@@ -3,7 +3,6 @@
 #
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 #
 # Unit tests
 #
