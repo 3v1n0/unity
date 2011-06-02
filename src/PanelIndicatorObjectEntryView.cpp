@@ -17,8 +17,6 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "PanelIndicatorObjectEntryView.h"
-
 #include "Nux/Nux.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
@@ -31,8 +29,12 @@
 
 #include <glib.h>
 #include <pango/pangocairo.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
 #include <time.h>
+
+// TODO: this include should be at the top, but it fails :(
+#include "PanelIndicatorObjectEntryView.h"
 
 #include "GLibWrapper.h"
 #include "PanelStyle.h"
@@ -135,8 +137,8 @@ void PanelIndicatorObjectEntryView::Refresh()
   int                   dpi = 0;
 
   std::string label = proxy_->label();
-  glib::Object<GdkPixbuf> pixbuf = make_pixbuf(proxy_->image_type(),
-                                               proxy_->image_data());
+  glib::Object<GdkPixbuf> pixbuf(make_pixbuf(proxy_->image_type(),
+                                             proxy_->image_data()));
 
 
   int  x = 0;

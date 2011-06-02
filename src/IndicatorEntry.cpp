@@ -19,6 +19,7 @@
 
 #include "IndicatorEntry.h"
 
+#include <iostream>
 
 namespace unity {
 namespace indicator {

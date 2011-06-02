@@ -11,7 +11,7 @@ namespace {
 TEST(TestIndicatorEntry, TestConstruction) {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         1, "some icon", false, true);
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.label(), "label");
@@ -22,7 +22,8 @@ TEST(TestIndicatorEntry, TestConstruction) {
   EXPECT_FALSE(entry.active());
   EXPECT_FALSE(entry.show_now());
   EXPECT_FALSE(entry.IsUnused());
-  // TODO: work out a nice test for the GdkPixbuf.
+  EXPECT_EQ(entry.image_type(), 1);
+  EXPECT_EQ(entry.image_data(), "some icon");
 }
 
 struct Counter : sigc::trackable
