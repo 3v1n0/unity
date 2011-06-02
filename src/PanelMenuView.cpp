@@ -168,7 +168,11 @@ PanelMenuView::~PanelMenuView ()
     _title_tex->UnReference ();
 
   _menu_layout->UnReference ();
-  _window_buttons->UnReference ();
+  if (_window_buttons->OwnsTheReference ())
+    _window_buttons->UnReference ();
+  else
+    _window_buttons->Dispose ();
+
   _panel_titlebar_grab_area->UnReference ();
 
   UBusServer* ubus = ubus_server_get_default ();
