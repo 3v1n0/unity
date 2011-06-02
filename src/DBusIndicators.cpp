@@ -339,10 +339,6 @@ bool DBusIndicators::using_local_service() const
   return g_getenv("PANEL_USE_LOCAL_SERVICE") != NULL;
 }
 
-GDBusProxy* DBusIndicators::GetRemoteProxy()
-{
-  return proxy_;
-}
 
 namespace {
 
