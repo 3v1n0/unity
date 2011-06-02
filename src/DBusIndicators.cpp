@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -125,7 +125,6 @@ public:
   std::string owner_name() const;
   bool using_local_service() const;
 
-private:
   DBusIndicators* owner_;
   GDBusProxy* proxy_;
   guint32 proxy_signal_id_;
@@ -511,14 +510,14 @@ void on_proxy_signal_received(GDBusProxy* proxy,
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->ActivateEntry(entry_name);
+      remote->owner_->ActivateEntry(entry_name);
     }
   }
   else if (signal_name == "EntryActivateRequest")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->on_entry_activate_request.emit(entry_name);
+      remote->owner_->on_entry_activate_request.emit(entry_name);
     }
   }
   else if (signal_name == "ReSync")
@@ -538,7 +537,7 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     int x = 0;
     int y = 0;
     g_variant_get (parameters, "(ii)", &x, &y);
-    remote->on_menu_pointer_moved.emit(x, y);
+    remote->owner_->on_menu_pointer_moved.emit(x, y);
   }
   else if (signal_name == "EntryShowNowChanged")
   {
@@ -546,7 +545,7 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     gboolean  show_now;
 
     g_variant_get (parameters, "(sb)", &id, &show_now);
-    remote->SetEntryShowNow(id, show_now);
+    remote->owner_->SetEntryShowNow(id, show_now);
 
     g_free (id);
   }
