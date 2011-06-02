@@ -20,11 +20,10 @@
 #ifndef UNITY_INDICATORS_H
 #define UNITY_INDICATORS_H
 
-#include <string>
-#include <vector>
-#include <sigc++/signal.h>
 #include <sigc++/trackable.h>
+
 #include "Indicator.h"
+
 
 namespace unity {
 namespace indicator {

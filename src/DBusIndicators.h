@@ -20,12 +20,8 @@
 #ifndef UNITY_DBUSINDICATORS_H
 #define UNITY_DBUSINDICATORS_H
 
-#include <map>
-#include <string>
-
-#include <NuxCore/Rect.h>
-
 #include "Indicators.h"
+
 
 namespace unity {
 namespace indicator {
