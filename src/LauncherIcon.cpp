@@ -55,6 +55,7 @@ QuicklistView *LauncherIcon::_current_quicklist = 0;
 
 int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme *LauncherIcon::_unity_theme = NULL;
+gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
@@ -93,6 +94,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
   _time_delay_handle = 0;
+  _tooltip_delay_handle = 0;
   
 
   // FIXME: the abstraction is already broken, should be fixed for O
@@ -130,6 +132,10 @@ LauncherIcon::~LauncherIcon()
   if (_time_delay_handle)
     g_source_remove (_time_delay_handle);
   _time_delay_handle = 0;
+  
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
 
   if (_superkey_label)
     _superkey_label->UnReference ();
@@ -472,6 +478,33 @@ LauncherIcon::GetShortcut ()
 }
 
 void
+LauncherIcon::SetSkipTooltipDelay (gboolean skip_tooltip_delay)
+{
+  _skip_tooltip_delay = skip_tooltip_delay;
+}
+
+gboolean
+LauncherIcon::OnTooltipTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon *) data;
+  
+  nux::Geometry geo = self->_launcher->GetAbsoluteGeometry ();
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + self->_center.y;
+          
+  self->_tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
+  
+  if (!self->_quicklist->IsVisible ())
+  {
+    self->_tooltip->ShowWindow (!self->m_TooltipText.IsEmpty ());
+    _skip_tooltip_delay = true;
+  }
+  
+  self->_tooltip_delay_handle = 0;
+  return false;
+}
+
+void
 LauncherIcon::RecvMouseEnter ()
 {
   if (QuicklistManager::Default ()->Current ())
@@ -480,25 +513,28 @@ LauncherIcon::RecvMouseEnter ()
     return;
   }
   
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
-          
-  _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
-  
-  if (!_quicklist->IsVisible ())
-  {
-    _tooltip->ShowWindow (true);
-  }
+  if (!_skip_tooltip_delay)
+    _tooltip_delay_handle = g_timeout_add (500, &LauncherIcon::OnTooltipTimeout, this);
+  else
+    OnTooltipTimeout (this);
 }
 
 void LauncherIcon::RecvMouseLeave ()
-{
+{  
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+    
   _tooltip->ShowWindow (false);
 }
 
 gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
+   if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+  _skip_tooltip_delay = false;
+
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
 
@@ -580,6 +616,11 @@ void LauncherIcon::RecvMouseClick (int button)
 
 void LauncherIcon::HideTooltip ()
 {
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+  _skip_tooltip_delay = false;
+  
   _tooltip->ShowWindow (false);
 }
 

@@ -149,6 +149,8 @@ public:
     void SendDndEnter () { OnDndEnter (); }
     void SendDndLeave () { OnDndLeave (); }
     
+    static void SetSkipTooltipDelay (gboolean skip_tooltip_delay);
+    
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
     sigc::signal<void>      MouseEnter;
@@ -258,6 +260,7 @@ private:
     static gboolean OnPresentTimeout (gpointer data);
     static gboolean OnCenterTimeout (gpointer data);
     static gboolean OnDelayedUpdateTimeout (gpointer data);
+    static gboolean OnTooltipTimeout (gpointer data);
 
     void ColorForIcon (GdkPixbuf *pixbuf, nux::Color &background, nux::Color &glow);
 
@@ -270,6 +273,8 @@ private:
     guint            _present_time_handle;
     guint            _center_stabilize_handle;
     guint            _time_delay_handle;
+    guint            _tooltip_delay_handle;
+    static gboolean  _skip_tooltip_delay;
     bool             _quicklist_is_initialized;
     bool             _has_visible_window;
     bool             _remote_urgent;
