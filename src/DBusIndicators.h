@@ -21,16 +21,11 @@
 #define UNITY_DBUSINDICATORS_H
 
 #include <string>
-#include <gio/gio.h>
-#include <dee.h>
 
 #include "Indicators.h"
 
 namespace unity {
 namespace indicator {
-
-struct SyncData;
-typedef boost::shared_ptr<SyncData> SyncDataPtr;
 
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show
@@ -42,11 +37,6 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  void OnRemoteProxyReady(GDBusProxy *proxy);
-  void Reconnect();
-  void RequestSyncAll();
-  void RequestSyncIndicator(std::string const& name);
-  void Sync(GVariant* args, SyncData* data);
   void SyncGeometries(GVariant* args);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
@@ -57,12 +47,11 @@ public:
   std::string owner_name() const;
   bool using_local_service() const;
 
+  // Due to the callback nature, the Impl class must be declared public, but
+  // it is not available to anyone except the internal implementation.
+  class Impl;
 private:
-  GDBusProxy* proxy_;
-  guint32 proxy_signal_id_;
-  guint32 proxy_name_id_;
-  typedef std::vector<SyncDataPtr> PendingSyncs;
-  PendingSyncs pending_syncs_;
+  Impl* pimpl;
 };
 
 }
