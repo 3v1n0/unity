@@ -73,8 +73,13 @@ TEST(TestIndicatorEntry, TestUnused) {
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
 
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+
   entry.MarkUnused();
   EXPECT_TRUE(entry.IsUnused());
+  // Setting unused emits updated.
+  EXPECT_EQ(counter.count, 1);
 }
 
 TEST(TestIndicatorEntry, TestShowNowEvents) {
