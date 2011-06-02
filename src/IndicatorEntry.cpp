@@ -19,7 +19,6 @@
 
 #include "IndicatorEntry.h"
 
-#include <gtk/gtk.h>
 
 namespace unity {
 namespace indicator {
@@ -77,46 +76,14 @@ bool Entry::label_sensitive() const
   return label_sensitive_;
 }
 
-GdkPixbuf* Entry::GetPixbuf() const
+int Entry::image_type() const
 {
-  GdkPixbuf* ret = NULL;
+  return image_type_;
+}
 
-  if (image_type_ == GTK_IMAGE_PIXBUF)
-  {
-    gsize len = 0;
-    guchar* decoded = g_base64_decode(image_data_.c_str(), &len);
-
-    GInputStream* stream = g_memory_input_stream_new_from_data(decoded,
-                                                               len, NULL);
-
-    ret = gdk_pixbuf_new_from_stream(stream, NULL, NULL);
-
-    g_free(decoded);
-    g_input_stream_close(stream, NULL, NULL);
-  }
-  else if (image_type_ == GTK_IMAGE_STOCK ||
-           image_type_ == GTK_IMAGE_ICON_NAME)
-  {
-    ret = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
-                                   image_data_.c_str(),
-                                   22,
-                                   (GtkIconLookupFlags)0,
-                                   NULL);
-  }
-  else if (image_type_ == GTK_IMAGE_GICON)
-  {
-    GIcon* icon = g_icon_new_for_string(image_data_.c_str(), NULL);
-    GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(
-        gtk_icon_theme_get_default(), icon, 22, (GtkIconLookupFlags)0);
-    if (info)
-    {
-      ret = gtk_icon_info_load_icon(info, NULL);
-      gtk_icon_info_free(info);
-    }
-    g_object_unref (icon);
-  }
-
-  return ret;
+std::string const& Entry::image_data() const
+{
+  return image_data_;
 }
 
 void Entry::set_active(bool active)

@@ -17,6 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include "PanelIndicatorObjectEntryView.h"
+
 #include "Nux/Nux.h"
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
@@ -25,16 +27,17 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "PanelIndicatorObjectEntryView.h"
-#include "PanelStyle.h"
-#include "Variant.h"
-
 #include <boost/algorithm/string.hpp>
 
 #include <glib.h>
 #include <pango/pangocairo.h>
 #include <gtk/gtk.h>
 #include <time.h>
+
+#include "GLibWrapper.h"
+#include "PanelStyle.h"
+#include "Variant.h"
+
 
 namespace unity {
 

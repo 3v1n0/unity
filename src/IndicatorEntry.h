@@ -21,11 +21,9 @@
 #define UNITY_INDICATOR_ENTRY_H
 
 #include <string>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/utility.hpp>
 
 #include <iosfwd>
 
@@ -52,13 +50,12 @@ public:
 
   std::string const& id() const;
   std::string const& label() const;
+  int image_type() const;
+  std::string const& image_data() const;
   bool image_visible() const;
   bool image_sensitive() const;
   bool label_visible() const;
   bool label_sensitive() const;
-
-  // Call g_object_unref on the returned pixbuf
-  GdkPixbuf* GetPixbuf() const;
 
   void set_active(bool active);
   bool active() const;
