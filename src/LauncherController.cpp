@@ -48,7 +48,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _device_section = new DeviceLauncherSection (_launcher);
   _on_device_section_icon_added_connection = (sigc::connection) _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
-  _num_workspaces = _screen->vpSize ().width ();
+  _num_workspaces = _screen->vpSize ().width () * _screen->vpSize ().height ();
   if(_num_workspaces > 1)
   {
     InsertExpoAction ();
