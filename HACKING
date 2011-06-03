@@ -1,0 +1,34 @@
+If you want to hack on unity you need the following packages
+  - nux
+  - libbamf
+  - libdee
+  - gio-2.0
+  - dbusmenu-glib-0.4
+  - gthread-2.0
+  - indicator
+  - atk
+  - libutouch-geis
+
+Or if you are on ubuntu run the command, apt-get build-dep unity
+
+Unity uses the google coding style for any C++ code which can be found here:
+http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+
+When in doubt copy the coding style of the file you are editing.
+
+Internal Documentation can be built for Unity by having doxygen installed and running make doxygen - its intended to give a high level understanding of the relationships between different parts of the code, not as a definitive API. doxygen generated files will be stored in api-docs/
+
+
+To build Unity the latest Unity you should grab the source files from bzr with
+  bzr branch lp:unity
+
+then make a directory called build in unity directory. inside that directory run
+  CMAKE ../
+  make
+
+Please note that this will create a systemwide install of unity, if you are developing localy (you are unless you know different) run 
+  CMAKE -DCMAKE_INSTALL_PREFIX=~/staging ../
+
+changing ~/staging to suit wherever you want to install files locally
+
+for more information see the README file
