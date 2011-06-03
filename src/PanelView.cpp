@@ -112,10 +112,12 @@ PanelView::GetChildsName ()
 
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
-  // First add some properties from the backend
-  _remote->AddProperties (builder);
-
-  variant::BuilderWrapper(builder).add(GetGeometry());
+  variant::BuilderWrapper(builder)
+    .add("backend", "remote")
+    .add("service-name", _remote->name())
+    .add("service-unique-name", _remote->owner_name())
+    .add("using-local-service", _remote->using_local_service())
+    .add(GetGeometry());
 }
 
 long
@@ -359,18 +361,12 @@ PanelView::SetPrimary (bool primary)
 
 void PanelView::SyncGeometries()
 {
-  GVariantBuilder b;
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
-
-  char const* name = GetName();
+  indicator::EntryLocationMap locations;
   for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
-    (*i)->GetGeometries(&b, name);
+    (*i)->GetGeometryForSync(locations);
   }
-
-  g_variant_builder_close (&b);
-  _remote->SyncGeometries(g_variant_builder_end(&b));
+  _remote->SyncGeometries(GetName(), locations);
 }
 
 void

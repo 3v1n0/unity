@@ -116,12 +116,12 @@ bool PanelIndicatorObjectView::ActivateIfSensitive()
   return false;
 }
 
-void PanelIndicatorObjectView::GetGeometries(GVariantBuilder* builder, const char* name)
+void PanelIndicatorObjectView::GetGeometryForSync(indicator::EntryLocationMap& locations)
 {
   for (Entries::iterator i = entries_.begin(), end = entries_.end();
        i != end; ++i)
   {
-    (*i)->GetGeometryForSync(builder, name);
+    (*i)->GetGeometryForSync(locations);
   }
 }
 

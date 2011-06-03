@@ -20,17 +20,11 @@
 #ifndef UNITY_INDICATOR_H
 #define UNITY_INDICATOR_H
 
-#include <string>
 #include <vector>
-#include <iosfwd>
-
-#include <gio/gio.h>
-#include <dee.h>
-
-#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 #include "IndicatorEntry.h"
+
 
 namespace unity {
 namespace indicator {

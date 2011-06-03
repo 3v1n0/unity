@@ -19,9 +19,6 @@
  */
 #include "Indicators.h"
 
-#include <map>
-#include <vector>
-
 
 namespace unity {
 namespace indicator {

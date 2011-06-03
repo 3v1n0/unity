@@ -20,17 +20,21 @@
 #ifndef UNITY_INDICATOR_ENTRY_H
 #define UNITY_INDICATOR_ENTRY_H
 
+#include <iosfwd>
+#include <map>
 #include <string>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <sigc++/signal.h>
 #include <boost/shared_ptr.hpp>
-#include <boost/utility.hpp>
 
-#include <iosfwd>
+#include "NuxCore/Rect.h"
 
 namespace unity {
 namespace indicator {
+
+// The EntryLocationMap is used to map the entry name to the
+// physical location on the screen.
+typedef std::map<std::string, nux::Rect> EntryLocationMap;
 
 class Entry
 {
@@ -52,13 +56,12 @@ public:
 
   std::string const& id() const;
   std::string const& label() const;
+  int image_type() const;
+  std::string const& image_data() const;
   bool image_visible() const;
   bool image_sensitive() const;
   bool label_visible() const;
   bool label_sensitive() const;
-
-  // Call g_object_unref on the returned pixbuf
-  GdkPixbuf* GetPixbuf() const;
 
   void set_active(bool active);
   bool active() const;

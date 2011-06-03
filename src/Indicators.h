@@ -20,11 +20,10 @@
 #ifndef UNITY_INDICATORS_H
 #define UNITY_INDICATORS_H
 
-#include <string>
-#include <vector>
-#include <sigc++/signal.h>
 #include <sigc++/trackable.h>
+
 #include "Indicator.h"
+
 
 namespace unity {
 namespace indicator {
@@ -37,9 +36,6 @@ public:
 
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
-
-  // For adding factory-specific properties
-  virtual void AddProperties(GVariantBuilder *builder) = 0;
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
   virtual void OnEntryShowMenu(std::string const& entry_id,

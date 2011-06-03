@@ -91,6 +91,9 @@ add_executable (test-panel
                 TestPanel.cpp
                 ../src/DBusIndicators.cpp
                 ../src/DBusIndicators.h
+                ../src/GLibWrapper.h
+                ../src/GLibWrapper-inl.h
+                ../src/GLibWrapper.cpp
                 ../src/PanelStyle.cpp
                 ../src/PanelStyle.h
                 ../src/PanelView.cpp

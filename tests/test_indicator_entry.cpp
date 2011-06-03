@@ -11,7 +11,7 @@ namespace {
 TEST(TestIndicatorEntry, TestConstruction) {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         1, "some icon", false, true);
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.label(), "label");
@@ -22,7 +22,8 @@ TEST(TestIndicatorEntry, TestConstruction) {
   EXPECT_FALSE(entry.active());
   EXPECT_FALSE(entry.show_now());
   EXPECT_FALSE(entry.IsUnused());
-  // TODO: work out a nice test for the GdkPixbuf.
+  EXPECT_EQ(entry.image_type(), 1);
+  EXPECT_EQ(entry.image_data(), "some icon");
 }
 
 struct Counter : sigc::trackable
@@ -62,6 +63,8 @@ TEST(TestIndicatorEntry, TestAssignment) {
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
+  EXPECT_EQ(entry.image_type(), 2);
+  EXPECT_EQ(entry.image_data(), "other icon");
   EXPECT_TRUE(entry.image_sensitive());
   EXPECT_FALSE(entry.image_visible());
   EXPECT_EQ(counter.count, 1);
@@ -72,8 +75,13 @@ TEST(TestIndicatorEntry, TestUnused) {
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
 
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+
   entry.MarkUnused();
   EXPECT_TRUE(entry.IsUnused());
+  // Setting unused emits updated.
+  EXPECT_EQ(counter.count, 1);
 }
 
 TEST(TestIndicatorEntry, TestShowNowEvents) {

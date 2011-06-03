@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010, 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,25 +21,28 @@
 
 #include <algorithm>
 
+#include <gio/gio.h>
+#include <dee.h>
+
 #include <X11/Xlib.h>
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GLWindowManager.h"
 
 #include "config.h"
+#include "GLibWrapper.h"
 #include "Variant.h"
 
 
 namespace unity {
 namespace indicator {
 
-const char* const S_NAME = "com.canonical.Unity.Panel.Service";
-const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
-const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
+namespace {
+// This anonymous namespace holds the DBus callback methods.
 
 struct SyncData
 {
-  SyncData(DBusIndicators* self_)
+  SyncData(DBusIndicators::Impl* self_)
   : self(self_)
   , cancel(g_cancellable_new())
   {
@@ -61,12 +64,15 @@ struct SyncData
     cancel = NULL;
   }
 
-  DBusIndicators* self;
+  DBusIndicators::Impl* self;
   GCancellable* cancel;
 };
 
-namespace {
-// This anonymous namespace holds the DBus callback methods.
+typedef boost::shared_ptr<SyncData> SyncDataPtr;
+
+const char* const S_NAME = "com.canonical.Unity.Panel.Service";
+const char* const S_PATH = "/com/canonical/Unity/Panel/Service";
+const char* const S_IFACE = "com.canonical.Unity.Panel.Service";
 
 struct ShowEntryData
 {
@@ -82,11 +88,13 @@ bool run_local_panel_service();
 gboolean reconnect_to_service(gpointer data);
 void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
-                                 DBusIndicators* remote);
+                                 DBusIndicators::Impl* remote);
 void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name,
-                              GVariant* parameters, DBusIndicators* remote);
-void request_sync(GDBusProxy* proxy, const char* method, GVariant* name, SyncData* data);
+                              GVariant* parameters,
+                              DBusIndicators::Impl* remote);
+void request_sync(GDBusProxy* proxy, const char* method, GVariant* name,
+                  SyncData* data);
 void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
 
 bool send_show_entry(ShowEntryData *data);
@@ -94,14 +102,48 @@ bool send_show_entry(ShowEntryData *data);
 } // anonymous namespace
 
 
+// Connects to the remote panel service (unity-panel-service) and translates
+// that into something that the panel can show
+class DBusIndicators::Impl
+{
+public:
+  Impl(DBusIndicators* owner);
+  ~Impl();
+
+  void OnRemoteProxyReady(GDBusProxy *proxy);
+  void Reconnect();
+  void RequestSyncAll();
+  void RequestSyncIndicator(std::string const& name);
+  void Sync(GVariant* args, SyncData* data);
+  void SyncGeometries(std::string const& name,
+                      EntryLocationMap const& locations);
+
+  virtual void OnEntryScroll(std::string const& entry_id, int delta);
+  virtual void OnEntryShowMenu(std::string const& entry_id,
+                               int x, int y, int timestamp, int button);
+
+  std::string name() const;
+  std::string owner_name() const;
+  bool using_local_service() const;
+
+  DBusIndicators* owner_;
+  GDBusProxy* proxy_;
+  guint32 proxy_signal_id_;
+  guint32 proxy_name_id_;
+  typedef std::vector<SyncDataPtr> PendingSyncs;
+  PendingSyncs pending_syncs_;
+};
+
+
 // Public Methods
-DBusIndicators::DBusIndicators()
-: proxy_(NULL)
+DBusIndicators::Impl::Impl(DBusIndicators* owner)
+  : owner_(owner)
+  , proxy_(NULL)
 {
   Reconnect();
 }
 
-DBusIndicators::~DBusIndicators()
+DBusIndicators::Impl::~Impl()
 {
   if (G_IS_OBJECT (proxy_))
   {
@@ -111,7 +153,7 @@ DBusIndicators::~DBusIndicators()
   }
 }
 
-void DBusIndicators::Reconnect()
+void DBusIndicators::Impl::Reconnect()
 {
   g_spawn_command_line_sync("killall unity-panel-service",
                             NULL, NULL, NULL, NULL);
@@ -128,7 +170,7 @@ void DBusIndicators::Reconnect()
   }
 }
 
-void DBusIndicators::OnRemoteProxyReady(GDBusProxy *proxy)
+void DBusIndicators::Impl::OnRemoteProxyReady(GDBusProxy *proxy)
 {
   if (proxy_)
   {
@@ -150,14 +192,14 @@ void DBusIndicators::OnRemoteProxyReady(GDBusProxy *proxy)
   RequestSyncAll();
 }
 
-void DBusIndicators::RequestSyncAll()
+void DBusIndicators::Impl::RequestSyncAll()
 {
   SyncDataPtr data(new SyncData(this));
   pending_syncs_.push_back(data);
   request_sync(proxy_, "Sync", NULL, data.get());
 }
 
-void DBusIndicators::RequestSyncIndicator(std::string const& name)
+void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 {
   SyncDataPtr data(new SyncData(this));
   pending_syncs_.push_back(data);
@@ -167,8 +209,8 @@ void DBusIndicators::RequestSyncIndicator(std::string const& name)
 }
 
 
-void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
-                                     int x, int y, int timestamp, int button)
+void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
+                                           int x, int y, int timestamp, int button)
 {
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
@@ -210,7 +252,7 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
   // --------------------------------------------------------------------------
 }
 
-void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
+void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
 {
   g_dbus_proxy_call(proxy_, "ScrollEntry",
                     g_variant_new("(si)", entry_id.c_str(), delta),
@@ -218,7 +260,7 @@ void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
                     -1, NULL, NULL, NULL);
 }
 
-void DBusIndicators::Sync(GVariant *args, SyncData* data)
+void DBusIndicators::Impl::Sync(GVariant *args, SyncData* data)
 {
   GVariantIter *iter            = NULL;
   gchar        *indicator_id    = NULL;
@@ -281,7 +323,7 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
     std::string const& indicator_name = *i;
     if (curr_indicator != indicator_name) {
       curr_indicator = indicator_name;
-      GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
+      owner_->GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
     }
   }
 
@@ -300,47 +342,108 @@ void DBusIndicators::Sync(GVariant *args, SyncData* data)
   }
 
   // Notify listeners we have new data
-  on_synced.emit();
+  owner_->on_synced.emit();
 }
 
-void DBusIndicators::SyncGeometries(GVariant* args)
+void DBusIndicators::Impl::SyncGeometries(std::string const& name,
+                                          EntryLocationMap const& locations)
 {
-  if (proxy_) {
-    g_dbus_proxy_call(proxy_, "SyncGeometries", args,
-                      G_DBUS_CALL_FLAGS_NONE,
-                      -1,
-                    NULL,
-                      NULL,
-                      NULL);
+  if (!proxy_)
+    return;
+
+  GVariantBuilder b;
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
+
+  for (EntryLocationMap::const_iterator i = locations.begin(), end = locations.end();
+       i != end; ++i)
+  {
+    nux::Rect const& rect = i->second;
+    g_variant_builder_add(&b, "(ssiiii)",
+                          name.c_str(),
+                          i->first.c_str(),
+                          rect.x,
+                          rect.y,
+                          rect.width,
+                          rect.height);
   }
+
+  g_variant_builder_close (&b);
+  g_dbus_proxy_call(proxy_, "SyncGeometries",
+                    g_variant_builder_end(&b),
+                    G_DBUS_CALL_FLAGS_NONE,
+                    -1,
+                    NULL,
+                    NULL,
+                    NULL);
 }
 
-
-void DBusIndicators::AddProperties(GVariantBuilder *builder)
+std::string DBusIndicators::Impl::name() const
 {
-  gchar *name = NULL;
-  gchar *uname = NULL;
-
-  g_object_get (proxy_,
-                "g-name", &name,
-                "g-name-owner", &uname,
-                NULL);
-
-  bool using_local_service = g_getenv ("PANEL_USE_LOCAL_SERVICE") != NULL;
-  variant::BuilderWrapper(builder)
-    .add("backend", "remote")
-    .add("service-name", name)
-    .add("service-unique-name", uname)
-    .add("using-local-service", using_local_service);
-
-  g_free (name);
-  g_free (uname);
+  glib::String name;
+  g_object_get(proxy_,
+               "g-name", name.AsOutParam(),
+               NULL);
+  return name.Str();
 }
 
-GDBusProxy* DBusIndicators::GetRemoteProxy()
+std::string DBusIndicators::Impl::owner_name() const
 {
-  return proxy_;
+  glib::String owner_name;
+  g_object_get(proxy_,
+               "g-name-owner", owner_name.AsOutParam(),
+               NULL);
+  return owner_name.Str();
 }
+
+bool DBusIndicators::Impl::using_local_service() const
+{
+  return g_getenv("PANEL_USE_LOCAL_SERVICE") != NULL;
+}
+
+
+DBusIndicators::DBusIndicators()
+  : pimpl(new Impl(this))
+{
+}
+
+DBusIndicators::~DBusIndicators()
+{
+  delete pimpl;
+}
+
+void DBusIndicators::SyncGeometries(std::string const& name,
+                                    EntryLocationMap const& locations)
+{
+  pimpl->SyncGeometries(name, locations);
+}
+
+void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
+{
+  pimpl->OnEntryScroll(entry_id, delta);
+}
+
+void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
+                                     int x, int y, int timestamp, int button)
+{
+  pimpl->OnEntryShowMenu(entry_id, x, y, timestamp, button);
+}
+
+std::string DBusIndicators::name() const
+{
+  return pimpl->name();
+}
+
+std::string DBusIndicators::owner_name() const
+{
+  return pimpl->owner_name();
+}
+
+bool DBusIndicators::using_local_service() const
+{
+  return pimpl->using_local_service();
+}
+
 
 namespace {
 
@@ -364,7 +467,7 @@ gboolean reconnect_to_service(gpointer data)
 // that on to the DBusIndicators.
 void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 {
-  DBusIndicators* remote = reinterpret_cast<DBusIndicators*>(data);
+  DBusIndicators::Impl* remote = reinterpret_cast<DBusIndicators::Impl*>(data);
   GError* error = NULL;
   GDBusProxy* proxy = g_dbus_proxy_new_for_bus_finish(res, &error);
 
@@ -422,21 +525,22 @@ bool run_local_panel_service()
 
 void on_proxy_signal_received(GDBusProxy* proxy,
                               char* sender_name, char* signal_name_,
-                              GVariant* parameters, DBusIndicators* remote)
+                              GVariant* parameters,
+                              DBusIndicators::Impl* remote)
 {
   std::string signal_name(signal_name_);
   if (signal_name == "EntryActivated")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->ActivateEntry(entry_name);
+      remote->owner_->ActivateEntry(entry_name);
     }
   }
   else if (signal_name == "EntryActivateRequest")
   {
     const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
     if (entry_name) {
-      remote->on_entry_activate_request.emit(entry_name);
+      remote->owner_->on_entry_activate_request.emit(entry_name);
     }
   }
   else if (signal_name == "ReSync")
@@ -456,7 +560,7 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     int x = 0;
     int y = 0;
     g_variant_get (parameters, "(ii)", &x, &y);
-    remote->on_menu_pointer_moved.emit(x, y);
+    remote->owner_->on_menu_pointer_moved.emit(x, y);
   }
   else if (signal_name == "EntryShowNowChanged")
   {
@@ -464,14 +568,14 @@ void on_proxy_signal_received(GDBusProxy* proxy,
     gboolean  show_now;
 
     g_variant_get (parameters, "(sb)", &id, &show_now);
-    remote->SetEntryShowNow(id, show_now);
+    remote->owner_->SetEntryShowNow(id, show_now);
 
     g_free (id);
   }
 }
 
 void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
-                                 DBusIndicators* remote)
+                                 DBusIndicators::Impl* remote)
 {
   char* name_owner = g_dbus_proxy_get_name_owner(proxy);
 
