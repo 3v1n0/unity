@@ -207,7 +207,7 @@ namespace nux
 
     if(TotalItemHeight < _anchor_height)
     {
-      _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
+      _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 + _padding + _corner_radius);
       _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
     }
 
@@ -218,12 +218,6 @@ namespace nux
   {
     long result = BaseWindow::PostLayoutManagement (LayoutResult);
     UpdateTexture ();
-
-    int x = _padding + _anchor_width + _corner_radius;
-    int y = _padding + _corner_radius;
-
-    _tooltip_text->SetBaseX (x);
-    _tooltip_text->SetBaseY (y);
 
     return result;
   }
