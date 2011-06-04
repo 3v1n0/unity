@@ -103,7 +103,7 @@ public:
     void        SetCenter (nux::Point3 center);
     nux::Point3 GetCenter ();
 
-    void Activate ();
+    virtual void Activate ();
     void OpenInstance ();
 
     void SaveCenter ();

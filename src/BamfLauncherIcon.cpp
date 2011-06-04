@@ -57,6 +57,13 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
 }
 
 void
+BamfLauncherIcon::Activate ()
+{
+  ActivateLauncherIcon ();
+}
+
+
+void
 BamfLauncherIcon::ActivateLauncherIcon ()
 {
   bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
@@ -77,27 +84,42 @@ BamfLauncherIcon::ActivateLauncherIcon ()
   {
     if (GetQuirk (QUIRK_STARTING))
       return;
-    SetQuirk (QUIRK_STARTING, true);
-    OpenInstanceLauncherIcon ();
-    return;
-  }
-  else if (scaleWasActive)
-  {
-    if (active ||           // #5 above
-        !Spread (0, false)) // #4 above
+
+    if (scaleWasActive)
     {
       PluginAdapter::Default ()->TerminateScale ();
-      Focus ();
-      _launcher->SetLastSpreadIcon (NULL);
     }
+
+    SetQuirk (QUIRK_STARTING, true);
+    OpenInstanceLauncherIcon ();
   }
-  else if (!active) // #3 above
+  else // app is running
   {
-    Focus ();
-  }
-  else if (active && !scaleWasActive) // #2 above
-  {
-    Spread (0, false);
+    if (active)
+    {
+      if (scaleWasActive) // #5 above
+      {
+        PluginAdapter::Default ()->TerminateScale ();
+        Focus ();
+      }
+      else // #2 above
+      {
+        Spread (0, false);
+      }
+    }
+    else
+    {
+      if (scaleWasActive) // #4 above
+      {
+        PluginAdapter::Default ()->TerminateScale ();
+        Focus ();
+        Spread (0, false);
+      }
+      else // #3 above
+      {
+        Focus ();
+      }
+    }
   }
 
   ubus_server_send_message (ubus_server_get_default (), UBUS_LAUNCHER_ACTION_DONE, NULL);
