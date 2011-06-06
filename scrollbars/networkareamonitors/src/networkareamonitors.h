@@ -31,6 +31,7 @@ class UnityNETWorkareaMonitorsScreen :
 {
     public:
         UnityNETWorkareaMonitorsScreen (CompScreen *);
+	~UnityNETWorkareaMonitorsScreen ();
 
         void
         outputChangeNotify ();
@@ -40,6 +41,9 @@ class UnityNETWorkareaMonitorsScreen :
 
         void
         handleEvent (XEvent *event);
+
+	void
+	addSupportedAtoms (std::vector<Atom> &atoms);
 
     private:
 

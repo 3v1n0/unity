@@ -108,12 +108,29 @@ UnityNETWorkareaMonitorsWindow::resizeNotify (int dx, int dy, unsigned int dwidt
     window->resizeNotify (dx, dy, dwidth, dheight);
 }
 
+void
+UnityNETWorkareaMonitorsScreen::addSupportedAtoms (std::vector<Atom> &atoms)
+{
+    atoms.push_back (mUnityNETWorkareaMonitorsAtom);
+
+    screen->addSupportedAtoms (atoms);
+}
 
 UnityNETWorkareaMonitorsScreen::UnityNETWorkareaMonitorsScreen (CompScreen *s) :
     PluginClassHandler <UnityNETWorkareaMonitorsScreen, CompScreen> (s),
     mUnityNETWorkareaMonitorsAtom (XInternAtom (screen->dpy (), "_UNITY_NET_WORKAREA_MONITORS", 0))
 {
     ScreenInterface::setHandler (screen);
+    screen->updateSupportedWmHints ();
+}
+
+UnityNETWorkareaMonitorsScreen::~UnityNETWorkareaMonitorsScreen ()
+{
+    /* Delete the property and the bit saying we support it */
+    screen->addSupportedAtomsSetEnabled (this, false);
+    screen->updateSupportedWmHints ();
+
+    XDeleteProperty (screen->dpy (), screen->root (), mUnityNETWorkareaMonitorsAtom);
 }
 
 
