@@ -64,7 +64,7 @@ class UnityNETWorkareaMonitorsWindow :
 };
 
 class UnityNETWorkareaMonitorsPluginVTable :
-    public CompPlugin::VTableForScreen <UnityNETWorkareaMonitorsScreen>
+    public CompPlugin::VTableForScreenAndWindow <UnityNETWorkareaMonitorsScreen, UnityNETWorkareaMonitorsWindow>
 {
     public:
         bool init ();

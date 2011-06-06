@@ -28,7 +28,7 @@ UnityNETWorkareaMonitorsScreen::setProperty ()
     unsigned int  dataSize;
     unsigned int  offset = 0;
 
-    sr.united (CompRect (0, 0, screen->width (), screen->height ()));
+    sr = sr.united (CompRect (0, 0, screen->width (), screen->height ()));
 
     foreach (CompWindow *w, screen->clientList ())
     {
@@ -122,7 +122,10 @@ UnityNETWorkareaMonitorsWindow::UnityNETWorkareaMonitorsWindow (CompWindow *w) :
     window (w)
 {
     if (w->struts ())
+    {
+	UnityNETWorkareaMonitorsScreen::get (screen)->setProperty ();
         WindowInterface::setHandler (w, true);
+    }
     else
         WindowInterface::setHandler (w, false);
 }
