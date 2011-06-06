@@ -164,9 +164,4 @@ if (DOXYGEN_FOUND STREQUAL "YES")
   set_property(DIRECTORY APPEND PROPERTY
          ADDITIONAL_MAKE_CLEAN_FILES api-doc)
 
-  # install HTML API documentation and manual pages
-  set(DOC_PATH "share/doc/${CPACK_PACKAGE_NAME}-${VERSION}")
-
-  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/html
-           DESTINATION ${DOC_PATH})
 endif (DOXYGEN_FOUND STREQUAL "YES")
