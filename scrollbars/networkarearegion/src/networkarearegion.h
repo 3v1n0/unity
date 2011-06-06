@@ -22,16 +22,16 @@
 #include <core/atoms.h>
 #include <X11/Xatom.h>
 
-#include "networkareamonitors_options.h"
+#include "networkarearegion_options.h"
 
-class UnityNETWorkareaMonitorsScreen :
-    public PluginClassHandler <UnityNETWorkareaMonitorsScreen, CompScreen>,
+class UnityNETWorkareaRegionScreen :
+    public PluginClassHandler <UnityNETWorkareaRegionScreen, CompScreen>,
     public ScreenInterface,
-    public NetworkareamonitorsOptions
+    public NetworkarearegionOptions
 {
     public:
-        UnityNETWorkareaMonitorsScreen (CompScreen *);
-	~UnityNETWorkareaMonitorsScreen ();
+        UnityNETWorkareaRegionScreen (CompScreen *);
+	~UnityNETWorkareaRegionScreen ();
 
         void
         outputChangeNotify ();
@@ -47,16 +47,16 @@ class UnityNETWorkareaMonitorsScreen :
 
     private:
 
-        Atom mUnityNETWorkareaMonitorsAtom;
+        Atom mUnityNETWorkareaRegionAtom;
 };
 
-class UnityNETWorkareaMonitorsWindow :
-    public PluginClassHandler <UnityNETWorkareaMonitorsWindow, CompWindow>,
+class UnityNETWorkareaRegionWindow :
+    public PluginClassHandler <UnityNETWorkareaRegionWindow, CompWindow>,
     public WindowInterface
 {
     public:
 
-        UnityNETWorkareaMonitorsWindow (CompWindow *);
+        UnityNETWorkareaRegionWindow (CompWindow *);
 
         CompWindow *window;
 
@@ -67,8 +67,8 @@ class UnityNETWorkareaMonitorsWindow :
         resizeNotify (int dx, int dy, unsigned int dwidth, unsigned int dheight);
 };
 
-class UnityNETWorkareaMonitorsPluginVTable :
-    public CompPlugin::VTableForScreenAndWindow <UnityNETWorkareaMonitorsScreen, UnityNETWorkareaMonitorsWindow>
+class UnityNETWorkareaRegionPluginVTable :
+    public CompPlugin::VTableForScreenAndWindow <UnityNETWorkareaRegionScreen, UnityNETWorkareaRegionWindow>
 {
     public:
         bool init ();

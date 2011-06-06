@@ -16,12 +16,12 @@
  * Authored by: Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
-#include "networkareamonitors.h"
+#include "networkarearegion.h"
 
-COMPIZ_PLUGIN_20090315 (networkareamonitors, UnityNETWorkareaMonitorsPluginVTable);
+COMPIZ_PLUGIN_20090315 (networkarearegion, UnityNETWorkareaRegionPluginVTable);
 
 void
-UnityNETWorkareaMonitorsScreen::setProperty ()
+UnityNETWorkareaRegionScreen::setProperty ()
 {
     CompRegion    sr;
     unsigned long *data;
@@ -54,20 +54,20 @@ UnityNETWorkareaMonitorsScreen::setProperty ()
         offset++;
     }
 
-    XChangeProperty (screen->dpy (), screen->root (), mUnityNETWorkareaMonitorsAtom,
+    XChangeProperty (screen->dpy (), screen->root (), mUnityNETWorkareaRegionAtom,
                      XA_CARDINAL, 32, PropModeReplace, (const unsigned char *) data, dataSize);
 
     delete[] data;
 }
 
 void
-UnityNETWorkareaMonitorsScreen::outputChangeNotify ()
+UnityNETWorkareaRegionScreen::outputChangeNotify ()
 {
     setProperty ();
 }
 
 void
-UnityNETWorkareaMonitorsScreen::handleEvent (XEvent *event)
+UnityNETWorkareaRegionScreen::handleEvent (XEvent *event)
 {
     screen->handleEvent (event);
 
@@ -84,7 +84,7 @@ UnityNETWorkareaMonitorsScreen::handleEvent (XEvent *event)
             {
                 if (w->struts ())
                 {
-                    UnityNETWorkareaMonitorsWindow *unwmh = UnityNETWorkareaMonitorsWindow::get (w);
+                    UnityNETWorkareaRegionWindow *unwmh = UnityNETWorkareaRegionWindow::get (w);
 
                     w->moveNotifySetEnabled (unwmh, true);
                     w->resizeNotifySetEnabled (unwmh, true);
@@ -95,52 +95,52 @@ UnityNETWorkareaMonitorsScreen::handleEvent (XEvent *event)
 }
 
 void
-UnityNETWorkareaMonitorsWindow::moveNotify (int dx, int dy, bool immediate)
+UnityNETWorkareaRegionWindow::moveNotify (int dx, int dy, bool immediate)
 {
-    UnityNETWorkareaMonitorsScreen::get (screen)->setProperty ();
+    UnityNETWorkareaRegionScreen::get (screen)->setProperty ();
     window->moveNotify (dx, dy, immediate);
 }
 
 void
-UnityNETWorkareaMonitorsWindow::resizeNotify (int dx, int dy, unsigned int dwidth, unsigned int dheight)
+UnityNETWorkareaRegionWindow::resizeNotify (int dx, int dy, unsigned int dwidth, unsigned int dheight)
 {
-    UnityNETWorkareaMonitorsScreen::get (screen)->setProperty ();
+    UnityNETWorkareaRegionScreen::get (screen)->setProperty ();
     window->resizeNotify (dx, dy, dwidth, dheight);
 }
 
 void
-UnityNETWorkareaMonitorsScreen::addSupportedAtoms (std::vector<Atom> &atoms)
+UnityNETWorkareaRegionScreen::addSupportedAtoms (std::vector<Atom> &atoms)
 {
-    atoms.push_back (mUnityNETWorkareaMonitorsAtom);
+    atoms.push_back (mUnityNETWorkareaRegionAtom);
 
     screen->addSupportedAtoms (atoms);
 }
 
-UnityNETWorkareaMonitorsScreen::UnityNETWorkareaMonitorsScreen (CompScreen *s) :
-    PluginClassHandler <UnityNETWorkareaMonitorsScreen, CompScreen> (s),
-    mUnityNETWorkareaMonitorsAtom (XInternAtom (screen->dpy (), "_UNITY_NET_WORKAREA_MONITORS", 0))
+UnityNETWorkareaRegionScreen::UnityNETWorkareaRegionScreen (CompScreen *s) :
+    PluginClassHandler <UnityNETWorkareaRegionScreen, CompScreen> (s),
+    mUnityNETWorkareaRegionAtom (XInternAtom (screen->dpy (), "_UNITY_NET_WORKAREA_REGION", 0))
 {
     ScreenInterface::setHandler (screen);
     screen->updateSupportedWmHints ();
 }
 
-UnityNETWorkareaMonitorsScreen::~UnityNETWorkareaMonitorsScreen ()
+UnityNETWorkareaRegionScreen::~UnityNETWorkareaRegionScreen ()
 {
     /* Delete the property and the bit saying we support it */
     screen->addSupportedAtomsSetEnabled (this, false);
     screen->updateSupportedWmHints ();
 
-    XDeleteProperty (screen->dpy (), screen->root (), mUnityNETWorkareaMonitorsAtom);
+    XDeleteProperty (screen->dpy (), screen->root (), mUnityNETWorkareaRegionAtom);
 }
 
 
-UnityNETWorkareaMonitorsWindow::UnityNETWorkareaMonitorsWindow (CompWindow *w) :
-    PluginClassHandler <UnityNETWorkareaMonitorsWindow, CompWindow> (w),
+UnityNETWorkareaRegionWindow::UnityNETWorkareaRegionWindow (CompWindow *w) :
+    PluginClassHandler <UnityNETWorkareaRegionWindow, CompWindow> (w),
     window (w)
 {
     if (w->struts ())
     {
-	UnityNETWorkareaMonitorsScreen::get (screen)->setProperty ();
+	UnityNETWorkareaRegionScreen::get (screen)->setProperty ();
         WindowInterface::setHandler (w, true);
     }
     else
@@ -148,7 +148,7 @@ UnityNETWorkareaMonitorsWindow::UnityNETWorkareaMonitorsWindow (CompWindow *w) :
 }
 
 bool
-UnityNETWorkareaMonitorsPluginVTable::init ()
+UnityNETWorkareaRegionPluginVTable::init ()
 {
     if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
         return false;

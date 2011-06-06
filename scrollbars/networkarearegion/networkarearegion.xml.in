@@ -1,7 +1,7 @@
 <compiz>
-	<plugin name="networkareamonitors" useBcop="true">
+	<plugin name="networkarearegion" useBcop="true">
 	<_short>Unity Scrollbars Support</_short>
-	<_long>Support _UNITY_NET_WORKAREA_MONITORS</_long>
+	<_long>Support _UNITY_NET_WORKAREA_REGION</_long>
 	<category>Utility</category>
 	<deps>
 		<relation type="after">

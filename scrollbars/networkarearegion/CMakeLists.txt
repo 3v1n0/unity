@@ -2,4 +2,4 @@ find_package (Compiz REQUIRED)
 
 include (CompizPlugin)
 
-compiz_plugin (networkareamonitors)
+compiz_plugin (networkarearegion)
