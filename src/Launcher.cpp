@@ -2217,7 +2217,6 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
   
   self->EnsureAnimation ();
-  
   return TRUE;
 }
 
@@ -3113,6 +3112,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   else if (GetActionState () == ACTION_DRAG_LAUNCHER)
   {
     _launcher_drag_delta += dy;
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_LAUNCHER_END_DND,
+                              NULL);
   }
   else if (GetActionState () == ACTION_DRAG_ICON)
   {
