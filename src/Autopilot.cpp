@@ -33,7 +33,6 @@ TestFinished (void *arg)
   TestArgs *args = static_cast<TestArgs*> (arg);
   GVariant *result = g_variant_new ("(sb)", args->name, args->passed);
 
-  g_debug ("firing TestFinished");
   g_dbus_connection_emit_signal (_dbus,
                                  NULL,
                                  "/com/canonical/Unity/Debug",
@@ -52,16 +51,11 @@ TestFinished (void *arg)
    ubus_server_send_message (_ubus,
                              UBUS_AUTOPILOT_TEST_FINISHED,
                              result);
-
-   // FIXME this is causing a segfault
-   //g_free (args->name);
-   //g_free (args);
- }
+}
 
 void
 on_test_passed (GVariant *payload, TestArgs *args)
 {
-  g_debug ("test passed! woo!");
   nux::GetTimer ().RemoveTimerHandler (args->expiration_handle);
   ubus_server_unregister_interest (_ubus, args->ubus_handle);
   args->passed = TRUE;

@@ -48,9 +48,6 @@ public:
 
   void StartTest (const gchar *name);
 
-  void preparePaint (int msSinceLastPaint);
-  void donePaint ();
-
   UBusServer *GetUBusConnection ();
   GDBusConnection *GetDBusConnection ();
 };
