@@ -22,6 +22,7 @@
 
 #include <sigc++/sigc++.h>
 #include <glib.h>
+#include <string>
 
 class LauncherHideMachine : public sigc::trackable
 {
@@ -75,7 +76,7 @@ class LauncherHideMachine : public sigc::trackable
     
     sigc::signal<void, bool> should_hide_changed;
     
-    char *DebugHideQuirks ();
+    std::string DebugHideQuirks ();
     
   private:
     void EnsureHideState (bool skip_delay);

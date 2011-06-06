@@ -3,7 +3,6 @@
 #
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 #
 # Unit tests
 #
@@ -57,6 +56,9 @@ add_executable (test-unit
                 ../src/FavoriteStore.h
                 ../src/FavoriteStoreGSettings.cpp
                 ../src/FavoriteStoreGSettings.h
+                ../src/GLibWrapper.h
+                ../src/GLibWrapper-inl.h
+                ../src/GLibWrapper.cpp
                 ../src/Introspectable.cpp
                 ../src/PlaceEntryRemote.cpp
                 ../src/PlaceEntryRemote.h
@@ -80,11 +82,18 @@ add_executable (test-unit
                 ../src/QuicklistMenuItemSeparator.h
                 ../src/QuicklistView.cpp
                 ../src/QuicklistView.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 ../src/
                 )
 
 add_executable (test-panel
                 TestPanel.cpp
+                ../src/DBusIndicators.cpp
+                ../src/DBusIndicators.h
+                ../src/GLibWrapper.h
+                ../src/GLibWrapper-inl.h
+                ../src/GLibWrapper.cpp
                 ../src/PanelStyle.cpp
                 ../src/PanelStyle.h
                 ../src/PanelView.cpp
@@ -93,27 +102,24 @@ add_executable (test-panel
                 ../src/PanelIndicatorObjectView.h
                 ../src/PanelIndicatorObjectEntryView.cpp
                 ../src/PanelIndicatorObjectEntryView.h
-            		../src/PanelTitlebarGrabAreaView.h
-            		../src/PanelTitlebarGrabAreaView.cpp
+            	../src/PanelTitlebarGrabAreaView.h
+            	../src/PanelTitlebarGrabAreaView.cpp
                 ../src/PanelTray.cpp
                 ../src/PanelTray.h
-                ../src/IndicatorObjectFactory.h
-                ../src/IndicatorObjectProxy.h
-                ../src/IndicatorObjectEntryProxy.h
-                ../src/IndicatorObjectFactoryRemote.cpp
-                ../src/IndicatorObjectFactoryRemote.h
-                ../src/IndicatorObjectProxyRemote.cpp
-                ../src/IndicatorObjectProxyRemote.h
-                ../src/IndicatorObjectEntryProxyRemote.cpp
-                ../src/IndicatorObjectEntryProxyRemote.h
+                ../src/Indicators.cpp
+                ../src/Indicators.h
+                ../src/Indicator.cpp
+                ../src/Indicator.h
+                ../src/IndicatorEntry.cpp
+                ../src/IndicatorEntry.h
                 ../src/Introspectable.cpp
                 ../src/Introspectable.h
                 ../src/PanelHomeButton.cpp
                 ../src/PanelHomeButton.h
                 ../src/PanelMenuView.cpp
                 ../src/PanelMenuView.h
-                ../src/TimeMe.cpp
-                ../src/TimeMe.h
+                ../src/Timer.cpp
+                ../src/Timer.h
                 ../src/StaticCairoText.cpp
                 ../src/StaticCairoText.h
                 ../src/WindowButtons.cpp
@@ -124,6 +130,8 @@ add_executable (test-panel
                 ../src/UScreen.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
@@ -146,11 +154,13 @@ set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
                           ../src/PlacesSimpleTile.h
                           ../src/TextureCache.h
                           ../src/TextureCache.cpp
-                          ../src/TimeMe.cpp
-                          ../src/TimeMe.h
+                          ../src/Timer.cpp
+                          ../src/Timer.h
                           ../src/StaticCairoText.cpp
                           ../src/StaticCairoText.h
                           ../src/UBusMessages.h
+                          ../src/Variant.cpp
+                          ../src/Variant.h
                           )
 add_executable (test-places
                 TestPlaces.cpp
@@ -237,6 +247,8 @@ add_executable (test-quicklist
                 ../src/QuicklistView.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 add_executable (test-quicklist-visuals
@@ -259,6 +271,8 @@ add_executable (test-quicklist-visuals
                 ../src/QuicklistView.h
                 ../src/ubus-server.cpp
                 ../src/ubus-server.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
 
 add_executable (test-places-backend
@@ -273,14 +287,35 @@ add_executable (test-places-backend
                 ../src/PlaceRemote.cpp
                 ../src/PlaceRemote.h
                 ../src/Place.h
+                ../src/Variant.cpp
+                ../src/Variant.h
                 )
+
+#
+# GTest tests
+#
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(test-gtest
+               test_timer.cpp
+               test_indicator_entry.cpp
+               ../src/IndicatorEntry.h
+               ../src/IndicatorEntry.cpp
+               ../src/Timer.h
+               ../src/Timer.cpp
+               )
+target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+add_test(UnityGTests test-gtest)
+
 #
 # check target
 #
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit)
-add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
+set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
+add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
+add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 

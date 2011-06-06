@@ -43,13 +43,19 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#define URGENT_BLINKS       3
-#define WIGGLE_CYCLES       6
+#include "Variant.h"
 
-#define MAX_STARTING_BLINKS 5
-#define STARTING_BLINK_LAMBDA 3
+namespace {
 
-#define BACKLIGHT_STRENGTH  0.9f
+const int URGENT_BLINKS = 3;
+const int WIGGLE_CYCLES = 6;
+
+const int MAX_STARTING_BLINKS = 5;
+const int STARTING_BLINK_LAMBDA = 3;
+
+const float BACKLIGHT_STRENGTH = 0.9f;
+
+}
 
 #define TRIGGER_SQR_RADIUS 25
 
@@ -314,17 +320,17 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
     {
-      _shader_program_uv_persp_correction = nux::GetThreadGLDeviceFactory()->CreateShaderProgram();
+      _shader_program_uv_persp_correction = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateShaderProgram();
       _shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
       _shader_program_uv_persp_correction->Link();
     }
     else
     {
-      _AsmShaderProg = nux::GetThreadGLDeviceFactory()->CreateAsmShaderProgram();
+      _AsmShaderProg = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateAsmShaderProgram();
       _AsmShaderProg->LoadVertexShader (TCHAR_TO_ANSI (*PerspectiveCorrectVtx) );
 
-      if ((nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
-        (nux::GetThreadGLDeviceFactory()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE () || nux::GetThreadGLDeviceFactory()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE ()))
+      if ((nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
+        (nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE () || nux::GetGraphicsDisplay ()->GetGpuDevice ()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE ()))
       {
         // No support for non power of two textures but support for rectangle textures
         _AsmShaderProg->LoadPixelShader (TCHAR_TO_ANSI (*PerspectiveCorrectTexRectFrg) );
@@ -424,8 +430,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     }
     
     _drag_window = NULL;
-    _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
-    _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_drag_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
+    _offscreen_progress_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 
     for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
       _ubus_handles[i] = 0;
@@ -653,7 +659,7 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   pango_cairo_show_layout (cr, layout);
 
   nux::NBitmapData* bitmap = cg->GetBitmap ();
-  texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture->Update (bitmap);
   delete bitmap;
   delete cg;
@@ -786,25 +792,20 @@ Launcher::exitKeyNavMode ()
 void
 Launcher::AddProperties (GVariantBuilder *builder)
 {
-  struct timespec current;
+  timespec current;
   clock_gettime (CLOCK_MONOTONIC, &current);
-  char* hidequirks_mask = _hide_machine->DebugHideQuirks ();
-  char* hoverquirks_mask = _hover_machine->DebugHoverQuirks ();
-  
-  g_variant_builder_add (builder, "{sv}", "hover-progress", g_variant_new_double ((double) GetHoverProgress (current)));
-  g_variant_builder_add (builder, "{sv}", "dnd-exit-progress", g_variant_new_double ((double) DnDExitProgress (current)));
-  g_variant_builder_add (builder, "{sv}", "autohide-progress", g_variant_new_double ((double) AutohideProgress (current)));
 
-  g_variant_builder_add (builder, "{sv}", "dnd-delta", g_variant_new_int32 (_dnd_delta_y));
-  g_variant_builder_add (builder, "{sv}", "floating", g_variant_new_boolean (_floating));
-  g_variant_builder_add (builder, "{sv}", "hovered", g_variant_new_boolean (_hovered));
-  g_variant_builder_add (builder, "{sv}", "hidemode", g_variant_new_int32 (_hidemode));
-  g_variant_builder_add (builder, "{sv}", "hidden", g_variant_new_boolean (_hidden));
-  g_variant_builder_add (builder, "{sv}", "hide-quirks", g_variant_new_string (hidequirks_mask));
-  g_variant_builder_add (builder, "{sv}", "hover-quirks", g_variant_new_string (hoverquirks_mask));
-
-  g_free (hidequirks_mask);
-  g_free (hoverquirks_mask);
+  unity::variant::BuilderWrapper(builder)
+    .add("hover-progress", GetHoverProgress(current))
+    .add("dnd-exit-progress", DnDExitProgress(current))
+    .add("autohide-progress", AutohideProgress(current))
+    .add("dnd-delta", _dnd_delta_y)
+    .add("floating", _floating)
+    .add("hovered", _hovered)
+    .add("hidemode", _hidemode)
+    .add("hidden", _hidden)
+    .add("hide-quirks", _hide_machine->DebugHideQuirks().c_str())
+    .add("hover-quirks", _hover_machine->DebugHoverQuirks().c_str());
 }
 
 void Launcher::SetMousePosition (int x, int y)
@@ -1503,6 +1504,9 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         float present_progress = IconPresentProgress (*it, current);
         folding_threshold -= CLAMP (sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
     }
+    
+    if (sum - _space_between_icons <= launcher_height)
+      folding_threshold = launcher_height;
 
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
@@ -1745,7 +1749,9 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // as the leave event is no more received when the place is opened
-    self->SetStateMouseOverLauncher (false);
+    // FIXME: remove when we change the mouse grab strategy in nux
+    self->SetStateMouseOverLauncher (pointerX < self->GetAbsoluteGeometry ().x + self->GetGeometry ().width &&
+                                     pointerY >= self->GetAbsoluteGeometry ().y);
     self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
@@ -1893,6 +1899,9 @@ Launcher::CheckWindowOverLauncher ()
   CompWindowList window_list = _screen->windows ();
   CompWindowList::iterator it;
   CompWindow *window = NULL;
+  CompWindow *parent = NULL;
+  int type_dialogs = CompWindowTypeDialogMask | CompWindowTypeModalDialogMask 
+                     | CompWindowTypeUtilMask;
 
   bool any = false;
   bool active = false;
@@ -1902,7 +1911,11 @@ Launcher::CheckWindowOverLauncher ()
     return;
 
   window = _screen->findWindow (_screen->activeWindow ());
-  if (CheckIntersectWindow (window))
+
+  if (window && (window->type () & type_dialogs))
+    parent = _screen->findWindow (window->transientFor ());
+
+  if (CheckIntersectWindow (window) || CheckIntersectWindow (parent))
   {
     any = true;
     active = true;
@@ -2354,23 +2367,22 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
 {
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * _icon_size);
-  
+
   if (running > 0)
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
+    nux::Color color = nux::color::LightGrey;
 
     if (arg.running_colored)
-      color = nux::Colors::SkyBlue;
-      
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+      color = nux::color::SkyBlue;
+
+    color = color * alpha;
 
     nux::BaseTexture *texture;
 
     std::vector<int> markers;
-    
+
     /*if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
@@ -2413,9 +2425,7 @@ void Launcher::RenderIndicators (nux::GraphicsEngine& GfxContext,
   {
     nux::TexCoordXForm texxform;
 
-    nux::Color color = nux::Colors::LightGrey;
-    color.SetRGBA (color.R () * alpha, color.G () * alpha,
-                   color.B () * alpha, alpha);
+    nux::Color color = nux::color::LightGrey * alpha;
     GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
                               markerCenter - (_arrow_rtl->GetHeight () / 2),
                               (float) _arrow_rtl->GetWidth(),
@@ -2553,18 +2563,13 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     CHECKGL( glVertexAttribPointerARB((GLuint)TextureCoord0Location, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 4) );
   }
 
-//   if(VertexColorLocation != -1)
-//   {
-//     CHECKGL( glEnableVertexAttribArrayARB(VertexColorLocation) );
-//     CHECKGL( glVertexAttribPointerARB((GLuint)VertexColorLocation, 4, GL_FLOAT, GL_FALSE, 32, VtxBuffer + 8) );
-//   }
-
-  bkg_color.SetRGBA (bkg_color.R () * alpha, bkg_color.G () * alpha,
-                     bkg_color.B () * alpha, alpha);
+  nux::Color bg_color = bkg_color * alpha;
+  // Since we don't know want the alpha was, reset the alpha channel of the color.
+  bkg_color.alpha = alpha;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {
-    CHECKGL ( glUniform4fARB (FragmentColor, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glUniform4fARB (FragmentColor, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glUniform4fARB (DesatFactor, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2572,7 +2577,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   }
   else
   {
-    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bkg_color.R(), bkg_color.G(), bkg_color.B(), bkg_color.A() ) );
+    CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 0, bg_color.red, bg_color.green, bg_color.blue, bg_color.alpha ) );
     CHECKGL ( glProgramLocalParameter4fARB (GL_FRAGMENT_PROGRAM_ARB, 1, arg.saturation, arg.saturation, arg.saturation, arg.saturation));
 
     nux::GetGraphicsEngine ().SetTexture(GL_TEXTURE0, icon);
@@ -2659,7 +2664,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   RenderIcon (GfxContext,
               arg,
               arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
-              nux::Colors::White,
+              nux::color::White,
               arg.alpha,
               arg.icon->_xform_coords["Image"]);
 
@@ -2669,7 +2674,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                _icon_shine_texture->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.backlight_intensity * arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2712,13 +2717,13 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
   if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
   {
     if (_offscreen_progress_texture->GetWidth () != _icon_size || _offscreen_progress_texture->GetHeight () != _icon_size)
-      _offscreen_progress_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+      _offscreen_progress_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
     RenderProgressToTexture (GfxContext, _offscreen_progress_texture, arg.progress, arg.progress_bias);
     
     RenderIcon(GfxContext,
                arg,
                _offscreen_progress_texture,
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Tile"]);
   }
@@ -2728,7 +2733,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
     RenderIcon(GfxContext,
                arg,
                arg.icon->Emblem ()->GetDeviceTexture (),
-               nux::Colors::White,
+               nux::color::White,
                arg.alpha,
                arg.icon->_xform_coords["Emblem"]);
   }
@@ -2837,26 +2842,33 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
         gPainter.Paint2DQuadColor (GfxContext, 
                                    nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
                                    nux::Color(0xAAAAAAAA));
-                                   
       if ((*it).x_rotation < 0.0f || (*it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *it, bkg_box);
     }
-    
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x + bkg_box.width - 1, bkg_box.y, 1, bkg_box.height), nux::Color(0x60606060));
-    gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (bkg_box.x, bkg_box.y, bkg_box.width, 20), nux::Color(0x60000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x00000000), 
-                                                                                                    nux::Color(0x60000000));
+
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x + bkg_box.width - 1,
+                                            bkg_box.y,
+                                            1,
+                                            bkg_box.height),
+                              nux::Color(0x60606060));
+    gPainter.Paint2DQuadColor(GfxContext,
+                              nux::Geometry(bkg_box.x,
+                                            bkg_box.y,
+                                            bkg_box.width,
+                                            20),
+                              nux::Color(0x60000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x00000000),
+                              nux::Color(0x60000000));
 
     // FIXME: can be removed for a bgk_box->SetAlpha once implemented
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::DST_IN);
-    nux::Color alpha_mask = nux::Color(0xAAAAAAAA);
-    alpha_mask.SetRGBA (alpha_mask.R () * launcher_alpha, alpha_mask.G () * launcher_alpha,
-                        alpha_mask.B () * launcher_alpha, launcher_alpha);
+    nux::Color alpha_mask = nux::Color(0xFFAAAAAA) * launcher_alpha;
     gPainter.Paint2DQuadColor (GfxContext, bkg_box, alpha_mask);
-    
+
     GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
     GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
 
@@ -2963,7 +2975,7 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
     _drag_window = NULL;
   }
   
-  _offscreen_drag_texture = nux::GetThreadGLDeviceFactory()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+  _offscreen_drag_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow (_offscreen_drag_texture);
   _drag_window->SinkReference ();
   
@@ -3127,6 +3139,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 {
   SetMousePosition (x, y);
   SetStateMouseOverLauncher (false);
+  LauncherIcon::SetSkipTooltipDelay (false);
 
   EventLogic ();
   EnsureAnimation ();
@@ -3314,12 +3327,13 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
+    case XK_Menu:
       // open quicklist of currently selected icon
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
       {
         if ((*it)->OpenQuicklist (true))
-          leaveKeyNavMode ();
+          leaveKeyNavMode (true);
       }
     break;
 
@@ -3843,33 +3857,32 @@ Launcher::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::Intrusi
   // FIXME
   glClear (GL_COLOR_BUFFER_BIT);
   nux::TexCoordXForm texxform;
-  
+
   fill_width *= progress_fill;
 
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-                            
-  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);  
-
-  GfxContext.PopClippingRectangle (); 
-
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height,
+                       _progress_bar_trough->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.PopClippingRectangle ();
 
   // right door
   GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width, progress_y, progress_width, progress_height, 
-                            _progress_bar_trough->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y, fill_width, fill_height, 
-                            _progress_bar_fill->GetDeviceTexture (), texxform, nux::Colors::White);
-  
-  GfxContext.PopClippingRectangle (); 
+  GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
+                      progress_width, progress_height,
+                      _progress_bar_trough->GetDeviceTexture (), texxform,
+                      nux::color::White);
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y,
+                       fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
 
-  
+  GfxContext.PopClippingRectangle();
+
   RestoreSystemRenderTarget ();
 }
 
@@ -3879,14 +3892,14 @@ Launcher::SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> te
   int width = texture->GetWidth ();
   int height = texture->GetHeight ();
   
-  nux::GetThreadGLDeviceFactory ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetThreadGLDeviceFactory ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
-  nux::GetThreadGLDeviceFactory ()->ActivateFrameBuffer ();
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->ActivateFrameBuffer ();
 
-  nux::GetThreadGraphicsContext ()->SetContext   (0, 0, width, height);
-  nux::GetThreadGraphicsContext ()->SetViewport  (0, 0, width, height);
-  nux::GetThreadGraphicsContext ()->Push2DWindow (width, height);
-  nux::GetThreadGraphicsContext ()->EmptyClippingRegion();
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetContext   (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetViewport  (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->Push2DWindow (width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->EmptyClippingRegion();
 }
 
 void 

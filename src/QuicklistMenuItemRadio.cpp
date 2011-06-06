@@ -178,7 +178,7 @@ QuicklistMenuItemRadio::Draw (nux::GraphicsEngine& gfxContext,
       texture = _normalTexture[1]->GetDeviceTexture ();
     }
 
-    _color = nux::Colors::White;
+    _color = nux::color::White;
   }
   else
   {
@@ -238,14 +238,14 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   cairo_set_line_width (cr, 1.0f);
 
-  DrawText (cr, width, height, nux::Colors::White);
+  DrawText (cr, width, height, nux::color::White);
 
   nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
 
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
-  _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
   delete bitmap;
 
@@ -267,14 +267,14 @@ QuicklistMenuItemRadio::UpdateTexture ()
   cairo_fill (cr);
 
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  DrawText (cr, width, height, nux::Colors::White);
+  DrawText (cr, width, height, nux::color::White);
 
   bitmap = _cairoGraphics->GetBitmap ();
 
   if (_normalTexture[1])
     _normalTexture[1]->UnReference ();
 
-  _normalTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture[1] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _normalTexture[1]->Update (bitmap);
   delete bitmap;
 
@@ -305,7 +305,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   if (_prelightTexture[0])
     _prelightTexture[0]->UnReference ();
 
-  _prelightTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _prelightTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _prelightTexture[0]->Update (bitmap);
   delete bitmap;
 
@@ -339,7 +339,7 @@ QuicklistMenuItemRadio::UpdateTexture ()
   if (_prelightTexture[1])
     _prelightTexture[1]->UnReference ();
 
-  _prelightTexture[1] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _prelightTexture[1] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _prelightTexture[1]->Update (bitmap);
   delete bitmap;
 

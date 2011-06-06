@@ -146,7 +146,7 @@ PlacesTile::DrawHighlight (const char *texid, int width, int height, nux::BaseTe
   cairo_destroy (cr);
 
   nux::NBitmapData *bitmap =  cairo_graphics->GetBitmap();
-  nux::BaseTexture *tex = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  nux::BaseTexture *tex = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   tex->Update (bitmap);
   *texture = tex;
 
@@ -207,7 +207,7 @@ PlacesTile::UpdateBackground ()
 
   _hilight_layer = new nux::TextureLayer (_hilight_background->GetDeviceTexture(),
                                           texxform,
-                                          nux::Colors::White,
+                                          nux::color::White,
                                           true,
                                           rop);
 }

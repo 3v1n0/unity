@@ -162,7 +162,7 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
   cairo_paint (cr);
-  cairo_set_source_rgba (cr, _color.R (), _color.G (), _color.B (), _color.A ());
+  cairo_set_source_rgba (cr, _color.red, _color.green, _color.blue, _color.alpha);
   cairo_set_line_width (cr, 1.0f);
   cairo_move_to (cr, 0.5f, 2.5f);
   cairo_line_to (cr, width - 0.5f, 2.5f);
@@ -173,7 +173,7 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   if (_normalTexture[0])
     _normalTexture[0]->UnReference ();
 
-  _normalTexture[0] = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _normalTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _normalTexture[0]->Update (bitmap);
   delete bitmap;
 

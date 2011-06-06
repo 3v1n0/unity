@@ -34,6 +34,7 @@
 #include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "PlacesView.h"
+#include "Variant.h"
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 
@@ -242,8 +243,8 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_bg_blur_texture.IsValid () && paint_blur)
   {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGpuDevice ()->GetCurrentFrameBufferObject ();
-    nux::GetGpuDevice ()->DeactivateFrameBuffer ();
+    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay ()->GetGpuDevice ()->GetCurrentFrameBufferObject ();
+    nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
     
     GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
     GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
@@ -253,7 +254,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
     nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::Colors::White, 1.0f, 2);
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::color::White, 1.0f, 2);
 
     if (current_fbo.IsValid ())
     { 
@@ -287,7 +288,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     gPainter.PushDrawTextureLayer (GfxContext, _bg_blur_geo,
                                    _bg_blur_texture,
                                    texxform_blur__bg,
-                                   nux::Colors::White,
+                                   nux::color::White,
                                    true,
                                    rop);
   
@@ -321,7 +322,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            corner->GetHeight (),
                            corner->GetDeviceTexture (),
                            texxform,
-                           nux::Colors::White);
+                           nux::color::White);
     }
 
     { // Fullscreen toggle
@@ -331,7 +332,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            icon->GetHeight (),
                            icon->GetDeviceTexture (),
                            texxform,
-                           nux::Colors::White);
+                           nux::color::White);
     }
 
     { // Bottom repeated texture
@@ -347,7 +348,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            bottom->GetHeight (),
                            bottom->GetDeviceTexture (),
                            texxform,
-                           nux::Colors::White);
+                           nux::color::White);
     }
 
     { // Right repeated texture
@@ -363,7 +364,7 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
                            real_height + offset,
                            right->GetDeviceTexture (),
                            texxform,
-                           nux::Colors::White);
+                           nux::color::White);
     }
   }
   else
@@ -406,17 +407,17 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
     gPainter.PushTextureLayer (GfxContext, _bg_blur_geo,
                                _bg_blur_texture,
                                texxform_blur__bg,
-                               nux::Colors::White,
+                               nux::color::White,
                                true,
                                rop);
     bgs++;
   }
- 
+
   nux::GetPainter ().PushLayer (GfxContext, _bg_layer->GetGeometry (), _bg_layer);
   bgs++;
 
   if (_layout)
-  {    
+  {
     _layout->ProcessDraw (GfxContext, force_draw);
   }
 
@@ -1006,12 +1007,7 @@ PlacesView::GetName ()
 void
 PlacesView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 //

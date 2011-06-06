@@ -34,6 +34,8 @@
 #include <core/core.h>
 #include <core/atoms.h>
 
+using unity::FavoriteStore;
+
 struct _ShortcutData
 {
   BamfLauncherIcon *self;
@@ -166,13 +168,16 @@ BamfLauncherIcon::~BamfLauncherIcon()
 {
   g_object_set_qdata (G_OBJECT (m_App), g_quark_from_static_string ("unity-seen"), GINT_TO_POINTER (0));
 
-  // FIXME(loicm): _menu_items stores invalid objects at that point for some
-  //     unknow reasons generating GLib warnings. Also it seems like some items
-  //     are leaked.
-  g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
-                               _menu_callbacks["Pin"]);
-  g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
-                               _menu_callbacks["Quit"]);
+  // We might not have created the menu items yet
+  if (_menu_items.find ("Pin") != _menu_items.end ()) {
+    g_signal_handler_disconnect ((gpointer) _menu_items["Pin"],
+                                 _menu_callbacks["Pin"]);
+  }
+
+  if (_menu_items.find ("Quit") != _menu_items.end ()) {
+    g_signal_handler_disconnect ((gpointer) _menu_items["Quit"],
+                                 _menu_callbacks["Quit"]);
+  }
 
   if (_on_desktop_file_changed_handler_id != 0)
     g_signal_handler_disconnect ((gpointer) _desktop_file_monitor,
@@ -497,10 +502,9 @@ BamfLauncherIcon::Spread (int state, bool force)
 
   if (windowList.size () > 1 || (windowList.size () > 0 && force))
   {
-    std::string *match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
+    std::string match = PluginAdapter::Default ()->MatchStringForXids (&windowList);
     _launcher->SetLastSpreadIcon ((LauncherIcon *) this);
     PluginAdapter::Default ()->InitiateScale (match, state);
-    delete match;
     g_list_free (children);
     return true;
   }
@@ -736,7 +740,7 @@ BamfLauncherIcon::UnStick (void)
     this->Remove ();
 
   if (desktop_file && strlen (desktop_file) > 0)
-    FavoriteStore::GetDefault ()->RemoveFavorite (desktop_file);
+    FavoriteStore::GetDefault().RemoveFavorite(desktop_file);
 }
 
 void
@@ -755,7 +759,7 @@ BamfLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIco
     bamf_view_set_sticky (view, true);
 
     if (desktop_file && strlen (desktop_file) > 0)
-      FavoriteStore::GetDefault ()->AddFavorite (desktop_file, -1); //self->SortPriority ());
+      FavoriteStore::GetDefault().AddFavorite(desktop_file, -1);
   }
 }
 

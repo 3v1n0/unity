@@ -1,4 +1,4 @@
-  project (unity)
+project (unity)
 cmake_minimum_required(VERSION 2.8)
 
 
@@ -48,7 +48,6 @@ set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
-set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -142,3 +141,32 @@ install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR}
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
+#
+# docs
+#
+
+# check if doxygen is even installed
+find_package(Doxygen)
+if (DOXYGEN_FOUND STREQUAL "NO")
+  message("Doxygen not found. Documentation will not be built")
+endif (DOXYGEN_FOUND STREQUAL "NO")
+
+if (DOXYGEN_FOUND STREQUAL "YES")
+  set(TOP_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+  # prepare doxygen configuration file
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # add doxygen as target
+  add_custom_target(doxygen ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # cleanup $build/api-doc on "make clean"
+  set_property(DIRECTORY APPEND PROPERTY
+         ADDITIONAL_MAKE_CLEAN_FILES api-doc)
+
+  # install HTML API documentation and manual pages
+  set(DOC_PATH "share/doc/${CPACK_PACKAGE_NAME}-${VERSION}")
+
+  install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/api-doc/html
+           DESTINATION ${DOC_PATH})
+endif (DOXYGEN_FOUND STREQUAL "YES")

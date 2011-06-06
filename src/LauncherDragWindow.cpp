@@ -103,19 +103,19 @@ LauncherDragWindow::DrawContent (nux::GraphicsEngine& GfxContext, bool force_dra
   nux::Geometry geo = GetGeometry ();
   geo.SetX (0);
   geo.SetY (0);
-  
+
   GfxContext.PushClippingRectangle (geo);
-  
+
   nux::TexCoordXForm texxform;
   texxform.FlipVCoord (true);
-  
+
   GfxContext.QRP_1Tex (0,
-                            0,
-                            _icon->GetWidth(),
-                            _icon->GetHeight(),
-                            _icon,
-                            texxform,
-                            nux::Colors::White);
-  
+                       0,
+                       _icon->GetWidth(),
+                       _icon->GetHeight(),
+                       _icon,
+                       texxform,
+                       nux::color::White);
+
   GfxContext.PopClippingRectangle ();
 }

@@ -23,6 +23,8 @@
 #include "unitya11y.h"
 #include "unity-util-accessible.h"
 
+using namespace unity;
+
 PanelController::PanelController ()
 : _bfb_size (66),
   _opacity (1.0f),

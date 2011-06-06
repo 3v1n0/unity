@@ -72,7 +72,7 @@ def reset_unity_compiz_profile ():
     # as compiz set a new schema instead of a value..
     try:
         current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    except GError, e:
+    except (GError, AttributeError), e:
         print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
         return
     

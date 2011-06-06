@@ -40,6 +40,7 @@
 #include "UBusMessages.h"
 
 #include "PlacesSearchBar.h"
+#include "Variant.h"
 
 #include "PlacesStyle.h"
 
@@ -146,12 +147,7 @@ PlacesSearchBar::GetChildsName ()
 
 void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 long
@@ -485,7 +481,7 @@ PlacesSearchBar::UpdateBackground ()
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
 
@@ -502,7 +498,7 @@ PlacesSearchBar::UpdateBackground ()
 
   _bg_layer = new nux::TextureLayer (texture2D->GetDeviceTexture(),
                                      texxform,          // The Oject that defines the texture wraping and coordinate transformation.
-                                     nux::Colors::White, // The color used to modulate the texture.
+                                     nux::color::White, // The color used to modulate the texture.
                                      true,              // Write the alpha value of the texture to the destination buffer.
                                      rop                // Use the given raster operation to set the blending when the layer is being rendered.
   );

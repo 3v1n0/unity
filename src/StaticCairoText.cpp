@@ -28,6 +28,9 @@
 #include "Nux/Validator.h"
 #include "StaticCairoText.h"
 
+// TODO: Tim Penhey 2011-05-16
+// We shouldn't be pushing stuff into the nux namespace from the unity
+// codebase, that is just rude.
 namespace nux
 {
   StaticCairoText::StaticCairoText (const TCHAR* text,
@@ -184,8 +187,8 @@ StaticCairoText::Draw (GraphicsEngine& gfxContext,
   gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
   gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  Color col = Colors::Black;
-  col.SetAlpha (0.0f);
+  Color col = color::Black;
+  col.alpha = 0;
   gfxContext.QRP_Color (base.x,
                         base.y,
                         base.width,
@@ -390,7 +393,7 @@ void StaticCairoText::DrawText (cairo_t*   cr,
     fontName = g_strdup (_fontstring);
 
   GetTextExtents (fontName, textWidth, textHeight);
-    
+
   cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
   layout = pango_cairo_create_layout (cr);
   desc = pango_font_description_from_string (fontName);
@@ -433,16 +436,11 @@ void StaticCairoText::DrawText (cairo_t*   cr,
                                         (float) dpi / (float) PANGO_SCALE);
   }
 
-  //cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
 
-
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  //cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
-  //cairo_paint (cr);
-  cairo_set_source_rgba (cr, color.R (),color.G (), color.B (), color.A ());
+  cairo_set_source_rgba (cr, color.red, color.green, color.blue, color.alpha);
 
   pango_layout_context_changed (layout);
 
@@ -485,7 +483,7 @@ void StaticCairoText::UpdateTexture ()
     _texture2D = NULL;
   }
 
-  _texture2D = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _texture2D = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   _texture2D->Update (bitmap);
 
   delete bitmap;

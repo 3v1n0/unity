@@ -19,26 +19,18 @@
 
 #include "FavoriteStoreGSettings.h"
 
-static FavoriteStore *m_store = NULL;
-
-FavoriteStore::FavoriteStore ()
+namespace unity
 {
 
-}
-
-FavoriteStore::~FavoriteStore ()
+FavoriteStore::~FavoriteStore()
 {
-
 }
 
-FavoriteStore *
-FavoriteStore::GetDefault ()
+
+FavoriteStore& FavoriteStore::GetDefault()
 {
-  if (m_store)
-    m_store->Reference ();
-  else
-    m_store = new FavoriteStoreGSettings ();
-
-  return m_store;
+  static internal::FavoriteStoreGSettings instance;
+  return instance;
 }
 
+}

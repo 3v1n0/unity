@@ -25,6 +25,7 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
+#include "Variant.h"
 #include "WindowButtons.h"
 
 #include <glib.h>
@@ -83,7 +84,7 @@ public:
                                 (float)geo.height,
                                 tex->GetDeviceTexture (),
                                 texxform,
-                                nux::Colors::White);
+                                nux::color::White);
     GfxContext.GetRenderStates ().SetBlend (false);
     GfxContext.PopClippingRectangle();
   }
@@ -181,13 +182,7 @@ WindowButtons::GetChildsName ()
 void
 WindowButtons::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)

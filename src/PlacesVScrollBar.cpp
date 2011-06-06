@@ -64,7 +64,7 @@ PlacesVScrollBar::PostLayoutManagement (long LayoutResult)
 void
 PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
 {
-  nux::Color         color = nux::Colors::White;
+  nux::Color         color = nux::color::White;
   nux::Geometry      base  = GetGeometry ();
   nux::TexCoordXForm texxform;
 
@@ -162,7 +162,7 @@ PlacesVScrollBar::UpdateTexture ()
   if (_slider)
     _slider->UnReference ();
 
-  _slider = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _slider = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   if (_slider)
     _slider->Update (bitmap);
 
@@ -207,7 +207,7 @@ PlacesVScrollBar::UpdateTexture ()
   if (_track)
     _track->UnReference ();
 
-  _track = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  _track = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   if (_track)
     _track->Update (bitmap);
 

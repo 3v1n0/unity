@@ -676,11 +676,26 @@ UnityWindow::resizeNotify (int x, int y, int w, int h)
   window->resizeNotify (x, y, w, h);
 }
 
+CompPoint
+UnityWindow::tryNotIntersectLauncher (CompPoint &pos)
+{
+  UnityScreen *us = UnityScreen::get (screen);
+  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
+  CompRect launcherGeo (geo.x, geo.y, geo.width, geo.height);
+
+  if (launcherGeo.contains (pos))
+  {
+    if (screen->workArea ().contains (CompRect (launcherGeo.right () + 1, pos.y (), window->width (), window->height ())))
+      pos.setX (launcherGeo.right () + 1);
+  }
+  
+  return pos;
+}
+
 bool
 UnityWindow::place (CompPoint &pos)
 {
   UnityScreen *us = UnityScreen::get (screen);
-  nux::Geometry geo = us->launcher->GetAbsoluteGeometry ();
   Launcher::LauncherHideMode hideMode = us->launcher->GetHideMode ();
   
   bool result = window->place (pos);
@@ -689,11 +704,9 @@ UnityWindow::place (CompPoint &pos)
   {
     case Launcher::LAUNCHER_HIDE_DODGE_WINDOWS:
     case Launcher::LAUNCHER_HIDE_DODGE_ACTIVE_WINDOW:
-      if (pos.x () <= geo.width && window->width () + geo.width + 1< screen->workArea ().width ())
-        {
-          pos.setX (geo.width + 1);
-        }
+      pos = tryNotIntersectLauncher (pos);
       break;
+    
     default:
       break;
   }
@@ -762,6 +775,9 @@ UnityScreen::optionChanged (CompOption            *opt,
 
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault ()->SetDashBlurType ((PlacesSettings::DashBlurType)optionGetDashBlurExperimental ());
+      break;
+    case UnityshellOptions::AutomaximizeValue:
+      PluginAdapter::Default ()->SetCoverageAreaBeforeAutomaximize (optionGetAutomaximizeValue () / 100.0f);
       break;
     default:
       break;
@@ -846,7 +862,7 @@ UnityScreen::setOptionForPlugin(const char *plugin, const char *name,
   {
     if (strcmp (plugin, "core") == 0 && strcmp (name, "hsize") == 0)
     {
-      controller->UpdateNumWorkspaces(screen->vpSize ().width ());
+      controller->UpdateNumWorkspaces(screen->vpSize ().width () * screen->vpSize ().height ());
     }
   }
   return status;
@@ -936,6 +952,7 @@ UnityScreen::UnityScreen (CompScreen *screen) :
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
     _ubus_handles[i] = 0;
@@ -975,7 +992,6 @@ UnityScreen::~UnityScreen ()
   delete placesController;
   panelController->UnReference ();
   delete controller;
-  layout->UnReference ();
   launcher->UnReference ();
   launcherWindow->UnReference ();
 
@@ -1003,21 +1019,24 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
+  
   self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher->SinkReference ();
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
   self->AddChild (self->launcher);
 
-  self->layout = new nux::HLayout();
-  self->layout->AddView(self->launcher, 1);
-  self->layout->SetContentDistribution(nux::eStackLeft);
-  self->layout->SetVerticalExternalMargin(0);
-  self->layout->SetHorizontalExternalMargin(0);
+  nux::HLayout* layout = new nux::HLayout();
+  layout->AddView(self->launcher, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
 
   self->controller = new LauncherController (self->launcher, self->screen);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(self->layout);
+  self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
@@ -1057,6 +1076,8 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
   self->launcher->SetLaunchAnimation (Launcher::LAUNCH_ANIMATION_PULSE);
   self->launcher->SetUrgentAnimation (Launcher::URGENT_ANIMATION_WIGGLE);
   self->ScheduleRelayout (0);
+  
+  self->OnLauncherHiddenChanged ();
 
   END_FUNCTION ();
 }

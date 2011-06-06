@@ -17,58 +17,51 @@
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
 */
 
-#ifndef FAVORITE_STORE_H
-#define FAVORITE_STORE_H
+#ifndef UNITY_FAVORITE_STORE_H
+#define UNITY_FAVORITE_STORE_H
 
-#include <NuxCore/NuxCore.h>
-#include <NuxCore/ObjectType.h>
-#include <NuxCore/Object.h>
+#include <list>
 #include <string>
+
+#include <boost/utility.hpp>
 #include <sigc++/signal.h>
 
-#include <glib.h>
+
+namespace unity {
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session
+typedef std::list<std::string> FavoriteList;
 
-class FavoriteStore : public nux::Object
+class FavoriteStore : boost::noncopyable
 {
 public:
-  FavoriteStore ();
-  ~FavoriteStore ();
+  virtual ~FavoriteStore();
 
-  // Returns a referenced FavoriteStore, make sure to UnReference () it
-  static FavoriteStore * GetDefault ();
+  static FavoriteStore& GetDefault();
 
-  // Methods
+  virtual FavoriteList const& GetFavorites() = 0;
 
-  // Get's a GSList of char * desktop paths
-  // DO NOT FREE
-  // DO NOT RELY ON THE CHAR *, STRDUP THEM
-  virtual GSList * GetFavorites () = 0;
-  
   // These will NOT emit the relevant signals, so bare that in mind
   // i.e. don't hope that you can add stuff and hook the view up to
   // favorite_added events to update the view. The signals only emit if
   // there has been a change on the GSettings object from an external
   // source
-  virtual void AddFavorite    (const char *desktop_path, gint position) = 0;
-  virtual void RemoveFavorite (const char *desktop_path) = 0;
-  virtual void MoveFavorite   (const char *desktop_path, gint position) = 0;
-  virtual void SetFavorites   (std::list<const char*> desktop_paths) = 0;
+  virtual void AddFavorite(std::string const& desktop_path, int position) = 0;
+  virtual void RemoveFavorite(std::string const& desktop_path) = 0;
+  virtual void MoveFavorite(std::string const& desktop_path, int position) = 0;
+  virtual void SetFavorites(FavoriteList const& desktop_paths) = 0;
 
   // Signals
   // Therse only emit if something has changed the GSettings object externally
 
   //desktop_path, position
-  sigc::signal<void, const char *, guint32> favorite_added;
-
+  sigc::signal<void, std::string, int> favorite_added;
   //desktop_path
-  sigc::signal<void, const char *> favorite_removed;
-
+  sigc::signal<void, std::string> favorite_removed;
   sigc::signal<void> reordered;
-
-private:
 };
+
+}
 
 #endif // FAVORITE_STORE_H
