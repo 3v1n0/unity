@@ -118,6 +118,8 @@ PanelController::ViewForWindow (nux::BaseWindow *window)
 void
 PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry>& monitors)
 {
+  nux::GetWindowThread()->SetWindowSize(monitors[0].width, monitors[0].height);
+
   std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
   int n_monitors = monitors.size ();
   int i = 0;

@@ -72,7 +72,7 @@ UnityScreen::nuxPrologue ()
   glDisable (GL_LIGHTING);
 
   /* reset matrices */
-  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
+  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
