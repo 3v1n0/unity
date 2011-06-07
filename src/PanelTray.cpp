@@ -85,7 +85,7 @@ PanelTray::~PanelTray ()
 void
 PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetAbsoluteGeometry ();
 
   if (geo.x != _last_x || geo.y != _last_y)
   {
