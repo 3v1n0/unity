@@ -1130,10 +1130,7 @@ UnityDialogPluginVTable::init ()
     if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION) ||
 	!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI) ||
 	!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
-    {
-	fprintf (stderr, "abi mismatch\n");
 	return false;
-    }
 
     if (!gtk_init_check (&programArgc, &programArgv))
     {
