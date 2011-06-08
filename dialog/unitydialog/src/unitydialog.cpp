@@ -18,6 +18,7 @@
 
 #include "unitydialog.h"
 #include <cmath>
+#include <boost/lexical_cast.hpp>
 
 COMPIZ_PLUGIN_20090315 (unitydialog, UnityDialogPluginVTable);
 
@@ -34,7 +35,7 @@ class UnityDialogExp :
 
 
 UnityDialogExp::UnityDialogExp (const CompString &str) :
-    value (strtol (str.c_str (), NULL, 0))
+    value (boost::lexical_cast<int> (str) != 0)
 {
 }
 
@@ -49,10 +50,11 @@ UnityDialogExp::evaluate (CompWindow *w)
 CompMatch::Expression *
 UnityDialogScreen::matchInitExp (const CompString &str)
 {
+    CompString matchString ("transient-dialog=");
     /* Create a new match object */
 
-    if (str.find ("transient-dialog=") == 0)
-	return new UnityDialogExp (str.substr (17));
+    if (str.find (matchString) == 0)
+	return new UnityDialogExp (str.substr (matchString.size ()));
 
     return screen->matchInitExp (str);
 }
