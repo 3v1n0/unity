@@ -274,7 +274,7 @@ UnityDialogShadeTexture::onThemeChanged (GObject	  *obj,
     self->render ();
 }
 
-GLTexture::List
+const GLTexture::List &
 UnityDialogShadeTexture::texture ()
 {
     return mTexture;
@@ -397,7 +397,7 @@ UnityDialogWindow::glDraw (const GLMatrix &transform,
 
     UNITY_DIALOG_SCREEN (screen);
 
-    foreach (GLTexture *tex, uds->mTex->texture ())
+    foreach (GLTexture *tex, uds->tex ())
     {
 	GLTexture::MatrixList matl;
 	GLTexture::Matrix     mat = tex->matrix ();
@@ -644,13 +644,13 @@ UnityDialogWindow::moveNotify (int dx, int dy, bool immediate)
     if (!mSkipNotify)
     {
 	if ((mGrabMask & CompWindowGrabMoveMask ||
-	    UnityDialogScreen::get (screen)->mSwitchingVp) &&
+	    UnityDialogScreen::get (screen)->switchingVp ()) &&
 	    !(mGrabMask & CompWindowGrabMoveMask &&
-	      UnityDialogScreen::get (screen)->mSwitchingVp))
+	      UnityDialogScreen::get (screen)->switchingVp ()))
 	{
-	    moveTransientsToRect (NULL, window->serverBorderRect (), UnityDialogScreen::get (screen)->mSwitchingVp);
+	    moveTransientsToRect (NULL, window->serverBorderRect (), UnityDialogScreen::get (screen)->switchingVp ());
 
-	    if (UnityDialogScreen::get (screen)->mSwitchingVp)
+	    if (UnityDialogScreen::get (screen)->switchingVp ())
 		window->syncPosition ();
 	}
 	/* Not a valid reason for the transient to be moved -

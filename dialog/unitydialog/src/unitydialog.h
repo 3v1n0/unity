@@ -46,7 +46,7 @@ class UnityDialogShadeTexture
 	void
 	render ();
 
-	GLTexture::List
+	const GLTexture::List &
 	texture ();
 
 	UnityDialogShadeTexture ();
@@ -122,15 +122,15 @@ class UnityDialogScreen :
 	CompositeScreen *cScreen;
 	GLScreen	*gScreen;
 
-	bool		mSwitchingVp;
-	UnityDialogShadeTexture *mTex;
-
-    public:
-
-	Atom		mCompizResizeAtom;
+	bool		          switchingVp () { return mSwitchingVp; }
+	const GLTexture::List	& tex () { return mTex->texture (); } 
 
     private:
 	
+	bool		mSwitchingVp;
+	UnityDialogShadeTexture *mTex;
+
+	Atom		mCompizResizeAtom;
 };
 
 #define UNITY_DIALOG_SCREEN(s)						       \
