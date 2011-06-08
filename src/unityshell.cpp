@@ -811,7 +811,23 @@ UnityScreen::Relayout ()
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
 
-  wt->SetWindowSize (rect.width, rect.height);
+
+  int display_x = 0;
+  int display_y = 0;
+  int display_w = 0;
+  int display_h = 0;
+
+  UScreen* uscreen = UScreen::GetDefault();
+  std::vector<nux::Geometry>& monitors = uscreen->GetMonitors ();
+  for (unsigned int i= 0; i < monitors.size(); ++i)
+  {
+      display_x = nux::Min<int>(display_x, monitors[i].x);
+      display_y = nux::Min<int>(display_y, monitors[i].y);
+      display_w = nux::Max<int>(display_w, monitors[i].x + monitors[i].width - display_x);
+      display_h = nux::Max<int>(display_h, monitors[i].y + monitors[i].height - display_y);
+  }
+
+  nux::GetWindowThread()->SetWindowSize(display_w, display_h);
 
   lCurGeom = launcherWindow->GetGeometry(); 
   launcher->SetMaximumHeight(rect.height - panel_height);
