@@ -123,7 +123,6 @@ class UnityDialogScreen :
 	GLScreen	*gScreen;
 
 	bool		mSwitchingVp;
-	std::map <Window, UnityDialogWindow *> mIpws;
 	UnityDialogShadeTexture *mTex;
 	
 

@@ -507,8 +507,6 @@ UnityDialogWindow::addTransient (CompWindow *w)
 				  window->input ().top, window->width (), window->height (),
 				  0, 0, InputOnly, CopyFromParent, CWOverrideRedirect, &attr);
 
-	    UnityDialogScreen::get (screen)->mIpws.insert (std::pair <Window, UnityDialogWindow *> (mIpw, this));
-
 	    XSelectInput (screen->dpy (), mIpw, StructureNotifyMask | ButtonPressMask);
 
 	    XMapWindow (screen->dpy (), mIpw);
@@ -557,7 +555,6 @@ UnityDialogWindow::removeTransient (CompWindow *w)
 
 	if (mIpw)
 	{
-	    UnityDialogScreen::get (screen)->mIpws.erase (mIpw);
 	    XDestroyWindow (screen->dpy (), mIpw);
 	    mIpw = None;
 	}
