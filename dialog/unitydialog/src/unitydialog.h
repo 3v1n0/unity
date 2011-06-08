@@ -124,7 +124,6 @@ class UnityDialogScreen :
 
 	bool		mSwitchingVp;
 	UnityDialogShadeTexture *mTex;
-	
 
     public:
 
