@@ -578,12 +578,22 @@ UnityDialogWindow::removeTransient (CompWindow *w)
 void
 UnityDialogScreen::trackParent (CompWindow *w)
 {
+    unsigned long *data = new unsigned long;
+
+    *data = 1;
+
     if (!mParentWindows.size ())
     {
 	cScreen->preparePaintSetEnabled (this, true);
 	gScreen->glPaintOutputSetEnabled (this, true);
 	cScreen->donePaintSetEnabled (this, true);
     }
+
+    /* Set the _UNITY_IS_PARENT property */
+    XChangeProperty (screen->dpy (), w->id (), mUnityIsParentAtom, XA_CARDINAL,
+		     32, PropModeReplace, (const unsigned char *) data, 1);
+
+    delete data;
 
     mParentWindows.push_back (w);
 }
@@ -592,6 +602,9 @@ void
 UnityDialogScreen::untrackParent (CompWindow *w)
 {
     mParentWindows.remove (w);
+
+    /* Unset the _UNITY_IS_PARENT property */
+    XDeleteProperty (screen->dpy (), w->id (), mUnityIsParentAtom);
 
     if (!mParentWindows.size ())
     {
@@ -1104,7 +1117,9 @@ UnityDialogScreen::UnityDialogScreen (CompScreen *s) :
     gScreen (GLScreen::get (s)),
     mSwitchingVp (false),
     mCompizResizeAtom (XInternAtom (screen->dpy (),
-				   "_COMPIZ_RESIZE_NOTIFY", 0))
+				   "_COMPIZ_RESIZE_NOTIFY", 0)),
+    mUnityIsParentAtom (XInternAtom (screen->dpy (),
+				   "_UNITY_IS_PARENT", 0))
 {
     ScreenInterface::setHandler (screen);
     CompositeScreenInterface::setHandler (cScreen, false);

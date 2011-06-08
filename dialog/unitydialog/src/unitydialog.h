@@ -138,6 +138,7 @@ class UnityDialogScreen :
 	UnityDialogShadeTexture *mTex;
 
 	Atom		mCompizResizeAtom;
+	Atom		mUnityIsParentAtom;
 
 	CompWindowList  mParentWindows;
 };
