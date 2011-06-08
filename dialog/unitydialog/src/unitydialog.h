@@ -177,11 +177,22 @@ class UnityDialogWindow :
 	void addTransient (CompWindow *transient);
 	void removeTransient (CompWindow *transient);
 
+	bool hasParent () { return mParent != NULL; }
+	bool hasTransients () { return !mTransients.empty (); }
+	bool hasTransient (CompWindow *w) { return std::find (mTransients.begin (),
+				   			      mTransients.end (),
+				  			      w) == mTransients.end (); }
+
+	CompWindow *
+	findTopParentWindow ();
+
 	CompPoint getChildCenteredPositionForRect (CompRect rect);
 	CompPoint getParentCenteredPositionForRect (CompRect rect);
 
 	void	  moveTransientsToRect (CompWindow *skip, CompRect rect, bool);
 	void	  moveParentToRect (CompWindow *requestor, CompRect rect, bool);
+
+	void      moveToRect (CompRect currentRect, bool sync);
 
 	void	  grabTransients (CompWindow *skip, int x, int y,
 				  unsigned int state, unsigned int mask, bool);
@@ -199,6 +210,8 @@ class UnityDialogWindow :
 
 	bool animate (int ms, float fadeTime);
 
+    private:
+
 	bool	       mSkipNotify;
 	CompWindowList mTransients;
 	CompWindow     *mParent;
@@ -209,8 +222,6 @@ class UnityDialogWindow :
 	CompPoint      mCurrentPos;
 
 	Window	       mIpw;
-
-    private:
 };
 
 #define VIG_WINDOW(w)						       \

@@ -66,44 +66,39 @@ UnityDialogScreen::matchExpHandlerChanged ()
 
     foreach (CompWindow *w, screen->windows ())
     {
-	if (UnityDialogWindow::get (w)->mParent ||
-	    UnityDialogWindow::get (w)->mTransients.size ())
+	if (UnityDialogWindow::get (w)->hasParent () ||
+	    UnityDialogWindow::get (w)->hasTransients ())
 	    screen->matchPropertyChanged (w);
     }
 }
 
 void
-moveTransientToRect (CompWindow *cw,
-		     CompRect currentRect, bool sync)
+UnityDialogWindow::moveToRect (CompRect currentRect, bool sync)
 {
-    CompPoint pos = UnityDialogWindow::get (cw)->getChildCenteredPositionForRect (currentRect);
+    CompPoint pos = getChildCenteredPositionForRect (currentRect);
 
-    UnityDialogWindow::get (cw)->mSkipNotify = true;
-    UnityDialogWindow::get (cw)->window->move (pos.x () - cw->x () + cw->input ().left,
-					       pos.y () - cw->y () + cw->input ().top, true);
+    mSkipNotify = true;
+    window->move (pos.x () - window->x () + window->input ().left,
+		  pos.y () - window->y () + window->input ().top, true);
 
     if (sync)
-	UnityDialogWindow::get (cw)->window->syncPosition ();
+	window->syncPosition ();
 
-    UnityDialogWindow::get (cw)->setMaxConstrainingAreas ();
-    UnityDialogWindow::get (cw)->mSkipNotify = false;
+    setMaxConstrainingAreas ();
+    mSkipNotify = false;
 }
 
 CompWindow *
-findParentWindow (CompWindow *w)
+UnityDialogWindow::findTopParentWindow ()
 {
-    UnityDialogWindow *udw = UnityDialogWindow::get (w);
-    CompWindow	      *parent = udw->mParent;
+    CompWindow	      *parent = window, *nextParent = NULL;
 
     /* Go to the bottom most window in the stack */
-    while (parent)
-    {
-	udw = UnityDialogWindow::get (parent);
-	parent = udw->mParent;
-    }
+    while ((nextParent = UnityDialogWindow::get (parent)->mParent))
+	parent = nextParent;
 
     /* parent now refers to the top most window */
-    return udw->window;
+    return parent;
 }
 
 UnityDialogShadeTexture::UnityDialogShadeTexture () :
@@ -656,7 +651,7 @@ UnityDialogWindow::moveNotify (int dx, int dy, bool immediate)
 	/* Not a valid reason for the transient to be moved -
 	 * force it back to the main window */
 	else if (mParent)
-	    moveTransientToRect (window, mParent->serverBorderRect (), true);
+	    moveToRect (mParent->serverBorderRect (), true);
     }
 }
 
@@ -805,7 +800,7 @@ UnityDialogWindow::moveTransientsToRect (CompWindow *skip, CompRect currentRect,
 	if (cw == skip)
 	    return;
 
-	moveTransientToRect (cw, currentRect, sync);
+	UnityDialogWindow::get (cw)->moveToRect (currentRect, sync);
 
 	/* Sync all of this window's transients */
 	if (UnityDialogWindow::get (cw)->mTransients.size ())
@@ -944,7 +939,7 @@ UnityDialogScreen::handleCompizEvent (const char	  *plugin,
 	    UnityDialogWindow *udw = UnityDialogWindow::get (w);
 
 	    /* Only move bottomlevels */
-	    if (udw->mParent)
+	    if (udw->hasParent ())
 		continue;
 
 	    udw->moveTransientsToRect (NULL, w->serverBorderRect (), true);
@@ -990,9 +985,7 @@ UnityDialogScreen::handleEvent (XEvent *event)
 		    CompWindow *parent = screen->findWindow (w->transientFor ());
 		    UnityDialogWindow *udw = UnityDialogWindow::get (parent);
 
-		    if (std::find (udw->mTransients.begin (),
-				   udw->mTransients.end (),
-				   w) == udw->mTransients.end ())
+		    if (!udw->hasTransient (w))
 		    {
 			/* This window got it's transient status updated
 			 * probably because the app was buggy and decided
