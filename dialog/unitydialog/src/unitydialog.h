@@ -127,7 +127,7 @@ class UnityDialogScreen :
 
     public:
 
-	Atom		compizResizeAtom;
+	Atom		mCompizResizeAtom;
 
     private:
 	

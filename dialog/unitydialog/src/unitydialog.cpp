@@ -967,7 +967,7 @@ UnityDialogScreen::handleEvent (XEvent *event)
 
 	    w = screen->findWindow (event->xclient.window);
 
-	    if (event->xclient.message_type == compizResizeAtom && w)
+	    if (event->xclient.message_type == mCompizResizeAtom && w)
 	    {
 		CompRect currentRect (event->xclient.data.l[0] - w->border ().left,
 				      event->xclient.data.l[1] - w->border ().top ,
@@ -1065,7 +1065,7 @@ UnityDialogScreen::UnityDialogScreen (CompScreen *s) :
     cScreen (CompositeScreen::get (s)),
     gScreen (GLScreen::get (s)),
     mSwitchingVp (false),
-    compizResizeAtom (XInternAtom (screen->dpy (),
+    mCompizResizeAtom (XInternAtom (screen->dpy (),
 				   "_COMPIZ_RESIZE_NOTIFY", 0))
 {
     ScreenInterface::setHandler (screen);
