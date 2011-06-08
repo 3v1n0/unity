@@ -105,111 +105,177 @@ findParentWindow (CompWindow *w)
 }
 
 UnityDialogShadeTexture::UnityDialogShadeTexture () :
-    pixmap (None),
-    surface (NULL),
-    cairo (NULL)
+    mPixmap (None),
+    mTexture (0),
+    mSurface (NULL),
+    mCairo (NULL),
+    mDamage (None)
 {
+    mOffscreenContainer = gtk_offscreen_window_new ();
+    gtk_widget_set_name (mOffscreenContainer, "UnityPanelWidget");
+    gtk_widget_set_size_request (mOffscreenContainer, 100, 24);
+    gtk_widget_show_all (mOffscreenContainer);
+
+    g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
+                      G_CALLBACK (UnityDialogShadeTexture::onThemeChanged), this);
+
+    g_object_get (gtk_settings_get_default (), "gtk-theme-name", &mThemeName, NULL);
+    mStyle = gtk_widget_get_style (mOffscreenContainer);
+
+}
+
+UnityDialogShadeTexture::~UnityDialogShadeTexture ()
+{
+    gtk_widget_destroy (mOffscreenContainer);
+    g_free (mThemeName);
+
+    destroy ();
 }
 
 void
-UnityDialogShadeTexture::cairoClear (cairo_t    *cr)
+UnityDialogShadeTexture::destroy ()
 {
-    if (pixmap)
+    if (mPixmap)
     {
-        XFreePixmap (screen->dpy (), pixmap);
-	pixmap = None;
+        XFreePixmap (screen->dpy (), mPixmap);
+        mPixmap = None;
     }
-    if (surface)
+    if (mSurface)
     {
-	cairo_surface_destroy (surface);
-	surface = NULL;
+        cairo_surface_destroy (mSurface);
+        mSurface = NULL;
     }
-    if (cairo)
+    if (mCairo)
     {
-	cairo_destroy (cairo);
-	cairo = NULL;
-    }
-
-    cairo = cairoContext ();
-
-    if (cairo)
-    {
-	cairo_save (cairo);
-	cairo_set_operator (cairo, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cairo);
-	cairo_restore (cairo);
+        cairo_destroy (mCairo);
+        mCairo = NULL;
     }
 }
 
-cairo_t *
-UnityDialogShadeTexture::cairoContext ()
+void
+UnityDialogShadeTexture::clear ()
 {
-    if (!cairo)
+    if (mCairo)
     {
-	XRenderPictFormat *format;
+        cairo_save (mCairo);
+        cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
+        cairo_paint (mCairo);
+        cairo_restore (mCairo);
+    }
+}
+
+void
+UnityDialogShadeTexture::context ()
+{
+    if (!mCairo)
+    {
 	Screen		  *xScreen;
+	XRenderPictFormat *format;
 	int		  w, h;
 
 	xScreen = ScreenOfDisplay (screen->dpy (), screen->screenNum ());
 
-	w = 4;
-	h = 4;
-
 	format = XRenderFindStandardFormat (screen->dpy (),
 					    PictStandardARGB32);
 
-	pixmap = XCreatePixmap (screen->dpy (), screen->root (), w, h, 32);
+	w = 4;
+	h = 4;
 
-	texture = GLTexture::bindPixmapToTexture (pixmap, w, h, 32);
+	mPixmap = XCreatePixmap (screen->dpy (), screen->root (), w, h, 32);
 
-	if (texture.empty ())
+	mTexture = GLTexture::bindPixmapToTexture (mPixmap, w, h, 32);
+
+	if (mTexture.empty ())
 	{
-	    compLogMessage ("annotate", CompLogLevelError,
+	    compLogMessage ("unitydialog", CompLogLevelError,
 			    "Couldn't bind pixmap 0x%x to texture",
-			    (int) pixmap);
+			    (int) mPixmap);
 
-	    XFreePixmap (screen->dpy (), pixmap);
+	    XFreePixmap (screen->dpy (), mPixmap);
 
-	    return NULL;
+	    return;
 	}
 
-	damage = XDamageCreate (screen->dpy (), pixmap,
-				XDamageReportRawRectangles);
+	mDamage = XDamageCreate (screen->dpy (), mPixmap,
+				 XDamageReportRawRectangles);
 
-	surface =
+	mSurface =
 	    cairo_xlib_surface_create_with_xrender_format (screen->dpy (),
-							   pixmap, xScreen,
+							   mPixmap, xScreen,
 							   format, w, h);
 
-	cairo = cairo_create (surface);
-    }
+        if (!mSurface)
+        {
+            compLogMessage ("unitydialog", CompLogLevelError, "Couldn't create surface");
 
-    return cairo;
+            XFreePixmap (screen->dpy (), mPixmap);
+            XDamageDestroy (screen->dpy (), mDamage);
+            mTexture.clear ();
+
+            return;
+        }
+
+        mCairo = cairo_create (mSurface);
+
+        if (!mCairo)
+        {
+            compLogMessage ("unitydialog", CompLogLevelError, "Couldn't create cairo context");
+
+            cairo_surface_destroy (mSurface);
+            XFreePixmap (screen->dpy (), mPixmap);
+            XDamageDestroy (screen->dpy (), mDamage);
+            mTexture.clear ();
+        }
+    }
+}
+
+void
+UnityDialogShadeTexture::render (float alpha)
+{
+    mAlpha = alpha;
+
+    /* FIXME: Calling destroy like this is a bit inefficient for
+     * animation cases, can we do better? */
+    destroy ();
+    context ();
+    clear ();
+
+    cairo_set_line_width (mCairo, 2);
+    cairo_set_source_rgba (mCairo,
+                           ((float) mStyle->bg[1].red / (float) 0xffff),
+                           ((float) mStyle->bg[1].green / (float) 0xffff),
+                           ((float) mStyle->bg[1].blue / (float) 0xffff),
+                           (alpha));
+
+    cairo_move_to (mCairo, 0, 0);
+    cairo_rectangle (mCairo, 0, 0, 4, 4);
+
+    cairo_fill (mCairo);
 }
 
 void
 UnityDialogShadeTexture::render ()
 {
-    UNITY_DIALOG_SCREEN (screen);
-    GtkStyle*  style    = NULL;
+    render (mAlpha);
+}
 
-    g_object_get (gtk_settings_get_default (), "gtk-theme-name", &uds->mThemeName, NULL);
-    
-    style = gtk_widget_get_style (uds->mOffscreenContainer);
+void
+UnityDialogShadeTexture::onThemeChanged (GObject	  *obj,
+				       GParamSpec *pspec,
+				       gpointer	  data)
+{
+    UnityDialogShadeTexture *self = static_cast<UnityDialogShadeTexture *> (data);
 
-    cairoClear (cairo);
+    g_object_get (gtk_settings_get_default (), "gtk-theme-name", &self->mThemeName, NULL);
+    self->mStyle = gtk_widget_get_style (self->mOffscreenContainer);
 
-    cairo_set_line_width (cairo, 2);
-    cairo_set_source_rgba (cairo,
-			   ((float) style->bg[1].red / (float) 0xffff),
-			   ((float) style->bg[1].green / (float) 0xffff),
-			   ((float) style->bg[1].blue / (float) 0xffff),
-			   (uds->optionGetAlpha ()));
+    self->render ();
+}
 
-    cairo_move_to (cairo, 0, 0);
-    cairo_rectangle (cairo, 0, 0, 4, 4);
-
-    cairo_fill (cairo);
+GLTexture::List
+UnityDialogShadeTexture::texture ()
+{
+    return mTexture;
 }
 
 void
@@ -320,7 +386,7 @@ UnityDialogWindow::glDraw (const GLMatrix &transform,
 
     UNITY_DIALOG_SCREEN (screen);
 
-    foreach (GLTexture *tex, uds->mTex.texture)
+    foreach (GLTexture *tex, uds->mTex->texture ())
     {
 	GLTexture::MatrixList matl;
 	GLTexture::Matrix     mat = tex->matrix ();
@@ -934,15 +1000,10 @@ UnityDialogScreen::handleEvent (XEvent *event)
 }
 
 void
-UnityDialogScreen::updateTexture (GObject	*obj,
-				  GParamSpec	*pspec,
-				  gpointer	data)
+UnityDialogScreen::optionChanged (CompOption *option,
+                                  Options    num)
 {
-    UnityDialogScreen *us = (UnityDialogScreen *) data;
-
-    g_object_get (gtk_settings_get_default (), "gtk-theme-name", &us->mThemeName, NULL);
-
-    us->mTex.render ();
+    mTex->render (optionGetAlpha ());
 }
 
 /* Constructors */
@@ -997,21 +1058,15 @@ UnityDialogScreen::UnityDialogScreen (CompScreen *s) :
     ScreenInterface::setHandler (screen);
     CompositeScreenInterface::setHandler (cScreen);
 
-    mOffscreenContainer = gtk_offscreen_window_new ();
-    gtk_widget_set_name (mOffscreenContainer, "UnityPanelWidget");
-    gtk_widget_set_size_request (mOffscreenContainer, 100, 24);
-    gtk_widget_show_all (mOffscreenContainer);
-    
-    g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
-		      G_CALLBACK (UnityDialogScreen::updateTexture), this);
+    optionSetAlphaNotify (boost::bind (&UnityDialogScreen::optionChanged, this, _1, _2));
 
-    mTex.render ();
-};
+    mTex = new UnityDialogShadeTexture ();
+    mTex->render (optionGetAlpha ());
+}
 
 UnityDialogScreen::~UnityDialogScreen ()
 {
-    gtk_widget_destroy (mOffscreenContainer);
-    g_free (mThemeName);	
+    delete mTex;
 }
 
 bool
@@ -1023,10 +1078,16 @@ UnityDialogPluginVTable::init ()
     if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION) ||
 	!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI) ||
 	!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
+    {
+	fprintf (stderr, "abi mismatch\n");
 	return false;
+    }
 
     if (!gtk_init_check (&programArgc, &programArgv))
+    {
+	compLogMessage ("unitydialog", CompLogLevelError, "Couldn't initialize gtk");
 	return false;
+    }
 
     XSetErrorHandler (old_handler);
 

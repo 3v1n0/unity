@@ -32,22 +32,48 @@ class UnityDialogShadeTexture
 {
     public:
 
-	UnityDialogShadeTexture ();
+	static UnityDialogShadeTexture *
+	create ();
 
-	Pixmap pixmap;
-	GLTexture::List texture;
-	cairo_surface_t *surface;
-	cairo_t		*cairo;
-	Damage		damage;
+	static void
+	onThemeChanged (GObject		*obj,
+			GParamSpec	*pspec,
+			gpointer	data);
 
 	void
-	cairoClear (cairo_t    *cr);
-
-	cairo_t *
-	cairoContext ();
+	render (float alpha);
 
 	void
 	render ();
+
+	GLTexture::List
+	texture ();
+
+	UnityDialogShadeTexture ();
+	~UnityDialogShadeTexture ();
+
+    private:
+
+	Pixmap		mPixmap;
+	GLTexture::List mTexture;
+	cairo_surface_t *mSurface;
+	cairo_t		*mCairo;
+	Damage		mDamage;
+
+	GtkWidget	*mOffscreenContainer;
+	char		*mThemeName;
+	GtkStyle	*mStyle;
+
+	float		mAlpha;
+
+	void
+	clear ();
+
+	void
+	destroy ();
+
+	void
+	context ();
 };
 
 class UnityDialogWindow;
@@ -88,6 +114,9 @@ class UnityDialogScreen :
 	void
 	donePaint ();
 
+	void
+	optionChanged (CompOption *, Options num);
+
     public:
 
 	CompositeScreen *cScreen;
@@ -95,15 +124,7 @@ class UnityDialogScreen :
 
 	bool		mSwitchingVp;
 	std::map <Window, UnityDialogWindow *> mIpws;
-	UnityDialogShadeTexture mTex;
-
-	GtkWidget *mOffscreenContainer;
-	char	  *mThemeName;
-
-	static void
-	updateTexture (GObject		*obj,
-		       GParamSpec	*pspec,
-		       gpointer		data);
+	UnityDialogShadeTexture *mTex;
 	
 
     public:
