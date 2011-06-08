@@ -306,7 +306,7 @@ UnityDialogScreen::preparePaint (int ms)
 {
     cScreen->preparePaint (ms);
 
-    foreach (CompWindow *w, screen->windows ())
+    foreach (CompWindow *w, mParentWindows)
 	UnityDialogWindow::get (w)->animate (ms, optionGetFadeTime ());
 
 }
@@ -326,19 +326,28 @@ UnityDialogScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
 void
 UnityDialogScreen::donePaint ()
 {
+    CompWindowList::iterator it = mParentWindows.begin ();
+
     cScreen->donePaint ();
 
-    foreach (CompWindow *w, screen->windows ())
+    while (it != mParentWindows.end ())
     {
+	CompWindow *w = (*it);
 	UnityDialogWindow *udw = UnityDialogWindow::get (w);
 
 	if (udw->animate (0, optionGetFadeTime ()))
 	    udw->cWindow->addDamage ();
 	else if (!udw->hasTransients ())
 	{
+	    untrackParent (w);
 	    udw->gWindow->glDrawSetEnabled (udw, false);
 	    udw->gWindow->glPaintSetEnabled (udw, false);
+
+	    it = mParentWindows.begin ();
+	    continue;
 	}
+
+	it++;
     }
 }
 
@@ -476,10 +485,11 @@ UnityDialogWindow::adjustIPW ()
     XConfigureWindow (screen->dpy (), mIpw, CWStackMode | CWWidth | CWHeight | CWX | CWY, &xwc);
 }
 
-void
+bool
 UnityDialogWindow::addTransient (CompWindow *w)
 {
     bool alreadyAdded = false;
+    bool newParent = false;
 
     if (!mTransients.size ())
     {
@@ -506,11 +516,14 @@ UnityDialogWindow::addTransient (CompWindow *w)
 	    adjustIPW ();
 	}
 
+	newParent = true;
     }
-
-    foreach (CompWindow *tw, mTransients)
-	if (tw->id () == w->id ())
-	    alreadyAdded = true;
+    else
+    {
+	foreach (CompWindow *tw, mTransients)
+	    if (tw->id () == w->id ())
+	    	alreadyAdded = true;
+    }
 
     if (!alreadyAdded)
     {
@@ -525,9 +538,11 @@ UnityDialogWindow::addTransient (CompWindow *w)
 	w->recalcActions ();
 	mTransients.push_back (w);
     }
+
+    return newParent;
 }
 
-void
+bool
 UnityDialogWindow::removeTransient (CompWindow *w)
 {
     mTransients.remove (w);
@@ -553,6 +568,36 @@ UnityDialogWindow::removeTransient (CompWindow *w)
 	}
 
 	cWindow->addDamage ();
+
+	return true;
+    }
+
+    return false;
+}
+
+void
+UnityDialogScreen::trackParent (CompWindow *w)
+{
+    if (!mParentWindows.size ())
+    {
+	cScreen->preparePaintSetEnabled (this, true);
+	gScreen->glPaintOutputSetEnabled (this, true);
+	cScreen->donePaintSetEnabled (this, true);
+    }
+
+    mParentWindows.push_back (w);
+}
+
+void
+UnityDialogScreen::untrackParent (CompWindow *w)
+{
+    mParentWindows.remove (w);
+
+    if (!mParentWindows.size ())
+    {
+	cScreen->preparePaintSetEnabled (this, false);
+	gScreen->glPaintOutputSetEnabled (this, false);
+	cScreen->donePaintSetEnabled (this, false);
     }
 }
 
@@ -857,7 +902,8 @@ UnityDialogWindow::place (CompPoint &pos)
      * enable the dimming on that other window */
 
     if ((parent = transientParent ()) != NULL)
-	UnityDialogWindow::get (parent)->addTransient (window);
+	if (UnityDialogWindow::get (parent)->addTransient (window))
+	    UnityDialogScreen::get (screen)->trackParent (parent);
 
     /* We need to check the final parent window */
 
@@ -932,7 +978,7 @@ UnityDialogScreen::handleCompizEvent (const char	  *plugin,
     {
 	mSwitchingVp = false;
 
-	foreach (CompWindow *w, screen->windows ())
+	foreach (CompWindow *w, mParentWindows)
 	{
 	    UnityDialogWindow *udw = UnityDialogWindow::get (w);
 
@@ -989,7 +1035,8 @@ UnityDialogScreen::handleEvent (XEvent *event)
 			 * probably because the app was buggy and decided
 			 * to do so after it was mapped. Work around it
 			 */
-			udw->addTransient (w);
+			if (udw->addTransient (w))
+			    trackParent (parent);
 
 			/* re-center all the transients */
 
@@ -1047,7 +1094,7 @@ UnityDialogWindow::~UnityDialogWindow ()
     {
 	compLogMessage ("unitydialog", CompLogLevelWarn, "Parent got closed before transients. This is an indication of a buggy app!");
 	foreach (CompWindow *w, mTransients)
-	    UnityDialogWindow::get (w)->removeTransient (w);
+	    UnityDialogWindow::get (mParent)->removeTransient (w);
     }
 }
 
@@ -1060,7 +1107,8 @@ UnityDialogScreen::UnityDialogScreen (CompScreen *s) :
 				   "_COMPIZ_RESIZE_NOTIFY", 0))
 {
     ScreenInterface::setHandler (screen);
-    CompositeScreenInterface::setHandler (cScreen);
+    CompositeScreenInterface::setHandler (cScreen, false);
+    GLScreenInterface::setHandler (gScreen, false);
 
     optionSetAlphaNotify (boost::bind (&UnityDialogScreen::optionChanged, this, _1, _2));
 

@@ -81,6 +81,7 @@ class UnityDialogWindow;
 class UnityDialogScreen :
     public PluginClassHandler <UnityDialogScreen, CompScreen>,
     public ScreenInterface,
+    public GLScreenInterface,
     public CompositeScreenInterface,
     public UnitydialogOptions
 {
@@ -117,6 +118,12 @@ class UnityDialogScreen :
 	void
 	optionChanged (CompOption *, Options num);
 
+	void
+	trackParent (CompWindow *w);
+
+	void
+	untrackParent (CompWindow *w);
+
     public:
 
 	CompositeScreen *cScreen;
@@ -131,6 +138,8 @@ class UnityDialogScreen :
 	UnityDialogShadeTexture *mTex;
 
 	Atom		mCompizResizeAtom;
+
+	CompWindowList  mParentWindows;
 };
 
 #define UNITY_DIALOG_SCREEN(s)						       \
@@ -174,8 +183,10 @@ class UnityDialogWindow :
 
 	void getAllowedActions (unsigned int &setActions, unsigned int &clearActions);
 
-	void addTransient (CompWindow *transient);
-	void removeTransient (CompWindow *transient);
+	/* True if on adding or removing transient, window becomes
+	 * or ceases to become a parent window */
+	bool addTransient (CompWindow *transient);
+	bool removeTransient (CompWindow *transient);
 
 	bool hasParent () { return mParent != NULL; }
 	bool hasTransients () { return !mTransients.empty (); }
