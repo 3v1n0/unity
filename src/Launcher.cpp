@@ -1510,7 +1510,10 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
 
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
-        SetDndDelta (center.x, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
+        /* 0 (zero) is a neutral value, since it is proper both for launcher already viewed
+         * both for launcher moving (edge reveal, I refer to you!)
+         */
+        SetDndDelta (0, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
 
     _enter_y = 0;
 
@@ -3242,6 +3245,8 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
 void 
 Launcher::EdgeRevealTriggered ()
 {
+  SetMousePosition (pointerX, pointerY - GetAbsoluteGeometry ().y);   
+  
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
