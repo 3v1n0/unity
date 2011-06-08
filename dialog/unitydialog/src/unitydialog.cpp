@@ -332,15 +332,13 @@ UnityDialogScreen::donePaint ()
     {
 	UnityDialogWindow *udw = UnityDialogWindow::get (w);
 
-	if (UnityDialogWindow::get (w)->animate (0, optionGetFadeTime ()))
+	if (udw->animate (0, optionGetFadeTime ()))
 	    udw->cWindow->addDamage ();
-#if 0
-	if (udw->mShadeProgress == 0 && !udw->mTransients.size ())
+	else if (!udw->hasTransients ())
 	{
 	    udw->gWindow->glDrawSetEnabled (udw, false);
 	    udw->gWindow->glPaintSetEnabled (udw, false);
 	}
-#endif
     }
 }
 
