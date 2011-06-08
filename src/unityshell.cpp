@@ -823,9 +823,13 @@ UnityScreen::Relayout ()
   {
       display_x = nux::Min<int>(display_x, monitors[i].x);
       display_y = nux::Min<int>(display_y, monitors[i].y);
-      display_w = nux::Max<int>(display_w, monitors[i].x + monitors[i].width - display_x);
-      display_h = nux::Max<int>(display_h, monitors[i].y + monitors[i].height - display_y);
+      display_w = nux::Max<int>(display_w, monitors[i].x + monitors[i].width);
+      display_h = nux::Max<int>(display_h, monitors[i].y + monitors[i].height);
   }
+
+  display_w -= display_x;
+  display_h -= display_y;
+  
 
   nux::GetWindowThread()->SetWindowSize(display_w, display_h);
 
