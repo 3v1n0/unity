@@ -199,6 +199,8 @@ class UnityDialogWindow :
 
 	void adjustIPW ();
 
+	bool animate (int ms, float fadeTime);
+
 	bool	       mSkipNotify;
 	CompWindowList mTransients;
 	CompWindow     *mParent;

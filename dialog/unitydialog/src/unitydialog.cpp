@@ -280,30 +280,40 @@ UnityDialogShadeTexture::texture ()
     return mTexture;
 }
 
+bool
+UnityDialogWindow::animate (int   ms,
+			    float fadeTime)
+{
+    if (mTransients.size () && mShadeProgress < OPAQUE)
+    {
+	mShadeProgress += OPAQUE * (ms / fadeTime);
+
+	if (mShadeProgress >= OPAQUE)
+	    mShadeProgress = OPAQUE;
+
+	return true;
+    }
+    else if (!mTransients.size () && mShadeProgress > 0)
+    {
+	mShadeProgress -=  OPAQUE * (ms / fadeTime);
+
+	if (mShadeProgress <= 0)
+	    mShadeProgress = 0;
+
+	return true;
+    }
+
+    return false;
+}
+
 void
 UnityDialogScreen::preparePaint (int ms)
 {
     cScreen->preparePaint (ms);
 
     foreach (CompWindow *w, screen->windows ())
-    {
-	UnityDialogWindow *udw = UnityDialogWindow::get (w);
+	UnityDialogWindow::get (w)->animate (ms, optionGetFadeTime ());
 
-	if (udw->mTransients.size () && udw->mShadeProgress < OPAQUE)
-	{
-	    udw->mShadeProgress += OPAQUE * ((float) ms / (float) optionGetFadeTime ());
-
-	    if (udw->mShadeProgress >= OPAQUE)
-		udw->mShadeProgress = OPAQUE;
-	}
-	else if (!udw->mTransients.size () && udw->mShadeProgress > 0)
-	{
-	    udw->mShadeProgress -=  OPAQUE * ((float) ms / (float) optionGetFadeTime ());
-
-	    if (udw->mShadeProgress <= 0)
-		udw->mShadeProgress = 0;
-	}
-    }
 }
 
 bool
@@ -327,16 +337,15 @@ UnityDialogScreen::donePaint ()
     {
 	UnityDialogWindow *udw = UnityDialogWindow::get (w);
 
-	if (udw->mTransients.size () && udw->mShadeProgress < OPAQUE)
+	if (UnityDialogWindow::get (w)->animate (0, optionGetFadeTime ()))
 	    udw->cWindow->addDamage ();
-	else if (!udw->mTransients.size () && udw->mShadeProgress > 0)
-	    udw->cWindow->addDamage ();
-
+#if 0
 	if (udw->mShadeProgress == 0 && !udw->mTransients.size ())
 	{
 	    udw->gWindow->glDrawSetEnabled (udw, false);
 	    udw->gWindow->glPaintSetEnabled (udw, false);
 	}
+#endif
     }
 }
 
@@ -352,7 +361,7 @@ UnityDialogWindow::glPaint (const GLWindowPaintAttrib &attrib,
 
     if (mTargetPos != mCurrentPos)
     {
-	float progress = (float) mShadeProgress / (float) OPAQUE;
+	float progress = mShadeProgress / (float) OPAQUE;
 	mask |= PAINT_WINDOW_TRANSFORMED_MASK;
 
 	int dx = ((mTargetPos.x () - mCurrentPos.x ()) * progress);
@@ -606,7 +615,6 @@ UnityDialogWindow::ungrabNotify ()
     if (!mSkipNotify)
     {
         moveTransientsToRect (NULL, window->serverBorderRect (), true);
-
 	grabTransients (NULL, 0, 0, 0, 0, false);
     }
 }
@@ -669,15 +677,21 @@ UnityDialogWindow::setMaxConstrainingAreas ()
      */
 
     bool sizeHintsSet = false;
+    bool needsWidth, needsHeight;
 
-    if (mParent &&
-	(window->sizeHints ().flags & PMaxSize) &&
-	!((mOldHintsSize.width () == window->sizeHints ().max_width ||
-	   (mOldHintsSize.width () && window->sizeHints ().max_width ==
-				      window->sizeHints ().min_width)) &&
-	  (mOldHintsSize.height () == window->sizeHints ().max_height ||
-	   (mOldHintsSize.height () && window->sizeHints ().max_height ==
-				      window->sizeHints ().min_height))))
+    needsWidth = mOldHintsSize.width () != window->sizeHints ().max_width;
+
+    if (needsWidth)
+	needsWidth = !(mOldHintsSize.width () && window->sizeHints ().max_width ==
+				      		 window->sizeHints ().min_width);
+
+    needsHeight = mOldHintsSize.height () != window->sizeHints ().max_height;
+
+    if (needsHeight)
+	needsHeight = !(mOldHintsSize.height () && window->sizeHints ().max_height ==
+				      		   window->sizeHints ().min_height);
+
+    if (mParent && (window->sizeHints ().flags & PMaxSize) && needsWidth && needsHeight)
     {
 	sizeHintsSet |=  ((window->sizeHints ().max_width <
 			  mParent->width () * 0.8) ||
