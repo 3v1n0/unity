@@ -779,7 +779,7 @@ Launcher::exitKeyNavMode ()
   QueueDraw ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
-                            NULL);
+                            g_variant_new_boolean  (true));
   selection_change.emit ();
 }
 
@@ -3313,7 +3313,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (it != (LauncherModel::iterator)NULL)
       {
         if ((*it)->OpenQuicklist (true))
-          leaveKeyNavMode (true);
+          leaveKeyNavMode (false);
       }
     break;
 
