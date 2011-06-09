@@ -1508,12 +1508,44 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     if (sum - _space_between_icons <= launcher_height)
       folding_threshold = launcher_height;
 
+    float autohide_offset = 0.0f;
+    *launcher_alpha = 1.0f; 
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
+    {
+        
+        float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
+        if (_autohide_animation == FADE_ONLY
+            || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
+            *launcher_alpha = 1.0f - autohide_progress;
+        else
+        {
+            if (autohide_progress > 0.0f)
+            {
+                autohide_offset -= geo.width * autohide_progress;
+                if (_autohide_animation == FADE_AND_SLIDE)
+                    *launcher_alpha = 1.0f - 0.5f * autohide_progress;
+            }
+        }
+    }
+    
+    float drag_hide_progress = DragHideProgress (current);
+    if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
+    {
+        autohide_offset -= geo.width * 0.25f * drag_hide_progress;
+        
+        if (drag_hide_progress >= 1.0f)
+          _hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, true);
+    }
+
+    // Inform the painter where to paint the box
+    box_geo = geo;
+
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
+        box_geo.x += autohide_offset;
+
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
-        /* 0 (zero) is a neutral value, since it is proper both for launcher already viewed
-         * both for launcher moving (edge reveal, I refer to you!)
-         */
-        SetDndDelta (0, center.y, geo, current);
+        SetDndDelta (box_geo.x + box_geo.width / 2, center.y, geo, current);
 
     _enter_y = 0;
 
@@ -1552,41 +1584,6 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         _launcher_drag_delta = 0;
     }
-
-    float autohide_offset = 0.0f;
-    *launcher_alpha = 1.0f; 
-    if (_hidemode != LAUNCHER_HIDE_NEVER)
-    {
-        
-        float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
-        if (_autohide_animation == FADE_ONLY
-            || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
-            *launcher_alpha = 1.0f - autohide_progress;
-        else
-        {
-            if (autohide_progress > 0.0f)
-            {
-                autohide_offset -= geo.width * autohide_progress;
-                if (_autohide_animation == FADE_AND_SLIDE)
-                    *launcher_alpha = 1.0f - 0.5f * autohide_progress;
-            }
-        }
-    }
-    
-    float drag_hide_progress = DragHideProgress (current);
-    if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
-    {
-        autohide_offset -= geo.width * 0.25f * drag_hide_progress;
-        
-        if (drag_hide_progress >= 1.0f)
-          _hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, true);
-    }
-
-    // Inform the painter where to paint the box
-    box_geo = geo;
-
-    if (_hidemode != LAUNCHER_HIDE_NEVER)
-        box_geo.x += autohide_offset;
 
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
