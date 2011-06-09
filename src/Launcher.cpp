@@ -3071,6 +3071,12 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  /* FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+   * on an internal Launcher property then
+   */
+  if (_last_button_press != 1)
+    return;
+
   SetMousePosition (x, y);
   
   // FIXME: hack (see SetupRenderArg)
