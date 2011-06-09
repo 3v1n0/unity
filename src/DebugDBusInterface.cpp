@@ -17,14 +17,24 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
+#include <Nux/WindowThread.h>
+
+#include "Autopilot.h"
 #include "DebugDBusInterface.h"
+#include "unityshell.h"
 
-#define UNITY_STATE_DEBUG_BUS_NAME "com.canonical.Unity"
+#define SI_METHOD_NAME_GETSTATE  "GetState"
+#define AP_METHOD_NAME_STARTTEST "StartTest"
 
-void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
-					 const gchar*, const gchar*, GVariant*,
-					 GDBusMethodInvocation*, gpointer);
+void StartTest (const gchar*);
 GVariant* GetState (const gchar*);
+void DBusMethodCall (GDBusConnection*, const gchar*, const gchar*,
+                     const gchar*, const gchar*, GVariant*,
+                     GDBusMethodInvocation*, gpointer);
 
 static const GDBusInterfaceVTable si_vtable =
 {
@@ -36,18 +46,18 @@ static const GDBusInterfaceVTable si_vtable =
 static const GDBusArgInfo si_getstate_in_args =
 {
   -1,
-  (gchar *) "piece",
-  (gchar *) "s",
+  (gchar*) "piece",
+  (gchar*) "s",
   NULL
 };
+
 static const GDBusArgInfo *const si_getstate_in_arg_pointers[] = { &si_getstate_in_args, NULL };
 
-// TODO: this is really a a{sv} or something like that.
 static const GDBusArgInfo si_getstate_out_args =
 {
   -1,
-  (gchar *) "state",
-  (gchar *) "a{sv}",
+  (gchar*) "state",
+  (gchar*) "a{sv}",
   NULL
 };
 static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate_out_args, NULL };
@@ -55,31 +65,90 @@ static const GDBusArgInfo *const si_getstate_out_arg_pointers[] = { &si_getstate
 static const GDBusMethodInfo si_method_info_getstate =
 {
   -1,
-  (gchar *) "GetState",
+  (gchar*) SI_METHOD_NAME_GETSTATE,
   (GDBusArgInfo **) &si_getstate_in_arg_pointers,
   (GDBusArgInfo **) &si_getstate_out_arg_pointers,
   NULL
 };
 
-static const GDBusMethodInfo *const si_method_info_pointers[] = { &si_method_info_getstate, NULL };
+static const GDBusArgInfo ap_starttest_in_args =
+{
+  -1,
+  (gchar*) "name",
+  (gchar*) "s",
+  NULL
+};
+static const GDBusArgInfo *const ap_starttest_in_arg_pointers[] = { &ap_starttest_in_args, NULL };
+
+static GDBusMethodInfo ap_method_info_starttest =
+{
+  -1,
+  (gchar*) AP_METHOD_NAME_STARTTEST,
+  (GDBusArgInfo **) &ap_starttest_in_arg_pointers,
+  NULL,
+  NULL
+};
+
+static const GDBusMethodInfo *const si_method_info_pointers [] = { &si_method_info_getstate, NULL };
+static const GDBusMethodInfo *const ap_method_info_pointers [] = { &ap_method_info_starttest, NULL };
+
+static GDBusArgInfo ap_testfinished_arg_name = 
+{
+  -1,
+  (gchar*) "name",
+  (gchar*) "s",
+  NULL
+};
+
+static GDBusArgInfo ap_testfinished_arg_passed = 
+{
+  -1,
+  (gchar*) "passed",
+  (gchar*) "b",
+  NULL
+};
+
+static const GDBusArgInfo *const ap_signal_testfinished_arg_pointers [] = { &ap_testfinished_arg_name,
+                                                                            &ap_testfinished_arg_passed,
+                                                                            NULL };
+static GDBusSignalInfo ap_signal_info_testfinished = 
+{
+  -1,
+  (gchar*) UNITY_DBUS_AP_SIG_TESTFINISHED,
+  (GDBusArgInfo **) &ap_signal_testfinished_arg_pointers,
+  NULL
+};
+
+static const GDBusSignalInfo *const ap_signal_info_pointers [] = { &ap_signal_info_testfinished, NULL };
 
 static const GDBusInterfaceInfo si_iface_info =
 {
   -1,
-  (gchar *) "com.canonical.Unity.Debug.Introspection",
+  (gchar*) UNITY_DBUS_INTROSPECTION_IFACE_NAME,
   (GDBusMethodInfo **) &si_method_info_pointers,
   NULL,
   NULL,
-  NULL,
+  NULL
 };
 
-static Introspectable      *_introspectable;
+static const GDBusInterfaceInfo ap_iface_info =
+{
+  -1,
+  (gchar *) UNITY_DBUS_AP_IFACE_NAME,
+  (GDBusMethodInfo **) &ap_method_info_pointers,
+  (GDBusSignalInfo **) &ap_signal_info_pointers,
+  NULL,
+  NULL
+};
+
+static Introspectable *_introspectable;
+static Autopilot *_autopilot;
 
 DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
 {
   _introspectable = introspectable;
   _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,
-                              UNITY_STATE_DEBUG_BUS_NAME,
+                              UNITY_DBUS_BUS_NAME,
                               G_BUS_NAME_OWNER_FLAGS_NONE,
                               &DebugDBusInterface::OnBusAcquired,
                               &DebugDBusInterface::OnNameAcquired,
@@ -93,21 +162,36 @@ DebugDBusInterface::~DebugDBusInterface ()
   g_bus_unown_name (_owner_id);
 }
 
+static const GDBusInterfaceInfo *const debug_object_interfaces [] = { &si_iface_info, &ap_iface_info, NULL };
+
 void 
 DebugDBusInterface::OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data)
 {
-  GError *error = NULL;
-  g_dbus_connection_register_object (connection,
-                                     "/com/canonical/Unity/Debug",
-                                     (GDBusInterfaceInfo *) &si_iface_info,
-                                     &si_vtable,
-                                     NULL,
-                                     NULL,
-                                     &error);
-  if (error != NULL)
+  int i = 0;
+  GError *error;
+
+  UnityScreen *uscreen = dynamic_cast<UnityScreen*> (_introspectable);
+  if (uscreen != NULL) 
   {
-    g_warning ("Could not register Introspection object onto d-bus");
-	g_error_free (error);
+    _autopilot = new Autopilot (uscreen->screen, connection);
+  }
+
+  while (debug_object_interfaces[i] != NULL)
+  {
+    error = NULL;
+    g_dbus_connection_register_object (connection,
+                                       UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                       (GDBusInterfaceInfo* ) debug_object_interfaces[i],
+                                       &si_vtable,
+                                       NULL,
+                                       NULL,
+                                       &error);
+    if (error != NULL)
+    {
+      g_warning ("Could not register debug interface onto d-bus");
+      g_error_free (error);
+    }
+    i++;
   }
 }
 
@@ -123,15 +207,15 @@ DebugDBusInterface::OnNameLost (GDBusConnection *connection, const gchar *name, 
 
 void
 DBusMethodCall (GDBusConnection *connection,
-                                                 const gchar *sender,
-                                                 const gchar *objectPath,
-                                                 const gchar *ifaceName,
-                                                 const gchar *methodName,
-                                                 GVariant *parameters,
-                                                 GDBusMethodInvocation *invocation,
-                                                 gpointer data)
+                const gchar *sender,
+                const gchar *objectPath,
+                const gchar *ifaceName,
+                const gchar *methodName,
+                GVariant *parameters,
+                GDBusMethodInvocation *invocation,
+                gpointer data)
 {
-  if (g_strcmp0 (methodName, "GetState") == 0)
+  if (g_strcmp0 (methodName, SI_METHOD_NAME_GETSTATE) == 0)
   {
     GVariant *ret;
     const gchar *input;
@@ -141,9 +225,17 @@ DBusMethodCall (GDBusConnection *connection,
     g_dbus_method_invocation_return_value (invocation, ret);
     g_variant_unref (ret);
   }
+  else if (g_strcmp0 (methodName, AP_METHOD_NAME_STARTTEST) == 0)
+  {
+    const gchar *name;
+    g_variant_get (parameters, "(&s)", &name);
+
+    StartTest (name);
+    g_dbus_method_invocation_return_value (invocation, NULL);
+  }
   else
   {
-    g_dbus_method_invocation_return_dbus_error (invocation, "com.canonical.Unity",
+    g_dbus_method_invocation_return_dbus_error (invocation, UNITY_DBUS_BUS_NAME,
                                                 "Failed to find method");
   }
 }
@@ -152,6 +244,12 @@ GVariant*
 GetState (const gchar *piece)
 {
   return _introspectable->Introspect ();
+}
+
+void
+StartTest (const gchar *name)
+{
+  _autopilot->StartTest (name);
 }
 
 /* a very contrived example purely for giving QA something purposes */
