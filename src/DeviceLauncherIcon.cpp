@@ -137,7 +137,29 @@ DeviceLauncherIcon::GetMenus ()
     g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                       G_CALLBACK (&DeviceLauncherIcon::OnDriveStop), this);
     result.push_back (menu_item);
+  }
+  if (drive)
+  {
     g_object_unref (drive);
+  }
+
+  if (!g_volume_can_eject (_volume))  // Don't need Unmount if can Eject
+  {
+    GMount *mount = g_volume_get_mount (_volume);
+    if (mount && g_mount_can_unmount (mount))
+    {
+      menu_item = dbusmenu_menuitem_new ();
+      dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
+      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+      g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                        G_CALLBACK (&DeviceLauncherIcon::OnUnmount), this);
+      result.push_back (menu_item);
+    }
+    if (mount)
+    {
+      g_object_unref (mount);
+    }
   }
 
   return result;
@@ -273,6 +295,41 @@ void
 DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
   self->Eject ();
+}
+
+void
+DeviceLauncherIcon::OnUnmountReady (GObject            *object,
+                                    GAsyncResult       *result,
+                                    DeviceLauncherIcon *self)
+{
+  if (G_IS_MOUNT (object))
+  {
+    g_mount_unmount_with_operation_finish (G_MOUNT(object), result, NULL);
+  }
+}
+
+void
+DeviceLauncherIcon::Unmount ()
+{
+  GMount *mount = g_volume_get_mount (_volume);
+  if (mount)
+  {
+    GMountOperation *op = gtk_mount_operation_new (NULL);
+    g_mount_unmount_with_operation (mount,
+                                   (GMountUnmountFlags)0,
+                                   op,
+                                   NULL,
+                                   (GAsyncReadyCallback)OnUnmountReady,
+                                   this);
+    g_object_unref (op);
+    g_object_unref (mount);
+  }
+}
+
+void
+DeviceLauncherIcon::OnUnmount (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+{
+  self->Unmount ();
 }
 
 void
