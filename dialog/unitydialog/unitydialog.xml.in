@@ -28,7 +28,7 @@
 			<_long>How long the fade should take (ms)</_long>
 			<default>300</default>
 		</option>
-		<option name="avoid_match" type="match">
+		<option name="avoid_match" type="match" read_only="true">
 			<_short>Blacklist</_short>
 			<_long>Match for dialogs that shouldn't be accepted as transient modal dialogs</_long>
 			<default></default>
