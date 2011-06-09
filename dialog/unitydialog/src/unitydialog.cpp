@@ -230,15 +230,16 @@ UnityDialogShadeTexture::context ()
 void
 UnityDialogShadeTexture::render (float alpha)
 {
+    float divisorMask = 0xffff;
     mAlpha = alpha;
 
     clear ();
 
     cairo_set_line_width (mCairo, 2);
     cairo_set_source_rgba (mCairo,
-                           ((float) mStyle->bg[1].red / (float) 0xffff),
-                           ((float) mStyle->bg[1].green / (float) 0xffff),
-                           ((float) mStyle->bg[1].blue / (float) 0xffff),
+                           (mStyle->bg[1].red / divisorMask),
+                           (mStyle->bg[1].green / divisorMask),
+                           (mStyle->bg[1].blue / divisorMask),
                            (alpha));
 
     cairo_move_to (mCairo, 0, 0);
@@ -798,7 +799,11 @@ UnityDialogWindow::grabTransients (CompWindow *skip, int x, int y,
 	    return;
 
 	udw->mSkipNotify = true;
-	grab ? udw->grabNotify (x, y, state, mask) : udw->ungrabNotify ();
+	
+	if (grab)
+	    udw->grabNotify (x, y, state, mask);
+	else
+	    udw->ungrabNotify ();
 
 	udw->mSkipNotify = false;
     }
