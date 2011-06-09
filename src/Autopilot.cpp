@@ -21,6 +21,7 @@
 
 #include "Autopilot.h"
 #include "UBusMessages.h"
+#include "DebugDBusInterface.h"
 
 UBusServer *_ubus;
 GDBusConnection *_dbus;
@@ -35,9 +36,9 @@ TestFinished (void *arg)
 
   g_dbus_connection_emit_signal (_dbus,
                                  NULL,
-                                 "/com/canonical/Unity/Debug",
-                                 "com.canonical.Unity.Debug.Autopilot",
-                                 "TestFinished",
+                                 UNITY_DBUS_DEBUG_OBJECT_PATH,
+                                 UNITY_DBUS_AP_IFACE_NAME,
+                                 UNITY_DBUS_AP_SIG_TESTFINISHED,
                                  result,
                                  &error);
 
