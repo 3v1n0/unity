@@ -32,8 +32,8 @@ add_custom_target (distcheck
        && mkdir ${ARCHIVE_NAME}/build
        && cd ${ARCHIVE_NAME}/build
        && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-       && make -j8
-       && make -j8 install
+       && make -j4
+       && make -j4 install
        && make check
   )
 add_dependencies(distcheck dist)
