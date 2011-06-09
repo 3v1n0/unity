@@ -1109,7 +1109,7 @@ float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
     }
 }
 
-void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current)
+void Launcher::SetDndDelta (float x, float y, nux::Geometry const &geo, timespec const &current)
 {
     LauncherIcon *anchor = 0;
     LauncherModel::iterator it;
@@ -1513,7 +1513,7 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
         /* 0 (zero) is a neutral value, since it is proper both for launcher already viewed
          * both for launcher moving (edge reveal, I refer to you!)
          */
-        SetDndDelta (0, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
+        SetDndDelta (0, center.y, geo, current);
 
     _enter_y = 0;
 
