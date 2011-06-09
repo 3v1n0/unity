@@ -16,6 +16,10 @@ set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
+set (CMAKE_CXX_FLAGS "-fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-fno-permissive")
+set (CMAKE_CXX_FLAGS_RELEASE "-fno-permissive")
+
 #
 # Niceties
 #
