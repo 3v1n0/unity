@@ -78,8 +78,8 @@ private:
     void OnLauncherAddRequest (char *path, LauncherIcon *before);
     void OnLauncherRemoveRequest (LauncherIcon *icon);
 
-    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
-    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
+    void OnLauncherEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncherEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
     void RemoveExpoAction ();

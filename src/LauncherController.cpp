@@ -58,8 +58,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _bamf_timer_handler_id = g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
-  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteRemoved));
+  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteRemoved));
 }
 
 LauncherController::~LauncherController()
@@ -172,7 +172,7 @@ LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
 }
 
 void
-LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
+LauncherController::OnLauncherEntryRemoteAdded (LauncherEntryRemote *entry)
 {
   LauncherModel::iterator it;
   for (it = _model->begin (); it != _model->end (); it++)
@@ -190,7 +190,7 @@ LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
 }
 
 void
-LauncherController::OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry)
+LauncherController::OnLauncherEntryRemoteRemoved (LauncherEntryRemote *entry)
 {
   LauncherModel::iterator it;
   for (it = _model->begin (); it != _model->end (); it++)
