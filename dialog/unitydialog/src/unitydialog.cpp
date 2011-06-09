@@ -176,8 +176,8 @@ UnityDialogShadeTexture::context ()
 	format = XRenderFindStandardFormat (screen->dpy (),
 					    PictStandardARGB32);
 
-	w = 4;
-	h = 4;
+	w = 1;
+	h = 1;
 
 	mPixmap = XCreatePixmap (screen->dpy (), screen->root (), w, h, 32);
 
@@ -242,7 +242,7 @@ UnityDialogShadeTexture::render (float alpha)
                            (alpha));
 
     cairo_move_to (mCairo, 0, 0);
-    cairo_rectangle (mCairo, 0, 0, 4, 4);
+    cairo_rectangle (mCairo, 0, 0, 1, 1);
 
     cairo_fill (mCairo);
 }
