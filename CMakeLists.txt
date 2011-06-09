@@ -137,6 +137,7 @@ compiz_plugin (unityshell
                LIBRARIES "-lunity-shared-${UNITY_API_VERSION}"
                LIBDIRS "${CMAKE_BINARY_DIR}/shared"
                )
+add_dependencies(unityshell unity-shared-${UNITY_API_VERSION})
 
 #
 # UTouch things
