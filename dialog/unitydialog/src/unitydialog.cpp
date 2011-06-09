@@ -119,6 +119,7 @@ UnityDialogShadeTexture::UnityDialogShadeTexture () :
     g_object_get (gtk_settings_get_default (), "gtk-theme-name", &mThemeName, NULL);
     mStyle = gtk_widget_get_style (mOffscreenContainer);
 
+    context ();
 }
 
 UnityDialogShadeTexture::~UnityDialogShadeTexture ()
@@ -231,10 +232,6 @@ UnityDialogShadeTexture::render (float alpha)
 {
     mAlpha = alpha;
 
-    /* FIXME: Calling destroy like this is a bit inefficient for
-     * animation cases, can we do better? */
-    destroy ();
-    context ();
     clear ();
 
     cairo_set_line_width (mCairo, 2);
