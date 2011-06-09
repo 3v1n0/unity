@@ -895,12 +895,13 @@ UnityDialogWindow::moveParentToRect (CompWindow      *requestor,
 CompWindow *
 UnityDialogWindow::transientParent ()
 {
-    if (window->transientFor ())
+    if (window->transientFor () &&
+	window->state () & CompWindowStateModalMask &&
+	!UnityDialogScreen::get (screen)->optionGetAvoidMatch ().evaluate (window))
     {
 	CompWindow *parent = screen->findWindow (window->transientFor ());
 
-	if (parent &&
-	    window->state () & CompWindowStateModalMask)
+	if (parent)
 	    return parent;
     }
 
