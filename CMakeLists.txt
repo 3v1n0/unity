@@ -49,7 +49,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating ChangeLog"
        && bzr log --gnu-changelog > ChangeLog
        && echo "• Generating AUTHORS"
-       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sort -u > AUTHORS
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
        && echo "• Committing Release"
        && bzr commit -m"Release ${UNITY_VERSION}"
        && echo "• Tagging Release"
