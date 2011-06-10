@@ -53,7 +53,7 @@ msgid "Internet Apps"
 msgstr ""
 
 #, fuzzy
-msgid "Keep In Launcher"
+msgid "Keep in launcher"
 msgstr "Διατήρηση στο πρόγραμμα εκκίνησης"
 
 msgid "Launcher & Menus"
