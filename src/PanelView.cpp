@@ -16,7 +16,6 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
-#include "PanelView.h"
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -35,6 +34,7 @@
 #include "PanelStyle.h"
 #include "PanelIndicatorObjectView.h"
 #include "Variant.h"
+#include "PanelView.h"
 
 namespace unity {
 

@@ -19,7 +19,7 @@
 #ifndef PANEL_TRAY_H
 #define PANEL_TRAY_H
 
-#include <Nux/View.h>
+#include <Nux/Nux.h>
 #include <gtk/gtk.h>
 
 #include <gdk/gdkx.h>
