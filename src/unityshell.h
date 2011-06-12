@@ -75,7 +75,7 @@ class UnityScreen :
 
 	/* nux draw wrapper */
 	void paintDisplay (const CompRegion 	&region);
-	
+
 	void paintPanelShadow (const GLMatrix &matrix);
 
 	/* paint on top of all windows if we could not find a window
@@ -101,7 +101,7 @@ class UnityScreen :
     void handleCompizEvent (const char          *plugin,
                             const char          *event,
                             CompOption::Vector  &option);
-	
+
 	bool
 	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
                              CompOption::Vector &options);
@@ -118,7 +118,7 @@ class UnityScreen :
   showPanelFirstMenuKeyTerminate (CompAction         *action,
                                   CompAction::State   state,
                                   CompOption::Vector &options);
-                                  
+
   bool
   executeCommand (CompAction*         action,
                   CompAction::State   state,
@@ -127,24 +127,24 @@ class UnityScreen :
   setKeyboardFocusKeyInitiate (CompAction*         action,
                                CompAction::State   state,
                                CompOption::Vector& options);
-                               
+
   bool
   launcherRevealEdgeInitiate (CompAction         *action,
                               CompAction::State   state,
                               CompOption::Vector &options);
-  
+
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
 	void optionChanged (CompOption *, Options num);
-	
+
 	/* Handle changes in the number of workspaces by showing the switcher
      * or not showing the switcher */
-	bool setOptionForPlugin(const char *plugin, const char *name, 
+	bool setOptionForPlugin(const char *plugin, const char *name,
                             CompOption::Value &v);
 
 	/* init plugin actions for screen */
 	bool initPluginForScreen (CompPlugin *p);
-	
+
 	void outputChangeNotify ();
 
   void NeedsRelayout ();
@@ -172,7 +172,7 @@ protected:
 
 	void
 	onRedrawRequested ();
-	
+
 	void Relayout ();
 
 	static gboolean
@@ -189,7 +189,7 @@ protected:
 
   static void
   OnExitKeyNav (GVariant* data, void* value);
-  
+
   static gboolean
   OnEdgeTriggerTimeout (gpointer data);
 
@@ -198,7 +198,7 @@ protected:
 
   void
   restartLauncherKeyNav ();
-  
+
   void
   OnLauncherHiddenChanged ();
 
@@ -229,7 +229,7 @@ protected:
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
-  
+
   GLTexture::List _shadow_texture;
 
 	/* handle paint order */
@@ -272,11 +272,11 @@ class UnityWindow :
   void moveNotify (int x, int y, bool immediate);
 
   void resizeNotify (int x, int y, int w, int h);
-  
+
   void stateChangeNotify (unsigned int lastState);
 
   bool place (CompPoint &pos);
-  
+
   CompPoint tryNotIntersectLauncher (CompPoint &pos);
 };
 
