@@ -72,7 +72,8 @@ PlacesController::PlacesController ()
   _window->ShowWindow(false);
   _window->SetOpacity (0.0f);
 
-  _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+    _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+
 
   _view = new PlacesView (_factory);
   _window_layout->AddView (_view, 1);
@@ -84,6 +85,8 @@ PlacesController::PlacesController ()
   // Set a InputArea to get the keyboard focus when window receives the enter focus event.
   _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
   _window->SetFocused (true);
+
+  _window->OnMouseDown.connect (sigc::mem_fun (_view->GetSearchBar (), &PlacesSearchBar::RecvMouseDownFromWindow));
 
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
   _view->fullscreen_request.connect (sigc::mem_fun (this, &PlacesController::OnDashFullscreenRequest));

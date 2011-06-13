@@ -82,6 +82,7 @@ public:
   PlacesResultsController * GetResultsController ();
 
   nux::TextEntry* GetTextEntryView ();
+  PlacesSearchBar* GetSearchBar ();
 
   // UBus handlers
   void PlaceEntryActivateRequest (const char *entry_id, guint section, const gchar *search);

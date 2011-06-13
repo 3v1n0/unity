@@ -505,3 +505,12 @@ PlacesSearchBar::UpdateBackground ()
 
   texture2D->UnReference ();
 }
+
+void
+PlacesSearchBar::RecvMouseDownFromWindow(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  if(_pango_entry->GetGeometry().IsPointInside(x, y))
+  {
+    printf("Mouse down on text entry.\n");
+  }
+}
