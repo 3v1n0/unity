@@ -59,7 +59,143 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
-static UnityScreen *uScreen = 0;
+namespace {
+
+UnityScreen* uScreen = 0;
+
+void configure_logging();
+
+}
+
+UnityScreen::UnityScreen(CompScreen *screen)
+ : PluginClassHandler <UnityScreen, CompScreen> (screen)
+ , screen(screen)
+ , cScreen(CompositeScreen::get(screen))
+ , gScreen(GLScreen::get(screen))
+ , relayoutSourceId(0)
+ , _edge_trigger_handle(0)
+ , doShellRepaint(false)
+{
+  configure_logging();
+  START_FUNCTION ();
+  _key_nav_mode_requested = false;
+  int (*old_handler) (Display *, XErrorEvent *);
+  old_handler = XSetErrorHandler (NULL);
+
+  g_thread_init (NULL);
+  dbus_g_thread_init ();
+
+  unity_a11y_preset_environment ();
+
+  gtk_init (NULL, NULL);
+
+  XSetErrorHandler (old_handler);
+
+  /* Wrap compiz interfaces */
+  ScreenInterface::setHandler (screen);
+  CompositeScreenInterface::setHandler (cScreen);
+  GLScreenInterface::setHandler (gScreen);
+
+  PluginAdapter::Initialize (screen);
+  WindowManager::SetDefault (PluginAdapter::Default ());
+
+  StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
+
+  nux::NuxInitialize(0);
+  wt = nux::CreateFromForeignWindow (cScreen->output (),
+                                     glXGetCurrentContext (),
+                                     &UnityScreen::initUnity,
+                                     this);
+
+  wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
+
+  unity_a11y_init (wt);
+
+  newFocusedWindow  = NULL;
+  lastFocusedWindow = NULL;
+
+  /* i18n init */
+  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
+  wt->Run (NULL);
+  uScreen = this;
+
+  debugger = new DebugDBusInterface (this);
+
+  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
+  UBusServer* ubus = ubus_server_get_default ();
+  _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_START_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+                                                    this);
+
+  _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                                    this);
+
+  _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                    UBUS_QUICKLIST_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
+                                                    this);
+
+  g_timeout_add (0, &UnityScreen::initPluginActions, this);
+  g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
+
+  GeisAdapter::Default (screen)->Run ();
+  gestureEngine = new GestureEngine (screen);
+
+  CompString name (PKGDATADIR"/panel-shadow.png");
+  CompString pname ("unityshell");
+  CompSize size (1, 20);
+  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
+
+  END_FUNCTION ();
+}
+
+UnityScreen::~UnityScreen()
+{
+  delete placesController;
+  panelController->UnReference ();
+  delete controller;
+  launcher->UnReference ();
+  launcherWindow->UnReference ();
+
+  unity_a11y_finalize ();
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+
+  if (relayoutSourceId != 0)
+    g_source_remove (relayoutSourceId);
+
+  delete wt;
+}
 
 void UnityScreen::nuxPrologue()
 {
@@ -827,135 +963,6 @@ void UnityScreen::outputChangeNotify()
   ScheduleRelayout (500);
 }
 
-UnityScreen::UnityScreen(CompScreen *screen)
- : PluginClassHandler <UnityScreen, CompScreen> (screen)
- , screen(screen)
- , cScreen(CompositeScreen::get(screen))
- , gScreen(GLScreen::get(screen))
- , relayoutSourceId(0)
- , _edge_trigger_handle(0)
- , doShellRepaint(false)
-{
-  START_FUNCTION ();
-  _key_nav_mode_requested = false;
-  int (*old_handler) (Display *, XErrorEvent *);
-  old_handler = XSetErrorHandler (NULL);
-
-  g_thread_init (NULL);
-  dbus_g_thread_init ();
-
-  unity_a11y_preset_environment ();
-
-  gtk_init (NULL, NULL);
-
-  XSetErrorHandler (old_handler);
-
-  /* Wrap compiz interfaces */
-  ScreenInterface::setHandler (screen);
-  CompositeScreenInterface::setHandler (cScreen);
-  GLScreenInterface::setHandler (gScreen);
-
-  PluginAdapter::Initialize (screen);
-  WindowManager::SetDefault (PluginAdapter::Default ());
-
-  StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
-
-  nux::NuxInitialize (0);
-  wt = nux::CreateFromForeignWindow (cScreen->output (),
-                                     glXGetCurrentContext (),
-                                     &UnityScreen::initUnity,
-                                     this);
-
-  wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
-
-  unity_a11y_init (wt);
-
-  newFocusedWindow  = NULL;
-  lastFocusedWindow = NULL;
-
-  /* i18n init */
-  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-
-  wt->Run (NULL);
-  uScreen = this;
-
-  debugger = new DebugDBusInterface (this);
-
-  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
-  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
-  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
-  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
-  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
-  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
-  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-
-  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
-    _ubus_handles[i] = 0;
-
-  UBusServer* ubus = ubus_server_get_default ();
-  _ubus_handles[0] = ubus_server_register_interest (ubus,
-                                                    UBUS_LAUNCHER_START_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-                                                    this);
-
-  _ubus_handles[1] = ubus_server_register_interest (ubus,
-                                                    UBUS_LAUNCHER_END_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-                                                    this);
-
-  _ubus_handles[2] = ubus_server_register_interest (ubus,
-                                                    UBUS_QUICKLIST_END_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-                                                    this);
-
-  g_timeout_add (0, &UnityScreen::initPluginActions, this);
-  g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
-
-  GeisAdapter::Default (screen)->Run ();
-  gestureEngine = new GestureEngine (screen);
-
-  CompString name (PKGDATADIR"/panel-shadow.png");
-  CompString pname ("unityshell");
-  CompSize size (1, 20);
-  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
-
-  END_FUNCTION ();
-}
-
-UnityScreen::~UnityScreen()
-{
-  delete placesController;
-  panelController->UnReference ();
-  delete controller;
-  launcher->UnReference ();
-  launcherWindow->UnReference ();
-
-  unity_a11y_finalize ();
-
-  UBusServer* ubus = ubus_server_get_default ();
-  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
-  }
-
-  if (relayoutSourceId != 0)
-    g_source_remove (relayoutSourceId);
-
-  delete wt;
-}
-
 /* Start up the launcher */
 void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 {
@@ -1047,50 +1054,6 @@ UnityWindow::~UnityWindow()
     us->lastFocusedWindow = NULL;
 }
 
-namespace {
-
-/* Checks whether an extension is supported by the GLX or OpenGL implementation
- * given the extension name and the list of supported extensions. */
-gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
-{
-  if (extensions != NULL && extension != NULL)
-  {
-    const gsize len = strlen (extension);
-    gchar* p = (gchar*) extensions;
-    gchar* end = p + strlen (p);
-
-    while (p < end)
-    {
-      const gsize size = strcspn (p, " ");
-      if (len == size && strncmp (extension, p, size) == 0)
-        return TRUE;
-      p += size + 1;
-    }
-  }
-
-  return FALSE;
-}
-
-/* Gets the OpenGL version as a floating-point number given the string. */
-gfloat get_opengl_version_f32(const gchar* version_string)
-{
-  gfloat version = 0.0f;
-  gint32 i;
-
-  for (i = 0; isdigit (version_string[i]); i++)
-    version = version * 10.0f + (version_string[i] - 48);
-
-  if (version_string[i++] == '.')
-  {
-    version = version * 10.0f + (version_string[i] - 48);
-    return (version + 0.1f) * 0.1f;
-  }
-  else
-    return 0.0f;
-}
-
-} /* anonymous namespace */
-
 /* vtable init */
 bool UnityPluginVTable::init()
 {
@@ -1157,3 +1120,51 @@ bool UnityPluginVTable::init()
   return true;
 }
 
+
+namespace {
+
+void configure_logging()
+{
+}
+
+/* Checks whether an extension is supported by the GLX or OpenGL implementation
+ * given the extension name and the list of supported extensions. */
+gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
+{
+  if (extensions != NULL && extension != NULL)
+  {
+    const gsize len = strlen (extension);
+    gchar* p = (gchar*) extensions;
+    gchar* end = p + strlen (p);
+
+    while (p < end)
+    {
+      const gsize size = strcspn (p, " ");
+      if (len == size && strncmp (extension, p, size) == 0)
+        return TRUE;
+      p += size + 1;
+    }
+  }
+
+  return FALSE;
+}
+
+/* Gets the OpenGL version as a floating-point number given the string. */
+gfloat get_opengl_version_f32(const gchar* version_string)
+{
+  gfloat version = 0.0f;
+  gint32 i;
+
+  for (i = 0; isdigit (version_string[i]); i++)
+    version = version * 10.0f + (version_string[i] - 48);
+
+  if (version_string[i++] == '.')
+  {
+    version = version * 10.0f + (version_string[i] - 48);
+    return (version + 0.1f) * 0.1f;
+  }
+  else
+    return 0.0f;
+}
+
+} // anonymous namespace
