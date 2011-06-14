@@ -72,7 +72,7 @@ PlacesController::PlacesController ()
   _window->ShowWindow(false);
   _window->SetOpacity (0.0f);
 
-    _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
+  _window->OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &PlacesController::RecvMouseDownOutsideOfView));
 
 
   _view = new PlacesView (_factory);

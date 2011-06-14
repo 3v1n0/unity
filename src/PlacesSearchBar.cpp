@@ -306,6 +306,14 @@ PlacesSearchBar::EmitLiveSearch ()
 void
 PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  std::map<gchar *, gchar *> hints;
+  gchar       *markup;
+  gchar       *tmp;
+
+  tmp = g_markup_escape_text (_entry->GetSearchHint (), -1);
+  markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", tmp);
+
+  _hint->SetText (markup);
   if (_pango_entry->GetText () != "")
   {
     _pango_entry->SetText ("");
@@ -511,6 +519,6 @@ PlacesSearchBar::RecvMouseDownFromWindow(int x, int y, unsigned long button_flag
 {
   if(_pango_entry->GetGeometry().IsPointInside(x, y))
   {
-    printf("Mouse down on text entry.\n");
+    _hint->SetText ("");
   }
 }
