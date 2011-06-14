@@ -18,8 +18,14 @@
 
 #include "PanelTray.h"
 
+#include "NuxCore/Logger.h"
+
 #define SETTINGS_NAME "com.canonical.Unity.Panel"
 #define PADDING 3
+
+namespace {
+nux::logging::Logger logger("unity.panel");
+}
 
 namespace unity
 {
@@ -163,12 +169,11 @@ PanelTray::FilterTrayCallback (NaTray *tray, NaTrayChild *icon, PanelTray *self)
     g_idle_add ((GSourceFunc)IdleSync, self);
   }
 
-  g_debug ("TrayChild %s: %s %s %s",
-           accept ? "Accepted" : "Rejected",
-           na_tray_child_get_title (icon),
-           res_name,
-           res_class);
-  
+  LOG_DEBUG(logger) << "TrayChild "
+                    << (accept ? "Accepted: " : "Rejected: ")
+                    << na_tray_child_get_title(icon) << " "
+                    << res_name << " " << res_class;
+
   g_free (res_name);
   g_free (res_class);
   g_free (title);

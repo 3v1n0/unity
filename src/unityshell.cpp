@@ -85,6 +85,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
 {
   Timer timer;
   configure_logging();
+  LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);

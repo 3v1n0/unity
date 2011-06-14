@@ -21,6 +21,14 @@
 #include <sstream>
 #include "PluginAdapter.h"
 
+#include "NuxCore/Logger.h"
+
+namespace {
+
+nux::logging::Logger logger("unity.plugin");
+
+}
+
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
@@ -608,7 +616,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   screen_width = screen.workArea().width ();
 
   if ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE) {
-    g_debug ("MaximizeIfBigEnough: window mapped and already maximized, just undecorate");
+    LOG_DEBUG(logger) << "window mapped and already maximized, just undecorate";
     Undecorate (window->id ());
     return;
   }
@@ -620,7 +628,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   if ((covering_part < _coverage_area_before_automaximize) || (covering_part > 1.0) ||
       (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
-    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass.c_str());
+    LOG_DEBUG(logger) << win_wmclass << " window size doesn't fit";
     return;
   }
 
