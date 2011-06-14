@@ -22,6 +22,8 @@
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 
+#include "NuxCore/Logger.h"
+
 #include "NuxGraphics/GLThread.h"
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
@@ -31,6 +33,10 @@
 #include "IndicatorEntry.h"
 
 #include <glib.h>
+
+namespace {
+nux::logging::Logger logger("unity.indicators");
+}
 
 namespace unity {
 
@@ -44,7 +50,7 @@ PanelIndicatorObjectView::PanelIndicatorObjectView(indicator::Indicator::Ptr con
   : View(NUX_TRACKER_LOCATION)
   , proxy_(proxy)
 {
-  g_debug ("IndicatorAdded: %s", proxy_->name().c_str ());
+  LOG_DEBUG(logger) << "IndicatorAdded: " << proxy_->name();
   layout_ = new nux::HLayout ("", NUX_TRACKER_LOCATION);
 
   SetCompositionLayout (layout_);
@@ -93,7 +99,7 @@ bool PanelIndicatorObjectView::ActivateEntry(std::string const& entry_id)
     PanelIndicatorObjectEntryView* view = *i;
     if (view->IsEntryValid() && entry_id == view->GetName())
     {
-      g_debug ("%s: Activating: %s", G_STRFUNC, entry_id.c_str());
+      LOG_DEBUG(logger) << "Activating: " << entry_id;
       view->Activate();
       return true;
     }

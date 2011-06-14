@@ -21,7 +21,7 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
-
+#include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -34,6 +34,7 @@
 #include "GeisAdapter.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
+#include "Timer.h"
 #include "unityshell.h"
 
 #include <dbus/dbus.h>
@@ -44,7 +45,6 @@
 
 #include <core/atoms.h>
 
-#include "perf-logger-utility.h"
 #include "unitya11y.h"
 
 #include "ubus-server.h"
@@ -59,11 +59,18 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
+using ::unity::logger::Timer;
+
 namespace {
+
+nux::logging::Logger logger("unity.shell");
 
 UnityScreen* uScreen = 0;
 
 void configure_logging();
+
+gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
+gfloat get_opengl_version_f32(const gchar* version_string);
 
 }
 
@@ -76,8 +83,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
  , _edge_trigger_handle(0)
  , doShellRepaint(false)
 {
+  Timer timer;
   configure_logging();
-  START_FUNCTION ();
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
@@ -161,7 +168,6 @@ UnityScreen::UnityScreen(CompScreen *screen)
                                                     this);
 
   g_timeout_add (0, &UnityScreen::initPluginActions, this);
-  g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
 
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);
@@ -171,7 +177,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
   CompSize size (1, 20);
   _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
 
-  END_FUNCTION ();
+  LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
 
 UnityScreen::~UnityScreen()
@@ -820,12 +826,12 @@ void UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHei
 /* Start up nux after OpenGL is initialized */
 void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
-  START_FUNCTION ();
+  Timer timer;
   initLauncher(thread, InitData);
 
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
-  END_FUNCTION ();
+  LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 }
 
 void UnityScreen::onRedrawRequested()
@@ -952,12 +958,6 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
   return status;
 }
 
-static gboolean write_logger_data_to_disk(gpointer data)
-{
-  LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
-  return FALSE;
-}
-
 void UnityScreen::outputChangeNotify()
 {
   ScheduleRelayout (500);
@@ -966,11 +966,9 @@ void UnityScreen::outputChangeNotify()
 /* Start up the launcher */
 void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 {
-  START_FUNCTION ();
-
+  Timer timer;
   UnityScreen *self = reinterpret_cast<UnityScreen*>(InitData);
 
-  LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcherWindow->SinkReference ();
 
@@ -1003,13 +1001,14 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightMode (Launcher::BACKLIGHT_ALWAYS_ON);
-  LOGGER_END_PROCESS ("initLauncher-Launcher");
+
+  LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
-  LOGGER_START_PROCESS ("initLauncher-Panel");
+  timer.Reset();
   self->panelController = new PanelController ();
   self->AddChild (self->panelController);
-  LOGGER_END_PROCESS ("initLauncher-Panel");
+  LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
   self->placesController = new PlacesController ();
@@ -1031,8 +1030,6 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->ScheduleRelayout (0);
 
   self->OnLauncherHiddenChanged ();
-
-  END_FUNCTION ();
 }
 
 /* Window init */
@@ -1125,6 +1122,11 @@ namespace {
 
 void configure_logging()
 {
+  // The default behaviour of the logging infrastructure is to send all output
+  // to std::cout for warning or above.
+
+  // TODO: write a file output handler that keeps track of backups.
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 }
 
 /* Checks whether an extension is supported by the GLX or OpenGL implementation
