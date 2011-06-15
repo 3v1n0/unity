@@ -110,7 +110,6 @@ DeviceLauncherSection::OnVolumeRemoved (GVolumeMonitor        *monitor,
     g_hash_table_remove (self->_ht, (gpointer) volume);  
 }
 
-#include "SimpleLauncherIcon.h"
 void 
 DeviceLauncherSection::OnMountAdded (GVolumeMonitor        *monitor,
                                      GMount                *mount,
@@ -118,6 +117,7 @@ DeviceLauncherSection::OnMountAdded (GVolumeMonitor        *monitor,
 {
     GVolume *volume = g_mount_get_volume (mount);
     DeviceLauncherIcon *icon = (DeviceLauncherIcon *) g_hash_table_lookup (self->_ht, (gpointer) volume);
+
     if (icon)
       icon->UpdateVisibility ();
 }

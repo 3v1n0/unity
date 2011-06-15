@@ -43,10 +43,30 @@ DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
                                              G_CALLBACK (&DeviceLauncherIcon::OnChanged),
                                              this);
 
+  /* Checked if in favourites! */
+  /* FIXME: I downt'know but g_slist_find doesn't work! */
+  gchar *uuid = g_volume_get_identifier (_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+
+  GSList *f = DevicesSettings::GetDefault ()->GetFavorites ();
+
+  _checked = true;
+  
+  while (f != NULL)
+  {
+    if (g_strcmp0 ((char *)f->data, uuid) == 0)
+    {
+      _checked = false;
+      break;
+    }
+      
+    f = f->next;
+  }
+  
   UpdateDeviceIcon ();
 
   UpdateVisibility ();
 
+  g_free (uuid);
 }
 
 DeviceLauncherIcon::~DeviceLauncherIcon()
@@ -84,7 +104,6 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
     g_free (icon_string);
   }
   
-  SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_DEVICE);
 }
@@ -108,6 +127,20 @@ DeviceLauncherIcon::GetMenus ()
   DbusmenuMenuitem              *menu_item;
   GDrive                        *drive;
 
+  /* Otherwise it have no sense to show "Keep in Launcher" */
+  if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED && !g_volume_should_automount (_volume))
+  {
+    menu_item = dbusmenu_menuitem_new ();
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep in Launcher"));
+    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_int (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, _checked);
+    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                      G_CALLBACK (&DeviceLauncherIcon::OnTogglePin), this);
+    result.push_back (menu_item);
+  }
+  
   menu_item = dbusmenu_menuitem_new ();
   dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
   dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
@@ -286,6 +319,36 @@ DeviceLauncherIcon::Eject ()
 }
 
 void
+DeviceLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+{
+  gchar *uuid = g_volume_get_identifier (self->_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+  
+  self->_checked = !self->_checked;
+
+  if (self->_checked)
+  {
+    // If the volume is not mounted hide the icon
+    GMount *mount =  g_volume_get_mount (self->_volume);
+
+    if (mount == NULL)
+      self->SetQuirk (QUIRK_VISIBLE, false); 
+    else
+      g_object_unref (mount);
+
+    // Remove from favorites
+    if (uuid && strlen (uuid) > 0)
+      DevicesSettings::GetDefault ()->RemoveFavorite (uuid);
+  }
+  else
+  {
+    if (uuid && strlen (uuid) > 0)
+      DevicesSettings::GetDefault ()->AddFavorite (uuid);
+  }
+
+  g_free (uuid);
+}
+
+void
 DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
   self->ActivateLauncherIcon ();
@@ -383,11 +446,15 @@ DeviceLauncherIcon::OnStopDriveReady (GObject *object,
 void
 DeviceLauncherIcon::OnChanged (GVolume *volume, DeviceLauncherIcon *self)
 {
+  GMount *mount = g_volume_get_mount (self->_volume);
+
   if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
-      && g_volume_get_mount (volume) == NULL)
+      && mount == NULL && self->_checked)
   {
     self->SetQuirk (QUIRK_VISIBLE, false); 
   } 
+
+  g_object_unref (mount);
 }
 
 void
@@ -401,8 +468,8 @@ DeviceLauncherIcon::UpdateVisibility ()
     case DevicesSettings::ONLY_MOUNTED:
     {
       GMount *mount =  g_volume_get_mount (_volume);
-
-      if (mount == NULL)
+      
+      if (mount == NULL && _checked)
       {
         SetQuirk (QUIRK_VISIBLE, false); 
       }
@@ -422,6 +489,27 @@ DeviceLauncherIcon::UpdateVisibility ()
 void
 DeviceLauncherIcon::OnSettingsChanged (DevicesSettings     *settings)
 {
+  /* Checked if in favourites! */
+  /* FIXME: I dont'know but g_slist_find doesn't work! */
+  gchar *uuid = g_volume_get_identifier (_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+
+  GSList *f = settings->GetFavorites ();
+
+  _checked = true;
+  
+  while (f != NULL)
+  {
+    if (!g_strcmp0 ((char *)f->data, uuid))
+    {
+      _checked = false;
+      break;
+    }
+      
+    f = f->next;
+  }
+
   UpdateVisibility ();
+
+  g_free (uuid);
 }
 

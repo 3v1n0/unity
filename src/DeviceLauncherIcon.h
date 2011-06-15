@@ -31,7 +31,7 @@ class DeviceLauncherIcon : public SimpleLauncherIcon
 public:
   DeviceLauncherIcon  (Launcher *launcher, GVolume *volume);
   ~DeviceLauncherIcon ();
-  
+
   virtual nux::Color BackgroundColor ();
   virtual nux::Color GlowColor ();
   void UpdateVisibility ();
@@ -46,6 +46,7 @@ private:
   void Eject ();
   void Unmount ();
   void StopDrive ();
+  static void OnTogglePin (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnUnmount (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
@@ -60,6 +61,7 @@ private:
 
 private:
   GVolume *_volume;
+  bool     _checked;
   gulong _on_removed_handler_id;
   gulong _on_changed_handler_id;
 };
