@@ -1109,7 +1109,7 @@ float IconVisibleProgress (LauncherIcon *icon, struct timespec const &current)
     }
 }
 
-void Launcher::SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current)
+void Launcher::SetDndDelta (float x, float y, nux::Geometry const &geo, timespec const &current)
 {
     LauncherIcon *anchor = 0;
     LauncherModel::iterator it;
@@ -1508,10 +1508,55 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     if (sum - _space_between_icons <= launcher_height)
       folding_threshold = launcher_height;
 
+    float autohide_offset = 0.0f;
+    *launcher_alpha = 1.0f; 
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
+    {
+        
+        float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
+        if (_autohide_animation == FADE_ONLY
+            || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
+            *launcher_alpha = 1.0f - autohide_progress;
+        else
+        {
+            if (autohide_progress > 0.0f)
+            {
+                autohide_offset -= geo.width * autohide_progress;
+                if (_autohide_animation == FADE_AND_SLIDE)
+                    *launcher_alpha = 1.0f - 0.5f * autohide_progress;
+            }
+        }
+    }
+    
+    float drag_hide_progress = DragHideProgress (current);
+    if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
+    {
+        autohide_offset -= geo.width * 0.25f * drag_hide_progress;
+        
+        if (drag_hide_progress >= 1.0f)
+          _hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, true);
+    }
+
+    // Inform the painter where to paint the box
+    box_geo = geo;
+
+    if (_hidemode != LAUNCHER_HIDE_NEVER)
+        box_geo.x += autohide_offset;
+
+    /* Why we need last_geo? It stores the last box_geo (note: as it is a static variable,
+     * it is initialized only first time). Infact we call SetDndDelta that calls MouseIconIntersection 
+     * that uses values (HitArea) that are computed in UpdateIconXForm.
+     * The problem is that in DrawContent we calls first RenderArgs, then UpdateIconXForm. Just
+     * use last_geo to hack this problem.
+     */
+    static nux::Geometry last_geo = box_geo;
+
     // this happens on hover, basically its a flag and a value in one, we translate this into a dnd offset
     if (_enter_y != 0 && _enter_y + _icon_size / 2 > folding_threshold)
-        SetDndDelta (center.x, center.y, nux::Geometry (geo.x, geo.y, geo.width, geo.height), current);
+        SetDndDelta (last_geo.x + last_geo.width / 2, center.y, geo, current);
 
+    // Update the last_geo value.
+    last_geo = box_geo;
     _enter_y = 0;
 
     if (hover_progress > 0.0f && _launcher_drag_delta != 0)
@@ -1549,41 +1594,6 @@ void Launcher::RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
     {
         _launcher_drag_delta = 0;
     }
-
-    float autohide_offset = 0.0f;
-    *launcher_alpha = 1.0f; 
-    if (_hidemode != LAUNCHER_HIDE_NEVER)
-    {
-        
-        float autohide_progress = AutohideProgress (current) * (1.0f - DragOutProgress (current));
-        if (_autohide_animation == FADE_ONLY
-            || (_autohide_animation == FADE_OR_SLIDE && _hide_machine->GetQuirk (LauncherHideMachine::MOUSE_OVER_BFB)))
-            *launcher_alpha = 1.0f - autohide_progress;
-        else
-        {
-            if (autohide_progress > 0.0f)
-            {
-                autohide_offset -= geo.width * autohide_progress;
-                if (_autohide_animation == FADE_AND_SLIDE)
-                    *launcher_alpha = 1.0f - 0.5f * autohide_progress;
-            }
-        }
-    }
-    
-    float drag_hide_progress = DragHideProgress (current);
-    if (_hidemode != LAUNCHER_HIDE_NEVER && drag_hide_progress > 0.0f)
-    {
-        autohide_offset -= geo.width * 0.25f * drag_hide_progress;
-        
-        if (drag_hide_progress >= 1.0f)
-          _hide_machine->SetQuirk (LauncherHideMachine::DND_PUSHED_OFF, true);
-    }
-
-    // Inform the painter where to paint the box
-    box_geo = geo;
-
-    if (_hidemode != LAUNCHER_HIDE_NEVER)
-        box_geo.x += autohide_offset;
 
     // The functional position we wish to represent for these icons is not smooth. Rather than introducing
     // special casing to represent this, we use MIN/MAX functions. This helps ensure that even though our
@@ -2786,7 +2796,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::Geometry bkg_box;
     std::list<Launcher::RenderArg> args;
     std::list<Launcher::RenderArg>::reverse_iterator rev_it;
-    std::list<Launcher::RenderArg>::iterator it;
     float launcher_alpha = 1.0f;
 
     // rely on the compiz event loop to come back to us in a nice throttling
@@ -2829,22 +2838,10 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                    nux::Geometry (bkg_box.x, (*rev_it).render_center.y - 3, bkg_box.width, 2), 
                                    nux::Color(0xAAAAAAAA));
       
-      if ((*rev_it).x_rotation >= 0.0f || (*rev_it).skip)
+      if ((*rev_it).skip)
         continue;
 
       DrawRenderArg (GfxContext, *rev_it, bkg_box);
-    }
-    
-    for (it = args.begin(); it != args.end(); it++)
-    {
-      if ((*it).stick_thingy)
-        gPainter.Paint2DQuadColor (GfxContext, 
-                                   nux::Geometry (bkg_box.x, (*it).render_center.y - 3, bkg_box.width, 2), 
-                                   nux::Color(0xAAAAAAAA));
-      if ((*it).x_rotation < 0.0f || (*it).skip)
-        continue;
-
-      DrawRenderArg (GfxContext, *it, bkg_box);
     }
 
     gPainter.Paint2DQuadColor(GfxContext,
@@ -3256,6 +3253,8 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
 void 
 Launcher::EdgeRevealTriggered ()
 {
+  SetMousePosition (pointerX, pointerY - GetAbsoluteGeometry ().y);   
+  
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_OVER_ACTIVE_EDGE, true);
   _hide_machine->SetQuirk (LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, true);
 }
@@ -3475,31 +3474,13 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
 LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
 {
   LauncherModel::iterator it;
-  LauncherModel::reverse_iterator rev_it;
   // We are looking for the icon at screen coordinates x, y;
   nux::Point2 mouse_position(x, y);
   int inside = 0;
 
-  // Because of the way icons fold and stack on one another, we must proceed in 2 steps.
-  for (rev_it = _model->rbegin (); rev_it != _model->rend (); rev_it++)
-  {
-    if ((*rev_it)->_folding_angle < 0.0f || !(*rev_it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
-      continue;
-
-    nux::Point2 screen_coord [4];
-    for (int i = 0; i < 4; i++)
-    {
-      screen_coord [i].x = (*rev_it)->_xform_coords["HitArea"] [i].x;
-      screen_coord [i].y = (*rev_it)->_xform_coords["HitArea"] [i].y;
-    }
-    inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
-    if (inside)
-      return (*rev_it);
-  }
-
   for (it = _model->begin(); it != _model->end (); it++)
   {
-    if ((*it)->_folding_angle >= 0.0f || !(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
+    if (!(*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
       continue;
 
     nux::Point2 screen_coord [4];
