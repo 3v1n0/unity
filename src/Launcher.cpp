@@ -2220,7 +2220,6 @@ gboolean Launcher::OnScrollTimeout (gpointer data)
   }
 
   self->EnsureAnimation ();
-
   return TRUE;
 }
 
@@ -2983,6 +2982,9 @@ void Launcher::StartIconDrag (LauncherIcon *icon)
   _drag_window->SinkReference ();
 
   _render_drag_window = true;
+
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_LAUNCHER_ICON_START_DND, NULL);
 }
 
 void Launcher::EndIconDrag ()
@@ -3012,7 +3014,10 @@ void Launcher::EndIconDrag ()
     SetTimeStruct (&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
 
   _render_drag_window = false;
+
   _hide_machine->SetQuirk (LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
+  UBusServer *ubus = ubus_server_get_default ();
+  ubus_server_send_message (ubus, UBUS_LAUNCHER_ICON_END_DND, NULL);
 }
 
 void Launcher::UpdateDragWindowPosition (int x, int y)
@@ -3074,6 +3079,12 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  /* FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+   * on an internal Launcher property then
+   */
+  if (_last_button_press != 1)
+    return;
+
   SetMousePosition (x, y);
 
   // FIXME: hack (see SetupRenderArg)
@@ -3110,6 +3121,9 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   else if (GetActionState () == ACTION_DRAG_LAUNCHER)
   {
     _launcher_drag_delta += dy;
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_LAUNCHER_END_DND,
+                              NULL);
   }
   else if (GetActionState () == ACTION_DRAG_ICON)
   {

@@ -4,39 +4,72 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (services tests tools doc)
+subdirs (shared services tests tools doc)
 
 #
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 3)
-set (UNITY_MINOR 8)
-set (UNITY_MICRO 12)
+set (UNITY_MAJOR 4)
+set (UNITY_MINOR 0)
+set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
-set (UNITY_API_VERSION "3.0")
+set (UNITY_API_VERSION "4.0")
+
+set (CMAKE_CXX_FLAGS "-fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-fno-permissive")
+set (CMAKE_CXX_FLAGS_RELEASE "-fno-permissive")
 
 #
 # Niceties
 #
 set (ARCHIVE_NAME unity-${UNITY_VERSION})
 add_custom_target (dist
-    COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+  COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
 add_custom_target (distcheck
-    COMMAND cd ${CMAKE_BINARY_DIR}
-    && rm -rf ${ARCHIVE_NAME}
-    && tar xf ${ARCHIVE_NAME}.tar.bz2
-    && mkdir ${ARCHIVE_NAME}/build
-    && cd ${ARCHIVE_NAME}/build
-    && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-    && make -j8
-    && make -j8 install
-    && make check
-    )
+  COMMAND cd ${CMAKE_BINARY_DIR}
+       && rm -rf ${ARCHIVE_NAME}
+       && tar xf ${ARCHIVE_NAME}.tar.bz2
+       && mkdir ${ARCHIVE_NAME}/build
+       && cd ${ARCHIVE_NAME}/build
+       && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
+       && make -j4
+       && make -j4 install
+       && make check
+  )
 add_dependencies(distcheck dist)
+
+add_custom_target (pre-distcheck
+  COMMAND echo ""
+       && echo "• Releasing Unity ${UNITY_VERSION}"
+       && cd ${CMAKE_SOURCE_DIR}
+       && echo "• Generating ChangeLog"
+       && bzr log --gnu-changelog > ChangeLog
+       && echo "• Generating AUTHORS"
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
+       && echo "• Committing Release"
+       && bzr commit -m"Release ${UNITY_VERSION}"
+       && echo "• Tagging Release"
+       && bzr tag ${UNITY_VERSION}
+       && echo "• Running Distcheck"
+  )
+
+add_custom_target (post-distcheck
+  COMMAND echo "• Signing Tarball"
+       && gpg --armor --sign --detach-sig ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+       && echo "• Pushing Branch"
+       && bzr push
+       && echo "• Publishing Tarball"
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && echo ""
+       && echo "• Unity ${UNITY_VERSION} Released."
+  )
+
+add_custom_target (release)
+add_dependencies (release pre-distcheck distcheck post-discheck)
 
 #
 # config.h
@@ -100,14 +133,23 @@ include (CompizPlugin)
 compiz_plugin (unityshell
                PKGDEPS ${UNITY_PLUGIN_DEPS}
                PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
+               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR}/shared ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
+               LIBRARIES "-lunity-shared-${UNITY_API_VERSION}"
+               LIBDIRS "${CMAKE_BINARY_DIR}/shared"
                )
+add_dependencies(unityshell unity-shared-${UNITY_API_VERSION})
 
 #
 # UTouch things
 #
 
 compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
+
+#
+# Dialog things
+#
+
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/dialog")
 
 #
 # GSettings Schema

@@ -91,7 +91,7 @@ PanelTray::~PanelTray ()
 void
 PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetAbsoluteGeometry ();
 
   if (geo.x != _last_x || geo.y != _last_y)
   {
@@ -185,7 +185,8 @@ void
 PanelTray::OnTrayIconRemoved (NaTrayManager *manager, NaTrayChild *child, PanelTray *self)
 {
   g_idle_add ((GSourceFunc)IdleSync, self);
-  self->_n_children--;
+  if (self->_n_children > 0)
+    self->_n_children--;
 }
 
 gboolean
