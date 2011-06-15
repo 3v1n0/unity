@@ -51,165 +51,115 @@ class UnityScreen :
     public PluginClassHandler <UnityScreen, CompScreen>,
     public UnityshellOptions
 {
-
-    public:
-
-	/* Init */
-	UnityScreen (CompScreen *s);
-
-	/* Cleanup */
-	~UnityScreen ();
+public:
+	UnityScreen(CompScreen* s);
+	~UnityScreen();
 
 	/* We store these  to avoid unecessary calls to ::get */
-	CompScreen      *screen;
-	CompositeScreen *cScreen;
-  GLScreen        *gScreen;
+	CompScreen* screen;
+	CompositeScreen* cScreen;
+  GLScreen* gScreen;
 
 	/* prepares nux for drawing */
-	void
-	nuxPrologue ();
-
+	void nuxPrologue ();
 	/* pops nux draw stack */
-	void
-	nuxEpilogue ();
+	void nuxEpilogue ();
 
 	/* nux draw wrapper */
-	void paintDisplay (const CompRegion 	&region);
-	
-	void paintPanelShadow (const GLMatrix &matrix);
+	void paintDisplay(const CompRegion& region);
+	void paintPanelShadow(const GLMatrix& matrix);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
-	bool glPaintOutput (const GLScreenPaintAttrib &,
-			    const GLMatrix &,
-			    const CompRegion &,
-		       	    CompOutput *,
-			    unsigned int);
+	bool glPaintOutput(const GLScreenPaintAttrib&,
+                     const GLMatrix&,
+                     const CompRegion&,
+                     CompOutput*,
+                     unsigned int);
 
 	/* paint in the special case that the output is transformed */
-	void glPaintTransformedOutput (const GLScreenPaintAttrib &,
-		       		       const GLMatrix &,
-				       const CompRegion &,
-		       		       CompOutput *,
-				       unsigned int);
+	void glPaintTransformedOutput(const GLScreenPaintAttrib&,
+                                const GLMatrix&,
+                                const CompRegion&,
+                                CompOutput*,
+                                unsigned int);
 
 	/* Pop our InputOutput windows from the paint list */
-	const CompWindowList & getWindowPaintList ();
+	const CompWindowList& getWindowPaintList();
 
 	/* handle X11 events */
-	void handleEvent (XEvent *);
-    void handleCompizEvent (const char          *plugin,
-                            const char          *event,
-                            CompOption::Vector  &option);
-	
-	bool
-	showLauncherKeyInitiate (CompAction *action, CompAction::State state,
-                             CompOption::Vector &options);
+	void handleEvent(XEvent*);
+  void handleCompizEvent(const char* plugin,
+                         const char* event,
+                         CompOption::Vector& option);
 
-	bool
-	showLauncherKeyTerminate (CompAction *action, CompAction::State state,
-                              CompOption::Vector &options);
-
-    bool
-    showPanelFirstMenuKeyInitiate (CompAction         *action,
-                                   CompAction::State   state,
-                                   CompOption::Vector &options);
-  bool
-  showPanelFirstMenuKeyTerminate (CompAction         *action,
-                                  CompAction::State   state,
-                                  CompOption::Vector &options);
-                                  
-  bool
-  executeCommand (CompAction*         action,
-                  CompAction::State   state,
-                  CompOption::Vector& options);
-  bool
-  setKeyboardFocusKeyInitiate (CompAction*         action,
-                               CompAction::State   state,
+	bool showLauncherKeyInitiate(CompAction* action,
+                               CompAction::State state,
                                CompOption::Vector& options);
-                               
-  bool
-  launcherRevealEdgeInitiate (CompAction         *action,
-                              CompAction::State   state,
-                              CompOption::Vector &options);
-  
+	bool showLauncherKeyTerminate(CompAction* action,
+                                CompAction::State state,
+                                CompOption::Vector& options);
+  bool showPanelFirstMenuKeyInitiate(CompAction* action,
+                                     CompAction::State state,
+                                     CompOption::Vector& options);
+  bool showPanelFirstMenuKeyTerminate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options);
+
+  bool executeCommand(CompAction* action,
+                      CompAction::State state,
+                      CompOption::Vector& options);
+  bool setKeyboardFocusKeyInitiate(CompAction* action,
+                                   CompAction::State state,
+                                   CompOption::Vector& options);
+  bool launcherRevealEdgeInitiate(CompAction* action,
+                                  CompAction::State state,
+                                  CompOption::Vector& options);
+
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
-	void optionChanged (CompOption *, Options num);
-	
+	void optionChanged(CompOption*, Options num);
+
 	/* Handle changes in the number of workspaces by showing the switcher
-     * or not showing the switcher */
-	bool setOptionForPlugin(const char *plugin, const char *name, 
-                            CompOption::Value &v);
+   * or not showing the switcher */
+	bool setOptionForPlugin(const char* plugin, const char* name,
+                          CompOption::Value& v);
 
 	/* init plugin actions for screen */
-	bool initPluginForScreen (CompPlugin *p);
-	
-	void outputChangeNotify ();
+	bool initPluginForScreen(CompPlugin* p);
 
-  void NeedsRelayout ();
-
-  void ScheduleRelayout (guint timeout);
+	void outputChangeNotify();
+  void NeedsRelayout();
+  void ScheduleRelayout(guint timeout);
 
 protected:
+	const gchar* GetName();
+	void AddProperties(GVariantBuilder *builder);
 
-	const gchar* GetName ();
+private:
+  void SendExecuteCommand();
 
-	void AddProperties (GVariantBuilder *builder);
-
-    private:
-
-  void SendExecuteCommand ();
-
-	static gboolean
-	initPluginActions (gpointer data);
-
-	static void
-	initLauncher (nux::NThread* thread, void* InitData);
-
-	void
-	damageNuxRegions();
-
-	void
-	onRedrawRequested ();
-	
+	static gboolean initPluginActions(gpointer data);
+	static void initLauncher(nux::NThread* thread, void* InitData);
+	void damageNuxRegions();
+	void onRedrawRequested();
 	void Relayout ();
 
-	static gboolean
-	RelayoutTimeout (gpointer data);
+	static gboolean RelayoutTimeout(gpointer data);
+	static void launcherWindowConfigureCallback(int WindowWidth, int WindowHeight,
+                                              nux::Geometry& geo, void* user_data);
+	static void initUnity(nux::NThread* thread, void* InitData);
+  static void OnStartKeyNav(GVariant* data, void* value);
+  static void OnExitKeyNav (GVariant* data, void* value);
+  static gboolean OnEdgeTriggerTimeout(gpointer data);
 
-	static void
-	launcherWindowConfigureCallback(int WindowWidth, int WindowHeight, nux::Geometry& geo, void* user_data);
+  void startLauncherKeyNav();
+  void restartLauncherKeyNav();
+  void OnLauncherHiddenChanged();
 
-	static void
-	initUnity(nux::NThread* thread, void* InitData);
-
-  static void
-  OnStartKeyNav (GVariant* data, void* value);
-
-  static void
-  OnExitKeyNav (GVariant* data, void* value);
-  
-  static gboolean
-  OnEdgeTriggerTimeout (gpointer data);
-
-  void
-  startLauncherKeyNav ();
-
-  void
-  restartLauncherKeyNav ();
-  
-  void
-  OnLauncherHiddenChanged ();
-
-  static void
-  OnQuicklistEndKeyNav (GVariant* data, void* value);
-
-  static void
-  OnLauncherStartKeyNav (GVariant* data, void* value);
-
-  static void
-  OnLauncherEndKeyNav (GVariant* data, void* value);
+  static void OnQuicklistEndKeyNav(GVariant* data, void* value);
+  static void OnLauncherStartKeyNav(GVariant* data, void* value);
+  static void OnLauncherEndKeyNav(GVariant* data, void* value);
 
 	Launcher               *launcher;
 	LauncherController     *controller;
@@ -229,7 +179,7 @@ protected:
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
   CompWindow* lastFocusedWindow;
-  
+
   GLTexture::List _shadow_texture;
 
 	/* handle paint order */
@@ -250,53 +200,37 @@ class UnityWindow :
     public GLWindowInterface,
     public PluginClassHandler <UnityWindow, CompWindow>
 {
+public:
+	UnityWindow(CompWindow*);
+	~UnityWindow();
 
-    public:
-
-        /* Constructors, destructors etc */
-	UnityWindow (CompWindow *);
-	~UnityWindow ();
-
-	CompWindow      *window;
-	GLWindow	*gWindow;
+	CompWindow* window;
+	GLWindow* gWindow;
 
 	/* basic window draw function */
-	bool
-	glDraw (const GLMatrix 	&matrix,
-	        GLFragment::Attrib &attrib,
-	        const CompRegion 	&region,
-	        unsigned int	mask);
+	bool glDraw(const GLMatrix& matrix,
+              GLFragment::Attrib& attrib,
+              const CompRegion& region,
+              unsigned intmask);
 
-	void windowNotify (CompWindowNotify n);
+	void windowNotify(CompWindowNotify n);
+  void moveNotify(int x, int y, bool immediate);
+  void resizeNotify(int x, int y, int w, int h);
+  void stateChangeNotify(unsigned int lastState);
 
-  void moveNotify (int x, int y, bool immediate);
-
-  void resizeNotify (int x, int y, int w, int h);
-  
-  void stateChangeNotify (unsigned int lastState);
-
-  bool place (CompPoint &pos);
-  
-  CompPoint tryNotIntersectLauncher (CompPoint &pos);
+  bool place(CompPoint& pos);
+  CompPoint tryNotIntersectLauncher(CompPoint& pos);
 };
 
-#define EX_SCREEN (screen) \
-UnityScreen *es = UnityScreen::get (screen);
 
-#define EX_WINDOW (window) \
-UnityWindow *ew = UnityWindow::get (window);
-
-/* Your vTable class is some basic info about the plugin that core uses.
+/**
+ * Your vTable class is some basic info about the plugin that core uses.
  */
-
 class UnityPluginVTable :
     public CompPlugin::VTableForScreenAndWindow<UnityScreen, UnityWindow>
 {
-    public:
-
-	/* kickstart initialization */
+public:
 	bool init ();
 };
 
 #endif // UNITYSHELL_H
-
