@@ -68,7 +68,10 @@ nux::logging::Logger logger("unity.shell");
 UnityScreen* uScreen = 0;
 
 void configure_logging();
-
+void capture_g_log_calls(const gchar *log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar *message,
+                         gpointer user_data);
 gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
 gfloat get_opengl_version_f32(const gchar* version_string);
 
@@ -1128,6 +1131,7 @@ void configure_logging()
 
   // TODO: write a file output handler that keeps track of backups.
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  g_log_set_default_handler(capture_g_log_calls, NULL);
 }
 
 /* Checks whether an extension is supported by the GLX or OpenGL implementation
@@ -1168,6 +1172,42 @@ gfloat get_opengl_version_f32(const gchar* version_string)
   }
   else
     return 0.0f;
+}
+
+nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
+{
+  // For some weird reason, ERROR is more critical than CRITICAL in gnome.
+  if (log_level & G_LOG_LEVEL_ERROR)
+    return nux::logging::CRITICAL;
+  if (log_level & G_LOG_LEVEL_CRITICAL)
+    return nux::logging::ERROR;
+  if (log_level & G_LOG_LEVEL_WARNING)
+    return nux::logging::WARNING;
+  if (log_level & G_LOG_LEVEL_MESSAGE ||
+      log_level & G_LOG_LEVEL_INFO)
+    return nux::logging::INFO;
+  // default to debug.
+  return nux::logging::DEBUG;
+}
+
+void capture_g_log_calls(const gchar *log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar *message,
+                         gpointer user_data)
+{
+  // Since we aren't entirely sure if log_domain contains anything, lets have
+  // a glib prefix.
+  std::string module("glib");
+  if (log_domain) {
+    module += std::string(".") + log_domain;
+  }
+  nux::logging::Logger logger(module);
+  nux::logging::Level level = glog_level_to_nux(log_level);
+  if (logger.GetEffectiveLogLevel() >= level)
+  {
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message;
+  }
 }
 
 } // anonymous namespace
