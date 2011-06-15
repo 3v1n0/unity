@@ -36,7 +36,7 @@ class WindowButton : public nux::Button
   // A single window button
 public:
   WindowButton (PanelStyle::WindowButtonType type)
-  : nux::Button ("X", NUX_TRACKER_LOCATION),
+  : nux::Button ("", NUX_TRACKER_LOCATION),
     _type (type),
     _normal_tex (NULL),
     _prelight_tex (NULL),
@@ -58,7 +58,7 @@ public:
     nux::Geometry      geo  = GetGeometry ();
     nux::BaseTexture  *tex;
     nux::TexCoordXForm texxform;
- 
+
     GfxContext.PushClippingRectangle (geo);
 
     if (HasMouseFocus ())
@@ -125,21 +125,18 @@ WindowButtons::WindowButtons ()
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
+  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
+  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
+  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
 
   SetContentDistribution (nux::eStackLeft);
 }
@@ -150,19 +147,19 @@ WindowButtons::~WindowButtons ()
 }
 
 void
-WindowButtons::OnCloseClicked ()
+WindowButtons::OnCloseClicked (nux::View *widget)
 {
   close_clicked.emit ();
 }
 
 void
-WindowButtons::OnMinimizeClicked ()
+WindowButtons::OnMinimizeClicked (nux::View *widget)
 {
   minimize_clicked.emit ();
 }
 
 void
-WindowButtons::OnRestoreClicked ()
+WindowButtons::OnRestoreClicked (nux::View *widget)
 {
   restore_clicked.emit ();
 }
@@ -185,14 +182,8 @@ WindowButtons::AddProperties (GVariantBuilder *builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
+void WindowButtons::OnStateChanged (int value)
 {
   redraw_signal.emit ();
 }
-
-void WindowButtons::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  redraw_signal.emit ();
-}
-
 

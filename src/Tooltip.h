@@ -32,7 +32,7 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#include "Introspectable.h"
+//#include "Introspectable.h"
 
 #if defined(NUX_OS_LINUX)
 #include <X11/Xlib.h>
@@ -41,7 +41,7 @@
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
-#define HIGH_LIGHT_MIN_WIDTH 200.0f 
+#define HIGH_LIGHT_MIN_WIDTH 200.0f
 #define RADIUS               5.0f
 #define BLUR_INTENSITY       8
 #define LINE_WIDTH           1.0f
@@ -51,14 +51,14 @@
 #define FONT_FACE            "Ubuntu 13"
 
 class QuicklistMenuItem;
-  
+
 namespace nux
 {
   class VLayout;
   class HLayout;
   class SpaceLayout;
 
-  class Tooltip : public BaseWindow, public Introspectable
+  class Tooltip : public BaseWindow
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
   public:
@@ -79,11 +79,11 @@ namespace nux
     void SetText (NString text);
 
     void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
-    
+
     // Introspection
     const gchar* GetName ();
     void AddProperties (GVariantBuilder *builder);
-  
+
   private:
     void RecvCairoTextChanged (StaticCairoText* cairo_text);
 
@@ -127,7 +127,7 @@ namespace nux
 
     bool _cairo_text_has_changed;
     void UpdateTexture ();
-    
+
     // Introspection
     gchar *_name;
 
