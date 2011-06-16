@@ -18,12 +18,12 @@
  */
  
 #include <glib.h>
+#include <sstream>
 #include "PluginAdapter.h"
 
 PluginAdapter * PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
-#define COVERAGE_AREA_BEFORE_AUTOMAXIMIZE 0.75
 
 #define MWM_HINTS_FUNCTIONS     (1L << 0)
 #define MWM_HINTS_DECORATIONS   (1L << 1)
@@ -56,6 +56,7 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
   _grab_show_action = 0;
   _grab_hide_action = 0;
   _grab_toggle_action = 0;
+  _coverage_area_before_automaximize = 0;
 }
 
 PluginAdapter::~PluginAdapter()
@@ -263,32 +264,29 @@ PluginAdapter::SetScaleAction (MultiActionList &scale)
 {
   m_ScaleActionList = scale;
 }
-    
-std::string *
+
+std::string
 PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 {
-  char *string;
-  std::string *result = new std::string ("any & (");
-    
+  std::ostringstream sout;
+
+  sout << "any & (";
+
   std::list<Window>::iterator it;
-    
-  for (it = windows->begin (); it != windows->end (); it++)
+  for (it = windows->begin (); it != windows->end (); ++it)
   {
-    string = g_strdup_printf ("| xid=%i ", (int) *it);
-    result->append (string);
-    g_free (string);
+    sout << "| xid=" << static_cast<int>(*it) << " ";
   }
-    
-  result->append (")");
-    
-  return result;
+  sout << ")";
+
+  return sout.str();
 }
-    
-void 
-PluginAdapter::InitiateScale (std::string *match, int state)
+
+void
+PluginAdapter::InitiateScale (std::string const& match, int state)
 {
   CompOption::Vector argument;
-  CompMatch	     m (*match);
+  CompMatch	     m (match);
 
   argument.resize (1);
   argument[0].setName ("match", CompOption::TypeMatch);
@@ -580,7 +578,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 {
   XClassHint   classHint;
   Status       status;
-  char*        win_wmclass = NULL;
+  std::string  win_wmclass;
   int          num_monitor;
   CompOutput   screen;
   int          screen_width;
@@ -597,7 +595,7 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   status = XGetClassHint (m_Screen->dpy (), window->id (), &classHint);
   if (status && classHint.res_class)
   {
-    win_wmclass = strdup (classHint.res_class);
+	win_wmclass = classHint.res_class;
     XFree (classHint.res_class);
   }
   else
@@ -617,18 +615,17 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
+  const XSizeHints& hints = window->sizeHints ();
   covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
-  if ((covering_part < COVERAGE_AREA_BEFORE_AUTOMAXIMIZE) || (covering_part > 1.0))
+  if ((covering_part < _coverage_area_before_automaximize) || (covering_part > 1.0) ||
+      (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
-    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass);
+    g_debug ("MaximizeIfBigEnough: %s window size doesn't fit", win_wmclass.c_str());
     return;
   }
 
   Undecorate (window->id ());
   window->maximize (MAXIMIZE_STATE);
-
-  if (win_wmclass)
-    free (win_wmclass);
 }
 
 void 
@@ -685,4 +682,9 @@ PluginAdapter::ToggleGrabHandles (CompWindow *window)
 
   /* Initiate the first available action with the arguments */
   _grab_toggle_action->initiate () (_grab_toggle_action, 0, argument);
+}
+
+void
+PluginAdapter::SetCoverageAreaBeforeAutomaximize (float area) {
+  _coverage_area_before_automaximize = area;
 }

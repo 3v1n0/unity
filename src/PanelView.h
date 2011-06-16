@@ -20,18 +20,22 @@
 #ifndef PANEL_VIEW_H
 #define PANEL_VIEW_H
 
+#include <vector>
+
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
 #include <gdk/gdkx.h>
 
-#include "IndicatorObjectFactoryRemote.h"
+#include "DBusIndicators.h"
 #include "Introspectable.h"
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelStyle.h"
+
+namespace unity {
 
 class PanelView : public Introspectable, public nux::View
 {
@@ -46,46 +50,49 @@ public:
 
   void PreLayoutManagement ();
   long PostLayoutManagement (long LayoutResult);
-  
-  void OnObjectAdded (IndicatorObjectProxy *proxy);
+
+  void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
   void OnMenuPointerMoved (int x, int y);
-  void OnEntryActivateRequest (const char *entry_id);
-  void OnEntryActivated (const char *entry_id);
+  void OnEntryActivateRequest(std::string const& entry_id);
+  void OnEntryActivated(std::string const& entry_id);
   void OnSynced ();
 
   void SetPrimary (bool primary);
   bool GetPrimary ();
   void SetMonitor (int monitor);
-  
+
   PanelHomeButton * GetHomeButton ();
 
   void StartFirstMenuShow ();
   void EndFirstMenuShow ();
-
-  Window GetTrayWindow ();
 
   void SetOpacity (float opacity);
 
 protected:
   // Introspectable methods
   const gchar * GetName ();
-  const gchar * GetChildsName (); 
+  const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
 private:
   void UpdateBackground ();
   void ForceUpdateBackground ();
   void SyncGeometries ();
+  void AddPanelView(PanelIndicatorObjectView* child,
+                    unsigned int stretchFactor);
 
 private:
-  IndicatorObjectFactoryRemote *_remote;
+  indicator::DBusIndicators::Ptr _remote;
+  // No ownership is taken for these views, that is done by the AddChild method.
+  typedef std::vector<PanelIndicatorObjectView*> Children;
+  Children children_;
 
   PanelHomeButton         *_home_button;
   PanelMenuView           *_menu_view;
   PanelTray               *_tray;
   nux::AbstractPaintLayer *_bg_layer;
   nux::HLayout            *_layout;
-  
+
   int _last_width;
   int _last_height;
 
@@ -95,7 +102,7 @@ private:
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
-  
+
   sigc::connection _on_panel_style_changed_connection;
   sigc::connection _on_object_added_connection;
   sigc::connection _on_menu_pointer_moved_connection;
@@ -103,5 +110,7 @@ private:
   sigc::connection _on_entry_activated_connection;
   sigc::connection _on_synced_connection;
 };
+
+}
 
 #endif // PANEL_VIEW_H

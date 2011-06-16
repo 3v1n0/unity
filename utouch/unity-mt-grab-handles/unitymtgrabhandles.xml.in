@@ -25,16 +25,16 @@
 	<options>
 		<option name="toggle_handles_key" type="key">
 			<_short>Toggle Handles</_short>
-			<_long>Show/Hide the handles</_long>
+			<_long>Key to toggle the handles</_long>
 			<!--<default>&lt;Control&gt;&lt;Alt&gt;h</default>-->
 		</option>
 		<option name="show_handles_key" type="key">
-			<_short>Toggle Handles</_short>
-			<_long>Show/Hide the handles</_long>
+			<_short>Show Handles</_short>
+			<_long>Key to show the handles</_long>
 		</option>
 		<option name="hide_handles_key" type="key">
-			<_short>Toggle Handles</_short>
-			<_long>Show/Hide the handles</_long>
+			<_short>Hide Handles</_short>
+			<_long>Key to hide the handles</_long>
 		</option>
 		<option name="fade_duration" type="int">
 			<_short>Fade Duration</_short>

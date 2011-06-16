@@ -308,7 +308,7 @@ private:
   void SetHover         (bool hovered);
   void SetHidden        (bool hidden);
 
-  void  SetDndDelta (float x, float y, nux::Geometry geo, struct timespec const &current);
+  void  SetDndDelta (float x, float y, nux::Geometry const &geo, timespec const &current);
   float DragLimiter (float x);
 
   void SetupRenderArg (LauncherIcon *icon, struct timespec const &current, RenderArg &arg);

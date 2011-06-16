@@ -33,6 +33,7 @@
 #include <gtk/gtk.h>
 
 #include "PanelStyle.h"
+#include "Variant.h"
 
 #define PANEL_HEIGHT 24
 
@@ -40,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
+  _opacity (1.0f),
   _urgent_interest (0)
 {
   _urgent_count = 0;
@@ -141,7 +143,7 @@ PanelHomeButton::Refresh ()
 
   /* button pressed effect */
   if (_pressed) {
-    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance ()) {
+    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance () && _opacity == 1.0f) {
       /* loads background panel upside-down */
       overlay = gdk_pixbuf_flip (PanelStyle::GetDefault ()->GetBackground (width - 2, height), FALSE);
       if (GDK_IS_PIXBUF (overlay)) {
@@ -197,7 +199,7 @@ PanelHomeButton::Refresh ()
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
   // The Texture is created with a reference count of 1.
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
 
@@ -321,12 +323,8 @@ PanelHomeButton::GetName ()
 void
 PanelHomeButton::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  unity::variant::BuilderWrapper(builder)
+    .add(GetGeometry());
 }
 
 void
@@ -376,4 +374,9 @@ PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
 void 
 PanelHomeButton::ProcessDndDrop (int x, int y)
 {
+}
+
+void
+PanelHomeButton::SetOpacity (float opacity) {
+  _opacity = opacity;
 }

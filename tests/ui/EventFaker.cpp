@@ -41,7 +41,7 @@ EventFaker::SendClick (nux::View* view)
   if (!view)
     return;
 
-  display = nux::GetThreadGLWindow()->GetX11Display ();
+  display = nux::GetGraphicsDisplay ()->GetX11Display ();
 
   // get a point inside the view
   x = view->GetBaseX () + 1;
@@ -78,7 +78,7 @@ EventFaker::doEvent (nux::View* view,
   if (!view || !event)
     return;
 
-  display = nux::GetThreadGLWindow()->GetX11Display ();
+  display = nux::GetGraphicsDisplay ()->GetX11Display ();
   XUngrabPointer (display, CurrentTime);
   XFlush (display);
 

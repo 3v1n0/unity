@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
+#include "PanelView.h"
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -31,12 +32,11 @@
 
 #include <glib.h>
 
-#include "PanelView.h"
 #include "PanelStyle.h"
-
-#include "IndicatorObjectFactoryRemote.h"
-#include "IndicatorObjectEntryProxy.h"
 #include "PanelIndicatorObjectView.h"
+#include "Variant.h"
+
+namespace unity {
 
 NUX_IMPLEMENT_OBJECT_TYPE (PanelView);
 
@@ -56,25 +56,25 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
    SetCompositionLayout (_layout);
 
-   // Home button
-   _home_button = new PanelHomeButton ();
-   _layout->AddView (_home_button, 0, nux::eCenter, nux::eFull);
-   AddChild (_home_button);
+   // Home button - not an indicator view
+   _home_button = new PanelHomeButton();
+   _layout->AddView(_home_button, 0, nux::eCenter, nux::eFull);
+   AddChild(_home_button);
 
    _menu_view = new PanelMenuView ();
-   _layout->AddView (_menu_view, 1, nux::eCenter, nux::eFull);
-   AddChild (_menu_view);
+   AddPanelView(_menu_view, 1);
 
+   // Pannel tray shouldn't be an indicator view
    _tray = new PanelTray ();
-   _layout->AddView (_tray, 0, nux::eCenter, nux::eFull);
-   AddChild (_tray);
+   _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
+   AddChild(_tray);
 
-  _remote = new IndicatorObjectFactoryRemote ();
-  _on_object_added_connection = _remote->OnObjectAdded.connect (sigc::mem_fun (this, &PanelView::OnObjectAdded));
-  _on_menu_pointer_moved_connection = _remote->OnMenuPointerMoved.connect (sigc::mem_fun (this, &PanelView::OnMenuPointerMoved));
-  _on_entry_activate_request_connection = _remote->OnEntryActivateRequest.connect (sigc::mem_fun (this, &PanelView::OnEntryActivateRequest));
-  _on_entry_activated_connection = _remote->IndicatorObjectFactory::OnEntryActivated.connect (sigc::mem_fun (this, &PanelView::OnEntryActivated));
-  _on_synced_connection = _remote->IndicatorObjectFactory::OnSynced.connect (sigc::mem_fun (this, &PanelView::OnSynced));
+   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
+  _on_object_added_connection = _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+  _on_menu_pointer_moved_connection = _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
+  _on_entry_activate_request_connection = _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
+  _on_entry_activated_connection = _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
+  _on_synced_connection = _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
 }
 
 PanelView::~PanelView ()
@@ -88,8 +88,15 @@ PanelView::~PanelView ()
 
   _style->UnReference ();
 
-  delete _remote;
   delete _bg_layer;
+}
+
+void PanelView::AddPanelView(PanelIndicatorObjectView* child,
+                             unsigned int stretchFactor)
+{
+  _layout->AddView(child, stretchFactor, nux::eCenter, nux::eFull);
+  AddChild(child);
+  children_.push_back(child);
 }
 
 const gchar* PanelView::GetName ()
@@ -105,16 +112,12 @@ PanelView::GetChildsName ()
 
 void PanelView::AddProperties (GVariantBuilder *builder)
 {
-  nux::Geometry geo = GetGeometry ();
-
-  /* First add some properties from the backend */
-  _remote->AddProperties (builder);
-
-  /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  variant::BuilderWrapper(builder)
+    .add("backend", "remote")
+    .add("service-name", _remote->name())
+    .add("service-unique-name", _remote->owner_name())
+    .add("using-local-service", _remote->using_local_service())
+    .add(GetGeometry());
 }
 
 long
@@ -208,155 +211,92 @@ PanelView::UpdateBackground ()
   NeedRedraw ();
 }
 
-void
-PanelView::ForceUpdateBackground ()
+void PanelView::ForceUpdateBackground()
 {
-  std::list<Area *>::iterator it;
-
   _is_dirty = true;
   UpdateBackground ();
 
-  std::list<Area *> my_children = _layout->GetChildren ();
-  for (it = my_children.begin(); it != my_children.end(); it++)
+  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
-    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-
-    view->QueueDraw ();
-    if (view->_layout == NULL)
-      continue;
-
-    std::list<Area *>::iterator it2;
-
-    std::list<Area *> its_children = view->_layout->GetChildren ();
-    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
-    {
-      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-      entry->QueueDraw ();
-    }
+    (*i)->QueueDraw();
   }
-  _home_button->QueueDraw ();
+  // The home button isn't an indicator view.
+  _home_button->QueueDraw();
+  _tray->QueueDraw();
   QueueDraw ();
 }
 
 //
 // Signals
 //
-void
-PanelView::OnObjectAdded (IndicatorObjectProxy *proxy)
+void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
 {
-  PanelIndicatorObjectView *view;
-  
   // Appmenu is treated differently as it needs to expand
   // We could do this in a more special way, but who has the time for special?
-  if (g_strstr_len (proxy->GetName ().c_str (), -1, "appmenu") != NULL)
+  if (proxy->name().find("appmenu") != std::string::npos)
   {
-    view = _menu_view;
-    _menu_view->SetProxy (proxy);
+    _menu_view->SetProxy(proxy);
   }
   else
   {
-    view = new PanelIndicatorObjectView (proxy);
-
-    _layout->AddView (view, 0, nux::eCenter, nux::eFull);
-    AddChild (view);
+    PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
+    AddPanelView(view, 0);
   }
 
   _layout->SetContentDistribution (nux::eStackLeft);
-  
+
   ComputeChildLayout ();
   NeedRedraw ();
 }
 
-void
-PanelView::OnMenuPointerMoved (int x, int y)
+void PanelView::OnMenuPointerMoved(int x, int y)
 {
   nux::Geometry geo = GetAbsoluteGeometry ();
   nux::Geometry hgeo = _home_button->GetAbsoluteGeometry ();
 
   if (x <= (hgeo.x + hgeo.width))
-    return; 
-  
-  if (x >= geo.x && x <= (geo.x + geo.width)
-      && y >= geo.y && y <= (geo.y + geo.height))
-  {
-    std::list<Area *>::iterator it;
+    return;
 
-    std::list<Area *> my_children = _layout->GetChildren ();
-    for (it = my_children.begin(); it != my_children.end(); it++)
+  if (geo.IsPointInside(x, y))
+  {
+    for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
     {
-      PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-      
-      if (view->_layout == NULL
-          || (view == _menu_view && _menu_view->HasOurWindowFocused ()))
+      PanelIndicatorObjectView* view = *i;
+
+      if (view == _menu_view && _menu_view->HasOurWindowFocused())
         continue;
 
-      geo = view->GetAbsoluteGeometry ();
-      if (x >= geo.x && x <= (geo.x + geo.width)
-          && y >= geo.y && y <= (geo.y + geo.height))
+      geo = view->GetAbsoluteGeometry();
+      if (geo.IsPointInside(x, y))
       {
-        std::list<Area *>::iterator it2;
-
-        std::list<Area *> its_children = view->_layout->GetChildren ();
-        for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
-        {
-          PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-          geo = entry->GetAbsoluteGeometry ();
-          if (x >= geo.x && x <= (geo.x + geo.width)
-              && y >= geo.y && y <= (geo.y + geo.height))
-          {
-            entry->OnMouseDown (x, y, 0, 0);
-            break;
-          }
-        }
+        view->OnPointerMoved(x, y);
         break;
       }
     }
   }
 }
 
-void
-PanelView::OnEntryActivateRequest (const char *entry_id)
+void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 {
-  std::list<Area *>::iterator it;
-
   if (!_menu_view->GetControlsActive ())
     return;
 
-  std::list<Area *> my_children = _layout->GetChildren ();
-  for (it = my_children.begin(); it != my_children.end(); it++)
+  bool activated = false;
+  for (Children::iterator i = children_.begin(), end = children_.end();
+       i != end && !activated; ++i)
   {
-    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-
-    if (view->_layout == NULL)
-      continue;
-
-    std::list<Area *>::iterator it2;
-
-    std::list<Area *> its_children = view->_layout->GetChildren ();
-    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
-    {
-      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-      if (g_strcmp0 (entry->GetName (), entry_id) == 0)
-      {
-        g_debug ("%s: Activating: %s", G_STRFUNC, entry_id);
-        entry->Activate ();
-        break;
-      }
-    }
+    PanelIndicatorObjectView* view = *i;
+    activated = view->ActivateEntry(entry_id);
   }
 }
 
-void
-PanelView::OnEntryActivated (const char *entry_id)
+void PanelView::OnEntryActivated(std::string const& entry_id)
 {
-  if (g_strcmp0 (entry_id, "") == 0)
+  if (entry_id == "")
     _menu_view->AllMenusClosed ();
 }
 
-void
-PanelView::OnSynced ()
+void PanelView::OnSynced()
 {
   _needs_geo_sync = true;
 }
@@ -364,56 +304,27 @@ PanelView::OnSynced ()
 //
 // Useful Public Methods
 //
-PanelHomeButton * 
-PanelView::GetHomeButton ()
+PanelHomeButton* PanelView::GetHomeButton()
 {
   return _home_button;
 }
 
-void
-PanelView::StartFirstMenuShow ()
+void PanelView::StartFirstMenuShow()
 {
-
 }
 
-void
-PanelView::EndFirstMenuShow ()
+void PanelView::EndFirstMenuShow()
 {
-  std::list<Area *>::iterator it;
-
-  if (!_menu_view->GetControlsActive ())
+  if (!_menu_view->GetControlsActive())
     return;
 
-  std::list<Area *> my_children = _layout->GetChildren ();
-  for (it = my_children.begin(); it != my_children.end(); it++)
+  bool activated = false;
+  for (Children::iterator i = children_.begin(), end = children_.end();
+       i != end && !activated; ++i)
   {
-    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-
-    if (view->_layout == NULL
-        || (view == _menu_view && _menu_view->HasOurWindowFocused ()))       
-      continue;
-
-    std::list<Area *>::iterator it2;
-
-    std::list<Area *> its_children = view->_layout->GetChildren ();
-    for (it2 = its_children.begin(); it2 != its_children.end(); it2++)
-    {
-      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-      IndicatorObjectEntryProxy *proxy = entry->_proxy;
-
-      if (proxy != NULL && !proxy->label_sensitive && !proxy->icon_sensitive)
-        continue;
-
-      entry->Activate ();
-      return;
-    }
+    PanelIndicatorObjectView* view = *i;
+    activated = view->ActivateIfSensitive();
   }
-}
-
-Window
-PanelView::GetTrayWindow ()
-{
-  return _tray->GetTrayWindow ();
 }
 
 void
@@ -423,7 +334,8 @@ PanelView::SetOpacity (float opacity)
     return;
 
   _opacity = opacity;
-  
+
+  _home_button->SetOpacity (opacity);
   ForceUpdateBackground ();
 }
 
@@ -441,61 +353,14 @@ PanelView::SetPrimary (bool primary)
   _home_button->SetVisible (primary);
 }
 
-void
-PanelView::SyncGeometries ()
+void PanelView::SyncGeometries()
 {
-  GVariantBuilder b;
-  GDBusProxy     *bus_proxy;
-  GVariant       *method_args;
-  std::list<Area *>::iterator it;
-
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssiiii))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssiiii)"));
-
-  std::list<Area *> my_children = _layout->GetChildren ();
-  for (it = my_children.begin(); it != my_children.end(); it++)
+  indicator::EntryLocationMap locations;
+  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
   {
-    PanelIndicatorObjectView *view = static_cast<PanelIndicatorObjectView *> (*it);
-
-    if (view->_layout == NULL)
-      continue;
-
-    std::list<Area *>::iterator it2;
-
-    std::list<Area *> its_children = view->_layout->GetChildren ();
-    for (it2 = its_children.begin (); it2 != its_children.end (); it2++)
-    {
-      nux::Geometry geo;
-      PanelIndicatorObjectEntryView *entry = static_cast<PanelIndicatorObjectEntryView *> (*it2);
-
-      if (entry == NULL)
-        continue;
-
-      geo = entry->GetAbsoluteGeometry ();
-      g_variant_builder_add (&b, "(ssiiii)",
-			     GetName (),
-			     entry->_proxy->GetId (),
-			     geo.x,
-			     geo.y,
-			     geo.GetWidth (),
-			     geo.GetHeight ());
-    }
+    (*i)->GetGeometryForSync(locations);
   }
-
-  g_variant_builder_close (&b);
-  method_args = g_variant_builder_end (&b);
-
-  // Send geometries to the panel service
-  bus_proxy =_remote->GetRemoteProxy ();
-  if (bus_proxy != NULL)
-  {
-    g_dbus_proxy_call (bus_proxy, "SyncGeometries", method_args,
-                       G_DBUS_CALL_FLAGS_NONE,
-                       -1,
-                       NULL,
-                       NULL,
-                       NULL);
-  }
+  _remote->SyncGeometries(GetName(), locations);
 }
 
 void
@@ -505,3 +370,4 @@ PanelView::SetMonitor (int monitor)
   _menu_view->SetMonitor (monitor);
 }
 
+} // namespace unity

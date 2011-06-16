@@ -30,6 +30,8 @@
 #include "NuxImage/CairoGraphics.h"
 
 #include "QuicklistMenuItem.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 #include "Tooltip.h"
 
@@ -67,8 +69,8 @@ namespace nux
     _vlayout->AddLayout(_top_space, 0);
 
     _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
-    _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
-    _tooltip_text->sigFontChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _on_text_changed_connection = (sigc::connection) _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _on_font_changed_connection = (sigc::connection) _tooltip_text->sigFontChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
     _tooltip_text->Reference();
     
     _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
@@ -91,6 +93,12 @@ namespace nux
     
     if (_texture_bg)
       _texture_bg->UnReference ();
+
+    if (_on_text_changed_connection.connected ())
+      _on_text_changed_connection.disconnect ();
+
+    if (_on_font_changed_connection.connected ())
+      _on_font_changed_connection.disconnect ();
 
     _tooltip_text->UnReference();
   }
@@ -124,6 +132,8 @@ namespace nux
     PushToFront ();
 
     ShowWindow (true);
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_send_message (ubus, UBUS_TOOLTIP_SHOWN, NULL);
   }
 
   void Tooltip::Draw (GraphicsEngine& gfxContext, bool forceDraw)
@@ -201,7 +211,7 @@ namespace nux
 
     if(TotalItemHeight < _anchor_height)
     {
-      _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
+      _top_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 + _padding + _corner_radius);
       _bottom_space->SetMinMaxSize(1, (_anchor_height - TotalItemHeight)/2 +1 + _padding + _corner_radius);
     }
 
@@ -212,12 +222,6 @@ namespace nux
   {
     long result = BaseWindow::PostLayoutManagement (LayoutResult);
     UpdateTexture ();
-
-    int x = _padding + _anchor_width + _corner_radius;
-    int y = _padding + _corner_radius;
-
-    _tooltip_text->SetBaseX (x);
-    _tooltip_text->SetBaseY (y);
 
     return result;
   }
@@ -625,21 +629,21 @@ namespace nux
 
     if (_texture_bg)
       _texture_bg->UnReference ();
-    _texture_bg = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_bg = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_bg->Update(bitmap);
     delete bitmap;
 
     bitmap = cairo_mask->GetBitmap();
     if (_texture_mask)
       _texture_mask->UnReference ();
-    _texture_mask = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_mask = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_mask->Update(bitmap);
     delete bitmap;
 
     bitmap = cairo_outline->GetBitmap();
     if (_texture_outline)
       _texture_outline->UnReference ();
-    _texture_outline = GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+    _texture_outline = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
     _texture_outline->Update(bitmap);
     delete bitmap;
 

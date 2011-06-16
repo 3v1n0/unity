@@ -29,7 +29,6 @@
 #include "LauncherModel.h"
 
 #include "DeviceLauncherSection.h"
-#include "FavoriteStore.h"
 #include "PlaceLauncherSection.h"
 
 #include "LauncherEntryRemote.h"
@@ -55,7 +54,6 @@ private:
     CompScreen*            _screen;
     Launcher*              _launcher;
     LauncherModel*         _model;
-    FavoriteStore*         _favorite_store;
     int                    _sort_priority;
     PlaceLauncherSection*  _place_section;
     DeviceLauncherSection* _device_section;
@@ -80,8 +78,8 @@ private:
     void OnLauncherAddRequest (char *path, LauncherIcon *before);
     void OnLauncherRemoveRequest (LauncherIcon *icon);
 
-    void OnLauncerEntryRemoteAdded   (LauncherEntryRemote *entry);
-    void OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry);
+    void OnLauncherEntryRemoteAdded   (LauncherEntryRemote *entry);
+    void OnLauncherEntryRemoteRemoved (LauncherEntryRemote *entry);
 
     void InsertExpoAction ();
     void RemoveExpoAction ();

@@ -64,7 +64,7 @@ public:
 
     ~PluginAdapter();
     
-    std::string * MatchStringForXids (std::list<Window> *windows);
+    std::string MatchStringForXids (std::list<Window> *windows);
     
     void SetScaleAction (MultiActionList &scale);    
     void SetExpoAction (MultiActionList &expo);
@@ -76,7 +76,7 @@ public:
     void OnScreenGrabbed ();
     void OnScreenUngrabbed ();
 
-    void InitiateScale (std::string *match, int state = 0);
+    void InitiateScale (std::string const& match, int state = 0);
     void TerminateScale ();
     bool IsScaleActive ();
     
@@ -112,6 +112,8 @@ public:
     void MaximizeIfBigEnough (CompWindow *window);
 
     nux::Geometry GetWindowGeometry (guint32 xid);
+
+    void SetCoverageAreaBeforeAutomaximize (float area);
     
 protected:
     PluginAdapter(CompScreen *screen);
@@ -130,7 +132,9 @@ private:
     CompAction *_grab_show_action;
     CompAction *_grab_hide_action;
     CompAction *_grab_toggle_action;
-    
+
+    float _coverage_area_before_automaximize;
+
     static PluginAdapter *_default;
 };
 

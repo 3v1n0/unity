@@ -29,6 +29,8 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
+using namespace unity;
+
 LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
 {
   _launcher = launcher;
@@ -39,7 +41,6 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _launcher->SetModel (_model);
   _on_launcher_add_request_connection = (sigc::connection) _launcher->launcher_addrequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherAddRequest));
   _on_launcher_remove_request_connection = (sigc::connection) _launcher->launcher_removerequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRemoveRequest));
-  _favorite_store = FavoriteStore::GetDefault ();
 
   _place_section = new PlaceLauncherSection (_launcher);
   _on_place_section_icon_added_connection = (sigc::connection) _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
@@ -47,7 +48,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _device_section = new DeviceLauncherSection (_launcher);
   _on_device_section_icon_added_connection = (sigc::connection) _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
 
-  _num_workspaces = _screen->vpSize ().width ();
+  _num_workspaces = _screen->vpSize ().width () * _screen->vpSize ().height ();
   if(_num_workspaces > 1)
   {
     InsertExpoAction ();
@@ -57,8 +58,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _bamf_timer_handler_id = g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteAdded));
-  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncerEntryRemoteRemoved));
+  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteRemoved));
 }
 
 LauncherController::~LauncherController()
@@ -87,7 +88,6 @@ LauncherController::~LauncherController()
   if (_matcher != NULL && _on_view_opened_id != 0)
     g_signal_handler_disconnect ((gpointer) _matcher, _on_view_opened_id);
 
-  _favorite_store->UnReference ();
   delete _place_section;
   delete _device_section;
   delete _model;
@@ -115,23 +115,22 @@ LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
   }
 }
 
-void
-LauncherController::SortAndSave ()
+void LauncherController::SortAndSave()
 {
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
-  std::list<const char*> desktop_paths;
+  FavoriteList desktop_paths;
   gint   shortcut = 1;
   gchar *buff;
-    
+
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
     BamfLauncherIcon *icon = *it;
-    
+
     if (shortcut < 11 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
     {
-      buff = g_strdup_printf ("%d", shortcut % 10);  
+      buff = g_strdup_printf ("%d", shortcut % 10);
       (*it)->SetShortcut (buff[0]);
       g_free (buff);
       shortcut++;
@@ -141,18 +140,17 @@ LauncherController::SortAndSave ()
     {
       (*it)->SetShortcut (0);
     }
-    
 
     if (!icon->IsSticky ())
       continue;
-    
+
     const char* desktop_file = icon->DesktopFile ();
-    
+
     if (desktop_file && strlen (desktop_file) > 0)
-      desktop_paths.push_back (desktop_file);
+      desktop_paths.push_back(desktop_file);
   }
-  
-  _favorite_store->SetFavorites (desktop_paths);
+
+  FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void
@@ -174,7 +172,7 @@ LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
 }
 
 void
-LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
+LauncherController::OnLauncherEntryRemoteAdded (LauncherEntryRemote *entry)
 {
   LauncherModel::iterator it;
   for (it = _model->begin (); it != _model->end (); it++)
@@ -192,7 +190,7 @@ LauncherController::OnLauncerEntryRemoteAdded (LauncherEntryRemote *entry)
 }
 
 void
-LauncherController::OnLauncerEntryRemoteRemoved (LauncherEntryRemote *entry)
+LauncherController::OnLauncherEntryRemoteRemoved (LauncherEntryRemote *entry)
 {
   LauncherModel::iterator it;
   for (it = _model->begin (); it != _model->end (); it++)
@@ -335,23 +333,22 @@ LauncherController::CreateFavorite (const char *file_path)
 }
 
 /* private */
-void
-LauncherController::SetupBamf ()
+void LauncherController::SetupBamf()
 {
   GList *apps, *l;
-  GSList *favs, *f;
   BamfApplication *app;
   BamfLauncherIcon *icon;
   int priority = 0;
-  
+
   _matcher = bamf_matcher_get_default ();
-  
-  favs = FavoriteStore::GetDefault ()->GetFavorites ();
-  
-  for (f = favs; f; f = f->next)
+
+  FavoriteList const& favs = FavoriteStore::GetDefault().GetFavorites();
+
+  for (FavoriteList::const_iterator i = favs.begin(), end = favs.end();
+       i != end; ++i)
   {
-    LauncherIcon *fav = CreateFavorite ((const char *) f->data);
-    
+    LauncherIcon* fav = CreateFavorite(i->c_str());
+
     if (fav)
     {
       fav->SetSortPriority (priority);
@@ -359,7 +356,7 @@ LauncherController::SetupBamf ()
       priority++;
     }
   }
-  
+
   apps = bamf_matcher_get_applications (_matcher);
   _on_view_opened_id = g_signal_connect (_matcher, "view-opened", (GCallback) &LauncherController::OnViewOpened, this);
   

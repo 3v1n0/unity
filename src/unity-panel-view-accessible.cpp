@@ -35,6 +35,8 @@
 
 #include "unitya11y.h"
 
+using namespace unity;
+
 /* GObject */
 static void unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass);
 static void unity_panel_view_accessible_init       (UnityPanelViewAccessible *self);

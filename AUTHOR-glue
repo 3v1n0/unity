@@ -1,0 +1,6 @@
+s/Gord(on)? Allott <.*@.*>/Gordon Allott <gord.allott@canonical.com>/
+s/Neil Jagdish Patel <.*@.*>/Neil Jagdish Patel <neil.patel@canonical.com>/
+s/Mikkel Kamstrup Erlandsen <.*@.*>/Mikkel Kamstrup Erlandsen <mikkel.kamstrup@gmail.com>/
+s/Jason Smith <jason@hakimaki>/Jason Smith <jason.smith@canonical.com>/
+s/Daniel van Vugt <.*@.*>/Daniel van Vugt <vanvugt@gmail.com>/
+s/Andrea Azzarone <.*@.*>/Andrea Azzarone <azzaronea@gmail.com>/

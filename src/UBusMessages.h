@@ -22,6 +22,11 @@
 // Add ubus messages here so we can easily export them around the place
 // keep ordered
 
+// Signal fired when an autopilot test is finished
+#define UBUS_AUTOPILOT_TEST_FINISHED "AUTOPILOT_TEST_FINISHED"
+
+#define UBUS_HOME_BUTTON_ACTIVATED "PANEL_HOME_ACTIVATED"
+
 #define UBUS_DASH_EXTERNAL_ACTIVATION   "DASH_EXTERNAL_ACTIVATION"
 #define UBUS_HOME_BUTTON_BFB_UPDATE "PANEL_HOME_BUTTON_BFB_UPDATE"
 #define UBUS_HOME_BUTTON_BFB_DND_ENTER "PANEL_HOME_BUTTON_BFB_DND_ENTER"
@@ -53,8 +58,19 @@
 #define UBUS_QUICKLIST_START_KEY_NAV "QUICKLIST_START_KEY_NAV"
 #define UBUS_QUICKLIST_END_KEY_NAV   "QUICKLIST_END_KEY_NAV"
 
+// Signals that fired on various launcher dnd tasks
+#define UBUS_LAUNCHER_START_DND      "LAUNCHER_START_DRAG"
+#define UBUS_LAUNCHER_END_DND        "LAUNCHER_END_DRAG"
+#define UBUS_LAUNCHER_ICON_START_DND "LAUNCHER_ICON_START_DND"
+#define UBUS_LAUNCHER_ICON_END_DND   "LAUNCHER_ICON_END_DND"
+
 // Signal to send on icon action and that you want to request hiding the launcher
 #define UBUS_LAUNCHER_ACTION_DONE "LAUNCHER_ACTION_DONE"
 
+// Signal sent when a quicklist is shown.
+#define UBUS_QUICKLIST_SHOWN "QUICKLIST_SHOWN"
+
+// Signal sent when a tooltip is shown.
+#define UBUS_TOOLTIP_SHOWN "TOOLTIP_SHOWN"
 
 #endif // UBUS_MESSAGES_H

@@ -25,25 +25,35 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include "IndicatorObjectEntryProxy.h"
+#include "IndicatorEntry.h"
 
 #include "Introspectable.h"
 
 #define PANEL_HEIGHT 24
 #define SPACING 3
 
+namespace unity {
+
 class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
 {
 public:
-  PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding = 3);
-  ~PanelIndicatorObjectEntryView ();
+  PanelIndicatorObjectEntryView(indicator::Entry::Ptr const& proxy,
+                                int padding = 3);
+  ~PanelIndicatorObjectEntryView();
 
   void Refresh ();
-  void OnMouseDown (int x, int y, long button_flags, long key_flags);
-  void OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
-  void Activate ();
-  void OnActiveChanged (bool is_active);
-  bool GetShowNow ();
+
+  void OnMouseDown(int x, int y, long button_flags, long key_flags);
+  void OnMouseUp(int x, int y, long button_flags, long key_flags);
+  void OnMouseWheel(int x, int y, int delta, unsigned long mouse_state, unsigned long key_state);
+
+  void Activate();
+  void OnActiveChanged(bool is_active);
+  bool GetShowNow();
+
+  void GetGeometryForSync(indicator::EntryLocationMap& locations);
+  bool IsEntryValid() const;
+  bool IsSensitive() const;
 
   const gchar * GetName ();
   void          AddProperties (GVariantBuilder *builder);
@@ -51,18 +61,21 @@ public:
   sigc::signal<void, PanelIndicatorObjectEntryView *, bool> active_changed;
   sigc::signal<void, PanelIndicatorObjectEntryView *> refreshed;
 
-public:
-  IndicatorObjectEntryProxy *_proxy;
 private:
-  nux::CairoGraphics _util_cg;
-  int _padding;
-  
-  sigc::connection _on_indicator_activate_changed_connection;
-  sigc::connection _on_indicator_updated_connection;
-  sigc::connection _on_panelstyle_changed_connection;
+  unity::indicator::Entry::Ptr proxy_;
 
-  gulong _on_font_changed_connection;
-  static void OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data);
+  nux::CairoGraphics util_cg_;
+  int padding_;
+
+  sigc::connection on_indicator_activate_changed_connection_;
+  sigc::connection on_indicator_updated_connection_;
+  sigc::connection on_panelstyle_changed_connection_;
+
+  gulong on_font_changed_connection_;
+
+  static void OnFontChanged(GObject *gobject, GParamSpec *pspec, gpointer data);
 };
+
+}
 
 #endif // PANEL_INDICATOR_OBJECT_ENTRY_VIEW_H

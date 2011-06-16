@@ -25,114 +25,108 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "PanelIndicatorObjectEntryView.h"
-#include "PanelStyle.h"
+#include <boost/algorithm/string.hpp>
 
 #include <glib.h>
 #include <pango/pangocairo.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
 #include <time.h>
 
+// TODO: this include should be at the top, but it fails :(
+#include "PanelIndicatorObjectEntryView.h"
 
-static void draw_menu_bg (cairo_t *cr, int width, int height);
+#include "GLibWrapper.h"
+#include "PanelStyle.h"
+#include "Variant.h"
 
 
-PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView (IndicatorObjectEntryProxy *proxy, int padding)
-: TextureArea (NUX_TRACKER_LOCATION),
-  _proxy (proxy),
-  _util_cg (CAIRO_FORMAT_ARGB32, 1, 1)
+namespace unity {
+
+namespace {
+void draw_menu_bg(cairo_t *cr, int width, int height);
+GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data);
+}
+
+
+PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
+    indicator::Entry::Ptr const& proxy,
+    int padding)
+  : TextureArea (NUX_TRACKER_LOCATION)
+  , proxy_(proxy)
+  , util_cg_(CAIRO_FORMAT_ARGB32, 1, 1)
+  , padding_(padding)
 {
-  _on_indicator_activate_changed_connection = _proxy->active_changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnActiveChanged));
-  _on_indicator_updated_connection = _proxy->updated.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
-  _padding = padding;
+  on_indicator_activate_changed_connection_ = proxy_->active_changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnActiveChanged));
+  on_indicator_updated_connection_ = proxy_->updated.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
 
-  _on_font_changed_connection = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
+  on_font_changed_connection_ = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name", (GCallback) &PanelIndicatorObjectEntryView::OnFontChanged, this);
 
-  InputArea::OnMouseDown.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseDown));
-  InputArea::OnMouseWheel.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseWheel));
+  InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
+  InputArea::OnMouseUp.connect(sigc::mem_fun (this, &PanelIndicatorObjectEntryView::OnMouseUp));
+  InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
-  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelIndicatorObjectEntryView::Refresh));
+  on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
   Refresh ();
 }
 
-PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView ()
+PanelIndicatorObjectEntryView::~PanelIndicatorObjectEntryView()
 {
-  _on_indicator_activate_changed_connection.disconnect ();
-  _on_indicator_updated_connection.disconnect ();
-  _on_panelstyle_changed_connection.disconnect ();
-  g_signal_handler_disconnect (gtk_settings_get_default (), _on_font_changed_connection);
+  on_indicator_activate_changed_connection_.disconnect();
+  on_indicator_updated_connection_.disconnect();
+  on_panelstyle_changed_connection_.disconnect();
+  g_signal_handler_disconnect(gtk_settings_get_default(), on_font_changed_connection_);
 }
 
-void
-PanelIndicatorObjectEntryView::OnActiveChanged (bool is_active)
+void PanelIndicatorObjectEntryView::OnActiveChanged(bool is_active)
 {
-  active_changed.emit (this, is_active);
+  active_changed.emit(this, is_active);
 }
 
-void
-PanelIndicatorObjectEntryView::OnMouseDown (int x, int y, long button_flags, long key_flags)
+void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
+                                                long button_flags, long key_flags)
 {
-  if (_proxy->GetActive ())
+  if (proxy_->active())
     return;
 
-  if ((_proxy->label_visible && _proxy->label_sensitive)
-      || (_proxy->icon_visible && _proxy->icon_sensitive))
+  if ((proxy_->label_visible() && proxy_->label_sensitive()) ||
+      (proxy_->image_visible() && proxy_->image_sensitive()))
   {
-    _proxy->ShowMenu (GetAbsoluteGeometry ().x + 1, //cairo translation
-                      GetAbsoluteGeometry ().y + PANEL_HEIGHT,
-                      time (NULL),
-                      nux::GetEventButton (button_flags));
+    proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation
+                     GetAbsoluteGeometry().y + PANEL_HEIGHT,
+                     time(NULL),
+                     nux::GetEventButton(button_flags));
+  } else {
+	  Refresh();
   }
 }
 
-void
-PanelIndicatorObjectEntryView::OnMouseWheel (int x, int y, int delta, unsigned long mouse_state, unsigned long key_state)
+void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
-  _proxy->Scroll (delta);
+  Refresh();
 }
 
-void
-PanelIndicatorObjectEntryView::Activate ()
+void PanelIndicatorObjectEntryView::OnMouseWheel(int x, int y, int delta,
+                                                 unsigned long mouse_state,
+                                                 unsigned long key_state)
 {
-  _proxy->ShowMenu (GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
-                    GetAbsoluteGeometry ().y + PANEL_HEIGHT,
-                    time (NULL),
-                    1);
+  proxy_->Scroll(delta);
 }
 
-static char *
-fix_string (const char *string)
+void PanelIndicatorObjectEntryView::Activate()
 {
-  if (string == NULL)
-    return NULL;
-
-  char buf[256];
-  int buf_pos = 0;
-  int i = 0;
-  int len = strlen (string);
-
-  for (i = 0; i < len; i++)
-    {
-      if (string[i] != '_')
-        {
-          buf[buf_pos] = string[i];
-          buf_pos++;
-        }
-    }
-  buf[buf_pos] = '\0';
-
-  return g_strdup (buf);
+  proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation FIXME: Make this into one function
+                   GetAbsoluteGeometry().y + PANEL_HEIGHT,
+                   time(NULL),
+                   1);
 }
 
 // We need to do a couple of things here:
 // 1. Figure out our width
 // 2. Figure out if we're active
 // 3. Paint something
-void
-PanelIndicatorObjectEntryView::Refresh ()
+void PanelIndicatorObjectEntryView::Refresh()
 {
-  GdkPixbuf            *pixbuf = _proxy->GetPixbuf ();
-  char                 *label = NULL;
   PangoLayout          *layout = NULL;
   PangoFontDescription *desc = NULL;
   PangoAttrList        *attrs = NULL;
@@ -141,6 +135,11 @@ PanelIndicatorObjectEntryView::Refresh ()
   char                 *font_description = NULL;
   GdkScreen            *screen = gdk_screen_get_default ();
   int                   dpi = 0;
+
+  std::string label = proxy_->label();
+  glib::Object<GdkPixbuf> pixbuf(make_pixbuf(proxy_->image_type(),
+                                             proxy_->image_data()));
+
 
   int  x = 0;
   int  y = 0;
@@ -154,38 +153,34 @@ PanelIndicatorObjectEntryView::Refresh ()
   nux::Color  textcol = style->GetTextColor ();
   nux::Color  textshadowcol = style->GetTextShadow ();
 
-  if (_proxy->show_now)
+  if (proxy_->show_now())
   {
-    if (!pango_parse_markup (_proxy->GetLabel (),
+    if (!pango_parse_markup (label.c_str(),
                              -1,
                              '_',
                              &attrs,
-                             &label,
+                             NULL,
                              NULL,
                              NULL))
     {
-      label = g_strdup (_proxy->GetLabel ());
-      g_debug ("failed");
+      g_debug ("pango_parse_markup failed");
     }
   }
-  else
-  {
-    label = fix_string (_proxy->GetLabel ());
-  }
+  boost::erase_all(label, "_");
 
   // First lets figure out our size
-  if (pixbuf && _proxy->icon_visible)
+  if (pixbuf && proxy_->image_visible())
   {
     width = gdk_pixbuf_get_width (pixbuf);
     icon_width = width;
   }
 
-  if (label && _proxy->label_visible)
+  if (!label.empty() && proxy_->label_visible())
   {
     PangoContext *cxt;
     PangoRectangle log_rect;
 
-    cr = _util_cg.GetContext ();
+    cr = util_cg_.GetContext();
 
     g_object_get (settings,
                   "gtk-font-name", &font_description,
@@ -202,8 +197,8 @@ PanelIndicatorObjectEntryView::Refresh ()
     }
 
     pango_layout_set_font_description (layout, desc);
-    pango_layout_set_text (layout, label, -1);
-    
+    pango_layout_set_text (layout, label.c_str(), -1);
+
     cxt = pango_layout_get_context (layout);
     pango_cairo_context_set_font_options (cxt, gdk_screen_get_font_options (screen));
     pango_cairo_context_set_resolution (cxt, (float)dpi/(float)PANGO_SCALE);
@@ -223,7 +218,7 @@ PanelIndicatorObjectEntryView::Refresh ()
   }
 
   if (width)
-    width += _padding *2;
+    width += padding_ *2;
 
   SetMinimumWidth (width);
 
@@ -236,23 +231,21 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-  if (_proxy->GetActive ())
+  if (proxy_->active())
     draw_menu_bg (cr, width, height);
 
-  x = _padding;
+  x = padding_;
   y = 0;
 
-  if (_proxy->GetPixbuf () && _proxy->icon_visible)
+  if (pixbuf && proxy_->image_visible())
   {
     gdk_cairo_set_source_pixbuf (cr, pixbuf, x, (int)((height - gdk_pixbuf_get_height (pixbuf))/2));
-    cairo_paint_with_alpha (cr, _proxy->icon_sensitive ? 1.0 : 0.5);
+    cairo_paint_with_alpha (cr, proxy_->image_sensitive() ? 1.0 : 0.5);
 
     x += icon_width + SPACING;
-
-    g_object_unref (pixbuf);
   }
 
-  if (label && _proxy->label_visible)
+  if (!label.empty() && proxy_->label_visible())
   {
     pango_cairo_update_layout (cr, layout);
 
@@ -271,7 +264,7 @@ PanelIndicatorObjectEntryView::Refresh ()
                            textcol.red,
                            textcol.green,
                            textcol.blue,
-                           _proxy->label_sensitive ? 1.0f : 0.5f);
+                           proxy_->label_sensitive() ? 1.0f : 0.5f);
     cairo_move_to (cr, x, (int)((height - text_height)/2));
     pango_cairo_show_layout (cr, layout);
     cairo_stroke (cr);
@@ -283,11 +276,11 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
 
-  // The Texture is created with a reference count of 1. 
-  nux::BaseTexture* texture2D = nux::GetThreadGLDeviceFactory ()->CreateSystemCapableTexture ();
+  // The Texture is created with a reference count of 1.
+  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   texture2D->Update(bitmap);
   delete bitmap;
-  
+
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -308,13 +301,69 @@ PanelIndicatorObjectEntryView::Refresh ()
 
   NeedRedraw ();
 
-  refreshed.emit (this);
-  if (label)
-    g_free (label);
+  refreshed.emit(this);
 }
 
-static void
-draw_menu_bg (cairo_t *cr, int width, int height)
+const gchar* PanelIndicatorObjectEntryView::GetName()
+{
+  if (proxy_->IsUnused())
+    return NULL;
+  else
+    return proxy_->id().c_str();
+}
+
+void PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
+{
+  variant::BuilderWrapper(builder)
+    .add(GetGeometry())
+    .add("label", proxy_->label())
+    .add("label_sensitive", proxy_->label_sensitive())
+    .add("label_visible", proxy_->label_visible())
+    .add("icon_sensitive", proxy_->image_sensitive())
+    .add("icon_visible", proxy_->image_visible())
+    .add("active", proxy_->active());
+}
+
+bool PanelIndicatorObjectEntryView::GetShowNow()
+{
+  return proxy_.get() ? proxy_->show_now() : false;
+}
+
+void PanelIndicatorObjectEntryView::GetGeometryForSync(indicator::EntryLocationMap& locations)
+{
+  if (proxy_->IsUnused())
+    return;
+
+  locations[proxy_->id()] = GetAbsoluteGeometry();
+}
+
+bool PanelIndicatorObjectEntryView::IsEntryValid() const
+{
+  if (proxy_.get()) {
+    return proxy_->image_visible() || proxy_->label_visible();
+  }
+  return false;
+}
+
+bool PanelIndicatorObjectEntryView::IsSensitive() const
+{
+  if (proxy_.get()) {
+    return proxy_->image_sensitive() || proxy_->label_sensitive();
+  }
+  return false;
+}
+
+void PanelIndicatorObjectEntryView::OnFontChanged(GObject *gobject,
+                                                  GParamSpec *pspec,
+                                                  gpointer data)
+{
+  PanelIndicatorObjectEntryView *self = reinterpret_cast<PanelIndicatorObjectEntryView*>(data);
+  self->Refresh();
+}
+
+namespace {
+
+void draw_menu_bg(cairo_t* cr, int width, int height)
 {
   int radius = 4;
   double x = 0;
@@ -397,47 +446,48 @@ draw_menu_bg (cairo_t *cr, int width, int height)
   cairo_pattern_destroy (pat);
 }
 
-const gchar *
-PanelIndicatorObjectEntryView::GetName ()
+GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
 {
-  const gchar *name = _proxy->GetId ();
+  GdkPixbuf* ret = NULL;
 
-  if (g_strcmp0 (name, "|") == 0)
-    return NULL;
-  else
-   return name;
+  if (image_type == GTK_IMAGE_PIXBUF)
+  {
+    gsize len = 0;
+    guchar* decoded = g_base64_decode(image_data.c_str(), &len);
+
+    GInputStream* stream = g_memory_input_stream_new_from_data(decoded,
+                                                               len, NULL);
+
+    ret = gdk_pixbuf_new_from_stream(stream, NULL, NULL);
+
+    g_free(decoded);
+    g_input_stream_close(stream, NULL, NULL);
+  }
+  else if (image_type == GTK_IMAGE_STOCK ||
+           image_type == GTK_IMAGE_ICON_NAME)
+  {
+    ret = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
+                                   image_data.c_str(),
+                                   22,
+                                   (GtkIconLookupFlags)0,
+                                   NULL);
+  }
+  else if (image_type == GTK_IMAGE_GICON)
+  {
+    glib::Object<GIcon> icon(g_icon_new_for_string(image_data.c_str(), NULL));
+    GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(
+        gtk_icon_theme_get_default(), icon, 22, (GtkIconLookupFlags)0);
+    if (info)
+    {
+      ret = gtk_icon_info_load_icon(info, NULL);
+      gtk_icon_info_free(info);
+    }
+  }
+
+  return ret;
 }
 
-void
-PanelIndicatorObjectEntryView::AddProperties (GVariantBuilder *builder)
-{
-  nux::Geometry geo = GetGeometry ();
+} // anon namespace
 
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 
-  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string (_proxy->GetLabel ()));
-  g_variant_builder_add (builder, "{sv}", "label_sensitive", g_variant_new_boolean (_proxy->label_sensitive));
-  g_variant_builder_add (builder, "{sv}", "label_visible", g_variant_new_boolean (_proxy->label_visible));
-
-  g_variant_builder_add (builder, "{sv}", "icon_sensitive", g_variant_new_boolean (_proxy->icon_sensitive));
-  g_variant_builder_add (builder, "{sv}", "icon_visible", g_variant_new_boolean (_proxy->icon_visible));
-
-  g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (_proxy->GetActive ()));
-}
-
-bool
-PanelIndicatorObjectEntryView::GetShowNow ()
-{
-  return _proxy ? _proxy->show_now : false;
-}
-
-void
-PanelIndicatorObjectEntryView::OnFontChanged (GObject *gobject, GParamSpec *pspec, gpointer data)
-{
-  PanelIndicatorObjectEntryView *self = (PanelIndicatorObjectEntryView*) data;
-
-  self->Refresh();
-}
+} // namespace unity

@@ -42,6 +42,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
+#include "Variant.h"
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"
@@ -54,6 +55,7 @@ QuicklistView *LauncherIcon::_current_quicklist = 0;
 
 int LauncherIcon::_current_theme_is_mono = -1;
 GtkIconTheme *LauncherIcon::_unity_theme = NULL;
+gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
@@ -92,6 +94,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _present_time_handle = 0;
   _center_stabilize_handle = 0;
   _time_delay_handle = 0;
+  _tooltip_delay_handle = 0;
   
 
   // FIXME: the abstraction is already broken, should be fixed for O
@@ -129,6 +132,10 @@ LauncherIcon::~LauncherIcon()
   if (_time_delay_handle)
     g_source_remove (_time_delay_handle);
   _time_delay_handle = 0;
+  
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
 
   if (_superkey_label)
     _superkey_label->UnReference ();
@@ -171,19 +178,19 @@ LauncherIcon::GetName ()
 void
 LauncherIcon::AddProperties (GVariantBuilder *builder)
 {
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (_center.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (_center.y));
-  g_variant_builder_add (builder, "{sv}", "z", g_variant_new_int32 (_center.z));
-  g_variant_builder_add (builder, "{sv}", "related-windows", g_variant_new_int32 (_related_windows));
-  g_variant_builder_add (builder, "{sv}", "icon-type", g_variant_new_int32 (_icon_type));
-  g_variant_builder_add (builder, "{sv}", "tooltip-text", g_variant_new_string (m_TooltipText.GetTCharPtr ()));
-  
-  g_variant_builder_add (builder, "{sv}", "sort-priority", g_variant_new_int32 (_sort_priority));
-  g_variant_builder_add (builder, "{sv}", "quirk-active", g_variant_new_boolean (GetQuirk (QUIRK_ACTIVE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-visible", g_variant_new_boolean (GetQuirk (QUIRK_VISIBLE)));
-  g_variant_builder_add (builder, "{sv}", "quirk-urgent", g_variant_new_boolean (GetQuirk (QUIRK_URGENT)));
-  g_variant_builder_add (builder, "{sv}", "quirk-running", g_variant_new_boolean (GetQuirk (QUIRK_RUNNING)));
-  g_variant_builder_add (builder, "{sv}", "quirk-presented", g_variant_new_boolean (GetQuirk (QUIRK_PRESENTED)));
+  unity::variant::BuilderWrapper(builder)
+    .add("x", _center.x)
+    .add("y", _center.y)
+    .add("z", _center.z)
+    .add("related-windows", _related_windows)
+    .add("icon-type", _icon_type)
+    .add("tooltip-text", m_TooltipText.GetTCharPtr ())
+    .add("sort-priority", _sort_priority)
+    .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
+    .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
+    .add("quirk-urgent", GetQuirk (QUIRK_URGENT))
+    .add("quirk-running", GetQuirk (QUIRK_RUNNING))
+    .add("quirk-presented", GetQuirk (QUIRK_PRESENTED));
 }
 
 void
@@ -471,6 +478,33 @@ LauncherIcon::GetShortcut ()
 }
 
 void
+LauncherIcon::SetSkipTooltipDelay (gboolean skip_tooltip_delay)
+{
+  _skip_tooltip_delay = skip_tooltip_delay;
+}
+
+gboolean
+LauncherIcon::OnTooltipTimeout (gpointer data)
+{
+  LauncherIcon *self = (LauncherIcon *) data;
+  
+  nux::Geometry geo = self->_launcher->GetAbsoluteGeometry ();
+  int tip_x = geo.x + geo.width + 1;
+  int tip_y = geo.y + self->_center.y;
+          
+  self->_tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
+  
+  if (!self->_quicklist->IsVisible ())
+  {
+    self->_tooltip->ShowWindow (!self->m_TooltipText.IsEmpty ());
+    _skip_tooltip_delay = true;
+  }
+  
+  self->_tooltip_delay_handle = 0;
+  return false;
+}
+
+void
 LauncherIcon::RecvMouseEnter ()
 {
   if (QuicklistManager::Default ()->Current ())
@@ -479,25 +513,28 @@ LauncherIcon::RecvMouseEnter ()
     return;
   }
   
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
-          
-  _tooltip->ShowTooltipWithTipAt (tip_x, tip_y);
-  
-  if (!_quicklist->IsVisible ())
-  {
-    _tooltip->ShowWindow (true);
-  }
+  if (!_skip_tooltip_delay)
+    _tooltip_delay_handle = g_timeout_add (500, &LauncherIcon::OnTooltipTimeout, this);
+  else
+    OnTooltipTimeout (this);
 }
 
 void LauncherIcon::RecvMouseLeave ()
-{
+{  
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+    
   _tooltip->ShowWindow (false);
 }
 
 gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
+   if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+  _skip_tooltip_delay = false;
+
   _tooltip->ShowWindow (false);    
   _quicklist->RemoveAllMenuItem ();
 
@@ -515,6 +552,11 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
     
     const gchar* type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
     const gchar* toggle_type = dbusmenu_menuitem_property_get (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE);
+    gboolean prop_visible = dbusmenu_menuitem_property_get_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE);
+    
+    // Skip this item, it is invisible right now.
+    if (!prop_visible)
+      continue;
 
     if (g_strcmp0 (type, DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0)
     {
@@ -574,6 +616,11 @@ void LauncherIcon::RecvMouseClick (int button)
 
 void LauncherIcon::HideTooltip ()
 {
+  if (_tooltip_delay_handle)
+    g_source_remove (_tooltip_delay_handle);
+  _tooltip_delay_handle = 0;
+  _skip_tooltip_delay = false;
+  
   _tooltip->ShowWindow (false);
 }
 
@@ -956,7 +1003,7 @@ LauncherIcon::SetEmblemText (const char *text)
 
   nux::NBitmapData* bitmap = cg->GetBitmap ();
 
-  emblem = nux::GetThreadGLDeviceFactory()->CreateSystemCapableTexture ();
+  emblem = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
   emblem->Update (bitmap);
   delete bitmap;
 

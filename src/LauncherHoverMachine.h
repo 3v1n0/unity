@@ -22,6 +22,7 @@
 
 #include <sigc++/sigc++.h>
 #include <glib.h>
+#include <string>
 
 class LauncherHoverMachine : public sigc::trackable
 {
@@ -48,7 +49,7 @@ class LauncherHoverMachine : public sigc::trackable
     
     sigc::signal<void, bool> should_hover_changed;
     
-    char *DebugHoverQuirks ();
+    std::string DebugHoverQuirks ();
     
   private:
     void EnsureHoverState ();

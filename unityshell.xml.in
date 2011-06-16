@@ -203,6 +203,13 @@
                         <_name>Static Blur</_name>
                     </desc>
                 </option>
+                <option name="automaximize_value" type="int">
+                    <_short>Automaximize value</_short>
+                    <_long>The minimum value to trigger automaximize.</_long>
+                    <min>1</min>
+                    <max>100</max>
+                    <default>75</default>
+                </option>
             </group>
         </options>
     </plugin>
