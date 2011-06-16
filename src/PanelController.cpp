@@ -122,10 +122,20 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
   int n_monitors = monitors.size ();
   int i = 0;
 
+  int display_x = 0;
+  int display_y = 0;
+  int display_w = 0;
+  int display_h = 0;
+
   for (it = _windows.begin (); it != eit; ++it)
   {
     if (i < n_monitors)
     {
+      display_x = nux::Min<int>(display_x, monitors[i].x);
+      display_y = nux::Min<int>(display_y, monitors[i].y);
+      display_w = nux::Max<int>(display_w, monitors[i].x + monitors[i].width);
+      display_h = nux::Max<int>(display_h, monitors[i].y + monitors[i].height);
+
       PanelView *view;
 
       (*it)->EnableInputWindow (false);
@@ -149,6 +159,11 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
     else
       break;
   }
+
+  display_w -= display_x;
+  display_h -= display_y;
+  
+  nux::GetWindowThread()->SetWindowSize(display_w, display_h);
 
   // Add new ones if needed
   if (i < n_monitors)

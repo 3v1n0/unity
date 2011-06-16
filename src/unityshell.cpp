@@ -72,7 +72,7 @@ UnityScreen::nuxPrologue ()
   glDisable (GL_LIGHTING);
 
   /* reset matrices */
-  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT | GL_SCISSOR_BIT);
+  glPushAttrib (GL_VIEWPORT_BIT | GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
@@ -811,7 +811,27 @@ UnityScreen::Relayout ()
   gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
 
-  wt->SetWindowSize (rect.width, rect.height);
+
+  int display_x = 0;
+  int display_y = 0;
+  int display_w = 0;
+  int display_h = 0;
+
+  UScreen* uscreen = UScreen::GetDefault();
+  std::vector<nux::Geometry>& monitors = uscreen->GetMonitors ();
+  for (unsigned int i= 0; i < monitors.size(); ++i)
+  {
+      display_x = nux::Min<int>(display_x, monitors[i].x);
+      display_y = nux::Min<int>(display_y, monitors[i].y);
+      display_w = nux::Max<int>(display_w, monitors[i].x + monitors[i].width);
+      display_h = nux::Max<int>(display_h, monitors[i].y + monitors[i].height);
+  }
+
+  display_w -= display_x;
+  display_h -= display_y;
+  
+
+  nux::GetWindowThread()->SetWindowSize(display_w, display_h);
 
   lCurGeom = launcherWindow->GetGeometry(); 
   launcher->SetMaximumHeight(rect.height - panel_height);
@@ -988,7 +1008,6 @@ UnityScreen::~UnityScreen ()
   delete placesController;
   panelController->UnReference ();
   delete controller;
-  layout->UnReference ();
   launcher->UnReference ();
   launcherWindow->UnReference ();
 
@@ -1016,25 +1035,31 @@ void UnityScreen::initLauncher (nux::NThread* thread, void* InitData)
 
   LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
+  self->launcherWindow->SinkReference ();
+
   self->launcher = new Launcher(self->launcherWindow, self->screen);
+  self->launcher->SinkReference ();
+
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
   
+
   self->AddChild (self->launcher);
 
-  self->layout = new nux::HLayout();
-  self->layout->AddView(self->launcher, 1);
-  self->layout->SetContentDistribution(nux::eStackLeft);
-  self->layout->SetVerticalExternalMargin(0);
-  self->layout->SetHorizontalExternalMargin(0);
+  nux::HLayout* layout = new nux::HLayout();
+  layout->AddView(self->launcher, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
 
   self->controller = new LauncherController (self->launcher, self->screen, self->launcherWindow);
 
   self->launcherWindow->SetConfigureNotifyCallback(&UnityScreen::launcherWindowConfigureCallback, self);
-  self->launcherWindow->SetLayout(self->layout);
+  self->launcherWindow->SetLayout(layout);
   self->launcherWindow->SetBackgroundColor(nux::Color(0x00000000));
   self->launcherWindow->ShowWindow(true);
   self->launcherWindow->EnableInputWindow(true, "launcher", false, false);
   self->launcherWindow->InputWindowEnableStruts(true);
+  
   self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
   /* FIXME: this should not be manual, should be managed with a

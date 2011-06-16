@@ -1,3 +1,23 @@
+unity (3.8.16-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream version:
+    - Unable to load icon text-x-preview at size 48 in a loop (lp: #794556)
+    - Display garbled upon restoring original resolution (lp: #795454)
+    - Display garbled upon connecting external displays (lp: #795458)
+    - Panel disappears after resolution change (lp: #795459)
+    - Dragging the launcher with right mouse button is 
+      confusing as menu pops up (lp: #735031)
+    - In a double monitor setup the Unity top panel in the second screen is 
+      cut at the right (lp: #750481)
+    - Launcher tooltips sometimes don´t show (lp: #769335)
+    - Menu key should open quicklist for the selected item in the launcher 
+      (lp: #750778)
+    - unity is spamming ~/.xsession-errors when windows are closed 
+      (lp: #767642)
+    - Dash button ignores transparency when clicked. (lp: #767733)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 16 Jun 2011 17:44:38 +0200
+
 unity (3.8.14-0ubuntu2) oneiric; urgency=low
 
   * Now depends on compiz-plugins-main-default instead of compiz-plugins-main

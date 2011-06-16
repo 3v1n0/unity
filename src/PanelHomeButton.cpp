@@ -40,6 +40,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (PanelHomeButton);
 
 PanelHomeButton::PanelHomeButton ()
 : TextureArea (NUX_TRACKER_LOCATION),
+  _opacity (1.0f),
   _urgent_interest (0)
 {
   _urgent_count = 0;
@@ -141,7 +142,7 @@ PanelHomeButton::Refresh ()
 
   /* button pressed effect */
   if (_pressed) {
-    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance ()) {
+    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance () && _opacity == 1.0f) {
       /* loads background panel upside-down */
       overlay = gdk_pixbuf_flip (PanelStyle::GetDefault ()->GetBackground (width - 2, height), FALSE);
       if (GDK_IS_PIXBUF (overlay)) {
@@ -376,4 +377,9 @@ PanelHomeButton::ProcessDndMove (int x, int y, std::list<char *> mimes)
 void 
 PanelHomeButton::ProcessDndDrop (int x, int y)
 {
+}
+
+void
+PanelHomeButton::SetOpacity (float opacity) {
+  _opacity = opacity;
 }

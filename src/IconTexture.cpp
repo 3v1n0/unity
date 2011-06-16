@@ -179,7 +179,11 @@ IconTexture::IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf)
   else
   {
     _loading = false;
-    SetByIconName (DEFAULT_ICON, _size);
+
+    // Protects against a missing default icon, we only request it if icon_name
+    // doesn't match.
+    if (g_strcmp0 (icon_name, DEFAULT_ICON))
+      SetByIconName (DEFAULT_ICON, _size);
   }
 }
 

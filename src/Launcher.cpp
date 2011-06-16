@@ -1748,7 +1748,9 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // as the leave event is no more received when the place is opened
-    self->SetStateMouseOverLauncher (false);
+    // FIXME: remove when we change the mouse grab strategy in nux
+    self->SetStateMouseOverLauncher (pointerX < self->GetAbsoluteGeometry ().x + self->GetGeometry ().width &&
+                                     pointerY >= self->GetAbsoluteGeometry ().y);
     self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
@@ -3069,6 +3071,12 @@ void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned lo
 
 void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
+  /* FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
+   * on an internal Launcher property then
+   */
+  if (_last_button_press != 1)
+    return;
+
   SetMousePosition (x, y);
   
   // FIXME: hack (see SetupRenderArg)
@@ -3318,6 +3326,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         break;
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
+    case XK_Menu:
       // open quicklist of currently selected icon
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
