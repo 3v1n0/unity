@@ -177,7 +177,8 @@ void
 PanelTray::OnTrayIconRemoved (NaTrayManager *manager, NaTrayChild *child, PanelTray *self)
 {
   g_idle_add ((GSourceFunc)IdleSync, self);
-  self->_n_children--;
+  if (self->_n_children > 0)
+    self->_n_children--;
 }
 
 gboolean

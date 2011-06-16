@@ -50,7 +50,7 @@ public:
   void OnEntryRemoved (IndicatorObjectEntryProxy *proxy);
 
 public:
-  int        _n_children;
+  guint8     _n_children;
   char     **_whitelist;
 protected:
   const gchar * GetName ();
