@@ -8,8 +8,8 @@ set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator")
-pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator)
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator3")
+pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator3)
 
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
