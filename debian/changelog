@@ -1,9 +1,9 @@
-unity (3.8.16-0ubuntu2) UNRELEASED; urgency=low
+unity (3.8.16-0ubuntu2) oneiric; urgency=low
 
   * Revert commit for this bug for #769335, to fix:
     - launcher autohidding is failing with 3.8.16 (lp: #798318)
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 17 Jun 2011 12:10:26 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 17 Jun 2011 12:11:52 +0200
 
 unity (3.8.16-0ubuntu1) oneiric; urgency=low
 
