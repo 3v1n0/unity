@@ -46,7 +46,7 @@ PanelTray::PanelTray ()
   gtk_widget_set_name (_window, "UnityPanelApplet");
   gtk_widget_set_colormap (_window, gdk_screen_get_rgba_colormap (gdk_screen_get_default ())); 
   gtk_widget_realize (_window);
-  gdk_window_set_back_pixmap (_window->window, NULL, FALSE);
+  gdk_window_set_back_pixmap (gtk_widget_get_window(GTK_WIDGET(_window)), NULL, FALSE);
   gtk_widget_set_app_paintable (_window, TRUE);
   _tray_expose_id = g_signal_connect (_window, "expose-event", G_CALLBACK (PanelTray::OnTrayExpose), this);
 
@@ -99,7 +99,7 @@ PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
 Window
 PanelTray::GetTrayWindow ()
 {
-  return GDK_WINDOW_XWINDOW (_window->window);
+  return GDK_WINDOW_XWINDOW (gtk_widget_get_window(GTK_WIDGET(_window)));
 }
 
 void
@@ -194,7 +194,7 @@ PanelTray::IdleSync (PanelTray *self)
 gboolean
 PanelTray::OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray)
 {
-  cairo_t *cr = gdk_cairo_create (widget->window);
+  cairo_t *cr = gdk_cairo_create (gtk_widget_get_window(GTK_WIDGET(widget)));
   GtkAllocation alloc;
 
   gtk_widget_get_allocation (widget, &alloc);
