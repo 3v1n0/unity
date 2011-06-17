@@ -1748,9 +1748,7 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
     self->_hover_machine->SetQuirk (LauncherHoverMachine::PLACES_VISIBLE, false);
     
     // as the leave event is no more received when the place is opened
-    // FIXME: remove when we change the mouse grab strategy in nux
-    self->SetStateMouseOverLauncher (pointerX < self->GetAbsoluteGeometry ().x + self->GetGeometry ().width &&
-                                     pointerY >= self->GetAbsoluteGeometry ().y);
+    self->SetStateMouseOverLauncher (false);
     self->SetStateMouseOverBFB (false);
     
     // TODO: add in a timeout for seeing the animation (and make it smoother)
