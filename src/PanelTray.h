@@ -45,8 +45,6 @@ public:
 
   void Draw (nux::GraphicsEngine& gfx_content, bool force_draw);
 
-  Window GetTrayWindow ();
-
   void Sync ();
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
@@ -63,7 +61,7 @@ private:
   static gboolean FilterTrayCallback (NaTray *tray, NaTrayChild *child, PanelTray *self);
   static void     OnTrayIconRemoved  (NaTrayManager *manager, NaTrayChild *child, PanelTray *self);
   static gboolean IdleSync (PanelTray *tray);
-  static gboolean OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray);
+  static gboolean OnTrayDraw (GtkWidget *widget, cairo_t *cr, PanelTray *tray);
 
 private:
   GSettings *_settings;

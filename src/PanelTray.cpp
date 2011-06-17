@@ -44,11 +44,11 @@ PanelTray::PanelTray ()
   SetMinMaxSize (1, 24);
   gtk_window_move (GTK_WINDOW (_window), 200, 12);
   gtk_widget_set_name (_window, "UnityPanelApplet");
-  gtk_widget_set_colormap (_window, gdk_screen_get_rgba_colormap (gdk_screen_get_default ())); 
+  
+  gtk_widget_set_visual (_window, gdk_screen_get_rgba_visual (gdk_screen_get_default ())); 
   gtk_widget_realize (_window);
-  gdk_window_set_back_pixmap (gtk_widget_get_window(GTK_WIDGET(_window)), NULL, FALSE);
   gtk_widget_set_app_paintable (_window, TRUE);
-  _tray_expose_id = g_signal_connect (_window, "expose-event", G_CALLBACK (PanelTray::OnTrayExpose), this);
+  _tray_expose_id = g_signal_connect (_window, "draw", G_CALLBACK (PanelTray::OnTrayDraw), this);
 
   if (!g_getenv ("UNITY_PANEL_TRAY_DISABLE"))
   {
@@ -56,8 +56,9 @@ PanelTray::PanelTray ()
                                     GTK_ORIENTATION_HORIZONTAL,
                                     (NaTrayFilterCallback)FilterTrayCallback,
                                     this);
-    _tray_icon_added_id = g_signal_connect (na_tray_get_manager (_tray), "tray_icon_removed",
-                                            G_CALLBACK (PanelTray::OnTrayIconRemoved), this);
+                
+   _tray_icon_added_id = g_signal_connect (na_tray_get_manager (_tray), "tray_icon_removed",
+                                           G_CALLBACK (PanelTray::OnTrayIconRemoved), this);
 
     gtk_container_add (GTK_CONTAINER (_window), GTK_WIDGET (_tray));
     gtk_widget_show (GTK_WIDGET (_tray));
@@ -94,12 +95,6 @@ PanelTray::Draw (nux::GraphicsEngine& gfx_content, bool force_draw)
 
     gtk_window_move (GTK_WINDOW (_window), geo.x + PADDING, geo.y);
   }
-}
-
-Window
-PanelTray::GetTrayWindow ()
-{
-  return GDK_WINDOW_XWINDOW (gtk_widget_get_window(GTK_WIDGET(_window)));
 }
 
 void
@@ -192,14 +187,13 @@ PanelTray::IdleSync (PanelTray *self)
 }
 
 gboolean
-PanelTray::OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray)
+PanelTray::OnTrayDraw (GtkWidget *widget, cairo_t *cr, PanelTray *tray)
 {
-  cairo_t *cr = gdk_cairo_create (gtk_widget_get_window(GTK_WIDGET(widget)));
   GtkAllocation alloc;
 
   gtk_widget_get_allocation (widget, &alloc);
 
-  gdk_cairo_region (cr, ev->region);
+  //gdk_cairo_region (cr, ev->region);
   cairo_clip (cr);
 
   cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -210,11 +204,9 @@ PanelTray::OnTrayExpose (GtkWidget *widget, GdkEventExpose *ev, PanelTray *tray)
   cairo_rectangle (cr, 0, 0, alloc.width, alloc.height);
   cairo_fill (cr);
 
-  cairo_destroy (cr);
-
-  gtk_container_propagate_expose (GTK_CONTAINER (widget),
-                                  gtk_bin_get_child (GTK_BIN (widget)),
-                                  ev);
+  gtk_container_propagate_draw (GTK_CONTAINER (widget),
+                                gtk_bin_get_child (GTK_BIN (widget)),
+                                cr);
 
   return FALSE;
 }
