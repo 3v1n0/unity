@@ -44,9 +44,12 @@ PanelTray::PanelTray ()
   SetMinMaxSize (1, 24);
   gtk_window_move (GTK_WINDOW (_window), 200, 12);
   gtk_widget_set_name (_window, "UnityPanelApplet");
+  
+  //FIXME-GTK3 - can't set the colourmap anymore
   //gtk_widget_set_colormap (_window, gdk_screen_get_rgba_colormap (gdk_screen_get_default ())); 
   gtk_widget_realize (_window);
   
+  //FIXME-GTK3 - is this compatible? not entirely sure, *should* be
   gdk_window_set_background_pattern (gtk_widget_get_window(GTK_WIDGET(_window)), NULL);
   //gdk_window_set_back_pixmap (gtk_widget_get_window(GTK_WIDGET(_window)), NULL, FALSE);
   
@@ -57,7 +60,8 @@ PanelTray::PanelTray ()
   {
     _tray = na_tray_new_for_screen (gdk_screen_get_default (),
                                     GTK_ORIENTATION_HORIZONTAL);
-                                    
+                
+    // FIXME-GTK3 - na_tray_get_manager no longer exists - we could easily add it though i guess              
     //_tray_icon_added_id = g_signal_connect (na_tray_get_manager (_tray), "tray_icon_removed",
     //                                        G_CALLBACK (PanelTray::OnTrayIconRemoved), this);
 

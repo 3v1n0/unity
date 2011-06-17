@@ -227,7 +227,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
       if (window == NULL)
         return GDK_FILTER_CONTINUE;
 			
-			Window     xwindow = gdk_x11_window_get_xid (window);
+			//FIXME-GTK3 - is this compatible? drawable is gone from gdk3
+      Window     xwindow = gdk_x11_window_get_xid (window);
       //Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
 
       if (xwindow == 0)
@@ -269,6 +270,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   // ITS A WORKAROUND SO I CAN TEST THE PANEL SCRUBBING
   // DONT HATE ME
   // --------------------------------------------------------------------------
+  //FIXME-GTK3 - i'm not porting this, fix your code :P
   /*
   else if (e->type == 6)
     {
