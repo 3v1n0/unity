@@ -125,6 +125,9 @@ public:
     
     void DeleteEmblem ();
     
+    virtual bool ShowInSwitcher () { return false; };
+    virtual unsigned int SwitcherPriority () { return 0; }
+    
     bool GetQuirk (Quirk quirk);
     struct timespec GetQuirkTime (Quirk quirk);
     
