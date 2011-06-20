@@ -733,7 +733,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default ()->SetCoverageAreaBeforeAutomaximize (optionGetAutomaximizeValue () / 100.0f);
     case UnityshellOptions::DevicesOption:
-      DevicesSettings::GetDefault ()->SetDevicesOption ((DevicesSettings::DevicesOption) optionGetDevicesOption ());
+      unity::DevicesSettings::GetDefault ().SetDevicesOption ((unity::DevicesSettings::DevicesOption) optionGetDevicesOption ());
       break;
     default:
       break;

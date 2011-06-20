@@ -21,10 +21,18 @@
 #define DEVICES_SETTINGS_H
 
 #include <gio/gio.h>
-#include <Nux/Nux.h>
+#include <boost/utility.hpp>
+#include <sigc++/sigc++.h>
 
+#include "GLibWrapper.h"
 
-class DevicesSettings : public nux::Object
+#include <list>
+
+namespace unity {
+
+typedef std::list<std::string> DeviceList;
+
+class DevicesSettings : boost::noncopyable
 {
 public:
   typedef enum
@@ -35,29 +43,31 @@ public:
 
   } DevicesOption;
 
-  DevicesSettings ();
-  ~DevicesSettings ();
+  DevicesSettings();
+  
+  static DevicesSettings& GetDefault();
 
-  static DevicesSettings * GetDefault ();
+  void SetDevicesOption(DevicesOption devices_option);
+  DevicesOption GetDevicesOption() { return devices_option_; };
 
-  void          SetDevicesOption (DevicesOption devices_option);
-  DevicesOption GetDevicesOption () { return _devices_option; };
+  DeviceList const& GetFavorites() { return favorites_; };
+  void AddFavorite(std::string const& uuid);
+  void RemoveFavorite(std::string const& uuid);
 
-  GSList * GetFavorites ();
-  void     AddFavorite    (const char *uuid);
-  void     RemoveFavorite (const char *uuid);
-
-  sigc::signal<void, DevicesSettings *> changed;
-
+  void Changed(std::string const& key);
+  
+  // Signals
+  sigc::signal<void> changed;
 private:
-  void Refresh ();
-  static void Changed (GSettings *settings, gchar *key, DevicesSettings *self);
+  void Refresh();
+  void SaveFavorites(DeviceList const& favorites);
 
-private:
-  GSettings    *_settings;
-  GSList       *_favorites;
-  bool          _ignore_signals;
-  DevicesOption _devices_option;
+  glib::Object<GSettings> settings_;
+  DeviceList favorites_;
+  bool ignore_signals_;
+  DevicesOption devices_option_;
 };
+
+} // namespace unity
 
 #endif // DEVICES_SETTINGS_H

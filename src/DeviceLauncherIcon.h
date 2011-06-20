@@ -22,48 +22,51 @@
 
 #include "SimpleLauncherIcon.h"
 #include "DevicesSettings.h"
+#include "GLibWrapper.h"
 
 #include <gio/gio.h>
+
+namespace unity {
 
 class DeviceLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  DeviceLauncherIcon  (Launcher *launcher, GVolume *volume);
-  ~DeviceLauncherIcon ();
+  DeviceLauncherIcon(Launcher *launcher, GVolume *volume);
 
-  virtual nux::Color BackgroundColor ();
-  virtual nux::Color GlowColor ();
-  void UpdateVisibility ();
+  virtual nux::Color BackgroundColor();
+  virtual nux::Color GlowColor();
+  void UpdateVisibility();
+  void OnRemoved();
 
 protected:
-  std::list<DbusmenuMenuitem *> GetMenus ();
-  void UpdateDeviceIcon ();
+  std::list<DbusmenuMenuitem *> GetMenus();
+  void UpdateDeviceIcon();
 
 private:
-  void ActivateLauncherIcon ();
-  void ShowMount (GMount *mount);
-  void Eject ();
-  void Unmount ();
-  void StopDrive ();
-  static void OnTogglePin (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnUnmount (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnRemoved (GVolume *volume, DeviceLauncherIcon *self);
-  static void OnChanged (GVolume *volume, DeviceLauncherIcon *self);
-  static void OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
-  static void OnEjectReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
-  static void OnUnmountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
-  static void OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnStopDriveReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
-  void OnSettingsChanged (DevicesSettings *settings);
+  void ActivateLauncherIcon();
+  void ShowMount(GMount *mount);
+  void Eject();
+  void Unmount();
+  void StopDrive();
+  static void OnTogglePin(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnOpen(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnEject(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnUnmount(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnChanged(GVolume *volume, DeviceLauncherIcon *self);
+  static void OnMountReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  static void OnEjectReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  static void OnUnmountReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  static void OnDriveStop(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
+  static void OnStopDriveReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
+  void OnSettingsChanged();
 
 private:
-  GVolume *_volume;
-  bool     _checked;
-  gulong _on_removed_handler_id;
-  gulong _on_changed_handler_id;
+  GVolume *volume_;
+  bool checked_;
+  gulong on_changed_handler_id_;
 };
+
+} // namespace unity
 
 #endif // _DEVICE_LAUNCHER_ICON_H__H

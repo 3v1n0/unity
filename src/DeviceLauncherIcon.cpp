@@ -23,493 +23,402 @@
 #include "UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
+#include <algorithm>
+
+namespace unity {
+
+namespace {
 
 #define DEFAULT_ICON "drive-removable-media"
 
-DeviceLauncherIcon::DeviceLauncherIcon (Launcher *launcher, GVolume *volume)
-: SimpleLauncherIcon(launcher),
-  _volume (volume)
+} // anonymous namespace
+
+DeviceLauncherIcon::DeviceLauncherIcon(Launcher *launcher, GVolume *volume)
+  : SimpleLauncherIcon(launcher)
+  , volume_(volume)
 {
 
-  DevicesSettings::GetDefault ()->changed.connect (sigc::mem_fun (this, &DeviceLauncherIcon::OnSettingsChanged));
+  DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  _on_removed_handler_id = g_signal_connect (_volume,
-                                             "removed",
-                                             G_CALLBACK (&DeviceLauncherIcon::OnRemoved),
-                                             this);
-
-  _on_changed_handler_id = g_signal_connect (_volume,
-                                             "changed",
-                                             G_CALLBACK (&DeviceLauncherIcon::OnChanged),
-                                             this);
+  /* FIXME: implement it in DeviceLauncherSection */
+  on_changed_handler_id_ = g_signal_connect(volume_,
+                                            "changed",
+                                            G_CALLBACK(&DeviceLauncherIcon::OnChanged),
+                                            this);
 
   /* Checked if in favourites! */
-  /* FIXME: I downt'know but g_slist_find doesn't work! */
-  gchar *uuid = g_volume_get_identifier (_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
+  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
 
-  GSList *f = DevicesSettings::GetDefault ()->GetFavorites ();
-
-  _checked = true;
+  checked_ = !(pos != favorites.end());
   
-  while (f != NULL)
-  {
-    if (g_strcmp0 ((char *)f->data, uuid) == 0)
-    {
-      _checked = false;
-      break;
-    }
-      
-    f = f->next;
-  }
-  
-  UpdateDeviceIcon ();
-
-  UpdateVisibility ();
-
-  g_free (uuid);
+  UpdateDeviceIcon();
+  UpdateVisibility();
 }
 
-DeviceLauncherIcon::~DeviceLauncherIcon()
-{
-  if (_on_removed_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _volume, _on_removed_handler_id);
-
-  if (_on_changed_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _volume, _on_changed_handler_id);
-}
-
-void
-DeviceLauncherIcon::UpdateDeviceIcon ()
+void DeviceLauncherIcon::UpdateDeviceIcon()
 {
   {
-    gchar *name;
+    glib::String name(g_volume_get_name(volume_));
 
-    name = g_volume_get_name (_volume);
-
-    SetTooltipText (name);
-
-    g_free (name);
+    SetTooltipText(name.Value());
   }
   
   {
-    GIcon *icon;
-    gchar *icon_string;
+    glib::Object<GIcon> icon(g_volume_get_icon(volume_));
+    glib::String icon_string(g_icon_to_string(icon.RawPtr()));
 
-    icon = g_volume_get_icon (_volume);
-    icon_string = g_icon_to_string (icon);
-
-    SetIconName (icon_string);
-
-    g_object_unref (icon);
-    g_free (icon_string);
+    SetIconName (icon_string.Value());
   }
   
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_DEVICE);
 }
 
-nux::Color 
-DeviceLauncherIcon::BackgroundColor ()
+inline nux::Color DeviceLauncherIcon::BackgroundColor ()
 {
   return nux::Color (0xFF333333);
 }
 
-nux::Color 
-DeviceLauncherIcon::GlowColor ()
+inline nux::Color DeviceLauncherIcon::GlowColor ()
 {
   return nux::Color (0xFF333333);
 }
 
-std::list<DbusmenuMenuitem *>
-DeviceLauncherIcon::GetMenus ()
+std::list<DbusmenuMenuitem *> DeviceLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem *>  result;
-  DbusmenuMenuitem              *menu_item;
-  GDrive                        *drive;
+  std::list<DbusmenuMenuitem *> result;
+  DbusmenuMenuitem *menu_item;
 
-  /* Otherwise it have no sense to show "Keep in Launcher" */
-  if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED && !g_volume_should_automount (_volume))
+  // "Keep in launcher" item
+  if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
+      && !g_volume_should_automount(volume_))
   {
-    menu_item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep in Launcher"));
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    dbusmenu_menuitem_property_set_int (menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, _checked);
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                      G_CALLBACK (&DeviceLauncherIcon::OnTogglePin), this);
+    menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Keep in launcher"));
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, checked_);
+    
+    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                     G_CALLBACK(&DeviceLauncherIcon::OnTogglePin), this);
+
     result.push_back (menu_item);
   }
   
-  menu_item = dbusmenu_menuitem_new ();
-  dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
-  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                    G_CALLBACK (&DeviceLauncherIcon::OnOpen), this);
-  result.push_back (menu_item);
+  // "Open" item
+  menu_item = dbusmenu_menuitem_new();
 
-  if (g_volume_can_eject (_volume))
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Open"));
+  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+  
+  g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                   G_CALLBACK(&DeviceLauncherIcon::OnOpen), this);
+
+  result.push_back(menu_item);
+
+  // "Eject" item
+  if (g_volume_can_eject(volume_))
   {
-    menu_item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                      G_CALLBACK (&DeviceLauncherIcon::OnEject), this);
-    result.push_back (menu_item);
+    menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                     G_CALLBACK(&DeviceLauncherIcon::OnEject), this);
+
+    result.push_back(menu_item);
   }
 
-  drive = g_volume_get_drive (_volume);
-  if (drive && g_drive_can_stop (drive))
+  // "Safely Remove" item (FIXME: Should it be "Safely remove"?)
+  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
+
+  if (drive.RawPtr() && g_drive_can_stop(drive.RawPtr()))
   {
-    menu_item = dbusmenu_menuitem_new ();
-    dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely Remove"));
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-    dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                      G_CALLBACK (&DeviceLauncherIcon::OnDriveStop), this);
-    result.push_back (menu_item);
-  }
-  if (drive)
-  {
-    g_object_unref (drive);
+    menu_item = dbusmenu_menuitem_new();
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely Remove"));
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+    g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                     G_CALLBACK(&DeviceLauncherIcon::OnDriveStop), this);
+
+    result.push_back(menu_item);
   }
 
-  if (!g_volume_can_eject (_volume))  // Don't need Unmount if can Eject
+  // "Unmount" item
+  if (!g_volume_can_eject(volume_))  // Don't need Unmount if can Eject
   {
-    GMount *mount = g_volume_get_mount (_volume);
-    if (mount && g_mount_can_unmount (mount))
+    glib::Object<GMount> mount(g_volume_get_mount(volume_));
+
+    if (mount.RawPtr() && g_mount_can_unmount(mount.RawPtr()))
     {
-      menu_item = dbusmenu_menuitem_new ();
-      dbusmenu_menuitem_property_set (menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
-      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-      dbusmenu_menuitem_property_set_bool (menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-      g_signal_connect (menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-                        G_CALLBACK (&DeviceLauncherIcon::OnUnmount), this);
-      result.push_back (menu_item);
-    }
-    if (mount)
-    {
-      g_object_unref (mount);
+      menu_item = dbusmenu_menuitem_new();
+
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Unmount"));
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+      dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+
+      g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                       G_CALLBACK(&DeviceLauncherIcon::OnUnmount), this);
+
+      result.push_back(menu_item);
     }
   }
 
   return result;
 }
 
-void
-DeviceLauncherIcon::ShowMount (GMount *mount)
+void DeviceLauncherIcon::ShowMount(GMount *mount)
 {
-  gchar  *name;
+  glib::String name(g_volume_get_name(volume_));
 
-  name = g_volume_get_name (_volume);
-  if (G_IS_MOUNT (mount))
+  if (G_IS_MOUNT(mount))
   {
-    GFile *root;
+    glib::Object<GFile> root(g_mount_get_root(mount));
 
-    root = g_mount_get_root (mount);
-    if (G_IS_FILE (root))
+    if (G_IS_FILE(root.RawPtr()))
     {
-      gchar  *uri;
-      GError *error = NULL;
+      glib::String uri(g_file_get_uri(root.RawPtr()));
+      glib::Error error;
 
-      uri = g_file_get_uri (root);
+      g_app_info_launch_default_for_uri(uri.Value(), NULL, error.AsOutParam());
 
-      g_app_info_launch_default_for_uri (uri, NULL, &error);
       if (error)
-      {
-        g_warning ("Cannot open volume '%s': Unable to show %s: %s", name, uri, error->message);
-        g_error_free (error);
-      }
-
-      g_free (uri);
-      g_object_unref (root);
+        g_warning("Cannot open volume '%s': Unable to show %s: %s", name.Value(), uri.Value(), error.Message().c_str());
     }
     else
     {
-      g_warning ("Cannot open volume '%s': Mount has no root", name);
+      g_warning ("Cannot open volume '%s': Mount has no root", name.Value());
     }
   }
   else
   {
-    g_warning ("Cannot open volume '%s': Mount-point is invalid", name);
+    g_warning ("Cannot open volume '%s': Mount-point is invalid", name.Value());
   }
-
-  g_free (name);
 }
 
-void
-DeviceLauncherIcon::ActivateLauncherIcon ()
+void DeviceLauncherIcon::ActivateLauncherIcon()
 {
-  GMount *mount;
-  gchar  *name;
-
   SetQuirk (QUIRK_STARTING, true);
   
-  name = g_volume_get_name (_volume);
-  mount = g_volume_get_mount (_volume);
-  if (G_IS_MOUNT (mount))
-  {
+  glib::Object<GMount> mount(g_volume_get_mount(volume_));
+
+  if (G_IS_MOUNT(mount.RawPtr()))
     ShowMount (mount);
-    g_object_unref (mount);
+  else
+    g_volume_mount(volume_,
+                   (GMountMountFlags)0,
+                   NULL,
+                   NULL,
+                   (GAsyncReadyCallback)&DeviceLauncherIcon::OnMountReady,
+                   this);
+}
+
+void DeviceLauncherIcon::OnMountReady(GObject *object,
+                                      GAsyncResult *result,
+                                      DeviceLauncherIcon *self)
+{
+  glib::Error error;
+
+  if (g_volume_mount_finish(self->volume_, result, error.AsOutParam()))
+  {
+    glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
+    self->ShowMount(mount.RawPtr());
   }
   else
   {
-    g_volume_mount (_volume,
-                    (GMountMountFlags)0,
-                    NULL,
-                    NULL,
-                    (GAsyncReadyCallback)&DeviceLauncherIcon::OnMountReady,
-                    this);
-  }
+    glib::String name(g_volume_get_name(self->volume_));
 
-  g_free (name);
-}
-
-void
-DeviceLauncherIcon::OnMountReady (GObject *object, GAsyncResult *result, DeviceLauncherIcon *self)
-{
-  GError *error = NULL;
-
-  if (g_volume_mount_finish (self->_volume, result, &error))
-  {
-    GMount *mount;
-
-    mount = g_volume_get_mount (self->_volume);
-    self->ShowMount (mount);
-
-    g_object_unref (mount);
-  }
-  else
-  {
-    gchar *name;
-
-    name = g_volume_get_name (self->_volume);
-    g_warning ("Cannot open volume '%s': %s",
-               name,
-               error ? error->message : "Mount operation failed");
-    g_error_free (error);
+    g_warning("Cannot open volume '%s': %s",
+              name.Value(),
+              error ? error.Message().c_str() : "Mount operation failed");
   }
 }
 
-void
-DeviceLauncherIcon::OnEjectReady (GObject            *object,
-                                  GAsyncResult       *result,
-                                  DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnEjectReady(GObject *object,
+                                      GAsyncResult *result,
+                                      DeviceLauncherIcon *self)
 {
-  g_volume_eject_with_operation_finish (self->_volume, result, NULL);
+  g_volume_eject_with_operation_finish(self->volume_, result, NULL);
 }
 
-void
-DeviceLauncherIcon::Eject ()
+void DeviceLauncherIcon::Eject()
 {
-  GMountOperation *mount_op;
+  glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
-  mount_op = gtk_mount_operation_new(NULL);
-
-  g_volume_eject_with_operation (_volume,
+  g_volume_eject_with_operation (volume_,
                                  (GMountUnmountFlags)0,
-                                 mount_op,
+                                 mount_op.RawPtr(),
                                  NULL,
                                  (GAsyncReadyCallback)OnEjectReady,
                                  this);
-
-  g_object_unref(mount_op);
 }
 
-void
-DeviceLauncherIcon::OnTogglePin (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem *item,
+                                     int time,
+                                     DeviceLauncherIcon *self)
 {
-  gchar *uuid = g_volume_get_identifier (self->_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+  glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   
-  self->_checked = !self->_checked;
+  self->checked_ = !self->checked_;
 
-  if (self->_checked)
+  if (self->checked_)
   {
     // If the volume is not mounted hide the icon
-    GMount *mount =  g_volume_get_mount (self->_volume);
+    glib::Object<GMount> mount (g_volume_get_mount(self->volume_));
 
-    if (mount == NULL)
+    if (mount.RawPtr() == NULL)
       self->SetQuirk (QUIRK_VISIBLE, false); 
-    else
-      g_object_unref (mount);
 
     // Remove from favorites
-    if (uuid && strlen (uuid) > 0)
-      DevicesSettings::GetDefault ()->RemoveFavorite (uuid);
+    if (!uuid.Str().empty())
+      DevicesSettings::GetDefault().RemoveFavorite(uuid.Str());
   }
   else
   {
-    if (uuid && strlen (uuid) > 0)
-      DevicesSettings::GetDefault ()->AddFavorite (uuid);
-  }
-
-  g_free (uuid);
-}
-
-void
-DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
-{
-  self->ActivateLauncherIcon ();
-}
-
-void
-DeviceLauncherIcon::OnEject (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
-{
-  self->Eject ();
-}
-
-void
-DeviceLauncherIcon::OnUnmountReady (GObject            *object,
-                                    GAsyncResult       *result,
-                                    DeviceLauncherIcon *self)
-{
-  if (G_IS_MOUNT (object))
-  {
-    g_mount_unmount_with_operation_finish (G_MOUNT(object), result, NULL);
+    if (!uuid.Str().empty())
+      DevicesSettings::GetDefault().AddFavorite(uuid.Str());
   }
 }
 
-void
-DeviceLauncherIcon::Unmount ()
+void DeviceLauncherIcon::OnOpen(DbusmenuMenuitem *item,
+                                int time,
+                                DeviceLauncherIcon *self)
 {
-  GMount *mount = g_volume_get_mount (_volume);
+  self->ActivateLauncherIcon();
+}
+
+void DeviceLauncherIcon::OnEject(DbusmenuMenuitem *item,
+                                 int time,
+                                 DeviceLauncherIcon *self)
+{
+  self->Eject();
+}
+
+void DeviceLauncherIcon::OnUnmountReady(GObject *object,
+                                        GAsyncResult *result,
+                                        DeviceLauncherIcon *self)
+{
+  if (G_IS_MOUNT(object))
+    g_mount_unmount_with_operation_finish(G_MOUNT(object), result, NULL);
+}
+
+void DeviceLauncherIcon::Unmount()
+{
+  glib::Object<GMount> mount(g_volume_get_mount(volume_));
+  
   if (mount)
   {
-    GMountOperation *op = gtk_mount_operation_new (NULL);
-    g_mount_unmount_with_operation (mount,
+    glib::Object<GMountOperation> op(gtk_mount_operation_new(NULL));
+
+    g_mount_unmount_with_operation(mount.RawPtr(),
                                    (GMountUnmountFlags)0,
                                    op,
                                    NULL,
                                    (GAsyncReadyCallback)OnUnmountReady,
                                    this);
-    g_object_unref (op);
-    g_object_unref (mount);
   }
 }
 
-void
-DeviceLauncherIcon::OnUnmount (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem *item,
+                                   int time,
+                                   DeviceLauncherIcon *self)
 {
-  self->Unmount ();
+  self->Unmount();
 }
 
-void
-DeviceLauncherIcon::OnRemoved (GVolume *volume, DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnRemoved ()
 {
-  self->_volume = NULL;
-  self->Remove ();
+  if (on_changed_handler_id_ != 0)
+    g_signal_handler_disconnect((gpointer) volume_, on_changed_handler_id_);
+
+  Remove();
 }
 
-void
-DeviceLauncherIcon::OnDriveStop (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnDriveStop(DbusmenuMenuitem *item,
+                                     int time,
+                                     DeviceLauncherIcon *self)
 {
-  self->StopDrive ();
+  self->StopDrive();
 }
 
-void
-DeviceLauncherIcon::StopDrive ()
+void DeviceLauncherIcon::StopDrive()
 {
-  GDrive          *drive;
-  GMountOperation *mount_op;
+  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
+  glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
-  drive = g_volume_get_drive (_volume);
-  mount_op = gtk_mount_operation_new (NULL);
-  g_drive_stop (drive,
-                (GMountUnmountFlags)0,
-                mount_op,
-                NULL,
-                (GAsyncReadyCallback)OnStopDriveReady,
-                this);
-  g_object_unref (drive);
-  g_object_unref (mount_op);
+  g_drive_stop(drive.RawPtr(),
+               (GMountUnmountFlags)0,
+               mount_op.RawPtr(),
+               NULL,
+               (GAsyncReadyCallback)OnStopDriveReady,
+               this);
 }
 
-void
-DeviceLauncherIcon::OnStopDriveReady (GObject *object,
-                                      GAsyncResult *result,
-                                      DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnStopDriveReady(GObject *object,
+                                          GAsyncResult *result,
+                                          DeviceLauncherIcon *self)
 {
-  GDrive *drive;
-
-  if (!self || !G_IS_VOLUME (self->_volume))
-  {
+  if (!self || !G_IS_VOLUME(self->volume_))
     return;
-  }
 
-  drive = g_volume_get_drive (self->_volume);
-  g_drive_stop_finish (drive, result, NULL);
-  g_object_unref (drive);
+  glib::Object<GDrive> drive(g_volume_get_drive(self->volume_));
+  g_drive_stop_finish (drive.RawPtr(), result, NULL);
 }
 
-void
-DeviceLauncherIcon::OnChanged (GVolume *volume, DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnChanged(GVolume *volume, DeviceLauncherIcon *self)
 {
-  GMount *mount = g_volume_get_mount (self->_volume);
+  glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
-  if (DevicesSettings::GetDefault ()->GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
-      && mount == NULL && self->_checked)
+  if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
+      && mount.RawPtr() == NULL && self->checked_)
   {
     self->SetQuirk (QUIRK_VISIBLE, false); 
   } 
-
-  g_object_unref (mount);
 }
 
-void
-DeviceLauncherIcon::UpdateVisibility ()
+void DeviceLauncherIcon::UpdateVisibility()
 {
-  switch (DevicesSettings::GetDefault ()->GetDevicesOption ())
+  switch (DevicesSettings::GetDefault().GetDevicesOption())
   {
     case DevicesSettings::NEVER:
       SetQuirk (QUIRK_VISIBLE, false);
       break;
     case DevicesSettings::ONLY_MOUNTED:
     {
-      GMount *mount =  g_volume_get_mount (_volume);
+      glib::Object<GMount> mount(g_volume_get_mount(volume_));
       
-      if (mount == NULL && _checked)
-      {
-        SetQuirk (QUIRK_VISIBLE, false); 
-      }
+      if (mount.RawPtr() == NULL && checked_)
+        SetQuirk(QUIRK_VISIBLE, false); 
       else
-      {
-        SetQuirk (QUIRK_VISIBLE, true); 
-        g_object_unref (mount);
-      }
+        SetQuirk(QUIRK_VISIBLE, true);
+
       break;
     }
     case DevicesSettings::ALWAYS:
-      SetQuirk (QUIRK_VISIBLE, true);
+      SetQuirk(QUIRK_VISIBLE, true);
       break;
   }
 }
 
-void
-DeviceLauncherIcon::OnSettingsChanged (DevicesSettings     *settings)
+void DeviceLauncherIcon::OnSettingsChanged()
 {
   /* Checked if in favourites! */
-  /* FIXME: I dont'know but g_slist_find doesn't work! */
-  gchar *uuid = g_volume_get_identifier (_volume, G_VOLUME_IDENTIFIER_KIND_UUID);
+  glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
+  DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
+  DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
 
-  GSList *f = settings->GetFavorites ();
+  checked_ = !(pos != favorites.end());
 
-  _checked = true;
-  
-  while (f != NULL)
-  {
-    if (!g_strcmp0 ((char *)f->data, uuid))
-    {
-      _checked = false;
-      break;
-    }
-      
-    f = f->next;
-  }
-
-  UpdateVisibility ();
-
-  g_free (uuid);
+  UpdateVisibility();
 }
 
+} // namespace unity

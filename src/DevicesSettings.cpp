@@ -19,176 +19,128 @@
 
 #include "DevicesSettings.h"
 
-static DevicesSettings *_devices_settings = NULL;
+#include <algorithm>
+#include <iostream>
 
-DevicesSettings::DevicesSettings ()
-: _settings (NULL),
-  _favorites (NULL),
-  _ignore_signals (false),
-  _devices_option (ONLY_MOUNTED)
+namespace unity {
+
+namespace {
+
+const char* SETTINGS_NAME = "com.canonical.Unity.Devices";
+
+void on_settings_updated(GSettings* settings,
+                         const gchar* key,
+                         DevicesSettings* self);
+
+} // anonymous namespace
+
+DevicesSettings& DevicesSettings::GetDefault()
 {
-  _settings = g_settings_new ("com.canonical.Unity.Devices");
-  g_signal_connect (_settings, "changed",
-                    (GCallback)(DevicesSettings::Changed), this);
+  static DevicesSettings instance;
+  return instance;
+}
+
+DevicesSettings::DevicesSettings()
+  : settings_(g_settings_new(SETTINGS_NAME))
+  , ignore_signals_(false)
+  , devices_option_(ONLY_MOUNTED)
+{
+
+  g_signal_connect(settings_.RawPtr(), "changed", G_CALLBACK(on_settings_updated), this);
 
   Refresh ();
 }
 
-DevicesSettings::~DevicesSettings ()
+void DevicesSettings::Refresh()
 {
-  g_slist_foreach (_favorites, (GFunc)g_free, NULL);
-  g_slist_free (_favorites);
-  g_object_unref (_settings);
+  gchar **favs = g_settings_get_strv(settings_, "favorites");
+
+  favorites_.clear ();
+
+  for (int i = 0; favs[i] != NULL; i++)
+    favorites_.push_back(favs[i]);
+
+  g_strfreev(favs);
 }
 
-void
-DevicesSettings::Refresh ()
+void DevicesSettings::AddFavorite(std::string const& uuid)
 {
-  gchar **favs;
-  gint i = 0;
-    
-  g_slist_foreach (_favorites, (GFunc)g_free, NULL);
-  g_slist_free (_favorites);
-  _favorites = NULL;
-
-  favs = g_settings_get_strv (_settings, "favorites");
-
-  while (favs[i] != NULL)
-  {
-    _favorites = g_slist_append (_favorites, g_strdup (favs[i]));
-    
-    i++;
-  }
-  
-  g_strfreev (favs);
-
-  changed.emit (this);
-}
-
-GSList *
-DevicesSettings::GetFavorites ()
-{
-  return _favorites;
-}
-
-static gchar *
-get_uuid (const gchar *uuid)
-{
-  return g_strdup (uuid);
-}
-
-void
-DevicesSettings::AddFavorite (const char *uuid)
-{
-  int     n_total_favs;
-  GSList *f;
-  gint    i = 0;
-  
-  g_return_if_fail (uuid);
-  
-  n_total_favs = g_slist_length (_favorites) + 1;
-  
-  char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
-
-  for (f = _favorites; f; f = f->next)
-    favs[i++] = get_uuid ((char *)f->data);
-
-  /* Add it to the end of the list */
-  favs[i] = get_uuid (uuid);
-
-  _ignore_signals = true;
-  if (!g_settings_set_strv (_settings, "favorites", favs))
-    g_warning ("Unable to add a new favorite '%s'", uuid);
-  _ignore_signals = false;
-
-  i = 0;
-  while (favs[i] != NULL)
-  {
-    g_free (favs[i]);
-    favs[i] = NULL;
-    i++;
-  }
-
-  Refresh ();
-}
-
-void
-DevicesSettings::RemoveFavorite (const char *uuid)
-{
-  int     n_total_favs;
-  GSList *f;
-  int     i = 0;
-  bool    found = false;
-
-  g_return_if_fail (uuid);
-
-  n_total_favs = g_slist_length (_favorites) - 1;
-  
-  char *favs[n_total_favs + 1];
-  favs[n_total_favs] = NULL;
-
-  for (f = _favorites; f; f = f->next)
-  {
-    if (g_strcmp0 ((char *)f->data, uuid) != 0)
-    {
-      favs[i] = get_uuid ((char *)f->data);
-      i++; 
-    }
-    else
-    {
-      found = true;
-    }
-  }
-
-  if (!found)
-  {
-      g_warning ("Unable to remove favorite '%s': Does not exist in favorites",
-                 uuid);
-  }
-
-  _ignore_signals = true;
-  if (!g_settings_set_strv (_settings, "favorites", favs))
-    g_warning ("Unable to remove favorite '%s'", uuid);
-  _ignore_signals = false;
-
-  i = 0;
-  while (favs[i] != NULL)
-  {
-    g_free (favs[i]);
-    favs[i] = NULL;
-    i++;
-  }
-
-  Refresh ();
-}
-
-
-void
-DevicesSettings::Changed (GSettings *settings, char *key, DevicesSettings *self)
-{
-  if (self->_ignore_signals)
+  if (uuid.empty())
     return;
   
-  self->Refresh ();
+  favorites_.push_back(uuid);
+
+  SaveFavorites(favorites_);
+  Refresh();
 }
 
-DevicesSettings *
-DevicesSettings::GetDefault ()
+void DevicesSettings::RemoveFavorite (std::string const& uuid)
 {
-  if (G_UNLIKELY (!_devices_settings))
-    _devices_settings = new DevicesSettings ();
-
-  return _devices_settings;
-}
-
-void
-DevicesSettings::SetDevicesOption (DevicesOption devices_option)
-{
-  if (devices_option == _devices_option)
+  if (uuid.empty())
     return;
 
-  _devices_option = devices_option;
+  DeviceList::iterator pos = std::find(favorites_.begin(), favorites_.end(), uuid);
+  if (pos == favorites_.end())
+    return;
 
-  changed.emit (this);
+  favorites_.erase(pos);
+  SaveFavorites(favorites_);
+  Refresh();
 }
+
+void DevicesSettings::SaveFavorites(DeviceList const& favorites)
+{
+  const int size = favorites.size();
+  const char* favs[size + 1];
+  favs[size] = NULL;
+
+  int index = 0;
+  for (DeviceList::const_iterator i = favorites.begin(), end = favorites.end();
+       i != end; ++i, ++index)
+  {
+    favs[index] = i->c_str();
+  }
+
+  ignore_signals_ = true;
+  if (!g_settings_set_strv(settings_, "favorites", favs))
+    g_warning("Saving favorites failed.");
+  ignore_signals_ = false;
+}
+
+
+void DevicesSettings::Changed(std::string const& key)
+{
+  if (ignore_signals_)
+    return;
+  
+  Refresh ();
+  
+  // FIXME: Use another signal
+  changed.emit();
+}
+
+void DevicesSettings::SetDevicesOption(DevicesOption devices_option)
+{
+  if (devices_option == devices_option_)
+    return;
+
+  devices_option_ = devices_option;
+
+  // FIXME: we should use different signals
+  changed.emit();
+}
+
+namespace {
+
+void on_settings_updated(GSettings* settings,
+                         const gchar* key,
+                         DevicesSettings* self)
+{
+  if (settings and key) {
+    self->Changed(key);
+  }
+}
+
+} // anonymous namespace
+
+} // namespace unity

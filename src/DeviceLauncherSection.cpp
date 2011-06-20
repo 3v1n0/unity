@@ -17,107 +17,109 @@
  */
 
 #include "DeviceLauncherIcon.h"
-
 #include "DeviceLauncherSection.h"
 
-DeviceLauncherSection::DeviceLauncherSection (Launcher *launcher)
-: _launcher (launcher)
+namespace unity
 {
-  _monitor = g_volume_monitor_get ();
-  _ht = g_hash_table_new (g_direct_hash , g_direct_equal);
 
-   _on_volume_added_handler_id = g_signal_connect (_monitor,
-                                                   "volume-added",
-                                                   G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded),
+DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
+	: launcher_(launcher)
+	, monitor_(g_volume_monitor_get())
+{
+	on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+                                                 "volume-added",
+                                                 G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded),
+                                                 this);
+
+  on_volume_removed_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+                                                   "volume-removed",
+                                                   G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved),
                                                    this);
-
-   _on_volume_removed_handler_id = g_signal_connect (_monitor,
-                                                     "volume-removed",
-                                                     G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved),
-                                                     this);
     
-   _on_mount_added_handler_id = g_signal_connect (_monitor,
-                                                  "mount-added",
-                                                  G_CALLBACK (&DeviceLauncherSection::OnMountAdded),
-                                                  this);
+  on_mount_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+                                                "mount-added",
+                                                G_CALLBACK (&DeviceLauncherSection::OnMountAdded),
+                                                this);
 
-   _on_device_populate_entry_id = g_idle_add ((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
+  on_device_populate_entry_id_ = g_idle_add((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
 
-DeviceLauncherSection::~DeviceLauncherSection ()
+DeviceLauncherSection::~DeviceLauncherSection()
 {
-  if (_on_volume_added_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _monitor,
-                                 _on_volume_added_handler_id);
+  if (on_volume_added_handler_id_)
+    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+                                on_volume_added_handler_id_);
 
-  if (_on_volume_removed_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _monitor,
-                                 _on_volume_removed_handler_id);
+  if (on_volume_removed_handler_id_)
+    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+                                on_volume_removed_handler_id_);
 
-  if (_on_mount_added_handler_id != 0)
-    g_signal_handler_disconnect ((gpointer) _monitor,
-                                 _on_mount_added_handler_id);
+  if (on_mount_added_handler_id_)
+    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+                                on_mount_added_handler_id_);
 
-  if (_on_device_populate_entry_id)
-    g_source_remove (_on_device_populate_entry_id);
-
-  g_object_unref (_monitor);
-  g_hash_table_unref (_ht);
+	/* Is it really needed? */
+  if (on_device_populate_entry_id_)
+    g_source_remove(on_device_populate_entry_id_);
 }
 
-bool
-DeviceLauncherSection::PopulateEntries (DeviceLauncherSection *self)
+bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
 {
-  GList *volumes, *v;
+  GList *volumes = g_volume_monitor_get_volumes(self->monitor_.RawPtr());
 
-  volumes = g_volume_monitor_get_volumes (self->_monitor);
-  for (v = volumes; v; v = v->next)
+  for (GList *v = volumes; v; v = v->next)
   {
-    GVolume *volume = (GVolume *)v->data;
-    DeviceLauncherIcon *icon = new DeviceLauncherIcon (self->_launcher, volume);
+    glib::Object<GVolume> volume((GVolume *)v->data);
+    DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume.RawPtr());
 
-    self->IconAdded.emit (icon);
-
-    g_hash_table_insert (self->_ht, (gpointer) volume, (gpointer) icon);
-
-    g_object_unref (volume);
+		self->map_[volume.RawPtr()] = icon;
+    self->IconAdded.emit(icon);
   }
 
-  g_list_free (volumes);
+  g_list_free(volumes);
   
-  self->_on_device_populate_entry_id = 0;
+  self->on_device_populate_entry_id_ = 0;
 
   return false;
 }
 
-void
-DeviceLauncherSection::OnVolumeAdded (GVolumeMonitor        *monitor,
-                                      GVolume               *volume,
-                                      DeviceLauncherSection *self)
+void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
+                                      		GVolume *volume,
+                                      		DeviceLauncherSection *self)
 {
-  DeviceLauncherIcon *icon = new DeviceLauncherIcon (self->_launcher, volume);
+  DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume);
   
-  g_hash_table_insert (self->_ht, (gpointer) volume, (gpointer) icon);  
-
+  self->map_[volume] = icon;
   self->IconAdded.emit (icon);
 }
 
-void
-DeviceLauncherSection::OnVolumeRemoved (GVolumeMonitor        *monitor,
-                                        GVolume               *volume,
-                                        DeviceLauncherSection *self)
+void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
+                                        		GVolume *volume,
+                                        		DeviceLauncherSection *self)
 {
-    g_hash_table_remove (self->_ht, (gpointer) volume);  
+
+	std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+
+	it = self->map_.find(volume);
+
+  if (it != self->map_.end())
+	{	
+		self->map_[volume]->OnRemoved();
+		self->map_.erase(volume);
+	}
 }
 
-void 
-DeviceLauncherSection::OnMountAdded (GVolumeMonitor        *monitor,
-                                     GMount                *mount,
-                                     DeviceLauncherSection *self)
+void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
+                                     		 GMount *mount,
+                                     		 DeviceLauncherSection *self)
 {
-    GVolume *volume = g_mount_get_volume (mount);
-    DeviceLauncherIcon *icon = (DeviceLauncherIcon *) g_hash_table_lookup (self->_ht, (gpointer) volume);
+		std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+		glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-    if (icon)
-      icon->UpdateVisibility ();
+		it = self->map_.find(volume.RawPtr());
+
+    if (it != self->map_.end())
+      it->second->UpdateVisibility();
 }
+
+} // namespace unity
