@@ -92,14 +92,14 @@ SimpleLauncherIcon::GetTextureForSize (int size)
 {
   if (m_Icon && size == m_Icon->GetHeight ())
     return m_Icon;
-    
+
   if (m_Icon)
     m_Icon->UnReference ();
   m_Icon = 0;
-  
+
   if (!m_IconName)
     return 0;
-  
+
   if (g_str_has_prefix (m_IconName, "/"))
     m_Icon = TextureFromPath (m_IconName, size);
   else
@@ -107,19 +107,19 @@ SimpleLauncherIcon::GetTextureForSize (int size)
   return m_Icon;
 }
 
-void 
+void
 SimpleLauncherIcon::SetIconName (const char *name)
 {
   if (m_IconName)
     g_free (m_IconName);
   m_IconName = g_strdup (name);
-  
+
   if (m_Icon)
   {
     m_Icon->UnReference ();
     m_Icon = 0;
   }
-  
+
   needs_redraw.emit (this);
 }
 
@@ -130,12 +130,12 @@ SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
 
   if (!data)
     return;
-  
+
   // invalidate the current cache
   _current_theme_is_mono = -1;
 
   self = (SimpleLauncherIcon*) data;
-  
+
   /*
    * Unreference the previous icon and redraw
    * (forcing the new icon to be loaded)

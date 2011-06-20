@@ -161,7 +161,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
 
   /* hack */
   SetProgress (0.0f);
-  
+
 }
 
 BamfLauncherIcon::~BamfLauncherIcon()
@@ -185,7 +185,7 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   if (_on_window_minimized_connection.connected ())
     _on_window_minimized_connection.disconnect ();
-  
+
   if (_hidden_changed_connection.connected ())
     _hidden_changed_connection.disconnect ();
 
@@ -236,10 +236,10 @@ BamfLauncherIcon::DesktopFile ()
   {
     if (_cached_desktop_file != NULL)
       g_free (_cached_desktop_file);
-    
+
     _cached_desktop_file = g_strdup (filename);
   }
-  
+
   return _cached_desktop_file;
 }
 
@@ -316,7 +316,7 @@ BamfLauncherIcon::OwnsWindow (Window w)
   return owns;
 }
 
-void 
+void
 BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
 {
   GDesktopAppInfo *appInfo;
@@ -324,14 +324,14 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
   std::list<char *>::iterator it;
 
   appInfo = g_desktop_app_info_new_from_filename (bamf_application_get_desktop_file (BAMF_APPLICATION (m_App)));
-  
+
   if (g_app_info_supports_uris (G_APP_INFO (appInfo)))
   {
     GList *list = NULL;
-    
+
     for (it = uris.begin (); it != uris.end (); it++)
       list = g_list_prepend (list, *it);
-    
+
     g_app_info_launch_uris (G_APP_INFO (appInfo), list, NULL, &error);
     g_list_free (list);
   }
@@ -344,10 +344,10 @@ BamfLauncherIcon::OpenInstanceWithUris (std::list<char *> uris)
       list = g_list_prepend (list, file);
     }
     g_app_info_launch (G_APP_INFO (appInfo), list, NULL, &error);
-    
+
     for (l = list; l; l = l->next)
       g_object_unref (G_FILE (list->data));
-      
+
     g_list_free (list);
   }
   else
@@ -511,7 +511,7 @@ BamfLauncherIcon::Spread (int state, bool force)
 
   g_list_free (children);
 
-  return false;  
+  return false;
 }
 
 void
@@ -566,18 +566,18 @@ BamfLauncherIcon::EnsureWindowState ()
   int count = 0;
 
   bool has_visible = false;
-  
+
   children = bamf_view_get_children (BAMF_VIEW (m_App));
   for (l = children; l; l = l->next)
   {
     if (!BAMF_IS_WINDOW (l->data))
       continue;
-      
+
     count++;
-    
+
     guint32 xid = bamf_window_get_xid (BAMF_WINDOW (l->data));
     CompWindow *window = m_Screen->findWindow ((Window) xid);
-    
+
     if (window && window->defaultViewport () == m_Screen->vp ())
       has_visible = true;
   }
@@ -628,7 +628,7 @@ BamfLauncherIcon::UpdateMenus ()
   }
 
   g_list_free (children);
-  
+
   // add dynamic quicklist
   if (_menuclient_dynamic_quicklist != NULL)
     _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
@@ -730,7 +730,7 @@ void
 BamfLauncherIcon::UnStick (void)
 {
   BamfView *view = BAMF_VIEW (this->m_App);
-  
+
   if (!bamf_view_is_sticky (view))
     return;
 
@@ -816,7 +816,7 @@ OnAppLabelActivated (DbusmenuMenuitem* sender,
 
   if (!data)
     return;
-    
+
   self = (BamfLauncherIcon*) data;
   self->ActivateLauncherIcon ();
 }
@@ -828,10 +828,10 @@ BamfLauncherIcon::GetMenus ()
   std::list<DbusmenuMenuitem *> result;
   bool first_separator_needed = false;
   DbusmenuMenuitem* item = NULL;
-  
+
   // FIXME for O: hack around the wrong abstraction
   UpdateMenus ();
-  
+
   for (it = _menu_clients.begin (); it != _menu_clients.end (); it++)
   {
     GList * child = NULL;
@@ -987,7 +987,7 @@ BamfLauncherIcon::GetRemoteUri ()
     const gchar * desktop_file = bamf_application_get_desktop_file (BAMF_APPLICATION (m_App));
     _remote_uri = g_strdup_printf ("application://%s", g_path_get_basename (desktop_file));
   }
-  
+
   return _remote_uri;
 }
 
@@ -998,15 +998,15 @@ BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
   const char *desktop_file;
   GError *error = NULL;
   std::list<char *> results;
-  
+
   desktop_file = DesktopFile ();
-  
+
   if (!desktop_file || strlen (desktop_file) <= 1)
     return results;
-  
+
   key_file = g_key_file_new ();
   g_key_file_load_from_file (key_file, desktop_file, (GKeyFileFlags) 0, &error);
-  
+
   if (error)
   {
     g_error_free (error);
@@ -1020,7 +1020,7 @@ BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
     g_key_file_free (key_file);
     return results;
   }
-  
+
   std::list<char *>::iterator it;
   for (it = uris.begin (); it != uris.end (); it++)
   {
@@ -1039,12 +1039,12 @@ BamfLauncherIcon::ValidateUrisForLaunch (std::list<char *> uris)
       }
       g_free (super_type);
     }
-    
-    
+
+
     g_object_unref (file);
     g_object_unref (info);
   }
-  
+
   g_strfreev (mimes);
   g_key_file_free (key_file);
   return results;
@@ -1056,7 +1056,7 @@ BamfLauncherIcon::OnDndHoveredTimeout (gpointer data)
   BamfLauncherIcon *self = (BamfLauncherIcon*) data;
   if (self->_dnd_hovered && bamf_view_is_running (BAMF_VIEW (self->m_App)))
     self->Spread (CompAction::StateInitEdgeDnd, true);
-  
+
   self->_dnd_hover_timer = 0;
   return false;
 }
@@ -1072,19 +1072,19 @@ void
 BamfLauncherIcon::OnDndLeave ()
 {
   _dnd_hovered = false;
-  
+
   if (_dnd_hover_timer)
     g_source_remove (_dnd_hover_timer);
   _dnd_hover_timer = 0;
 }
 
-nux::DndAction 
+nux::DndAction
 BamfLauncherIcon::OnQueryAcceptDrop (std::list<char *> uris)
 {
   return ValidateUrisForLaunch (uris).empty () ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 }
 
-void 
+void
 BamfLauncherIcon::OnAcceptDrop (std::list<char *> uris)
 {
   OpenInstanceWithUris (ValidateUrisForLaunch (uris));

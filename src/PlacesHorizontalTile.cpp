@@ -52,13 +52,16 @@ PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
   nux::HLayout *layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   layout->AddLayout (new nux::SpaceLayout (6, 6, 0, 0));
 
+  int size = 42 + (rand () % 30);
+  _icon = g_strdup (g_strdup_printf ("http://placekitten.com/%i/%i", size, size));
+
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize (icon_size, icon_size);
   AddChild (_icontex);
   layout->AddView (_icontex, 0, nux::eLeft, nux::eFix);
 
   layout->AddLayout (new nux::SpaceLayout (6, 6, 0, 0));
-  
+
   nux::VLayout *vlayout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
   layout->AddView (vlayout, 1, nux::eLeft, nux::eFull);
 
@@ -80,7 +83,7 @@ PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
   vlayout->AddView (_cairotext, 1, nux::eLeft, nux::eFull);
 
   SetLayout (layout);
-  
+
   SetDndEnabled (true, false);
 }
 
@@ -102,7 +105,7 @@ PlacesHorizontalTile::DndSourceDragBegin ()
                             NULL);
 }
 
-nux::NBitmapData * 
+nux::NBitmapData *
 PlacesHorizontalTile::DndSourceGetDragImage ()
 {
   nux::NBitmapData *result = 0;
@@ -111,13 +114,13 @@ PlacesHorizontalTile::DndSourceGetDragImage ()
   GtkIconInfo *info;
   GError *error = NULL;
   GIcon *icon;
-  
+
   const char *icon_name = _icon;
   int size = 64;
-  
+
   if (!icon_name)
     icon_name = "application-default-icon";
-   
+
   theme = gtk_icon_theme_get_default ();
   icon = g_icon_new_for_string (icon_name, NULL);
 
@@ -127,7 +130,7 @@ PlacesHorizontalTile::DndSourceGetDragImage ()
     g_object_unref (icon);
   }
   else
-  {   
+  {
     info = gtk_icon_theme_lookup_icon (theme,
                                        icon_name,
                                        size,
@@ -141,7 +144,7 @@ PlacesHorizontalTile::DndSourceGetDragImage ()
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-        
+
   if (gtk_icon_info_get_filename (info) == NULL)
   {
     gtk_icon_info_free (info);
@@ -160,11 +163,11 @@ PlacesHorizontalTile::DndSourceGetDragImage ()
     result = graphics.GetBitmap ();
     g_object_unref (pbuf);
   }
-  
+
   return result;
 }
 
-std::list<const char *> 
+std::list<const char *>
 PlacesHorizontalTile::DndSourceGetDragTypes ()
 {
   std::list<const char*> result;
@@ -215,7 +218,7 @@ PlacesHorizontalTile::SetURI (const char *uri)
 {
   if (_uri)
     g_free (_uri);
-  
+
   _uri = NULL;
 
   if (uri)
