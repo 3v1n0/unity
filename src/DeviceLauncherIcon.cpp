@@ -40,7 +40,6 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher *launcher, GVolume *volume)
 
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  /* FIXME: implement it in DeviceLauncherSection */
   on_changed_handler_id_ = g_signal_connect(volume_,
                                             "changed",
                                             G_CALLBACK(&DeviceLauncherIcon::OnChanged),

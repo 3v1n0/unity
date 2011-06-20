@@ -115,7 +115,9 @@ void DevicesSettings::Changed(std::string const& key)
   
   Refresh ();
   
-  // FIXME: Use another signal
+  /* TODO: We should use two different signals (one for visibility option
+   * and onther one for favorites.
+   */
   changed.emit();
 }
 
@@ -126,7 +128,9 @@ void DevicesSettings::SetDevicesOption(DevicesOption devices_option)
 
   devices_option_ = devices_option;
 
-  // FIXME: we should use different signals
+  /* TODO: We should use two different signals (one for visibility option
+   * and onther one for favorites 
+   */
   changed.emit();
 }
 

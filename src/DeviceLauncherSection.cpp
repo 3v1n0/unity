@@ -58,7 +58,6 @@ DeviceLauncherSection::~DeviceLauncherSection()
     g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
                                 on_mount_added_handler_id_);
 
-	/* Is it really needed? */
   if (on_device_populate_entry_id_)
     g_source_remove(on_device_populate_entry_id_);
 }
@@ -90,19 +89,15 @@ void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
   DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume);
   
   self->map_[volume] = icon;
-  self->IconAdded.emit (icon);
+  self->IconAdded.emit(icon);
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
                                         		GVolume *volume,
                                         		DeviceLauncherSection *self)
 {
-
-	std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
-
-	it = self->map_.find(volume);
-
-  if (it != self->map_.end())
+	// It should not happen! Let me do the check anyway.
+  if (self->map_.find(volume) != self->map_.end())
 	{	
 		self->map_[volume]->OnRemoved();
 		self->map_.erase(volume);
