@@ -52,9 +52,6 @@ PlacesHorizontalTile::PlacesHorizontalTile (const char *icon_name,
   nux::HLayout *layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
   layout->AddLayout (new nux::SpaceLayout (6, 6, 0, 0));
 
-  int size = 42 + (rand () % 30);
-  _icon = g_strdup (g_strdup_printf ("http://placekitten.com/%i/%i", size, size));
-
   _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
   _icontex->SetMinMaxSize (icon_size, icon_size);
   AddChild (_icontex);
