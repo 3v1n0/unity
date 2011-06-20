@@ -53,12 +53,6 @@ protected:
   void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
 private:
-  void OnCloseClicked (nux::View *widget);
-  void OnMinimizeClicked (nux::View *widget);
-  void OnRestoreClicked (nux::View *widget);
-  void OnStateChanged (int value);
-
-private:
   nux::HLayout *_layout;
 };
 

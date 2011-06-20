@@ -123,20 +123,22 @@ WindowButtons::WindowButtons ()
 {
   WindowButton *but;
 
+  auto lambda_statechanged = [&](int value) { redraw_signal.emit (); };
+
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
-  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
+  but->Activated.connect ([&](nux::View *widget) { close_clicked.emit (); });
+  but->state.changed.connect (lambda_statechanged);
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
-  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
+  but->Activated.connect ([&](nux::View *widget) { minimize_clicked.emit (); });
+  but->state.changed.connect (lambda_statechanged);
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
-  but->Activated.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
-  but->state.changed.connect (sigc::mem_fun (this, &WindowButtons::OnStateChanged));
+  but->Activated.connect ([&](nux::View *widget) { restore_clicked.emit (); });
+  but->state.changed.connect (lambda_statechanged);
 
   SetContentDistribution (nux::eStackLeft);
 }
@@ -144,24 +146,6 @@ WindowButtons::WindowButtons ()
 
 WindowButtons::~WindowButtons ()
 {
-}
-
-void
-WindowButtons::OnCloseClicked (nux::View *widget)
-{
-  close_clicked.emit ();
-}
-
-void
-WindowButtons::OnMinimizeClicked (nux::View *widget)
-{
-  minimize_clicked.emit ();
-}
-
-void
-WindowButtons::OnRestoreClicked (nux::View *widget)
-{
-  restore_clicked.emit ();
 }
 
 const gchar *
@@ -181,9 +165,3 @@ WindowButtons::AddProperties (GVariantBuilder *builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
-
-void WindowButtons::OnStateChanged (int value)
-{
-  redraw_signal.emit ();
-}
-
