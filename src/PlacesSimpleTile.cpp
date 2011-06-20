@@ -98,23 +98,23 @@ PlacesSimpleTile::DndSourceGetDragImage ()
   GtkIconInfo *info;
   GError *error = NULL;
   GIcon *icon;
-  
+
   const char *icon_name = _icon;
   int size = 64;
-  
+
   if (!icon_name)
     icon_name = "application-default-icon";
-  
+
   theme = gtk_icon_theme_get_default ();
   icon = g_icon_new_for_string (icon_name, NULL);
-  
+
   if (G_IS_ICON (icon))
   {
     info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
     g_object_unref (icon);
   }
   else
-  {   
+  {
     info = gtk_icon_theme_lookup_icon (theme,
                                        icon_name,
                                        size,
@@ -128,7 +128,7 @@ PlacesSimpleTile::DndSourceGetDragImage ()
                                        size,
                                        (GtkIconLookupFlags) 0);
   }
-        
+
   if (gtk_icon_info_get_filename (info) == NULL)
   {
     gtk_icon_info_free (info);
@@ -147,11 +147,11 @@ PlacesSimpleTile::DndSourceGetDragImage ()
     result = graphics.GetBitmap ();
     g_object_unref (pbuf);
   }
-  
+
   return result;
 }
 
-std::list<const char *> 
+std::list<const char *>
 PlacesSimpleTile::DndSourceGetDragTypes ()
 {
   std::list<const char*> result;
@@ -189,7 +189,7 @@ PlacesSimpleTile::GetHighlightGeometry ()
   int width = 0, height = 0;
 
   _icontex->GetTextureSize (&width, &height);
-  
+
   _highlight_geometry.x = (base.width - width) / 2;
   _highlight_geometry.y = 12;
   _highlight_geometry.width = width;
@@ -221,7 +221,7 @@ PlacesSimpleTile::SetURI (const char *uri)
 {
   if (_uri)
     g_free (_uri);
-  
+
   _uri = NULL;
 
   if (uri)
