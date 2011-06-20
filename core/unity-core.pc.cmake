@@ -3,9 +3,10 @@ exec_prefix=@EXEC_PREFIX@
 libdir=@LIBDIR@
 includedir=@INCLUDEDIR@
 
-Name: Unity Shared Library
+Name: Unity Core
+Library
 Description: Core objects and utilities for Unity implementations
 Version: @VERSION@
-Libs: -L${libdir} -lunity-shared-@UNITY_API_VERSION@
-Cflags: -I${includedir}/unity-shared-@UNITY_API_VERSION@
+Libs: -L${libdir} -lunity-core-@UNITY_API_VERSION@
+Cflags: -I${includedir}/unity-core-@UNITY_API_VERSION@
 Requires: glib-2.0 gio-2.0 sigc++-2.0

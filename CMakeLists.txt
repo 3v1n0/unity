@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (shared services tests tools doc)
+subdirs (core services tests tools doc)
 
 #
 # Base bits
