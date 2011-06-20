@@ -295,7 +295,6 @@ add_executable (test-filters
                 TestFilters.cpp
                 ../src/FilterBasicButton.cpp
                 ../src/FilterRatingsWidget.cpp
-                ../src/FilterWidget.cpp
                 )
 
 add_executable (test-filter-bar
@@ -303,7 +302,6 @@ add_executable (test-filter-bar
                 ../src/FilterFactory.cpp
                 ../src/FilterBasicButton.cpp
                 ../src/FilterRatingsWidget.cpp
-                ../src/FilterWidget.cpp
                 ../src/FilterBar.cpp
                 )
 #

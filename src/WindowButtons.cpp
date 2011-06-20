@@ -123,6 +123,7 @@ WindowButtons::WindowButtons ()
 {
   WindowButton *but;
 
+  // a simple lambda to call redraw_signal.emit (), so we don't have to define a method.
   auto lambda_statechanged = [&](int value) { redraw_signal.emit (); };
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);

@@ -32,7 +32,6 @@ namespace unity {
   FilterBasicButton::FilterBasicButton (const std::string label, NUX_FILE_LINE_DECL)
       : nux::ToggleButton (label, NUX_FILE_LINE_PARAM) {
     InitTheme();
-    this->label = "hello world dang it";
   }
 
   FilterBasicButton::FilterBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_DECL)
@@ -52,12 +51,16 @@ namespace unity {
   void FilterBasicButton::SetFilter(void *filter)
   {
     // we got a new filter
-    FilterWidget::SetFilter (filter);
+    _filter = filter;
 
     //FIXME - we need to get detail from the filter,
     //such as name and link to its signals
   }
 
+  std::string FilterBasicButton::GetFilterType ()
+  {
+    return "FilterBasicButton";
+  }
 
   void FilterBasicButton::InitTheme()
   {

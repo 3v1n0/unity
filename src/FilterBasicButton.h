@@ -39,6 +39,7 @@ namespace unity {
     virtual ~FilterBasicButton();
 
     void SetFilter (void *);
+    std::string GetFilterType ();
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -47,7 +48,7 @@ namespace unity {
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     void InitTheme ();
-
+    void *_filter;
 
   };
 

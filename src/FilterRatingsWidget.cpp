@@ -36,23 +36,43 @@ namespace unity {
   }
 
   FilterRatings::~FilterRatings() {
-
+    delete _full_normal;
+    delete _full_prelight;
+    delete _half_normal;
+    delete _half_prelight;
+    delete _empty_normal;
+    delete _empty_prelight;
   }
 
   void FilterRatings::SetFilter(void *filter)
   {
-    // we got a new filter
-    FilterWidget::SetFilter (filter);
-
+    _filter = filter;
     //FIXME - we need to get detail from the filter,
     //such as name and link to its signals
+    rating = 5;
+  }
+
+  std::string FilterRatings::GetFilterType ()
+  {
+    return "FilterBasicButton";
   }
 
 
   void FilterRatings::InitTheme()
   {
+    g_debug ("init theme");
     //FIXME - build theme here - store images, cache them, fun fun fun
     // ratings bar requires us to store/create three states for stares, half open, selected/unselected
+
+    //these should be cached and shared between widgets if at all possible
+    _full_prelight = new nux::ColorLayer (nux::Color (1.0, 1.0, 1.0, 1.0));
+    _full_normal = new nux::ColorLayer (nux::Color (0.8, 0.8, 0.8, 1.0));
+
+    _empty_prelight = new nux::ColorLayer (nux::Color (0.7, 0.0, 0.0, 1.0));
+    _empty_normal = new nux::ColorLayer (nux::Color (0.5, 0.0, 0.0, 1.0));
+
+    _half_prelight = new nux::ColorLayer (nux::Color (0.0, 0.0, 0.7, 1.0));
+    _half_normal = new nux::ColorLayer (nux::Color (0.0, 0.0, 0.5, 1.0));
   }
 
 
@@ -61,9 +81,47 @@ namespace unity {
   }
 
   void FilterRatings::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+
     //FIXME - i disabled the crappy drawing i was doing,
     //should just draw five sliced textures,
-    nux::Button::Draw(GfxContext, force_draw);
+    //int total_full_stars = rating / 2;
+    //int total_half_stars = rating % 2;
+
+    nux::Geometry geometry = GetGeometry ();
+    /*g_debug ("widget geometry is %i, %i - %ix%i",geometry.x, geometry.y, geometry.width, geometry.height);
+    geometry.width = geometry.width / 5;
+
+    g_debug ("doing draw");
+
+    for (int index = 0; index < 5; index++) {
+      g_debug ("drawing star");
+      geometry.x += index * geometry.width;
+
+      g_debug ("drawing at %i,%i - %ix%i", geometry.x, geometry.y, geometry.width, geometry.height);
+
+      nux::AbstractPaintLayer *render_layer;
+      if (index < total_full_stars) {
+        render_layer = _full_normal;
+      }
+      else if (index < total_full_stars + total_half_stars) {
+        render_layer = _half_normal;
+      }
+      else {
+        render_layer = _empty_normal;
+      }
+      */
+
+      //nux::GetPainter().PushDrawSliceScaledTextureLayer (GfxContext, GetGeometry (), nux::eBUTTON_FOCUS, nux::color::White, nux::eAllCorners);
+      g_debug ("drawing a texture layer");
+      nux::ROPConfig blend = nux::ROPConfig();
+      blend.Blend = true;
+
+      nux::ColorLayer *layer = new nux::ColorLayer (nux::Color (1.0, 1.0, 1.0, 0.0), true, blend);
+      //layer->Renderlayer (GfxContext);
+      nux::GetPainter ().RenderSinglePaintLayer (GfxContext, GetGeometry (), layer);
+
+      //GfxContext.QRP_Color (GetGeometry ().x, GetGeometry ().y, GetGeometry ().GetWidth(), GetGeometry ().GetHeight(), nux::Color (1.0, 1.0, 1.0, 1.0));
+    //}
   }
 
   void FilterRatings::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {

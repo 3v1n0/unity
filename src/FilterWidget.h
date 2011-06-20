@@ -28,10 +28,9 @@ namespace unity {
   class FilterWidget
   {
   public:
-    virtual void SetFilter (void *); // FIXME - a void pointer for now, we don't have filters
-
-  protected:
-    void *filter; // FIXME - again, once we have filters, will be a UnityFilter or whatever
+    virtual ~FilterWidget () {}
+    virtual void SetFilter (void *) = 0; // FIXME - a void pointer for now, we don't have filters
+    virtual std::string GetFilterType () = 0;
   };
 }
 

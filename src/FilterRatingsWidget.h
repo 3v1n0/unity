@@ -36,8 +36,9 @@ namespace unity {
     virtual ~FilterRatings();
 
     void SetFilter (void *);
+    std::string GetFilterType ();
 
-    nux::Property<int> rating;
+    nux::Property<int> rating; // maximum of 10
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -49,6 +50,17 @@ namespace unity {
 
     void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
     void OnRatingsChanged (int rating);
+
+    nux::AbstractPaintLayer *_full_prelight;
+    nux::AbstractPaintLayer *_full_normal;
+
+    nux::AbstractPaintLayer *_empty_prelight;
+    nux::AbstractPaintLayer *_empty_normal;
+
+    nux::AbstractPaintLayer *_half_prelight;
+    nux::AbstractPaintLayer *_half_normal;
+
+    void *_filter;
 
   };
 

@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 
 #include "FilterBasicButton.h"
+#include <FilterRatingsWidget.h>
 
 class TestRunner
 {
@@ -52,12 +53,13 @@ TestRunner::~TestRunner ()
 
 void TestRunner::Init ()
 {
-  unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world");
+  unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
+  unity::FilterRatings *ratings = new unity::FilterRatings (NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
+  layout->AddView (ratings, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   layout->SetFocused (true);
 
   nux::GetGraphicsThread()->SetLayout (layout);

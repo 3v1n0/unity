@@ -73,32 +73,31 @@ namespace unity {
     uint filter_type = FILTER_TOGGLE;
     nux::View *view = NULL;
 
+
+
     //TODO this does not conform to GCS i assume - I'll format it later
     switch (filter_type) {
-      case (FILTER_GENRE):
+      case (FILTER_GENRE): {
         //FIXME - removed the old code here, re-add it for the new widget
         break;
+      }
 
-      case (FILTER_RATING):
-      {
-        FilterRatings *rating = new FilterRatings ();
-        rating->SetFilter (filter);
-        return rating;
+      case (FILTER_RATING): {
+        view = static_cast<nux::View *> (new FilterRatings ());
         break;
       };
-      case (FILTER_DATERANGE):
+      case (FILTER_DATERANGE): {
         //TODO - date range widget
         break;
+      }
 
-      case (FILTER_TOGGLE):
-      {
-        g_debug ("building a toggle");
-        FilterBasicButton *toggle = new FilterBasicButton ();
-        toggle->SetFilter (filter);
-        return toggle;
+      case (FILTER_TOGGLE): {
+        view = static_cast<nux::View *> (new FilterBasicButton ());
         break;
       };
     }
+
+    dynamic_cast<FilterWidget *>(view)->SetFilter (filter);
 
     return view;
   }
