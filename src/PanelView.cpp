@@ -327,12 +327,6 @@ void PanelView::EndFirstMenuShow()
   }
 }
 
-Window
-PanelView::GetTrayWindow ()
-{
-  return _tray->GetTrayWindow ();
-}
-
 void
 PanelView::SetOpacity (float opacity)
 {

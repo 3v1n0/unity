@@ -66,8 +66,6 @@ public:
   void StartFirstMenuShow ();
   void EndFirstMenuShow ();
 
-  Window GetTrayWindow ();
-
   void SetOpacity (float opacity);
 
 protected:
