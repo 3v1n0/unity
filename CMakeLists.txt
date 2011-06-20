@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (shared services tools doc)
+subdirs (shared services tests tools doc)
 
 #
 # Base bits
@@ -124,6 +124,8 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # Compiz Plugins
 #
+set (UNITY_PLUGIN_DEPS "compiz;nux-0.9;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3;atk;unity-misc;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0")
+
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
 

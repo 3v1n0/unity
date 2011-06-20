@@ -450,7 +450,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
 {
   GdkPixbuf* ret = NULL;
 
-  if (image_type == GTK_IMAGE_PIXBUF)
+  if (image_type == 3) //FIXME:gtk3-service  GTK_IMAGE_PIXBUF)
   {
     gsize len = 0;
     guchar* decoded = g_base64_decode(image_data.c_str(), &len);
@@ -463,8 +463,8 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
     g_free(decoded);
     g_input_stream_close(stream, NULL, NULL);
   }
-  else if (image_type == GTK_IMAGE_STOCK ||
-           image_type == GTK_IMAGE_ICON_NAME)
+  else if (image_type == 3 || //FIXME:gtk3-service GTK_IMAGE_STOCK ||
+           image_type == 7)   //FIXME:gtk3-service GTK_IMAGE_ICON_NAME)
   {
     ret = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
                                    image_data.c_str(),
@@ -472,7 +472,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
                                    (GtkIconLookupFlags)0,
                                    NULL);
   }
-  else if (image_type == GTK_IMAGE_GICON)
+  else if (image_type == 8) //FIXME:gtk3-service GTK_IMAGE_GICON)
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(image_data.c_str(), NULL));
     GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(

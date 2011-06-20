@@ -271,7 +271,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   // DONT HATE ME
   // --------------------------------------------------------------------------
   //FIXME-GTK3 - i'm not porting this, fix your code :P
-  /*
+  
   else if (e->type == 6)
     {
       int       x_root=0, y_root=0;
@@ -299,7 +299,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
         }
     }
-  */
   // -> I HATE YOU
   // /DONT HATE ME
   // /FIXME
