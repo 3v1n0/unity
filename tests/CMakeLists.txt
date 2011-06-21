@@ -294,19 +294,19 @@ add_executable (test-places-backend
 # GTest tests
 #
 
-#enable_testing()
-#find_package(GTest REQUIRED)
-#include_directories(${GTEST_INCLUDE_DIRS})
-#add_executable(test-gtest
-#               test_timer.cpp
-#               test_indicator_entry.cpp
-#               ${UNITY_SRC}/IndicatorEntry.h
-#               ${UNITY_SRC}/IndicatorEntry.cpp
-#               ${UNITY_SRC}/Timer.h
-#               ${UNITY_SRC}/Timer.cpp
-#               )
-#target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
-#add_test(UnityGTests test-gtest)
+enable_testing()
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(test-gtest
+               test_timer.cpp
+               test_indicator_entry.cpp
+               ${UNITY_SRC}/IndicatorEntry.h
+               ${UNITY_SRC}/IndicatorEntry.cpp
+               ${UNITY_SRC}/Timer.h
+               ${UNITY_SRC}/Timer.cpp
+               )
+target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+add_test(UnityGTests test-gtest)
 
 #
 # check target
