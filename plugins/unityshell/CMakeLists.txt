@@ -11,4 +11,10 @@ compiz_plugin (unityshell
                )
 add_dependencies(unityshell unity-core-${UNITY_API_VERSION})
 
+#
+# Data
+#
 install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
+
+file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})

@@ -15,7 +15,7 @@ set(PANEL_SOURCES
     panel-indicator-entry-accessible.c
     panel-indicator-entry-accessible.h
     panel-main.c
-    ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
+    ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
     panel-root-accessible.c
     panel-root-accessible.h
     panel-service.c
@@ -24,9 +24,9 @@ set(PANEL_SOURCES
     panel-util-accessible.h)
 
 find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.h
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS panel-marshal.list
   COMMENT "Generating marshallers")
@@ -35,6 +35,7 @@ set(CFLAGS
     "${SERVICE_DEPS_CFLAGS}"
     ${SERVICE_DEPS_CFLAGS_OTHER}
     ${MAINTAINER_CFLAGS}
+    "-I${CMAKE_CURRENT_BINARY_DIR}"
     "-DGETTEXT_PACKAGE=\"unity\""
     "-DINDICATORDIR=\"${_indicatordir}\""
     "-DINDICATORICONDIR=\"${_iconsdir}\""
