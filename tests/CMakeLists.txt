@@ -42,7 +42,6 @@ add_executable (test-unit
                 unit/TestUBus.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
                 ${UNITY_SRC}/FavoriteStore.cpp
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
