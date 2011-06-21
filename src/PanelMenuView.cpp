@@ -810,17 +810,16 @@ void
 PanelMenuView::OnWindowMaximized (guint xid)
 {
   BamfWindow *window;
-
+  
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window) && bamf_window_get_xid (window) == xid)
   {
     _is_maximized = true;
   }
   
-  // We could probably just check if a key is available, but who wants to do that
-  if (_decor_map.find (xid) == _decor_map.end ())
-    _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
-  
+   // update the state of the window in the _decor_map
+   _decor_map[xid] = WindowManager::Default ()->IsWindowDecorated (xid);
+   
   if (_decor_map[xid])
   {
     WindowManager::Default ()->Undecorate (xid);
