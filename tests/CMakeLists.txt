@@ -31,14 +31,6 @@ link_directories (${LIB_PATHS} ${CMAKE_BINARY_DIR}/UnityCore)
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../services/panel-marshal.list
-  COMMENT "Generating marshallers")
-
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
@@ -279,6 +271,7 @@ add_executable(test-gtest
                )
 target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
 add_test(UnityGTests test-gtest)
+add_dependencies (test-gtest unity-core-${UNITY_API_VERSION})
 
 #
 # check target
