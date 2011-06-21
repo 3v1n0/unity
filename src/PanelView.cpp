@@ -16,7 +16,6 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
-#include "PanelView.h"
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -35,6 +34,7 @@
 #include "PanelStyle.h"
 #include "PanelIndicatorObjectView.h"
 #include "Variant.h"
+#include "PanelView.h"
 
 namespace unity {
 
@@ -54,7 +54,6 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
   _layout = new nux::HLayout ("", NUX_TRACKER_LOCATION);
-   SetCompositionLayout (_layout);
 
    // Home button - not an indicator view
    _home_button = new PanelHomeButton();
@@ -64,6 +63,8 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    _menu_view = new PanelMenuView ();
    AddPanelView(_menu_view, 1);
 
+   SetCompositionLayout (_layout);
+   
    // Pannel tray shouldn't be an indicator view
    _tray = new PanelTray ();
    _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
