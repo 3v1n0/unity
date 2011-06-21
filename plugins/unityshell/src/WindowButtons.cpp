@@ -25,7 +25,7 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 #include "WindowButtons.h"
 
 #include <glib.h>

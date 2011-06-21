@@ -23,13 +23,13 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES})
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION}")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${LIB_PATHS})
+link_directories (${LIB_PATHS} ${CMAKE_BINARY_DIR}/UnityCore)
 
-include_directories (. .. ../services ${UNITY_SRC} ${CMAKE_BINARY_DIR})
+include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
 find_program(GLIB_GENMARSHAL glib-genmarshal)
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
@@ -88,8 +88,6 @@ add_executable (test-unit
 
 add_executable (test-panel
                 TestPanel.cpp
-                ${UNITY_SRC}/DBusIndicators.cpp
-                ${UNITY_SRC}/DBusIndicators.h
                 ${UNITY_SRC}/GLibWrapper.h
                 ${UNITY_SRC}/GLibWrapper-inl.h
                 ${UNITY_SRC}/GLibWrapper.cpp
@@ -105,12 +103,6 @@ add_executable (test-panel
             	${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
                 ${UNITY_SRC}/PanelTray.cpp
                 ${UNITY_SRC}/PanelTray.h
-                ${UNITY_SRC}/Indicators.cpp
-                ${UNITY_SRC}/Indicators.h
-                ${UNITY_SRC}/Indicator.cpp
-                ${UNITY_SRC}/Indicator.h
-                ${UNITY_SRC}/IndicatorEntry.cpp
-                ${UNITY_SRC}/IndicatorEntry.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
                 ${UNITY_SRC}/PanelHomeButton.cpp
@@ -300,8 +292,6 @@ include_directories(${GTEST_INCLUDE_DIRS})
 add_executable(test-gtest
                test_timer.cpp
                test_indicator_entry.cpp
-               ${UNITY_SRC}/IndicatorEntry.h
-               ${UNITY_SRC}/IndicatorEntry.cpp
                ${UNITY_SRC}/Timer.h
                ${UNITY_SRC}/Timer.cpp
                )

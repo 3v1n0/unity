@@ -33,7 +33,7 @@
 #include <gtk/gtk.h>
 
 #include "PanelStyle.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #define PANEL_HEIGHT 24
 

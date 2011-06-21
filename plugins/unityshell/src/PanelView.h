@@ -28,7 +28,8 @@
 
 #include <gdk/gdkx.h>
 
-#include "DBusIndicators.h"
+#include <UnityCore/UnityCore.h>
+
 #include "Introspectable.h"
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"

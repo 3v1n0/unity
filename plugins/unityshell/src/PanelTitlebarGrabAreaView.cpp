@@ -28,7 +28,7 @@
 #include "Nux/WindowCompositor.h"
 
 #include "PanelTitlebarGrabAreaView.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #include <glib.h>
 

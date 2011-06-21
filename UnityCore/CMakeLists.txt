@@ -1,15 +1,27 @@
 find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0)
+pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-0.9 gdk-pixbuf-2.0)
 
 #
 # Headers & Sources
 #
 set (CORE_HEADERS
-     Unity.h
+     DBusIndicators.h
+     GLibWrapper.h
+     GLibWrapper-inl.h
+     IndicatorEntry.h
+     Indicator.h
+     Indicators.h
+     UnityCore.h
+     Variant.h
     )
 
 set (CORE_SOURCES
-     Unity.cpp
+     DBusIndicators.cpp
+     GLibWrapper.cpp
+     Indicator.cpp
+     IndicatorEntry.cpp
+     Indicators.cpp
+     Variant.cpp
     )
 
 #
@@ -19,6 +31,7 @@ set (CFLAGS
      ${CORE_DEPS_CFLAGS}
      ${CORE_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
+     "-I${CMAKE_BINARY_DIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-Werror -Wall"
      )
@@ -46,7 +59,7 @@ install (TARGETS ${CORE_LIB_NAME}
 #
 # Headers
 #
-install (FILES ${CORE_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${CORE_LIB_NAME}/unity-core)
+install (FILES ${CORE_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/Unity-${UNITY_API_VERSION}/UnityCore)
 
 #
 # PkgConfig file

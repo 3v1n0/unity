@@ -23,7 +23,7 @@
 #include <gio/gio.h>
 
 #include "FavoriteStore.h"
-#include "GLibWrapper.h"
+#include <UnityCore/UnityCore.h>
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session

@@ -42,7 +42,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"

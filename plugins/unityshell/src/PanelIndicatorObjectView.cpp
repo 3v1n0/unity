@@ -28,8 +28,6 @@
 
 #include "PanelIndicatorObjectView.h"
 
-#include "IndicatorEntry.h"
-
 #include <glib.h>
 
 namespace unity {

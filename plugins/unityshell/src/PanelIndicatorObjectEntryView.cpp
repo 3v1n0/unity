@@ -36,9 +36,8 @@
 // TODO: this include should be at the top, but it fails :(
 #include "PanelIndicatorObjectEntryView.h"
 
-#include "GLibWrapper.h"
 #include "PanelStyle.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 
 namespace unity {
