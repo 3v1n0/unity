@@ -94,6 +94,7 @@ PlacesHomeView::PlacesHomeView ()
   SetIcon (PKGDATADIR"/shortcuts_group_icon.png");
   
   _layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  _layout->SetReconfigureParentLayoutOnGeometryChange (true);
   SetChildLayout (_layout);
  
   _layout->ForceChildrenSize (true);

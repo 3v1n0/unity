@@ -40,7 +40,8 @@ public:
 
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-  
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);

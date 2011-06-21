@@ -102,8 +102,8 @@ QuicklistView::QuicklistView ()
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
-  OnStartFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
-  OnEndFocus.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
+  OnStartKeyboardReceiver.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
+  OnStopKeyboardReceiver.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
 
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
