@@ -1,5 +1,5 @@
 find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-0.9 gdk-pixbuf-2.0)
+pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-1.0 gdk-pixbuf-2.0)
 
 #
 # Headers & Sources
