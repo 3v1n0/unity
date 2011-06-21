@@ -71,6 +71,7 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/
                 )
+add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 
 add_executable (test-panel
                 TestPanel.cpp
@@ -105,6 +106,7 @@ add_executable (test-panel
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
 set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
                           ${UNITY_SRC}/ubus-server.h
@@ -168,11 +170,13 @@ add_executable (test-places
                 ${UNITY_SRC}/PlaceRemote.h
                 ${UNITY_SRC}/Place.h
                 )
+add_dependencies (test-places unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-tiles
                 TestPlacesTiles.cpp
                 ${PLACES_COMMON_SOURCE}
                 )
+add_dependencies (test-places-tiles unity-core-${UNITY_API_VERSION})
 
 
 add_executable (test-places-group
@@ -181,6 +185,7 @@ add_executable (test-places-group
                 ${UNITY_SRC}/PlacesGroup.cpp
                 ${UNITY_SRC}/PlacesGroup.h
                 )
+add_dependencies (test-places-group unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-results
                 TestPlacesResults.cpp
@@ -196,6 +201,7 @@ add_executable (test-places-results
                 ${UNITY_SRC}/PlacesVScrollBar.cpp
                 ${UNITY_SRC}/PlacesVScrollBar.h
                 )
+add_dependencies (test-places-results unity-core-${UNITY_API_VERSION})
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
@@ -218,6 +224,7 @@ add_executable (test-quicklist
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-quicklist unity-core-${UNITY_API_VERSION})
 
 add_executable (test-quicklist-visuals
                 ui/TestQuicklistVisuals.cpp
@@ -240,6 +247,7 @@ add_executable (test-quicklist-visuals
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-quicklist-visuals unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-backend
                 TestPlacesBackend.cpp
@@ -254,6 +262,7 @@ add_executable (test-places-backend
                 ${UNITY_SRC}/PlaceRemote.h
                 ${UNITY_SRC}/Place.h
                 )
+add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
 #
 # GTest tests
