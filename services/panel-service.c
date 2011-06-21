@@ -228,8 +228,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
         return GDK_FILTER_CONTINUE;
 			
 			//FIXME-GTK3 - is this compatible? drawable is gone from gdk3
-      Window     xwindow = gdk_x11_window_get_xid (window);
-      //Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
+      //Window     xwindow = gdk_x11_window_get_xid (window);
+      Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
 
       if (xwindow == 0)
         return GDK_FILTER_CONTINUE;
@@ -248,7 +248,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                      &win_y,
                      &mask_return);
 
-      gdk_window_get_geometry (window, &x, &y, &width, &height);
+      gdk_window_get_geometry (window, &x, &y, &width, &height, NULL);
       gdk_window_get_origin (window, &x, &y);
 
       if (x_root > x
@@ -271,7 +271,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   // DONT HATE ME
   // --------------------------------------------------------------------------
   //FIXME-GTK3 - i'm not porting this, fix your code :P
-  /*
+  
   else if (e->type == 6)
     {
       int       x_root=0, y_root=0;
@@ -299,7 +299,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
         }
     }
-  */
   // -> I HATE YOU
   // /DONT HATE ME
   // /FIXME

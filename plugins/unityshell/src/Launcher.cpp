@@ -43,7 +43,7 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 namespace {
 

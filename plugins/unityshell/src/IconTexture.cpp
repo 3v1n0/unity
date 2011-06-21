@@ -24,7 +24,7 @@
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "TextureCache.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #include <glib.h>
 #include <pango/pangocairo.h>

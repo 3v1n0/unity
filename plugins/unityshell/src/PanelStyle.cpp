@@ -47,6 +47,8 @@ PanelStyle::PanelStyle ()
   _offscreen = gtk_offscreen_window_new ();
   gtk_widget_set_name (_offscreen, "UnityPanelWidget");
   gtk_widget_set_size_request (_offscreen, 100, 24);
+  gtk_style_context_add_class (gtk_widget_get_style_context (_offscreen),
+                               "menubar");
   gtk_widget_show_all (_offscreen);
 
   _gtk_theme_changed_id = g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",

@@ -34,7 +34,7 @@
 
 #include "PanelStyle.h"
 #include "PanelIndicatorObjectView.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 namespace unity {
 

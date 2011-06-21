@@ -42,7 +42,7 @@
 #include "PlacesSettings.h"
 #include "PlacesSimpleTile.h"
 #include "PlacesStyle.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #include <string>
 #include <vector>

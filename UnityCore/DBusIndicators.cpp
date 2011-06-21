@@ -22,7 +22,6 @@
 #include <algorithm>
 
 #include <gio/gio.h>
-#include <dee.h>
 
 #include <X11/Xlib.h>
 #include "Nux/Nux.h"

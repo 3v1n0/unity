@@ -22,8 +22,7 @@
 
 #include <Nux/View.h>
 
-#include "Indicator.h"
-#include "IndicatorEntry.h"
+#include <UnityCore/UnityCore.h>
 #include "PanelIndicatorObjectEntryView.h"
 
 #include "Introspectable.h"

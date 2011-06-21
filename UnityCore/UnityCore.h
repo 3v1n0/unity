@@ -16,9 +16,17 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef _UNITY_H_
-#define _UNITY_H_
+#ifndef _UNITY_CORE_H_
+#define _UNITY_CORE_H_
 
 // Single include for headers
 
-#endif // _UNITY_H_
+#include <UnityCore/DBusIndicators.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibWrapper-inl.h>
+#include <UnityCore/Indicator.h>
+#include <UnityCore/IndicatorEntry.h>
+#include <UnityCore/Indicators.h>
+#include <UnityCore/Variant.h>
+
+#endif // _UNITY_CORE_H_

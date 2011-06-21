@@ -40,7 +40,7 @@
 #include "UBusMessages.h"
 
 #include "PlacesSearchBar.h"
-#include "Variant.h"
+#include <UnityCore/UnityCore.h>
 
 #include "PlacesStyle.h"
 
