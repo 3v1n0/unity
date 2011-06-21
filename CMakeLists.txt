@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (doc services tools UnityCore)
+subdirs (doc services tests tools UnityCore)
 
 #
 # Base bits

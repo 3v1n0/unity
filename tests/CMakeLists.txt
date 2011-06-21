@@ -55,9 +55,6 @@ add_executable (test-unit
                 ${UNITY_SRC}/FavoriteStore.h
                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
                 ${UNITY_SRC}/FavoriteStoreGSettings.h
-                ${UNITY_SRC}/GLibWrapper.h
-                ${UNITY_SRC}/GLibWrapper-inl.h
-                ${UNITY_SRC}/GLibWrapper.cpp
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/PlaceEntryRemote.cpp
                 ${UNITY_SRC}/PlaceEntryRemote.h
@@ -81,16 +78,11 @@ add_executable (test-unit
                 ${UNITY_SRC}/QuicklistMenuItemSeparator.h
                 ${UNITY_SRC}/QuicklistView.cpp
                 ${UNITY_SRC}/QuicklistView.h
-                ${UNITY_SRC}/Variant.cpp
-                ${UNITY_SRC}/Variant.h
                 ${UNITY_SRC}/
                 )
 
 add_executable (test-panel
                 TestPanel.cpp
-                ${UNITY_SRC}/GLibWrapper.h
-                ${UNITY_SRC}/GLibWrapper-inl.h
-                ${UNITY_SRC}/GLibWrapper.cpp
                 ${UNITY_SRC}/PanelStyle.cpp
                 ${UNITY_SRC}/PanelStyle.h
                 ${UNITY_SRC}/PanelView.cpp
@@ -99,8 +91,8 @@ add_executable (test-panel
                 ${UNITY_SRC}/PanelIndicatorObjectView.h
                 ${UNITY_SRC}/PanelIndicatorObjectEntryView.cpp
                 ${UNITY_SRC}/PanelIndicatorObjectEntryView.h
-            	${UNITY_SRC}/PanelTitlebarGrabAreaView.h
-            	${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
+                ${UNITY_SRC}/PanelTitlebarGrabAreaView.h
+                ${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
                 ${UNITY_SRC}/PanelTray.cpp
                 ${UNITY_SRC}/PanelTray.h
                 ${UNITY_SRC}/Introspectable.cpp
@@ -121,8 +113,6 @@ add_executable (test-panel
                 ${UNITY_SRC}/UScreen.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                ${UNITY_SRC}/Variant.cpp
-                ${UNITY_SRC}/Variant.h
                 )
 
 set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
@@ -150,8 +140,6 @@ set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
                           ${UNITY_SRC}/StaticCairoText.cpp
                           ${UNITY_SRC}/StaticCairoText.h
                           ${UNITY_SRC}/UBusMessages.h
-                          ${UNITY_SRC}/Variant.cpp
-                          ${UNITY_SRC}/Variant.h
                           )
 add_executable (test-places
                 TestPlaces.cpp
@@ -238,8 +226,6 @@ add_executable (test-quicklist
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                ${UNITY_SRC}/Variant.cpp
-                ${UNITY_SRC}/Variant.h
                 )
 
 add_executable (test-quicklist-visuals
@@ -262,8 +248,6 @@ add_executable (test-quicklist-visuals
                 ${UNITY_SRC}/QuicklistView.h
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                ${UNITY_SRC}/Variant.cpp
-                ${UNITY_SRC}/Variant.h
                 )
 
 add_executable (test-places-backend
@@ -278,8 +262,6 @@ add_executable (test-places-backend
                 ${UNITY_SRC}/PlaceRemote.cpp
                 ${UNITY_SRC}/PlaceRemote.h
                 ${UNITY_SRC}/Place.h
-                ${UNITY_SRC}/Variant.cpp
-                ${UNITY_SRC}/Variant.h
                 )
 
 #
