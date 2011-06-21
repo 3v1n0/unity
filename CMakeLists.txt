@@ -51,7 +51,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating AUTHORS"
        && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
        && echo "• Committing Release"
-       && bzr commit -m"Release ${UNITY_VERSION}"
+       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
        && echo "• Tagging Release"
        && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"
