@@ -1,4 +1,4 @@
-unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
+unity (4.0.1-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - Launcher - move Launcher icon count indicator so that it appears on the
@@ -31,7 +31,7 @@ unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
     - generate some shlibs for libunity-core-4.0-1 taking into accout ABI
       unstability
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 18:01:16 +0200
 
 unity (3.8.16-0ubuntu2) oneiric; urgency=low
 
