@@ -130,6 +130,7 @@ Depends: ${misc:Depends},
          libunity-core-4.0-1 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
+         libnux-1.0-dev (>= 1.0.2),
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
