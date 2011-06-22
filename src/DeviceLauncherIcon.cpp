@@ -19,11 +19,14 @@
 
 #include "DeviceLauncherIcon.h"
 
-#include "ubus-server.h"
-#include "UBusMessages.h"
+#include <algorithm>
+#include <list>
 
 #include <glib/gi18n-lib.h>
-#include <algorithm>
+
+#include "DevicesSettings.h"
+#include "ubus-server.h"
+#include "UBusMessages.h"
 
 namespace unity {
 

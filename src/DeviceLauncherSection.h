@@ -19,16 +19,16 @@
 #ifndef _DEVICE_LAUNCHER_SECTION_H_
 #define _DEVICE_LAUNCHER_SECTION_H_
 
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
 #include <map>
 
-#include "Launcher.h"
-#include "DeviceLauncherIcon.h"
-#include "DevicesSettings.h"
-#include "GLibWrapper.h"
-
+#include <sigc++/sigc++.h>
+#include <sigc++/signal.h>
 #include <gio/gio.h>
+
+#include "Launcher.h"
+#include "LauncherIcon.h"
+#include "DeviceLauncherIcon.h"
+#include "GLibWrapper.h"
 
 namespace unity {
 

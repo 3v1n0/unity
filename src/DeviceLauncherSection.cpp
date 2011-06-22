@@ -16,7 +16,6 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "DeviceLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 
 namespace unity

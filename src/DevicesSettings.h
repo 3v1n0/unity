@@ -20,13 +20,14 @@
 #ifndef DEVICES_SETTINGS_H
 #define DEVICES_SETTINGS_H
 
+#include <list>
+#include <string>
+
 #include <gio/gio.h>
 #include <boost/utility.hpp>
 #include <sigc++/sigc++.h>
 
 #include "GLibWrapper.h"
-
-#include <list>
 
 namespace unity {
 

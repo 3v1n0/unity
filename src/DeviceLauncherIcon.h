@@ -20,11 +20,10 @@
 #ifndef _DEVICE_LAUNCHER_ICON_H__H
 #define _DEVICE_LAUNCHER_ICON_H__H
 
-#include "SimpleLauncherIcon.h"
-#include "DevicesSettings.h"
-#include "GLibWrapper.h"
-
 #include <gio/gio.h>
+
+#include "SimpleLauncherIcon.h"
+#include "GLibWrapper.h"
 
 namespace unity {
 

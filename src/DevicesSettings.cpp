@@ -20,7 +20,6 @@
 #include "DevicesSettings.h"
 
 #include <algorithm>
-#include <iostream>
 
 namespace unity {
 
