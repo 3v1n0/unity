@@ -37,15 +37,9 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher *launcher, GVolume *volume)
   : SimpleLauncherIcon(launcher)
   , volume_(volume)
 {
-
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  on_changed_handler_id_ = g_signal_connect(volume_,
-                                            "changed",
-                                            G_CALLBACK(&DeviceLauncherIcon::OnChanged),
-                                            this);
-
-  /* Checked if in favourites! */
+  // Checked if in favourites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
   DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
@@ -336,9 +330,6 @@ void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem *item,
 
 void DeviceLauncherIcon::OnRemoved()
 {
-  if (on_changed_handler_id_ != 0)
-    g_signal_handler_disconnect((gpointer) volume_, on_changed_handler_id_);
-
   Remove();
 }
 
@@ -373,18 +364,7 @@ void DeviceLauncherIcon::OnStopDriveReady(GObject *object,
   g_drive_stop_finish(drive.RawPtr(), result, NULL);
 }
 
-void DeviceLauncherIcon::OnChanged(GVolume *volume, DeviceLauncherIcon *self)
-{
-  glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
-
-  if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
-      && mount.RawPtr() == NULL && self->checked_)
-  {
-    self->SetQuirk(QUIRK_VISIBLE, false); 
-  } 
-}
-
-void DeviceLauncherIcon::UpdateVisibility()
+void DeviceLauncherIcon::UpdateVisibility(int visibility)
 {
   switch (DevicesSettings::GetDefault().GetDevicesOption())
   {
@@ -392,16 +372,20 @@ void DeviceLauncherIcon::UpdateVisibility()
       SetQuirk(QUIRK_VISIBLE, false);
       break;
     case DevicesSettings::ONLY_MOUNTED:
-    {
-      glib::Object<GMount> mount(g_volume_get_mount(volume_));
-      
-      if (mount.RawPtr() == NULL && checked_)
-        SetQuirk(QUIRK_VISIBLE, false); 
-      else
+      if (!checked_)
+      {
         SetQuirk(QUIRK_VISIBLE, true);
-
+      }
+      else if (visibility < 0)
+      {
+        glib::Object<GMount> mount(g_volume_get_mount(volume_));
+        SetQuirk(QUIRK_VISIBLE, mount.RawPtr() != NULL); 
+      }
+      else
+      {
+        SetQuirk(QUIRK_VISIBLE, visibility); 
+      }
       break;
-    }
     case DevicesSettings::ALWAYS:
       SetQuirk(QUIRK_VISIBLE, true);
       break;
@@ -410,7 +394,7 @@ void DeviceLauncherIcon::UpdateVisibility()
 
 void DeviceLauncherIcon::OnSettingsChanged()
 {
-  /* Checked if in favourites! */
+  // Checked if in favourites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
   DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());

@@ -36,7 +36,7 @@ public:
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
-  void UpdateVisibility();
+  void UpdateVisibility(int visibility = -1);
   void OnRemoved();
 
 protected:
@@ -53,7 +53,6 @@ private:
   static void OnOpen(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnEject(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
   static void OnUnmount(DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);
-  static void OnChanged(GVolume *volume, DeviceLauncherIcon *self);
   static void OnMountReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnEjectReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
   static void OnUnmountReady(GObject *object, GAsyncResult *result, DeviceLauncherIcon *self);
@@ -64,7 +63,6 @@ private:
 private:
   GVolume *volume_;
   bool checked_;
-  gulong on_changed_handler_id_;
 };
 
 } // namespace unity

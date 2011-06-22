@@ -115,9 +115,6 @@ void DevicesSettings::Changed(std::string const& key)
   
   Refresh();
   
-  /* TODO: We should use two different signals (one for visibility option
-   * and onther one for favorites.
-   */
   changed.emit();
 }
 
@@ -128,9 +125,6 @@ void DevicesSettings::SetDevicesOption(DevicesOption devices_option)
 
   devices_option_ = devices_option;
 
-  /* TODO: We should use two different signals (one for visibility option
-   * and onther one for favorites 
-   */
   changed.emit();
 }
 

@@ -41,6 +41,11 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
                                                 G_CALLBACK(&DeviceLauncherSection::OnMountAdded),
                                                 this);
 
+	on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+                                                  "mount-pre-unmount",
+                                                  G_CALLBACK(&DeviceLauncherSection::OnMountPreUnmount),
+                                                  this);
+
   on_device_populate_entry_id_ = g_idle_add((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
 
@@ -57,6 +62,10 @@ DeviceLauncherSection::~DeviceLauncherSection()
   if (on_mount_added_handler_id_)
     g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
                                 on_mount_added_handler_id_);
+
+	if (on_mount_pre_unmount_handler_id_)
+    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+                                on_mount_pre_unmount_handler_id_);
 
   if (on_device_populate_entry_id_)
     g_source_remove(on_device_populate_entry_id_);
@@ -82,6 +91,10 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
   return false;
 }
 
+/* Uses a std::map to track all the volume icons shown and not shown.
+ * Keep in mind: when "volume-removed" is recevied we should erase
+ * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
+ */
 void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
                                       		GVolume *volume,
                                       		DeviceLauncherSection *self)
@@ -104,6 +117,9 @@ void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
 	}
 }
 
+/* Keep in mind: we could have a GMount without a related GVolume
+ * so check everything to avoid unwanted behaviors.
+ */
 void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
                                      		 GMount *mount,
                                      		 DeviceLauncherSection *self)
@@ -114,7 +130,23 @@ void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
 		it = self->map_.find(volume.RawPtr());
 
     if (it != self->map_.end())
-      it->second->UpdateVisibility();
+      it->second->UpdateVisibility(1);
+}
+
+/* We don't use "mount-removed" signal since it is received after "volume-removed"
+ * signal. You should read also the comment above.
+	*/
+void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor *monitor,
+                                     		      GMount *mount,
+                                     		      DeviceLauncherSection *self)
+{
+	std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+	glib::Object<GVolume> volume(g_mount_get_volume(mount));
+
+	it = self->map_.find(volume.RawPtr());
+
+  if (it != self->map_.end())
+    it->second->UpdateVisibility(0);
 }
 
 } // namespace unity
