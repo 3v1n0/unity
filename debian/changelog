@@ -25,6 +25,8 @@ unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - remove unitydialog and networkarearegion from ccsm to avoid enabling them,
       they are making compiz hanging and segfault on switch
+    - generate some shlibs for libunity-core-4.0-1 taking into accout ABI
+      unstability
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
 
