@@ -7,6 +7,10 @@ unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
     - don't build-dep on quilt
     debian/rules, debian/patches:
     - dont use --with-quilt
+  * debian/control:
+    - add build-dep on libgtk-3-dev, libcairo2-dev
+    - bump deps on libunity-misc-dev, libnux-1.0-dev, libbamf3-dev and
+      libindicator3-dev
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
 
