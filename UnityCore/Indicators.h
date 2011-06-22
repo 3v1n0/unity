@@ -48,6 +48,7 @@ public:
   sigc::signal<void, std::string const&> on_entry_activate_request;
   sigc::signal<void, std::string const&> on_entry_activated;
   sigc::signal<void> on_synced;
+  sigc::signal<void, std::string const&, int, int, int, int> on_entry_show_menu;
 
 protected:
   Indicator& GetIndicator(std::string const& name);
