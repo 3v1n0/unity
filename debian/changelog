@@ -22,6 +22,9 @@ unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
   * debian/libunity-core-4.0-1.install, debian/libunity-core-4.0-dev.install,
     debian/control:
     - new libunity-core packages for shared library between unity and unity-2d
+  * debian/rules:
+    - remove unitydialog and networkarearegion from ccsm to avoid enabling them,
+      they are making compiz hanging and segfault on switch
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
 

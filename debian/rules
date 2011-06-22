@@ -15,6 +15,8 @@ override_dh_auto_configure:
 
 override_dh_install:
 	find debian/tmp/usr/lib -name \*.*a -exec rm {} \;
+	rm -f debian/tmp/usr/share/compiz/unitydialog.xml
+	rm -f debian/tmp/usr/share/compiz/networkarearegion.xml
 	dh_install --fail-missing
 
 override_dh_gencontrol:
