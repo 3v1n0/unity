@@ -48,9 +48,9 @@ private:
   static void OnVolumeRemoved(GVolumeMonitor *monitor,
                               GVolume *volume,
                               DeviceLauncherSection *self);
-  static void OnMountAdded (GVolumeMonitor *monitor,
-                            GMount *mount,
-                            DeviceLauncherSection *self);
+  static void OnMountAdded(GVolumeMonitor *monitor,
+                           GMount *mount,
+                           DeviceLauncherSection *self);
 public:
   Launcher *launcher_;
   glib::Object<GVolumeMonitor> monitor_;

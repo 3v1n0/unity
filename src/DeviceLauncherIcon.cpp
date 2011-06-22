@@ -68,21 +68,21 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
     glib::Object<GIcon> icon(g_volume_get_icon(volume_));
     glib::String icon_string(g_icon_to_string(icon.RawPtr()));
 
-    SetIconName (icon_string.Value());
+    SetIconName(icon_string.Value());
   }
   
-  SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_DEVICE);
+  SetQuirk(QUIRK_RUNNING, false);
+  SetIconType(TYPE_DEVICE);
 }
 
-inline nux::Color DeviceLauncherIcon::BackgroundColor ()
+inline nux::Color DeviceLauncherIcon::BackgroundColor()
 {
-  return nux::Color (0xFF333333);
+  return nux::Color(0xFF333333);
 }
 
-inline nux::Color DeviceLauncherIcon::GlowColor ()
+inline nux::Color DeviceLauncherIcon::GlowColor()
 {
-  return nux::Color (0xFF333333);
+  return nux::Color(0xFF333333);
 }
 
 std::list<DbusmenuMenuitem *> DeviceLauncherIcon::GetMenus()
@@ -105,7 +105,7 @@ std::list<DbusmenuMenuitem *> DeviceLauncherIcon::GetMenus()
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      G_CALLBACK(&DeviceLauncherIcon::OnTogglePin), this);
 
-    result.push_back (menu_item);
+    result.push_back(menu_item);
   }
   
   // "Open" item
@@ -206,12 +206,12 @@ void DeviceLauncherIcon::ShowMount(GMount *mount)
 
 void DeviceLauncherIcon::ActivateLauncherIcon()
 {
-  SetQuirk (QUIRK_STARTING, true);
+  SetQuirk(QUIRK_STARTING, true);
   
   glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
   if (G_IS_MOUNT(mount.RawPtr()))
-    ShowMount (mount);
+    ShowMount(mount);
   else
     g_volume_mount(volume_,
                    (GMountMountFlags)0,
@@ -253,12 +253,12 @@ void DeviceLauncherIcon::Eject()
 {
   glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
-  g_volume_eject_with_operation (volume_,
-                                 (GMountUnmountFlags)0,
-                                 mount_op.RawPtr(),
-                                 NULL,
-                                 (GAsyncReadyCallback)OnEjectReady,
-                                 this);
+  g_volume_eject_with_operation(volume_,
+                                (GMountUnmountFlags)0,
+                                mount_op.RawPtr(),
+                                NULL,
+                                (GAsyncReadyCallback)OnEjectReady,
+                                this);
 }
 
 void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem *item,
@@ -272,10 +272,10 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem *item,
   if (self->checked_)
   {
     // If the volume is not mounted hide the icon
-    glib::Object<GMount> mount (g_volume_get_mount(self->volume_));
+    glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
     if (mount.RawPtr() == NULL)
-      self->SetQuirk (QUIRK_VISIBLE, false); 
+      self->SetQuirk(QUIRK_VISIBLE, false); 
 
     // Remove from favorites
     if (!uuid.Str().empty())
@@ -334,7 +334,7 @@ void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem *item,
   self->Unmount();
 }
 
-void DeviceLauncherIcon::OnRemoved ()
+void DeviceLauncherIcon::OnRemoved()
 {
   if (on_changed_handler_id_ != 0)
     g_signal_handler_disconnect((gpointer) volume_, on_changed_handler_id_);
@@ -370,7 +370,7 @@ void DeviceLauncherIcon::OnStopDriveReady(GObject *object,
     return;
 
   glib::Object<GDrive> drive(g_volume_get_drive(self->volume_));
-  g_drive_stop_finish (drive.RawPtr(), result, NULL);
+  g_drive_stop_finish(drive.RawPtr(), result, NULL);
 }
 
 void DeviceLauncherIcon::OnChanged(GVolume *volume, DeviceLauncherIcon *self)
@@ -380,7 +380,7 @@ void DeviceLauncherIcon::OnChanged(GVolume *volume, DeviceLauncherIcon *self)
   if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
       && mount.RawPtr() == NULL && self->checked_)
   {
-    self->SetQuirk (QUIRK_VISIBLE, false); 
+    self->SetQuirk(QUIRK_VISIBLE, false); 
   } 
 }
 
@@ -389,7 +389,7 @@ void DeviceLauncherIcon::UpdateVisibility()
   switch (DevicesSettings::GetDefault().GetDevicesOption())
   {
     case DevicesSettings::NEVER:
-      SetQuirk (QUIRK_VISIBLE, false);
+      SetQuirk(QUIRK_VISIBLE, false);
       break;
     case DevicesSettings::ONLY_MOUNTED:
     {

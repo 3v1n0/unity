@@ -48,14 +48,14 @@ DevicesSettings::DevicesSettings()
 
   g_signal_connect(settings_.RawPtr(), "changed", G_CALLBACK(on_settings_updated), this);
 
-  Refresh ();
+  Refresh();
 }
 
 void DevicesSettings::Refresh()
 {
   gchar **favs = g_settings_get_strv(settings_, "favorites");
 
-  favorites_.clear ();
+  favorites_.clear();
 
   for (int i = 0; favs[i] != NULL; i++)
     favorites_.push_back(favs[i]);
@@ -74,7 +74,7 @@ void DevicesSettings::AddFavorite(std::string const& uuid)
   Refresh();
 }
 
-void DevicesSettings::RemoveFavorite (std::string const& uuid)
+void DevicesSettings::RemoveFavorite(std::string const& uuid)
 {
   if (uuid.empty())
     return;
@@ -113,7 +113,7 @@ void DevicesSettings::Changed(std::string const& key)
   if (ignore_signals_)
     return;
   
-  Refresh ();
+  Refresh();
   
   /* TODO: We should use two different signals (one for visibility option
    * and onther one for favorites.

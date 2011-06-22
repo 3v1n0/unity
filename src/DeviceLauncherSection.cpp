@@ -28,17 +28,17 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
 {
 	on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
                                                  "volume-added",
-                                                 G_CALLBACK (&DeviceLauncherSection::OnVolumeAdded),
+                                                 G_CALLBACK(&DeviceLauncherSection::OnVolumeAdded),
                                                  this);
 
   on_volume_removed_handler_id_ = g_signal_connect(monitor_.RawPtr(),
                                                    "volume-removed",
-                                                   G_CALLBACK (&DeviceLauncherSection::OnVolumeRemoved),
+                                                   G_CALLBACK(&DeviceLauncherSection::OnVolumeRemoved),
                                                    this);
     
   on_mount_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
                                                 "mount-added",
-                                                G_CALLBACK (&DeviceLauncherSection::OnMountAdded),
+                                                G_CALLBACK(&DeviceLauncherSection::OnMountAdded),
                                                 this);
 
   on_device_populate_entry_id_ = g_idle_add((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
