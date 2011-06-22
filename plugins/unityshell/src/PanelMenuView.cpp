@@ -249,7 +249,7 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 nux::Area*
 PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
-    bool mouse_inside = TestMousePointerInclusion(mouse_position, event_type, false);
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
     if(mouse_inside == false)
       return NULL;
