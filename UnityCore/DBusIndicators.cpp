@@ -20,18 +20,15 @@
 #include "DBusIndicators.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include <gio/gio.h>
 
 #include <X11/Xlib.h>
-#include "Nux/Nux.h"
-#include "Nux/WindowThread.h"
-#include "NuxGraphics/GLWindowManager.h"
 
 #include "config.h"
 #include "GLibWrapper.h"
 #include "Variant.h"
-
 
 namespace unity {
 namespace indicator {
@@ -211,9 +208,7 @@ void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
                                            int x, int y, int timestamp, int button)
 {
-  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-  XUngrabPointer(d, CurrentTime);
-  XFlush(d);
+  owner_->on_entry_show_menu.emit (entry_id, x, y, timestamp, button);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
@@ -227,28 +222,6 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->button = button;
 
   g_timeout_add(0, (GSourceFunc)send_show_entry, data);
-
-  // --------------------------------------------------------------------------
-  // FIXME: This is a workaround until the non-paired events issue is fixed in
-  // nux
-  XButtonEvent ev = {
-    ButtonRelease,
-    0,
-    False,
-    d,
-    0,
-    0,
-    0,
-    CurrentTime,
-    x, y,
-    x, y,
-    0,
-    Button1,
-    True
-  };
-  XEvent *e = (XEvent*)&ev;
-  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
-  // --------------------------------------------------------------------------
 }
 
 void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
@@ -617,10 +590,6 @@ bool send_show_entry(ShowEntryData *data)
 {
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (G_IS_DBUS_PROXY (data->proxy), FALSE);
-
-  /* Re-flush 'cos X is crap like that */
-  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
-  XFlush (d);
 
   g_dbus_proxy_call(data->proxy,
                      "ShowEntry",

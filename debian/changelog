@@ -1,7 +1,8 @@
 unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
-  * Cherry pick some patches to not build on GTest
+  * Cherry pick some patches to not build on GTest, soname fixes as well as
+    invalid value for automaximize
   * Some lintian cleanage:
     debian/control:
     - bump Standards-Version
