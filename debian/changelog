@@ -9,9 +9,19 @@ unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
     debian/rules, debian/patches:
     - dont use --with-quilt
   * debian/control:
-    - add build-dep on libgtk-3-dev, libcairo2-dev
-    - bump deps on libunity-misc-dev, libnux-1.0-dev, libbamf3-dev and
-      libindicator3-dev
+    - add build-dep on libgtk-3-dev, libcairo2-dev, libindicator3-dev,
+      libsigc++-2.0-dev
+    - bump deps on libunity-misc-dev, libnux-1.0-dev, libbamf3-dev
+    - remove vala
+  * debian/unity-common.install, debian/control:
+    - now ship the ccsm unityshell image, gconf schemas, all images and
+      apport hook
+  * debian/unity-services.install, debian/control
+    - new unity-services package containing current and futur unity services,
+      moving files to it from unity
+  * debian/libunity-core-4.0-1.install, debian/libunity-core-4.0-dev.install,
+    debian/control:
+    - new libunity-core packages for shared library between unity and unity-2d
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
 

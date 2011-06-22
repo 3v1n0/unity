@@ -1,10 +1,4 @@
-usr/bin/
+usr/bin
 usr/lib/compiz
-usr/lib/unity/*service
-usr/share/compiz/
-usr/share/ccsm
-usr/share/dbus-1
-usr/share/gconf
+usr/share/compiz
 usr/share/locale
-usr/share/unity
-debian/source_unity.py /usr/share/apport/package-hooks

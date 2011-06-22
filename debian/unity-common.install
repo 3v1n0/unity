@@ -1,4 +1,8 @@
 usr/lib/unity/*.py
+usr/share/applications
+usr/share/ccsm
 usr/share/glib-2.0
+usr/share/gconf
 usr/share/man
-usr/share/applications/unity-preferences.desktop
+usr/share/unity/*/*png
+debian/source_unity.py usr/share/apport/package-hooks
