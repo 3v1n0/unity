@@ -56,7 +56,7 @@ PluginAdapter::PluginAdapter(CompScreen *screen) :
   _grab_show_action = 0;
   _grab_hide_action = 0;
   _grab_toggle_action = 0;
-  _coverage_area_before_automaximize = 0;
+  _coverage_area_before_automaximize = 0.75;
 }
 
 PluginAdapter::~PluginAdapter()
