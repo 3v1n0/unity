@@ -26,7 +26,7 @@
 #include "Nux/WindowThread.h"
 
 void TestFavoriteStoreGSettingsCreateSuite (void);
-void TestPanelServiceCreateSuite (void);
+//void TestPanelServiceCreateSuite (void);
 void TestPlaceFactoryFileCreateSuite (void);
 void TestUBusCreateSuite (void);
 void TestQuicklistMenuitemsCreateSuite (void);
@@ -72,7 +72,7 @@ main (int argc, char **argv)
 
   //Keep alphabetical please
   TestFavoriteStoreGSettingsCreateSuite ();
-  TestPanelServiceCreateSuite ();
+  //TestPanelServiceCreateSuite ();
   TestPlaceFactoryFileCreateSuite ();
   TestQuicklistMenuitemsCreateSuite ();
   TestUBusCreateSuite ();

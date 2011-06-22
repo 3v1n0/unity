@@ -4,39 +4,72 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (services tests tools doc)
+subdirs (doc services tests tools UnityCore)
 
 #
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 3)
-set (UNITY_MINOR 8)
-set (UNITY_MICRO 16)
+set (UNITY_MAJOR 4)
+set (UNITY_MINOR 0)
+set (UNITY_MICRO 1)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
-set (UNITY_API_VERSION "3.0")
+set (UNITY_API_VERSION "4.0")
+
+set (CMAKE_CXX_FLAGS "-fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-fno-permissive")
+set (CMAKE_CXX_FLAGS_RELEASE "-fno-permissive")
 
 #
 # Niceties
 #
 set (ARCHIVE_NAME unity-${UNITY_VERSION})
 add_custom_target (dist
-    COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+  COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
 
 add_custom_target (distcheck
-    COMMAND cd ${CMAKE_BINARY_DIR}
-    && rm -rf ${ARCHIVE_NAME}
-    && tar xf ${ARCHIVE_NAME}.tar.bz2
-    && mkdir ${ARCHIVE_NAME}/build
-    && cd ${ARCHIVE_NAME}/build
-    && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
-    && make -j8
-    && make -j8 install
-    && make check
-    )
+  COMMAND cd ${CMAKE_BINARY_DIR}
+       && rm -rf ${ARCHIVE_NAME}
+       && tar xf ${ARCHIVE_NAME}.tar.bz2
+       && mkdir ${ARCHIVE_NAME}/build
+       && cd ${ARCHIVE_NAME}/build
+       && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
+       && make -j4
+       && make -j4 install
+       && make check
+  )
 add_dependencies(distcheck dist)
+
+add_custom_target (pre-distcheck
+  COMMAND echo ""
+       && echo "• Releasing Unity ${UNITY_VERSION}"
+       && cd ${CMAKE_SOURCE_DIR}
+       && echo "• Generating ChangeLog"
+       && bzr log --gnu-changelog > ChangeLog
+       && echo "• Generating AUTHORS"
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
+       && echo "• Committing Release"
+       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
+       && echo "• Tagging Release"
+       && bzr tag ${UNITY_VERSION}
+       && echo "• Running Distcheck"
+  )
+
+add_custom_target (post-distcheck
+  COMMAND echo "• Signing Tarball"
+       && gpg --armor --sign --detach-sig ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
+       && echo "• Pushing Branch"
+       && bzr push
+       && echo "• Publishing Tarball"
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && echo ""
+       && echo "• Unity ${UNITY_VERSION} Released."
+  )
+
+add_custom_target (release)
+add_dependencies (release pre-distcheck distcheck post-discheck)
 
 #
 # config.h
@@ -48,17 +81,8 @@ set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
-set (TESTVALADIR "${CMAKE_SOURCE_DIR}/tests/vala")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-
-#
-# Data
-#
-file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
-
-install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
 
 #
 # i18n
@@ -92,23 +116,14 @@ if (DISABLE_MAINTAINER_CFLAGS)
 endif (DISABLE_MAINTAINER_CFLAGS)
 
 #
-# src (Compiz Plugin)
+# Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk;unity-misc;gconf-2.0;libutouch-geis")
+set (UNITY_PLUGIN_DEPS "compiz;nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
-compiz_plugin (unityshell
-               PKGDEPS ${UNITY_PLUGIN_DEPS}
-               PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${CMAKE_INSTALL_PREFIX}/share/unity/3\"' -I${CMAKE_BINARY_DIR} ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
-               )
 
-#
-# UTouch things
-#
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/plugins/")
 
 #
 # GSettings Schema
@@ -142,3 +157,27 @@ install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR}
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
+#
+# docs
+#
+
+# check if doxygen is even installed
+find_package(Doxygen)
+if (DOXYGEN_FOUND STREQUAL "NO")
+  message("Doxygen not found. Documentation will not be built")
+endif (DOXYGEN_FOUND STREQUAL "NO")
+
+if (DOXYGEN_FOUND STREQUAL "YES")
+  set(TOP_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+  # prepare doxygen configuration file
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # add doxygen as target
+  add_custom_target(doxygen ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  # cleanup $build/api-doc on "make clean"
+  set_property(DIRECTORY APPEND PROPERTY
+         ADDITIONAL_MAKE_CLEAN_FILES api-doc)
+
+endif (DOXYGEN_FOUND STREQUAL "YES")

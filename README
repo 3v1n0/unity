@@ -19,6 +19,3 @@
     D-Bus activation. This is used for testing how the panel reacts when it
     starts before the service does.
 
-
-• Code Style
-  astyle -s2 -b -S -N -w -Y -M80 -p -H -d -j -k3 -n -z2
