@@ -456,7 +456,7 @@ void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
   {
     if (force_tried)
     {
-      printf ("\nWARNING: Unable to connect to the unity-panel-service %s\n",
+      g_warning ("WARNING: Unable to connect to the unity-panel-service %s",
               error ? error->message : "Unknown");
       if (error)
         g_error_free (error);
