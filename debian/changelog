@@ -1,6 +1,7 @@
 unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Cherry pick some patches to not build on GTest
   * Some lintian cleanage:
     debian/control:
     - bump Standards-Version

@@ -269,17 +269,22 @@ add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 #
 
 enable_testing()
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(test-gtest
-               test_timer.cpp
-               test_indicator_entry.cpp
-               ${UNITY_SRC}/Timer.h
-               ${UNITY_SRC}/Timer.cpp
-               )
-target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
-add_test(UnityGTests test-gtest)
-add_dependencies (test-gtest unity-core-${UNITY_API_VERSION})
+find_package(GTest)
+
+if (${GTEST_FOUND} STREQUAL TRUE)
+
+  include_directories(${GTEST_INCLUDE_DIRS})
+  add_executable(test-gtest
+                 test_timer.cpp
+                 test_indicator_entry.cpp
+                 ${UNITY_SRC}/Timer.h
+                 ${UNITY_SRC}/Timer.cpp
+                 )
+  target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+  add_test(UnityGTests test-gtest)
+  add_dependencies (test-gtest unity-core-${UNITY_API_VERSION})
+  add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
+endif (${GTEST_FOUND} STREQUAL TRUE)
 
 #
 # check target
@@ -289,6 +294,5 @@ set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
 add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
-add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 

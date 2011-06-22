@@ -63,13 +63,13 @@ add_custom_target (post-distcheck
        && echo "• Pushing Branch"
        && bzr push
        && echo "• Publishing Tarball"
-       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
        && echo ""
        && echo "• Unity ${UNITY_VERSION} Released."
   )
 
 add_custom_target (release)
-add_dependencies (release pre-distcheck distcheck post-discheck)
+add_dependencies (release pre-distcheck distcheck post-distcheck)
 
 #
 # config.h
