@@ -1,6 +1,8 @@
 unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Launcher - move Launcher icon count indicator so that it appears on the
+      right side of the Launcher icons (LP: #767046)
   * Cherry pick some patches to not build on GTest, soname fixes as well as
     invalid value for automaximize
   * Some lintian cleanage:
