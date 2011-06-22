@@ -1,6 +1,12 @@
 unity (4.0.1-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Some lintian cleanage:
+    debian/control:
+    - bump Standards-Version
+    - don't build-dep on quilt
+    debian/rules, debian/patches:
+    - dont use --with-quilt
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Jun 2011 12:57:36 +0200
 
