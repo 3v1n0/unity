@@ -2,7 +2,7 @@
 # Panel Service
 #
 find_package(PkgConfig)
-pkg_check_modules(SERVICE_DEPS REQUIRED gobject-2.0 gio-2.0 gtk+-2.0 gthread-2.0 indicator>=0.3.19 x11 gconf-2.0)
+pkg_check_modules(SERVICE_DEPS REQUIRED gtk+-2.0 gobject-2.0 gio-2.0 gthread-2.0 indicator x11 gconf-2.0)
 
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable indicatordir OUTPUT_VARIABLE _indicatordir OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator --variable iconsdir OUTPUT_VARIABLE _iconsdir OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -15,7 +15,7 @@ set(PANEL_SOURCES
     panel-indicator-entry-accessible.c
     panel-indicator-entry-accessible.h
     panel-main.c
-    ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
+    ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
     panel-root-accessible.c
     panel-root-accessible.h
     panel-service.c
@@ -24,17 +24,18 @@ set(PANEL_SOURCES
     panel-util-accessible.h)
 
 find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.h
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
+  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   DEPENDS panel-marshal.list
   COMMENT "Generating marshallers")
 
 set(CFLAGS
-    ${SERVICE_DEPS_CFLAGS}
+    "${SERVICE_DEPS_CFLAGS}"
     ${SERVICE_DEPS_CFLAGS_OTHER}
     ${MAINTAINER_CFLAGS}
+    "-I${CMAKE_CURRENT_BINARY_DIR}"
     "-DGETTEXT_PACKAGE=\"unity\""
     "-DINDICATORDIR=\"${_indicatordir}\""
     "-DINDICATORICONDIR=\"${_iconsdir}\""

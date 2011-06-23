@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (shared services tests tools doc)
+subdirs (doc services tests tools UnityCore)
 
 #
 # Base bits
@@ -51,7 +51,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating AUTHORS"
        && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
        && echo "• Committing Release"
-       && bzr commit -m"Release ${UNITY_VERSION}"
+       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
        && echo "• Tagging Release"
        && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"
@@ -63,13 +63,13 @@ add_custom_target (post-distcheck
        && echo "• Pushing Branch"
        && bzr push
        && echo "• Publishing Tarball"
-       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
        && echo ""
        && echo "• Unity ${UNITY_VERSION} Released."
   )
 
 add_custom_target (release)
-add_dependencies (release pre-distcheck distcheck post-discheck)
+add_dependencies (release pre-distcheck distcheck post-distcheck)
 
 #
 # config.h
@@ -83,14 +83,6 @@ set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-
-#
-# Data
-#
-file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
-
-install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
 
 #
 # i18n
@@ -124,32 +116,14 @@ if (DISABLE_MAINTAINER_CFLAGS)
 endif (DISABLE_MAINTAINER_CFLAGS)
 
 #
-# src (Compiz Plugin)
+# Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "nux-0.9;libbamf;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator;atk;unity-misc;gconf-2.0;libutouch-geis")
+set (UNITY_PLUGIN_DEPS "compiz;nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
-compiz_plugin (unityshell
-               PKGDEPS ${UNITY_PLUGIN_DEPS}
-               PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR}/shared ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
-               LIBRARIES "-lunity-shared-${UNITY_API_VERSION}"
-               LIBDIRS "${CMAKE_BINARY_DIR}/shared"
-               )
-add_dependencies(unityshell unity-shared-${UNITY_API_VERSION})
 
-#
-# UTouch things
-#
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
-
-#
-# Dialog things
-#
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/dialog")
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/plugins/")
 
 #
 # GSettings Schema
