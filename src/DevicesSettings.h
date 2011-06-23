@@ -59,6 +59,7 @@ public:
   
   // Signals
   sigc::signal<void> changed;
+  
 private:
   void Refresh();
   void SaveFavorites(DeviceList const& favorites);

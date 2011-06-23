@@ -22,10 +22,10 @@ namespace unity
 {
 
 DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
-	: launcher_(launcher)
-	, monitor_(g_volume_monitor_get())
+  : launcher_(launcher)
+  , monitor_(g_volume_monitor_get())
 {
-	on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+  on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
                                                  "volume-added",
                                                  G_CALLBACK(&DeviceLauncherSection::OnVolumeAdded),
                                                  this);
@@ -40,10 +40,10 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
                                                 G_CALLBACK(&DeviceLauncherSection::OnMountAdded),
                                                 this);
 
-	on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_.RawPtr(),
-                                                  "mount-pre-unmount",
-                                                  G_CALLBACK(&DeviceLauncherSection::OnMountPreUnmount),
-                                                  this);
+  on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+                                                      "mount-pre-unmount",
+                                                      G_CALLBACK(&DeviceLauncherSection::OnMountPreUnmount),
+                                                      this);
 
   on_device_populate_entry_id_ = g_idle_add((GSourceFunc)&DeviceLauncherSection::PopulateEntries, this);
 }
@@ -62,7 +62,7 @@ DeviceLauncherSection::~DeviceLauncherSection()
     g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
                                 on_mount_added_handler_id_);
 
-	if (on_mount_pre_unmount_handler_id_)
+  if (on_mount_pre_unmount_handler_id_)
     g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
                                 on_mount_pre_unmount_handler_id_);
 
@@ -79,7 +79,7 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
     glib::Object<GVolume> volume((GVolume *)v->data);
     DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume.RawPtr());
 
-		self->map_[volume.RawPtr()] = icon;
+    self->map_[volume.RawPtr()] = icon;
     self->IconAdded.emit(icon);
   }
 
@@ -95,8 +95,8 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
  * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
  */
 void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
-                                      		GVolume *volume,
-                                      		DeviceLauncherSection *self)
+                                          GVolume *volume,
+                                          DeviceLauncherSection *self)
 {
   DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume);
   
@@ -105,47 +105,47 @@ void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
 }
 
 void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
-                                        		GVolume *volume,
-                                        		DeviceLauncherSection *self)
+                                            GVolume *volume,
+                                            DeviceLauncherSection *self)
 {
-	// It should not happen! Let me do the check anyway.
+  // It should not happen! Let me do the check anyway.
   if (self->map_.find(volume) != self->map_.end())
-	{	
-		self->map_[volume]->OnRemoved();
-		self->map_.erase(volume);
-	}
+  {	
+    self->map_[volume]->OnRemoved();
+    self->map_.erase(volume);
+  }
 }
 
 /* Keep in mind: we could have a GMount without a related GVolume
  * so check everything to avoid unwanted behaviors.
  */
 void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
-                                     		 GMount *mount,
-                                     		 DeviceLauncherSection *self)
+                                         GMount *mount,
+                                         DeviceLauncherSection *self)
 {
-		std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
-		glib::Object<GVolume> volume(g_mount_get_volume(mount));
+  std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+  glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-		it = self->map_.find(volume.RawPtr());
+  it = self->map_.find(volume.RawPtr());
 
-    if (it != self->map_.end())
-      it->second->UpdateVisibility(1);
+  if (it != self->map_.end())
+    it->second->UpdateVisibility(1);
 }
 
 /* We don't use "mount-removed" signal since it is received after "volume-removed"
  * signal. You should read also the comment above.
 	*/
 void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor *monitor,
-                                     		      GMount *mount,
-                                     		      DeviceLauncherSection *self)
+                                              GMount *mount,
+                                              DeviceLauncherSection *self)
 {
-	std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
-	glib::Object<GVolume> volume(g_mount_get_volume(mount));
+  std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+  glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-	it = self->map_.find(volume.RawPtr());
+  it = self->map_.find(volume.RawPtr());
 
   if (it != self->map_.end())
-    it->second->UpdateVisibility(0);
+  it->second->UpdateVisibility(0);
 }
 
 } // namespace unity

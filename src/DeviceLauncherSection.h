@@ -51,19 +51,18 @@ private:
   static void OnMountAdded(GVolumeMonitor *monitor,
                            GMount *mount,
                            DeviceLauncherSection *self);
-	static void OnMountPreUnmount(GVolumeMonitor *monitor,
+  static void OnMountPreUnmount(GVolumeMonitor *monitor,
                                 GMount *mount,
                                 DeviceLauncherSection *self);
-public:
-  Launcher *launcher_;
-  glib::Object<GVolumeMonitor> monitor_;
-	std::map<GVolume *, DeviceLauncherIcon *> map_;
 
 private:
+  Launcher *launcher_;
+  glib::Object<GVolumeMonitor> monitor_;
+  std::map<GVolume *, DeviceLauncherIcon *> map_;
   gulong on_volume_added_handler_id_;
   gulong on_volume_removed_handler_id_;
   gulong on_mount_added_handler_id_;
-	gulong on_mount_pre_unmount_handler_id_;
+  gulong on_mount_pre_unmount_handler_id_;
   gulong on_device_populate_entry_id_;
 };
 
