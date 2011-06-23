@@ -49,29 +49,23 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
 
 void DeviceLauncherIcon::UpdateDeviceIcon()
 {
-  {
-    glib::String name(g_volume_get_name(volume_));
+  glib::String name(g_volume_get_name(volume_));
+  glib::Object<GIcon> icon(g_volume_get_icon(volume_));
+  glib::String icon_string(g_icon_to_string(icon.RawPtr()));
 
-    SetTooltipText(name.Value());
-  }
-  
-  {
-    glib::Object<GIcon> icon(g_volume_get_icon(volume_));
-    glib::String icon_string(g_icon_to_string(icon.RawPtr()));
-
-    SetIconName(icon_string.Value());
-  }
+  SetTooltipText(name.Value());
+  SetIconName(icon_string.Value());
   
   SetQuirk(QUIRK_RUNNING, false);
   SetIconType(TYPE_DEVICE);
 }
 
-inline nux::Color DeviceLauncherIcon::BackgroundColor()
+nux::Color DeviceLauncherIcon::BackgroundColor()
 {
   return nux::Color(0xFF333333);
 }
 
-inline nux::Color DeviceLauncherIcon::GlowColor()
+nux::Color DeviceLauncherIcon::GlowColor()
 {
   return nux::Color(0xFF333333);
 }
