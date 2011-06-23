@@ -26,22 +26,22 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
   , monitor_(g_volume_monitor_get())
 {
   
-  on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+  on_volume_added_handler_id_ = g_signal_connect(monitor_,
                                                  "volume-added",
                                                  G_CALLBACK(&DeviceLauncherSection::OnVolumeAdded),
                                                  this);
 
-  on_volume_removed_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+  on_volume_removed_handler_id_ = g_signal_connect(monitor_,
                                                    "volume-removed",
                                                    G_CALLBACK(&DeviceLauncherSection::OnVolumeRemoved),
                                                    this);
     
-  on_mount_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+  on_mount_added_handler_id_ = g_signal_connect(monitor_,
                                                 "mount-added",
                                                 G_CALLBACK(&DeviceLauncherSection::OnMountAdded),
                                                 this);
 
-  on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_.RawPtr(),
+  on_mount_pre_unmount_handler_id_ = g_signal_connect(monitor_,
                                                       "mount-pre-unmount",
                                                       G_CALLBACK(&DeviceLauncherSection::OnMountPreUnmount),
                                                       this);
@@ -52,19 +52,19 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
 DeviceLauncherSection::~DeviceLauncherSection()
 {
   if (on_volume_added_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+    g_signal_handler_disconnect((gpointer) monitor_,
                                 on_volume_added_handler_id_);
 
   if (on_volume_removed_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+    g_signal_handler_disconnect((gpointer) monitor_,
                                 on_volume_removed_handler_id_);
 
   if (on_mount_added_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+    g_signal_handler_disconnect((gpointer) monitor_,
                                 on_mount_added_handler_id_);
 
   if (on_mount_pre_unmount_handler_id_)
-    g_signal_handler_disconnect((gpointer) monitor_.RawPtr(),
+    g_signal_handler_disconnect((gpointer) monitor_,
                                 on_mount_pre_unmount_handler_id_);
 
   if (on_device_populate_entry_id_)
