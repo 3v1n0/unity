@@ -1,3 +1,10 @@
+unity (4.0.1-0ubuntu2) UNRELEASED; urgency=low
+
+  * Move back the .desktop file in unity from unity-common to avoid a lintian
+    warning
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Jun 2011 10:05:25 +0200
+
 unity (4.0.1-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
