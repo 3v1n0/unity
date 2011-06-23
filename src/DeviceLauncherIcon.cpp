@@ -30,12 +30,6 @@
 
 namespace unity {
 
-namespace {
-
-const char* DEFAULT_ICON = "drive-removable-media";
-
-} // anonymous namespace
-
 DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
   : SimpleLauncherIcon(launcher)
   , volume_(volume)
