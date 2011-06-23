@@ -25,6 +25,7 @@ DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
   : launcher_(launcher)
   , monitor_(g_volume_monitor_get())
 {
+  
   on_volume_added_handler_id_ = g_signal_connect(monitor_.RawPtr(),
                                                  "volume-added",
                                                  G_CALLBACK(&DeviceLauncherSection::OnVolumeAdded),
@@ -72,14 +73,14 @@ DeviceLauncherSection::~DeviceLauncherSection()
 
 bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
 {
-  GList* volumes = g_volume_monitor_get_volumes(self->monitor_.RawPtr());
+  GList* volumes = g_volume_monitor_get_volumes(self->monitor_);
 
   for (GList* v = volumes; v; v = v->next)
   {
     glib::Object<GVolume> volume((GVolume* )v->data);
-    DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume.RawPtr());
+    DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume);
 
-    self->map_[volume.RawPtr()] = icon;
+    self->map_[volume] = icon;
     self->IconAdded.emit(icon);
   }
 
@@ -126,7 +127,7 @@ void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor,
   std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  it = self->map_.find(volume.RawPtr());
+  it = self->map_.find(volume);
 
   if (it != self->map_.end())
     it->second->UpdateVisibility(1);
@@ -142,7 +143,7 @@ void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
   std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
-  it = self->map_.find(volume.RawPtr());
+  it = self->map_.find(volume);
 
   if (it != self->map_.end())
   it->second->UpdateVisibility(0);

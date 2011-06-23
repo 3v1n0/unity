@@ -45,7 +45,7 @@ DevicesSettings::DevicesSettings()
   , devices_option_(ONLY_MOUNTED)
 {
 
-  g_signal_connect(settings_.RawPtr(), "changed", G_CALLBACK(on_settings_updated), this);
+  g_signal_connect(settings_, "changed", G_CALLBACK(on_settings_updated), this);
 
   Refresh();
 }

@@ -51,7 +51,7 @@ void DeviceLauncherIcon::UpdateDeviceIcon()
 {
   glib::String name(g_volume_get_name(volume_));
   glib::Object<GIcon> icon(g_volume_get_icon(volume_));
-  glib::String icon_string(g_icon_to_string(icon.RawPtr()));
+  glib::String icon_string(g_icon_to_string(icon));
 
   SetTooltipText(name.Value());
   SetIconName(icon_string.Value());
@@ -123,7 +123,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   // "Safely Remove" item (FIXME: Should it be "Safely remove"?)
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
-  if (drive.RawPtr() && g_drive_can_stop(drive.RawPtr()))
+  if (drive && g_drive_can_stop(drive))
   {
     menu_item = dbusmenu_menuitem_new();
 
@@ -142,7 +142,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   {
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
 
-    if (mount.RawPtr() && g_mount_can_unmount(mount.RawPtr()))
+    if (mount && g_mount_can_unmount(mount))
     {
       menu_item = dbusmenu_menuitem_new();
 
@@ -170,7 +170,7 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
 
     if (G_IS_FILE(root.RawPtr()))
     {
-      glib::String uri(g_file_get_uri(root.RawPtr()));
+      glib::String uri(g_file_get_uri(root));
       glib::Error error;
 
       g_app_info_launch_default_for_uri(uri.Value(), NULL, error.AsOutParam());
@@ -215,7 +215,7 @@ void DeviceLauncherIcon::OnMountReady(GObject* object,
   if (g_volume_mount_finish(self->volume_, result, error.AsOutParam()))
   {
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
-    self->ShowMount(mount.RawPtr());
+    self->ShowMount(mount);
   }
   else
   {
@@ -240,7 +240,7 @@ void DeviceLauncherIcon::Eject()
 
   g_volume_eject_with_operation(volume_,
                                 (GMountUnmountFlags)0,
-                                mount_op.RawPtr(),
+                                mount_op,
                                 NULL,
                                 (GAsyncReadyCallback)OnEjectReady,
                                 this);
@@ -259,7 +259,7 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
     // If the volume is not mounted hide the icon
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
 
-    if (mount.RawPtr() == NULL)
+    if (!mount)
       self->SetQuirk(QUIRK_VISIBLE, false); 
 
     // Remove from favorites
@@ -303,7 +303,7 @@ void DeviceLauncherIcon::Unmount()
   {
     glib::Object<GMountOperation> op(gtk_mount_operation_new(NULL));
 
-    g_mount_unmount_with_operation(mount.RawPtr(),
+    g_mount_unmount_with_operation(mount,
                                    (GMountUnmountFlags)0,
                                    op,
                                    NULL,
@@ -336,9 +336,9 @@ void DeviceLauncherIcon::StopDrive()
   glib::Object<GDrive> drive(g_volume_get_drive(volume_));
   glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
-  g_drive_stop(drive.RawPtr(),
+  g_drive_stop(drive,
                (GMountUnmountFlags)0,
-               mount_op.RawPtr(),
+               mount_op,
                NULL,
                (GAsyncReadyCallback)OnStopDriveReady,
                this);
@@ -352,7 +352,7 @@ void DeviceLauncherIcon::OnStopDriveReady(GObject* object,
     return;
 
   glib::Object<GDrive> drive(g_volume_get_drive(self->volume_));
-  g_drive_stop_finish(drive.RawPtr(), result, NULL);
+  g_drive_stop_finish(drive, result, NULL);
 }
 
 void DeviceLauncherIcon::UpdateVisibility(int visibility)
