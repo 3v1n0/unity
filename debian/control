@@ -81,7 +81,7 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-Replaces: unity (<< 4.0.1-0ubuntu1~)
+Replaces: unity (<< 4.0.1-0ubuntu2~)
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -128,7 +128,7 @@ Package: libunity-core-4.0-dev
 Section: libdevel
 Architecture: all
 Depends: ${misc:Depends},
-         libunity-core-4.0-4 (= ${binary:Version}),
+         libunity-core-4.0-4 (= ${source:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-1.0-dev (>= 1.0.2),

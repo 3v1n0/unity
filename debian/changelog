@@ -2,7 +2,8 @@ unity (4.0.1-0ubuntu2) UNRELEASED; urgency=low
 
   * Move back the .desktop file in unity from unity-common to avoid a lintian
     warning
-  * do the same for the man page (and add Replaces: then)
+  * do the same for the man page moved to unity and unity-services
+    (and add Replaces: then)
   * Move from libunity-core-4.0-1 to libunity-core-4.0-4 for last soname change
   * Fix a typo in debian/changelog
 
