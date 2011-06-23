@@ -44,7 +44,7 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         unity-common (= ${binary:Version}),
+         unity-common (= ${source:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
          compiz-plugins-main-default,
@@ -55,7 +55,8 @@ Depends: ${shlibs:Depends},
 Provides: indicator-renderer,
           netbook-launcher
 Conflicts: netbook-launcher (<< 1:2.1.18-0ubuntu2)
-Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2)
+Replaces: netbook-launcher (<< 1:2.1.18-0ubuntu2),
+          unity-common (<< 4.0.1-0ubuntu2~)
 Recommends: unity-place-applications,
             unity-place-files,
             indicator-appmenu,
@@ -107,7 +108,7 @@ Description: Common files for the Unity interface.
  .
  This package contains commons file that are architecture independent.
 
-Package: libunity-core-4.0-1
+Package: libunity-core-4.0-4
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -127,7 +128,7 @@ Package: libunity-core-4.0-dev
 Section: libdevel
 Architecture: all
 Depends: ${misc:Depends},
-         libunity-core-4.0-1 (= ${binary:Version}),
+         libunity-core-4.0-4 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-1.0-dev (>= 1.0.2),
