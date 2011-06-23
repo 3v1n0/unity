@@ -1,4 +1,4 @@
-unity (4.0.1-0ubuntu2) UNRELEASED; urgency=low
+unity (4.0.1-0ubuntu2) oneiric; urgency=low
 
   * Move back the .desktop file in unity from unity-common to avoid a lintian
     warning
@@ -8,7 +8,7 @@ unity (4.0.1-0ubuntu2) UNRELEASED; urgency=low
   * Fix a typo in debian/changelog
   * make -dev arch:any to be binuable if needed
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Jun 2011 10:05:25 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Jun 2011 10:56:11 +0200
 
 unity (4.0.1-0ubuntu1) oneiric; urgency=low
 
