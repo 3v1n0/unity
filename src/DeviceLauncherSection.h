@@ -35,30 +35,30 @@ namespace unity {
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection(Launcher *launcher);
+  DeviceLauncherSection(Launcher* launcher);
   ~DeviceLauncherSection();
 
-  sigc::signal<void, LauncherIcon *> IconAdded;
+  sigc::signal<void, LauncherIcon* > IconAdded;
 
 private:
-  static bool PopulateEntries(DeviceLauncherSection *self);
-  static void OnVolumeAdded(GVolumeMonitor *monitor,
-                            GVolume *volume,
-                            DeviceLauncherSection *self);
-  static void OnVolumeRemoved(GVolumeMonitor *monitor,
-                              GVolume *volume,
-                              DeviceLauncherSection *self);
-  static void OnMountAdded(GVolumeMonitor *monitor,
-                           GMount *mount,
-                           DeviceLauncherSection *self);
-  static void OnMountPreUnmount(GVolumeMonitor *monitor,
-                                GMount *mount,
-                                DeviceLauncherSection *self);
+  static bool PopulateEntries(DeviceLauncherSection* self);
+  static void OnVolumeAdded(GVolumeMonitor* monitor,
+                            GVolume* volume,
+                            DeviceLauncherSection* self);
+  static void OnVolumeRemoved(GVolumeMonitor* monitor,
+                              GVolume* volume,
+                              DeviceLauncherSection* self);
+  static void OnMountAdded(GVolumeMonitor* monitor,
+                           GMount* mount,
+                           DeviceLauncherSection* self);
+  static void OnMountPreUnmount(GVolumeMonitor* monitor,
+                                GMount* mount,
+                                DeviceLauncherSection* self);
 
 private:
-  Launcher *launcher_;
+  Launcher* launcher_;
   glib::Object<GVolumeMonitor> monitor_;
-  std::map<GVolume *, DeviceLauncherIcon *> map_;
+  std::map<GVolume* , DeviceLauncherIcon* > map_;
   gulong on_volume_added_handler_id_;
   gulong on_volume_removed_handler_id_;
   gulong on_mount_added_handler_id_;

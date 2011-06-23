@@ -21,7 +21,7 @@
 namespace unity
 {
 
-DeviceLauncherSection::DeviceLauncherSection(Launcher *launcher)
+DeviceLauncherSection::DeviceLauncherSection(Launcher* launcher)
   : launcher_(launcher)
   , monitor_(g_volume_monitor_get())
 {
@@ -70,14 +70,14 @@ DeviceLauncherSection::~DeviceLauncherSection()
     g_source_remove(on_device_populate_entry_id_);
 }
 
-bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
+bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection* self)
 {
-  GList *volumes = g_volume_monitor_get_volumes(self->monitor_.RawPtr());
+  GList* volumes = g_volume_monitor_get_volumes(self->monitor_.RawPtr());
 
-  for (GList *v = volumes; v; v = v->next)
+  for (GList* v = volumes; v; v = v->next)
   {
-    glib::Object<GVolume> volume((GVolume *)v->data);
-    DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume.RawPtr());
+    glib::Object<GVolume> volume((GVolume* )v->data);
+    DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume.RawPtr());
 
     self->map_[volume.RawPtr()] = icon;
     self->IconAdded.emit(icon);
@@ -94,19 +94,19 @@ bool DeviceLauncherSection::PopulateEntries(DeviceLauncherSection *self)
  * Keep in mind: when "volume-removed" is recevied we should erase
  * the pair (GVolume - DeviceLauncherIcon) from the std::map to avoid leaks
  */
-void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor *monitor,
-                                          GVolume *volume,
-                                          DeviceLauncherSection *self)
+void DeviceLauncherSection::OnVolumeAdded(GVolumeMonitor* monitor,
+                                          GVolume* volume,
+                                          DeviceLauncherSection* self)
 {
-  DeviceLauncherIcon *icon = new DeviceLauncherIcon(self->launcher_, volume);
+  DeviceLauncherIcon* icon = new DeviceLauncherIcon(self->launcher_, volume);
   
   self->map_[volume] = icon;
   self->IconAdded.emit(icon);
 }
 
-void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
-                                            GVolume *volume,
-                                            DeviceLauncherSection *self)
+void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor* monitor,
+                                            GVolume* volume,
+                                            DeviceLauncherSection* self)
 {
   // It should not happen! Let me do the check anyway.
   if (self->map_.find(volume) != self->map_.end())
@@ -119,11 +119,11 @@ void DeviceLauncherSection::OnVolumeRemoved(GVolumeMonitor *monitor,
 /* Keep in mind: we could have a GMount without a related GVolume
  * so check everything to avoid unwanted behaviors.
  */
-void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
-                                         GMount *mount,
-                                         DeviceLauncherSection *self)
+void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor,
+                                         GMount* mount,
+                                         DeviceLauncherSection* self)
 {
-  std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+  std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
   it = self->map_.find(volume.RawPtr());
@@ -135,11 +135,11 @@ void DeviceLauncherSection::OnMountAdded(GVolumeMonitor *monitor,
 /* We don't use "mount-removed" signal since it is received after "volume-removed"
  * signal. You should read also the comment above.
 	*/
-void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor *monitor,
-                                              GMount *mount,
-                                              DeviceLauncherSection *self)
+void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
+                                              GMount* mount,
+                                              DeviceLauncherSection* self)
 {
-  std::map<GVolume *, DeviceLauncherIcon *>::iterator it;
+  std::map<GVolume* , DeviceLauncherIcon* >::iterator it;
   glib::Object<GVolume> volume(g_mount_get_volume(mount));
 
   it = self->map_.find(volume.RawPtr());

@@ -32,11 +32,11 @@ namespace unity {
 
 namespace {
 
-#define DEFAULT_ICON "drive-removable-media"
+const char* DEFAULT_ICON = "drive-removable-media";
 
 } // anonymous namespace
 
-DeviceLauncherIcon::DeviceLauncherIcon(Launcher *launcher, GVolume *volume)
+DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
   : SimpleLauncherIcon(launcher)
   , volume_(volume)
 {
@@ -82,10 +82,10 @@ inline nux::Color DeviceLauncherIcon::GlowColor()
   return nux::Color(0xFF333333);
 }
 
-std::list<DbusmenuMenuitem *> DeviceLauncherIcon::GetMenus()
+std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 {
-  std::list<DbusmenuMenuitem *> result;
-  DbusmenuMenuitem *menu_item;
+  std::list<DbusmenuMenuitem*> result;
+  DbusmenuMenuitem* menu_item;
 
   // "Keep in launcher" item
   if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
@@ -172,7 +172,7 @@ std::list<DbusmenuMenuitem *> DeviceLauncherIcon::GetMenus()
   return result;
 }
 
-void DeviceLauncherIcon::ShowMount(GMount *mount)
+void DeviceLauncherIcon::ShowMount(GMount* mount)
 {
   glib::String name(g_volume_get_name(volume_));
 
@@ -218,9 +218,9 @@ void DeviceLauncherIcon::ActivateLauncherIcon()
                    this);
 }
 
-void DeviceLauncherIcon::OnMountReady(GObject *object,
-                                      GAsyncResult *result,
-                                      DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnMountReady(GObject* object,
+                                      GAsyncResult* result,
+                                      DeviceLauncherIcon* self)
 {
   glib::Error error;
 
@@ -239,9 +239,9 @@ void DeviceLauncherIcon::OnMountReady(GObject *object,
   }
 }
 
-void DeviceLauncherIcon::OnEjectReady(GObject *object,
-                                      GAsyncResult *result,
-                                      DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnEjectReady(GObject* object,
+                                      GAsyncResult* result,
+                                      DeviceLauncherIcon* self)
 {
   g_volume_eject_with_operation_finish(self->volume_, result, NULL);
 }
@@ -258,9 +258,9 @@ void DeviceLauncherIcon::Eject()
                                 this);
 }
 
-void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem *item,
+void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
                                      int time,
-                                     DeviceLauncherIcon *self)
+                                     DeviceLauncherIcon* self)
 {
   glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   
@@ -285,23 +285,23 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem *item,
   }
 }
 
-void DeviceLauncherIcon::OnOpen(DbusmenuMenuitem *item,
+void DeviceLauncherIcon::OnOpen(DbusmenuMenuitem* item,
                                 int time,
-                                DeviceLauncherIcon *self)
+                                DeviceLauncherIcon* self)
 {
   self->ActivateLauncherIcon();
 }
 
-void DeviceLauncherIcon::OnEject(DbusmenuMenuitem *item,
+void DeviceLauncherIcon::OnEject(DbusmenuMenuitem* item,
                                  int time,
-                                 DeviceLauncherIcon *self)
+                                 DeviceLauncherIcon* self)
 {
   self->Eject();
 }
 
-void DeviceLauncherIcon::OnUnmountReady(GObject *object,
-                                        GAsyncResult *result,
-                                        DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnUnmountReady(GObject* object,
+                                        GAsyncResult* result,
+                                        DeviceLauncherIcon* self)
 {
   if (G_IS_MOUNT(object))
     g_mount_unmount_with_operation_finish(G_MOUNT(object), result, NULL);
@@ -324,9 +324,9 @@ void DeviceLauncherIcon::Unmount()
   }
 }
 
-void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem *item,
+void DeviceLauncherIcon::OnUnmount(DbusmenuMenuitem* item,
                                    int time,
-                                   DeviceLauncherIcon *self)
+                                   DeviceLauncherIcon* self)
 {
   self->Unmount();
 }
@@ -336,9 +336,9 @@ void DeviceLauncherIcon::OnRemoved()
   Remove();
 }
 
-void DeviceLauncherIcon::OnDriveStop(DbusmenuMenuitem *item,
+void DeviceLauncherIcon::OnDriveStop(DbusmenuMenuitem* item,
                                      int time,
-                                     DeviceLauncherIcon *self)
+                                     DeviceLauncherIcon* self)
 {
   self->StopDrive();
 }
@@ -356,9 +356,9 @@ void DeviceLauncherIcon::StopDrive()
                this);
 }
 
-void DeviceLauncherIcon::OnStopDriveReady(GObject *object,
-                                          GAsyncResult *result,
-                                          DeviceLauncherIcon *self)
+void DeviceLauncherIcon::OnStopDriveReady(GObject* object,
+                                          GAsyncResult* result,
+                                          DeviceLauncherIcon* self)
 {
   if (!self || !G_IS_VOLUME(self->volume_))
     return;
