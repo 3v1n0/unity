@@ -1141,22 +1141,11 @@ UnityDialogScreen::~UnityDialogScreen ()
 
 bool
 UnityDialogPluginVTable::init ()
-{
-    int (*old_handler) (Display *, XErrorEvent *);
-    old_handler = XSetErrorHandler (NULL);
-	
+{	
     if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION) ||
 	!CompPlugin::checkPluginABI ("composite", COMPIZ_COMPOSITE_ABI) ||
 	!CompPlugin::checkPluginABI ("opengl", COMPIZ_OPENGL_ABI))
 	return false;
-
-    if (!gtk_init_check (&programArgc, &programArgv))
-    {
-	compLogMessage ("unitydialog", CompLogLevelError, "Couldn't initialize gtk");
-	return false;
-    }
-
-    XSetErrorHandler (old_handler);
 
     return true;
 }

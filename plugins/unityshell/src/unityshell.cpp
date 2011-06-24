@@ -846,8 +846,6 @@ UnityScreen::UnityScreen(CompScreen *screen)
 
   unity_a11y_preset_environment ();
 
-  gtk_init (NULL, NULL);
-
   XSetErrorHandler (old_handler);
 
   /* Wrap compiz interfaces */
