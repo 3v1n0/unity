@@ -36,12 +36,12 @@ DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
 {
   DevicesSettings::GetDefault().changed.connect(sigc::mem_fun(this, &DeviceLauncherIcon::OnSettingsChanged));
 
-  // Checked if in favourites!
+  // Checks if in favourites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
   DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
 
-  checked_ = !(pos != favorites.end());
+  keep_in_launcher_ = pos != favorites.end();
   
   UpdateDeviceIcon();
   UpdateVisibility();
@@ -85,7 +85,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, checked_);
+    dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, !keep_in_launcher_);
     
     g_signal_connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
                      G_CALLBACK(&DeviceLauncherIcon::OnTogglePin), this);
@@ -252,9 +252,9 @@ void DeviceLauncherIcon::OnTogglePin(DbusmenuMenuitem* item,
 {
   glib::String uuid(g_volume_get_identifier(self->volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   
-  self->checked_ = !self->checked_;
+  self->keep_in_launcher_ = !self->keep_in_launcher_;
 
-  if (self->checked_)
+  if (!self->keep_in_launcher_)
   {
     // If the volume is not mounted hide the icon
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
@@ -363,7 +363,7 @@ void DeviceLauncherIcon::UpdateVisibility(int visibility)
       SetQuirk(QUIRK_VISIBLE, false);
       break;
     case DevicesSettings::ONLY_MOUNTED:
-      if (!checked_)
+      if (keep_in_launcher_)
       {
         SetQuirk(QUIRK_VISIBLE, true);
       }
@@ -385,12 +385,12 @@ void DeviceLauncherIcon::UpdateVisibility(int visibility)
 
 void DeviceLauncherIcon::OnSettingsChanged()
 {
-  // Checked if in favourites!
+  // Checks if in favourites!
   glib::String uuid(g_volume_get_identifier(volume_, G_VOLUME_IDENTIFIER_KIND_UUID));
   DeviceList favorites = DevicesSettings::GetDefault().GetFavorites();
   DeviceList::iterator pos = std::find(favorites.begin(), favorites.end(), uuid.Str());
 
-  checked_ = !(pos != favorites.end());
+  keep_in_launcher_ = pos != favorites.end();
 
   UpdateVisibility();
 }

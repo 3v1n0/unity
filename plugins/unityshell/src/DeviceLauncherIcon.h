@@ -61,7 +61,7 @@ private:
 
 private:
   GVolume* volume_;
-  bool checked_;
+  bool keep_in_launcher_;
 };
 
 } // namespace unity
