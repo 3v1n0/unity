@@ -56,7 +56,7 @@ private:
     LauncherModel*         _model;
     int                    _sort_priority;
     PlaceLauncherSection*  _place_section;
-    DeviceLauncherSection* _device_section;
+    unity::DeviceLauncherSection* _device_section;
     LauncherEntryRemoteModel* _remote_model;
     SimpleLauncherIcon*    _expoIcon;
     int                    _num_workspaces;

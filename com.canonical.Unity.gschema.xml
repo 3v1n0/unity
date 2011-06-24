@@ -4,11 +4,6 @@
     <value nick="Desktop" value="1" />
     <value nick="Netbook" value="2" />
   </enum>
-  <enum id="devices-option-enum">
-    <value nick="Never" value="0" />
-    <value nick="OnlyMounted" value="1" />
-    <value nick="Always" value="2" />
-  </enum>
   <enum id="home-expanded-enum">
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
@@ -51,10 +46,10 @@
     </key>
   </schema>
   <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
-    <key enum="devices-option-enum" name="devices-option">
-        <default>"OnlyMounted"</default>
-        <summary>The devices that will be shown on launcher</summary>
-        <description>Key for setting the devices that will be shown on launcher. </description>
+    <key type="as" name="favorites">
+        <default>[]</default>
+        <summary>List of device uuid for favorites on the launcher.</summary>
+        <description>These devices are shown in the Launcher by default.</description>
     </key>
     </schema>
 </schemalist>
