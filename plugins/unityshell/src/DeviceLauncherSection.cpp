@@ -135,7 +135,7 @@ void DeviceLauncherSection::OnMountAdded(GVolumeMonitor* monitor,
 
 /* We don't use "mount-removed" signal since it is received after "volume-removed"
  * signal. You should read also the comment above.
-	*/
+ */
 void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
                                               GMount* mount,
                                               DeviceLauncherSection* self)
@@ -146,7 +146,7 @@ void DeviceLauncherSection::OnMountPreUnmount(GVolumeMonitor* monitor,
   it = self->map_.find(volume);
 
   if (it != self->map_.end())
-  it->second->UpdateVisibility(0);
+    it->second->UpdateVisibility(0);
 }
 
 } // namespace unity
