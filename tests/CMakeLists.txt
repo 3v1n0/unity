@@ -291,6 +291,13 @@ add_executable (test-places-backend
                 ../src/Variant.h
                 )
 
+add_executable (test-dash-style
+                TestDashStyle.cpp
+                ../src/DashStyle.cpp
+                ../src/DashStyle.h
+                ${PLACES_COMMON_SOURCE}
+                )
+
 #
 # GTest tests
 #
