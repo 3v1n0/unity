@@ -20,7 +20,7 @@
 
 
 #include "config.h"
-#include "src/ubus-server.h"
+#include "ubus-server.h"
 
 #define MESSAGE1 "TEST MESSAGE ONE"
 #define MESSAGE2 "ՄᕅᏆⲤꙨႧΈ Ϊટ ಗשׁຣ໐ɱË‼‼❢"

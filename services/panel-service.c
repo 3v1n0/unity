@@ -222,11 +222,13 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
   if (e->type == 5 && self->priv->last_menu_button != 0) //FocusChange
     {
-      gint       x=0, y=0, width=0, height=0, depth=0, x_root=0, y_root=0;
+      gint       x=0, y=0, width=0, height=0, x_root=0, y_root=0;
       GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
       if (window == NULL)
         return GDK_FILTER_CONTINUE;
-
+			
+			//FIXME-GTK3 - is this compatible? drawable is gone from gdk3
+      //Window     xwindow = gdk_x11_window_get_xid (window);
       Window     xwindow = gdk_x11_drawable_get_xid (GDK_DRAWABLE (window));
 
       if (xwindow == 0)
@@ -246,7 +248,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                      &win_y,
                      &mask_return);
 
-      gdk_window_get_geometry (window, &x, &y, &width, &height, &depth);
+      gdk_window_get_geometry (window, &x, &y, &width, &height, NULL);
       gdk_window_get_origin (window, &x, &y);
 
       if (x_root > x
@@ -268,6 +270,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   // ITS A WORKAROUND SO I CAN TEST THE PANEL SCRUBBING
   // DONT HATE ME
   // --------------------------------------------------------------------------
+  //FIXME-GTK3 - i'm not porting this, fix your code :P
+  
   else if (e->type == 6)
     {
       int       x_root=0, y_root=0;
@@ -295,6 +299,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
           g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
         }
     }
+  // -> I HATE YOU
   // /DONT HATE ME
   // /FIXME
   // --------------------------------------------------------------------------

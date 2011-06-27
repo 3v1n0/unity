@@ -1,3 +1,579 @@
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Tweak release script
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Bump deps
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] Update the build system
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	fix documentation generation for the nation
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make everything depend on itself, because it was too hard to just build sub-directories in order
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove un-needed build file
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Unfuck CMake
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	- Move resources into the unityshell plugin directory
+	- Make generated things to into the current binary directory instead of the source dir
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Tests biiiiiaaaatch!
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	- Rename unity-share to unity-core
+	- Fix include paths for UnityCore
+	- Add in all the code that's meant to be shared, update the plugin to look for that code in
+	libunity-core
+	- Tests are disabled again, will fix in next commit
+	- Update .pc file to reflect new include path
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Re-enable gtest
+
+2011-06-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	libunity-shared => libunity-core
+
+2011-06-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make the panel draw the right background with the new gtk3 goodness
+
+2011-06-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make tests build again, but they don't all work due to gtk clashes, nothing I can do about that right now. Also, make the panel recognise that the service is sending gtk2 values for GtkImageType. Finally switch back on the code that was commented out due to gtk3. Will fix that next week with the final transition
+
+2011-06-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Put networkarearegion into the plugins folder too
+
+2011-06-20  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Initial go at making things sane again
+
+2011-06-21  Gord Allott  <gord.allott@canonical.com>
+
+	fixes a problem with undecorated windows redecorating after maximise
+
+2011-06-21  Gord Allott  <gord.allott@canonical.com>
+
+	fixes undecorated windows getting decorations after being maximised then restored
+
+2011-06-17  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	- Merge Gord's gtk3 work
+	- Add back support for all the features of the systray
+
+2011-06-17  Gord Allott  <gord.allott@canonical.com>
+
+	cleanup
+
+2011-06-16  Gord Allott  <gord.allott@canonical.com>
+
+	save point
+
+2011-06-16  Gord Allott  <gord.allott@canonical.com>
+
+	Bump indicator and bamf to gtk3 versions
+
+2011-06-17  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	[merge] First pass at Gtk3 port
+
+2011-05-18  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Port to GTK3
+
+2011-06-15  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix error where bottom of launcher would not properly unfold from a hidden state
+
+2011-06-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	No commit message
+2011-06-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use the the horizontal offset of the launcher instead of 0.
+
+2011-06-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Applied changes as requested by Tim Penhey.
+
+2011-06-08  Andrea Azzarone azzaronea@gmail.com
+
+	When the user reveals the Launcher by moving the pointer to the left side of the screen, the Launcher should unfold at exactly the point entered.
+
+2011-06-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Tweaking the unityshell files for the new coding standard
+
+2011-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Mostly alignment changes.
+
+2011-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Delete trailing whitespace and fix function signatures to new coding standard.
+
+2011-06-11  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added scrollbar support
+
+2011-06-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Did I say _NET_WORKAREA_MONITORS? Soz, I meant _NET_WORKAREA_REGION
+
+2011-06-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Delete the property on unload and ensure that property is in _NET_WM_SUPPORTED like the EWMH says to
+
+2011-06-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix load and property setting
+
+2011-06-06  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added _UNITY_NET_WORKAREA_MONITORS support
+
+2011-06-10  Alex Launi  <alex.launi@canonical.com>
+
+	Remove autopilot.py from CMake install list
+
+2011-06-10  Gord Allott  <gord.allott@canonical.com>
+
+	generates nicer AUTHOR files by consolodating multiple identities
+
+2011-06-10  Gord Allott  <gord.allott@canonical.com>
+
+	i always forget to add a file...
+
+2011-06-10  Gord Allott  <gord.allott@canonical.com>
+
+	uses sed to consoldate our AUTHOR list a bit
+
+2011-06-09  Alex Launi  <alex.launi@canonical.com>
+
+	Merge autopilot test framework support
+
+2011-06-09  Alex Launi  <alex.launi@canonical.com>
+
+	Move shared strings into #define statements
+
+2011-06-06  Alex Launi  <alex.launi@canonical.com>
+
+	fix up the branch for merging
+
+2011-06-06  Alex Launi  <alex.launi@canonical.com>
+
+	send signal on launcher scroll drag
+
+2011-06-06  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk ... again
+
+2011-05-09  Alex Launi  <alex.launi@canonical.com>
+
+	Fix interface that TestFinished is being emitted on
+
+2011-05-06  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-05-04  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-04-19  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-04-12  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	remove display and add handlers for icon dragging
+
+2011-03-14  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-03-02  Alex Launi  <alex.launi@canonical.com>
+
+	Show timegraph updates for fps
+
+2011-03-01  Alex Launi  <alex.launi@canonical.com>
+
+	merge
+
+2011-03-01  Alex Launi  <alex.launi@canonical.com>
+
+	fix nux usage
+
+2011-03-01  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-28  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-28  Alex Launi  <alex.launi@canonical.com>
+
+	use a layout on the window
+
+2011-02-25  Alex Launi  <alex.launi@canonical.com>
+
+	enable nux input window on stats display
+
+2011-02-25  Alex Launi  <alex.launi@canonical.com>
+
+	fix autopilot so it actually compiles
+
+2011-02-24  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-07  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-07  Alex Launi  <alex.launi@canonical.com>
+
+	start hacking display
+
+2011-02-04  Alex Launi  <alex.launi@canonical.com>
+
+	fix copyright
+
+2011-02-04  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-04  Alex Launi  <alex.launi@canonical.com>
+
+	some formatting
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	add some documentation to the autopilot script
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	fix indentation
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	fix python syntax errors
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	nicer exit message
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	emit testfinished to all listeners so i dont have to give auto.py a bus
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	hook autopilot.py up to internal testing hook
+
+2011-02-03  Alex Launi  <alex.launi@canonical.com>
+
+	refactor test registration
+
+2011-02-02  Alex Launi  <alex.launi@canonical.com>
+
+	fire ubus message on tooltip shown
+
+2011-02-02  Alex Launi  <alex.launi@canonical.com>
+
+	take care of registering unregistering tests
+
+2011-02-02  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-02-02  Alex Launi  <alex.launi@canonical.com>
+
+	remove display and just focus on test logic
+
+2011-02-01  Alex Launi  <alex.launi@canonical.com>
+
+	remove updatetime for fps counting and just go whole hog
+
+2011-01-31  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-01-31  Alex Launi  <alex.launi@canonical.com>
+
+	switch to floatingwindow
+
+2011-01-28  Alex Launi  <alex.launi@canonical.com>
+
+	begin wiring up nux display
+
+2011-01-27  Alex Launi  <alex.launi@canonical.com>
+
+	hook into compiz plugin stuff
+
+2011-01-27  Alex Launi  <alex.launi@canonical.com>
+
+	Fix TestFinished signal args
+
+2011-01-27  Alex Launi  <alex.launi@canonical.com>
+
+	make it compile
+
+2011-01-27  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-01-27  Alex Launi  <alex.launi@canonical.com>
+
+	start setting up communication between C++ and python
+
+2011-01-20  Alex Launi  <alex.launi@canonical.com>
+
+	implement autopilot dbus interface
+
+2011-01-20  Alex Launi  <alex.launi@canonical.com>
+
+	use gdk x connection for clicks
+
+2011-01-19  Alex Launi  <alex.launi@canonical.com>
+
+	use screen->dpy () instead of an owned x connection
+
+2011-01-19  Alex Launi  <alex.launi@canonical.com>
+
+	use screen->warppointer instead of xwarppointer
+
+2011-01-14  Alex Launi  <alex.launi@canonical.com>
+
+	break autopilot out into its own interface
+
+2011-01-14  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-01-14  Alex Launi  <alex.launi@canonical.com>
+
+	merge trunk
+
+2011-01-14  Alex Launi  <alex.launi@canonical.com>
+
+	Make Autopilot runnable via dbus dbus interface
+
+2011-01-13  Alex Launi  <alex.launi@canonical.com>
+
+	Implement unity tests and mouse class
+
+2011-01-12  Alex Launi  <alex.launi@canonical.com>
+
+	Make the runner decide pass/fail
+
+2011-01-11  Alex Launi  <alex.launi@canonical.com>
+
+	Make test runner a thread that gets spawned from unity script
+
+2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix magically resizing panel and magical never-ending icon search
+
+2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix size calculation error for PanelTray objects that are not the primary tray
+
+2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Protect against a missing default icon
+
+2011-06-09  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Allows you to unmount devices in the launcher that do not have an Eject option, fixes lp:773946
+
+2011-05-25  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Mounts which have the Eject option already don't need Unmount also.
+	Improves fix for LP: #773946.
+
+2011-05-17  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Added missing Unmount option to devices in the Launcher. This is especially
+	important for eSATA mounts which don't have Eject or Remove options
+	(LP: #773946)
+
+2011-06-09  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	added:
+	dialog/
+	dialog/unitydialog/
+	dialog/unitydialog/CMakeLists.txt
+	dialog/unitydialog/src/
+	dialog/unitydialog/src/unitydialog.cpp
+	dialog/unitydialog/src/unitydialog.h
+	dialog/unitydialog/unitydialog.xml.in
+	modified:
+	CMakeLists.txt
+	
+	Merged Sam's unity.add_dialogs branch to trunk after review, test and
+	approval from Tim and myself. This makes the rendering of modal dialogs
+	a lot nicer and gives the user a better visual clue which dialog belongs
+	to which (parent) window. It can be switched on/off via the typical
+	compiz-plugin frontends (e.g. ccsm).
+
+2011-06-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Make avoid match read only
+
+2011-06-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add avoid match
+
+2011-06-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Coding style fixes
+
+2011-06-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't need a 4x4 texture
+
+2011-06-09  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Don't need to create context multiple times
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Set the _UNITY_IS_PARENT property .. we could need this later
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove debug message
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Optimize painting code, only enable preparePaint and friends when there are
+	transients around, only bother trying to animate windows we know are parents
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Disable paint functions when there are no transients left
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Make UnityDialogWindow class members private
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Make class memebers in UnityDialogScreen private
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	s/compizResizeAtom/mCompizResizeAtom/
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Whitespace
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	No need to have an IPW Map, remove it
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Clean up animation code, setMaxConstrainingAreas
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Use lexical cast and temporary string in match handler
+
+2011-06-08  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Clean up UnityDialogShadeTexture
+
+2011-05-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add unity dialog plugin to build
+
+2011-05-21  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Added dialog handling plugin
+
+2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix build deps
+
+2011-06-09  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Launcher mispelled as Launcer in LauncherController.cpp and LauncherController.h
+
+2011-06-04  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Fix typo in LauncherController.cpp (LP: #792590). Thanks Rick Spencer for
+	notice the typo and propose a patch!
+
+2011-06-09  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Bug #735031: If you pull down the application panel, the context menu pop up
+
+2011-06-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Use only the left mouse click for dnd. Resolve bug #735031.
+
+2011-06-09  Marius Gedminas  <marius@pov.lt>
+
+	Bug #778256: Notification area ('system tray') missing when using dual monitors of different sizes, with their bottoms aligned
+
+2011-06-07  Marius Gedminas  <marius@gedmin.as>
+
+	Fix invisible tray icons when the panel is not at 0x0.
+	
+	This happens in dual-head configurations, when the monitor on the left is
+	shorter than the monitor on the right, and the monitors are aligned at the
+	bottom.
+	
+	See https://bugs.launchpad.net/ubuntu/+source/unity/+bug/778256
+
+2011-06-09  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Make compilation of Unity on GCC versions 4.5 and below, as strict as that on GCC 4.6 .
+
+2011-05-24  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Remove -fno-strict-enums from CXXFLAGS as it isn't supported by GCC 4.5 and below
+
+2011-05-18  Bilal Akhtar  <bilalakhtar@ubuntu.com>
+
+	Add extra CXX flags to make compilation on GCC 4.5 and below, as strict as GCC 4.6
+
+2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Do the first automatic AUTHORS and ChangeLog creation to avoid issues for the next release
+
 2011-06-09  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Add support for shared library. Add a 'make release' target
