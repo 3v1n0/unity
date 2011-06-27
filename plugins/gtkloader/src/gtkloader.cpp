@@ -38,9 +38,9 @@ GTKLoaderPluginVTable::init ()
 
     if (!gtk_init_check (&programArgc, &programArgv))
     {
-	compLogMessage ("unitydialog", CompLogLevelError, "Couldn't initialize gtk");
+	compLogMessage ("gtkloader", CompLogLevelError, "Couldn't initialize gtk");
 	return false;
     }
 
-    XSetErrorHandler (old_handler);
+    return true;
 }
