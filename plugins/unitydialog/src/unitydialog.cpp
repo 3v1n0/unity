@@ -599,16 +599,21 @@ UnityDialogScreen::trackParent (CompWindow *w)
 void
 UnityDialogScreen::untrackParent (CompWindow *w)
 {
-    mParentWindows.remove (w);
+    CompWindowList::iterator it = std::find (mParentWindows.begin (), mParentWindows.end (), w);
 
-    /* Unset the _UNITY_IS_PARENT property */
-    XDeleteProperty (screen->dpy (), w->id (), mUnityIsParentAtom);
-
-    if (!mParentWindows.size ())
+    if (it != mParentWindows.end ())
     {
-	cScreen->preparePaintSetEnabled (this, false);
-	gScreen->glPaintOutputSetEnabled (this, false);
-	cScreen->donePaintSetEnabled (this, false);
+	mParentWindows.erase (it);
+
+	/* Unset the _UNITY_IS_PARENT property */
+	XDeleteProperty (screen->dpy (), w->id (), mUnityIsParentAtom);
+
+	if (!mParentWindows.size ())
+	{
+	    cScreen->preparePaintSetEnabled (this, false);
+	    gScreen->glPaintOutputSetEnabled (this, false);
+	    cScreen->donePaintSetEnabled (this, false);
+	}
     }
 }
 
@@ -1098,6 +1103,8 @@ UnityDialogWindow::~UnityDialogWindow ()
     /* Handle weird circumstances where windows go away
      * without warning */
 
+    UnityDialogScreen::get (screen)->untrackParent (window);
+
     if (mParent)
     {
 	compLogMessage ("unitydialog", CompLogLevelWarn, "Did not get a close notification before window was destroyed!");
@@ -1142,6 +1149,7 @@ UnityDialogScreen::~UnityDialogScreen ()
 bool
 UnityDialogPluginVTable::init ()
 {
+    fprintf (stderr, "vt init\n"); 
     int (*old_handler) (Display *, XErrorEvent *);
     old_handler = XSetErrorHandler (NULL);
 	
