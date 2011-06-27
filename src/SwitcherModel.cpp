@@ -20,29 +20,15 @@
 
 #include "SwitcherModel.h"
 
-SwitcherModel::SwitcherModel(LauncherModel *model)
+SwitcherModel::SwitcherModel(std::vector<LauncherIcon*> icons)
 {
-  LauncherModel::iterator it;
-  _model = model;
-  
-  for (it = model->begin (); it != model->end (); it++)
-  {
-    if ((*it)->ShowInSwitcher ())
-      _inner.push_back (*it);
-  }
-  
-  std::sort (_inner.begin (), _inner.end (), CompareSwitcherItem);
+  _inner = icons;
+  _index = 0;
 }
 
 virtual SwitcherModel::~SwitcherModel()
 {
 
-}
-
-void
-SwitcherModel::SetInitialIndex ()
-{
-  _index = std::min (1, _inner.size () - 1);
 }
 
 SwitcherModel::iterator 
@@ -112,10 +98,4 @@ void
 SwitcherModel::SelectIndex (int index)
 {
   _index = CLAMP (index, 0, _inner.size -1);
-}
-
-bool 
-SwitcherModel::CompareSwitcherItem (LauncherIcon *first, LauncherIcon *second)
-{
-  return first->SwitcherPriority () > second->SwitcherPriority ();
 }

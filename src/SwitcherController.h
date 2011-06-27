@@ -55,6 +55,8 @@ public:
 private:
   Launcher _launcher;
   SwitcherModel _model;
+  
+  bool CompareSwitcherItemsPriority (LauncherIcon *first, LauncherIcon *second);
 
 };
 

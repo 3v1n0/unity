@@ -33,7 +33,7 @@ public:
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
     
-    SwitcherModel(LauncherModel *model);
+    SwitcherModel(std::vector<LauncherIcon*> icons);
     virtual ~SwitcherModel();
 
     iterator begin ();
@@ -52,11 +52,7 @@ public:
     
 private:
     Base             _inner;
-    LauncherModel   *_model;
     int              _index;
-    
-    void SetInitialIndex ();
-    static bool CompareSwitcherItem (LauncherIcon *first, LauncherIcon *second);
 };
 
 #endif // SWITCHERMODEL_H
