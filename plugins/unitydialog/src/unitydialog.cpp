@@ -110,6 +110,8 @@ UnityDialogShadeTexture::UnityDialogShadeTexture () :
 {
     mOffscreenContainer = gtk_offscreen_window_new ();
     gtk_widget_set_name (mOffscreenContainer, "UnityPanelWidget");
+    gtk_style_context_add_class (gtk_widget_get_style_context (mOffscreenContainer),
+                                 "menubar");
     gtk_widget_set_size_request (mOffscreenContainer, 100, 24);
     gtk_widget_show_all (mOffscreenContainer);
 
