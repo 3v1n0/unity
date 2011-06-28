@@ -36,7 +36,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/TimelineEasings.h>
 
-class PlacesController : public Introspectable
+class PlacesController : public unity::Introspectable
 {
 public:
   PlacesController ();

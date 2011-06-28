@@ -53,7 +53,7 @@ class SpaceLayout;
 class QuicklistMenuItem;
 class QuicklistMenuItemLabel;
 
-class QuicklistView : public nux::BaseWindow, public Introspectable
+class QuicklistView : public nux::BaseWindow, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (QuicklistView, nux::BaseWindow);
 public:
