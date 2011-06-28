@@ -35,7 +35,7 @@
 #include <gconf/gconf-client.h>
 #include <time.h>
 
-class PlacesHomeView : public Introspectable, public PlacesGroup
+class PlacesHomeView : public unity::Introspectable, public PlacesGroup
 {
 public:
   PlacesHomeView ();

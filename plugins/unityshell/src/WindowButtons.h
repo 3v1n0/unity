@@ -24,7 +24,7 @@
 
 #include "Introspectable.h"
 
-class WindowButtons : public nux::HLayout, public Introspectable
+class WindowButtons : public nux::HLayout, public unity::Introspectable
 {
   // These are the [close][minimize][restore] buttons on the panel when there
   // is a maximized window

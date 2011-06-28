@@ -44,7 +44,7 @@
 
 #include "IconLoader.h"
 
-class PlacesView : public nux::View, public Introspectable
+class PlacesView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:

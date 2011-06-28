@@ -33,7 +33,7 @@ namespace unity {
 
 class PanelIndicatorObjectEntryView;
 
-class PanelIndicatorObjectView : public nux::View, public Introspectable
+class PanelIndicatorObjectView : public nux::View, public unity::Introspectable
 {
 public:
   PanelIndicatorObjectView();

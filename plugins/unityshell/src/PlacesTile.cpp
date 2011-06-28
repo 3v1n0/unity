@@ -218,6 +218,17 @@ PlacesTile::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
 }
 
+nux::Area*
+PlacesTile::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+    bool mouse_inside = TestMousePointerInclusion(mouse_position, event_type);
+
+    if(mouse_inside == false)
+      return NULL;
+
+    return this;
+}
+
 void
 PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)

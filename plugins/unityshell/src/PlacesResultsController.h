@@ -28,7 +28,7 @@
 
 #include "PlacesGroupController.h"
 
-class PlacesResultsController : public nux::Object, public Introspectable
+class PlacesResultsController : public nux::Object, public unity::Introspectable
 {
 public:
   PlacesResultsController  ();

@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <list>
 
+namespace unity
+{
 class Introspectable
 {
 public:
@@ -52,5 +54,5 @@ protected:
 private:
   std::list<Introspectable *> _children;
 };
-
+}
 #endif

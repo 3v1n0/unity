@@ -43,7 +43,7 @@
 
 /* base screen class */
 class UnityScreen :
-    public Introspectable,
+    public unity::Introspectable,
     public sigc::trackable,
     public ScreenInterface,
     public CompositeScreenInterface,

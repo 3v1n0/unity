@@ -27,7 +27,7 @@
 
 #include "Introspectable.h"
 
-class IconTexture : public nux::TextureArea, public Introspectable
+class IconTexture : public nux::TextureArea, public unity::Introspectable
 {
 public:
   IconTexture (nux::BaseTexture *texture, guint width, guint height);

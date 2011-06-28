@@ -477,6 +477,8 @@ Launcher::Launcher (nux::BaseWindow* parent,
     SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
+
+    SetAcceptMouseWheelEvent (true);
 }
 
 Launcher::~Launcher()
@@ -3087,6 +3089,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   /* FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
    * on an internal Launcher property then
    */
+
   if (_last_button_press != 1)
     return;
 
