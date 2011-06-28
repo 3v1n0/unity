@@ -504,8 +504,13 @@ bool BamfLauncherIcon::Spread (int state, bool force)
     if (BAMF_IS_WINDOW (view))
     {
       guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+      CompWindow *window = m_Screen->findWindow ((Window) xid);
 
-      windowList.push_back ((Window) xid);
+      // filter by workspace
+      if (window->defaultViewport () == m_Screen->vp ())
+      {
+        windowList.push_back ((Window) xid);
+      }
     }
   }
 
