@@ -308,10 +308,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
-    // FIXME: not used, remove (with Get function) in O
-    m_ActiveMenuIcon = NULL;
-    m_LastSpreadIcon = NULL;
-
     _current_icon       = NULL;
     _current_icon_index = -1;
     _last_icon_index    = -1;
@@ -2317,10 +2313,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon == _current_icon)
       _current_icon = 0;
-    if (icon == m_ActiveMenuIcon)
-      m_ActiveMenuIcon = 0;
-    if (icon == m_LastSpreadIcon)
-      m_LastSpreadIcon = 0;
     if (icon == _icon_under_mouse)
       _icon_under_mouse = 0;
     if (icon == _icon_mouse_down)
