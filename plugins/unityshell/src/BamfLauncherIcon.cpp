@@ -507,7 +507,7 @@ bool BamfLauncherIcon::Spread (int state, bool force)
       CompWindow *window = m_Screen->findWindow ((Window) xid);
 
       // filter by workspace
-      if (window->defaultViewport () == m_Screen->vp ())
+      if (window && window->defaultViewport () == m_Screen->vp ())
       {
         windowList.push_back ((Window) xid);
       }
