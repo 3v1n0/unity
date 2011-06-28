@@ -141,7 +141,6 @@ void PanelIndicatorObjectEntryView::Refresh()
 
 
   int  x = 0;
-  int  y = 0;
   int  width = 0;
   int  height = PANEL_HEIGHT;
   int  icon_width = 0;
@@ -234,7 +233,6 @@ void PanelIndicatorObjectEntryView::Refresh()
     draw_menu_bg (cr, width, height);
 
   x = padding_;
-  y = 0;
 
   if (pixbuf && proxy_->image_visible())
   {
