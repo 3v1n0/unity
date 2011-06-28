@@ -18,6 +18,9 @@
 
 #include "config.h"
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PlaceEntryRemote.h"
 
 #include <glib/gi18n-lib.h>
@@ -845,6 +848,18 @@ PlaceEntryRemote::Update (const gchar  *dbus_path,
   {
     _dbus_path = g_strdup (dbus_path);
     Connect ();
+  }
+
+  // place might be already active until is successfully connected and updated
+  // therefore activation procedure needs to be redone
+  if (_active)
+  {
+    ubus_server_send_message (ubus_server_get_default (),
+                              UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new ("(sus)",
+                              GetId (),
+                              _previous_section,
+                              _previous_search));
   }
 
   _valid = true;
