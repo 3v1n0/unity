@@ -125,6 +125,7 @@
     "overlay-mode"   : "normal",
     "blur-size"      : 6},
 
+
   "filter-caption"   : {
     "text-size"      : 17,
     "text-color"     : "#ffffff",
