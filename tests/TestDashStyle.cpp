@@ -26,8 +26,8 @@ namespace unity
       DashStyleO();
       ~DashStyleO();
 
-      bool Scrollbar (cairo_t* cr);
-      bool TrackEntry (cairo_t* cr);
+      bool ScrollbarVert (cairo_t* cr, nux::State state);
+      bool TrackView (cairo_t* cr, nux::State state);
   };
 
   class DashStyleP : public DashStyle
@@ -36,8 +36,8 @@ namespace unity
       DashStyleP();
       ~DashStyleP();
 
-      bool Scrollbar (cairo_t* cr);
-      bool TrackEntry (cairo_t* cr);
+      bool ScrollbarVert (cairo_t* cr, nux::State state);
+      bool TrackView (cairo_t* cr, nux::State state);
   };
 
   DashStyleO::DashStyleO ()
@@ -48,7 +48,7 @@ namespace unity
   {
   }
 
-  bool DashStyleO::Scrollbar (cairo_t* cr)
+  bool DashStyleO::ScrollbarVert (cairo_t* cr, nux::State state)
   {
     cairo_set_source_rgba (cr, 0.0, 1.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -56,7 +56,7 @@ namespace unity
     return true;
   }
 
-  bool DashStyleO::TrackEntry (cairo_t* cr)
+  bool DashStyleO::TrackView (cairo_t* cr, nux::State state)
   {
     cairo_set_source_rgba (cr, 0.0, 1.0, 1.0, 1.0);
     cairo_paint (cr);
@@ -72,7 +72,7 @@ namespace unity
   {
   }
 
-  bool DashStyleP::Scrollbar (cairo_t* cr)
+  bool DashStyleP::ScrollbarVert (cairo_t* cr, nux::State state)
   {
     cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -80,7 +80,7 @@ namespace unity
     return true;
   }
 
-  bool DashStyleP::TrackEntry (cairo_t* cr)
+  bool DashStyleP::TrackView (cairo_t* cr, nux::State state)
   {
     cairo_set_source_rgba (cr, 1.0, 1.0, 0.0, 1.0);
     cairo_paint (cr);
@@ -114,32 +114,36 @@ int main (int    argc,
   wipe (cr);
 
   // render some elements from different styles to PNG-images
-  if (oDashStyle->Scrollbar (cr))
+  if (oDashStyle->ScrollbarVert (cr, nux::NUX_STATE_NORMAL))
   {
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/scrollbar-o.png");
+    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/scrollbarv-o.png");
     wipe (cr);
   }
 
-  if (oDashStyle->TrackEntry (cr))
+  if (oDashStyle->TrackView (cr, nux::NUX_STATE_NORMAL))
   {
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/trackentry-o.png");
+    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/trackview-o.png");
     wipe (cr);
   }
 
-  if (pDashStyle->Scrollbar (cr))
+  if (pDashStyle->ScrollbarVert (cr, nux::NUX_STATE_NORMAL))
   {
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/scrollbar-p.png");
+    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/scrollbarv-p.png");
     wipe (cr);
   }
 
-  if (pDashStyle->TrackEntry (cr))
+  if (pDashStyle->TrackView (cr, nux::NUX_STATE_NORMAL))
   {
-    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/trackentry-p.png");
+    cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/trackview-p.png");
     wipe (cr);
   }
 
-  pDashStyle->Stars (cr, 0.75);
+  pDashStyle->Star (cr, nux::NUX_STATE_NORMAL);
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/star-p.png");
+  wipe (cr);
+
+  pDashStyle->DrawIcon (cr, unity::DashStyle::STOCK_ICON_GRID_VIEW, 0.8, 3);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/icon-p.png");
   wipe (cr);
 
   // clean up

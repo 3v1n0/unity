@@ -1,0 +1,38 @@
+{
+  "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
+  "button-icon": {
+    "icon-opacity"   : [      0.8,       1.0,       0.8,       0.8,       0.8],
+    "blur-size"      : [        0,         2,         2,         0,         0]},
+
+  "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
+  "button-label": {
+    "corner-radius"  : 5,
+    "border-opacity" : [      0.5,       0.5,       0.5,       0.5,       0.5],
+    "border-color"   : ["#88ffaa", "#1f1a23", "#1122ff", "#123456", "#654321"],
+    "text-size"      : 1.0,
+    "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+    "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
+    "fill-color"     : ["#000000", "#000000", "#000000", "#000000", "#000000"],
+    "fill-opacity"   : [      0.0,       0.0,       0.0,       0.0,       0.0],
+    "blur-size"      : [        0,         0,         0,         0,         0]},
+
+  "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
+  "button-label-icon": {
+    "corner-radius"  : 5,
+    "border-opacity" : [      0.5,       0.5,       0.5,       0.5,       0.5],
+    "border-color"   : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+    "text-size"      : 1.0,
+    "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+    "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
+    "fill-color"     : ["#000000", "#000000", "#000000", "#000000", "#000000"],
+    "fill-opacity"   : [      0.0,       0.0,       0.0,       0.0,       0.0],
+    "blur-size"      : [        0,         0,         0,         0,         0]}
+
+  "stock-icons"      : {
+    "checkmark"      : "/usr/share/icons/unity/checkmark.svg",
+    "cross"          : "/usr/share/icons/unity/cross.svg",
+    "grid-view"      : "/usr/share/icons/unity/grid-view.svg",
+    "flow-view"      : "/usr/share/icons/unity/flow-view.svg",
+    "star"           : "/usr/share/icons/unity/star.svg"}
+}
+

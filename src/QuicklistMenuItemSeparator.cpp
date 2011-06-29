@@ -157,7 +157,7 @@ QuicklistMenuItemSeparator::UpdateTexture ()
   _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32,
                                            GetBaseWidth (),
                                            GetBaseHeight ());
-  cairo_t *cr = _cairoGraphics->GetContext ();
+  cairo_t *cr = _cairoGraphics->GetContext ();  
 
   cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
