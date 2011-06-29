@@ -1,38 +1,147 @@
 {
   "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
   "button-icon": {
-    "icon-opacity"   : [      0.8,       1.0,       0.8,       0.8,       0.8],
-    "blur-size"      : [        0,         2,         2,         0,         0]},
+    "color"          : ["#7f7f7f", "#ffffff", "#7f7f7f","#7f7f7f","#7f7f7f",],
+    "opacity"        : [      1.0,       1.0,       0.8,       0.8,       0.8],
+    "overlay-opacity": [     0.48,      0.30,      0.45,      0.45,       0.45],
+    "overlay-mode"   : ["multiply",  "normal",        "",        "",        ""],
+    "blur-size"      : [        0,         5,         0,         0,         0]},
+
+  "icon-only"        : {
+    "color"          : "#ffffff",
+    "opacity"        : 1.0,
+    "overlay-opacity": 0.2,
+    "overlay-mode"   : "normal",
+    "blur-size"      : 6},
+
+  "lens-nav-bar"     : {
+    "icon-height"    : 20,
+    "icon-gap"       : 40},
 
   "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
   "button-label": {
-    "corner-radius"  : 5,
-    "border-opacity" : [      0.5,       0.5,       0.5,       0.5,       0.5],
-    "border-color"   : ["#88ffaa", "#1f1a23", "#1122ff", "#123456", "#654321"],
+    "border-opacity" : [      0.5,       0.8,       0.5,       0.5,       0.5],
+    "border-color"   : ["#88ffaa", "#ffffff", "#1122ff", "#123456", "#654321"],
     "text-size"      : 1.0,
-    "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+    "text-color"     : ["#ffffff", "#000000", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
     "fill-color"     : ["#000000", "#000000", "#000000", "#000000", "#000000"],
     "fill-opacity"   : [      0.0,       0.0,       0.0,       0.0,       0.0],
-    "blur-size"      : [        0,         0,         0,         0,         0]},
+    "overlay-opacity": [      0.0,       0.3,       0.0,       0.0,       0.0],
+    "overlay-mode"   : [ "normal",  "normal",  "normal",  "normal",  "normal"],
+    "blur-size"      : [        0,         5,         0,         0,         0]},
 
   "dummy-entry"      : [   normal,    active,  prelight,  selected,  insensit],
   "button-label-icon": {
-    "corner-radius"  : 5,
     "border-opacity" : [      0.5,       0.5,       0.5,       0.5,       0.5],
     "border-color"   : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
-    "text-size"      : 1.0,
+    "border-size"    : 1,
+    "border-mode"    : "normal",
+    "text-size"      : 17.0,
     "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
-    "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
-    "fill-color"     : ["#000000", "#000000", "#000000", "#000000", "#000000"],
-    "fill-opacity"   : [      0.0,       0.0,       0.0,       0.0,       0.0],
-    "blur-size"      : [        0,         0,         0,         0,         0]}
+    "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0],
+    "text-mode"      : [ "normal",  "normal",  "normal",  "normal",   "normal"]
+    "text-style"     : [   "bold",    "bold",    "bold",    "bold",    "bold"],
+    "height"         : 40}, 
+
+  "regular-text"     : {
+    "text-color"     : "#ffffff"
+    "text-opacity"   : 1.0, 
+    "text-size"      : 13.0,
+    "text-mode"      : "normal",
+    "text-style"     : "light"},
+
+  "track-view"       : {
+    "line-gap"         : 26.0,
+    "heading-list-gap" : 30,
+    "left-padding"     : 20},
+
+  "row-caption" : {
+    "main-text-color"   : "#ffffff",
+    "main-text-opacity" : 1.0,
+    "main-text-size"    : 17.0,
+    "main-text-style"   : "regular",
+    "sub-text-color"    : "#ffffff",
+    "sub-text-opacity"  : 0.5,
+    "sub-text-size"     : 13.0,
+    "sub-text-style"    : "regular",
+    "icon-main-gap"     : 10,
+    "main-sub-gap"      : 15,
+    "sub-arrow-gap"     : 10},
+
+  "preview-heading-small"  : {
+    "main-title-size"    : 23.0,
+    "main-title-color"   : "#ffffff",
+    "main-title-opacity" : 1.0,
+    "main-title-mode"    : "normal",
+    "main-title-style"   : "regular,
+    "sub-title-size"     : 17.0,
+    "sub-title-color"    : "#ffffff",
+    "sub-title-opacity"  : 1.0,
+    "sub-title-mode"     : "normal",
+    "sub-title-style"    : "regular",
+    "main-sub-gap"       : 15,
+    "padding"            : 10},
+
+  "preview-heading"  : {
+    "main-title-size"    : 30.0,
+    "main-title-color"   : "#ffffff",
+    "main-title-opacity" : 1.0,
+    "main-title-mode"    : "normal",
+    "main-title-style"   : "regular,
+    "sub-title-size"     : 17.0,
+    "sub-title-color"    : "#ffffff",
+    "sub-title-opacity"  : 1.0,
+    "sub-title-mode"     : "normal",
+    "sub-title-style"    : "regular",
+    "main-sub-gap"       : 15,
+    "padding"            : 10},
+
+  "scrollbar"       : {
+    "color"          : "#ffffff",
+    "opacity"        : 1.0,
+    "overlay-opacity": 0.30,
+    "overlay-mode"   : "normal",
+    "blur-size"      : 5,
+    "size"           : 3,
+    "corner-radius"  : 1.5},
+
+  "filter-pane" : {
+    "width"           : 330,
+    "title-size"      : 17.0,
+    "title-color"     : "#ffffff",
+    "title-opacity"   : 1.0,
+    "title-mode"      : "normal",
+    "title-style"     : "bold",
+    "title-arrow-gap" : 10,
+    "button-height"   : 30,
+    "border-size"     : 1},
+
+  "separator"       : {
+    "size"           : 1,
+    "color"          : "#ffffff",
+    "opacity"        : 0.15, 
+    "overlay-opacity": 0.47,
+    "overlay-mode"   : "normal",
+    "blur-size"      : 6},
+
+  "filter-caption"   : {
+    "text-size"      : 17,
+    "text-color"     : "#ffffff",
+    "text-opacity"   : 1.0,
+    "text-mode"      : "normal",
+    "text-style"     : "bold",
+    "text-arrow-gap" : 10}
 
   "stock-icons"      : {
     "checkmark"      : "/usr/share/icons/unity/checkmark.svg",
     "cross"          : "/usr/share/icons/unity/cross.svg",
     "grid-view"      : "/usr/share/icons/unity/grid-view.svg",
     "flow-view"      : "/usr/share/icons/unity/flow-view.svg",
-    "star"           : "/usr/share/icons/unity/star.svg"}
+    "star"           : "/usr/share/icons/unity/star.svg",
+    "triangle"       : "/usr/share/icons/unity/curved-triangle.svg",
+    "bag"            : "/usr/share/icons/unity/bag.svg",
+    "next"           : "/usr/share/icons/unity/next.svg",
+    "prev"           : "/usr/share/icons/unity/prev.svg",
+    "play"           : "/usr/share/icons/unity/play.svg"}
 }
-
