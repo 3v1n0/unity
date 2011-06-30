@@ -21,6 +21,7 @@
 
 #include "Nux/Nux.h"
 
+#include <json-glib/json-glib.h>
 #include <cairo.h>
 
 #define STATES   5
@@ -48,7 +49,7 @@ namespace unity
     public:
 
       typedef enum {
-        STOCK_ICON_CHECKMARK,
+        STOCK_ICON_CHECKMARK = 0,
         STOCK_ICON_CROSS,
         STOCK_ICON_GRID_VIEW,
         STOCK_ICON_FLOW_VIEW,
@@ -56,11 +57,23 @@ namespace unity
       } StockIcon;
 
       typedef enum {
-        ORIENTATION_UP,
+        ORIENTATION_UP = 0,
         ORIENTATION_DOWN,
         ORIENTATION_LEFT,
         ORIENTATION_RIGHT,
       } Orientation;
+
+      typedef enum {
+        BLEND_MODE_NORMAL = 0,
+        BLEND_MODE_MULTIPLY,
+        BLEND_MODE_SCREEN,
+	  } BlendMode;
+
+      typedef enum {
+        FONT_STYLE_REGULAR = 0,
+        FONT_STYLE_LIGHT,
+        FONT_STYLE_BOLD,
+	  } FontStyle;
 
       DashStyle ();
       ~DashStyle ();
@@ -116,8 +129,70 @@ namespace unity
     void Star (cairo_t* cr, nux::State state);
 
     private:
-      double _buttonIconOpacity[STATES];
-      int    _buttonIconBlurSize[STATES];
+      void UseDefaultValues ();
+
+      bool ReadColorSingle (JsonNode*    root,
+                            const gchar* nodeName,
+                            const gchar* memberName,
+                            double*      color);
+
+      bool ReadColorArray (JsonNode*    root,
+                           const gchar* nodeName,
+                           const gchar* memberName,
+                           double       colors[][CHANNELS]);
+
+      bool ReadDoubleSingle (JsonNode*    root,
+                             const gchar* nodeName,
+                             const gchar* memberName,
+                             double*      value);
+
+      bool ReadDoubleArray (JsonNode*    root,
+                            const gchar* nodeName,
+                            const gchar* memberName,
+                            double*      values);
+
+      bool ReadIntSingle (JsonNode*    root,
+                          const gchar* nodeName,
+                          const gchar* memberName,
+                          int*         value);
+
+      bool ReadIntArray (JsonNode*    root,
+                         const gchar* nodeName,
+                         const gchar* memberName,
+                         int*         values);
+
+      bool ReadModeSingle (JsonNode*    root,
+                           const gchar* nodeName,
+                           const gchar* memberName,
+                           BlendMode*   mode);
+
+      bool ReadModeArray (JsonNode*    root,
+                          const gchar* nodeName,
+                          const gchar* memberName,
+                          BlendMode*   modes);
+
+      bool ReadStyleSingle (JsonNode*    root,
+                            const gchar* nodeName,
+                            const gchar* memberName,
+                            FontStyle*   style);
+
+      bool ReadStyleArray (JsonNode*    root,
+                           const gchar* nodeName,
+                           const gchar* memberName,
+                           FontStyle*   styles);
+
+    private:
+      double    _buttonIconColor[STATES][CHANNELS];
+      double    _buttonIconOpacity[STATES];
+      double    _buttonIconOverlayOpacity[STATES];
+      BlendMode _buttonIconOverlayMode[STATES];
+      int       _buttonIconBlurSize[STATES];
+
+      double    _iconOnlyColor[CHANNELS];
+      double    _iconOnlyOpacity;
+      double    _iconOnlyOverlayOpacity;
+      BlendMode _iconOnlyOverlayMode;
+      int       _iconOnlyBlurSize;
   };
 }
 

@@ -19,14 +19,291 @@
 #include <math.h>
 #include <glib.h>
 #include <gdk/gdk.h>
+#include <pango/pango.h>
 #include <json-glib/json-glib.h>
 
 #include "DashStyle.h"
 
+//#define DASH_WIDGETS_FILE "/usr/share/unity/themes/dash-widgets.json"
+#define DASH_WIDGETS_FILE "/home/mirco/src/avantika-team/unity.style/resources/dash-widgets.json"
+
 namespace unity
 {
+  bool DashStyle::ReadColorSingle (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   double*      color)
+  {
+	JsonObject* object = NULL;
+	JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !color)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    const gchar* string = NULL;
+    PangoColor   col    = {0, 0, 0};
+
+    string = json_object_get_string_member (object, memberName);
+    pango_color_parse (&col, string);
+    color[R] = (double) col.red   / (double) 0xffff;
+    color[G] = (double) col.green / (double) 0xffff;
+    color[B] = (double) col.blue  / (double) 0xffff;
+    
+    return true;
+  }
+
+  bool DashStyle::ReadColorArray (JsonNode*    root,
+                                  const gchar* nodeName,
+                                  const gchar* memberName,
+                                  double colors[][CHANNELS])
+  {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !colors)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+      PangoColor   color  = {0, 0, 0};
+      string = json_array_get_string_element (array, i);
+      pango_color_parse (&color, string);
+      colors[i][R] = (double) color.red   / (double) 0xffff;
+      colors[i][G] = (double) color.green / (double) 0xffff;
+      colors[i][B] = (double) color.blue  / (double) 0xffff;
+    }
+    
+    return true;
+  }
+
+  bool DashStyle::ReadDoubleSingle (JsonNode*    root,
+                                    const gchar* nodeName,
+                                    const gchar* memberName,
+                                    double*      value)
+  {
+	JsonObject* object = NULL;
+	JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !value)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    *value = json_object_get_double_member (object, memberName);
+
+    return true;
+  }
+
+  bool DashStyle::ReadDoubleArray (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   double*      values)
+  {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !values)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+      values[i] = json_array_get_double_element (array, i);
+
+    return true;
+  }
+
+  bool DashStyle::ReadIntSingle (JsonNode*    root,
+                                 const gchar* nodeName,
+                                 const gchar* memberName,
+                                 int*         value)
+  {
+	JsonObject* object = NULL;
+	JsonNode*   node   = NULL;
+
+    if (!root || !nodeName || !memberName || !value)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    *value = json_object_get_int_member (object, memberName);
+
+    return true;
+  }
+
+  bool DashStyle::ReadIntArray (JsonNode*    root,
+                                const gchar* nodeName,
+                                const gchar* memberName,
+                                int*         values)
+  {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+    unsigned int i      = 0;
+
+    if (!root || !nodeName || !memberName || !values)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+      values[i] = json_array_get_int_element (array, i);
+
+    return true;
+  }
+
+  bool DashStyle::ReadModeSingle (JsonNode*    root,
+                                  const gchar* nodeName,
+                                  const gchar* memberName,
+                                  BlendMode*   mode)
+  {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    const gchar* string = NULL;
+
+    if (!root || !nodeName || !memberName || !mode)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    string = json_object_get_string_member (object, memberName);
+    if (!g_strcmp0 (string, "normal"))
+      *mode = BLEND_MODE_NORMAL ;
+
+    if (!g_strcmp0 (string, "multiply"))
+      *mode = BLEND_MODE_MULTIPLY ;
+
+    if (!g_strcmp0 (string, "screen"))
+      *mode = BLEND_MODE_SCREEN ;
+
+    return true;
+  }
+
+  bool DashStyle::ReadModeArray (JsonNode*    root,
+                                 const gchar* nodeName,
+                                 const gchar* memberName,
+                                 BlendMode*   modes)
+  {
+    if (!root || !nodeName || !memberName || !modes)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::ReadStyleSingle (JsonNode*    root,
+                                   const gchar* nodeName,
+                                   const gchar* memberName,
+                                   FontStyle*   style)
+  {
+    if (!root || !nodeName || !memberName || !style)
+      return false;
+
+    return true;
+  }
+
+  bool DashStyle::ReadStyleArray (JsonNode*    root,
+                                  const gchar* nodeName,
+                                  const gchar* memberName,
+                                  FontStyle*   styles)
+  {
+    if (!root || !nodeName || !memberName || !styles)
+      return false;
+
+    return true;
+  }
+
   DashStyle::DashStyle ()
   {
+    JsonParser*  parser = NULL;
+    GError*      error  = NULL;
+    gboolean     result = FALSE;
+    JsonNode*    root   = NULL;
+    unsigned int i      = 0;
+
+	g_type_init ();
+
+    parser = json_parser_new ();
+    result = json_parser_load_from_file (parser, DASH_WIDGETS_FILE, &error);
+    if (!result)
+    {
+      g_object_unref (parser);
+      g_warning ("Failure: %s", error->message);
+      g_error_free (error);
+      UseDefaultValues ();
+	  return;
+    }
+
+    root = json_parser_get_root (parser); // not ref'ed
+
+    if (JSON_NODE_TYPE (root) != JSON_NODE_OBJECT)
+    {
+      g_warning ("Root node is not an object, fail.  It's an: %s",
+                 json_node_type_name (root));
+      g_object_unref (parser);
+      UseDefaultValues ();
+      return;
+    }
+
+    ReadColorSingle (root, "icon-only", "color", _iconOnlyColor);
+    g_print ("icon-only color = %1.2f/%1.2f/%1.2f\n",
+             _iconOnlyColor[R],
+             _iconOnlyColor[G],
+             _iconOnlyColor[B]);
+
+    ReadColorArray (root, "button-icon", "color", _buttonIconColor);
+    for (i = 0; i < 5; i++)
+    {
+      g_print ("button-icon color = %1.2f/%1.2f/%1.2f\n",
+               _buttonIconColor[i][R],
+               _buttonIconColor[i][G],
+               _buttonIconColor[i][B]);
+    }
+
+    ReadDoubleSingle (root, "icon-only", "opacity", &_iconOnlyOpacity);
+    g_print ("icon-only opacity = %1.2f\n", _iconOnlyOpacity);
+
+    ReadDoubleArray (root, "button-icon", "opacity", _buttonIconOpacity);
+    for (i = 0; i < 5; i++)
+      g_print ("button-icon opacity = %1.2f\n", _buttonIconOpacity[i]);
+
+    ReadDoubleArray (root, "button-icon", "overlay-opacity", _buttonIconOverlayOpacity);
+    for (i = 0; i < 5; i++)
+      g_print ("button-icon overlay-opacity = %1.2f\n", _buttonIconOverlayOpacity[i]);
+
+    ReadIntArray (root, "button-icon", "blur-size", _buttonIconBlurSize);
+    for (i = 0; i < 5; i++)
+      g_print ("button-icon blur-size = %d\n", _buttonIconBlurSize[i]);
+
+    ReadModeSingle (root, "icon-only", "overlay-mode", &_iconOnlyOverlayMode);
+    g_print ("icon-only overlay-mode = %d\n", _iconOnlyOverlayMode);
+
+    g_object_unref (parser);
   }
 
   DashStyle::~DashStyle ()
@@ -642,5 +919,44 @@ namespace unity
     cairo_rectangle (cr, -(4.0 * 50.0 + 4.0 * 7.0), -30.0, 4.0 * 50.0 + 4.0 * 7.0, 55.0);
     cairo_fill (cr);
 
+  }
+
+  void DashStyle::UseDefaultValues ()
+  {
+    _buttonIconColor[nux::NUX_STATE_NORMAL][R]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_NORMAL][G]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_NORMAL][B]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_ACTIVE][R]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_ACTIVE][G]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_ACTIVE][B]      = 1.0;
+    _buttonIconColor[nux::NUX_STATE_PRELIGHT][R]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_PRELIGHT][G]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_PRELIGHT][B]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_SELECTED][R]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_SELECTED][G]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_SELECTED][B]    = 1.0;
+    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][R] = 1.0;
+    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][G] = 1.0;
+    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][B] = 1.0;
+    _buttonIconOpacity[nux::NUX_STATE_NORMAL]       = 1.0;
+    _buttonIconOpacity[nux::NUX_STATE_ACTIVE]       = 1.0;
+    _buttonIconOpacity[nux::NUX_STATE_PRELIGHT]     = 1.0;
+    _buttonIconOpacity[nux::NUX_STATE_SELECTED]     = 1.0;
+    _buttonIconOpacity[nux::NUX_STATE_INSENSITIVE]  = 1.0;
+    _buttonIconOverlayOpacity[nux::NUX_STATE_NORMAL]      = 0.0;
+	_buttonIconOverlayOpacity[nux::NUX_STATE_ACTIVE]      = 0.0;
+    _buttonIconOverlayOpacity[nux::NUX_STATE_PRELIGHT]    = 0.0;
+	_buttonIconOverlayOpacity[nux::NUX_STATE_SELECTED]    = 0.0;
+	_buttonIconOverlayOpacity[nux::NUX_STATE_INSENSITIVE] = 0.0;
+    _buttonIconOverlayMode[nux::NUX_STATE_NORMAL]      = BLEND_MODE_NORMAL;
+    _buttonIconOverlayMode[nux::NUX_STATE_ACTIVE]      = BLEND_MODE_NORMAL;
+    _buttonIconOverlayMode[nux::NUX_STATE_PRELIGHT]    = BLEND_MODE_NORMAL;
+    _buttonIconOverlayMode[nux::NUX_STATE_SELECTED]    = BLEND_MODE_NORMAL;
+    _buttonIconOverlayMode[nux::NUX_STATE_INSENSITIVE] = BLEND_MODE_NORMAL;
+    _buttonIconBlurSize[nux::NUX_STATE_NORMAL]      = 0;
+    _buttonIconBlurSize[nux::NUX_STATE_ACTIVE]      = 0;
+    _buttonIconBlurSize[nux::NUX_STATE_PRELIGHT]    = 0;
+    _buttonIconBlurSize[nux::NUX_STATE_SELECTED]    = 0;
+    _buttonIconBlurSize[nux::NUX_STATE_INSENSITIVE] = 0;
   }
 }

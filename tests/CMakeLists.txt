@@ -14,6 +14,8 @@ set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
+     "-O0"
+     "-ggdb"
      "-DTESTDATADIR=${TESTDATADIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""

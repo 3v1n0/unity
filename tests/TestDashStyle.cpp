@@ -105,7 +105,7 @@ int main (int    argc,
           char** argv)
 {
   // setup
-  unity::DashStyleO* oDashStyle = new unity::DashStyleO ();
+  //unity::DashStyleO* oDashStyle = new unity::DashStyleO ();
   unity::DashStyleP* pDashStyle = new unity::DashStyleP ();
   cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
                                                          400,
@@ -114,7 +114,7 @@ int main (int    argc,
   wipe (cr);
 
   // render some elements from different styles to PNG-images
-  if (oDashStyle->ScrollbarVert (cr, nux::NUX_STATE_NORMAL))
+  /*if (oDashStyle->ScrollbarVert (cr, nux::NUX_STATE_NORMAL))
   {
     cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/scrollbarv-o.png");
     wipe (cr);
@@ -124,7 +124,7 @@ int main (int    argc,
   {
     cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/trackview-o.png");
     wipe (cr);
-  }
+  }*/
 
   if (pDashStyle->ScrollbarVert (cr, nux::NUX_STATE_NORMAL))
   {
@@ -148,7 +148,7 @@ int main (int    argc,
 
   // clean up
   cairo_destroy (cr);
-  delete oDashStyle;
+  //delete oDashStyle;
   delete pDashStyle;
 
   return 0;
