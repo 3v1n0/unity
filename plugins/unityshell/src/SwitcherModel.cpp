@@ -20,13 +20,16 @@
 
 #include "SwitcherModel.h"
 
+namespace unity {
+namespace switcher {
+
 SwitcherModel::SwitcherModel(std::vector<LauncherIcon*> icons)
 {
   _inner = icons;
   _index = 0;
 }
 
-virtual SwitcherModel::~SwitcherModel()
+SwitcherModel::~SwitcherModel()
 {
 
 }
@@ -72,30 +75,32 @@ SwitcherModel::Next ()
 void 
 SwitcherModel::Prev ()
 {
-  _index--;
-  if (index < 0)
+  if (_index > 0)
+    _index--;
+  else
     _index = _inner.size () - 1;
 }
 
 void 
 SwitcherModel::Select (LauncherIcon *selection)
 {
-  iterator it;
   int i = 0;
-  
-  for (it = begin (); it != end (); it++)
+  for (iterator it = begin(), e = end(); it != e; ++it)
   {
     if (*it == selection)
     {
       _index = i;
       break;
     }
-    i++;
+    ++i;
   }
 }
 
 void 
-SwitcherModel::SelectIndex (int index)
+SwitcherModel::Select (int index)
 {
-  _index = CLAMP (index, 0, _inner.size -1);
+  _index = CLAMP (index, 0, _inner.size () - 1);
+}
+
+}
 }

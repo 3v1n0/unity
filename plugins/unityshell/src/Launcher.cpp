@@ -18,6 +18,7 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  */
 
+#include "config.h"
 #include <math.h>
 
 #include "Nux/Nux.h"
@@ -1320,7 +1321,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.running_arrow       = icon->GetQuirk (LauncherIcon::QUIRK_RUNNING);
     arg.active_arrow        = icon->GetQuirk (LauncherIcon::QUIRK_ACTIVE);
     arg.running_colored     = icon->GetQuirk (LauncherIcon::QUIRK_URGENT);
-    arg.running_on_viewport = icon->HasVisibleWindow ();
+    arg.running_on_viewport = icon->HasWindowOnViewport ();
     arg.active_colored      = false;
     arg.x_rotation          = 0.0f;
     arg.y_rotation          = 0.0f;

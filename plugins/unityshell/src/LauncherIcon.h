@@ -112,7 +112,7 @@ public:
     
     int RelatedWindows ();
     
-    bool HasVisibleWindow ();
+    bool HasWindowOnViewport ();
     
     virtual bool IsSpacer () { return false; };
     
@@ -129,6 +129,7 @@ public:
     virtual unsigned int SwitcherPriority () { return 0; }
     
     bool GetQuirk (Quirk quirk);
+    void SetQuirk (Quirk quirk, bool value);
     struct timespec GetQuirkTime (Quirk quirk);
     
     IconType Type ();
@@ -152,6 +153,7 @@ public:
     void SendDndEnter () { OnDndEnter (); }
     void SendDndLeave () { OnDndLeave (); }
     
+    void SetIconType (IconType type);
     static void SetSkipTooltipDelay (gboolean skip_tooltip_delay);
     
     sigc::signal<void, int> MouseDown;
@@ -174,7 +176,6 @@ protected:
     const gchar * GetName ();
     void AddProperties (GVariantBuilder *builder);
 
-    void SetQuirk (Quirk quirk, bool value);
 
     void UpdateQuirkTimeDelayed (guint ms, Quirk quirk);
     void UpdateQuirkTime (Quirk quirk);
@@ -185,12 +186,11 @@ protected:
     
     void SetProgress (float progress);
     
-    void SetHasVisibleWindow (bool val);
+    void SetHasWindowOnViewport (bool val);
     
     void Present (float urgency, int length);
     void Unpresent ();
     
-    void SetIconType (IconType type);
 
     void SetEmblem (nux::BaseTexture *emblem);
     void SetSuperkeyLabel (nux::BaseTexture* label);

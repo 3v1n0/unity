@@ -56,6 +56,8 @@
    the accessible root object, this include would not be required */
 #include "unity-util-accessible.h"
 
+using namespace unity::switcher;
+
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
@@ -429,6 +431,28 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompOption::Vector& options)
 {
   _key_nav_mode_requested = true;
+  return false;
+}
+
+bool UnityScreen::altTabForwardInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
+{
+  if (switcherController->Visible ())
+    switcherController->MoveNext ();
+  else
+    switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, launcher->GetModel ());
+  
+  action->setState (action->state () | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabForwardTerminate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
+  switcherController->Hide ();
   return false;
 }
 
@@ -893,6 +917,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
   optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  optionSetAltTabForwardInitiate     (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+  optionSetAltTabForwardTerminate    (boost::bind (&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
@@ -924,7 +950,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
 
   GeisAdapter::Default (screen)->Run ();
   gestureEngine = new GestureEngine (screen);
-
+  
   CompString name (PKGDATADIR"/panel-shadow.png");
   CompString pname ("unityshell");
   CompSize size (1, 20);
@@ -970,8 +996,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcher = new Launcher(self->launcherWindow, self->screen);
   self->launcher->SinkReference ();
   self->launcher->hidden_changed.connect (sigc::mem_fun (self, &UnityScreen::OnLauncherHiddenChanged));
-
-  self->AddChild (self->launcher);
+  
 
   nux::HLayout* layout = new nux::HLayout();
   layout->AddView(self->launcher, 1);
@@ -989,6 +1014,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
   self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
+  self->switcherController = new SwitcherController ();
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
   if (unity_a11y_initialized () == TRUE)

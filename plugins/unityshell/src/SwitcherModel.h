@@ -23,12 +23,18 @@
 #include "LauncherIcon.h"
 #include "LauncherModel.h"
 
+#include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
+
+namespace unity {
+namespace switcher {
 
 class SwitcherModel : public sigc::trackable
 {
 
 public:
+    typedef boost::shared_ptr<SwitcherModel> Ptr;
+
     typedef std::vector<LauncherIcon*> Base;
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
@@ -48,12 +54,15 @@ public:
     void Prev ();
     
     void Select (LauncherIcon *selection);
-    void SelectIndex (int index);
+    void Select (int index);
     
 private:
     Base             _inner;
-    int              _index;
+    unsigned int              _index;
 };
+
+}
+}
 
 #endif // SWITCHERMODEL_H
 

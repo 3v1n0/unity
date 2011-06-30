@@ -583,7 +583,7 @@ BamfLauncherIcon::EnsureWindowState ()
   }
 
   SetRelatedWindows (count);
-  SetHasVisibleWindow (has_visible);
+  SetHasWindowOnViewport (has_visible);
 
   g_list_free (children);
 }
@@ -1110,7 +1110,7 @@ BamfLauncherIcon::OnDesktopFileChanged (GFileMonitor        *monitor,
 bool 
 BamfLauncherIcon::ShowInSwitcher ()
 {
-  return HasVisibleWindow ();
+  return GetQuirk (QUIRK_RUNNING) && GetQuirk (QUIRK_VISIBLE);
 }
 
 unsigned int 
@@ -1138,6 +1138,5 @@ BamfLauncherIcon::SwitcherPriority ()
   }
   
   g_list_free (children);
-  
   return result;
 }

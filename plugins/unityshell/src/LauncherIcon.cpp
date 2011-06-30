@@ -164,7 +164,7 @@ LauncherIcon::~LauncherIcon()
 }
 
 bool
-LauncherIcon::HasVisibleWindow ()
+LauncherIcon::HasWindowOnViewport ()
 {
   return _has_visible_window;
 }
@@ -487,6 +487,9 @@ gboolean
 LauncherIcon::OnTooltipTimeout (gpointer data)
 {
   LauncherIcon *self = (LauncherIcon *) data;
+
+  if (!self->_launcher)
+    return false;
   
   nux::Geometry geo = self->_launcher->GetAbsoluteGeometry ();
   int tip_x = geo.x + geo.width + 1;
@@ -583,9 +586,18 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
   if (default_to_first_item)
     _quicklist->DefaultToFirstItem ();
 
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
+  int tip_x, tip_y;
+  if (_launcher)
+  {
+    nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+    tip_x = geo.x + geo.width + 1;
+    tip_y = geo.y + _center.y;
+  }
+  else
+  {
+    tip_x = 0;
+    tip_y = _center.y;
+  }
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
   
   return true;
@@ -644,9 +656,18 @@ LauncherIcon::SetCenter (nux::Point3 center)
 {
   _center = center;
   
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
+  int tip_x, tip_y;
+  if (_launcher)
+  {
+    nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+    tip_x = geo.x + geo.width + 1;
+    tip_y = geo.y + _center.y;
+  }
+  else
+  {
+    tip_x = 0;
+    tip_y = _center.y;
+  }
     
   if (_quicklist->IsVisible ())
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
@@ -673,7 +694,7 @@ LauncherIcon::SaveCenter ()
 }
 
 void 
-LauncherIcon::SetHasVisibleWindow (bool val)
+LauncherIcon::SetHasWindowOnViewport (bool val)
 {
   if (_has_visible_window == val)
     return;

@@ -21,9 +21,18 @@
 #define SWITCHERCONTROLLER_H
 
 #include "SwitcherModel.h"
-#include "Launcher.h"
+#include "SwitcherView.h"
+#include "LauncherModel.h"
 
+#include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
+
+#include <Nux/Nux.h>
+#include <Nux/BaseWindow.h>
+#include <Nux/WindowCompositor.h>
+
+namespace unity {
+namespace switcher {
 
 class SwitcherController : public sigc::trackable
 {
@@ -41,10 +50,10 @@ public:
     CURRENT_VIEWPORT,
   };
 
-  SwitcherController(Launcher *launcher);
-  virtual ~SwitcherController();
+  SwitcherController();
 
-  void Show (ShowMode show, SortMode sort, bool reverse);
+  void Show (ShowMode show, SortMode sort, bool reverse, LauncherModel *model);
+  void Show (ShowMode show, SortMode sort, bool reverse, std::vector<LauncherIcon*> results);
   void Hide ();
 
   bool Visible ();
@@ -52,13 +61,26 @@ public:
   void MoveNext ();
   void MovePrev ();
 
-private:
-  Launcher _launcher;
-  SwitcherModel _model;
+  void DetailCurrent ();
   
-  bool CompareSwitcherItemsPriority (LauncherIcon *first, LauncherIcon *second);
+  void SelectFirstItem ();
+
+private:
+  void ConstructView ();
+
+  SwitcherModel::Ptr model_;
+  SwitcherView *view_;
+
+  nux::BaseWindow *view_window_;
+  
+  bool visible_;
+  
+  static bool CompareSwitcherItemsPriority (LauncherIcon *first, LauncherIcon *second);
 
 };
+
+}
+}
 
 #endif // SWITCHERCONTROLLER_H
 

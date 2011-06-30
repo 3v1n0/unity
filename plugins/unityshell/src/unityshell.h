@@ -38,8 +38,11 @@
 #include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
+#include "SwitcherController.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
+
+using namespace unity::switcher;
 
 /* base screen class */
 class UnityScreen :
@@ -115,6 +118,14 @@ public:
   bool launcherRevealEdgeInitiate(CompAction* action,
                                   CompAction::State state,
                                   CompOption::Vector& options);
+                                  
+  bool altTabForwardInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options);
+
+  bool altTabForwardTerminate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
@@ -164,6 +175,7 @@ private:
 	Launcher               *launcher;
 	LauncherController     *controller;
   PanelController        *panelController;
+  SwitcherController     *switcherController;
 	PlacesController 			 *placesController;
 	GestureEngine          *gestureEngine;
 	nux::WindowThread      *wt;
