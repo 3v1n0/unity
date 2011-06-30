@@ -1,4 +1,4 @@
-unity (4.0.1-0ubuntu3) UNRELEASED; urgency=low
+unity (4.0.1-0ubuntu3) oneiric; urgency=low
 
   * Backport Neil's commit to migrate the indicator loaders to GTK3
   * CMakeLists.txt: build without Werror to workaround a build issue
