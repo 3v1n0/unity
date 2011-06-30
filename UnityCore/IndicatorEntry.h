@@ -66,6 +66,11 @@ public:
   void set_active(bool active);
   bool active() const;
 
+  /**
+   * Whether this entry should be shown to the user.
+   * Example uses: Application menubar items are only shown when the user
+   * movoes its mouse over the panel or holds down the Alt key.
+   */
   bool show_now() const;
   void set_show_now(bool show_now);
 
