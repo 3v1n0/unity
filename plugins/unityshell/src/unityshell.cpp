@@ -85,7 +85,10 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+  if (mFBOBound)
+    (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
+  else
+    (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -176,14 +179,240 @@ void UnityScreen::paintPanelShadow(const GLMatrix &matrix)
 
 void UnityScreen::paintDisplay(const CompRegion &region)
 {
-  nuxPrologue ();
   CompOutput *output = _last_output;
+
+	fboEpilogue ();
+
+  /* Draw the bit of the relevant framebuffer for each output */
+  fboPaint (output, cScreen->damageMask ());
+
+  nuxPrologue ();
   nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
 
   wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue ();
 
   doShellRepaint = false;
+}
+
+void UnityScreen::fboPrologue()
+{
+  if (!mFBTexture)
+  {
+    glGenTextures (1, &mFBTexture);
+
+    glBindTexture (GL_TEXTURE_2D, mFBTexture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, screen->width (), screen->height (), 0, GL_BGRA,
+#if IMAGE_BYTE_ORDER == MSBFirst
+		  GL_UNSIGNED_INT_8_8_8_8_REV,
+#else
+		  GL_UNSIGNED_BYTE,
+#endif
+		  NULL);
+
+    glBindTexture (GL_TEXTURE_2D, 0);
+  }
+
+  glGetError ();
+
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
+
+  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                               GL_TEXTURE_2D, mFBTexture, 0);
+
+  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+  mFBOBound = true;
+
+  /* Ensure that a framebuffer is actually available */
+  if (!mFboStatus)
+  {
+    GLint status = (*GL::checkFramebufferStatus) (GL_DRAW_FRAMEBUFFER);
+
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+       switch (status)
+       {
+          case GL_FRAMEBUFFER_UNDEFINED:
+            compLogMessage ("unity", CompLogLevelWarn, "no window"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            compLogMessage ("unity", CompLogLevelWarn, "attachment incomplete"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            compLogMessage ("unity", CompLogLevelWarn, "no buffers attached to fbo"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glDrawBuffers doesn't exist in FBO"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glReadBuffers doesn't exist in FBO"); break;
+          case GL_FRAMEBUFFER_UNSUPPORTED:
+            compLogMessage ("unity", CompLogLevelWarn, "unsupported internal format"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            compLogMessage ("unity", CompLogLevelWarn, "different levels of sampling for each attachment"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+            compLogMessage ("unity", CompLogLevelWarn, "number of layers is different"); break;
+          default:
+            compLogMessage ("unity", CompLogLevelWarn, "unable to bind the framebuffer for an unknown reason"); break;
+       }
+
+       GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+       GL::deleteFramebuffers (1, &mFboHandle);
+
+       glDrawBuffer (GL_BACK);
+       glReadBuffer (GL_BACK);
+
+       mFboHandle = 0;
+
+       mFboStatus = false;
+       mFBOBound = false;
+     }
+     else
+       mFboStatus = true;
+   }
+}
+
+void
+UnityScreen::fboEpilogue ()
+{
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glDrawBuffer (GL_BACK);
+  glReadBuffer (GL_BACK);
+
+  mFBOBound = false;
+}  
+
+void
+UnityScreen::fboPaint (CompOutput *output, unsigned int mask)
+{
+
+  if (mFBTexture)
+  {
+    CompRect outVp;
+    CompRect tex;
+
+	  glEnable (GL_TEXTURE_2D);
+	  GL::activeTexture (GL_TEXTURE0_ARB);
+    glBindTexture (GL_TEXTURE_2D, mFBTexture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    /* Draw the bit of the relevant framebuffer for each output */
+    GLMatrix transform;
+
+    outVp = *output;
+    outVp.setY (screen->height () - outVp.y2 ());
+
+    glViewport (outVp.x (), outVp.y (), outVp.width (), outVp.height ());
+
+    transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
+    glPushMatrix ();
+    glLoadMatrixf (transform.getMatrix ());
+
+    tex.setX ((1.0f / screen->width()) * output->x1 ());
+    tex.setY ((1.0f / screen->height()) * (screen->height () - output->y2 ()));
+    tex.setWidth ((1.0f / screen->width()) * output->x2 () - tex.x ());
+    tex.setHeight ((1.0f / screen->height()) * (screen->height () - output->y2 () + output->height()) - tex.y ());
+
+    /* FIXME: This needs to be GL_TRIANGLE_STRIP */
+		glBegin (GL_QUADS);
+		glTexCoord2f (tex.x1 (), tex.y2 ());
+		glVertex2i   (output->x1(),		output->y1());
+		glTexCoord2f (tex.x1 (), tex.y1 ());
+		glVertex2i   (output->x1(),		output->y2());
+		glTexCoord2f (tex.x2 (), tex.y1 ());
+		glVertex2i   (output->x2(), 	output->y2());
+		glTexCoord2f (tex.x2 (), tex.y2 ());
+		glVertex2i   (output->x2(), 	output->y1());
+		glEnd ();
+
+		glPopMatrix();
+
+    GL::activeTexture (GL_TEXTURE0_ARB);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture (GL_TEXTURE_2D, 0);
+
+  }
+
+	glDisable(GL_TEXTURE_2D);
+
+  /* We need to copy the modified fbo into the backbuffer
+   * FIXME: Compiz core should really have a way to process
+   * this properly, copying the openGL code here isn't
+   * really the best way of doing this */
+
+  if (mask & COMPOSITE_SCREEN_DAMAGE_ALL_MASK)
+  {
+	  glXSwapBuffers (screen->dpy (), cScreen->output ());
+  }
+  else
+  {
+    BoxPtr pBox;
+    int    nBox, y;
+    CompPoint rasterPos (0,0);
+
+    pBox = const_cast <Region> (cScreen->currentDamage ().handle ())->rects;
+    nBox = const_cast <Region> (cScreen->currentDamage ().handle ())->numRects;
+
+	  if (GL::copySubBuffer)
+	  {
+	    while (nBox--)
+	    {
+		    y = screen->height () - pBox->y2;
+
+		    (*GL::copySubBuffer) (screen->dpy (), cScreen->output (),
+				          pBox->x1, y,
+				          pBox->x2 - pBox->x1,
+				          pBox->y2 - pBox->y1);
+
+		    pBox++;
+	    }
+    }
+	  else
+	  {
+      glEnable (GL_SCISSOR_TEST);
+      glDrawBuffer (GL_FRONT);
+
+      while (nBox--)
+      {
+		    y = screen->height () - pBox->y2;
+
+		    glBitmap (0, 0, 0, 0,
+			            pBox->x1 - rasterPos.x (),
+			            y - rasterPos.y (),
+			            NULL);
+
+		    rasterPos = CompPoint (pBox->x1, y);
+
+		    glScissor (pBox->x1, y,
+			       pBox->x2 - pBox->x1,
+			       pBox->y2 - pBox->y1);
+
+		    glCopyPixels (pBox->x1, y,
+			          pBox->x2 - pBox->x1,
+			          pBox->y2 - pBox->y1,
+			          GL_COLOR);
+
+		    pBox++;
+      }
+
+      glDrawBuffer (GL_BACK);
+      glDisable (GL_SCISSOR_TEST);
+      glFlush ();
+    }
+  }
+}
+void
+UnityScreen::paint (CompOutput::ptrList &outputs,
+                    unsigned int mask)
+{
+	fboPrologue ();
+  cScreen->paint (outputs, mask);
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -791,6 +1020,9 @@ gboolean UnityScreen::RelayoutTimeout(gpointer data)
 {
   UnityScreen *uScr = reinterpret_cast<UnityScreen*>(data);
 
+  glDeleteTextures (1, &uScr->mFBTexture);
+  uScr->mFBTexture = 0;
+
   uScr->NeedsRelayout ();
   uScr->Relayout();
   uScr->relayoutSourceId = 0;
@@ -835,6 +1067,10 @@ UnityScreen::UnityScreen(CompScreen *screen)
  , relayoutSourceId(0)
  , _edge_trigger_handle(0)
  , doShellRepaint(false)
+ , mFboHandle (0)
+ , mFboStatus (0)
+ , mFBTexture (0)
+ , mFBOBound (0)
 {
   START_FUNCTION ();
   _key_nav_mode_requested = false;
@@ -881,6 +1117,10 @@ UnityScreen::UnityScreen(CompScreen *screen)
   uScreen = this;
 
   debugger = new DebugDBusInterface (this);
+
+  if (GL::fbo)
+		GL::genFramebuffers (1, &mFboHandle);
+
 
   optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
@@ -935,6 +1175,14 @@ UnityScreen::UnityScreen(CompScreen *screen)
 
 UnityScreen::~UnityScreen()
 {
+  fboEpilogue ();
+
+  if (mFboHandle)
+    (*GL::deleteFramebuffers) (1, &mFboHandle);
+
+  if (mFBTexture)
+    glDeleteTextures (1, &mFBTexture);
+
   delete placesController;
   panelController->UnReference ();
   delete controller;

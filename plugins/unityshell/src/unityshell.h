@@ -65,9 +65,20 @@ public:
 	/* pops nux draw stack */
 	void nuxEpilogue ();
 
+  /* makes a big fbo */
+  void fboPrologue ();
+  /* bye bye fbo */
+  void fboEpilogue ();
+  /* paint fbo */
+  void fboPaint (CompOutput *output, unsigned int mask);
+
 	/* nux draw wrapper */
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
+
+	void paint(CompOutput::ptrList &outputs, unsigned int mask);
+
+  void paintFboForOutput (CompOutput *output);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -191,6 +202,15 @@ private:
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;
+
+  /* compiz fbo handle that goes through to nux */
+  GLuint   mFboHandle; // actual handle to the framebuffer_ext
+  bool    mFboStatus; // did the framebuffer texture bind succeed
+  GLuint   mFBTexture;
+  bool    mFBOBound;
+  CompRegion mLastDamage;
+
+  bool   queryForShader ();
 
 	friend class UnityWindow;
 };
