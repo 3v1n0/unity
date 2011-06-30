@@ -85,6 +85,8 @@ PlacesController::PlacesController ()
   _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
   _window->SetFocused (true);
 
+  _window->OnMouseDown.connect (sigc::mem_fun (_view->GetSearchBar (), &PlacesSearchBar::RecvMouseDownFromWindow));
+
   _view->entry_changed.connect (sigc::mem_fun (this, &PlacesController::OnActivePlaceEntryChanged));
   _view->fullscreen_request.connect (sigc::mem_fun (this, &PlacesController::OnDashFullscreenRequest));
 
