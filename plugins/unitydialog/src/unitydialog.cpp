@@ -1149,7 +1149,6 @@ UnityDialogScreen::~UnityDialogScreen ()
 bool
 UnityDialogPluginVTable::init ()
 {
-    fprintf (stderr, "vt init\n"); 
     int (*old_handler) (Display *, XErrorEvent *);
     old_handler = XSetErrorHandler (NULL);
 	
