@@ -566,6 +566,11 @@ on_indicator_menu_show (IndicatorObject      *object,
   gchar *entry_id;
   
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  if (entry == NULL)
+    {
+      g_warning ("on_indicator_menu_show() called with a NULL entry");
+      return;
+    }
 
   entry_id = g_strdup_printf ("%p", entry);
 
@@ -583,6 +588,11 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
   gchar *entry_id;
   
   g_return_if_fail (PANEL_IS_SERVICE (self));
+  if (entry == NULL)
+    {
+      g_warning ("on_indicator_menu_show_now_changed() called with a NULL entry");
+      return;
+    }
 
   entry_id = g_strdup_printf ("%p", entry);
 
