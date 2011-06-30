@@ -1,3 +1,10 @@
+unity (4.0.1-0ubuntu3) UNRELEASED; urgency=low
+
+  * Backport Neil's commit to migrate the indicator loaders to GTK3
+  * CMakeLists.txt: build without Werror to workaround a build issue
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 30 Jun 2011 15:52:19 +0100
+
 unity (4.0.1-0ubuntu2) oneiric; urgency=low
 
   * Move back the .desktop file in unity from unity-common to avoid a lintian
