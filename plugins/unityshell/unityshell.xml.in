@@ -34,6 +34,7 @@
             <requirement>
                 <plugin>opengl</plugin>
                 <feature>largedesktop</feature>
+		<plugin>gtkloader</plugin>
             </requirement>
         </deps>
         <options>

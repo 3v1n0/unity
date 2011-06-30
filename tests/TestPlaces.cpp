@@ -147,8 +147,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
 int main(int argc, char **argv)
 {
-  TestApp *app;
-
   g_type_init ();
   g_thread_init (NULL);
   gtk_init (&argc, &argv);
@@ -157,7 +155,7 @@ int main(int argc, char **argv)
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
                                                 1024, 768, 0, &ThreadWidgetInit, 0);
-  app = new TestApp ();
+  TestApp ();
 
   wt->Run(NULL);
   delete wt;

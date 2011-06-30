@@ -308,10 +308,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
     _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
 
-    // FIXME: not used, remove (with Get function) in O
-    m_ActiveMenuIcon = NULL;
-    m_LastSpreadIcon = NULL;
-
     _current_icon       = NULL;
     _current_icon_index = -1;
     _last_icon_index    = -1;
@@ -618,7 +614,6 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
                                                            height);
   cairo_t*              cr       = cg->GetContext ();
   PangoLayout*          layout   = NULL;
-  PangoContext*         pangoCtx = NULL;
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName = NULL;
@@ -645,7 +640,6 @@ Launcher::cairoToTexture2D (const char label, int width, int height)
   pango_font_description_set_absolute_size (desc, text_size * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
 
   PangoRectangle logRect;
   PangoRectangle inkRect;
@@ -785,7 +779,7 @@ Launcher::exitKeyNavMode ()
   QueueDraw ();
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_LAUNCHER_END_KEY_NAV,
-                            NULL);
+                            g_variant_new_boolean  (true));
   selection_change.emit ();
 }
 
@@ -2319,10 +2313,6 @@ void Launcher::OnIconRemoved (LauncherIcon *icon)
 
     if (icon == _current_icon)
       _current_icon = 0;
-    if (icon == m_ActiveMenuIcon)
-      m_ActiveMenuIcon = 0;
-    if (icon == m_LastSpreadIcon)
-      m_LastSpreadIcon = 0;
     if (icon == _icon_under_mouse)
       _icon_under_mouse = 0;
     if (icon == _icon_mouse_down)
@@ -2499,7 +2489,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   v3.w = xform_coords[3].w ;
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
-  nux::Color color = bkg_color;
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
@@ -2530,7 +2519,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
   int TextureObjectLocation;
   int VertexLocation;
   int TextureCoord0Location;
-  int VertexColorLocation;
   int FragmentColor;
   int DesatFactor;
 
@@ -2541,7 +2529,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
     TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB ("TextureObject0");
     VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation  ("iVertex");
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation  ("iTexCoord0");
-    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation  ("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
     DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
@@ -2561,7 +2548,6 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
 
     VertexLocation        = nux::VTXATTRIB_POSITION;
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
-    VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
     nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
 
@@ -3351,7 +3337,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       if (it != (LauncherModel::iterator)NULL)
       {
         if ((*it)->OpenQuicklist (true))
-          leaveKeyNavMode (true);
+          leaveKeyNavMode (false);
       }
     break;
 
@@ -3991,7 +3977,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 {
   std::list<char *>::iterator it;
   nux::Area *parent = GetToplevel ();
-  char *remote_desktop_path = NULL;
   char *uri_list_const = g_strdup ("text/uri-list");
   
   if (!_data_checked)
@@ -4014,7 +3999,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     {
       if (g_str_has_suffix (*it, ".desktop"))
       {
-        remote_desktop_path = *it;
         _steal_drag = true;
         break;
       }

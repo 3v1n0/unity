@@ -7,6 +7,7 @@
 		<requirement>
 			<plugin>composite</plugin>
 			<plugin>opengl</plugin>
+			<plugin>gtkloader</plugin>
 		</requirement>
 		<relation type="after">
 			<plugin>decor</plugin>
