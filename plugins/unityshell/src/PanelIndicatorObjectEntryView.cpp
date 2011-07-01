@@ -257,7 +257,7 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
 
     if (proxy_->active())
-      gtk_style_context_set_state (style_context, GTK_STATE_FLAG_ACTIVE);
+      gtk_style_context_set_state (style_context, GTK_STATE_FLAG_PRELIGHT);
 
     gtk_render_layout (style_context, cr, x, (int)((height - text_height)/2), layout);
 
@@ -374,8 +374,9 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_set_path (style_context, widget_path);
   gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
   gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
-  gtk_style_context_set_state (style_context, GTK_STATE_FLAG_ACTIVE);
+  gtk_style_context_set_state (style_context, GTK_STATE_FLAG_PRELIGHT);
 
+  // FIXME(Cimi) probably some padding is needed here.
   gtk_render_background (style_context, cr, 0, 0, width, height);
   gtk_render_frame (style_context, cr, 0, 0, width, height);
 
