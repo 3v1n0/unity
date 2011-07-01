@@ -40,6 +40,34 @@
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
+class UnityFBO
+{
+public:
+
+  typedef boost::shared_ptr <UnityFBO> Ptr;
+
+  UnityFBO (CompOutput *o);
+  ~UnityFBO ();
+
+public:
+
+  void bind ();
+  void unbind ();
+
+  bool status ();
+  void paint ();
+
+private:
+
+  /* compiz fbo handle that goes through to nux */
+  GLuint   mFboHandle; // actual handle to the framebuffer_ext
+  bool    mFboStatus; // did the framebuffer texture bind succeed
+  GLuint   mFBTexture;
+  CompOutput *output;
+};
+
 
 /* base screen class */
 class UnityScreen :
@@ -65,18 +93,9 @@ public:
 	/* pops nux draw stack */
 	void nuxEpilogue ();
 
-  /* makes a big fbo */
-  void fboPrologue ();
-  /* bye bye fbo */
-  void fboEpilogue ();
-  /* paint fbo */
-  void fboPaint (CompOutput *output, unsigned int mask);
-
 	/* nux draw wrapper */
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
-
-	void paint(CompOutput::ptrList &outputs, unsigned int mask);
 
   void paintFboForOutput (CompOutput *output);
 
@@ -143,6 +162,8 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
+  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+
 protected:
 	const gchar* GetName();
 	void AddProperties(GVariantBuilder *builder);
@@ -203,12 +224,8 @@ private:
 
   GdkRectangle _primary_monitor;
 
-  /* compiz fbo handle that goes through to nux */
-  GLuint   mFboHandle; // actual handle to the framebuffer_ext
-  bool    mFboStatus; // did the framebuffer texture bind succeed
-  GLuint   mFBTexture;
-  bool    mFBOBound;
-  CompRegion mLastDamage;
+  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
+  GLuint                                 mActiveFbo;
 
   bool   queryForShader ();
 
