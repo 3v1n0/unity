@@ -229,7 +229,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   /* bind the framebuffer here */
   mFbos[output]->bind ();
   allowWindowPaint = false;
-  gScreen->glPaintTransformedOutput (attrib, transform, region, output, mask);
+  /* urgh */
+  gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
 
 /* Grab changed nux regions and add damage rects for them */
