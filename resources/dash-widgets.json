@@ -1,4 +1,26 @@
 {
+  "stock-icons"      : {
+    "checkmark"      : ["/usr/share/icons/unity/checkmark.svg", "32px", "32px"],
+    "cross"          : ["/usr/share/icons/unity/cross.svg", "32px", "32px"],
+    "grid-view"      : ["/usr/share/icons/unity/grid-view.svg", "32px", "32px"],
+    "flow-view"      : ["/usr/share/icons/unity/flow-view.svg", "32px", "32px"],
+    "star"           : ["/usr/share/icons/unity/star.svg", "32px", "32px"],
+    "triangle"       : ["/usr/share/icons/unity/curved-triangle.svg", "32px", "32px"],
+    "bag"            : ["/usr/share/icons/unity/bag.svg", "32px", "32px"],
+    "next"           : ["/usr/share/icons/unity/next.svg", "32px", "32px"],
+    "prev"           : ["/usr/share/icons/unity/prev.svg", "32px", "32px"],
+    "play"           : ["/usr/share/icons/unity/play.svg", "32px", "32px"]},
+
+  "regular-text"     : {
+    "text-color"     : "#ffffff",
+    "text-opacity"   : 1.0, 
+    "text-size"      : 13.0,
+    "text-mode"      : "normal",
+    "text-style"     : "light"},
+
+  "comments": {
+    "states"         : ["NORMAL", "ACTIVE", "PRELIGHT", "SELECTED", "INSENSITIVE"]},
+
   "button-icon": {
     "color"          : ["#7f7f7f", "#ffffff", "#7f7f7f", "#7f7f7f", "#7f7f7f"],
     "opacity"        : [      1.0,       1.0,       0.8,       0.8,       0.8],
@@ -41,12 +63,6 @@
     "text-style"     : [   "bold",    "bold",    "bold",    "bold",    "bold"],
     "height"         : 40}, 
 
-  "regular-text"     : {
-    "text-color"     : "#ffffff",
-    "text-opacity"   : 1.0, 
-    "text-size"      : 13.0,
-    "text-mode"      : "normal",
-    "text-style"     : "light"},
 
   "track-view"       : {
     "line-gap"         : 26.0,
@@ -128,17 +144,6 @@
     "text-opacity"   : 1.0,
     "text-mode"      : "normal",
     "text-style"     : "bold",
-    "text-arrow-gap" : 10},
+    "text-arrow-gap" : 10}
 
-  "stock-icons"      : {
-    "checkmark"      : "/usr/share/icons/unity/checkmark.svg",
-    "cross"          : "/usr/share/icons/unity/cross.svg",
-    "grid-view"      : "/usr/share/icons/unity/grid-view.svg",
-    "flow-view"      : "/usr/share/icons/unity/flow-view.svg",
-    "star"           : "/usr/share/icons/unity/star.svg",
-    "triangle"       : "/usr/share/icons/unity/curved-triangle.svg",
-    "bag"            : "/usr/share/icons/unity/bag.svg",
-    "next"           : "/usr/share/icons/unity/next.svg",
-    "prev"           : "/usr/share/icons/unity/prev.svg",
-    "play"           : "/usr/share/icons/unity/play.svg"}
 }
