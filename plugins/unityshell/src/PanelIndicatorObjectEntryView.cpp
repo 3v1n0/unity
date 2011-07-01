@@ -253,8 +253,8 @@ void PanelIndicatorObjectEntryView::Refresh()
     gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
 
     gtk_style_context_set_path (style_context, widget_path);
-    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
     gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
 
     if (proxy_->active())
       gtk_style_context_set_state (style_context, GTK_STATE_FLAG_ACTIVE);
@@ -370,8 +370,8 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
 
   gtk_style_context_set_path (style_context, widget_path);
-  gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_set_state (style_context, GTK_STATE_FLAG_ACTIVE);
 
   gtk_render_background (style_context, cr, 0, 0, width, height);
