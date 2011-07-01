@@ -578,10 +578,14 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
-    nux::Color const& col = PanelStyle::GetDefault ()->GetTextColor();
-    float red = col.red;
-    float green = col.green;
-    float blue = col.blue;
+    PanelStyle *style = PanelStyle::GetDefault ();
+    GtkStyleContext *style_context = style->GetStyleContext ();
+    GdkRGBA rgba_text;
+    gtk_style_context_get_color (style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
+
+    float red = rgba_text.red;
+    float green = rgba_text.green;
+    float blue = rgba_text.blue;
 
     pango_cairo_update_layout (cr, layout);
 
@@ -602,9 +606,8 @@ PanelMenuView::Refresh ()
     {
       cairo_set_source_rgb (cr, red, green, blue);
     }
-    cairo_move_to (cr, x, y);
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
+
+    gtk_render_layout (style_context, cr, x, y, layout);
   }
 
   cairo_destroy (cr);
