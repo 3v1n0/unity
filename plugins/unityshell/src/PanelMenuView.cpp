@@ -583,8 +583,8 @@ PanelMenuView::Refresh ()
 
     gtk_style_context_save (style_context);
 
-    const GtkWidgetPath *const_widget_path = gtk_style_context_get_path (style_context);
-    GtkWidgetPath *widget_path = gtk_widget_path_copy (const_widget_path);
+    GtkWidgetPath *widget_path = gtk_widget_path_new ();
+    gtk_widget_path_iter_set_name (widget_path, -1 , "UnityPanelWidget");
     gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_BAR);
     gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
 
