@@ -58,6 +58,8 @@ public:
 
   bool status ();
   void paint ();
+  
+  GLuint texture () { return mFBTexture; }
 
 private:
 
