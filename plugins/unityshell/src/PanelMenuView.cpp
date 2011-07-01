@@ -580,6 +580,18 @@ PanelMenuView::Refresh ()
   {
     PanelStyle *style = PanelStyle::GetDefault ();
     GtkStyleContext *style_context = style->GetStyleContext ();
+
+    gtk_style_context_save (style_context);
+
+    const GtkWidgetPath *const_widget_path = gtk_style_context_get_path (style_context);
+    GtkWidgetPath *widget_path = gtk_widget_path_copy (const_widget_path);
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_BAR);
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
+
+    gtk_style_context_set_path (style_context, widget_path);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
+
     GdkRGBA rgba_text;
     gtk_style_context_get_color (style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
 
@@ -608,6 +620,10 @@ PanelMenuView::Refresh ()
     }
 
     gtk_render_layout (style_context, cr, x, y, layout);
+
+    gtk_widget_path_free (widget_path);
+
+    gtk_style_context_restore (style_context);
   }
 
   cairo_destroy (cr);

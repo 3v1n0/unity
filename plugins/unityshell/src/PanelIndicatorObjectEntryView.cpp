@@ -261,6 +261,8 @@ void PanelIndicatorObjectEntryView::Refresh()
 
     gtk_render_layout (style_context, cr, x, (int)((height - text_height)/2), layout);
 
+    gtk_widget_path_free (widget_path);
+
     gtk_style_context_restore (style_context);
   }
 
