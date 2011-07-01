@@ -2,9 +2,7 @@
 /* Compiz unity plugin
  * unity.cpp
  *
- * Copyright (c) 2010 Sam Spilsbury <smspillaz@gmail.com>
- *                    Jason Smith <jason.smith@canonical.com>
- * Copyright (c) 2010 Canonical Ltd.
+ * Copyright (c) 2010-11 Canonical Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
