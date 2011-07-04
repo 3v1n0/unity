@@ -67,7 +67,7 @@ Recommends: unity-place-applications,
             indicator-me,
             indicator-session,
             ubuntuone-control-panel-gtk,
-Breaks: compiz-core (<< 1:0.9.2.1+glibmainloop3),
+Breaks: compiz-core (<< 1:0.9.4+bzr20110606-0ubuntu5),
         bamf (<< 0.2.76),
 Description: Interface designed for efficiency of space and interaction.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
