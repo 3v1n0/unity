@@ -11,8 +11,8 @@ subdirs (doc services tests tools UnityCore)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 4)
-set (UNITY_MINOR 0)
-set (UNITY_MICRO 1)
+set (UNITY_MINOR 2)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
@@ -63,13 +63,13 @@ add_custom_target (post-distcheck
        && echo "• Pushing Branch"
        && bzr push
        && echo "• Publishing Tarball"
-       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
        && echo ""
        && echo "• Unity ${UNITY_VERSION} Released."
   )
 
 add_custom_target (release)
-add_dependencies (release pre-distcheck distcheck post-discheck)
+add_dependencies (release pre-distcheck distcheck post-distcheck)
 
 #
 # config.h

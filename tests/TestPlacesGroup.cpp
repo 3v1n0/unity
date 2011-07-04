@@ -132,10 +132,6 @@ ControlThread (nux::NThread* thread,
   // sleep for 3 seconds
   nux::SleepForMilliseconds (3000);
   printf ("ControlThread successfully started\n");
-
-  nux::WindowThread* mainWindowThread;
-  
-  mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 
 

@@ -75,6 +75,8 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
   _on_entry_activate_request_connection = _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _on_entry_activated_connection = _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _on_synced_connection = _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
+  _remote->on_entry_show_menu.connect(sigc::mem_fun(this,
+                                                    &PanelView::OnEntryShowMenu));
 }
 
 PanelView::~PanelView ()
@@ -299,6 +301,36 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
 void PanelView::OnSynced()
 {
   _needs_geo_sync = true;
+}
+
+void PanelView::OnEntryShowMenu (std::string const& entry_id,
+                                 int x, int y, int timestamp, int button)
+{
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
+  XUngrabPointer(d, CurrentTime);
+  XFlush(d);
+
+  // --------------------------------------------------------------------------
+  // FIXME: This is a workaround until the non-paired events issue is fixed in
+  // nux
+  XButtonEvent ev = {
+    ButtonRelease,
+    0,
+    False,
+    d,
+    0,
+    0,
+    0,
+    CurrentTime,
+    x, y,
+    x, y,
+    0,
+    Button1,
+    True
+  };
+  XEvent *e = (XEvent*)&ev;
+  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
+  // --------------------------------------------------------------------------
 }
 
 //

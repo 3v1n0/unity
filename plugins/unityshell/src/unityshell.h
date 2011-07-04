@@ -2,8 +2,7 @@
 /* Compiz unity plugin
  * unity.h
  *
- * Copyright (c) 2008 Sam Spilsbury <smspillaz@gmail.com>
- * Copyright (c) 2010 Canonical Ltd.
+ * Copyright (c) 2010-11 Canonical Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

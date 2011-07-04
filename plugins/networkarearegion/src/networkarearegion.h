@@ -57,6 +57,7 @@ class UnityNETWorkareaRegionWindow :
     public:
 
         UnityNETWorkareaRegionWindow (CompWindow *);
+	~UnityNETWorkareaRegionWindow ();
 
         CompWindow *window;
 

@@ -2,9 +2,7 @@
 /* Compiz unity plugin
  * unity.cpp
  *
- * Copyright (c) 2010 Sam Spilsbury <smspillaz@gmail.com>
- *                    Jason Smith <jason.smith@canonical.com>
- * Copyright (c) 2010 Canonical Ltd.
+ * Copyright (c) 2010-11 Canonical Ltd.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -21,7 +19,7 @@
  * not be able to re-use it if you want to use a different licence.
  */
 
-
+#include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <Nux/BaseWindow.h>
@@ -34,6 +32,7 @@
 #include "GeisAdapter.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
+#include "Timer.h"
 #include "unityshell.h"
 
 #include <dbus/dbus.h>
@@ -44,7 +43,6 @@
 
 #include <core/atoms.h>
 
-#include "perf-logger-utility.h"
 #include "unitya11y.h"
 
 #include "ubus-server.h"
@@ -59,7 +57,151 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
-static UnityScreen *uScreen = 0;
+using ::unity::logger::Timer;
+
+namespace {
+
+nux::logging::Logger logger("unity.shell");
+
+UnityScreen* uScreen = 0;
+
+void configure_logging();
+void capture_g_log_calls(const gchar *log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar *message,
+                         gpointer user_data);
+gboolean is_extension_supported(const gchar* extensions, const gchar* extension);
+gfloat get_opengl_version_f32(const gchar* version_string);
+
+}
+
+UnityScreen::UnityScreen(CompScreen *screen)
+ : PluginClassHandler <UnityScreen, CompScreen> (screen)
+ , screen(screen)
+ , cScreen(CompositeScreen::get(screen))
+ , gScreen(GLScreen::get(screen))
+ , relayoutSourceId(0)
+ , _edge_trigger_handle(0)
+ , doShellRepaint(false)
+{
+  Timer timer;
+  configure_logging();
+  LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
+  _key_nav_mode_requested = false;
+  int (*old_handler) (Display *, XErrorEvent *);
+  old_handler = XSetErrorHandler (NULL);
+
+  g_thread_init (NULL);
+  dbus_g_thread_init ();
+
+  unity_a11y_preset_environment ();
+
+  XSetErrorHandler (old_handler);
+
+  /* Wrap compiz interfaces */
+  ScreenInterface::setHandler (screen);
+  CompositeScreenInterface::setHandler (cScreen);
+  GLScreenInterface::setHandler (gScreen);
+
+  PluginAdapter::Initialize (screen);
+  WindowManager::SetDefault (PluginAdapter::Default ());
+
+  StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
+
+  nux::NuxInitialize(0);
+  wt = nux::CreateFromForeignWindow (cScreen->output (),
+                                     glXGetCurrentContext (),
+                                     &UnityScreen::initUnity,
+                                     this);
+
+  wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
+
+  unity_a11y_init (wt);
+
+  newFocusedWindow  = NULL;
+  lastFocusedWindow = NULL;
+
+  /* i18n init */
+  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+
+  wt->Run (NULL);
+  uScreen = this;
+
+  debugger = new DebugDBusInterface (this);
+
+  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
+  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
+  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
+  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
+  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
+  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
+  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
+
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    _ubus_handles[i] = 0;
+
+  UBusServer* ubus = ubus_server_get_default ();
+  _ubus_handles[0] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_START_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
+                                                    this);
+
+  _ubus_handles[1] = ubus_server_register_interest (ubus,
+                                                    UBUS_LAUNCHER_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
+                                                    this);
+
+  _ubus_handles[2] = ubus_server_register_interest (ubus,
+                                                    UBUS_QUICKLIST_END_KEY_NAV,
+                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
+                                                    this);
+
+  g_timeout_add (0, &UnityScreen::initPluginActions, this);
+
+  GeisAdapter::Default (screen)->Run ();
+  gestureEngine = new GestureEngine (screen);
+
+  CompString name (PKGDATADIR"/panel-shadow.png");
+  CompString pname ("unityshell");
+  CompSize size (1, 20);
+  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
+
+  LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+}
+
+UnityScreen::~UnityScreen()
+{
+  delete placesController;
+  panelController->UnReference ();
+  delete controller;
+  launcher->UnReference ();
+  launcherWindow->UnReference ();
+
+  unity_a11y_finalize ();
+
+  UBusServer* ubus = ubus_server_get_default ();
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  {
+    if (_ubus_handles[i] != 0)
+      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
+  }
+
+  if (relayoutSourceId != 0)
+    g_source_remove (relayoutSourceId);
+
+  delete wt;
+}
 
 void UnityScreen::nuxPrologue()
 {
@@ -684,12 +826,12 @@ void UnityScreen::launcherWindowConfigureCallback(int WindowWidth, int WindowHei
 /* Start up nux after OpenGL is initialized */
 void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 {
-  START_FUNCTION ();
+  Timer timer;
   initLauncher(thread, InitData);
 
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
-  END_FUNCTION ();
+  LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 }
 
 void UnityScreen::onRedrawRequested()
@@ -816,154 +958,17 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
   return status;
 }
 
-static gboolean write_logger_data_to_disk(gpointer data)
-{
-  LOGGER_WRITE_LOG ("/tmp/unity-perf.log");
-  return FALSE;
-}
-
 void UnityScreen::outputChangeNotify()
 {
   ScheduleRelayout (500);
 }
 
-UnityScreen::UnityScreen(CompScreen *screen)
- : PluginClassHandler <UnityScreen, CompScreen> (screen)
- , screen(screen)
- , cScreen(CompositeScreen::get(screen))
- , gScreen(GLScreen::get(screen))
- , relayoutSourceId(0)
- , _edge_trigger_handle(0)
- , doShellRepaint(false)
-{
-  START_FUNCTION ();
-  _key_nav_mode_requested = false;
-  int (*old_handler) (Display *, XErrorEvent *);
-  old_handler = XSetErrorHandler (NULL);
-
-  g_thread_init (NULL);
-  dbus_g_thread_init ();
-
-  unity_a11y_preset_environment ();
-
-  gtk_init (NULL, NULL);
-
-  XSetErrorHandler (old_handler);
-
-  /* Wrap compiz interfaces */
-  ScreenInterface::setHandler (screen);
-  CompositeScreenInterface::setHandler (cScreen);
-  GLScreenInterface::setHandler (gScreen);
-
-  PluginAdapter::Initialize (screen);
-  WindowManager::SetDefault (PluginAdapter::Default ());
-
-  StartupNotifyService::Default ()->SetSnDisplay (screen->snDisplay (), screen->screenNum ());
-
-  nux::NuxInitialize (0);
-  wt = nux::CreateFromForeignWindow (cScreen->output (),
-                                     glXGetCurrentContext (),
-                                     &UnityScreen::initUnity,
-                                     this);
-
-  wt->RedrawRequested.connect (sigc::mem_fun (this, &UnityScreen::onRedrawRequested));
-
-  unity_a11y_init (wt);
-
-  newFocusedWindow  = NULL;
-  lastFocusedWindow = NULL;
-
-  /* i18n init */
-  bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-
-  wt->Run (NULL);
-  uScreen = this;
-
-  debugger = new DebugDBusInterface (this);
-
-  optionSetLauncherHideModeNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetBacklightModeNotify    (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetLaunchAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetUrgentAnimationNotify  (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetPanelOpacityNotify     (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetIconSizeNotify         (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetAutohideAnimationNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetDashBlurExperimentalNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-  optionSetShowLauncherInitiate   (boost::bind (&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
-  optionSetShowLauncherTerminate  (boost::bind (&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
-  optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
-  //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
-  optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
-  optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
-  optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
-  optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
-  optionSetAutomaximizeValueNotify (boost::bind (&UnityScreen::optionChanged, this, _1, _2));
-
-  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
-    _ubus_handles[i] = 0;
-
-  UBusServer* ubus = ubus_server_get_default ();
-  _ubus_handles[0] = ubus_server_register_interest (ubus,
-                                                    UBUS_LAUNCHER_START_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnLauncherStartKeyNav,
-                                                    this);
-
-  _ubus_handles[1] = ubus_server_register_interest (ubus,
-                                                    UBUS_LAUNCHER_END_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnLauncherEndKeyNav,
-                                                    this);
-
-  _ubus_handles[2] = ubus_server_register_interest (ubus,
-                                                    UBUS_QUICKLIST_END_KEY_NAV,
-                                                    (UBusCallback)&UnityScreen::OnQuicklistEndKeyNav,
-                                                    this);
-
-  g_timeout_add (0, &UnityScreen::initPluginActions, this);
-  g_timeout_add (5000, (GSourceFunc) write_logger_data_to_disk, NULL);
-
-  GeisAdapter::Default (screen)->Run ();
-  gestureEngine = new GestureEngine (screen);
-
-  CompString name (PKGDATADIR"/panel-shadow.png");
-  CompString pname ("unityshell");
-  CompSize size (1, 20);
-  _shadow_texture = GLTexture::readImageToTexture (name, pname, size);
-
-  END_FUNCTION ();
-}
-
-UnityScreen::~UnityScreen()
-{
-  delete placesController;
-  panelController->UnReference ();
-  delete controller;
-  launcher->UnReference ();
-  launcherWindow->UnReference ();
-
-  unity_a11y_finalize ();
-
-  UBusServer* ubus = ubus_server_get_default ();
-  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
-  {
-    if (_ubus_handles[i] != 0)
-      ubus_server_unregister_interest (ubus, _ubus_handles[i]);
-  }
-
-  if (relayoutSourceId != 0)
-    g_source_remove (relayoutSourceId);
-
-  delete wt;
-}
-
 /* Start up the launcher */
 void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 {
-  START_FUNCTION ();
-
+  Timer timer;
   UnityScreen *self = reinterpret_cast<UnityScreen*>(InitData);
 
-  LOGGER_START_PROCESS ("initLauncher-Launcher");
   self->launcherWindow = new nux::BaseWindow(TEXT("LauncherWindow"));
   self->launcherWindow->SinkReference ();
 
@@ -996,13 +1001,14 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
   self->launcher->SetIconSize (54, 48);
   self->launcher->SetBacklightMode (Launcher::BACKLIGHT_ALWAYS_ON);
-  LOGGER_END_PROCESS ("initLauncher-Launcher");
+
+  LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
   /* Setup panel */
-  LOGGER_START_PROCESS ("initLauncher-Panel");
+  timer.Reset();
   self->panelController = new PanelController ();
   self->AddChild (self->panelController);
-  LOGGER_END_PROCESS ("initLauncher-Panel");
+  LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
   self->placesController = new PlacesController ();
@@ -1024,8 +1030,6 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->ScheduleRelayout (0);
 
   self->OnLauncherHiddenChanged ();
-
-  END_FUNCTION ();
 }
 
 /* Window init */
@@ -1046,50 +1050,6 @@ UnityWindow::~UnityWindow()
   if (us->lastFocusedWindow && (UnityWindow::get (us->lastFocusedWindow) == this))
     us->lastFocusedWindow = NULL;
 }
-
-namespace {
-
-/* Checks whether an extension is supported by the GLX or OpenGL implementation
- * given the extension name and the list of supported extensions. */
-gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
-{
-  if (extensions != NULL && extension != NULL)
-  {
-    const gsize len = strlen (extension);
-    gchar* p = (gchar*) extensions;
-    gchar* end = p + strlen (p);
-
-    while (p < end)
-    {
-      const gsize size = strcspn (p, " ");
-      if (len == size && strncmp (extension, p, size) == 0)
-        return TRUE;
-      p += size + 1;
-    }
-  }
-
-  return FALSE;
-}
-
-/* Gets the OpenGL version as a floating-point number given the string. */
-gfloat get_opengl_version_f32(const gchar* version_string)
-{
-  gfloat version = 0.0f;
-  gint32 i;
-
-  for (i = 0; isdigit (version_string[i]); i++)
-    version = version * 10.0f + (version_string[i] - 48);
-
-  if (version_string[i++] == '.')
-  {
-    version = version * 10.0f + (version_string[i] - 48);
-    return (version + 0.1f) * 0.1f;
-  }
-  else
-    return 0.0f;
-}
-
-} /* anonymous namespace */
 
 /* vtable init */
 bool UnityPluginVTable::init()
@@ -1157,3 +1117,93 @@ bool UnityPluginVTable::init()
   return true;
 }
 
+
+namespace {
+
+void configure_logging()
+{
+  // The default behaviour of the logging infrastructure is to send all output
+  // to std::cout for warning or above.
+
+  // TODO: write a file output handler that keeps track of backups.
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  g_log_set_default_handler(capture_g_log_calls, NULL);
+}
+
+/* Checks whether an extension is supported by the GLX or OpenGL implementation
+ * given the extension name and the list of supported extensions. */
+gboolean is_extension_supported(const gchar* extensions, const gchar* extension)
+{
+  if (extensions != NULL && extension != NULL)
+  {
+    const gsize len = strlen (extension);
+    gchar* p = (gchar*) extensions;
+    gchar* end = p + strlen (p);
+
+    while (p < end)
+    {
+      const gsize size = strcspn (p, " ");
+      if (len == size && strncmp (extension, p, size) == 0)
+        return TRUE;
+      p += size + 1;
+    }
+  }
+
+  return FALSE;
+}
+
+/* Gets the OpenGL version as a floating-point number given the string. */
+gfloat get_opengl_version_f32(const gchar* version_string)
+{
+  gfloat version = 0.0f;
+  gint32 i;
+
+  for (i = 0; isdigit (version_string[i]); i++)
+    version = version * 10.0f + (version_string[i] - 48);
+
+  if (version_string[i++] == '.')
+  {
+    version = version * 10.0f + (version_string[i] - 48);
+    return (version + 0.1f) * 0.1f;
+  }
+  else
+    return 0.0f;
+}
+
+nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
+{
+  // For some weird reason, ERROR is more critical than CRITICAL in gnome.
+  if (log_level & G_LOG_LEVEL_ERROR)
+    return nux::logging::CRITICAL;
+  if (log_level & G_LOG_LEVEL_CRITICAL)
+    return nux::logging::ERROR;
+  if (log_level & G_LOG_LEVEL_WARNING)
+    return nux::logging::WARNING;
+  if (log_level & G_LOG_LEVEL_MESSAGE ||
+      log_level & G_LOG_LEVEL_INFO)
+    return nux::logging::INFO;
+  // default to debug.
+  return nux::logging::DEBUG;
+}
+
+void capture_g_log_calls(const gchar *log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar *message,
+                         gpointer user_data)
+{
+  // Since we aren't entirely sure if log_domain contains anything, lets have
+  // a glib prefix.
+  std::string module("glib");
+  if (log_domain) {
+    module += std::string(".") + log_domain;
+  }
+  nux::logging::Logger logger(module);
+  nux::logging::Level level = glog_level_to_nux(log_level);
+  if (logger.GetEffectiveLogLevel() >= level)
+  {
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message;
+  }
+}
+
+} // anonymous namespace
