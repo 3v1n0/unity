@@ -52,7 +52,7 @@ msgid "Internet Apps"
 msgstr ""
 
 #, fuzzy
-msgid "Keep In Launcher"
+msgid "Keep in launcher"
 msgstr "إبقاء في برنامج Launcher"
 
 msgid "Launcher & Menus"

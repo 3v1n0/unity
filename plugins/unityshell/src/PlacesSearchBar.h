@@ -65,6 +65,7 @@ public:
     return _pango_entry;
   }
 
+  void RecvMouseDownFromWindow (int x, int y, unsigned long button_flags, unsigned long key_flags);
 protected:
   // Introspectable methods
   const gchar * GetName ();

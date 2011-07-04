@@ -19,12 +19,19 @@
 #include "config.h"
 
 #include "PlaceEntryRemote.h"
+#include "NuxCore/Logger.h"
 
 #include <glib/gi18n-lib.h>
 
 #define PLACE_ENTRY_IFACE "com.canonical.Unity.PlaceEntry"
 
 #define DBUS_PATH "DBusObjectPath"
+
+namespace {
+
+nux::logging::Logger logger("unity.place");
+
+}
 
 static void on_proxy_ready (GObject      *source,
                             GAsyncResult *result,
@@ -304,7 +311,7 @@ PlaceEntryRemote::InitFromKeyFile (GKeyFile    *key_file,
 
   _valid = true;
 
-  g_debug ("PlaceEntry: %s", _name);
+  LOG_DEBUG(logger) << "PlaceEntry: " << _name;
 
   g_free (name);
   g_free (description);
@@ -890,7 +897,7 @@ PlaceEntryRemote::OnServiceProxyReady (GObject *source, GAsyncResult *result)
     return;
   }
 
-  g_debug ("Connected to proxy");
+  LOG_DEBUG(logger) << "Connected to proxy";
 
   g_signal_connect (_proxy, "g-signal",
                     G_CALLBACK (on_proxy_signal_received), this);
@@ -910,7 +917,9 @@ PlaceEntryRemote::OnProxyNameOwnerChanged (GDBusProxy       *proxy,
   if (!name_owner)
   {
     // Remote proxy has died
-    g_debug ("Remote PlaceEntryRemote proxy %s no longer exists, reconnecting", self->_dbus_path);
+    LOG_DEBUG(logger) << "Remote PlaceEntryRemote proxy "
+                      << self->_dbus_path
+                      << " no longer exists, reconnecting";
     g_object_unref (self->_proxy);
     self->_proxy = NULL;
 

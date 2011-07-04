@@ -899,6 +899,12 @@ PlacesView::GetTextEntryView ()
   return _search_bar->_pango_entry;
 }
 
+PlacesSearchBar*
+PlacesView::GetSearchBar ()
+{
+  return _search_bar;
+}
+
 void
 PlacesView::OnPlaceViewQueueDrawNeeded (GVariant *data, PlacesView *self)
 {

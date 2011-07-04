@@ -139,8 +139,7 @@ const gchar* PlacesSearchBar::GetName ()
 	return "PlacesSearchBar";
 }
 
-const gchar *
-PlacesSearchBar::GetChildsName ()
+const gchar* PlacesSearchBar::GetChildsName ()
 {
   return "";
 }
@@ -150,8 +149,8 @@ void PlacesSearchBar::AddProperties (GVariantBuilder *builder)
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-long
-PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+long PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, 
+                                    long ProcessEventInfo)
 {
   long ret = TraverseInfo;
   ret = _layout->ProcessEvent (ievent, ret, ProcessEventInfo);
@@ -159,8 +158,7 @@ PlacesSearchBar::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proc
   return ret;
 }
 
-void
-PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+void PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
 
@@ -178,8 +176,7 @@ PlacesSearchBar::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle ();
 }
 
-void
-PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+void PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry ();
 
@@ -193,10 +190,9 @@ PlacesSearchBar::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void
-PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
-                                 guint       section_id,
-                                 const char *search_string)
+void PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
+                                      guint       section_id,
+                                      const char *search_string)
 {
    std::map<gchar *, gchar *> hints;
 
@@ -232,8 +228,7 @@ PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
   }
 }
 
-void
-PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
+void PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
 {
   char *tmp = g_markup_escape_text (section.GetName (), -1);
 
@@ -243,23 +238,20 @@ PlacesSearchBar::OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section)
   g_free (tmp);
 }
 
-void
-PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
+void PlacesSearchBar::OnComboChanged (nux::ComboBoxSimple *simple)
 {
   _entry->SetActiveSection (_combo->GetSelectionIndex());
   OnMenuClosing (NULL, 0, 0);
 }
 
-void
-PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
+void PlacesSearchBar::OnMenuClosing (nux::MenuPage *menu, int x, int y)
 {
   ubus_server_send_message (ubus_server_get_default (),
                             UBUS_PLACE_VIEW_QUEUE_DRAW,
                             NULL);
 }
 
-void
-PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
+void PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
 {
   bool is_empty;
 
@@ -283,8 +275,7 @@ PlacesSearchBar::OnSearchChanged (nux::TextEntry *text_entry)
   QueueDraw ();
 }
 
-bool
-PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
+bool PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
 {
   self->EmitLiveSearch ();
   self->_live_search_timeout = 0;
@@ -292,8 +283,7 @@ PlacesSearchBar::OnLiveSearchTimeout (PlacesSearchBar *self)
   return FALSE;
 }
 
-void
-PlacesSearchBar::EmitLiveSearch ()
+void PlacesSearchBar::EmitLiveSearch ()
 {
   if (_entry)
   {
@@ -303,9 +293,17 @@ PlacesSearchBar::EmitLiveSearch ()
   }
 }
 
-void
-PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags)
+void PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags,
+                                      unsigned long key_flags)
 {
+  gchar*                   markup;
+  gchar*                   tmp;
+  std::map<gchar*, gchar*> hints;
+
+  tmp = g_markup_escape_text (_entry->GetSearchHint (), -1);
+  markup  = g_strdup_printf ("<span font_size='x-small' font_style='italic'> %s </span>", tmp);
+
+  _hint->SetText (markup);
   if (_pango_entry->GetText () != "")
   {
     _pango_entry->SetText ("");
@@ -314,14 +312,12 @@ PlacesSearchBar::OnClearClicked (int x, int y, unsigned long button_flags, unsig
   }
 }
 
-void
-PlacesSearchBar::OnEntryActivated ()
+void PlacesSearchBar::OnEntryActivated ()
 {
   activated.emit ();
 }
 
-void
-PlacesSearchBar::OnLayeredLayoutQueueDraw (int i)
+void PlacesSearchBar::OnLayeredLayoutQueueDraw (int i)
 {
   QueueDraw ();
 }
@@ -332,8 +328,8 @@ PlacesSearchBar::OnSearchFinished ()
   _spinner->SetState (STATE_CLEAR);
 }
 
-void
-PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self)
+void PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, 
+                                     PlacesSearchBar *self)
 {
 #define HOW_LARGE 8
   GtkSettings          *settings;
@@ -370,20 +366,18 @@ PlacesSearchBar::OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearch
   g_free (font_desc);
 }
 
-void
-PlacesSearchBar::OnPlacesClosed (GVariant *variant, PlacesSearchBar *self)
+void PlacesSearchBar::OnPlacesClosed (GVariant *variant, PlacesSearchBar *self)
 {
   self->_combo->GetMenuPage ()->StopMenu ();
 }
 
-static void
-draw_rounded_rect (cairo_t* cr,
-                   double   aspect,
-                   double   x,
-                   double   y,
-                   double   cornerRadius,
-                   double   width,
-                   double   height)
+static void draw_rounded_rect (cairo_t* cr,
+                               double   aspect,
+                               double   x,
+                               double   y,
+                               double   cornerRadius,
+                               double   width,
+                               double   height)
 {
     double radius = cornerRadius / aspect;
 
@@ -433,8 +427,7 @@ draw_rounded_rect (cairo_t* cr,
   cairo_close_path (cr);
 }
 
-void
-PlacesSearchBar::UpdateBackground ()
+void PlacesSearchBar::UpdateBackground ()
 {
 #define PADDING 14
 #define RADIUS  6
@@ -504,4 +497,14 @@ PlacesSearchBar::UpdateBackground ()
   );
 
   texture2D->UnReference ();
+}
+
+void PlacesSearchBar::RecvMouseDownFromWindow (int x, int y, 
+                                               unsigned long button_flags, 
+                                               unsigned long key_flags)
+{
+  if (_pango_entry->GetGeometry ().IsPointInside (x, y))
+  {
+    _hint->SetText ("");
+  }
 }

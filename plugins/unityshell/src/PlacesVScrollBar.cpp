@@ -113,7 +113,6 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
 void
 PlacesVScrollBar::UpdateTexture ()
 {
-  nux::Color          transparent   = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
   int                 width         = 0;
   int                 height        = 0;
   nux::CairoGraphics* cairoGraphics = NULL;

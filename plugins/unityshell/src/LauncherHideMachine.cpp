@@ -17,9 +17,17 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include "LauncherHideMachine.h"
+
 #include <boost/lexical_cast.hpp>
 
-#include "LauncherHideMachine.h"
+#include "NuxCore/Logger.h"
+
+namespace {
+
+nux::logging::Logger logger("unity.launcher");
+
+}
 
 LauncherHideMachine::LauncherHideMachine ()
 {
@@ -27,10 +35,10 @@ LauncherHideMachine::LauncherHideMachine ()
   _quirks = DEFAULT;
   _should_hide = false;
   _show_on_edge = false;
-  
+
   _latest_emit_should_hide = false;
   _hide_changed_emit_handle = 0;
-  
+
   _hide_delay_handle = 0;
   _hide_delay_timeout_length = 750;
 }
@@ -54,21 +62,21 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
 {
   if (_should_hide == value)
     return;
-    
+
   if (value && !skip_delay)
   {
     if (_hide_delay_handle)
       g_source_remove (_hide_delay_handle);
-    
+
     _hide_delay_handle = g_timeout_add (_hide_delay_timeout_length, &OnHideDelayTimeout, this);
   }
   else
   {
     _should_hide = value;
-    
+
     if (_hide_changed_emit_handle)
       g_source_remove (_hide_changed_emit_handle);
-    _hide_changed_emit_handle = g_timeout_add (0, &EmitShouldHideChanged, this);  
+    _hide_changed_emit_handle = g_timeout_add (0, &EmitShouldHideChanged, this);
   }
 }
 
@@ -104,13 +112,13 @@ void
 LauncherHideMachine::EnsureHideState (bool skip_delay)
 {
   bool should_hide;
-  
+
   if (_mode == HIDE_NEVER)
   {
     SetShouldHide (false, skip_delay);
     return;
   }
-  
+
   do
   {
     // first we check the condition where external DND is active and the push off has happened
@@ -119,7 +127,7 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       should_hide = true;
       break;
     }
-    
+
     // figure out if we are going to hide because of a window
     bool hide_for_window = false;
     if (_mode == AUTOHIDE)
@@ -128,31 +136,31 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       hide_for_window = GetQuirk (ANY_WINDOW_UNDER);
     else if (_mode == DODGE_ACTIVE_WINDOW)
       hide_for_window = GetQuirk (ACTIVE_WINDOW_UNDER);
-    
+
     // if we activated AND we would hide because of a window, go ahead and do it
     if (GetQuirk (LAST_ACTION_ACTIVATE) && hide_for_window)
     {
       should_hide = true;
       break;
     }
-    
+
     // Is there anything holding us open?
     HideQuirk _should_show_quirk;
     if (GetQuirk (LAUNCHER_HIDDEN))
     {
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
-      
+
       if (_show_on_edge)
         _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
-      
+
     }
-    else 
+    else
     {
       _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB);
       // mouse position over launcher is only taken into account if we move it after the revealing state
       if (GetQuirk (MOUSE_MOVE_POST_REVEAL))
-        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER); 
-      
+        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER);
+
       if (_show_on_edge)
         _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
@@ -162,12 +170,12 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
       should_hide = false;
       break;
     }
-    
+
     // nothing holding us open, any reason to hide?
     should_hide = hide_for_window;
 
   } while (false);
-  
+
   SetShouldHide (should_hide, skip_delay);
 }
 
@@ -176,7 +184,7 @@ LauncherHideMachine::SetMode (LauncherHideMachine::HideMode mode)
 {
   if (_mode == mode)
     return;
-  
+
   _mode = mode;
   EnsureHideState (true);
 }
@@ -195,19 +203,19 @@ LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active
 {
   if (GetQuirk (quirk) == active)
     return;
-  
+
   if (active)
     _quirks = (HideQuirk) (_quirks | quirk);
   else
     _quirks = (HideQuirk) (_quirks & ~quirk);
-  
+
   // no skipping when last action was activate on general case
   bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk (LAST_ACTION_ACTIVATE);
-  
+
   // but skip on last action if we were out of the launcher/bfb
   if (GetQuirk (LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB)))
     skip = true;
-  
+
   EnsureHideState (skip);
 }
 
@@ -225,18 +233,18 @@ LauncherHideMachine::ShouldHide ()
   return _should_hide;
 }
 
-void     
+void
 LauncherHideMachine::SetShowOnEdge (bool value)
 {
   if (value == _show_on_edge)
     return;
-    
+
   _show_on_edge = value;
 
-  g_debug ("Shows on edge: %d", _show_on_edge);
+  LOG_DEBUG(logger) << "Shows on edge: " << _show_on_edge;
 }
 
-bool     
+bool
 LauncherHideMachine::GetShowOnEdge ()
 {
   return _show_on_edge;
@@ -247,7 +255,7 @@ LauncherHideMachine::OnHideDelayTimeout (gpointer data)
 {
   LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
   self->EnsureHideState (true);
-  
+
   self->_hide_delay_handle = 0;
   return false;
 }
@@ -257,13 +265,13 @@ LauncherHideMachine::EmitShouldHideChanged (gpointer data)
 {
   LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
 
-  self->_hide_changed_emit_handle = 0;  
+  self->_hide_changed_emit_handle = 0;
   if (self->_should_hide == self->_latest_emit_should_hide)
     return false;
-    
+
   self->_latest_emit_should_hide = self->_should_hide;
   self->should_hide_changed.emit (self->_should_hide);
-  
+
   return false;
 }
 
