@@ -214,7 +214,7 @@
                 
                 <option name="devices_option" type="int">
                     <_short>Show Devices</_short>
-                    <_long>Show Devices in the Springboad</_long>
+                    <_long>Show devices in the launcher</_long>
                     <min>0</min>
                     <max>2</max>
                     <default>1</default>
