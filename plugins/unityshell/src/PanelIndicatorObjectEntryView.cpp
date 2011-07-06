@@ -459,6 +459,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
 
     g_free(decoded);
     g_input_stream_close(stream, NULL, NULL);
+    g_object_unref(stream);
   }
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)
