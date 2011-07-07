@@ -178,6 +178,18 @@ add_executable (test-places-tiles
                 )
 add_dependencies (test-places-tiles unity-core-${UNITY_API_VERSION})
 
+add_executable (test-switcher
+                TestSwitcher.cpp
+                ${UNITY_SRC}/SwitcherController.cpp
+                ${UNITY_SRC}/SwitcherController.h
+                ${UNITY_SRC}/SwitcherModel.cpp
+                ${UNITY_SRC}/SwitcherModel.h
+                ${UNITY_SRC}/SwitcherView.cpp
+                ${UNITY_SRC}/SwitcherView.h
+                ${UNITY_SRC}/AbstractLauncherIcon.h
+                )
+add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
+
 add_executable (test-places-group
                 TestPlacesGroup.cpp
                 ${PLACES_COMMON_SOURCE}
