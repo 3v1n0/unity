@@ -205,7 +205,7 @@ unity_launcher_icon_accessible_get_name (AtkObject *obj)
       if (icon == NULL) /* State is defunct */
         name = NULL;
       else
-        name = icon->GetTooltipText().GetTCharPtr ();
+        name = icon->GetTooltipText().c_str ();
     }
 
   return name;

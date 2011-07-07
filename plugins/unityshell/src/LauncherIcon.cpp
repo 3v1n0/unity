@@ -61,7 +61,7 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _folding_angle = 0;
   _launcher = launcher;
-  m_TooltipText = "blank";
+  tooltip_text = "blank";
 
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -184,7 +184,7 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
     .add("z", _center.z)
     .add("related-windows", _related_windows)
     .add("icon-type", _icon_type)
-    .add("tooltip-text", m_TooltipText.GetTCharPtr ())
+    .add("tooltip-text", tooltip_text.c_str ())
     .add("sort-priority", _sort_priority)
     .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
     .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
@@ -451,15 +451,15 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
   return result;
 }
 
-void LauncherIcon::SetTooltipText(const TCHAR* text)
+void LauncherIcon::SetTooltipText(std::string text)
 {
-    m_TooltipText = g_markup_escape_text (text, -1);
-    _tooltip->SetText (m_TooltipText);
+    tooltip_text = g_markup_escape_text (text.c_str (), -1);
+    _tooltip->SetText (nux::NString (tooltip_text.c_str ()));
 }
 
-nux::NString LauncherIcon::GetTooltipText()
+std::string LauncherIcon::GetTooltipText()
 {
-    return m_TooltipText;
+    return tooltip_text;
 }
 
 void
@@ -499,7 +499,7 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   
   if (!self->_quicklist->IsVisible ())
   {
-    self->_tooltip->ShowWindow (!self->m_TooltipText.IsEmpty ());
+    self->_tooltip->ShowWindow (!self->tooltip_text.empty ());
     _skip_tooltip_delay = true;
   }
   

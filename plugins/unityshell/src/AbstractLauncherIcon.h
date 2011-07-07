@@ -64,13 +64,13 @@ public:
       QUIRK_LAST,
     } Quirk;
 
-    virtual ~AbstractLauncherIcon();
+    virtual ~AbstractLauncherIcon ();
 
-    virtual  void HideTooltip () = 0;
+    virtual void HideTooltip () = 0;
 
-    virtual void SetTooltipText (const TCHAR* text) = 0;
+    virtual void SetTooltipText (std::string) = 0;
     
-    virtual nux::NString GetTooltipText () = 0;
+    virtual std::string GetTooltipText () = 0;
     
     virtual void    SetShortcut (guint64 shortcut) = 0;
     
