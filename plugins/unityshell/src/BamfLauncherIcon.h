@@ -43,6 +43,7 @@ public:
     bool IsSticky ();
     void UnStick ();
 
+    virtual void Activate ();
     void ActivateLauncherIcon ();
     
     virtual bool ShowInSwitcher ();

@@ -18,12 +18,18 @@
 
 #include "PanelController.h"
 
+#include "NuxCore/Logger.h"
+
 #include "UScreen.h"
 
 #include "unitya11y.h"
 #include "unity-util-accessible.h"
 
 using namespace unity;
+
+namespace {
+nux::logging::Logger logger("unity.panel");
+}
 
 PanelController::PanelController ()
 : _bfb_size (66),
@@ -144,7 +150,7 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
       (*it)->EnableInputWindow (true);
       (*it)->InputWindowEnableStruts (true);
 
-      g_debug ("PanelController:: Updated Panel for Monitor %d", i);
+      LOG_DEBUG(logger) << "Updated Panel for Monitor " << i;
 
       i++;
     }
@@ -198,7 +204,7 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
 
       _windows.push_back (window);
 
-      g_debug ("PanelController:: Added Panel for Monitor %d", i);
+      LOG_DEBUG(logger) << "Added Panel for Monitor " << i;
     }
   }
 
@@ -208,7 +214,7 @@ PanelController::OnScreenChanged (int primary_monitor, std::vector<nux::Geometry
     for (sit = it; sit != eit; ++sit)
     {
       (*sit)->UnReference ();
-      g_debug ("PanelController:: Removed extra Panel");
+      LOG_DEBUG(logger) << "Removed extra Panel";
     }
 
     _windows.erase (it, _windows.end ());

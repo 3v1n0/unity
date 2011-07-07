@@ -75,8 +75,8 @@ UnityNETWorkareaRegionScreen::handleEvent (XEvent *event)
     {
         case PropertyNotify:
 
-        if (event->xproperty.type == (int) Atoms::wmStrut ||
-            event->xproperty.type == (int) Atoms::wmStrutPartial)
+        if (event->xproperty.atom == (int) Atoms::wmStrut ||
+            event->xproperty.atom == (int) Atoms::wmStrutPartial)
         {
             CompWindow *w = screen->findWindow (event->xproperty.window);
 
@@ -88,6 +88,9 @@ UnityNETWorkareaRegionScreen::handleEvent (XEvent *event)
 
                     w->moveNotifySetEnabled (unwmh, true);
                     w->resizeNotifySetEnabled (unwmh, true);
+
+		    /* The struts got updated, so we need to set the property again */
+		    setProperty ();
                 }
             }
         }
@@ -145,6 +148,12 @@ UnityNETWorkareaRegionWindow::UnityNETWorkareaRegionWindow (CompWindow *w) :
     }
     else
         WindowInterface::setHandler (w, false);
+}
+
+UnityNETWorkareaRegionWindow::~UnityNETWorkareaRegionWindow ()
+{
+    if (window->struts ())
+	UnityNETWorkareaRegionScreen::get (screen)->setProperty ();
 }
 
 bool

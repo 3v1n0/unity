@@ -52,7 +52,7 @@ msgid "Internet Apps"
 msgstr ""
 
 #, fuzzy
-msgid "Keep In Launcher"
+msgid "Keep in launcher"
 msgstr "Остави в програмата за стартиране"
 
 msgid "Launcher & Menus"

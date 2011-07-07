@@ -104,10 +104,6 @@ public:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  LauncherIcon* GetActiveMenuIcon() {return m_ActiveMenuIcon;}
-  LauncherIcon* GetLastSpreadIcon() {return m_LastSpreadIcon;}
-  void SetLastSpreadIcon(LauncherIcon *i) {m_LastSpreadIcon = i;}
-
   LauncherIcon* GetSelectedMenuIcon ();
 
   void SetIconSize(int tile_size, int icon_size);
@@ -404,8 +400,6 @@ private:
   // used by keyboard/a11y-navigation
   LauncherIcon* _current_icon;
   LauncherIcon* m_ActiveTooltipIcon;
-  LauncherIcon* m_ActiveMenuIcon;
-  LauncherIcon* m_LastSpreadIcon;
   LauncherIcon* _icon_under_mouse;
   LauncherIcon* _icon_mouse_down;
   LauncherIcon* _drag_icon;

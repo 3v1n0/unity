@@ -34,20 +34,66 @@ public:
   Indicators();
   virtual ~Indicators();
 
+  /**
+   * internal
+   */
   void ActivateEntry(std::string const& entry_id);
+
+  /**
+   * internal
+   */
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
+  /**
+   * internal
+   */
   virtual void OnEntryScroll(std::string const& entry_id, int delta) = 0;
+
+  /**
+   * internal
+   */
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
   sigc::signal<void, Indicator::Ptr const&> on_object_removed;
+
+  /**
+   * This signal is emitted when an entry is activated and the user moves the
+   * mouse.
+   * @param x x coordinate
+   * @param y y coordinate
+   */
   sigc::signal<void, int, int> on_menu_pointer_moved;
+
+  /**
+   * Service wants the view to activate an entry.
+   * Example use-case: user has activated an entry with the mouse and pressed
+   * Left or Right key to activate previous or next entry.
+   * @param entry_id entry id
+   */
   sigc::signal<void, std::string const&> on_entry_activate_request;
+
+  /**
+   * An entry just got activated. View needs to repaint it.
+   * @param entry_id entry id
+   */
   sigc::signal<void, std::string const&> on_entry_activated;
+
+  /**
+   * internal
+   */
   sigc::signal<void> on_synced;
+
+  /**
+   * The service is about to show a menu.
+   * @param entry_id entry id
+   * @param x x coordinate
+   * @param y y coordinate
+   * @param timestamp current time
+   * @param button pressed button
+   */
   sigc::signal<void, std::string const&, int, int, int, int> on_entry_show_menu;
 
 protected:

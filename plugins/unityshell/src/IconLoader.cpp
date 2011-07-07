@@ -464,14 +464,10 @@ IconLoader::Iteration ()
       break;
   }
 
-  //g_debug ("Iteration took: %f msecs", (g_get_monotonic_time () - time)/1000.0);
-  
   is_empty = g_queue_is_empty (_tasks);
   if (is_empty)
   {
     _idle_id = 0;
-
-    //g_debug ("Complete load took: %f msecs", (g_get_monotonic_time () - _idle_start_time)/1000.0);
   }
 
   return !is_empty;

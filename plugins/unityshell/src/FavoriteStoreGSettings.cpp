@@ -24,6 +24,8 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include "NuxCore/Logger.h"
+
 #include "config.h"
 
 /**
@@ -37,6 +39,8 @@ namespace unity {
 namespace internal {
 
 namespace {
+
+nux::logging::Logger logger("unity.favorites");
 
 const char* SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const char* LATEST_SETTINGS_MIGRATION = "3.2.10";
@@ -114,7 +118,8 @@ void FavoriteStoreGSettings::Refresh()
       }
       else
       {
-        g_warning("Unable to load desktop file: %s", favs[i]);
+        LOG_WARNING(logger) << "Unable to load desktop file: "
+                            << favs[i];
       }
     }
     else
@@ -130,11 +135,14 @@ void FavoriteStoreGSettings::Refresh()
       }
       else
       {
-        g_warning ("Unable to load GDesktopAppInfo for '%s'", favs[i]);
+        LOG_INFO(logger) << "Unable to load GDesktopAppInfo for '"
+                         << favs[i] << "'";
         glib::String exhaustive_path(exhaustive_desktopfile_lookup(favs[i]));
         if (exhaustive_path.Value() == NULL)
         {
-          g_warning ("Desktop file '%s' Does not exist anywhere we can find it", favs[i]);
+          LOG_WARNING(logger) << "Desktop file '"
+                              << favs[i]
+                              << "' does not exist anywhere we can find it";
         }
         else
         {
@@ -247,7 +255,9 @@ void FavoriteStoreGSettings::SaveFavorites(FavoriteList const& favorites)
 
   ignore_signals_ = true;
   if (!g_settings_set_strv(settings_, "favorites", favs))
-    g_warning("Saving favorites failed.");
+  {
+    LOG_WARNING(logger) << "Saving favorites failed.";
+  }
   ignore_signals_ = false;
 }
 
@@ -256,8 +266,7 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
   if (ignore_signals_)
     return;
 
-  // We shouldn't really be using g_print here.  Logging FTW.
-  g_print("Changed: %s\n", key.c_str());
+  LOG_DEBUG(logger) << "Changed: " << key;
 }
 
 namespace {

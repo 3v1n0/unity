@@ -1,3 +1,211 @@
+2011-07-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove dependancy on gtkloader as it doesn't work for upgrading Unity on existing installs
+
+2011-07-01  Gord Allott  <gord.allott@canonical.com>
+
+	updated copyright in unityshell.cpp/h
+
+2011-06-30  Aurélien Gâteau  <aurelien.gateau@canonical.com>
+
+	Merge fix to block NULL indicators from sending signals
+
+2011-06-30  Aurelien Gateau  <aurelien.gateau@canonical.com>
+
+	Do not emit signals for invalid indicator entries.
+
+2011-06-30  Aurélien Gâteau  <aurelien.gateau@canonical.com>
+
+	Merge Aurélien's updates to Indicator* class documentation
+
+2011-06-30  Aurelien Gateau  <aurelien.gateau@canonical.com>
+
+	Document (some) members of UnityCore classes
+
+2011-06-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge fix for 759899
+
+2011-06-11  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix conditions where workarea region wouldn't be updated
+
+2011-06-30  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add logging config and start using nux logging.
+
+2011-06-23  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk and resolve conflicts.
+
+2011-06-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Resolve conflict.
+
+2011-06-15  Tim Penhey  <tim.penhey@canonical.com>
+
+	Add a default g_log handler.
+
+2011-06-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Use the new logger.
+
+2011-06-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	New logging FTW.
+
+2011-06-13  Tim Penhey  <tim.penhey@canonical.com>
+
+	Move the constructor to the top and the anon namespace to the botton of the file.
+
+2011-06-30  Jason Smith  <jason.smith@canonical.com>
+
+	merge branch to make spread only show windows on the current workspace
+
+2011-06-28  Oliver Sauder  <os@esite.ch>
+
+	[App spread] Added null pointer check
+
+2011-06-28  Oliver Sauder  <os@esite.ch>
+
+	[App spread] Only show applications on current workspace
+
+2011-06-30  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	merged in neils gtk3 panel branch
+
+2011-06-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Port filter code to Xi2
+
+2011-06-29  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Initial build with gtk3, stuff broken
+
+2011-06-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge
+
+2011-06-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge
+
+2011-06-30  Alexander Fougner  <fougner89@gmail.com>
+
+	merge Alexander Fougner's branch to fix lp:795422
+
+2011-06-10  Alexander Fougner  <fougner89@gmail.com>
+
+	Replaced "Keep In Launcher" with "Keep in launcher", fixing LP: #795422
+
+2011-06-28  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge launcher/scale interaction fixes
+
+2011-06-09  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Removing unnecessary code.
+
+2011-06-09  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	Merge with trunk
+
+2011-06-04  Marco Biscaro  <marcobiscaro2112@gmail.com>
+
+	BamfLauncherIcon click behaviour fixed (LP: #724045).
+
+2011-06-28  Alex Launi  <alex.launi@canonical.com>
+
+	merge build fixes for GCC 4.6
+
+2011-06-28  Alex Launi  <alex.launi@canonical.com>
+
+	Remove unused variables to fix build on oneiric
+
+2011-06-28  Oier Mees  <oier.mees@gmail.com>
+
+	Merge branch to remove Search hint when clicking in dash search box
+
+2011-06-14  Oier Mees  <oier.mees@gmail.com>
+
+	Clicking inside the Dash search box removes the search hint, fixed LP:764859.
+
+2011-06-13  Jay Taoko  <jay.taoko@canonical.com>
+
+	* A solution for bug #764859
+
+2011-06-27  Manuel Nicetto  <manuel.nicetto@gmail.com>
+
+	Merge fix for quicklist keyboard navigation focus issues
+
+2011-06-09  Manuel Nicetto  <manuel.nicetto@gmail.com>
+
+	fixes the bug for the current version on unity, fixes also return focus to last opened window on exit keynav mode
+
+2011-06-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix some stupid errors
+
+2011-06-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add GTK3 Workraround
+
+2011-06-24  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Link unitydialog to gtk3
+
+2011-06-30  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Remove debug message
+
+2011-06-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Fix crash
+
+2011-06-22  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Merge fix for 769335 and 798318
+
+2011-06-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	PointerX and PointerX don't work well. Use Xlib instead.
+
+2011-06-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Use g_warning
+
+2011-06-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Use the same default that you provide to compiz
+
+2011-06-22  Aurélien Gâteau  <aurelien.gateau@canonical.com>
+
+	correct libunity-core pc file
+
+2011-06-22  Aurelien Gateau  <aurelien.gateau@canonical.com>
+
+	Add dependency on nux-core
+
+2011-06-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove dep on nux-graphics from libunity-core
+
+2011-06-22  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix soname stuff
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't fail if GTest isn't found
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix typos
+
+2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.0.1
+
 2011-06-21  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Tweak release script
