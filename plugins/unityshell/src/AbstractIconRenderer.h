@@ -20,13 +20,15 @@
 #ifndef ABSTRACTICONRENDERER_H
 #define ABSTRACTICONRENDERER_H
 
+#include "AbstractLauncherIcon.h"
+
 namespace unity {
 namespace ui {
 
 class RenderArg
 {
 public:
-  LauncherIcon *icon;
+  AbstractLauncherIcon *icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
   float         x_rotation;
@@ -58,6 +60,8 @@ public:
   virtual void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window) = 0;
 
   virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo) = 0;
+
+  virtual void SetTargetSize (int size);
 };
 
 }

@@ -30,15 +30,19 @@
 namespace unity {
 namespace ui {
 
+#define MAX_SHORTCUT_LABELS 10
+
 class IconRenderer : public AbstractIconRenderer
 {
 public:
-  IconRenderer();
+  IconRenderer(int icon_size);
   virtual ~IconRenderer();
 
-  void PreprocessIcons (std::list<Launcher::RenderArg> &args, nux::Geometry target_window);
-  
+  void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window);
+
   void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo);
+
+  void SetTargetSize (int size);
 
   nux::BaseTexture* RenderCharToTexture (const char label,
                                          int        width,
@@ -66,6 +70,9 @@ protected:
 
 private:
   void GenerateTextures ();
+  void DestroyTextures ();
+
+  int icon_size;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -82,7 +89,7 @@ private:
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
 
-  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
+  nux::BaseTexture* _superkey_labels[MAX_SHORTCUT_LABELS];
 };
 
 }
