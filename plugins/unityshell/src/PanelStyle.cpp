@@ -32,11 +32,12 @@ namespace {
 
 PanelStyle *_style = NULL;
 
-nux::Color ColorFromGdkColor(GdkColor const& gc)
+nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
-  return nux::Color(gc.red / static_cast<float>(0xffff),
-                    gc.green / static_cast<float>(0xffff),
-                    gc.blue / static_cast<float>(0xffff));
+  return nux::Color(color.red,
+                    color.green,
+                    color.blue,
+                    color.alpha);
 }
 
 }
@@ -44,12 +45,17 @@ nux::Color ColorFromGdkColor(GdkColor const& gc)
 PanelStyle::PanelStyle ()
 : _theme_name (NULL)
 {
-  _offscreen = gtk_offscreen_window_new ();
-  gtk_widget_set_name (_offscreen, "UnityPanelWidget");
-  gtk_widget_set_size_request (_offscreen, 100, 24);
-  gtk_style_context_add_class (gtk_widget_get_style_context (_offscreen),
-                               "menubar");
-  gtk_widget_show_all (_offscreen);
+  _style_context = gtk_style_context_new ();
+
+  GtkWidgetPath *widget_path = gtk_widget_path_new ();
+  gtk_widget_path_iter_set_name (widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type (widget_path, GTK_TYPE_WINDOW);
+
+  gtk_style_context_set_path (_style_context, widget_path);
+  gtk_style_context_add_class (_style_context, "gnome-panel-menu-bar");
+  gtk_style_context_add_class (_style_context, "unity-panel");
+
+  gtk_widget_path_free (widget_path);
 
   _gtk_theme_changed_id = g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
                                             G_CALLBACK (PanelStyle::OnStyleChanged), this);
@@ -62,8 +68,8 @@ PanelStyle::~PanelStyle ()
   if (_gtk_theme_changed_id)
     g_signal_handler_disconnect (gtk_settings_get_default (),
                                  _gtk_theme_changed_id);
-  
-  gtk_widget_destroy (_offscreen);
+
+  g_object_unref (_style_context);
 
   if (_style == this)
     _style = NULL;
@@ -83,7 +89,7 @@ PanelStyle::GetDefault ()
 void
 PanelStyle::Refresh ()
 {
-  GtkStyle*  style    = NULL;
+  GdkRGBA rgba_text;
 
   if (_theme_name)
     g_free (_theme_name);
@@ -91,40 +97,19 @@ PanelStyle::Refresh ()
   _theme_name = NULL;
   g_object_get (gtk_settings_get_default (), "gtk-theme-name", &_theme_name, NULL);
 
-  style = gtk_widget_get_style (_offscreen);
+  gtk_style_context_invalidate (_style_context);
 
-  _text = ColorFromGdkColor(style->text[0]);
-  _text_shadow = ColorFromGdkColor(style->text[3]);
-  _line = ColorFromGdkColor(style->dark[0]);
-  _bg_top = ColorFromGdkColor(style->bg[1]);
-  _bg_bottom = ColorFromGdkColor(style->bg[0]);
+  gtk_style_context_get_color (_style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
+
+  _text = ColorFromGdkRGBA (rgba_text);
 
   changed.emit ();
 }
 
-nux::Color const& PanelStyle::GetTextColor() const
+GtkStyleContext *
+PanelStyle::GetStyleContext ()
 {
-  return _text;
-}
-
-nux::Color const& PanelStyle::GetBackgroundTop() const
-{
-  return _bg_top;
-}
-
-nux::Color const& PanelStyle::GetBackgroundBottom() const
-{
-  return _bg_bottom;
-}
-
-nux::Color const& PanelStyle::GetTextShadow() const
-{
-  return _text_shadow;
-}
-
-nux::Color const& PanelStyle::GetLineColor() const
-{
-  return _line;
+  return _style_context;
 }
 
 void
@@ -137,13 +122,20 @@ PanelStyle::OnStyleChanged (GObject*    gobject,
   self->Refresh ();
 }
 
-GdkPixbuf *
+nux::NBitmapData *
 PanelStyle::GetBackground (int width, int height)
 {
-  gtk_widget_set_size_request (_offscreen, width, height);
-  gdk_window_process_updates (gtk_widget_get_window (_offscreen), TRUE);
-  
-  return gtk_offscreen_window_get_pixbuf (GTK_OFFSCREEN_WINDOW (_offscreen));
+  nux::CairoGraphics* context = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
+
+  cairo_t* cr = context->GetContext ();
+
+  gtk_render_background (_style_context, cr, 0, 0, width, height);
+
+  nux::NBitmapData* bitmap = context->GetBitmap ();
+
+  delete context;
+
+  return bitmap;
 }
 
 nux::BaseTexture *

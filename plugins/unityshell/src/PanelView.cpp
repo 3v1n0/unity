@@ -187,9 +187,11 @@ PanelView::UpdateBackground ()
   _last_height = geo.height;
   _is_dirty = false;
 
-  GdkPixbuf *pixbuf = _style->GetBackground (geo.width, geo.height);
-  nux::BaseTexture * texture2D = nux::CreateTexture2DFromPixbuf (pixbuf, true);
-  g_object_unref (pixbuf);
+  nux::NBitmapData * bitmap = _style->GetBackground (geo.width, geo.height);
+  nux::BaseTexture * texture2D = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
+  texture2D->Update (bitmap);
+  delete bitmap;
+
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
   texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
