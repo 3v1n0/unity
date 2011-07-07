@@ -6,6 +6,8 @@ pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-1.0 g
 #
 set (CORE_HEADERS
      DBusIndicators.h
+     GLibSignal.h
+     GLibSignal-inl.h
      GLibWrapper.h
      GLibWrapper-inl.h
      IndicatorEntry.h
