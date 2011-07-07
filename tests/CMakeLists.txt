@@ -275,8 +275,10 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
   include_directories(${GTEST_INCLUDE_DIRS})
   add_executable(test-gtest
-                 test_timer.cpp
+                 test_glib_signals.cpp
                  test_indicator_entry.cpp
+                 test_main.cpp
+                 test_timer.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/Timer.cpp
                  )

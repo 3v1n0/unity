@@ -32,7 +32,7 @@ class SignalBase
 public:
   SignalBase();
   virtual ~SignalBase();
-  
+
   void Disconnect();
 
 protected:
@@ -48,7 +48,7 @@ public:
 
   Signal0()
   {}
-  
+ 
   void Connect(GObject*           object,
                std::string const& signal_name,
                SignalCallback     cb);
