@@ -2362,7 +2362,7 @@ LauncherModel* Launcher::GetModel ()
   return _model;
 }
 
-void Launcher::OnIconNeedsRedraw (LauncherIcon *icon)
+void Launcher::OnIconNeedsRedraw (AbstractLauncherIcon *icon)
 {
     EnsureAnimation();
 }

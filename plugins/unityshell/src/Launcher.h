@@ -332,7 +332,7 @@ private:
   void OnIconRemoved  (LauncherIcon *icon);
   void OnOrderChanged ();
 
-  void OnIconNeedsRedraw (LauncherIcon *icon);
+  void OnIconNeedsRedraw (AbstractLauncherIcon *icon);
   
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
