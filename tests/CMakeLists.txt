@@ -276,6 +276,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   include_directories(${GTEST_INCLUDE_DIRS})
   add_executable(test-gtest
                  test_glib_signals.cpp
+                 test_glib_signals_utils.cpp
+                 test_glib_signals_utils.h
                  test_indicator_entry.cpp
                  test_main.cpp
                  test_timer.cpp

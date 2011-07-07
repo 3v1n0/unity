@@ -1,14 +1,25 @@
 #include <UnityCore/UnityCore.h>
-
 #include <gtest/gtest.h>
+
+#include "test_glib_signals_utils.h"
 
 using namespace unity;
 
 namespace {
 
-TEST(TestGLibSignals, TestConstruction)
+void OnSignal1 (std::string str)
 {
 
+}
+
+TEST(TestGLibSignals, TestConstruction)
+{
+  GObject *object = static_cast<GObject*>(g_object_new(TEST_TYPE_SIGNALS, NULL));
+
+  EXPECT_TRUE(G_IS_OBJECT(object));
+
+  glib::Signal<void, std::string> signal1;
+  signal1.Connect (object, "signal-1", sigc::ptr_fun (OnSignal1));
 }
 
 /*

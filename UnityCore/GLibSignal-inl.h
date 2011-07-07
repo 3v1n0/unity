@@ -23,25 +23,6 @@
 namespace unity {
 namespace glib {
 
-SignalBase::SignalBase()
-  : object_(0),
-    connection_id_(0)
-{}
-
-SignalBase::~SignalBase()
-{
-  Disconnect();
-}
-
-void SignalBase::Disconnect()
-{
-  if (G_IS_OBJECT(object_) && connection_id_)
-    g_signal_handler_disconnect(object_, connection_id_);
-  
-  object_ = 0;
-  connection_id_ = 0;
-}
-
 template <typename R>
 void Signal0<R>::Connect(GObject*           object,
                          std::string const& signal_name,
@@ -180,7 +161,7 @@ template <typename R, typename T1, typename T2,
           typename T3, typename T4, typename T5, typename T6>
 R Signal6<R, T1, T2, T3, T4, T5, T6>::Callback(GObject* object,
                                                T1       data1,
-
+                                               T2       data2,
                                                T3       data3,
                                                T4       data4,
                                                T5       data5,

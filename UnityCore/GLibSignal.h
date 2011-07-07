@@ -226,7 +226,7 @@ template <typename R, typename T1 = nil, typename T2 = nil,
                       typename T3 = nil, typename T4 = nil,
                       typename T5 = nil, typename T6 = nil,
                       typename T7 = nil>
-class Signal : public Signal1<R, T1, T2, T3, T4, T5, T6, T7>
+class Signal : public Signal7<R, T1, T2, T3, T4, T5, T6, T7>
 {
 public:
   inline Signal() {}
@@ -281,15 +281,6 @@ template <typename R, typename T1, typename T2, typename T3, typename T4,
           typename T5, typename T6>
 class Signal<R, T1, T2, T3, T4, T5, T6, nil>
   : public Signal6<R, T1, T2 ,T3, T4, T5, T6>
-{
-public:
-  inline Signal() {}
-};
-
-template <typename R, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename T6, typename T7>
-class Signal<R, T1, T2, T3, T4, T5, T6, T7>
-  : public Signal7<R, T1, T2 ,T3, T4, T5, T6, T7>
 {
 public:
   inline Signal() {}

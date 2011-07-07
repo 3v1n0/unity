@@ -22,6 +22,8 @@
 // Single include for headers
 
 #include <UnityCore/DBusIndicators.h>
+#include <UnityCore/GLibSignal.h>
+#include <UnityCore/GLibSignal-inl.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibWrapper-inl.h>
 #include <UnityCore/Indicator.h>

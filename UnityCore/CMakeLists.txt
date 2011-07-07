@@ -19,6 +19,7 @@ set (CORE_HEADERS
 
 set (CORE_SOURCES
      DBusIndicators.cpp
+     GLibSignal.cpp
      GLibWrapper.cpp
      Indicator.cpp
      IndicatorEntry.cpp
