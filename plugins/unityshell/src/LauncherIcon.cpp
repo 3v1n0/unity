@@ -59,7 +59,6 @@ gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
-  _folding_angle = 0;
   _launcher = launcher;
   tooltip_text = "blank";
 

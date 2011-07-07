@@ -3508,13 +3508,13 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
   v3.divide_xyz_by_w();
 
   // normalize to the viewport coordinates and translate to the correct location
-  v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v0.x =  geo.width *(v0.x + 1.0f)/2.0f - geo.width /2.0f + x + w/2.0f;
   v0.y = -geo.height*(v0.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-  v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;;
+  v1.x =  geo.width *(v1.x + 1.0f)/2.0f - geo.width /2.0f + x + w/2.0f;;
   v1.y = -geo.height*(v1.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-  v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v2.x =  geo.width *(v2.x + 1.0f)/2.0f - geo.width /2.0f + x + w/2.0f;
   v2.y = -geo.height*(v2.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
-  v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width/2.0f + x + w/2.0f;
+  v3.x =  geo.width *(v3.x + 1.0f)/2.0f - geo.width /2.0f + x + w/2.0f;
   v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
 
 
@@ -3607,9 +3607,6 @@ void Launcher::UpdateIconXForm (std::list<Launcher::RenderArg> &args, nux::Geome
   {
 
     LauncherIcon* launcher_icon = (*it).icon;
-
-    // We to store the icon angle in the icons itself. Makes one thing easier afterward.
-    launcher_icon->_folding_angle = (*it).x_rotation;
 
     float w = _icon_size;
     float h = _icon_size;

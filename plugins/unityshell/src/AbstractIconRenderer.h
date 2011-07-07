@@ -49,6 +49,7 @@ public:
   bool          skip;
   bool          stick_thingy;
   bool          keyboard_nav_hl;
+  bool          draw_shortcut;
   int           window_indicators;
 };
 
@@ -59,9 +60,9 @@ public:
 
   virtual void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window) = 0;
 
-  virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo) = 0;
+  virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo, nux::Geometry owner_geo) = 0;
 
-  virtual void SetTargetSize (int size);
+  virtual void SetTargetSize (int tile_size, int image_size, int spacing) = 0;
 };
 
 }

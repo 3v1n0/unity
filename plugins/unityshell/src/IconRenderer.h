@@ -35,14 +35,14 @@ namespace ui {
 class IconRenderer : public AbstractIconRenderer
 {
 public:
-  IconRenderer(int icon_size);
+  IconRenderer();
   virtual ~IconRenderer();
 
   void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo, nux::Geometry owner_geo);
 
-  void SetTargetSize (int size);
+  void SetTargetSize (int tile_size, int image_size, int spacing);
 
   nux::BaseTexture* RenderCharToTexture (const char label,
                                          int        width,
@@ -54,7 +54,7 @@ protected:
                       nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                       nux::Color bkg_color,
                       float alpha,
-                      nux::Vector4 xform_coords[]);
+                      std::vector<nux::Vector4> &xform_coords);
   
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
                          RenderArg const &arg,
@@ -68,11 +68,30 @@ protected:
                                 float progress_fill, 
                                 float bias);
 
+  void UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+                            float x, float y, float w, float h, float z, std::string name);
+  
+  void UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+                                   float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
+
+  void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
+                                         int ViewportWidth,
+                                         int ViewportHeight,
+                                         float NearClipPlane,
+                                         float FarClipPlane,
+                                         float Fovy);
 private:
+  void SetupShaders ();
+
   void GenerateTextures ();
+
   void DestroyTextures ();
 
   int icon_size;
+  int image_size;
+  int spacing;
+
+  bool textures_created;
 
   nux::BaseTexture* _icon_bkg_texture;
   nux::BaseTexture* _icon_shine_texture;
@@ -90,6 +109,11 @@ private:
   nux::BaseTexture* _arrow_empty_rtl;
 
   nux::BaseTexture* _superkey_labels[MAX_SHORTCUT_LABELS];
+
+  nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
+  nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
+
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 };
 
 }

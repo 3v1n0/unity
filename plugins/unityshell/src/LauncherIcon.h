@@ -237,7 +237,6 @@ protected:
 
     std::map<std::string, nux::Vector4*> _xform_coords;
     bool          _mouse_inside;
-    float         _folding_angle;
 
     nux::Tooltip *_tooltip;
     QuicklistView *_quicklist;
