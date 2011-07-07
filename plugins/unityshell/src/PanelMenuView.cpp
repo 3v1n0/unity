@@ -129,7 +129,7 @@ PanelMenuView::PanelMenuView (int padding)
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
 
   OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
-  OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
