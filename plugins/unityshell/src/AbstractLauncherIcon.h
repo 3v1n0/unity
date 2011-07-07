@@ -22,13 +22,11 @@
 #define ABSTRACTLAUNCHERICON_H
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
+#include <NuxCore/Math/MathInc.h>
 
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
-
-#include "LauncherEntryRemote.h"
 
 class AbstractLauncherIcon
 {
@@ -88,8 +86,6 @@ public:
     
     virtual void OpenInstance () = 0;
 
-    virtual void SaveCenter () = 0;
-    
     virtual int SortPriority () = 0;
     
     virtual int RelatedWindows () = 0;
@@ -101,12 +97,6 @@ public:
     virtual float PresentUrgency () = 0;
 
     virtual float GetProgress () = 0;
-    
-    virtual void SetEmblemIconName (const char *name) = 0;
-    
-    virtual void SetEmblemText (const char *text) = 0;
-    
-    virtual void DeleteEmblem () = 0;
     
     virtual bool ShowInSwitcher () = 0;
 
@@ -130,13 +120,9 @@ public:
 
     virtual nux::BaseTexture * Emblem () = 0;
 
-    virtual nux::BaseTexture* GetSuperkeyLabel () = 0;
+    virtual nux::BaseTexture * GetSuperkeyLabel () = 0;
 
     virtual std::list<DbusmenuMenuitem *> Menus () = 0;
-
-    virtual void InsertEntryRemote (LauncherEntryRemote *remote) = 0;
-
-    virtual void RemoveEntryRemote (LauncherEntryRemote *remote) = 0;
 
     virtual nux::DndAction QueryAcceptDrop (std::list<char *> paths) = 0;
 
@@ -145,8 +131,6 @@ public:
     virtual void SendDndEnter () = 0;
 
     virtual void SendDndLeave () = 0;
-    
-    virtual void SetIconType (IconType type) = 0;
     
     sigc::signal<void, int> MouseDown;
     sigc::signal<void, int> MouseUp;
@@ -157,23 +141,6 @@ public:
     sigc::signal<void, AbstractLauncherIcon *> show;
     sigc::signal<void, AbstractLauncherIcon *> hide;
     sigc::signal<void, AbstractLauncherIcon *> needs_redraw;
-
-protected:
-    virtual const gchar * GetName () = 0;
-
-    virtual void AddProperties (GVariantBuilder *builder) = 0;
-
-    virtual void SetRelatedWindows (int windows) = 0;
-    
-    virtual void Remove () = 0;
-    
-    virtual void SetProgress (float progress) = 0;
-    
-    virtual void SetHasWindowOnViewport (bool val) = 0;
-    
-    virtual void Present (float urgency, int length) = 0;
-    
-    virtual void Unpresent () = 0;
 
 };
 

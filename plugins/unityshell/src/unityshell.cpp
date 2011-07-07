@@ -583,9 +583,20 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
                                         CompOption::Vector& options)
 {
   if (switcherController->Visible ())
+  {
     switcherController->MoveNext ();
+  }
   else
-    switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, launcher->GetModel ());
+  {
+    std::vector<AbstractLauncherIcon*> results;
+  
+    LauncherModel::iterator it;
+    for (it = launcher->GetModel ()->begin (); it != launcher->GetModel ()->end (); it++)
+      if ((*it)->ShowInSwitcher ())
+        results.push_back (*it);
+
+    switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
+  }
   
   action->setState (action->state () | CompAction::StateTermKey);
   return false;

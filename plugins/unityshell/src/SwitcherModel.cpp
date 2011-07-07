@@ -23,7 +23,7 @@
 namespace unity {
 namespace switcher {
 
-SwitcherModel::SwitcherModel(std::vector<LauncherIcon*> icons)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 {
   _inner = icons;
   _index = 0;
@@ -52,7 +52,7 @@ SwitcherModel::Size ()
   return _inner.size ();
 }
 
-LauncherIcon *
+AbstractLauncherIcon *
 SwitcherModel::Selected ()
 {
   return _inner.at (_index);
@@ -82,7 +82,7 @@ SwitcherModel::Prev ()
 }
 
 void 
-SwitcherModel::Select (LauncherIcon *selection)
+SwitcherModel::Select (AbstractLauncherIcon *selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)

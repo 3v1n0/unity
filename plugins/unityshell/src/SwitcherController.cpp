@@ -32,19 +32,7 @@ SwitcherController::SwitcherController()
   
 }
 
-void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, LauncherModel *model)
-{
-  std::vector<LauncherIcon*> results;
-  
-  LauncherModel::iterator it;
-  for (it = model->begin (); it != model->end (); it++)
-    if ((*it)->ShowInSwitcher ())
-      results.push_back (*it);
-  
-  Show (show, sort, reverse, results);  
-}
-
-void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<LauncherIcon*> results)
+void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
 {
   if (sort == FOCUS_ORDER)
     std::sort (results.begin (), results.end (), CompareSwitcherItemsPriority);
@@ -113,7 +101,7 @@ void SwitcherController::DetailCurrent ()
 
 }
 
-bool SwitcherController::CompareSwitcherItemsPriority (LauncherIcon *first, LauncherIcon *second)
+bool SwitcherController::CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second)
 {
   return first->SwitcherPriority () > second->SwitcherPriority ();
 }

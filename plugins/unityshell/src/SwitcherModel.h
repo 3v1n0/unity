@@ -20,7 +20,7 @@
 #ifndef SWITCHERMODEL_H
 #define SWITCHERMODEL_H
 
-#include "LauncherIcon.h"
+#include "AbstractLauncherIcon.h"
 #include "LauncherModel.h"
 
 #include <boost/shared_ptr.hpp>
@@ -35,11 +35,11 @@ class SwitcherModel : public sigc::trackable
 public:
     typedef boost::shared_ptr<SwitcherModel> Ptr;
 
-    typedef std::vector<LauncherIcon*> Base;
+    typedef std::vector<AbstractLauncherIcon*> Base;
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
     
-    SwitcherModel(std::vector<LauncherIcon*> icons);
+    SwitcherModel(std::vector<AbstractLauncherIcon*> icons);
     virtual ~SwitcherModel();
 
     iterator begin ();
@@ -47,13 +47,13 @@ public:
     
     int Size ();
     
-    LauncherIcon *Selected ();
+    AbstractLauncherIcon *Selected ();
     int SelectedIndex ();
     
     void Next ();
     void Prev ();
     
-    void Select (LauncherIcon *selection);
+    void Select (AbstractLauncherIcon *selection);
     void Select (int index);
     
 private:

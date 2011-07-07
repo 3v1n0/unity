@@ -22,7 +22,6 @@
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
-#include "LauncherModel.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -52,8 +51,7 @@ public:
 
   SwitcherController();
 
-  void Show (ShowMode show, SortMode sort, bool reverse, LauncherModel *model);
-  void Show (ShowMode show, SortMode sort, bool reverse, std::vector<LauncherIcon*> results);
+  void Show (ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
   void Hide ();
 
   bool Visible ();
@@ -75,7 +73,7 @@ private:
   
   bool visible_;
   
-  static bool CompareSwitcherItemsPriority (LauncherIcon *first, LauncherIcon *second);
+  static bool CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second);
 
 };
 
