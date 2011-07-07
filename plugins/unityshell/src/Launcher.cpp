@@ -2287,12 +2287,6 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 {
     EnsureAnimation();
 
-    icon->_xform_coords["HitArea"]      = new nux::Vector4[4];
-    icon->_xform_coords["Image"]        = new nux::Vector4[4];
-    icon->_xform_coords["Tile"]         = new nux::Vector4[4];
-    icon->_xform_coords["Glow"]         = new nux::Vector4[4];
-    icon->_xform_coords["Emblem"]       = new nux::Vector4[4];
-
     // needs to be disconnected
     icon->needs_redraw_connection = (sigc::connection) icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
@@ -2305,12 +2299,6 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
 void Launcher::OnIconRemoved (LauncherIcon *icon)
 {
-    delete [] icon->_xform_coords["HitArea"];
-    delete [] icon->_xform_coords["Image"];
-    delete [] icon->_xform_coords["Tile"];
-    delete [] icon->_xform_coords["Glow"];
-    delete [] icon->_xform_coords["Emblem"];
-
     if (icon->needs_redraw_connection.connected ())
       icon->needs_redraw_connection.disconnect ();
 
@@ -2454,7 +2442,7 @@ void Launcher::RenderIcon(nux::GraphicsEngine& GfxContext,
                           nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                           nux::Color bkg_color,
                           float alpha,
-                          nux::Vector4 xform_coords[])
+                          std::vector<nux::Vector4> &xform_coords)
 {
   if (icon == NULL)
     return;
@@ -2632,21 +2620,21 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                 _icon_glow_hl_texture->GetDeviceTexture (),
                 nux::Color (0xFFFFFFFF),
                 arg.alpha,
-                arg.icon->_xform_coords["Glow"]);
+                arg.icon->GetTransform ("Glow"));
 
     RenderIcon (GfxContext,
                 arg,
                 _icon_outline_texture->GetDeviceTexture (),
                 nux::Color(0xFFFFFFFF),
                 0.95f * arg.alpha,
-                arg.icon->_xform_coords["Tile"]);
+                arg.icon->GetTransform ("Tile"));
 
     RenderIcon (GfxContext,
                 arg,
                 _icon_bkg_texture->GetDeviceTexture (),
                 nux::Color(0xFFFFFFFF),
                 0.9f * arg.alpha,
-                arg.icon->_xform_coords["Tile"]);
+                arg.icon->GetTransform ("Tile"));
   }
   else
   {
@@ -2658,7 +2646,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                  _icon_outline_texture->GetDeviceTexture (),
                  nux::Color(0xAAAAAAAA),
                  (1.0f - arg.backlight_intensity) * arg.alpha,
-                 arg.icon->_xform_coords["Tile"]);
+                 arg.icon->GetTransform ("Tile"));
     }
 
     if (arg.backlight_intensity > 0.0f)
@@ -2668,7 +2656,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                  _icon_bkg_texture->GetDeviceTexture (),
                  arg.icon->BackgroundColor (),
                  arg.backlight_intensity * arg.alpha,
-                 arg.icon->_xform_coords["Tile"]);
+                 arg.icon->GetTransform ("Tile"));
     }
     /* end tile draw */
   }
@@ -2679,7 +2667,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
               arg.icon->TextureForSize (_icon_image_size)->GetDeviceTexture (),
               nux::color::White,
               arg.alpha,
-              arg.icon->_xform_coords["Image"]);
+              arg.icon->GetTransform ("Image"));
 
   /* draw overlay shine */
   if (arg.backlight_intensity > 0.0f)
@@ -2689,7 +2677,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                _icon_shine_texture->GetDeviceTexture (),
                nux::color::White,
                arg.backlight_intensity * arg.alpha,
-               arg.icon->_xform_coords["Tile"]);
+               arg.icon->GetTransform ("Tile"));
   }
 
   /* draw glow */
@@ -2700,7 +2688,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
                arg.glow_intensity * arg.alpha,
-               arg.icon->_xform_coords["Glow"]);
+               arg.icon->GetTransform ("Glow"));
   }
   
   /* draw shimmer */
@@ -2721,7 +2709,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                _icon_glow_texture->GetDeviceTexture (),
                arg.icon->GlowColor (),
                fade_out * arg.alpha,
-               arg.icon->_xform_coords["Glow"]);
+               arg.icon->GetTransform ("Glow"));
 
     GfxContext.PopClippingRectangle();
   }
@@ -2738,7 +2726,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                _offscreen_progress_texture,
                nux::color::White,
                arg.alpha,
-               arg.icon->_xform_coords["Tile"]);
+               arg.icon->GetTransform ("Tile"));
   }
   
   if (arg.icon->Emblem ())
@@ -2748,7 +2736,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                arg.icon->Emblem ()->GetDeviceTexture (),
                nux::color::White,
                arg.alpha,
-               arg.icon->_xform_coords["Emblem"]);
+               arg.icon->GetTransform ("Emblem"));
   }
 
   /* draw indicators */
@@ -2774,7 +2762,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
                     nux::Color (0xFFFFFFFF),
                     arg.alpha,
-                    arg.icon->_xform_coords["Tile"]);
+                    arg.icon->GetTransform ("Tile"));
       }
       else
       {
@@ -2788,7 +2776,7 @@ void Launcher::DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &
                     _superkey_labels[index]->GetDeviceTexture (),
                     nux::Color (0xFFFFFFFF),
                     arg.alpha,
-                    arg.icon->_xform_coords["Tile"]);
+                    arg.icon->GetTransform ("Tile"));
       }
     }
   }
@@ -3490,8 +3478,8 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
     nux::Point2 screen_coord [4];
     for (int i = 0; i < 4; i++)
     {
-      screen_coord [i].x = (*it)->_xform_coords["HitArea"] [i].x;
-      screen_coord [i].y = (*it)->_xform_coords["HitArea"] [i].y;
+      screen_coord [i].x = (*it)->GetTransform ("HitArea") [i].x;
+      screen_coord [i].y = (*it)->GetTransform ("HitArea") [i].y;
     }
     inside = PointInside2DPolygon (screen_coord, 4, mouse_position, 1);
     if (inside)
@@ -3530,7 +3518,7 @@ void Launcher::SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatr
   v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
 
 
-  nux::Vector4* vectors = icon->_xform_coords[name];
+  std::vector<nux::Vector4> &vectors = icon->GetTransform (name);
 
   vectors[0].x = v0.x;
   vectors[0].y = v0.y;
@@ -3579,7 +3567,7 @@ void Launcher::SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProject
   v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
 
 
-  nux::Vector4* vectors = icon->_xform_coords[name];
+  std::vector<nux::Vector4> &vectors = icon->GetTransform (name);
 
   vectors[0].x = v0.x;
   vectors[0].y = v0.y;

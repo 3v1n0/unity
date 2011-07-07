@@ -949,16 +949,13 @@ LauncherIcon::SetEmblemIconName (const char *name)
   SetEmblem (emblem);
 }
 
-nux::Vector4
+std::vector<nux::Vector4> &
 LauncherIcon::GetTransform (std::string name)
 {
-  return transform_map[name];
-}
+  if (transform_map.find (name) == transform_map.end ())
+    transform_map[name] = std::vector<nux::Vector4> (4);
 
-void
-LauncherIcon::SetTransform (std::string name, nux::Vector4 transform)
-{
-  transform_map[name] = transform;
+  return transform_map[name];
 }
 
 void 

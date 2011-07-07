@@ -350,7 +350,7 @@ private:
                    nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                    nux::Color bkg_color,
                    float alpha,
-                   nux::Vector4 xform_coords[]);
+                   std::vector<nux::Vector4> &xform_coords);
                    
   void RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
   void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, float progress_fill, float bias);
