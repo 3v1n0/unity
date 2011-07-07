@@ -145,6 +145,10 @@ public:
     void SendDndLeave () { OnDndLeave (); }
     
     void SetIconType (IconType type);
+
+    nux::Vector4 GetTransform (std::string name);
+
+    void SetTransform (std::string name, nux::Vector4 transform);
     
     static void SetSkipTooltipDelay (gboolean skip_tooltip_delay);
 
@@ -298,6 +302,7 @@ private:
     struct timespec  _quirk_times[QUIRK_LAST];
     
     std::list<LauncherEntryRemote *> _entry_list;
+    std::map<std::string, nux::Vector4> transform_map;
     
 };
 

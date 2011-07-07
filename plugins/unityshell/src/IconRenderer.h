@@ -25,17 +25,24 @@
 #include <Nux/View.h>
 
 #include "AbstractLauncherIcon.h"
+#include "AbstractIconRenderer.h"
 
 namespace unity {
 namespace ui {
 
-class IconRenderer
+class IconRenderer : public AbstractIconRenderer
 {
 public:
   IconRenderer();
   virtual ~IconRenderer();
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
+  void PreprocessIcons (std::list<Launcher::RenderArg> &args, nux::Geometry target_window);
+  
+  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo);
+
+  nux::BaseTexture* RenderCharToTexture (const char label,
+                                         int        width,
+                                         int        height);                              
 
 protected:
   void RenderElement (nux::GraphicsEngine& GfxContext,
@@ -44,6 +51,38 @@ protected:
                       nux::Color bkg_color,
                       float alpha,
                       nux::Vector4 xform_coords[]);
+  
+  void RenderIndicators (nux::GraphicsEngine& GfxContext,
+                         RenderArg const &arg,
+                         int running,
+                         int active,
+                         float alpha,
+                         nux::Geometry& geo);
+
+  void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, 
+                                nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, 
+                                float progress_fill, 
+                                float bias);
+
+private:
+  void GenerateTextures ();
+
+  nux::BaseTexture* _icon_bkg_texture;
+  nux::BaseTexture* _icon_shine_texture;
+  nux::BaseTexture* _icon_outline_texture;
+  nux::BaseTexture* _icon_glow_texture;
+  nux::BaseTexture* _icon_glow_hl_texture;
+  nux::BaseTexture* _progress_bar_trough;
+  nux::BaseTexture* _progress_bar_fill;
+  
+  nux::BaseTexture* _pip_ltr;
+  nux::BaseTexture* _pip_rtl;
+  nux::BaseTexture* _arrow_ltr;
+  nux::BaseTexture* _arrow_rtl;
+  nux::BaseTexture* _arrow_empty_ltr;
+  nux::BaseTexture* _arrow_empty_rtl;
+
+  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
 };
 
 }

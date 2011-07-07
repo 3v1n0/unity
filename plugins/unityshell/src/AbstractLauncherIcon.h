@@ -82,6 +82,10 @@ public:
 
     virtual nux::Point3 GetCenter () = 0;
 
+    virtual nux::Vector4 GetTransform (std::string name) = 0;
+
+    virtual void SetTransform (std::string name, nux::Vector4 transform) = 0;
+
     virtual void Activate () = 0;
     
     virtual void OpenInstance () = 0;
