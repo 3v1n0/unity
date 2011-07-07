@@ -74,10 +74,11 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 {
   std::list<DbusmenuMenuitem*> result;
   DbusmenuMenuitem* menu_item;
+  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
 
   // "Keep in launcher" item
   if (DevicesSettings::GetDefault().GetDevicesOption() == DevicesSettings::ONLY_MOUNTED
-      && !g_volume_should_automount(volume_))
+      && drive && !g_drive_is_media_removable (drive))
   {
     menu_item = dbusmenu_menuitem_new();
 
@@ -121,8 +122,6 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   }
 
   // "Safely Remove" item (FIXME: Should it be "Safely remove"?)
-  glib::Object<GDrive> drive(g_volume_get_drive(volume_));
-
   if (drive && g_drive_can_stop(drive))
   {
     menu_item = dbusmenu_menuitem_new();
