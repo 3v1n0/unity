@@ -78,7 +78,7 @@ public:
     
     virtual void SetSortPriority (int priority) = 0;    
 
-    virtual gboolean OpenQuicklist (bool default_to_first_item = false) = 0;
+    virtual bool OpenQuicklist (bool default_to_first_item = false) = 0;
 
     virtual void        SetCenter (nux::Point3 center) = 0;
 

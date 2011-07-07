@@ -76,7 +76,7 @@ public:
     
     void HideTooltip ();
     
-    gboolean OpenQuicklist (bool default_to_first_item = false);
+    bool OpenQuicklist (bool default_to_first_item = false);
 
     void        SetCenter (nux::Point3 center);
     

@@ -531,7 +531,7 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
+bool LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
    if (_tooltip_delay_handle)
     g_source_remove (_tooltip_delay_handle);
