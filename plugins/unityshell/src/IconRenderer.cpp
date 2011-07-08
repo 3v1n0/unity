@@ -160,6 +160,7 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
 IconRenderer::IconRenderer ()
 {
   textures_created = false;
+  SetupShaders ();
 }
 
 IconRenderer::~IconRenderer ()
@@ -384,25 +385,25 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const 
   if (arg.keyboard_nav_hl)
   {
     RenderElement (GfxContext,
-                arg,
-                _icon_glow_hl_texture->GetDeviceTexture (),
-                nux::Color (0xFFFFFFFF),
-                arg.alpha,
-                arg.icon->GetTransform ("Glow"));
+                   arg,
+                   _icon_glow_hl_texture->GetDeviceTexture (),
+                   nux::Color (0xFFFFFFFF),
+                   arg.alpha,
+                   arg.icon->GetTransform ("Glow"));
 
     RenderElement (GfxContext,
-                arg,
-                _icon_outline_texture->GetDeviceTexture (),
-                nux::Color(0xFFFFFFFF),
-                0.95f * arg.alpha,
-                arg.icon->GetTransform ("Tile"));
+                   arg,
+                   _icon_outline_texture->GetDeviceTexture (),
+                   nux::Color(0xFFFFFFFF),
+                   0.95f * arg.alpha,
+                   arg.icon->GetTransform ("Tile"));
 
     RenderElement (GfxContext,
-                arg,
-                _icon_bkg_texture->GetDeviceTexture (),
-                nux::Color(0xFFFFFFFF),
-                0.9f * arg.alpha,
-                arg.icon->GetTransform ("Tile"));
+                   arg,
+                   _icon_bkg_texture->GetDeviceTexture (),
+                   nux::Color(0xFFFFFFFF),
+                   0.9f * arg.alpha,
+                   arg.icon->GetTransform ("Tile"));
   }
   else
   {
@@ -410,53 +411,53 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const 
     if (arg.backlight_intensity < 1.0f)
     {
       RenderElement(GfxContext,
-                 arg,
-                 _icon_outline_texture->GetDeviceTexture (),
-                 nux::Color(0xAAAAAAAA),
-                 (1.0f - arg.backlight_intensity) * arg.alpha,
-                 arg.icon->GetTransform ("Tile"));
+                    arg,
+                    _icon_outline_texture->GetDeviceTexture (),
+                    nux::Color(0xAAAAAAAA),
+                    (1.0f - arg.backlight_intensity) * arg.alpha,
+                    arg.icon->GetTransform ("Tile"));
     }
 
     if (arg.backlight_intensity > 0.0f)
     {
       RenderElement(GfxContext,
-                 arg,
-                 _icon_bkg_texture->GetDeviceTexture (),
-                 arg.icon->BackgroundColor (),
-                 arg.backlight_intensity * arg.alpha,
-                 arg.icon->GetTransform ("Tile"));
+                    arg,
+                    _icon_bkg_texture->GetDeviceTexture (),
+                    arg.icon->BackgroundColor (),
+                    arg.backlight_intensity * arg.alpha,
+                    arg.icon->GetTransform ("Tile"));
     }
     /* end tile draw */
   }
 
   /* draw icon */
   RenderElement (GfxContext,
-              arg,
-              arg.icon->TextureForSize (image_size)->GetDeviceTexture (),
-              nux::color::White,
-              arg.alpha,
-              arg.icon->GetTransform ("Image"));
+                 arg,
+                 arg.icon->TextureForSize (image_size)->GetDeviceTexture (),
+                 nux::color::White,
+                 arg.alpha,
+                 arg.icon->GetTransform ("Image"));
 
   /* draw overlay shine */
   if (arg.backlight_intensity > 0.0f)
   {
     RenderElement(GfxContext,
-               arg,
-               _icon_shine_texture->GetDeviceTexture (),
-               nux::color::White,
-               arg.backlight_intensity * arg.alpha,
-               arg.icon->GetTransform ("Tile"));
+                  arg,
+                  _icon_shine_texture->GetDeviceTexture (),
+                  nux::color::White,
+                  arg.backlight_intensity * arg.alpha,
+                  arg.icon->GetTransform ("Tile"));
   }
 
   /* draw glow */
   if (arg.glow_intensity > 0.0f)
   {
     RenderElement(GfxContext,
-               arg,
-               _icon_glow_texture->GetDeviceTexture (),
-               arg.icon->GlowColor (),
-               arg.glow_intensity * arg.alpha,
-               arg.icon->GetTransform ("Glow"));
+                  arg,
+                  _icon_glow_texture->GetDeviceTexture (),
+                  arg.icon->GlowColor (),
+                  arg.glow_intensity * arg.alpha,
+                  arg.icon->GetTransform ("Glow"));
   }
   
   /* draw shimmer */
@@ -472,11 +473,11 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const 
     float fade_out = 1.0f - CLAMP (((x2 - x1) - geo.width) / (geo.width * (shimmer_constant - 1.0f)), 0.0f, 1.0f);
 
     RenderElement(GfxContext,
-               arg,
-               _icon_glow_texture->GetDeviceTexture (),
-               arg.icon->GlowColor (),
-               fade_out * arg.alpha,
-               arg.icon->GetTransform ("Glow"));
+                  arg,
+                  _icon_glow_texture->GetDeviceTexture (),
+                  arg.icon->GlowColor (),
+                  fade_out * arg.alpha,
+                  arg.icon->GetTransform ("Glow"));
 
     GfxContext.PopClippingRectangle();
   }
@@ -489,21 +490,21 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const 
     RenderProgressToTexture (GfxContext, _offscreen_progress_texture, arg.progress, arg.progress_bias);
     
     RenderElement(GfxContext,
-               arg,
-               _offscreen_progress_texture,
-               nux::color::White,
-               arg.alpha,
-               arg.icon->GetTransform ("Tile"));
+                  arg,
+                  _offscreen_progress_texture,
+                  nux::color::White,
+                  arg.alpha,
+                  arg.icon->GetTransform ("Tile"));
   }
   
   if (arg.icon->Emblem ())
   {
     RenderElement(GfxContext,
-               arg,
-               arg.icon->Emblem ()->GetDeviceTexture (),
-               nux::color::White,
-               arg.alpha,
-               arg.icon->GetTransform ("Emblem"));
+                  arg,
+                  arg.icon->Emblem ()->GetDeviceTexture (),
+                  nux::color::White,
+                  arg.alpha,
+                  arg.icon->GetTransform ("Emblem"));
   }
 
   /* draw indicators */

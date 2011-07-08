@@ -20,6 +20,9 @@
 #ifndef ABSTRACTICONRENDERER_H
 #define ABSTRACTICONRENDERER_H
 
+#include <Nux/Nux.h>
+#include <boost/shared_ptr.hpp>
+
 #include "AbstractLauncherIcon.h"
 
 namespace unity {
@@ -56,7 +59,9 @@ public:
 class AbstractIconRenderer
 {
 public:
-  virtual ~AbstractIconRenderer();
+  typedef boost::shared_ptr<AbstractIconRenderer> Ptr;
+
+  virtual ~AbstractIconRenderer() = 0;
 
   virtual void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window) = 0;
 
