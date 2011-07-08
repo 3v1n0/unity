@@ -334,7 +334,7 @@ class SignalManager
 {
 public:
   SignalManager();
-  ~SignalManager();
+  virtual ~SignalManager();
   
   void Add(SignalBase* signal);
   

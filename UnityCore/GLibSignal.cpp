@@ -45,7 +45,8 @@ SignalManager::SignalManager()
 {}
 
 SignalManager::~SignalManager()
-{}
+{
+}
 
 void SignalManager::Add(SignalBase* signal)
 {

@@ -381,7 +381,15 @@ TEST_F(TestGLibSignals, TestManagerConnection)
 
 TEST_F(TestGLibSignals, TestManagerAutoDisconnect)
 {
+  {
+    SignalManager manager;
+    manager.Add(new Signal<void>(test_signals_,
+      "signal0",
+      sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+  }
 
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
 }
 
 }
