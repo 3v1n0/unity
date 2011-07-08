@@ -164,6 +164,7 @@ TEST_F(TestGLibSignals, TestSignal0)
   g_signal_emit_by_name(test_signals_, "signal0");
   
   EXPECT_TRUE(signal0_received_);
+  EXPECT_EQ(arg1_, "");
 }
 
 TEST_F(TestGLibSignals, TestSignal1)
@@ -243,6 +244,7 @@ TEST_F(TestGLibSignals, TestSignal5)
   EXPECT_EQ(arg6_, 0);
 }
 
+// This Test test's accumulation as well
 TEST_F(TestGLibSignals, TestSignal6)
 {
   Signal<bool, const char*, int, float, double, gboolean, char> signal;
@@ -264,6 +266,7 @@ TEST_F(TestGLibSignals, TestSignal6)
   EXPECT_EQ(ret, TRUE);
 }
 
+// This Test test's accumulation as well
 TEST_F(TestGLibSignals, TestSignal7)
 {
   Signal<bool, const char*, int, float, double, gboolean, char, guint> signal;
@@ -287,37 +290,35 @@ TEST_F(TestGLibSignals, TestSignal7)
 
 TEST_F(TestGLibSignals, TestDisconnection)
 {
+  Signal<void> signal;
+  signal.Connect(test_signals_, "signal0",
+                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  signal.Disconnect();
 
+  g_signal_emit_by_name(test_signals_, "signal0");
+  
+  EXPECT_FALSE(signal0_received_);
 }
 
 TEST_F(TestGLibSignals, TestAutoDisconnection)
 {
+  {
+    Signal<void> signal;
+    signal.Connect(test_signals_, "signal0",
+                   sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  }
 
+  g_signal_emit_by_name(test_signals_, "signal0");
+  
+  EXPECT_FALSE(signal0_received_);
 }
 
-TEST_F(TestGLibSignals, TestAccumulation)
+TEST_F(TestGLibSignals, TestCleanDestruction)
 {
-
+  Signal<void> signal;
+  signal.Connect(test_signals_, "signal0",
+                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  g_object_unref (test_signals_);
 }
-
-/*
-TEST(TestIndicatorEntry, TestConstruction) {
-
-  indicator::Entry entry("id", "label", true, true,
-                         1, "some icon", false, true);
-
-  EXPECT_EQ(entry.id(), "id");
-  EXPECT_EQ(entry.label(), "label");
-  EXPECT_TRUE(entry.label_sensitive());
-  EXPECT_TRUE(entry.label_visible());
-  EXPECT_FALSE(entry.image_sensitive());
-  EXPECT_TRUE(entry.image_visible());
-  EXPECT_FALSE(entry.active());
-  EXPECT_FALSE(entry.show_now());
-  EXPECT_FALSE(entry.IsUnused());
-  EXPECT_EQ(entry.image_type(), 1);
-  EXPECT_EQ(entry.image_data(), "some icon");
-}
-*/
 
 }
