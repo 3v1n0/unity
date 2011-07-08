@@ -20,6 +20,7 @@
 #include <math.h>
 
 #include <Nux/Nux.h>
+#include <Nux/WindowCompositor.h>
 #include <NuxGraphics/NuxGraphics.h>
 #include <NuxGraphics/GpuDevice.h>
 #include <NuxGraphics/GLTextureResourceManager.h>
@@ -780,7 +781,75 @@ void IconRenderer::RenderIndicators (nux::GraphicsEngine& GfxContext,
                                      float alpha,
                                      nux::Geometry& geo)
 {
-  
+  int markerCenter = (int) arg.render_center.y;
+  markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * icon_size);
+
+  if (running > 0)
+  {
+    nux::TexCoordXForm texxform;
+
+    nux::Color color = nux::color::LightGrey;
+
+    if (arg.running_colored)
+      color = nux::color::SkyBlue;
+
+    color = color * alpha;
+
+    nux::BaseTexture *texture;
+
+    std::vector<int> markers;
+
+    /*if (!arg.running_on_viewport)
+    {
+      markers.push_back (markerCenter);
+      texture = _arrow_empty_ltr;
+    }
+    else*/ if (running == 1)
+    {
+      markers.push_back (markerCenter);
+      texture = _arrow_ltr;
+    }
+    else if (running == 2)
+    {
+      markers.push_back (markerCenter - 2);
+      markers.push_back (markerCenter + 2);
+      texture = _pip_ltr;
+    }
+    else
+    {
+      markers.push_back (markerCenter - 4);
+      markers.push_back (markerCenter);
+      markers.push_back (markerCenter + 4);
+      texture = _pip_ltr;
+    }
+
+    std::vector<int>::iterator it;
+    for (it = markers.begin (); it != markers.end (); it++)
+    {
+      int center = *it;
+      GfxContext.QRP_1Tex (geo.x,
+                           center - (texture->GetHeight () / 2),
+                           (float) texture->GetWidth(),
+                           (float) texture->GetHeight(),
+                           texture->GetDeviceTexture(),
+                           texxform,
+                           color);
+    }
+  }
+
+  if (active > 0)
+  {
+    nux::TexCoordXForm texxform;
+
+    nux::Color color = nux::color::LightGrey * alpha;
+    GfxContext.QRP_1Tex ((geo.x + geo.width) - _arrow_rtl->GetWidth (),
+                              markerCenter - (_arrow_rtl->GetHeight () / 2),
+                              (float) _arrow_rtl->GetWidth(),
+                              (float) _arrow_rtl->GetHeight(),
+                              _arrow_rtl->GetDeviceTexture(),
+                              texxform,
+                              color);
+  }
 }
 
 void IconRenderer::RenderProgressToTexture (nux::GraphicsEngine& GfxContext, 
@@ -788,7 +857,69 @@ void IconRenderer::RenderProgressToTexture (nux::GraphicsEngine& GfxContext,
                                             float progress_fill, 
                                             float bias)
 {
+  int width = texture->GetWidth ();
+  int height = texture->GetHeight ();
   
+  int progress_width =  icon_size;
+  int progress_height = _progress_bar_trough->GetHeight ();
+
+  int fill_width = image_size - (icon_size - image_size);
+  int fill_height = _progress_bar_fill->GetHeight ();
+  
+  int fill_offset = (progress_width - fill_width) / 2;
+
+  /* We need to perform a barn doors effect to acheive the slide in and out */
+
+  int left_edge = width / 2 - progress_width / 2;
+  int right_edge = width / 2 + progress_width / 2;
+  
+  if (bias < 0.0f)
+  {
+    // pulls the right edge in
+    right_edge -= (int) (-bias * (float) progress_width);
+  }
+  else if (bias > 0.0f)
+  {
+    // pulls the left edge in
+    left_edge += (int) (bias * progress_width);
+  }
+  
+  int fill_y = (height - fill_height) / 2;
+  int progress_y = (height - progress_height) / 2;
+  int half_size = (right_edge - left_edge) / 2;
+  
+  SetOffscreenRenderTarget (texture);
+  
+  // FIXME
+  glClear (GL_COLOR_BUFFER_BIT);
+  nux::TexCoordXForm texxform;
+
+  fill_width *= progress_fill;
+
+  // left door
+  GfxContext.PushClippingRectangle(nux::Geometry (left_edge, 0, half_size, height));
+  GfxContext.QRP_1Tex (left_edge, progress_y, progress_width, progress_height,
+                       _progress_bar_trough->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.QRP_1Tex (left_edge + fill_offset, fill_y, fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
+  GfxContext.PopClippingRectangle ();
+
+  // right door
+  GfxContext.PushClippingRectangle(nux::Geometry (left_edge + half_size, 0, half_size, height));
+  GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
+                      progress_width, progress_height,
+                      _progress_bar_trough->GetDeviceTexture (), texxform,
+                      nux::color::White);
+  GfxContext.QRP_1Tex (right_edge - progress_width + fill_offset, fill_y,
+                       fill_width, fill_height,
+                       _progress_bar_fill->GetDeviceTexture (), texxform,
+                       nux::color::White);
+
+  GfxContext.PopClippingRectangle();
+
+  RestoreSystemRenderTarget ();
 }
 
 void IconRenderer::SetupShaders ()
@@ -953,6 +1084,28 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
     nux::Matrix4::SCALE(2.0f*x_cs/ViewportWidth, -2.0f*y_cs/ViewportHeight, -2.0f * 3 * y_cs/ViewportHeight /* or -2.0f * x_cs/ViewportWidth*/ );
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
+}
+
+void 
+IconRenderer::SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture)
+{
+  int width = texture->GetWidth ();
+  int height = texture->GetHeight ();
+  
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->FormatFrameBufferObject (width, height, nux::BITFMT_R8G8B8A8);
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->SetColorRenderTargetSurface (0, texture->GetSurfaceLevel (0));
+  nux::GetGraphicsDisplay ()->GetGpuDevice ()->ActivateFrameBuffer ();
+
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetContext   (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->SetViewport  (0, 0, width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->Push2DWindow (width, height);
+  nux::GetGraphicsDisplay ()->GetGraphicsEngine ()->EmptyClippingRegion();
+}
+
+void 
+IconRenderer::RestoreSystemRenderTarget ()
+{
+  nux::GetWindowCompositor ().RestoreRenderingSurface ();
 }
 
 }

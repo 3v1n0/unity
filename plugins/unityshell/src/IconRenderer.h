@@ -44,11 +44,9 @@ public:
 
   void SetTargetSize (int tile_size, int image_size, int spacing);
 
-  nux::BaseTexture* RenderCharToTexture (const char label,
-                                         int        width,
-                                         int        height);                              
-
 protected:
+  nux::BaseTexture* RenderCharToTexture (const char label, int width, int height);                              
+
   void RenderElement (nux::GraphicsEngine& GfxContext,
                       RenderArg const &arg,
                       nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
@@ -80,6 +78,11 @@ protected:
                                          float NearClipPlane,
                                          float FarClipPlane,
                                          float Fovy);
+
+  void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+
+  void RestoreSystemRenderTarget ();
+
 private:
   void SetupShaders ();
 
