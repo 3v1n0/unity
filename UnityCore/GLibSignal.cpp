@@ -46,7 +46,7 @@ GObject* SignalBase::get_object() const
   return object_;
 }
 
-std::string SignalBase::get_name() const
+std::string const& SignalBase::get_name() const
 {
   return name_;
 }

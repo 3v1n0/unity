@@ -40,7 +40,7 @@ public:
   void Disconnect();
 
   GObject* get_object() const;
-  std::string get_name() const;
+  std::string const& get_name() const;
 
 protected:
   GObject* object_;
