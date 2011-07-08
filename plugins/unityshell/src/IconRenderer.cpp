@@ -953,6 +953,11 @@ void IconRenderer::DestroyTextures ()
   _pip_rtl->UnReference ();
   _arrow_rtl->UnReference ();
   _arrow_empty_rtl->UnReference ();
+
+  std::map<char, nux::BaseTexture*>::iterator it;
+  for (it = label_map.begin (); it != label_map.end (); it++)
+    (*it).second->UnReference ();
+  label_map.clear ();
 }
 
 void IconRenderer::GenerateTextures ()
