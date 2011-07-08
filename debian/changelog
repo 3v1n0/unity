@@ -1,4 +1,4 @@
-unity (4.2.0-0ubuntu2) UNRELEASED; urgency=low
+unity (4.2.0-0ubuntu2) oneiric; urgency=low
 
   * Upstream fixes:
     - don't leak in the indicator code (lp: #806485)
@@ -6,8 +6,9 @@ unity (4.2.0-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - drop libgnomeui-dev build-depends, it doesn't seem required
     - updated libindicator requirement
+  * services/CMakeLists.txt: don't use Werror to workaround new gcc being picky
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 08 Jul 2011 15:24:57 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 08 Jul 2011 16:36:53 +0200
 
 unity (4.2.0-0ubuntu1) oneiric; urgency=low
 
