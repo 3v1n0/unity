@@ -51,7 +51,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_VOID__STRING_INT,
-                  G_TYPE_NONE, 1,
+                  G_TYPE_NONE, 2,
                   G_TYPE_STRING, G_TYPE_INT);
 
   _service_signals[SIGNAL_3] =
@@ -61,7 +61,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_VOID__STRING_INT_FLOAT,
-                  G_TYPE_NONE, 1,
+                  G_TYPE_NONE, 3,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT);
 
   _service_signals[SIGNAL_4] =
@@ -71,7 +71,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_VOID__STRING_INT_FLOAT_DOUBLE,
-                  G_TYPE_NONE, 1,
+                  G_TYPE_NONE, 4,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT, G_TYPE_DOUBLE);
 
   _service_signals[SIGNAL_5] =
@@ -81,7 +81,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_VOID__STRING_INT_FLOAT_DOUBLE_BOOLEAN,
-                  G_TYPE_NONE, 1,
+                  G_TYPE_NONE, 5,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                   G_TYPE_DOUBLE, G_TYPE_BOOLEAN);
 
@@ -92,7 +92,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR,
-                  G_TYPE_BOOLEAN, 1,
+                  G_TYPE_BOOLEAN, 6,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                   G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR);
 
@@ -103,7 +103,7 @@ test_signals_class_init (TestSignalsClass *klass)
                   0,
                   NULL, NULL,
                   test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR_UINT,
-                  G_TYPE_BOOLEAN, 1,
+                  G_TYPE_BOOLEAN, 7,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                   G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR, G_TYPE_UINT);
 }
