@@ -330,4 +330,19 @@ TEST_F(TestGLibSignals, TestManagerConstruction)
                                sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
 }
 
+TEST_F(TestGLibSignals, TestManagerAddition)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestManagerConnection)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestManagerAutoDisconnect)
+{
+
+}
+
 }

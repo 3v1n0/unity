@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 #include <glib-object.h>
 #include <sigc++/sigc++.h>
 
@@ -31,6 +32,8 @@ namespace glib {
 class SignalBase
 {
 public:
+  typedef boost::shared_ptr<SignalBase> Ptr;
+
   SignalBase();
   virtual ~SignalBase();
 
@@ -230,7 +233,12 @@ template <typename R, typename T1 = nil, typename T2 = nil,
 class Signal : public Signal7<R, T1, T2, T3, T4, T5, T6, T7>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6, T7> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R>
@@ -239,34 +247,46 @@ class Signal<R, nil, nil, nil, nil, nil, nil, nil> : public Signal0<R>
 public:
   typedef sigc::slot<R> SignalCallback;
 
-  inline Signal() {}
-  inline Signal(void* object,
-                std::string signal_name,
-                SignalCallback callback)
-  {
-    Connect (object, signal_name, callback);
-  }
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1>
 class Signal<R, T1, nil, nil, nil, nil, nil, nil> : public Signal1<R, T1>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1, typename T2>
 class Signal<R, T1, T2, nil, nil, nil, nil, nil> : public Signal2<R, T1, T2>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1, typename T2, typename T3>
 class Signal<R, T1, T2, T3, nil, nil, nil, nil> : public Signal3<R, T1, T2 ,T3>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2, T3> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1, typename T2, typename T3, typename T4>
@@ -274,7 +294,12 @@ class Signal<R, T1, T2, T3, T4, nil, nil, nil>
   : public Signal4<R, T1, T2 ,T3, T4>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2, T3, T4> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1, typename T2, typename T3, typename T4,
@@ -283,7 +308,12 @@ class Signal<R, T1, T2, T3, T4, T5, nil, nil>
   : public Signal5<R, T1, T2 ,T3, T4, T5>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2, T3, T4, T5> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 template <typename R, typename T1, typename T2, typename T3, typename T4,
@@ -292,7 +322,12 @@ class Signal<R, T1, T2, T3, T4, T5, T6, nil>
   : public Signal6<R, T1, T2 ,T3, T4, T5, T6>
 {
 public:
-  inline Signal() {}
+  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6> SignalCallback;
+
+  inline Signal();
+  inline Signal(void*          object,
+                std::string    signal_name,
+                SignalCallback callback);
 };
 
 class SignalManager
@@ -304,7 +339,7 @@ public:
   void Add(SignalBase* signal);
   
 private:
-  std::vector<SignalBase*> connections_;
+  std::vector<SignalBase::Ptr> connections_;
 };
 
 }

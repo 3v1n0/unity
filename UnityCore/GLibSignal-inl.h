@@ -198,6 +198,104 @@ R Signal7<R, T1, T2, T3, T4, T5, T6, T7>::Callback(GObject* object,
   return self->callback_ (data1, data2, data3, data4, data5, data6, data7);
 }
 
+template<typename R>
+Signal<R>::Signal()
+{}
+
+template<typename R>
+Signal<R>::Signal(void* object, std::string signal_name, SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1>
+Signal<R, T1>::Signal()
+{}
+
+template<typename R, typename T1>
+Signal<R, T1>::Signal(void* object, std::string signal_name, SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2>
+Signal<R, T1, T2>::Signal()
+{}
+
+template<typename R, typename T1, typename T2>
+Signal<R, T1, T2>::Signal(void*          object,
+                          std::string    signal_name,
+                          SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2, typename T3>
+Signal<R, T1, T2, T3>::Signal()
+{}
+
+template<typename R, typename T1, typename T2, typename T3>
+Signal<R, T1, T2, T3>::Signal(void*          object,
+                              std::string    signal_name,
+                              SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4>
+Signal<R, T1, T2, T3, T4>::Signal()
+{}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4>
+Signal<R, T1, T2, T3, T4>::Signal(void*          object,
+                                  std::string    signal_name,
+                                  SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5>
+Signal<R, T1, T2, T3, T4, T5>::Signal()
+{}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5>
+Signal<R, T1, T2, T3, T4, T5>::Signal(void*          object,
+                                      std::string    signal_name,
+                                      SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6>
+Signal<R, T1, T2, T3, T4, T5, T6>::Signal()
+{}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6>
+Signal<R, T1, T2, T3, T4, T5, T6>::Signal(void*          object,
+                                          std::string    signal_name,
+                                          SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6, typename T7>
+Signal<R, T1, T2, T3, T4, T5, T6, T7>::Signal()
+{}
+
+template<typename R, typename T1, typename T2, typename T3, typename T4,
+         typename T5, typename T6, typename T7>
+Signal<R, T1, T2, T3, T4, T5, T6, T7>::Signal(void*          object,
+                                              std::string    signal_name,
+                                              SignalCallback callback)
+{
+  Connect(object, signal_name, callback);
+}
+
 
 }
 }

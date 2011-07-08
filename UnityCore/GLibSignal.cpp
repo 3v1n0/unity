@@ -49,7 +49,8 @@ SignalManager::~SignalManager()
 
 void SignalManager::Add(SignalBase* signal)
 {
-  connections_.push_back (signal);
+  SignalBase::Ptr s(signal);
+  connections_.push_back(s);
 }
 
 }
