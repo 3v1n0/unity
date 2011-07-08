@@ -39,9 +39,13 @@ public:
 
   void Disconnect();
 
+  GObject* get_object() const;
+  std::string get_name() const;
+
 protected:
   GObject* object_;
   guint32 connection_id_;
+  std::string name_;
 };
 
 template <typename R>
@@ -333,13 +337,16 @@ public:
 class SignalManager
 {
 public:
+  typedef std::vector<SignalBase::Ptr> ConnectionVector;
+
   SignalManager();
   virtual ~SignalManager();
   
   void Add(SignalBase* signal);
+  void Disconnect(void* object, std::string const& signal_name);
   
 private:
-  std::vector<SignalBase::Ptr> connections_;
+  ConnectionVector connections_;
 };
 
 }

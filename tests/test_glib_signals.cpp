@@ -392,4 +392,17 @@ TEST_F(TestGLibSignals, TestManagerAutoDisconnect)
   EXPECT_FALSE(signal0_received_);
 }
 
+TEST_F(TestGLibSignals, TestManagerDisconnection)
+{
+  SignalManager manager;
+  
+  manager.Add(new Signal<void>(test_signals_,
+    "signal0",
+    sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+  manager.Disconnect(test_signals_, "signal0");
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
+}
+
 }

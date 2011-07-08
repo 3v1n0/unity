@@ -29,6 +29,7 @@ void Signal0<R>::Connect(void*              object,
                          SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK(Callback), this);
@@ -46,6 +47,7 @@ void Signal1<R, T>::Connect(void*              object,
                             SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -63,6 +65,7 @@ void Signal2<R, T1, T2>::Connect(void*              object,
                                  SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -83,6 +86,7 @@ void Signal3<R, T1, T2, T3>::Connect(void*              object,
                                      SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -104,6 +108,7 @@ void Signal4<R, T1, T2, T3, T4>::Connect(void*              object,
                                          SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -127,6 +132,7 @@ void Signal5<R, T1, T2, T3, T4, T5>::Connect(void*              object,
                                              SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -152,6 +158,7 @@ void Signal6<R, T1, T2, T3, T4, T5, T6>::Connect(void*              object,
                                                  SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -178,6 +185,7 @@ void Signal7<R, T1, T2, T3, T4, T5, T6, T7>::Connect(void*              object,
                                                      SignalCallback     callback)
 {
   object_ = static_cast<GObject*>(object);
+  name_ = signal_name;
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);

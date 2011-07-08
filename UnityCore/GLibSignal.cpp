@@ -41,6 +41,16 @@ void SignalBase::Disconnect()
   connection_id_ = 0;
 }
 
+GObject* SignalBase::get_object() const
+{
+  return object_;
+}
+
+std::string SignalBase::get_name() const
+{
+  return name_;
+}
+
 SignalManager::SignalManager()
 {}
 
@@ -52,6 +62,20 @@ void SignalManager::Add(SignalBase* signal)
 {
   SignalBase::Ptr s(signal);
   connections_.push_back(s);
+}
+
+void SignalManager::Disconnect(void* object, std::string const& signal_name)
+{
+  for (ConnectionVector::iterator it = connections_.begin();
+       it != connections_.end ();
+       ++it)
+  {
+    if ((*it)->get_object() == object && (*it)->get_name() == signal_name)
+    {
+      (*it)->Disconnect();
+      connections_.erase(it, it);
+    }
+  }
 }
 
 }
