@@ -226,7 +226,7 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg> &args, nux::Geometry ge
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
 
-    int icon_glow_size = icon_size + 14;
+    int icon_glow_size = image_size + 14;
     w = icon_glow_size;
     h = icon_glow_size;
     x = (*it).render_center.x - icon_glow_size/2.0f;
