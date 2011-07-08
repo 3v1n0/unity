@@ -278,6 +278,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
+                 test_glib_signals_utils_marshal.cpp
+                 test_glib_signals_utils_marshal.h
                  test_indicator_entry.cpp
                  test_main.cpp
                  test_timer.cpp

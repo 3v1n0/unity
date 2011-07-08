@@ -3,7 +3,9 @@
 
 #include "test_glib_signals_utils.h"
 
+using namespace std;
 using namespace unity;
+using namespace unity::glib;
 
 namespace {
 
@@ -34,13 +36,62 @@ protected:
 };
 
 
-TEST_F(TestGLibSignals, TestConstruction)
+TEST_F(TestGLibSignals, TestConstructions)
 {
-  glib::Signal<void, const char*> signal1;
+  SignalBase base;
+
+  Signal0<void> signal0;
+  Signal1<void, string> signal1;
+  Signal2<void, string, int> signal2;
+  Signal3<void, string, int, float> signal3;
+  Signal4<void, string, int, float, double> signal4;
+  Signal5<void, string, int, float, double, bool> signal5;
+  Signal6<bool, string, int, float, double, bool, char> signal6;
+  Signal7<bool, string, int, float, double, bool, char, unsigned int> signal7;
+
+  Signal<void> signal00;
+  Signal<void, string> signal01;
+  Signal<void, string, int> signal02;
+  Signal<void, string, int, float> signal03;
+  Signal<void, string, int, float, double> signal04;
+  Signal<void, string, int, float, double, bool> signal05;
+  Signal<bool, string, int, float, double, bool, char> signal06;
+  Signal<bool, string, int, float, double, bool, char, unsigned int> signal07;
+}
+
+TEST_F(TestGLibSignals, TestConnections)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestEmission)
+{
+  /*
   signal1.Connect(test_signals_, "signal-1",
                   sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
   g_signal_emit_by_name(test_signals_, "signal-1", "hello");
   EXPECT_TRUE(signal1_emitted_);
+  */
+}
+
+TEST_F(TestGLibSignals, TestEmissionAfter)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestDisconnection)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestAutoDisconnection)
+{
+
+}
+
+TEST_F(TestGLibSignals, TestAccumulation)
+{
+
 }
 
 /*

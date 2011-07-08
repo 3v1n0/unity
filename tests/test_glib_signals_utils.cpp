@@ -1,4 +1,5 @@
 #include "test_glib_signals_utils.h"
+#include "test_glib_signals_utils_marshal.h"
 
 enum
 {
@@ -25,14 +26,86 @@ test_signals_class_init (TestSignalsClass *klass)
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
 
   /* Signals */
+  _service_signals[SIGNAL_0] =
+    g_signal_new ("signal0",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__VOID,
+                  G_TYPE_NONE, 0);
+
   _service_signals[SIGNAL_1] =
-    g_signal_new ("signal-1",
+    g_signal_new ("signal1",
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
                   NULL, NULL,
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
+
+  _service_signals[SIGNAL_2] =
+    g_signal_new ("signal2",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_VOID__STRING_INT,
+                  G_TYPE_NONE, 1,
+                  G_TYPE_STRING, G_TYPE_INT);
+
+  _service_signals[SIGNAL_3] =
+    g_signal_new ("signal3",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_VOID__STRING_INT_FLOAT,
+                  G_TYPE_NONE, 1,
+                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT);
+
+  _service_signals[SIGNAL_4] =
+    g_signal_new ("signal4",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_VOID__STRING_INT_FLOAT_DOUBLE,
+                  G_TYPE_NONE, 1,
+                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT, G_TYPE_DOUBLE);
+
+  _service_signals[SIGNAL_5] =
+    g_signal_new ("signal5",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_VOID__STRING_INT_FLOAT_DOUBLE_BOOLEAN,
+                  G_TYPE_NONE, 1,
+                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
+                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN);
+
+  _service_signals[SIGNAL_6] =
+    g_signal_new ("signal6",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR,
+                  G_TYPE_BOOLEAN, 1,
+                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
+                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR);
+
+  _service_signals[SIGNAL_7] =
+    g_signal_new ("signal7",
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL,
+                  test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR_UINT,
+                  G_TYPE_BOOLEAN, 1,
+                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
+                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR, G_TYPE_UINT);
 }
 
 static void
