@@ -41,6 +41,17 @@ void SignalBase::Disconnect()
   connection_id_ = 0;
 }
 
+SignalManager::SignalManager()
+{}
+
+SignalManager::~SignalManager()
+{}
+
+void SignalManager::Add(SignalBase* signal)
+{
+  connections_.push_back (signal);
+}
+
 }
 }
 

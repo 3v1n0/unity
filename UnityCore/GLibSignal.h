@@ -21,6 +21,7 @@
 #define UNITY_GLIB_SIGNAL_H
 
 #include <string>
+#include <vector>
 #include <glib-object.h>
 #include <sigc++/sigc++.h>
 
@@ -236,7 +237,15 @@ template <typename R>
 class Signal<R, nil, nil, nil, nil, nil, nil, nil> : public Signal0<R>
 {
 public:
+  typedef sigc::slot<R> SignalCallback;
+
   inline Signal() {}
+  inline Signal(void* object,
+                std::string signal_name,
+                SignalCallback callback)
+  {
+    Connect (object, signal_name, callback);
+  }
 };
 
 template <typename R, typename T1>
@@ -284,6 +293,18 @@ class Signal<R, T1, T2, T3, T4, T5, T6, nil>
 {
 public:
   inline Signal() {}
+};
+
+class SignalManager
+{
+public:
+  SignalManager();
+  ~SignalManager();
+  
+  void Add(SignalBase* signal);
+  
+private:
+  std::vector<SignalBase*> connections_;
 };
 
 }

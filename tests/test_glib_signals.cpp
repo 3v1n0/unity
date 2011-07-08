@@ -321,4 +321,13 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
   g_object_unref (test_signals_);
 }
 
+TEST_F(TestGLibSignals, TestManagerConstruction)
+{
+  SignalManager manager;
+
+  manager.Add(new Signal<void>(test_signals_,
+                               "signal0",
+                               sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+}
+
 }
