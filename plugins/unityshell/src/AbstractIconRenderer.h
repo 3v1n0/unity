@@ -54,6 +54,7 @@ public:
   bool          keyboard_nav_hl;
   bool          draw_shortcut;
   int           window_indicators;
+  char          shortcut_label;
 };
 
 class AbstractIconRenderer

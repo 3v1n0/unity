@@ -30,8 +30,6 @@
 namespace unity {
 namespace ui {
 
-#define MAX_SHORTCUT_LABELS 10
-
 class IconRenderer : public AbstractIconRenderer
 {
 public:
@@ -111,12 +109,12 @@ private:
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
 
-  nux::BaseTexture* _superkey_labels[MAX_SHORTCUT_LABELS];
-
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
+
+  std::map<char, nux::BaseTexture*> label_map;
 };
 
 }

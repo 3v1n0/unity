@@ -516,37 +516,19 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const 
                     geo);
 
   /* draw superkey-shortcut label */ 
-  if (arg.draw_shortcut)
+  if (arg.draw_shortcut && arg.shortcut_label)
   {
-    guint64 shortcut = arg.icon->GetShortcut ();
+    char shortcut = (char) arg.shortcut_label;
 
-    if (shortcut > 32)
-    {
-      if (!g_ascii_isdigit ((gchar) shortcut))
-      {
-        /* deal with dynamic labels for places, which can be set via the locale */
-        RenderElement (GfxContext,
+    if (label_map.find (shortcut) == label_map.end ())
+      label_map[shortcut] = RenderCharToTexture (shortcut, icon_size, icon_size);
+
+    RenderElement (GfxContext,
                     arg,
-                    arg.icon->GetSuperkeyLabel ()->GetDeviceTexture (),
+                    label_map[shortcut]->GetDeviceTexture (),
                     nux::Color (0xFFFFFFFF),
                     arg.alpha,
                     arg.icon->GetTransform ("Tile"));
-      }
-      else
-      {
-        /* deal with the hardcoded labels used for the first 10 icons on the launcher */
-        gchar *shortcut_str = g_strdup_printf ("%c", (gchar)shortcut);
-        int index = (atoi (shortcut_str) + 9) % 10; // Not -1 as -1 % 10 = -1…
-        g_free (shortcut_str);
-        
-        RenderElement (GfxContext,
-                    arg,
-                    _superkey_labels[index]->GetDeviceTexture (),
-                    nux::Color (0xFFFFFFFF),
-                    arg.alpha,
-                    arg.icon->GetTransform ("Tile"));
-      }
-    }
   }
 }
 
@@ -971,10 +953,6 @@ void IconRenderer::DestroyTextures ()
   _pip_rtl->UnReference ();
   _arrow_rtl->UnReference ();
   _arrow_empty_rtl->UnReference ();
-
-  for (int i = 0; i < MAX_SHORTCUT_LABELS; i++)
-    if (_superkey_labels[i])
-      _superkey_labels[i]->UnReference ();
 }
 
 void IconRenderer::GenerateTextures ()
@@ -994,9 +972,6 @@ void IconRenderer::GenerateTextures ()
   _pip_rtl                = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_pip_rtl.png", -1, true);
   _arrow_rtl              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
   _arrow_empty_rtl        = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
-
-  for (int i = 0; i < MAX_SHORTCUT_LABELS; i++)
-    _superkey_labels[i] = RenderCharToTexture ((char) ('0' + ((i  + 1) % 10)), icon_size, icon_size);
 
   _offscreen_progress_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
   textures_created = true;

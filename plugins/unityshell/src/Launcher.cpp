@@ -1096,6 +1096,12 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     arg.progress            = CLAMP (icon->GetProgress (), 0.0f, 1.0f);
     arg.draw_shortcut       = _shortcuts_shown && !_hide_machine->GetQuirk (LauncherHideMachine::PLACES_VISIBLE);
 
+    guint64 shortcut = icon->GetShortcut();
+    if (shortcut > 32 && !g_ascii_isdigit ((gchar)shortcut))
+      arg.shortcut_label = (char) shortcut;
+    else
+      arg.shortcut_label = 0;
+
     // we dont need to show strays
     if (!icon->GetQuirk (LauncherIcon::QUIRK_RUNNING))
     {
@@ -1365,6 +1371,7 @@ void Launcher::RenderArgs (std::list<RenderArg> &launcher_args,
     // function is not smooth it is continuous, which is more important for our visual representation (icons
     // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
     // as bugs.
+    int index = 1;
     for (it = _model->main_begin (); it != _model->main_end (); it++)
     {
         RenderArg arg;
@@ -1372,8 +1379,13 @@ void Launcher::RenderArgs (std::list<RenderArg> &launcher_args,
 
         FillRenderArg (icon, arg, center, folding_threshold, folded_size, folded_spacing, 
                        autohide_offset, folded_z_distance, animation_neg_rads, current);
+        
+
+        if (!arg.shortcut_label && index <= 10)
+          arg.shortcut_label = '0' + (index % 10);
 
         launcher_args.push_back (arg);
+        index++;
     }
 
     // compute maximum height of shelf
@@ -2030,17 +2042,6 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
     _icon_image_size_delta = tile_size - icon_size;
     _icon_glow_size = icon_size + 14;
 
-    /*LauncherModel::iterator it;
-    for (it = _model->main_begin(); it != _model->main_end(); it++)
-    {
-        LauncherIcon *icon = *it;
-        guint64 shortcut = icon->GetShortcut();
-        if (shortcut > 32 && !g_ascii_isdigit ((gchar)shortcut))
-                icon->SetSuperkeyLabel (cairoToTexture2D ((gchar)shortcut, _icon_size, _icon_size));
-    }*/
-
-    // recreate tile textures
-
     _parent->SetGeometry (nux::Geometry (geo.x, geo.y, tile_size + 12, geo.height));
 
     icon_renderer->SetTargetSize (_icon_size, _icon_image_size, _space_between_icons);
@@ -2052,10 +2053,6 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
 
     // needs to be disconnected
     icon->needs_redraw_connection = (sigc::connection) icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
-
-    /*guint64 shortcut = icon->GetShortcut ();
-    if (shortcut > 32 && !g_ascii_isdigit ((gchar) shortcut))
-      icon->SetSuperkeyLabel (cairoToTexture2D ((gchar) shortcut, _icon_size, _icon_size));*/
 
     AddChild (icon);
 }
