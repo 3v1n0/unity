@@ -7,19 +7,40 @@ using namespace unity;
 
 namespace {
 
-void OnSignal1 (std::string str)
+class TestGLibSignals : public testing::Test
 {
+public:
+  TestGLibSignals()
+    : signal1_emitted_(false)
+  {
+    test_signals_ = static_cast<TestSignals*>(g_object_new(TEST_TYPE_SIGNALS, NULL));
+  }
 
-}
+  virtual ~TestGLibSignals()
+  {
+    if (G_IS_OBJECT(test_signals_))
+      g_object_unref(test_signals_);
+  }
 
-TEST(TestGLibSignals, TestConstruction)
+  void Signal1Callback(const char *str)
+  {
+    signal1_emitted_ = true;
+  }
+
+protected:
+  TestSignals* test_signals_;
+
+  bool signal1_emitted_;
+};
+
+
+TEST_F(TestGLibSignals, TestConstruction)
 {
-  GObject *object = static_cast<GObject*>(g_object_new(TEST_TYPE_SIGNALS, NULL));
-
-  EXPECT_TRUE(G_IS_OBJECT(object));
-
-  glib::Signal<void, std::string> signal1;
-  signal1.Connect (object, "signal-1", sigc::ptr_fun (OnSignal1));
+  glib::Signal<void, const char*> signal1;
+  signal1.Connect(test_signals_, "signal-1",
+                  sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  g_signal_emit_by_name(test_signals_, "signal-1", "hello");
+  EXPECT_TRUE(signal1_emitted_);
 }
 
 /*

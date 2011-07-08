@@ -2,8 +2,8 @@
  * GObject Class to allow for extensive testing of our Signal wrapper
  */
 
-#ifndef _TestSignals_H_
-#define _TestSignals_H_
+#ifndef _TEST_SIGNALS_H_
+#define _TEST_SIGNALS_H_
 
 #include <glib-object.h>
 
@@ -26,15 +26,15 @@ G_BEGIN_DECLS
 #define TestSignals_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
 	TEST_TYPE_SIGNALS, TestSignalsClass))
 
-typedef struct _TestSignals        TestSignals;
-typedef struct _TestSignalsClass   TestSignalsClass;
+typedef struct _TEST_SIGNALS        TestSignals;
+typedef struct _TEST_SIGNALSClass   TestSignalsClass;
 
-struct _TestSignals
+struct _TEST_SIGNALS
 {
   GObject parent;
 };
 
-struct _TestSignalsClass
+struct _TEST_SIGNALSClass
 {
   GObjectClass parent_class;
 };
@@ -43,4 +43,4 @@ GType test_signals_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 
-#endif /* _TestSignals_H_ */
+#endif /* _TEST_SIGNALS_H_ */

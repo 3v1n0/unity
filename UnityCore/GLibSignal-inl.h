@@ -24,11 +24,11 @@ namespace unity {
 namespace glib {
 
 template <typename R>
-void Signal0<R>::Connect(GObject*           object,
+void Signal0<R>::Connect(void*              object,
                          std::string const& signal_name,
                          SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK(Callback), this);
@@ -41,11 +41,11 @@ R Signal0<R>::Callback(GObject* object, Signal0* self)
 }
   
 template <typename R, typename T>
-void Signal1<R, T>::Connect(GObject*           object,
+void Signal1<R, T>::Connect(void*              object,
                             std::string const& signal_name,
                             SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -58,11 +58,11 @@ R Signal1<R, T>::Callback(GObject* object, T data1, Signal1* self)
 }
 
 template <typename R, typename T1, typename T2>
-void Signal2<R, T1, T2>::Connect(GObject*           object,
+void Signal2<R, T1, T2>::Connect(void*              object,
                                  std::string const& signal_name,
                                  SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -78,11 +78,11 @@ R Signal2<R, T1, T2>::Callback(GObject* object,
 }
 
 template <typename R, typename T1, typename T2, typename T3>
-void Signal3<R, T1, T2, T3>::Connect(GObject*           object,
+void Signal3<R, T1, T2, T3>::Connect(void*              object,
                                      std::string const& signal_name,
                                      SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -99,11 +99,11 @@ R Signal3<R, T1, T2, T3>::Callback(GObject* object,
 }
 
 template <typename R, typename T1, typename T2, typename T3, typename T4>
-void Signal4<R, T1, T2, T3, T4>::Connect(GObject*           object,
+void Signal4<R, T1, T2, T3, T4>::Connect(void*              object,
                                          std::string const& signal_name,
                                          SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -122,11 +122,11 @@ R Signal4<R, T1, T2, T3, T4>::Callback(GObject* object,
 
 template <typename R, typename T1, typename T2,
           typename T3, typename T4, typename T5 >
-void Signal5<R, T1, T2, T3, T4, T5>::Connect(GObject*           object,
+void Signal5<R, T1, T2, T3, T4, T5>::Connect(void*              object,
                                              std::string const& signal_name,
                                              SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -147,11 +147,11 @@ R Signal5<R, T1, T2, T3, T4, T5>::Callback(GObject* object,
 
 template <typename R, typename T1, typename T2,
           typename T3, typename T4, typename T5 , typename T6>
-void Signal6<R, T1, T2, T3, T4, T5, T6>::Connect(GObject*           object,
+void Signal6<R, T1, T2, T3, T4, T5, T6>::Connect(void*              object,
                                                  std::string const& signal_name,
                                                  SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);
@@ -173,11 +173,11 @@ R Signal6<R, T1, T2, T3, T4, T5, T6>::Callback(GObject* object,
 
 template <typename R, typename T1, typename T2, typename T3,
           typename T4, typename T5, typename T6 , typename T7>
-void Signal7<R, T1, T2, T3, T4, T5, T6, T7>::Connect(GObject*           object,
+void Signal7<R, T1, T2, T3, T4, T5, T6, T7>::Connect(void*              object,
                                                      std::string const& signal_name,
                                                      SignalCallback     callback)
 {
-  object_ = object;
+  object_ = static_cast<GObject*>(object);
   callback_ = callback;
   connection_id_ = g_signal_connect(object, signal_name.c_str (),
                                     G_CALLBACK (Callback), this);

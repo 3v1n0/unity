@@ -49,7 +49,7 @@ public:
   Signal0()
   {}
  
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     cb);
 private:
@@ -67,7 +67,7 @@ public:
   Signal1()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -85,7 +85,7 @@ public:
   Signal2()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -106,7 +106,7 @@ public:
   Signal3()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -128,7 +128,7 @@ public:
   Signal4()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -152,7 +152,7 @@ public:
   Signal5()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -177,7 +177,7 @@ public:
   Signal6()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
@@ -203,7 +203,7 @@ public:
   Signal7()
   {}
 
-  void Connect(GObject*           object,
+  void Connect(void*              object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
