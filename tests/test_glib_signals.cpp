@@ -324,15 +324,36 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
 TEST_F(TestGLibSignals, TestManagerConstruction)
 {
   SignalManager manager;
-
-  manager.Add(new Signal<void>(test_signals_,
-                               "signal0",
-                               sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
 }
 
 TEST_F(TestGLibSignals, TestManagerAddition)
 {
+  SignalManager manager;
 
+  manager.Add(new Signal<void>(test_signals_,
+    "signal0",
+    sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+  manager.Add(new Signal<void, const char *>(test_signals_,
+    "signal1",
+    sigc::mem_fun(this, &TestGLibSignals::Signal1Callback)));
+  manager.Add(new Signal<void, const char *, int>(test_signals_,
+    "signal2",
+     sigc::mem_fun(this, &TestGLibSignals::Signal2Callback)));
+  manager.Add(new Signal<void, const char *, int, float>(test_signals_,
+    "signal3",
+     sigc::mem_fun(this, &TestGLibSignals::Signal3Callback)));
+  manager.Add(new Signal<void, const char *, int, float, double>(test_signals_,
+    "signal4",
+     sigc::mem_fun(this, &TestGLibSignals::Signal4Callback)));
+  manager.Add(new Signal<void, const char *, int, float, double, gboolean>(test_signals_,
+    "signal5",
+     sigc::mem_fun(this, &TestGLibSignals::Signal5Callback)));
+  manager.Add(new Signal<bool, const char *, int, float, double, gboolean, char>(test_signals_,
+    "signal6",
+     sigc::mem_fun(this, &TestGLibSignals::Signal6Callback)));
+  manager.Add(new Signal<bool, const char *, int, float, double, gboolean, char, guint>(test_signals_,
+    "signal7",
+     sigc::mem_fun(this, &TestGLibSignals::Signal7Callback)));
 }
 
 TEST_F(TestGLibSignals, TestManagerConnection)
