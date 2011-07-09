@@ -24,6 +24,10 @@ namespace unity {
 namespace glib {
 
 template <typename R, typename O>
+Signal0<R, O>::Signal0()
+{}
+
+template <typename R, typename O>
 void Signal0<R, O>::Connect(O                  object,
                             std::string const& signal_name,
                             SignalCallback     callback)
@@ -38,9 +42,13 @@ void Signal0<R, O>::Connect(O                  object,
 template <typename R, typename O>
 R Signal0<R, O>::Callback(O object, Signal0* self)
 {
-  return self->callback_ (object);
+  return self->callback_(object);
 }
-  
+
+template <typename R, typename O, typename T>
+Signal1<R, O, T>::Signal1()
+{}
+
 template <typename R, typename O, typename T>
 void Signal1<R, O, T>::Connect(O                  object,
                                std::string const& signal_name,
@@ -56,8 +64,12 @@ void Signal1<R, O, T>::Connect(O                  object,
 template <typename R, typename O, typename T>
 R Signal1<R, O, T>::Callback(O object, T data1, Signal1* self)
 {
-  return self->callback_ (object, data1);
+  return self->callback_(object, data1);
 }
+
+template <typename R, typename O, typename T1, typename T2>
+Signal2<R, O, T1, T2>::Signal2()
+{}
 
 template <typename R, typename O, typename T1, typename T2>
 void Signal2<R, O, T1, T2>::Connect(O                  object,
@@ -77,8 +89,12 @@ R Signal2<R, O, T1, T2>::Callback(O object,
                                   T2       data2,
                                   Signal2* self)
 {
-  return self->callback_ (object, data1, data2);
+  return self->callback_(object, data1, data2);
 }
+
+template <typename R, typename O, typename T1, typename T2, typename T3>
+Signal3<R, O, T1, T2, T3>::Signal3()
+{}
 
 template <typename R, typename O, typename T1, typename T2, typename T3>
 void Signal3<R, O, T1, T2, T3>::Connect(O                  object,
@@ -99,8 +115,12 @@ R Signal3<R, O, T1, T2, T3>::Callback(O object,
                                       T3       data3,
                                       Signal3* self)
 {
-  return self->callback_ (object, data1, data2, data3);
+  return self->callback_(object, data1, data2, data3);
 }
+
+template <typename R, typename O, typename T1, typename T2, typename T3, typename T4>
+Signal4<R, O, T1, T2, T3, T4>::Signal4()
+{}
 
 template <typename R, typename O, typename T1, typename T2, typename T3, typename T4>
 void Signal4<R, O, T1, T2, T3, T4>::Connect(O                  object,
@@ -122,8 +142,14 @@ R Signal4<R, O, T1, T2, T3, T4>::Callback(O object,
                                           T4       data4,
                                           Signal4* self)
 {
-  return self->callback_ (object, data1, data2, data3, data4);
+  return self->callback_(object, data1, data2, data3, data4);
 }
+
+
+template <typename R, typename O, typename T1, typename T2,
+          typename T3, typename T4, typename T5>
+Signal5<R, O, T1, T2, T3, T4, T5>::Signal5()
+{}
 
 template <typename R, typename O, typename T1, typename T2,
           typename T3, typename T4, typename T5 >
@@ -148,8 +174,13 @@ R Signal5<R, O, T1, T2, T3, T4, T5>::Callback(O object,
                                               T5       data5,
                                               Signal5* self)
 {
-  return self->callback_ (object, data1, data2, data3, data4, data5);
+  return self->callback_(object, data1, data2, data3, data4, data5);
 }
+
+template <typename R, typename O, typename T1, typename T2,
+          typename T3, typename T4, typename T5 , typename T6>
+Signal6<R, O, T1, T2, T3, T4, T5, T6>::Signal6()
+{}
 
 template <typename R, typename O, typename T1, typename T2,
           typename T3, typename T4, typename T5 , typename T6>
@@ -175,7 +206,7 @@ R Signal6<R, O, T1, T2, T3, T4, T5, T6>::Callback(O object,
                                                   T6       data6,
                                                   Signal6* self)
 {
-  return self->callback_ (object, data1, data2, data3, data4, data5, data6);
+  return self->callback_(object, data1, data2, data3, data4, data5, data6);
 }
 
 template<typename R, typename O>

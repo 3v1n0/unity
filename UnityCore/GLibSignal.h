@@ -54,8 +54,7 @@ class Signal0 : public SignalBase
 public:
   typedef sigc::slot<R, O> SignalCallback;
 
-  Signal0()
-  {}
+  Signal0();
  
   void Connect(O                  object,
                std::string const& signal_name,
@@ -72,8 +71,7 @@ class Signal1 : public SignalBase
 public:
   typedef sigc::slot<R, O, T> SignalCallback;
 
-  Signal1()
-  {}
+  Signal1();
 
   void Connect(O                  object,
                std::string const& signal_name,
@@ -90,8 +88,7 @@ class Signal2 : public SignalBase
 public:
   typedef sigc::slot<R, O, T1, T2> SignalCallback;
 
-  Signal2()
-  {}
+  Signal2();
 
   void Connect(O                  object,
                std::string const& signal_name,
@@ -111,8 +108,7 @@ class Signal3 : public SignalBase
 public:
   typedef sigc::slot<R, O, T1, T2, T3> SignalCallback;
 
-  Signal3()
-  {}
+  Signal3();
 
   void Connect(O                  object,
                std::string const& signal_name,
@@ -133,8 +129,7 @@ class Signal4 : public SignalBase
 public:
   typedef sigc::slot<R, O, T1, T2, T3, T4> SignalCallback;
 
-  Signal4()
-  {}
+  Signal4();
 
   void Connect(O                  object,
                std::string const& signal_name,
@@ -157,8 +152,7 @@ class Signal5 : public SignalBase
 public:
   typedef sigc::slot<R, O, T1, T2, T3, T4, T5> SignalCallback;
 
-  Signal5()
-  {}
+  Signal5();
 
   void Connect(O                  object,
                std::string const& signal_name,
@@ -182,8 +176,7 @@ class Signal6 : public SignalBase
 public:
   typedef sigc::slot<R, O, T1, T2, T3, T4, T5, T6> SignalCallback;
 
-  Signal6()
-  {}
+  Signal6();
 
   void Connect(O                  object,
                std::string const& signal_name,

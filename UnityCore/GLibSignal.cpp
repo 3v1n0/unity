@@ -55,8 +55,7 @@ SignalManager::SignalManager()
 {}
 
 SignalManager::~SignalManager()
-{
-}
+{}
 
 // Ideally this would be SignalBase& but there is a specific requirment to allow
 // only one instance of Signal to control a connection. With the templating, it
@@ -74,10 +73,11 @@ void SignalManager::Add(SignalBase* signal)
 void SignalManager::Disconnect(void* object, std::string const& signal_name)
 {
   for (ConnectionVector::iterator it = connections_.begin();
-       it != connections_.end ();
+       it != connections_.end();
        ++it)
   {
-    if ((*it)->get_object() == object && (*it)->get_name() == signal_name)
+    if ((*it)->get_object() == object
+        && (*it)->get_name() == signal_name)
     {
       (*it)->Disconnect();
       connections_.erase(it, it);

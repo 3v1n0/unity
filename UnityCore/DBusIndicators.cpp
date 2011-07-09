@@ -114,7 +114,7 @@ public:
                              char* signal_name_,
                              GVariant* parameters);
 
-virtual void OnEntryScroll(std::string const& entry_id, int delta);
+  virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
 
@@ -179,8 +179,8 @@ void DBusIndicators::Impl::OnRemoteProxyReady(GDBusProxy *proxy)
     signal_manager_.Add (new glib::Signal<void, GDBusProxy*, char*, char*, GVariant*>
       (proxy_, "g-signal", sigc::mem_fun(this, &Impl::OnProxySignalReceived)));
 
-      signal_manager_.Add(new glib::Signal<void, GDBusProxy*,GParamSpec*>
-        (proxy_, "notify::g-name-owner", sigc::mem_fun(this, &DBusIndicators::Impl::OnProxyNameOwnerChanged)));
+    signal_manager_.Add(new glib::Signal<void, GDBusProxy*,GParamSpec*>
+      (proxy_, "notify::g-name-owner", sigc::mem_fun(this, &Impl::OnProxyNameOwnerChanged)));
   }
   RequestSyncAll();
 }
