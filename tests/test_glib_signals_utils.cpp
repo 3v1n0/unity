@@ -10,7 +10,6 @@ enum
   SIGNAL_4,
   SIGNAL_5,
   SIGNAL_6,
-  SIGNAL_7,
 
   LAST_SIGNAL
 };
@@ -95,17 +94,6 @@ test_signals_class_init (TestSignalsClass *klass)
                   G_TYPE_BOOLEAN, 6,
                   G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                   G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR);
-
-  _service_signals[SIGNAL_7] =
-    g_signal_new ("signal7",
-                  G_OBJECT_CLASS_TYPE (obj_class),
-                  G_SIGNAL_RUN_LAST,
-                  0,
-                  NULL, NULL,
-                  test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR_UINT,
-                  G_TYPE_BOOLEAN, 7,
-                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
-                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR, G_TYPE_UINT);
 }
 
 static void

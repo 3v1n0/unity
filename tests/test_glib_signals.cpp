@@ -20,14 +20,12 @@ public:
     , signal4_received_(false)
     , signal5_received_(false)
     , signal6_received_(false)
-    , signal7_received_(false)
     , arg1_("")
     , arg2_(-1)
     , arg3_(0.0f)
     , arg4_(0.00)
     , arg5_(false)
     , arg6_(0)
-    , arg7_(0)
   {
     test_signals_ = static_cast<TestSignals*>(g_object_new(TEST_TYPE_SIGNALS, NULL));
   }
@@ -38,25 +36,25 @@ public:
       g_object_unref(test_signals_);
   }
 
-  void Signal0Callback()
+  void Signal0Callback(TestSignals* signals)
   {
    signal0_received_ = true;
   }
 
-  void Signal1Callback(const char *str)
+  void Signal1Callback(TestSignals* signals, const char *str)
   {
     arg1_ = str;
     signal1_received_ = true;
   }
 
-  void Signal2Callback(const char* str, int i)
+  void Signal2Callback(TestSignals* signals, const char* str, int i)
   {
     arg1_ = str;
     arg2_ = i;
     signal2_received_ = true;
   }
   
-  void Signal3Callback(const char* str, int i, float f)
+  void Signal3Callback(TestSignals* signals, const char* str, int i, float f)
   {
     arg1_ = str;
     arg2_ = i;
@@ -64,7 +62,7 @@ public:
     signal3_received_ = true;
   }
 
-  void Signal4Callback(const char* str, int i, float f, double d) // heh
+  void Signal4Callback(TestSignals* signals, const char* str, int i, float f, double d) // heh
   {
     arg1_ = str;
     arg2_ = i;
@@ -73,7 +71,8 @@ public:
     signal4_received_ = true;
   }
 
-  void Signal5Callback(const char* str, int i, float f, double d, gboolean b)
+  void Signal5Callback(TestSignals* signals, const char* str, int i, float f,
+                       double d, gboolean b)
   {
     arg1_ = str;
     arg2_ = i;
@@ -83,8 +82,8 @@ public:
     signal5_received_ = true;
   }
 
-  gboolean Signal6Callback(const char* str, int i, float f, double d, gboolean b,
-                           char c)
+  gboolean Signal6Callback(TestSignals* signals, const char* str, int i, float f,
+                           double d, gboolean b, char c)
   {
     arg1_ = str;
     arg2_ = i;
@@ -94,20 +93,6 @@ public:
     arg6_ = c;
     signal6_received_ = true;
     return TRUE;
-  }
-
-  gboolean Signal7Callback(const char* str, int i, float f, double d, gboolean b,
-                           char c, guint ui)
-  {
-    arg1_ = str;
-    arg2_ = i;
-    arg3_ = f;
-    arg4_ = d;
-    arg5_ = b ? true : false;
-    arg6_ = c;
-    arg7_ = ui;
-    signal7_received_ = true;
-    return FALSE;
   }
 
 protected:
@@ -120,7 +105,6 @@ protected:
   bool signal4_received_;
   bool signal5_received_;
   bool signal6_received_;
-  bool signal7_received_;
 
   string arg1_;
   int arg2_;
@@ -128,7 +112,6 @@ protected:
   double arg4_;
   bool arg5_;
   char arg6_;
-  guint arg7_;
 };
 
 
@@ -136,28 +119,26 @@ TEST_F(TestGLibSignals, TestConstructions)
 {
   SignalBase base;
 
-  Signal0<void> signal0;
-  Signal1<void, string> signal1;
-  Signal2<void, string, int> signal2;
-  Signal3<void, string, int, float> signal3;
-  Signal4<void, string, int, float, double> signal4;
-  Signal5<void, string, int, float, double, gboolean> signal5;
-  Signal6<gboolean, string, int, float, double, gboolean, char> signal6;
-  Signal7<gboolean, string, int, float, double, gboolean, char, guint> signal7;
+  Signal0<void, TestSignals*> signal0;
+  Signal1<void, TestSignals*, string> signal1;
+  Signal2<void, TestSignals*, string, int> signal2;
+  Signal3<void, TestSignals*, string, int, float> signal3;
+  Signal4<void, TestSignals*, string, int, float, double> signal4;
+  Signal5<void, TestSignals*, string, int, float, double, gboolean> signal5;
+  Signal6<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal6;
 
-  Signal<void> signal00;
-  Signal<void, string> signal01;
-  Signal<void, string, int> signal02;
-  Signal<void, string, int, float> signal03;
-  Signal<void, string, int, float, double> signal04;
-  Signal<void, string, int, float, double, bool> signal05;
-  Signal<gboolean, string, int, float, double, bool, char> signal06;
-  Signal<gboolean, string, int, float, double, bool, char, guint> signal07;
+  Signal<void, TestSignals*> signal00;
+  Signal<void, TestSignals*, string> signal01;
+  Signal<void, TestSignals*, string, int> signal02;
+  Signal<void, TestSignals*, string, int, float> signal03;
+  Signal<void, TestSignals*, string, int, float, double> signal04;
+  Signal<void, TestSignals*, string, int, float, double, gboolean> signal05;
+  Signal<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal06;
 }
 
 TEST_F(TestGLibSignals, TestSignal0)
 {
-  Signal<void> signal;
+  Signal<void, TestSignals*> signal;
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
   
@@ -169,7 +150,7 @@ TEST_F(TestGLibSignals, TestSignal0)
 
 TEST_F(TestGLibSignals, TestSignal1)
 {
-  Signal<void, const char*> signal;
+  Signal<void, TestSignals*, const char*> signal;
   signal.Connect(test_signals_, "signal1",
                  sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
 
@@ -182,7 +163,7 @@ TEST_F(TestGLibSignals, TestSignal1)
 
 TEST_F(TestGLibSignals, TestSignal2)
 {
-  Signal<void, const char*, int> signal;
+  Signal<void, TestSignals*, const char*, int> signal;
   signal.Connect(test_signals_, "signal2",
                  sigc::mem_fun(this, &TestGLibSignals::Signal2Callback));
 
@@ -196,7 +177,7 @@ TEST_F(TestGLibSignals, TestSignal2)
 
 TEST_F(TestGLibSignals, TestSignal3)
 {
-  Signal<void, const char*, int, float> signal;
+  Signal<void, TestSignals*, const char*, int, float> signal;
   signal.Connect(test_signals_, "signal3",
                  sigc::mem_fun(this, &TestGLibSignals::Signal3Callback));
 
@@ -212,7 +193,7 @@ TEST_F(TestGLibSignals, TestSignal3)
 
 TEST_F(TestGLibSignals, TestSignal4)
 {
-  Signal<void, const char*, int, float, double> signal;
+  Signal<void, TestSignals*, const char*, int, float, double> signal;
   signal.Connect(test_signals_, "signal4",
                  sigc::mem_fun(this, &TestGLibSignals::Signal4Callback));
 
@@ -228,7 +209,7 @@ TEST_F(TestGLibSignals, TestSignal4)
 
 TEST_F(TestGLibSignals, TestSignal5)
 {
-  Signal<void, const char*, int, float, double, gboolean> signal;
+  Signal<void, TestSignals*, const char*, int, float, double, gboolean> signal;
   signal.Connect(test_signals_, "signal5",
                  sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
 
@@ -247,7 +228,7 @@ TEST_F(TestGLibSignals, TestSignal5)
 // This Test test's accumulation as well
 TEST_F(TestGLibSignals, TestSignal6)
 {
-  Signal<bool, const char*, int, float, double, gboolean, char> signal;
+  Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char> signal;
   signal.Connect(test_signals_, "signal6",
                  sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
 
@@ -262,35 +243,12 @@ TEST_F(TestGLibSignals, TestSignal6)
   EXPECT_EQ(arg4_, 300.00);
   EXPECT_EQ(arg5_, true);
   EXPECT_EQ(arg6_, 'x');
-  EXPECT_EQ(arg7_, 0);
   EXPECT_EQ(ret, TRUE);
-}
-
-// This Test test's accumulation as well
-TEST_F(TestGLibSignals, TestSignal7)
-{
-  Signal<bool, const char*, int, float, double, gboolean, char, guint> signal;
-  signal.Connect(test_signals_, "signal7",
-                 sigc::mem_fun(this, &TestGLibSignals::Signal7Callback));
-
-  gboolean ret = TRUE;
-  g_signal_emit_by_name(test_signals_, "signal7", "test", 100, 200.0f, 300.00,
-                        TRUE, 'x', (guint)G_MAXUINT, &ret);
- 
-  EXPECT_TRUE(signal7_received_);
-  EXPECT_EQ(arg1_, "test");
-  EXPECT_EQ(arg2_, 100);
-  EXPECT_EQ(arg3_, 200.0f);
-  EXPECT_EQ(arg4_, 300.00);
-  EXPECT_EQ(arg5_, true);
-  EXPECT_EQ(arg6_, 'x');
-  EXPECT_EQ(arg7_, G_MAXUINT);
-  EXPECT_EQ(ret, FALSE);
 }
 
 TEST_F(TestGLibSignals, TestDisconnection)
 {
-  Signal<void> signal;
+  Signal<void, TestSignals*> signal;
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
   signal.Disconnect();
@@ -303,7 +261,7 @@ TEST_F(TestGLibSignals, TestDisconnection)
 TEST_F(TestGLibSignals, TestAutoDisconnection)
 {
   {
-    Signal<void> signal;
+    Signal<void, TestSignals*> signal;
     signal.Connect(test_signals_, "signal0",
                    sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
   }
@@ -315,7 +273,7 @@ TEST_F(TestGLibSignals, TestAutoDisconnection)
 
 TEST_F(TestGLibSignals, TestCleanDestruction)
 {
-  Signal<void> signal;
+  Signal<void, TestSignals*> signal;
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
   g_object_unref (test_signals_);
@@ -330,60 +288,60 @@ TEST_F(TestGLibSignals, TestManagerAddition)
 {
   SignalManager manager;
 
-  manager.Add(new Signal<void>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*>(test_signals_,
     "signal0",
     sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
-  manager.Add(new Signal<void, const char *>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *>(test_signals_,
     "signal1",
     sigc::mem_fun(this, &TestGLibSignals::Signal1Callback)));
-  manager.Add(new Signal<void, const char *, int>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *, int>(test_signals_,
     "signal2",
      sigc::mem_fun(this, &TestGLibSignals::Signal2Callback)));
-  manager.Add(new Signal<void, const char *, int, float>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *, int, float>(test_signals_,
     "signal3",
      sigc::mem_fun(this, &TestGLibSignals::Signal3Callback)));
-  manager.Add(new Signal<void, const char *, int, float, double>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *, int, float, double>(test_signals_,
     "signal4",
      sigc::mem_fun(this, &TestGLibSignals::Signal4Callback)));
-  manager.Add(new Signal<void, const char *, int, float, double, gboolean>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *, int, float, double, gboolean>(test_signals_,
     "signal5",
      sigc::mem_fun(this, &TestGLibSignals::Signal5Callback)));
-  manager.Add(new Signal<bool, const char *, int, float, double, gboolean, char>(test_signals_,
+  manager.Add(new Signal<gboolean, TestSignals*, const char *, int, float, double, gboolean, char>(test_signals_,
     "signal6",
      sigc::mem_fun(this, &TestGLibSignals::Signal6Callback)));
-  manager.Add(new Signal<bool, const char *, int, float, double, gboolean, char, guint>(test_signals_,
-    "signal7",
-     sigc::mem_fun(this, &TestGLibSignals::Signal7Callback)));
 }
 
 TEST_F(TestGLibSignals, TestManagerConnection)
 {
   SignalManager manager;
 
-  manager.Add(new Signal<void>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*>(test_signals_,
     "signal0",
     sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+
   g_signal_emit_by_name(test_signals_, "signal0");
   EXPECT_TRUE(signal0_received_);
 
-  manager.Add(new Signal<void, const char *>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*, const char *>(test_signals_,
     "signal1",
     sigc::mem_fun(this, &TestGLibSignals::Signal1Callback)));
   g_signal_emit_by_name(test_signals_, "signal1", "test");
   EXPECT_TRUE(signal1_received_);
 
-  manager.Add(new Signal<bool, const char *, int, float, double, gboolean, char, guint>(test_signals_,
-    "signal7",
-     sigc::mem_fun(this, &TestGLibSignals::Signal7Callback)));
-  g_signal_emit_by_name(test_signals_, "signal7", "test", 100, 1.0f, 100.00, FALSE, 'x', (guint)1000);
-  EXPECT_TRUE(signal7_received_);
+  gboolean ret = FALSE;
+  manager.Add(new Signal<gboolean, TestSignals*, const char *, int, float, double, gboolean, char>(test_signals_,
+    "signal6",
+     sigc::mem_fun(this, &TestGLibSignals::Signal6Callback)));
+  g_signal_emit_by_name(test_signals_, "signal6", "test", 100, 1.0f, 100.00, FALSE, 'x', &ret);
+  EXPECT_TRUE(signal6_received_);
+  EXPECT_TRUE(ret);
 }
 
 TEST_F(TestGLibSignals, TestManagerAutoDisconnect)
 {
   {
     SignalManager manager;
-    manager.Add(new Signal<void>(test_signals_,
+    manager.Add(new Signal<void, TestSignals*>(test_signals_,
       "signal0",
       sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
   }
@@ -396,7 +354,7 @@ TEST_F(TestGLibSignals, TestManagerDisconnection)
 {
   SignalManager manager;
   
-  manager.Add(new Signal<void>(test_signals_,
+  manager.Add(new Signal<void, TestSignals*>(test_signals_,
     "signal0",
     sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
   manager.Disconnect(test_signals_, "signal0");

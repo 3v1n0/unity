@@ -27,6 +27,7 @@
 #include <X11/Xlib.h>
 
 #include "config.h"
+#include "GLibSignal.h"
 #include "GLibWrapper.h"
 #include "Variant.h"
 
@@ -83,12 +84,6 @@ struct ShowEntryData
 bool run_local_panel_service();
 gboolean reconnect_to_service(gpointer data);
 void on_proxy_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
-void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
-                                 DBusIndicators::Impl* remote);
-void on_proxy_signal_received(GDBusProxy* proxy,
-                              char* sender_name, char* signal_name,
-                              GVariant* parameters,
-                              DBusIndicators::Impl* remote);
 void request_sync(GDBusProxy* proxy, const char* method, GVariant* name,
                   SyncData* data);
 void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data);
@@ -113,8 +108,13 @@ public:
   void Sync(GVariant* args, SyncData* data);
   void SyncGeometries(std::string const& name,
                       EntryLocationMap const& locations);
+  void OnProxyNameOwnerChanged(GDBusProxy*proxy, GParamSpec *pspec);
+  void OnProxySignalReceived(GDBusProxy* proxy,
+                             char* sender_name,
+                             char* signal_name_,
+                             GVariant* parameters);
 
-  virtual void OnEntryScroll(std::string const& entry_id, int delta);
+virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
 
@@ -124,10 +124,10 @@ public:
 
   DBusIndicators* owner_;
   GDBusProxy* proxy_;
-  guint32 proxy_signal_id_;
-  guint32 proxy_name_id_;
   typedef std::vector<SyncDataPtr> PendingSyncs;
   PendingSyncs pending_syncs_;
+  
+  glib::SignalManager signal_manager_;
 };
 
 
@@ -143,8 +143,6 @@ DBusIndicators::Impl::~Impl()
 {
   if (G_IS_OBJECT (proxy_))
   {
-    g_signal_handler_disconnect(proxy_, proxy_signal_id_);
-    g_signal_handler_disconnect(proxy_, proxy_name_id_);
     g_object_unref(proxy_);
   }
 }
@@ -178,12 +176,11 @@ void DBusIndicators::Impl::OnRemoteProxyReady(GDBusProxy *proxy)
   {
     proxy_ = proxy;
     // Connect to interesting signals
-    proxy_signal_id_ = g_signal_connect(proxy_, "g-signal",
-                                        G_CALLBACK(on_proxy_signal_received),
-                                        this);
-    proxy_name_id_ = g_signal_connect(proxy_, "notify::g-name-owner",
-                                      G_CALLBACK(on_proxy_name_owner_changed),
-                                      this);
+    signal_manager_.Add (new glib::Signal<void, GDBusProxy*, char*, char*, GVariant*>
+      (proxy_, "g-signal", sigc::mem_fun(this, &Impl::OnProxySignalReceived)));
+
+      signal_manager_.Add(new glib::Signal<void, GDBusProxy*,GParamSpec*>
+        (proxy_, "notify::g-name-owner", sigc::mem_fun(this, &DBusIndicators::Impl::OnProxyNameOwnerChanged)));
   }
   RequestSyncAll();
 }
@@ -373,6 +370,72 @@ bool DBusIndicators::Impl::using_local_service() const
   return g_getenv("PANEL_USE_LOCAL_SERVICE") != NULL;
 }
 
+void DBusIndicators::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy,
+                                                   GParamSpec* pspec)
+{
+  char* name_owner = g_dbus_proxy_get_name_owner(proxy);
+
+  if (name_owner == NULL)
+  {
+    // The panel service has stopped for some reason.  Restart it if not in
+    // dev mode
+    if (!g_getenv("UNITY_DEV_MODE"))
+      Reconnect();
+  }
+
+  g_free (name_owner);
+}
+
+void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
+                                                 char* sender_name,
+                                                 char* signal_name_,
+                                                 GVariant* parameters)
+{
+  std::string signal_name(signal_name_);
+  if (signal_name == "EntryActivated")
+  {
+    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    if (entry_name) {
+      owner_->ActivateEntry(entry_name);
+    }
+  }
+  else if (signal_name == "EntryActivateRequest")
+  {
+    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    if (entry_name) {
+      owner_->on_entry_activate_request.emit(entry_name);
+    }
+  }
+  else if (signal_name == "ReSync")
+  {
+    const char* id = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
+    bool sync_one = !g_strcmp0 (id, "") == 0;
+
+    if (sync_one) {
+      RequestSyncIndicator(id);
+    }
+    else {
+      RequestSyncAll();
+    }
+  }
+  else if (signal_name == "ActiveMenuPointerMotion")
+  {
+    int x = 0;
+    int y = 0;
+    g_variant_get (parameters, "(ii)", &x, &y);
+    owner_->on_menu_pointer_moved.emit(x, y);
+  }
+  else if (signal_name == "EntryShowNowChanged")
+  {
+    gchar    *id = NULL;
+    gboolean  show_now;
+
+    g_variant_get (parameters, "(sb)", &id, &show_now);
+    owner_->SetEntryShowNow(id, show_now);
+
+    g_free (id);
+  }
+}
 
 DBusIndicators::DBusIndicators()
   : pimpl(new Impl(this))
@@ -493,73 +556,6 @@ bool run_local_panel_service()
     return false;
   }
   return true;
-}
-
-void on_proxy_signal_received(GDBusProxy* proxy,
-                              char* sender_name, char* signal_name_,
-                              GVariant* parameters,
-                              DBusIndicators::Impl* remote)
-{
-  std::string signal_name(signal_name_);
-  if (signal_name == "EntryActivated")
-  {
-    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
-    if (entry_name) {
-      remote->owner_->ActivateEntry(entry_name);
-    }
-  }
-  else if (signal_name == "EntryActivateRequest")
-  {
-    const char* entry_name = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
-    if (entry_name) {
-      remote->owner_->on_entry_activate_request.emit(entry_name);
-    }
-  }
-  else if (signal_name == "ReSync")
-  {
-    const char* id = g_variant_get_string(g_variant_get_child_value(parameters, 0), NULL);
-    bool sync_one = !g_strcmp0 (id, "") == 0;
-
-    if (sync_one) {
-      remote->RequestSyncIndicator(id);
-    }
-    else {
-      remote->RequestSyncAll();
-    }
-  }
-  else if (signal_name == "ActiveMenuPointerMotion")
-  {
-    int x = 0;
-    int y = 0;
-    g_variant_get (parameters, "(ii)", &x, &y);
-    remote->owner_->on_menu_pointer_moved.emit(x, y);
-  }
-  else if (signal_name == "EntryShowNowChanged")
-  {
-    gchar    *id = NULL;
-    gboolean  show_now;
-
-    g_variant_get (parameters, "(sb)", &id, &show_now);
-    remote->owner_->SetEntryShowNow(id, show_now);
-
-    g_free (id);
-  }
-}
-
-void on_proxy_name_owner_changed(GDBusProxy* proxy, GParamSpec* pspec,
-                                 DBusIndicators::Impl* remote)
-{
-  char* name_owner = g_dbus_proxy_get_name_owner(proxy);
-
-  if (name_owner == NULL)
-  {
-    // The panel service has stopped for some reason.  Restart it if not in
-    // dev mode
-    if (!g_getenv("UNITY_DEV_MODE"))
-      remote->Reconnect();
-  }
-
-  g_free (name_owner);
 }
 
 void request_sync(GDBusProxy* proxy, const char* method, GVariant* name, SyncData* data)

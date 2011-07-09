@@ -48,56 +48,56 @@ protected:
   std::string name_;
 };
 
-template <typename R>
+template <typename R, typename O>
 class Signal0 : public SignalBase
 {
 public:
-  typedef sigc::slot<R> SignalCallback;
+  typedef sigc::slot<R, O> SignalCallback;
 
   Signal0()
   {}
  
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     cb);
 private:
-  static R Callback(GObject* object, Signal0* self);
+  static R Callback(O object, Signal0* self);
 private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T>
+template <typename R, typename O, typename T>
 class Signal1 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T> SignalCallback;
+  typedef sigc::slot<R, O, T> SignalCallback;
 
   Signal1()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object, T data1, Signal1* self);
+  static R Callback(O object, T data1, Signal1* self);
 private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2>
+template <typename R, typename O, typename T1, typename T2>
 class Signal2 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T1, T2> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2> SignalCallback;
 
   Signal2()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object,
+  static R Callback(O        object,
                     T1       data1,
                     T2       data2,
                     Signal2* self);
@@ -105,20 +105,20 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2, typename T3>
+template <typename R, typename O, typename T1, typename T2, typename T3>
 class Signal3 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3> SignalCallback;
 
   Signal3()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object,
+  static R Callback(O        object,
                     T1       data1,
                     T2       data2,
                     T3       data3,
@@ -127,20 +127,20 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2, typename T3, typename T4>
+template <typename R, typename O, typename T1, typename T2, typename T3, typename T4>
 class Signal4 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4> SignalCallback;
 
   Signal4()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object,
+  static R Callback(O        object,
                     T1       data1,
                     T2       data2,
                     T3       data3,
@@ -150,21 +150,21 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2,
+template <typename R, typename O, typename T1, typename T2,
           typename T3, typename T4, typename T5>
 class Signal5 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4, T5> SignalCallback;
 
   Signal5()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object,
+  static R Callback(O        object,
                     T1       data1,
                     T2       data2,
                     T3       data3,
@@ -175,21 +175,21 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2,
+template <typename R, typename O, typename T1, typename T2,
           typename T3, typename T4, typename T5, typename T6>
 class Signal6 : public SignalBase
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4, T5, T6> SignalCallback;
 
   Signal6()
   {}
 
-  void Connect(void*              object,
+  void Connect(O                  object,
                std::string const& signal_name,
                SignalCallback     callback);
 private:
-  static R Callback(GObject* object,
+  static R Callback(O        object,
                     T1       data1,
                     T2       data2,
                     T3       data3,
@@ -201,135 +201,94 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename T1, typename T2, typename T3,
-          typename T4, typename T5, typename T6, typename T7>
-class Signal7 : public SignalBase
-{
-public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6, T7> SignalCallback;
-
-  Signal7()
-  {}
-
-  void Connect(void*              object,
-               std::string const& signal_name,
-               SignalCallback     callback);
-private:
-  static R Callback(GObject* object,
-                    T1       data1,
-                    T2       data2,
-                    T3       data3,
-                    T4       data4,
-                    T5       data5,
-                    T6       data6,
-                    T7       data7,
-                    Signal7* self);
-private:
-  SignalCallback callback_;
-};
-
 struct nil;
 
-template <typename R, typename T1 = nil, typename T2 = nil,
-                      typename T3 = nil, typename T4 = nil,
-                      typename T5 = nil, typename T6 = nil,
-                      typename T7 = nil>
-class Signal : public Signal7<R, T1, T2, T3, T4, T5, T6, T7>
+template <typename R, typename O,
+          typename T1 = nil, typename T2 = nil,
+          typename T3 = nil, typename T4 = nil,
+          typename T5 = nil, typename T6 = nil>
+class Signal : public Signal6<R, O, T1, T2, T3, T4, T5, T6>
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6, T7> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4, T5, T6> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R>
-class Signal<R, nil, nil, nil, nil, nil, nil, nil> : public Signal0<R>
+template <typename R, typename O>
+class Signal<R, O, nil, nil, nil, nil, nil, nil> : public Signal0<R, O>
 {
 public:
-  typedef sigc::slot<R> SignalCallback;
+  typedef sigc::slot<R, O> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R, typename T1>
-class Signal<R, T1, nil, nil, nil, nil, nil, nil> : public Signal1<R, T1>
+template <typename R, typename O, typename T1>
+class Signal<R, O, T1, nil, nil, nil, nil, nil> : public Signal1<R, O, T1>
 {
 public:
-  typedef sigc::slot<R, T1> SignalCallback;
+  typedef sigc::slot<R, O, T1> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R, typename T1, typename T2>
-class Signal<R, T1, T2, nil, nil, nil, nil, nil> : public Signal2<R, T1, T2>
+template <typename R, typename O, typename T1, typename T2>
+class Signal<R, O, T1, T2, nil, nil, nil, nil> : public Signal2<R, O, T1, T2>
 {
 public:
-  typedef sigc::slot<R, T1, T2> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R, typename T1, typename T2, typename T3>
-class Signal<R, T1, T2, T3, nil, nil, nil, nil> : public Signal3<R, T1, T2 ,T3>
+template <typename R, typename O, typename T1, typename T2, typename T3>
+class Signal<R, O, T1, T2, T3, nil, nil, nil> : public Signal3<R, O, T1, T2 ,T3>
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R, typename T1, typename T2, typename T3, typename T4>
-class Signal<R, T1, T2, T3, T4, nil, nil, nil>
-  : public Signal4<R, T1, T2 ,T3, T4>
+template <typename R, typename O, typename T1, typename T2, typename T3, typename T4>
+class Signal<R, O, T1, T2, T3, T4, nil, nil>
+  : public Signal4<R, O, T1, T2 ,T3, T4>
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
 
-template <typename R, typename T1, typename T2, typename T3, typename T4,
+template <typename R, typename O, typename T1, typename T2, typename T3, typename T4,
           typename T5>
-class Signal<R, T1, T2, T3, T4, T5, nil, nil>
-  : public Signal5<R, T1, T2 ,T3, T4, T5>
+class Signal<R, O, T1, T2, T3, T4, T5, nil>
+  : public Signal5<R, O, T1, T2 ,T3, T4, T5>
 {
 public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5> SignalCallback;
+  typedef sigc::slot<R, O, T1, T2, T3, T4, T5> SignalCallback;
 
   inline Signal();
-  inline Signal(void*          object,
-                std::string    signal_name,
-                SignalCallback callback);
-};
-
-template <typename R, typename T1, typename T2, typename T3, typename T4,
-          typename T5, typename T6>
-class Signal<R, T1, T2, T3, T4, T5, T6, nil>
-  : public Signal6<R, T1, T2 ,T3, T4, T5, T6>
-{
-public:
-  typedef sigc::slot<R, T1, T2, T3, T4, T5, T6> SignalCallback;
-
-  inline Signal();
-  inline Signal(void*          object,
+  inline Signal(O              object,
                 std::string    signal_name,
                 SignalCallback callback);
 };
