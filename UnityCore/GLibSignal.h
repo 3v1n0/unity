@@ -302,6 +302,7 @@ public:
   virtual ~SignalManager();
   
   void Add(SignalBase* signal);
+
   void Disconnect(void* object, std::string const& signal_name);
   
 private:

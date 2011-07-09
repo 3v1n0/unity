@@ -58,12 +58,19 @@ SignalManager::~SignalManager()
 {
 }
 
+// Ideally this would be SignalBase& but there is a specific requirment to allow
+// only one instance of Signal to control a connection. With the templating, it
+// was too messy to try and write a copy constructor/operator that would steal
+// from "other" and make the new one the owner. Not only did it create
+// opportunity for random bugs, it also made the API bad.
 void SignalManager::Add(SignalBase* signal)
 {
   SignalBase::Ptr s(signal);
   connections_.push_back(s);
 }
 
+// This uses void* to keep in line with the g_signal* functions
+// (it allows you to pass in a GObject without casting up).
 void SignalManager::Disconnect(void* object, std::string const& signal_name)
 {
   for (ConnectionVector::iterator it = connections_.begin();

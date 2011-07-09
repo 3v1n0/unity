@@ -225,7 +225,7 @@ TEST_F(TestGLibSignals, TestSignal5)
   EXPECT_EQ(arg6_, 0);
 }
 
-// This Test test's accumulation as well
+// This tests accumulation as well
 TEST_F(TestGLibSignals, TestSignal6)
 {
   Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char> signal;
