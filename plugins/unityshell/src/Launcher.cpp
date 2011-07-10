@@ -34,6 +34,8 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
+#include "BamfLauncherIcon.h"
+#include "FavoriteStore.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "SpacerLauncherIcon.h"
@@ -2995,6 +2997,28 @@ void Launcher::EndIconDrag ()
     }
     else
     {
+      
+      std::list<BamfLauncherIcon *> launchers;
+      std::list<BamfLauncherIcon *>::iterator it;
+      unity::FavoriteList desktop_paths;
+
+      // Updates gsettings favorites.
+      launchers = _model->GetSublist<BamfLauncherIcon> ();
+      for (it = launchers.begin (); it != launchers.end (); it++)
+      {
+        BamfLauncherIcon *icon = *it;
+
+        if (!icon->IsSticky ())
+          continue;
+
+        const char* desktop_file = icon->DesktopFile ();
+
+        if (desktop_file && strlen (desktop_file) > 0)
+          desktop_paths.push_back(desktop_file);
+      }
+
+      unity::FavoriteStore::GetDefault ().SetFavorites (desktop_paths);
+      
       _drag_window->SetAnimationTarget ((int) (_drag_icon->GetCenter ().x), (int) (_drag_icon->GetCenter ().y));
       _drag_window->StartAnimation ();
 
