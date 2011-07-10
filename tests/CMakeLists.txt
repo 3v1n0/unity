@@ -20,6 +20,7 @@ set (CFLAGS
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
+     "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 add_definitions (${CFLAGS})
 
@@ -267,19 +268,24 @@ add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 #
 # GTest tests
 #
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
+  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS test_glib_signals_utils_marshal.list
+  COMMENT "Generating marshallers")
 
 enable_testing()
 find_package(GTest)
-
 if (${GTEST_FOUND} STREQUAL TRUE)
-
   include_directories(${GTEST_INCLUDE_DIRS})
   add_executable(test-gtest
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
-                 test_glib_signals_utils_marshal.cpp
-                 test_glib_signals_utils_marshal.h
+                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator_entry.cpp
                  test_main.cpp
                  test_timer.cpp
