@@ -54,9 +54,6 @@ std::string const& SignalBase::name() const
 SignalManager::SignalManager()
 {}
 
-SignalManager::~SignalManager()
-{}
-
 // Ideally this would be SignalBase& but there is a specific requirment to allow
 // only one instance of Signal to control a connection. With the templating, it
 // was too messy to try and write a copy constructor/operator that would steal
