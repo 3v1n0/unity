@@ -41,12 +41,12 @@ void SignalBase::Disconnect()
   connection_id_ = 0;
 }
 
-GObject* SignalBase::get_object() const
+GObject* SignalBase::object() const
 {
   return object_;
 }
 
-std::string const& SignalBase::get_name() const
+std::string const& SignalBase::name() const
 {
   return name_;
 }
@@ -76,8 +76,8 @@ void SignalManager::Disconnect(void* object, std::string const& signal_name)
        it != connections_.end();
        ++it)
   {
-    if ((*it)->get_object() == object
-        && (*it)->get_name() == signal_name)
+    if ((*it)->object() == object
+        && (*it)->name() == signal_name)
     {
       (*it)->Disconnect();
       connections_.erase(it, it);
