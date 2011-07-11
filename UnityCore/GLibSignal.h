@@ -206,9 +206,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4, T5, T6> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 template <typename R, typename G>
@@ -218,9 +218,9 @@ public:
   typedef sigc::slot<R, G> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 template <typename R, typename G, typename T1>
@@ -230,9 +230,9 @@ public:
   typedef sigc::slot<R, G, T1> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 template <typename R, typename G, typename T1, typename T2>
@@ -242,9 +242,9 @@ public:
   typedef sigc::slot<R, G, T1, T2> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3>
@@ -254,9 +254,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4>
@@ -267,13 +267,12 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
-template <typename R, typename G, typename T1, typename T2, typename T3, typename T4,
-          typename T5>
+template <typename R, typename G, typename T1, typename T2, typename T3, typename T4, typename T5>
 class Signal<R, G, T1, T2, T3, T4, T5, nil>
   : public Signal5<R, G, T1, T2 ,T3, T4, T5>
 {
@@ -281,9 +280,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4, T5> SignalCallback;
 
   inline Signal();
-  inline Signal(G              object,
-                std::string    signal_name,
-                SignalCallback callback);
+  inline Signal(G                  object,
+                std::string const& signal_name,
+                SignalCallback     callback);
 };
 
 class SignalManager

@@ -214,7 +214,7 @@ Signal<R, G>::Signal()
 {}
 
 template<typename R, typename G>
-Signal<R, G>::Signal(G object, std::string signal_name, SignalCallback callback)
+Signal<R, G>::Signal(G object, std::string const& signal_name, SignalCallback callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -224,7 +224,7 @@ Signal<R, G, T1>::Signal()
 {}
 
 template<typename R, typename G, typename T1>
-Signal<R, G, T1>::Signal(G object, std::string signal_name, SignalCallback callback)
+Signal<R, G, T1>::Signal(G object, std::string const& signal_name, SignalCallback callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -234,9 +234,9 @@ Signal<R, G, T1, T2>::Signal()
 {}
 
 template<typename R, typename G, typename T1, typename T2>
-Signal<R, G, T1, T2>::Signal(G              object,
-                             std::string    signal_name,
-                             SignalCallback callback)
+Signal<R, G, T1, T2>::Signal(G                  object,
+                             std::string const& signal_name,
+                             SignalCallback     callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -246,9 +246,9 @@ Signal<R, G, T1, T2, T3>::Signal()
 {}
 
 template<typename R, typename G, typename T1, typename T2, typename T3>
-Signal<R, G, T1, T2, T3>::Signal(G              object,
-                                 std::string    signal_name,
-                                 SignalCallback callback)
+Signal<R, G, T1, T2, T3>::Signal(G                  object,
+                                 std::string const& signal_name,
+                                 SignalCallback     callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -258,9 +258,9 @@ Signal<R, G, T1, T2, T3, T4>::Signal()
 {}
 
 template<typename R, typename G, typename T1, typename T2, typename T3, typename T4>
-Signal<R, G, T1, T2, T3, T4>::Signal(G              object,
-                                     std::string    signal_name,
-                                     SignalCallback callback)
+Signal<R, G, T1, T2, T3, T4>::Signal(G                  object,
+                                     std::string const& signal_name,
+                                     SignalCallback     callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -272,9 +272,9 @@ Signal<R, G, T1, T2, T3, T4, T5>::Signal()
 
 template<typename R, typename G, typename T1, typename T2, typename T3, typename T4,
          typename T5>
-Signal<R, G, T1, T2, T3, T4, T5>::Signal(G              object,
-                                         std::string    signal_name,
-                                         SignalCallback callback)
+Signal<R, G, T1, T2, T3, T4, T5>::Signal(G                  object,
+                                         std::string const& signal_name,
+                                         SignalCallback     callback)
 {
   Connect(object, signal_name, callback);
 }
@@ -286,9 +286,9 @@ Signal<R, G, T1, T2, T3, T4, T5, T6>::Signal()
 
 template<typename R, typename G, typename T1, typename T2, typename T3, typename T4,
          typename T5, typename T6>
-Signal<R, G, T1, T2, T3, T4, T5, T6>::Signal(G              object,
-                                             std::string    signal_name,
-                                             SignalCallback callback)
+Signal<R, G, T1, T2, T3, T4, T5, T6>::Signal(G                  object,
+                                             std::string const& signal_name,
+                                             SignalCallback     callback)
 {
   Connect(object, signal_name, callback);
 }
