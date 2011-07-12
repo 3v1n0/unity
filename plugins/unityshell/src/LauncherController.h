@@ -71,7 +71,7 @@ private:
 
     guint32 _on_view_opened_id;
 
-    void SortAndSave ();
+    void SortAndUpdate ();
 
     void OnIconAdded (LauncherIcon *icon);
     

@@ -115,7 +115,7 @@ LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
   }
 }
 
-void LauncherController::SortAndSave()
+void LauncherController::SortAndUpdate()
 {
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
@@ -126,8 +126,6 @@ void LauncherController::SortAndSave()
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    BamfLauncherIcon *icon = *it;
-
     if (shortcut < 11 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf ("%d", shortcut % 10);
@@ -140,17 +138,7 @@ void LauncherController::SortAndSave()
     {
       (*it)->SetShortcut (0);
     }
-
-    if (!icon->IsSticky ())
-      continue;
-
-    const char* desktop_file = icon->DesktopFile ();
-
-    if (desktop_file && strlen (desktop_file) > 0)
-      desktop_paths.push_back(desktop_file);
   }
-
-  FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void
@@ -373,6 +361,6 @@ void LauncherController::SetupBamf()
     RegisterIcon (icon);
   }
   
-  _model->order_changed.connect (sigc::mem_fun (this, &LauncherController::SortAndSave));
+  _model->order_changed.connect (sigc::mem_fun (this, &LauncherController::SortAndUpdate));
 }
 
