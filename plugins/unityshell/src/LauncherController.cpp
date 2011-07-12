@@ -17,6 +17,7 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include "DeviceLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "LauncherController.h"
 #include "LauncherIcon.h"
@@ -150,13 +151,29 @@ LauncherController::OnIconAdded (LauncherIcon *icon)
 void
 LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
 {
-  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
-  
-  // we only handle bamf Icon removal request for now.
-  if (!bamf_icon)
-    return;
-    
-  bamf_icon->UnStick ();
+  switch (icon->Type ())
+  {
+    case LauncherIcon::TYPE_APPLICATION:
+    {
+      BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+      
+      if (bamf_icon)
+        bamf_icon->UnStick ();
+      
+      break;
+    }
+    case LauncherIcon::TYPE_DEVICE:
+    {
+      DeviceLauncherIcon *device_icon = dynamic_cast<DeviceLauncherIcon *> (icon);
+      
+      if (device_icon && device_icon->CanEject ())
+        device_icon->Eject ();
+      
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 void

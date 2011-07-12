@@ -23,6 +23,7 @@
 #include "UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
+#include <libnotify/notify.h>
 
 #define DEFAULT_ICON "drive-removable-media"
 
@@ -77,7 +78,7 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
 
     icon = g_volume_get_icon (_volume);
     icon_string = g_icon_to_string (icon);
-
+    
     SetIconName (icon_string);
 
     g_object_unref (icon);
@@ -99,6 +100,12 @@ nux::Color
 DeviceLauncherIcon::GlowColor ()
 {
   return nux::Color (0xFF333333);
+}
+
+bool
+DeviceLauncherIcon::CanEject ()
+{
+  return g_volume_can_eject (_volume);
 }
 
 std::list<DbusmenuMenuitem *>
@@ -257,6 +264,8 @@ DeviceLauncherIcon::OnMountReady (GObject *object, GAsyncResult *result, DeviceL
                name,
                error ? error->message : "Mount operation failed");
     g_error_free (error);
+    
+    g_free (name);
   }
 }
 
@@ -264,8 +273,20 @@ void
 DeviceLauncherIcon::OnEjectReady (GObject            *object,
                                   GAsyncResult       *result,
                                   DeviceLauncherIcon *self)
-{
-  g_volume_eject_with_operation_finish (self->_volume, result, NULL);
+{  
+  if (g_volume_eject_with_operation_finish (self->_volume, result, NULL))
+  {
+    NotifyNotification* notification;
+    gchar  *name = g_volume_get_name (self->_volume);
+    
+    notification = notify_notification_new (name,
+                                            _("The drive has been successfully ejected"),
+                                            "drive-removable-media-usb");
+  
+    notify_notification_show (notification, NULL);
+  
+    g_free (name);
+  }
 }
 
 void
