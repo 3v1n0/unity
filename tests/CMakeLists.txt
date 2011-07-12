@@ -190,6 +190,7 @@ add_executable (test-switcher
                 ${UNITY_SRC}/SwitcherView.h
                 ${UNITY_SRC}/IconRenderer.cpp
                 ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/MockLauncherIcon.h
                 )
 add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 

@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 
 #include "SwitcherController.h"
+#include "MockLauncherIcon.h"
 #include <dbus/dbus-glib.h>
 
 using namespace unity::switcher;
@@ -42,6 +43,10 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::GetGraphicsThread()->SetLayout (layout);
 
   std::vector<AbstractLauncherIcon *> icons;
+
+  icons.push_back (new MockLauncherIcon ());
+  icons.push_back (new MockLauncherIcon ());
+  icons.push_back (new MockLauncherIcon ());
 
   view->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
 }

@@ -28,6 +28,8 @@
 
 #include <Nux/View.h>
 
+using namespace unity::ui;
+
 namespace unity {
 namespace switcher {
 
@@ -46,6 +48,7 @@ protected:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
+  std::list<RenderArg> RenderArgs ();
 private:
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;

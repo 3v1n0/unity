@@ -64,7 +64,7 @@ void SwitcherController::ConstructView ()
   view_window_->SetBackgroundColor (nux::Color(0x00000000));
   view_window_->ShowWindow(true);
 
-  nux::Geometry geo (50, 50, 100, 100);
+  nux::Geometry geo (0, 0, 600, 300);
   view_window_->SetGeometry (geo);
 
 }

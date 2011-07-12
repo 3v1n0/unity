@@ -34,6 +34,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 : View (NUX_FILE_LINE_PARAM)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());
+  icon_renderer_->SetTargetSize (140, 128, 10);
 }
 
 SwitcherView::~SwitcherView()
@@ -61,12 +62,51 @@ void SwitcherView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   return;
 }
 
+std::list<RenderArg> SwitcherView::RenderArgs ()
+{
+  std::list<RenderArg> results;
+
+  if (model_)
+  {
+    SwitcherModel::iterator it;
+    int i = 0;
+
+    for (it = model_->begin (); it != model_->end (); ++it)
+    {
+      RenderArg arg;
+
+      arg.render_center = nux::Point3 (75 + (150 * i), 100, 0);
+      arg.logical_center = arg.render_center;
+      arg.y_rotation = 0.05f * i;
+
+      arg.icon = *it;
+
+      results.push_back (arg);
+      ++i;
+    }
+  }
+
+  return results;
+}
+
 void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  nux::Geometry base = GetGeometry ();
+  GfxContext.PushClippingRectangle (base);
 
   // draw content
   gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (0, 0, 100, 100), nux::Color(0xAAAA0000));
+
+  std::list<RenderArg> args = RenderArgs ();
+
+  icon_renderer_->PreprocessIcons (args, base);
+
+  GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  std::list<RenderArg>::iterator it;
+  for (it = args.begin (); it != args.end (); ++it)
+  {
+    icon_renderer_->RenderIcon (GfxContext, *it, base, base);
+  }
 
   GfxContext.PopClippingRectangle();
 }

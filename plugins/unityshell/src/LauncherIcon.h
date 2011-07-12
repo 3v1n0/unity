@@ -235,9 +235,6 @@ protected:
     nux::BaseWindow* m_Window;
     Launcher* _launcher;
 
-    std::map<std::string, nux::Vector4*> _xform_coords;
-    bool          _mouse_inside;
-
     nux::Tooltip *_tooltip;
     QuicklistView *_quicklist;
 

@@ -75,7 +75,6 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _glow_color = nux::color::White;
 
   _remote_urgent = false;
-  _mouse_inside = false;
   _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
   _tooltip->SinkReference ();
@@ -915,24 +914,6 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   
   _emblem = emblem;
   needs_redraw.emit (this);
-}
-
-void
-LauncherIcon::SetSuperkeyLabel (nux::BaseTexture* label)
-{
-  if (_superkey_label == label)
-    return;
-  
-  if (_superkey_label)
-    _superkey_label->UnReference ();
-  
-  _superkey_label = label;  
-}
-
-nux::BaseTexture*
-LauncherIcon::GetSuperkeyLabel ()
-{
-  return _superkey_label;
 }
 
 void 

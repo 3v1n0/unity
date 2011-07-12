@@ -122,8 +122,6 @@ public:
 
     virtual nux::BaseTexture * Emblem () = 0;
 
-    virtual nux::BaseTexture * GetSuperkeyLabel () = 0;
-
     virtual std::list<DbusmenuMenuitem *> Menus () = 0;
 
     virtual nux::DndAction QueryAcceptDrop (std::list<char *> paths) = 0;

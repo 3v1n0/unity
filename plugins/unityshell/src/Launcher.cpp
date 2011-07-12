@@ -2245,7 +2245,6 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
       if (self->_icon_under_mouse)
       {
       self->_icon_under_mouse->MouseLeave.emit ();
-      self->_icon_under_mouse->_mouse_inside = false;
       self->_icon_under_mouse = 0;
       }
       self->_initial_drag_animation = true;
@@ -2424,7 +2423,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   if (_icon_under_mouse)
   {
     _icon_under_mouse->MouseLeave.emit ();
-    _icon_under_mouse->_mouse_inside = false;
     _icon_under_mouse = 0;
   }
 
@@ -2735,14 +2733,12 @@ void Launcher::EventLogic ()
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
     _icon_under_mouse->MouseLeave.emit ();
-    _icon_under_mouse->_mouse_inside = false;
     _icon_under_mouse = 0;
   }
 
   if (launcher_icon && (_icon_under_mouse != launcher_icon))
   {
     launcher_icon->MouseEnter.emit ();
-    launcher_icon->_mouse_inside = true;
     _icon_under_mouse = launcher_icon;
     
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
