@@ -62,7 +62,7 @@ public:
       QUIRK_LAST,
     } Quirk;
 
-    virtual ~AbstractLauncherIcon () = 0;
+    virtual ~AbstractLauncherIcon () {}
 
     virtual void HideTooltip () = 0;
 

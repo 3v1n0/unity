@@ -62,7 +62,7 @@ class AbstractIconRenderer
 public:
   typedef boost::shared_ptr<AbstractIconRenderer> Ptr;
 
-  virtual ~AbstractIconRenderer() = 0;
+  virtual ~AbstractIconRenderer() {}
 
   virtual void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window) = 0;
 

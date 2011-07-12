@@ -29,6 +29,7 @@
 #include <dbus/dbus-glib.h>
 
 using namespace unity::switcher;
+using namespace unity::ui;
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {

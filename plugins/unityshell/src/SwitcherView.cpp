@@ -17,10 +17,13 @@
  */
 
 #include "SwitcherView.h"
+#include "IconRenderer.h"
 
 #include <NuxCore/Object.h>
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
+
+using namespace unity::ui;
 
 namespace unity {
 namespace switcher {
@@ -30,7 +33,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (SwitcherView);
 SwitcherView::SwitcherView(NUX_FILE_LINE_DECL) 
 : View (NUX_FILE_LINE_PARAM)
 {
-
+  icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());
 }
 
 SwitcherView::~SwitcherView()

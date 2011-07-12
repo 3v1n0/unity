@@ -21,6 +21,7 @@
 #define SWITCHERVIEW_H
 
 #include "SwitcherModel.h"
+#include "AbstractIconRenderer.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -46,6 +47,7 @@ protected:
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
 private:
+  AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
 };
 
