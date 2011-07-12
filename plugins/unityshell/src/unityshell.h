@@ -39,6 +39,36 @@
 #include "DebugDBusInterface.h"
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
+#include <boost/shared_ptr.hpp>
+
+class UnityFBO
+{
+public:
+
+  typedef boost::shared_ptr <UnityFBO> Ptr;
+
+  UnityFBO (CompOutput *o);
+  ~UnityFBO ();
+
+public:
+
+  void bind ();
+  void unbind ();
+
+  bool status ();
+  void paint ();
+  
+  GLuint texture () { return mFBTexture; }
+
+private:
+
+  /* compiz fbo handle that goes through to nux */
+  GLuint   mFboHandle; // actual handle to the framebuffer_ext
+  bool    mFboStatus; // did the framebuffer texture bind succeed
+  GLuint   mFBTexture;
+  CompOutput *output;
+};
+
 
 /* base screen class */
 class UnityScreen :
@@ -67,6 +97,8 @@ public:
 	/* nux draw wrapper */
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
+
+  void paintFboForOutput (CompOutput *output);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -131,6 +163,8 @@ public:
   void NeedsRelayout();
   void ScheduleRelayout(guint timeout);
 
+  void setActiveFbo (GLuint fbo) { mActiveFbo = fbo; }
+
 protected:
 	const gchar* GetName();
 	void AddProperties(GVariantBuilder *builder);
@@ -190,6 +224,11 @@ private:
 	CompWindowList _withRemovedNuxWindows;
 
   GdkRectangle _primary_monitor;
+
+  std::map <CompOutput *, UnityFBO::Ptr> mFbos;
+  GLuint                                 mActiveFbo;
+
+  bool   queryForShader ();
 
 	friend class UnityWindow;
 };
