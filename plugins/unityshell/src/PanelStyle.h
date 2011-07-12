@@ -48,13 +48,9 @@ class PanelStyle : public nux::Object
     PanelStyle ();
     ~PanelStyle ();
 
-    nux::Color const& GetTextColor() const;
-    nux::Color const& GetBackgroundTop() const;
-    nux::Color const& GetBackgroundBottom() const;
-    nux::Color const& GetTextShadow() const;
-    nux::Color const& GetLineColor() const;
+    GtkStyleContext * GetStyleContext ();
 
-    GdkPixbuf * GetBackground (int width, int height);
+    nux::NBitmapData * GetBackground (int width, int height);
 
     nux::BaseTexture * GetWindowButton (WindowButtonType type, WindowState state);
 
@@ -71,13 +67,9 @@ class PanelStyle : public nux::Object
                                 gpointer    data);
     nux::BaseTexture * GetWindowButtonForTheme (WindowButtonType type, WindowState state);
   private:
-    GtkWidget         *_offscreen;
+    GtkStyleContext   *_style_context;
     char              *_theme_name;
     nux::Color         _text;
-    nux::Color         _bg_top;
-    nux::Color         _bg_bottom;
-    nux::Color         _text_shadow;
-    nux::Color         _line;
 
     gulong            _gtk_theme_changed_id;
 };
