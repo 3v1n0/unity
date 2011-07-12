@@ -261,6 +261,9 @@ add_executable (test-places-backend
                 ${UNITY_SRC}/PlaceRemote.cpp
                 ${UNITY_SRC}/PlaceRemote.h
                 ${UNITY_SRC}/Place.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/UBusMessages.h
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
