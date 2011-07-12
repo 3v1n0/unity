@@ -63,11 +63,15 @@ public:
   
   void SelectFirstItem ();
 
+  void SetWorkspace (nux::Geometry geo);
+
 private:
   void ConstructView ();
 
   SwitcherModel::Ptr model_;
   SwitcherView *view_;
+
+  nux::Geometry workarea_;
 
   nux::BaseWindow *view_window_;
   

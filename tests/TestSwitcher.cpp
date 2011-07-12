@@ -32,10 +32,20 @@
 using namespace unity::switcher;
 using namespace unity::ui;
 
+static gboolean on_timeout (gpointer data)
+{
+  SwitcherController *self = (SwitcherController *) data;
+
+  self->MoveNext ();
+
+  return TRUE;
+}
+
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   SwitcherController *view = new SwitcherController ();
+  view->SetWorkspace (nux::Geometry (0, 0, 800, 500));
 
   //view->SetMinMaxSize(1024, 24);
   layout->SetContentDistribution(nux::eStackCenter);
@@ -47,8 +57,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
+  icons.push_back (new MockLauncherIcon ());
+  icons.push_back (new MockLauncherIcon ());
 
   view->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
+  view->MoveNext ();
+
+  g_timeout_add (1000, on_timeout, view);
 }
 
 int main(int argc, char **argv)
@@ -61,7 +76,7 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
 
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 800, 500, 0, &ThreadWidgetInit, 0);
+  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 800, 500, 0, &ThreadWidgetInit, 0);
   
   wt->Run(NULL);
   delete wt;

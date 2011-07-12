@@ -27,13 +27,14 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/View.h>
+#include <NuxCore/Property.h>
 
 using namespace unity::ui;
 
 namespace unity {
 namespace switcher {
 
-class SwitcherView : public nux::View
+class SwitcherView : public nux::View, nux::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (SwitcherView, nux::View);
 public:
@@ -43,15 +44,26 @@ public:
   void SetModel (SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel ();
 
+  nux::Property<int> border_size;
+  nux::Property<int> flat_spacing;
+  nux::Property<int> icon_size;
+  nux::Property<int> minimum_spacing;
+  nux::Property<int> tile_size;
+
 protected:
   long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
   std::list<RenderArg> RenderArgs ();
+
+  RenderArg CreateBaseArgForIcon (AbstractLauncherIcon *icon);
 private:
+  void OnSelectionChanged (AbstractLauncherIcon *selection);
+
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
+  bool target_sizes_set_;
 };
 
 }

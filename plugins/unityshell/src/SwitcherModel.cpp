@@ -46,6 +46,18 @@ SwitcherModel::end ()
   return _inner.end ();
 }
 
+SwitcherModel::reverse_iterator 
+SwitcherModel::rbegin ()
+{
+  return _inner.rbegin ();
+}
+
+SwitcherModel::reverse_iterator 
+SwitcherModel::rend ()
+{
+  return _inner.rend ();
+}
+
 int 
 SwitcherModel::Size ()
 {
@@ -53,13 +65,13 @@ SwitcherModel::Size ()
 }
 
 AbstractLauncherIcon *
-SwitcherModel::Selected ()
+SwitcherModel::Selection ()
 {
   return _inner.at (_index);
 }
 
 int 
-SwitcherModel::SelectedIndex ()
+SwitcherModel::SelectionIndex ()
 {
   return _index;
 }
@@ -70,6 +82,8 @@ SwitcherModel::Next ()
   _index++;
   if (_index >= _inner.size ())
     _index = 0;
+  
+  selection_changed.emit (Selection ());
 }
 
 void 
@@ -79,6 +93,8 @@ SwitcherModel::Prev ()
     _index--;
   else
     _index = _inner.size () - 1;
+  
+  selection_changed.emit (Selection ());
 }
 
 void 

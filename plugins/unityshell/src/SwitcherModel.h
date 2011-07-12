@@ -44,11 +44,14 @@ public:
 
     iterator begin ();
     iterator end ();
+
+    reverse_iterator rbegin ();
+    reverse_iterator rend ();
     
     int Size ();
     
-    AbstractLauncherIcon *Selected ();
-    int SelectedIndex ();
+    AbstractLauncherIcon *Selection ();
+    int SelectionIndex ();
     
     void Next ();
     void Prev ();
@@ -56,6 +59,8 @@ public:
     void Select (AbstractLauncherIcon *selection);
     void Select (int index);
     
+    sigc::signal<void, AbstractLauncherIcon *> selection_changed;
+
 private:
     Base             _inner;
     unsigned int              _index;
