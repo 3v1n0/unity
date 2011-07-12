@@ -540,7 +540,6 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture (const char label, int width
                                                            height);
   cairo_t*              cr       = cg->GetContext ();
   PangoLayout*          layout   = NULL;
-  PangoContext*         pangoCtx = NULL;
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default (); // not ref'ed
   gchar*                fontName = NULL;
@@ -567,7 +566,6 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture (const char label, int width
   pango_font_description_set_absolute_size (desc, text_size * PANGO_SCALE);
   pango_layout_set_font_description (layout, desc);
   pango_layout_set_text (layout, &label, 1);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
 
   PangoRectangle logRect;
   PangoRectangle inkRect;
@@ -635,7 +633,6 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
   v3.w = xform_coords[3].w ;
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
-  nux::Color color = bkg_color;
 
   if (icon->GetResourceType () == nux::RTTEXTURERECTANGLE)
   {
@@ -666,7 +663,6 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
   int TextureObjectLocation;
   int VertexLocation;
   int TextureCoord0Location;
-  int VertexColorLocation;
   int FragmentColor;
   int DesatFactor;
 
@@ -677,7 +673,6 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
     TextureObjectLocation   = _shader_program_uv_persp_correction->GetUniformLocationARB ("TextureObject0");
     VertexLocation          = _shader_program_uv_persp_correction->GetAttributeLocation  ("iVertex");
     TextureCoord0Location   = _shader_program_uv_persp_correction->GetAttributeLocation  ("iTexCoord0");
-    VertexColorLocation     = _shader_program_uv_persp_correction->GetAttributeLocation  ("iColor");
     FragmentColor           = _shader_program_uv_persp_correction->GetUniformLocationARB ("color0");
     DesatFactor             = _shader_program_uv_persp_correction->GetUniformLocationARB ("desat_factor");
 
@@ -697,7 +692,6 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
 
     VertexLocation        = nux::VTXATTRIB_POSITION;
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
-    VertexColorLocation   = nux::VTXATTRIB_COLOR;
 
     nux::GetGraphicsEngine().SetTexture(GL_TEXTURE0, icon);
 

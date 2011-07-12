@@ -2956,7 +2956,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
 {
   std::list<char *>::iterator it;
   nux::Area *parent = GetToplevel ();
-  char *remote_desktop_path = NULL;
   char *uri_list_const = g_strdup ("text/uri-list");
   
   if (!_data_checked)
@@ -2979,7 +2978,6 @@ Launcher::ProcessDndMove (int x, int y, std::list<char *> mimes)
     {
       if (g_str_has_suffix (*it, ".desktop"))
       {
-        remote_desktop_path = *it;
         _steal_drag = true;
         break;
       }
