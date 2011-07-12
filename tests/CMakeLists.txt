@@ -28,7 +28,7 @@ set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION}")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${LIB_PATHS} ${CMAKE_BINARY_DIR}/UnityCore)
+link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
