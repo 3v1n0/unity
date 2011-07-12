@@ -42,10 +42,12 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
   _confirm_dialog = NULL;
   _on_confirm_dialog_close_id = 0;
 
-  m_TrashMonitor = g_file_monitor_directory (g_file_new_for_uri("trash:///"),
-					     G_FILE_MONITOR_NONE,
-					     NULL,
-					     NULL);
+  GFile *location = g_file_new_for_uri ("trash:///");
+  
+  m_TrashMonitor = g_file_monitor_directory (location,
+                                             G_FILE_MONITOR_NONE,
+                                             NULL,
+                                             NULL);
 
   _on_trash_changed_handler_id = g_signal_connect (m_TrashMonitor,
                                                    "changed",
@@ -53,6 +55,8 @@ TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
                                                    this);
 
   UpdateTrashIcon ();
+  
+  g_object_unref (location);
 }
 
 TrashLauncherIcon::~TrashLauncherIcon()
@@ -255,6 +259,7 @@ TrashLauncherIcon::UpdateTrashIconCb (GObject      *source,
     else self->_empty = FALSE;
 
     g_object_unref(info);
+    g_free(icon_name);
   }
 }
 
