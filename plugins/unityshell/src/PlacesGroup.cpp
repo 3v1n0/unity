@@ -128,7 +128,7 @@ PlacesGroup::OnLabelActivated (nux::Area *label)
 void
 PlacesGroup::OnLabelFocusChanged (nux::Area *label)
 {
-  if (_expand_label->GetFocused ())
+  if (_expand_label->HasKeyFocus ())
   {
     _expand_label->SetTextColor (kExpandHoverTextColor);
     _expand_icon->SetOpacity (kExpandHoverIconOpacity);
@@ -350,7 +350,7 @@ PlacesGroup::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned 
 void
 PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!_expand_label->GetFocused ())
+  if (!_expand_label->HasKeyFocus ())
   {
     _expand_label->SetTextColor (kExpandDefaultTextColor);
     _expand_icon->SetOpacity (kExpandDefaultIconOpacity);
