@@ -280,7 +280,7 @@ DeviceLauncherIcon::OnEjectReady (GObject            *object,
     gchar  *name = g_volume_get_name (self->_volume);
     
     notification = notify_notification_new (name,
-                                            "The drive has been successfully ejected",
+                                            _("The drive has been successfully ejected"),
                                             "drive-removable-media-usb");
   
     notify_notification_show (notification, NULL);
