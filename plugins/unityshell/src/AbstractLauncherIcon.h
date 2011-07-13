@@ -131,11 +131,11 @@ public:
 
     virtual void SendDndLeave () = 0;
     
-    sigc::signal<void, int> MouseDown;
-    sigc::signal<void, int> MouseUp;
-    sigc::signal<void, int> MouseClick;
-    sigc::signal<void>      MouseEnter;
-    sigc::signal<void>      MouseLeave;
+    sigc::signal<void, int> mouse_down;
+    sigc::signal<void, int> mouse_up;
+    sigc::signal<void, int> mouse_click;
+    sigc::signal<void>      mouse_enter;
+    sigc::signal<void>      mouse_leave;
     
     sigc::signal<void, AbstractLauncherIcon *> show;
     sigc::signal<void, AbstractLauncherIcon *> hide;

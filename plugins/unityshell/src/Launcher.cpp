@@ -2249,7 +2249,7 @@ gboolean Launcher::StartIconDragTimeout (gpointer data)
     if (self->GetActionState () == ACTION_NONE) {
       if (self->_icon_under_mouse)
       {
-      self->_icon_under_mouse->MouseLeave.emit ();
+      self->_icon_under_mouse->mouse_leave.emit ();
       self->_icon_under_mouse = 0;
       }
       self->_initial_drag_animation = true;
@@ -2449,7 +2449,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (_icon_under_mouse)
   {
-    _icon_under_mouse->MouseLeave.emit ();
+    _icon_under_mouse->mouse_leave.emit ();
     _icon_under_mouse = 0;
   }
 
@@ -2759,13 +2759,13 @@ void Launcher::EventLogic ()
 
   if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
   {
-    _icon_under_mouse->MouseLeave.emit ();
+    _icon_under_mouse->mouse_leave.emit ();
     _icon_under_mouse = 0;
   }
 
   if (launcher_icon && (_icon_under_mouse != launcher_icon))
   {
-    launcher_icon->MouseEnter.emit ();
+    launcher_icon->mouse_enter.emit ();
     _icon_under_mouse = launcher_icon;
 
     _hide_machine->SetQuirk (LauncherHideMachine::LAST_ACTION_ACTIVATE, false);
@@ -2787,7 +2787,7 @@ void Launcher::MouseDownLogic (int x, int y, unsigned long button_flags, unsigne
       g_source_remove (_start_dragicon_handle);
     _start_dragicon_handle = g_timeout_add (START_DRAGICON_DURATION, &Launcher::StartIconDragTimeout, this);
 
-    launcher_icon->MouseDown.emit (nux::GetEventButton (button_flags));
+    launcher_icon->mouse_down.emit (nux::GetEventButton (button_flags));
   }
 }
 
@@ -2803,16 +2803,16 @@ void Launcher::MouseUpLogic (int x, int y, unsigned long button_flags, unsigned 
 
   if (_icon_mouse_down && (_icon_mouse_down == launcher_icon))
   {
-    _icon_mouse_down->MouseUp.emit (nux::GetEventButton (button_flags));
+    _icon_mouse_down->mouse_up.emit (nux::GetEventButton (button_flags));
 
     if (GetActionState () == ACTION_NONE) {
-      _icon_mouse_down->MouseClick.emit (nux::GetEventButton (button_flags));
+      _icon_mouse_down->mouse_click.emit (nux::GetEventButton (button_flags));
     }
   }
 
   if (launcher_icon && (_icon_mouse_down != launcher_icon))
   {
-    launcher_icon->MouseUp.emit (nux::GetEventButton (button_flags));
+    launcher_icon->mouse_up.emit (nux::GetEventButton (button_flags));
   }
 
   if (GetActionState () == ACTION_DRAG_LAUNCHER)

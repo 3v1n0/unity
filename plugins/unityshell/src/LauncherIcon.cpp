@@ -106,11 +106,11 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   AddChild (_quicklist);
   AddChild (_tooltip);
 
-  MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
-  MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
-  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
-  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
-  MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
+  mouse_enter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
+  mouse_leave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  mouse_down.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  mouse_up.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  mouse_click.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
 }
 
 LauncherIcon::~LauncherIcon()

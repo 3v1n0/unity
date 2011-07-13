@@ -31,11 +31,11 @@ SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
   m_Icon = 0;
   m_IconName = 0;
 
-  _on_mouse_down_connection = (sigc::connection) LauncherIcon::MouseDown.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
-  _on_mouse_up_connection = (sigc::connection) LauncherIcon::MouseUp.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
-  _on_mouse_click_connection = (sigc::connection) LauncherIcon::MouseClick.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
-  _on_mouse_enter_connection = (sigc::connection) LauncherIcon::MouseEnter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
-  _on_mouse_leave_connection = (sigc::connection) LauncherIcon::MouseLeave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+  _on_mouse_down_connection = (sigc::connection) LauncherIcon::mouse_down.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
+  _on_mouse_up_connection = (sigc::connection) LauncherIcon::mouse_up.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
+  _on_mouse_click_connection = (sigc::connection) LauncherIcon::mouse_click.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
+  _on_mouse_enter_connection = (sigc::connection) LauncherIcon::mouse_enter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
+  _on_mouse_leave_connection = (sigc::connection) LauncherIcon::mouse_leave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
 
   _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
                                         G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
