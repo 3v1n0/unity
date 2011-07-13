@@ -100,6 +100,9 @@ protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  
 private:
   static void     CloseRequest (GVariant *data, PlacesView *self);
   static gboolean OnCloseTimeout (PlacesView *self);

@@ -41,8 +41,8 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   OnMouseClick.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseClick));
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
-  FocusChanged.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
-  FocusActivated.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
+  OnKeyNavFocusChange.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
+  OnKeyNavFocusActivate.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;
 }
 
@@ -69,7 +69,7 @@ PlacesTile::GetId ()
 }
 
 void
-PlacesTile::OnFocusChanged (nux::Area *area)
+PlacesTile::OnFocusChanged (nux::Area *label)
 {
   QueueDraw ();
 }
@@ -317,7 +317,7 @@ PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned l
 }
 
 void
-PlacesTile::OnFocusActivated (nux::Area *area)
+PlacesTile::OnFocusActivated (nux::Area *label)
 {
   sigClick.emit (this);
 }

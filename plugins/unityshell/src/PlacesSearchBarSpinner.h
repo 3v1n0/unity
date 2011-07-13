@@ -53,6 +53,9 @@ protected:
   void AddProperties (GVariantBuilder *builder);
   static gboolean OnFrame (PlacesSearchBarSpinner *self);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  
 private:
 
 private:

@@ -504,3 +504,12 @@ PlacesSearchBar::UpdateBackground ()
 
   texture2D->UnReference ();
 }
+
+//
+// Key navigation
+//
+bool 
+PlacesSearchBar::AcceptKeyNavFocus()
+{
+  return false;
+}

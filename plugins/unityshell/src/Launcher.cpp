@@ -781,7 +781,7 @@ Launcher::exitKeyNavMode ()
   UnGrabKeyboard ();
   UnGrabPointer ();
   SetStateKeyNav (false);
-
+  
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
   QueueDraw ();
@@ -4272,4 +4272,16 @@ Launcher::OnNameLost (GDBusConnection *connection,
                        gpointer         user_data)
 {
   g_debug ("Lost the name %s on the session bus\n", name);
+}
+
+//
+// Key navigation
+//
+bool
+Launcher::InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character)
+{
+  // The Launcher accepts all key inputs.
+  return true;
 }

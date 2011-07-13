@@ -99,6 +99,11 @@ public:
 
   void EnableQuicklistForTesting (bool enable_testing);
 
+  // Key navigation
+  virtual bool InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character);
+      
 private:
   void RecvCairoTextChanged (QuicklistMenuItem* item);
   void RecvCairoTextColorChanged (QuicklistMenuItem* item);

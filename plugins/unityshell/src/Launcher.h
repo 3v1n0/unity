@@ -175,6 +175,13 @@ public:
   sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
+
+
+  // Key navigation
+  virtual bool InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character);
+
 protected:
   // Introspectable methods
   const gchar* GetName ();

@@ -71,6 +71,9 @@ protected:
   const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+
 private:
   void UpdateBackground ();
   void OnSearchChanged (nux::TextEntry *text_entry);

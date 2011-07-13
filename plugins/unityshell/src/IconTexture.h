@@ -43,7 +43,13 @@ public:
   void SetOpacity (float opacity);
   void SetTexture (nux::BaseTexture *texture);
 
+  void SetAcceptKeyNavFocus(bool accept);
+  
 protected:
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  bool _accept_key_nav_focus;
+  
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
   virtual bool DoCanFocus ();

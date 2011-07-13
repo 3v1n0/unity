@@ -139,7 +139,7 @@ nux_area_accessible_initialize (AtkObject *accessible,
   area = dynamic_cast<nux::Area *>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
-  area->FocusChanged.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
+  (static_cast<nux::InputArea*>(area))->OnKeyNavFocusChange.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
 
   atk_component_add_focus_handler (ATK_COMPONENT (accessible),
                                    nux_area_accessible_focus_handler);

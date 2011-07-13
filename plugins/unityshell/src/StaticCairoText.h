@@ -96,6 +96,12 @@ namespace nux
       sigc::signal<void, StaticCairoText*> sigTextColorChanged;
       sigc::signal<void, StaticCairoText*> sigFontChanged;
 
+      void SetAcceptKeyNavFocus(bool accept);
+    protected:
+      // Key navigation
+      virtual bool AcceptKeyNavFocus();
+      bool _accept_key_nav_focus;
+
     private:
       int            _cached_extent_width;
       int            _cached_extent_height;
