@@ -35,6 +35,8 @@ public:
   virtual nux::Color BackgroundColor ();
   virtual nux::Color GlowColor ();
   void UpdateVisibility ();
+  bool CanEject ();
+  void Eject ();
 
 protected:
   std::list<DbusmenuMenuitem *> GetMenus ();
@@ -43,7 +45,6 @@ protected:
 private:
   void ActivateLauncherIcon ();
   void ShowMount (GMount *mount);
-  void Eject ();
   void Unmount ();
   void StopDrive ();
   static void OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self);

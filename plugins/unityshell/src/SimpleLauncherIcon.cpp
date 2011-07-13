@@ -51,6 +51,9 @@ SimpleLauncherIcon::~SimpleLauncherIcon()
 
   if (m_Icon)
     m_Icon->UnReference ();
+    
+  if (m_IconName)
+    g_free (m_IconName);
 
   if (_theme_changed_id)
     g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);

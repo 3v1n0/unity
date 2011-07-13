@@ -40,6 +40,7 @@
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
+#include <libnotify/notify.h>
 
 #include <core/atoms.h>
 
@@ -90,6 +91,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
+
+  notify_init ("unityshell");
 
   g_thread_init (NULL);
   dbus_g_thread_init ();
@@ -187,6 +190,8 @@ UnityScreen::~UnityScreen()
   delete controller;
   launcher->UnReference ();
   launcherWindow->UnReference ();
+  
+  notify_uninit ();
 
   unity_a11y_finalize ();
 
