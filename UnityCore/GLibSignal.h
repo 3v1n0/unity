@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <glib-object.h>
 #include <sigc++/sigc++.h>
@@ -285,7 +286,7 @@ public:
                 SignalCallback     callback);
 };
 
-class SignalManager
+class SignalManager : public boost::noncopyable
 {
 public:
   typedef std::vector<SignalBase::Ptr> ConnectionVector;
