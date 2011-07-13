@@ -40,7 +40,8 @@ PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
 : PlacesTile (NUX_TRACKER_LOCATION, id),
   _label (NULL),
   _icon (NULL),
-  _uri (NULL)
+  _uri (NULL),
+  _idealiconsize (icon_size)
 {
   PlacesStyle *style = PlacesStyle::GetDefault ();
   nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
@@ -190,10 +191,10 @@ PlacesSimpleTile::GetHighlightGeometry ()
 
   _icontex->GetTextureSize (&width, &height);
   
-  _highlight_geometry.x = (base.width - width) / 2;
+  _highlight_geometry.width = MAX(width, _idealiconsize);
+  _highlight_geometry.height = MAX(height, _idealiconsize);
+  _highlight_geometry.x = (base.width - _highlight_geometry.width) / 2;
   _highlight_geometry.y = 12;
-  _highlight_geometry.width = width;
-  _highlight_geometry.height = height;
 
   return _highlight_geometry;
 }

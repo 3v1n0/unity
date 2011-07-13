@@ -17,6 +17,7 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include "DeviceLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "LauncherController.h"
 #include "LauncherIcon.h"
@@ -115,7 +116,7 @@ LauncherController::OnLauncherAddRequest (char *path, LauncherIcon *before)
   }
 }
 
-void LauncherController::SortAndSave()
+void LauncherController::SortAndUpdate()
 {
   std::list<BamfLauncherIcon *> launchers;
   std::list<BamfLauncherIcon *>::iterator it;
@@ -126,8 +127,6 @@ void LauncherController::SortAndSave()
   launchers = _model->GetSublist<BamfLauncherIcon> ();
   for (it = launchers.begin (); it != launchers.end (); it++)
   {
-    BamfLauncherIcon *icon = *it;
-
     if (shortcut < 11 && (*it)->GetQuirk (LauncherIcon::QUIRK_VISIBLE))
     {
       buff = g_strdup_printf ("%d", shortcut % 10);
@@ -140,17 +139,7 @@ void LauncherController::SortAndSave()
     {
       (*it)->SetShortcut (0);
     }
-
-    if (!icon->IsSticky ())
-      continue;
-
-    const char* desktop_file = icon->DesktopFile ();
-
-    if (desktop_file && strlen (desktop_file) > 0)
-      desktop_paths.push_back(desktop_file);
   }
-
-  FavoriteStore::GetDefault().SetFavorites(desktop_paths);
 }
 
 void
@@ -162,13 +151,29 @@ LauncherController::OnIconAdded (LauncherIcon *icon)
 void
 LauncherController::OnLauncherRemoveRequest (LauncherIcon *icon)
 {
-  BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
-  
-  // we only handle bamf Icon removal request for now.
-  if (!bamf_icon)
-    return;
-    
-  bamf_icon->UnStick ();
+  switch (icon->Type ())
+  {
+    case LauncherIcon::TYPE_APPLICATION:
+    {
+      BamfLauncherIcon *bamf_icon = dynamic_cast<BamfLauncherIcon *> (icon);
+      
+      if (bamf_icon)
+        bamf_icon->UnStick ();
+      
+      break;
+    }
+    case LauncherIcon::TYPE_DEVICE:
+    {
+      DeviceLauncherIcon *device_icon = dynamic_cast<DeviceLauncherIcon *> (icon);
+      
+      if (device_icon && device_icon->CanEject ())
+        device_icon->Eject ();
+      
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 void
@@ -373,6 +378,6 @@ void LauncherController::SetupBamf()
     RegisterIcon (icon);
   }
   
-  _model->order_changed.connect (sigc::mem_fun (this, &LauncherController::SortAndSave));
+  _model->order_changed.connect (sigc::mem_fun (this, &LauncherController::SortAndUpdate));
 }
 

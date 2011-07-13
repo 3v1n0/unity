@@ -201,11 +201,12 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 {
   long ret = TraverseInfo;
   nux::Geometry geo = GetAbsoluteGeometry ();
+  nux::Geometry geo_buttons = _window_buttons->GetAbsoluteGeometry ();
 
   if (!_we_control_active)
     return _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
-
-  if (geo.IsPointInside (ievent.e_x, ievent.e_y))
+  
+  if (geo.IsPointInside (ievent.e_x, ievent.e_y) && !(_is_maximized && geo_buttons.IsPointInside (ievent.e_x, ievent.e_y)) )
   {
     if (_is_inside != true)
     {
