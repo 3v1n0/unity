@@ -586,27 +586,10 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
   else
     icon->SetFiltering(GL_LINEAR, GL_LINEAR);
 
-  nux::Vector4 v0;
-  nux::Vector4 v1;
-  nux::Vector4 v2;
-  nux::Vector4 v3;
-
-  v0.x = xform_coords[0].x ;
-  v0.y = xform_coords[0].y ;
-  v0.z = xform_coords[0].z ;
-  v0.w = xform_coords[0].w ;
-  v1.x = xform_coords[1].x ;
-  v1.y = xform_coords[1].y ;
-  v1.z = xform_coords[1].z ;
-  v1.w = xform_coords[1].w ;
-  v2.x = xform_coords[2].x ;
-  v2.y = xform_coords[2].y ;
-  v2.z = xform_coords[2].z ;
-  v2.w = xform_coords[2].w ;
-  v3.x = xform_coords[3].x ;
-  v3.y = xform_coords[3].y ;
-  v3.z = xform_coords[3].z ;
-  v3.w = xform_coords[3].w ;
+  nux::Vector4 const& v0 = xform_coords[0];
+  nux::Vector4 const& v1 = xform_coords[1];
+  nux::Vector4 const& v2 = xform_coords[2];
+  nux::Vector4 const& v3 = xform_coords[3];
 
   float s0, t0, s1, t1, s2, t2, s3, t3;
 
@@ -690,8 +673,6 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
   }
 
   nux::Color bg_color = bkg_color * alpha;
-  // Since we don't know want the alpha was, reset the alpha channel of the color.
-  bkg_color.alpha = alpha;
 
   if(nux::GetGraphicsEngine ().UsingGLSLCodePath ())
   {

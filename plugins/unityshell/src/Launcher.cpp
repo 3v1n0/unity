@@ -26,6 +26,7 @@
 #include "Nux/HLayout.h"
 #include "Nux/VLayout.h"
 #include "Nux/MenuPage.h"
+#include "NuxCore/Logger.h"
 
 #include "NuxGraphics/NuxGraphics.h"
 #include "NuxGraphics/GpuDevice.h"
@@ -50,6 +51,8 @@
 using namespace unity::ui;
 
 namespace {
+
+nux::logging::Logger logger("unity.launcher");
 
 const int URGENT_BLINKS = 3;
 const int WIGGLE_CYCLES = 6;
