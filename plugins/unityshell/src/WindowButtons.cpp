@@ -58,7 +58,7 @@ public:
     nux::Geometry      geo  = GetGeometry ();
     nux::BaseTexture  *tex;
     nux::TexCoordXForm texxform;
- 
+
     GfxContext.PushClippingRectangle (geo);
 
     if (HasMouseFocus ())
@@ -123,23 +123,25 @@ WindowButtons::WindowButtons ()
 {
   WindowButton *but;
 
+  auto lambda_statechanged = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { redraw_signal.emit (); };
+
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->OnMouseEnter.connect (lambda_statechanged);
+  but->OnMouseLeave.connect (lambda_statechanged);
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->OnMouseEnter.connect (lambda_statechanged);
+  but->OnMouseLeave.connect (lambda_statechanged);
 
   but = new WindowButton (PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView (but, 0, nux::eCenter, nux::eFix);
   but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but->OnMouseEnter.connect (lambda_statechanged);
+  but->OnMouseLeave.connect (lambda_statechanged);
 
   SetContentDistribution (nux::eStackLeft);
 }
@@ -184,15 +186,3 @@ WindowButtons::AddProperties (GVariantBuilder *builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
-
-void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  redraw_signal.emit ();
-}
-
-void WindowButtons::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  redraw_signal.emit ();
-}
-
-
