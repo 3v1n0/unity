@@ -90,9 +90,9 @@ public:
 
   virtual ~AbstractIconRenderer() {}
 
-  virtual void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window) = 0;
+  virtual void PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;
 
-  virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo, nux::Geometry owner_geo) = 0;
+  virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo) = 0;
 
   virtual void SetTargetSize (int tile_size, int image_size, int spacing) = 0;
 };

@@ -36,9 +36,9 @@ public:
   IconRenderer();
   virtual ~IconRenderer();
 
-  void PreprocessIcons (std::list<RenderArg> &args, nux::Geometry target_window);
+  void PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& target_window);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry anchor_geo, nux::Geometry owner_geo);
+  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo);
 
   void SetTargetSize (int tile_size, int image_size, int spacing);
 
@@ -46,28 +46,28 @@ protected:
   nux::BaseTexture* RenderCharToTexture (const char label, int width, int height);                              
 
   void RenderElement (nux::GraphicsEngine& GfxContext,
-                      RenderArg const &arg,
+                      RenderArg const& arg,
                       nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                       nux::Color bkg_color,
                       float alpha,
-                      std::vector<nux::Vector4> &xform_coords);
+                      std::vector<nux::Vector4>& xform_coords);
   
   void RenderIndicators (nux::GraphicsEngine& GfxContext,
-                         RenderArg const &arg,
+                         RenderArg const& arg,
                          int running,
                          int active,
                          float alpha,
-                         nux::Geometry& geo);
+                         nux::Geometry const& geo);
 
   void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, 
                                 nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, 
                                 float progress_fill, 
                                 float bias);
 
-  void UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+  void UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                             float x, float y, float w, float h, float z, std::string name);
   
-  void UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+  void UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                                    float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
 
   void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,

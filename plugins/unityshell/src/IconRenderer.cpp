@@ -178,7 +178,7 @@ void IconRenderer::SetTargetSize (int tile_size, int image_size_, int spacing_)
   GenerateTextures ();
 }
 
-void IconRenderer::PreprocessIcons (std::list<RenderArg> &args, nux::Geometry geo)
+void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& geo)
 {
   nux::Matrix4 ObjectMatrix;
   nux::Matrix4 ViewMatrix;
@@ -273,7 +273,7 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg> &args, nux::Geometry ge
   }
 }
 
-void IconRenderer::UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+void IconRenderer::UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                                         float x, float y, float w, float h, float z, std::string name)
 {
   nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
@@ -302,7 +302,7 @@ void IconRenderer::UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4
   v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + y + h/2.0f;
 
 
-  std::vector<nux::Vector4> &vectors = icon->GetTransform (name);
+  std::vector<nux::Vector4>& vectors = icon->GetTransform (name);
 
   vectors[0].x = v0.x;
   vectors[0].y = v0.y;
@@ -322,7 +322,7 @@ void IconRenderer::UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4
   vectors[3].w = v3.w;
 }
 
-void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
+void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                                                float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name)
 {
   nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
@@ -351,7 +351,7 @@ void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::
   v3.y = -geo.height*(v3.y - 1.0f)/2.0f - geo.height/2.0f + yy + hh/2.0f;
 
 
-  std::vector<nux::Vector4> &vectors = icon->GetTransform (name);
+  std::vector<nux::Vector4>& vectors = icon->GetTransform (name);
 
   vectors[0].x = v0.x;
   vectors[0].y = v0.y;
@@ -371,7 +371,7 @@ void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::
   vectors[3].w = v3.w;
 }
 
-void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo, nux::Geometry owner_geo)
+void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& geo, nux::Geometry const& owner_geo)
 {
   // This check avoids a crash when the icon is not available on the system.
   if (arg.icon->TextureForSize (image_size) == 0)
@@ -591,11 +591,11 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture (const char label, int width
 }
 
 void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
-                                  RenderArg const &arg,
+                                  RenderArg const& arg,
                                   nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
                                   nux::Color bkg_color,
                                   float alpha,
-                                  std::vector<nux::Vector4> &xform_coords)
+                                  std::vector<nux::Vector4>& xform_coords)
 {
   if (icon == NULL)
     return;
@@ -752,11 +752,11 @@ void IconRenderer::RenderElement (nux::GraphicsEngine& GfxContext,
 }
 
 void IconRenderer::RenderIndicators (nux::GraphicsEngine& GfxContext,
-                                     RenderArg const &arg,
+                                     RenderArg const& arg,
                                      int running,
                                      int active,
                                      float alpha,
-                                     nux::Geometry& geo)
+                                     nux::Geometry const& geo)
 {
   int markerCenter = (int) arg.render_center.y;
   markerCenter -= (int) (arg.x_rotation / (2 * M_PI) * icon_size);
