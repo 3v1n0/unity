@@ -256,7 +256,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     // 0 out timers to avoid wonky startups
     int i;
-    for (i = 0; i < TIME_LAST; i++)
+    for (i = 0; i < TIME_LAST; ++i)
     {
       _times[i].tv_sec = 0;
       _times[i].tv_nsec = 0;
@@ -265,7 +265,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _drag_window = NULL;
     _offscreen_drag_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableDeviceTexture (2, 2, 1, nux::BITFMT_R8G8B8A8);
 
-    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+    for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); ++i)
       _ubus_handles[i] = 0;
 
     UBusServer *ubus = ubus_server_get_default ();
@@ -413,7 +413,7 @@ Launcher::~Launcher()
     g_source_remove (_launcher_animation_timeout);
 
   UBusServer* ubus = ubus_server_get_default ();
-  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
+  for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); ++i)
   {
     if (_ubus_handles[i] != 0)
       ubus_server_unregister_interest (ubus, _ubus_handles[i]);
@@ -1143,7 +1143,7 @@ void Launcher::SetupRenderArg (LauncherIcon *icon, struct timespec const &curren
     // we can't use the random-access operator [] :(
     LauncherModel::iterator it;
     int i;
-    for (it = _model->begin (), i = 0; it != _model->end (); it++, i++)
+    for (it = _model->begin (), i = 0; it != _model->end (); it++, ++i)
       if (i == _current_icon_index && *it == icon) {
         arg.keyboard_nav_hl = true;
       }
@@ -2836,7 +2836,7 @@ LauncherIcon* Launcher::MouseIconIntersection (int x, int y)
       continue;
 
     nux::Point2 screen_coord [4];
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
     {
       screen_coord [i].x = (*it)->GetTransform ("HitArea") [i].x;
       screen_coord [i].y = (*it)->GetTransform ("HitArea") [i].y;
@@ -2966,7 +2966,7 @@ Launcher::StringToUriList (char * input)
     // empty string check
     if (imtrappedinastringfactory[i][0])
       result.push_back (g_strdup (imtrappedinastringfactory[i]));
-    i++;
+    ++i;
   }
 
   g_strfreev (imtrappedinastringfactory);
