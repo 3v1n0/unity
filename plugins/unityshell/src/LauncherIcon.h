@@ -128,8 +128,6 @@ public:
     
     nux::BaseTexture * Emblem ();
     
-    nux::BaseTexture* GetSuperkeyLabel ();
-    
     std::list<DbusmenuMenuitem *> Menus ();
     
     void InsertEntryRemote (LauncherEntryRemote *remote);
