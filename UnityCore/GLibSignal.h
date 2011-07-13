@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: sigc::nil; tab-width: 2 -*-
 /*
 * Copyright (C) 2011 Canonical Ltd
 *
@@ -194,12 +194,10 @@ private:
   SignalCallback callback_;
 };
 
-struct nil;
-
 template <typename R, typename G,
-          typename T1 = nil, typename T2 = nil,
-          typename T3 = nil, typename T4 = nil,
-          typename T5 = nil, typename T6 = nil>
+          typename T1 = sigc::nil, typename T2 = sigc::nil,
+          typename T3 = sigc::nil, typename T4 = sigc::nil,
+          typename T5 = sigc::nil, typename T6 = sigc::nil>
 class Signal : public Signal6<R, G, T1, T2, T3, T4, T5, T6>
 {
 public:
@@ -212,7 +210,7 @@ public:
 };
 
 template <typename R, typename G>
-class Signal<R, G, nil, nil, nil, nil, nil, nil> : public Signal0<R, G>
+class Signal<R, G, sigc::nil, sigc::nil, sigc::nil, sigc::nil, sigc::nil, sigc::nil> : public Signal0<R, G>
 {
 public:
   typedef sigc::slot<R, G> SignalCallback;
@@ -224,7 +222,7 @@ public:
 };
 
 template <typename R, typename G, typename T1>
-class Signal<R, G, T1, nil, nil, nil, nil, nil> : public Signal1<R, G, T1>
+class Signal<R, G, T1, sigc::nil, sigc::nil, sigc::nil, sigc::nil, sigc::nil> : public Signal1<R, G, T1>
 {
 public:
   typedef sigc::slot<R, G, T1> SignalCallback;
@@ -236,7 +234,7 @@ public:
 };
 
 template <typename R, typename G, typename T1, typename T2>
-class Signal<R, G, T1, T2, nil, nil, nil, nil> : public Signal2<R, G, T1, T2>
+class Signal<R, G, T1, T2, sigc::nil, sigc::nil, sigc::nil, sigc::nil> : public Signal2<R, G, T1, T2>
 {
 public:
   typedef sigc::slot<R, G, T1, T2> SignalCallback;
@@ -248,7 +246,7 @@ public:
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3>
-class Signal<R, G, T1, T2, T3, nil, nil, nil> : public Signal3<R, G, T1, T2 ,T3>
+class Signal<R, G, T1, T2, T3, sigc::nil, sigc::nil, sigc::nil> : public Signal3<R, G, T1, T2 ,T3>
 {
 public:
   typedef sigc::slot<R, G, T1, T2, T3> SignalCallback;
@@ -260,7 +258,7 @@ public:
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4>
-class Signal<R, G, T1, T2, T3, T4, nil, nil>
+class Signal<R, G, T1, T2, T3, T4, sigc::nil, sigc::nil>
   : public Signal4<R, G, T1, T2 ,T3, T4>
 {
 public:
@@ -273,7 +271,7 @@ public:
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4, typename T5>
-class Signal<R, G, T1, T2, T3, T4, T5, nil>
+class Signal<R, G, T1, T2, T3, T4, T5, sigc::nil>
   : public Signal5<R, G, T1, T2 ,T3, T4, T5>
 {
 public:
