@@ -199,14 +199,14 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   std::list<RenderArg>::iterator it;
   for (it = args.begin (); it != args.end (); ++it)
   {
-    if ((*it).y_rotation < 0)
+    if (it->y_rotation < 0)
       icon_renderer_->RenderIcon (GfxContext, *it, base, base);
   }
 
   std::list<RenderArg>::reverse_iterator rit;
   for (rit = args.rbegin (); rit != args.rend (); ++rit)
   {
-    if ((*rit).y_rotation >= 0)
+    if (rit->y_rotation >= 0)
       icon_renderer_->RenderIcon (GfxContext, *rit, base, base);
   }
 

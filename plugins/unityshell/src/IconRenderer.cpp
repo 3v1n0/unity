@@ -192,15 +192,15 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
   for(it = args.begin(), i = 0; it != args.end(); it++, i++)
   {
 
-    AbstractLauncherIcon* launcher_icon = (*it).icon;
+    AbstractLauncherIcon* launcher_icon = it->icon;
 
     float w = icon_size;
     float h = icon_size;
-    float x = (*it).render_center.x - w/2.0f; // x: top left corner
-    float y = (*it).render_center.y - h/2.0f; // y: top left corner
-    float z = (*it).render_center.z;
+    float x = it->render_center.x - w/2.0f; // x: top left corner
+    float y = it->render_center.y - h/2.0f; // y: top left corner
+    float z = it->render_center.z;
 
-    if ((*it).skip)
+    if (it->skip)
     {
       w = 1;
       h = 1;
@@ -209,10 +209,10 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
     }
     
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
-      nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
-      nux::Matrix4::ROTATEY((*it).y_rotation) *
-      nux::Matrix4::ROTATEZ((*it).z_rotation) *
-      nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
+                   nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
+                   nux::Matrix4::ROTATEY(it->y_rotation) *
+                   nux::Matrix4::ROTATEZ(it->z_rotation) *
+                   nux::Matrix4::TRANSLATE(-x - w/2.0f, -y - h/2.0f, -z);    // Put the center the icon to (0, 0)
 
     ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
 
@@ -220,18 +220,18 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
 
     w = image_size;
     h = image_size;
-    x = (*it).render_center.x - icon_size/2.0f + (icon_size - image_size)/2.0f;
-    y = (*it).render_center.y - icon_size/2.0f + (icon_size - image_size)/2.0f;
-    z = (*it).render_center.z;
+    x = it->render_center.x - icon_size/2.0f + (icon_size - image_size)/2.0f;
+    y = it->render_center.y - icon_size/2.0f + (icon_size - image_size)/2.0f;
+    z = it->render_center.z;
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
 
     int icon_glow_size = image_size + 14;
     w = icon_glow_size;
     h = icon_glow_size;
-    x = (*it).render_center.x - icon_glow_size/2.0f;
-    y = (*it).render_center.y - icon_glow_size/2.0f;
-    z = (*it).render_center.z;
+    x = it->render_center.x - icon_glow_size/2.0f;
+    y = it->render_center.y - icon_glow_size/2.0f;
+    z = it->render_center.z;
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Glow");
 
@@ -239,9 +239,9 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
     h = icon_size + spacing;
     if (i == (int) args.size () - 1)
       h += 4;
-    x = (*it).logical_center.x - w/2.0f;
-    y = (*it).logical_center.y - h/2.0f;
-    z = (*it).logical_center.z;
+    x = it->logical_center.x - w/2.0f;
+    y = it->logical_center.y - h/2.0f;
+    z = it->logical_center.z;
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "HitArea");
     
@@ -255,20 +255,20 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
       float emb_w = emblem->GetWidth ();
       float emb_h = emblem->GetHeight ();
 
-      x = (*it).render_center.x - (w - emb_w); // puts right edge of emblem just over the edge of the launcher icon
-      y = (*it).render_center.y - icon_size/2.0f;     // y = top left corner position of emblem
-      z = (*it).render_center.z;
+      x = it->render_center.x - (w - emb_w); // puts right edge of emblem just over the edge of the launcher icon
+      y = it->render_center.y - icon_size/2.0f;     // y = top left corner position of emblem
+      z = it->render_center.z;
       
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport
-      nux::Matrix4::ROTATEX((*it).x_rotation) *              // rotate the icon
-      nux::Matrix4::ROTATEY((*it).y_rotation) *
-      nux::Matrix4::ROTATEZ((*it).z_rotation) *
-      nux::Matrix4::TRANSLATE(-((*it).render_center.x - w/2.0f) - w/2.0f, -((*it).render_center.y - h/2.0f) - h/2.0f, -z);    // Put the center the icon to (0, 0)
+      nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
+      nux::Matrix4::ROTATEY(it->y_rotation) *
+      nux::Matrix4::ROTATEZ(it->z_rotation) *
+      nux::Matrix4::TRANSLATE(-(it->render_center.x - w/2.0f) - w/2.0f, -(it->render_center.y - h/2.0f) - h/2.0f, -z);    // Put the center the icon to (0, 0)
 
       ViewProjectionMatrix = ProjectionMatrix*ViewMatrix*ObjectMatrix;
 
       UpdateIconSectionTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, emb_w, emb_h, z,
-                           (*it).render_center.x - w/2.0f, (*it).render_center.y - h/2.0f, w, h, "Emblem");
+                           it->render_center.x - w/2.0f, it->render_center.y - h/2.0f, w, h, "Emblem");
     }
   }
 }
@@ -304,22 +304,10 @@ void IconRenderer::UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4
 
   std::vector<nux::Vector4>& vectors = icon->GetTransform (name);
 
-  vectors[0].x = v0.x;
-  vectors[0].y = v0.y;
-  vectors[0].z = v0.z;
-  vectors[0].w = v0.w;
-  vectors[1].x = v1.x;
-  vectors[1].y = v1.y;
-  vectors[1].z = v1.z;
-  vectors[1].w = v1.w;
-  vectors[2].x = v2.x;
-  vectors[2].y = v2.y;
-  vectors[2].z = v2.z;
-  vectors[2].w = v2.w;
-  vectors[3].x = v3.x;
-  vectors[3].y = v3.y;
-  vectors[3].z = v3.z;
-  vectors[3].w = v3.w;
+  vectors[0] = v0;
+  vectors[1] = v1;
+  vectors[2] = v2;
+  vectors[3] = v3;
 }
 
 void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
@@ -353,22 +341,10 @@ void IconRenderer::UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::
 
   std::vector<nux::Vector4>& vectors = icon->GetTransform (name);
 
-  vectors[0].x = v0.x;
-  vectors[0].y = v0.y;
-  vectors[0].z = v0.z;
-  vectors[0].w = v0.w;
-  vectors[1].x = v1.x;
-  vectors[1].y = v1.y;
-  vectors[1].z = v1.z;
-  vectors[1].w = v1.w;
-  vectors[2].x = v2.x;
-  vectors[2].y = v2.y;
-  vectors[2].z = v2.z;
-  vectors[2].w = v2.w;
-  vectors[3].x = v3.x;
-  vectors[3].y = v3.y;
-  vectors[3].z = v3.z;
-  vectors[3].w = v3.w;
+  vectors[0] = v0;
+  vectors[1] = v1;
+  vectors[2] = v2;
+  vectors[3] = v3;
 }
 
 void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& geo, nux::Geometry const& owner_geo)
@@ -381,7 +357,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
-    /* draw keyboard-navigation "highlight" if any */
+    // draw keyboard-navigation "highlight" if any
   if (arg.keyboard_nav_hl)
   {
     RenderElement (GfxContext,
@@ -407,7 +383,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   }
   else
   {
-    /* draw tile */
+    // draw tile
     if (arg.backlight_intensity < 1.0f)
     {
       RenderElement(GfxContext,
@@ -427,10 +403,10 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                     arg.backlight_intensity * arg.alpha,
                     arg.icon->GetTransform ("Tile"));
     }
-    /* end tile draw */
+    // end tile draw
   }
 
-  /* draw icon */
+  // draw icon
   RenderElement (GfxContext,
                  arg,
                  arg.icon->TextureForSize (image_size)->GetDeviceTexture (),
@@ -438,7 +414,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                  arg.alpha,
                  arg.icon->GetTransform ("Image"));
 
-  /* draw overlay shine */
+  // draw overlay shine
   if (arg.backlight_intensity > 0.0f)
   {
     RenderElement(GfxContext,
@@ -449,7 +425,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                   arg.icon->GetTransform ("Tile"));
   }
 
-  /* draw glow */
+  // draw glow
   if (arg.glow_intensity > 0.0f)
   {
     RenderElement(GfxContext,
@@ -460,7 +436,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                   arg.icon->GetTransform ("Glow"));
   }
   
-  /* draw shimmer */
+  // draw shimmer
   if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
   {
     int x1 = owner_geo.x + owner_geo.width;
@@ -482,7 +458,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
     GfxContext.PopClippingRectangle();
   }
   
-  /* draw progress bar */
+  // draw progress bar
   if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
   {
     if (_offscreen_progress_texture->GetWidth () != icon_size || _offscreen_progress_texture->GetHeight () != icon_size)
@@ -507,7 +483,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                   arg.icon->GetTransform ("Emblem"));
   }
 
-  /* draw indicators */
+  // draw indicators
   RenderIndicators (GfxContext,
                     arg,
                     arg.running_arrow ? arg.window_indicators : 0,
@@ -515,7 +491,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                     arg.alpha,
                     geo);
 
-  /* draw superkey-shortcut label */ 
+  // draw superkey-shortcut label
   if (arg.draw_shortcut && arg.shortcut_label)
   {
     char shortcut = (char) arg.shortcut_label;
@@ -571,7 +547,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture (const char label, int width
   PangoRectangle inkRect;
   pango_layout_get_extents (layout, &inkRect, &logRect);
 
-  /* position and paint text */
+  // position and paint text
   cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
   double x = label_x - ((logRect.width / PANGO_SCALE) - label_w) / 2.0f;
   double y = label_y - ((logRect.height / PANGO_SCALE) - label_h) / 2.0f - 1;
@@ -845,7 +821,7 @@ void IconRenderer::RenderProgressToTexture (nux::GraphicsEngine& GfxContext,
   
   int fill_offset = (progress_width - fill_width) / 2;
 
-  /* We need to perform a barn doors effect to acheive the slide in and out */
+  // We need to perform a barn doors effect to acheive the slide in and out
 
   int left_edge = width / 2 - progress_width / 2;
   int right_edge = width / 2 + progress_width / 2;
@@ -950,7 +926,7 @@ void IconRenderer::DestroyTextures ()
 
   std::map<char, nux::BaseTexture*>::iterator it;
   for (it = label_map.begin (); it != label_map.end (); it++)
-    (*it).second->UnReference ();
+    it->second->UnReference ();
   label_map.clear ();
 }
 
