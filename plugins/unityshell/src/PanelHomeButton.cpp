@@ -133,7 +133,6 @@ PanelHomeButton::Refresh ()
   int width = _button_width;
   int height = PANEL_HEIGHT;
   GdkPixbuf *pixbuf;
-  GdkPixbuf *overlay;
 
   SetMinMaxSize (_button_width, PANEL_HEIGHT);
 
@@ -142,23 +141,8 @@ PanelHomeButton::Refresh ()
   cairo_set_line_width (cr, 1);
 
   /* button pressed effect */
-  if (_pressed) {
-    if (PanelStyle::GetDefault ()->IsAmbianceOrRadiance () && _opacity == 1.0f) {
-      /* loads background panel upside-down */
-      overlay = gdk_pixbuf_flip (PanelStyle::GetDefault ()->GetBackground (width - 2, height), FALSE);
-      if (GDK_IS_PIXBUF (overlay)) {
-        gdk_cairo_set_source_pixbuf (cr, overlay, 0, 0);
-        cairo_paint (cr);
-        g_object_unref (overlay);
-      }
-    } else {
-      /* draws an translucent overlay  */
-      cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.3f);
-      cairo_rectangle (cr, 0, 0, width-1, height);
-      cairo_fill (cr);
-    }
-  }
-
+  //FIXME(Cimi) removed the pressed effect
+  
   pixbuf = PanelStyle::GetDefault ()->GetHomeButton ();
   if (GDK_IS_PIXBUF (pixbuf))
   {

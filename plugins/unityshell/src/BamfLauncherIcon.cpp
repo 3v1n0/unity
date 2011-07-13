@@ -674,10 +674,10 @@ void BamfLauncherIcon::UpdateMenus ()
       {
         while (((gpointer*) nicks)[index])
         {
-          const char* name;
+          gchar* name;
           DbusmenuMenuitem *item;
-          name = g_strdup (indicator_desktop_shortcuts_nick_get_name (desktop_shortcuts,
-                                                                      nicks[index]));
+          name = indicator_desktop_shortcuts_nick_get_name (desktop_shortcuts,
+                                                            nicks[index]);
           ShortcutData *data = g_slice_new0 (ShortcutData);
           data->self = this;
           data->shortcuts = INDICATOR_DESKTOP_SHORTCUTS (g_object_ref (desktop_shortcuts));
@@ -695,7 +695,7 @@ void BamfLauncherIcon::UpdateMenus ()
 
           index++;
 
-          g_free ((void *)name);
+          g_free (name);
         }
       }
 
@@ -981,8 +981,12 @@ const gchar* BamfLauncherIcon::GetRemoteUri ()
 {
   if (!_remote_uri)
   {
-    const gchar * desktop_file = bamf_application_get_desktop_file (BAMF_APPLICATION (m_App));
-    _remote_uri = g_strdup_printf ("application://%s", g_path_get_basename (desktop_file));
+    const gchar *desktop_file = bamf_application_get_desktop_file (BAMF_APPLICATION (m_App));
+    gchar *basename =  g_path_get_basename (desktop_file);
+    
+    _remote_uri = g_strdup_printf ("application://%s", basename);
+    
+    g_free (basename);
   }
   
   return _remote_uri;

@@ -147,10 +147,6 @@ void PanelIndicatorObjectEntryView::Refresh()
   int  text_width = 0;
   int  text_height = 0;
 
-  PanelStyle *style = PanelStyle::GetDefault ();
-  nux::Color  textcol = style->GetTextColor ();
-  nux::Color  textshadowcol = style->GetTextShadow ();
-
   if (proxy_->show_now())
   {
     if (!pango_parse_markup (label.c_str(),
@@ -246,25 +242,28 @@ void PanelIndicatorObjectEntryView::Refresh()
   {
     pango_cairo_update_layout (cr, layout);
 
-    // Once for the homies that couldn't be here
-    cairo_set_source_rgba (cr,
-                           textshadowcol.red,
-                           textshadowcol.green,
-                           textshadowcol.blue,
-                           1.0f - textshadowcol.red);
-    cairo_move_to (cr, x, (int)(((height - text_height)/2)+1));
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
+    PanelStyle *style = PanelStyle::GetDefault ();
+    GtkStyleContext *style_context = style->GetStyleContext ();
 
-    // Once again for the homies that could
-    cairo_set_source_rgba (cr,
-                           textcol.red,
-                           textcol.green,
-                           textcol.blue,
-                           proxy_->label_sensitive() ? 1.0f : 0.5f);
-    cairo_move_to (cr, x, (int)((height - text_height)/2));
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
+    gtk_style_context_save (style_context);
+
+    GtkWidgetPath *widget_path = gtk_widget_path_new ();
+    gtk_widget_path_iter_set_name (widget_path, -1 , "UnityPanelWidget");
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_BAR);
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
+
+    gtk_style_context_set_path (style_context, widget_path);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
+
+    if (proxy_->active())
+      gtk_style_context_set_state (style_context, GTK_STATE_FLAG_PRELIGHT);
+
+    gtk_render_layout (style_context, cr, x, (int)((height - text_height)/2), layout);
+
+    gtk_widget_path_free (widget_path);
+
+    gtk_style_context_restore (style_context);
   }
 
   cairo_destroy (cr);
@@ -362,85 +361,28 @@ namespace {
 
 void draw_menu_bg(cairo_t* cr, int width, int height)
 {
-  int radius = 4;
-  double x = 0;
-  double y = 0;
-  double xos = 0.5;
-  double yos = 0.5;
-  /* FIXME */
-  double mpi = 3.14159265358979323846;
-
   PanelStyle *style = PanelStyle::GetDefault ();
-  nux::Color bgtop = style->GetBackgroundTop ();
-  nux::Color bgbot = style->GetBackgroundBottom ();
-  nux::Color line = style->GetLineColor ();
+  GtkStyleContext *style_context = style->GetStyleContext ();
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  gtk_style_context_save (style_context);
 
-  cairo_set_line_width (cr, 1.0);
+  GtkWidgetPath *widget_path = gtk_widget_path_new ();
+  gtk_widget_path_iter_set_name (widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_BAR);
+  gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
 
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
+  gtk_style_context_set_path (style_context, widget_path);
+  gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+  gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
+  gtk_style_context_set_state (style_context, GTK_STATE_FLAG_PRELIGHT);
 
-  cairo_move_to (cr, x+xos+radius, y+yos);
-  cairo_arc (cr, x+xos+width-xos*2-radius, y+yos+radius, radius, mpi*1.5, mpi*2);
-  cairo_line_to (cr, x+xos+width-xos*2, y+yos+height-yos*2+2);
-  cairo_line_to (cr, x+xos, y+yos+height-yos*2+2);
-  cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
+  // FIXME(Cimi) probably some padding is needed here.
+  gtk_render_background (style_context, cr, 0, 0, width, height);
+  gtk_render_frame (style_context, cr, 0, 0, width, height);
 
-  cairo_pattern_t * pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgtop.red,
-                                     bgtop.green,
-                                     bgtop.blue,
-                                     1.0f - bgbot.red);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.red,
-                                     bgbot.green,
-                                     bgbot.blue,
-                                     1.0f - bgtop.red);
-  cairo_set_source (cr, pat);
-  cairo_fill_preserve (cr);
-  cairo_pattern_destroy (pat);
+  gtk_widget_path_free (widget_path);
 
-  pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+2);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     line.red,
-                                     line.green,
-                                     line.blue,
-                                     1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     line.red,
-                                     line.green,
-                                     line.blue,
-                                     1.0f);
-  cairo_set_source (cr, pat);
-  cairo_stroke (cr);
-  cairo_pattern_destroy (pat);
-
-  xos++;
-  yos++;
-
-  /* enlarging the area to not draw the lightborder at bottom, ugly trick :P */
-  cairo_move_to (cr, x+radius+xos, y+yos);
-  cairo_arc (cr, x+xos+width-xos*2-radius, y+yos+radius, radius, mpi*1.5, mpi*2);
-  cairo_line_to (cr, x+xos+width-xos*2, y+yos+height-yos*2+3);
-  cairo_line_to (cr, x+xos, y+yos+height-yos*2+3);
-  cairo_arc (cr, x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
-
-  pat = cairo_pattern_create_linear (x+xos, y, x+xos, y+height-yos*2+3);
-  cairo_pattern_add_color_stop_rgba (pat, 0.0,
-                                     bgbot.red,
-                                     bgbot.green,
-                                     bgbot.blue,
-                                     1.0f);
-  cairo_pattern_add_color_stop_rgba (pat, 1.0,
-                                     bgbot.red,
-                                     bgbot.green,
-                                     bgbot.blue,
-                                     1.0f);
-  cairo_set_source (cr, pat);
-  cairo_stroke (cr);
-  cairo_pattern_destroy (pat);
+  gtk_style_context_restore (style_context);
 }
 
 GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
@@ -459,6 +401,7 @@ GdkPixbuf* make_pixbuf(int image_type, std::string const& image_data)
 
     g_free(decoded);
     g_input_stream_close(stream, NULL, NULL);
+    g_object_unref(stream);
   }
   else if (image_type == GTK_IMAGE_STOCK ||
            image_type == GTK_IMAGE_ICON_NAME)

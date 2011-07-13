@@ -38,7 +38,7 @@ class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspect
 {
 public:
   PanelIndicatorObjectEntryView(indicator::Entry::Ptr const& proxy,
-                                int padding = 3);
+                                int padding = 5);
   ~PanelIndicatorObjectEntryView();
 
   void Refresh ();

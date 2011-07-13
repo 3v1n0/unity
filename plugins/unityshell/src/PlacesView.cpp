@@ -673,10 +673,6 @@ PlacesView::OnGroupAdded (PlaceEntry *entry, PlaceEntryGroup& group)
 void
 PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  // We never show these so ignore them
-  if (_search_empty)
-    return;
-
   _n_results++;
 
   if (_n_results <= 2

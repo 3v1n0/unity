@@ -201,11 +201,12 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
 {
   long ret = TraverseInfo;
   nux::Geometry geo = GetAbsoluteGeometry ();
+  nux::Geometry geo_buttons = _window_buttons->GetAbsoluteGeometry ();
 
   if (!_we_control_active)
     return _panel_titlebar_grab_area->OnEvent (ievent, ret, ProcessEventInfo);
-
-  if (geo.IsPointInside (ievent.e_x, ievent.e_y))
+  
+  if (geo.IsPointInside (ievent.e_x, ievent.e_y) && !(_is_maximized && geo_buttons.IsPointInside (ievent.e_x, ievent.e_y)) )
   {
     if (_is_inside != true)
     {
@@ -578,10 +579,26 @@ PanelMenuView::Refresh ()
 
   if (label)
   {
-    nux::Color const& col = PanelStyle::GetDefault ()->GetTextColor();
-    float red = col.red;
-    float green = col.green;
-    float blue = col.blue;
+    PanelStyle *style = PanelStyle::GetDefault ();
+    GtkStyleContext *style_context = style->GetStyleContext ();
+
+    gtk_style_context_save (style_context);
+
+    GtkWidgetPath *widget_path = gtk_widget_path_new ();
+    gtk_widget_path_iter_set_name (widget_path, -1 , "UnityPanelWidget");
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_BAR);
+    gtk_widget_path_append_type (widget_path, GTK_TYPE_MENU_ITEM);
+
+    gtk_style_context_set_path (style_context, widget_path);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
+    gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
+
+    GdkRGBA rgba_text;
+    gtk_style_context_get_color (style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
+
+    float red = rgba_text.red;
+    float green = rgba_text.green;
+    float blue = rgba_text.blue;
 
     pango_cairo_update_layout (cr, layout);
 
@@ -602,9 +619,12 @@ PanelMenuView::Refresh ()
     {
       cairo_set_source_rgb (cr, red, green, blue);
     }
-    cairo_move_to (cr, x, y);
-    pango_cairo_show_layout (cr, layout);
-    cairo_stroke (cr);
+
+    gtk_render_layout (style_context, cr, x, y, layout);
+
+    gtk_widget_path_free (widget_path);
+
+    gtk_style_context_restore (style_context);
   }
 
   cairo_destroy (cr);
