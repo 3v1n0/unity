@@ -1166,7 +1166,7 @@ gfloat get_opengl_version_f32(const gchar* version_string)
   for (i = 0; isdigit (version_string[i]); i++)
     version = version * 10.0f + (version_string[i] - 48);
 
-  if (version_string[i] == '.' || version_string[i] == ',' &&
+  if ((version_string[i] == '.' || version_string[i] == ',') &&
       isdigit (version_string[i+1]))
   {
     version = version * 10.0f + (version_string[i+1] - 48);
