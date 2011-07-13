@@ -44,7 +44,7 @@ public:
 
   virtual Lens::Ptr GetLens(std::string const& lens_id) const = 0;
   virtual Lens::Ptr GetLensAtIndex(unsigned int index) const = 0;
-  virtual unsigned int TotalLenses() const = 0;
+  virtual unsigned int LensCount() const = 0;
 
   sigc::signal<void, Lens::Ptr&> lens_added;
   sigc::signal<void, Lens::Ptr&> lens_removed;

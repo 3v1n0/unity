@@ -17,83 +17,92 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "DBusLenses.h"
+#include "FilesystemLenses.h"
 
 namespace unity {
 namespace dash {
 
-class DBusLenses::Impl
+class FilesystemLenses::Impl
 {
 public:
-  Impl(DBusLenses* owner);
+  Impl(FilesystemLenses* owner);
+  Impl(FilesystemLenses* owner, std::string const& lens_directory);
+
   ~Impl();
 
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int TotalLenses() const;
+  unsigned int LensCount() const;
 
-  DBusLenses* owner_;
+  FilesystemLenses* owner_;
 };
 
-DBusLenses::Impl::Impl(DBusLenses* owner)
+FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
   : owner_(owner)
 {}
 
-DBusLenses::Impl::~Impl()
+FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_directory)
 {}
 
-Lenses::LensList DBusLenses::Impl::GetLenses() const
+FilesystemLenses::Impl::~Impl()
+{}
+
+Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 {
   LensList list;
   return list;
 }
 
-Lens::Ptr DBusLenses::Impl::GetLens(std::string const& lens_id) const
+Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 {
   Lens::Ptr p;
   return p;
 }
 
-Lens::Ptr DBusLenses::Impl::GetLensAtIndex(unsigned int index) const
+Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(unsigned int index) const
 {
   Lens::Ptr p;
   return p;
 }
 
-unsigned int DBusLenses::Impl::TotalLenses() const
+unsigned int FilesystemLenses::Impl::LensCount() const
 {
   return 0;
 }
 
 
-DBusLenses::DBusLenses()
+FilesystemLenses::FilesystemLenses()
   : pimpl(new Impl(this))
 {}
 
-DBusLenses::~DBusLenses()
+FilesystemLenses::FilesystemLenses(std::string const& lens_directory)
+  :pimpl(new Impl(this, lens_directory))
+{}
+
+FilesystemLenses::~FilesystemLenses()
 {
   delete pimpl;
 }
 
-Lenses::LensList DBusLenses::GetLenses() const
+Lenses::LensList FilesystemLenses::GetLenses() const
 {
   return pimpl->GetLenses();
 }
 
-Lens::Ptr DBusLenses::GetLens(std::string const& lens_id) const
+Lens::Ptr FilesystemLenses::GetLens(std::string const& lens_id) const
 {
   return pimpl->GetLens(lens_id);
 }
 
-Lens::Ptr DBusLenses::GetLensAtIndex(unsigned int index) const
+Lens::Ptr FilesystemLenses::GetLensAtIndex(unsigned int index) const
 {
   return pimpl->GetLensAtIndex(index);
 }
 
-unsigned int DBusLenses::TotalLenses() const
+unsigned int FilesystemLenses::LensCount() const
 {
-  return pimpl->TotalLenses();
+  return pimpl->LensCount();
 }
 
 

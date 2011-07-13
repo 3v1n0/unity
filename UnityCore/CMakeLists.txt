@@ -6,7 +6,7 @@ pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 sigc++-2.0 nux-core-1.0 g
 #
 set (CORE_HEADERS
      DBusIndicators.h
-     DBusLenses.h
+     FilesystemLenses.h
      GLibWrapper.h
      GLibWrapper-inl.h
      IndicatorEntry.h
@@ -20,7 +20,7 @@ set (CORE_HEADERS
 
 set (CORE_SOURCES
      DBusIndicators.cpp
-     DBusLenses.cpp
+     FilesystemLenses.cpp
      GLibWrapper.cpp
      Indicator.cpp
      IndicatorEntry.cpp

@@ -28,18 +28,24 @@
 namespace unity {
 namespace dash {
 
-class DBusLenses : public Lenses
+// Reads Lens information from the filesystem, as per-specification, and creates
+// Lens instances using this data
+class FilesystemLenses : public Lenses
 {
 public:
-  typedef boost::shared_ptr<DBusLenses> Ptr;
+  typedef boost::shared_ptr<FilesystemLenses> Ptr;
 
-  DBusLenses();
-  ~DBusLenses();
+  FilesystemLenses();
+  FilesystemLenses(std::string const& lens_directory);
+
+  ~FilesystemLenses();
 
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
+
+  // For QML
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int TotalLenses() const;
+  unsigned int LensCount() const;
 
   class Impl;
 private:
