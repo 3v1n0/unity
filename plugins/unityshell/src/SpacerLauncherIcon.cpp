@@ -29,7 +29,7 @@ SpacerLauncherIcon::SpacerLauncherIcon (Launcher* IconManager)
   SetQuirk (QUIRK_RUNNING, false);
   SetIconType (TYPE_APPLICATION); 
   
-  SetTooltipText (_("Drop To Add Application"));
+  tooltip_text = _("Drop To Add Application");
 }
 
 SpacerLauncherIcon::~SpacerLauncherIcon()

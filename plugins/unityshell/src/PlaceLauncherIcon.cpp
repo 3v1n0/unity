@@ -34,7 +34,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   _entry (entry),
   _n_sections (0)
 {
-  SetTooltipText (entry->GetName ());
+  tooltip_text = entry->GetName ();
   SetShortcut (entry->GetShortcut());
   SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);

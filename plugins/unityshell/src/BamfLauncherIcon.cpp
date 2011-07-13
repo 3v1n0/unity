@@ -137,7 +137,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
-  SetTooltipText (BamfName ());
+  tooltip_text = BamfName ();
   SetIconName (icon_name);
   SetIconType (TYPE_APPLICATION);
 

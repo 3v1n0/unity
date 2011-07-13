@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,11 +32,6 @@ NUX_IMPLEMENT_OBJECT_TYPE (SwitcherView);
 
 SwitcherView::SwitcherView(NUX_FILE_LINE_DECL) 
 : View (NUX_FILE_LINE_PARAM)
-, border_size (this, "border-size")
-, flat_spacing (this, "flat-spacing")
-, icon_size (this, "icon-size")
-, minimum_spacing (this, "minimum-spacing")
-, tile_size (this, "tile-size")
 , target_sizes_set_ (false)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());

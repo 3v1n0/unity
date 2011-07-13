@@ -54,10 +54,8 @@ public:
 
     Launcher* GetLauncher () {return _launcher;};
 
-    void SetTooltipText (std::string);
-    
-    std::string GetTooltipText ();
-    
+    bool SetTooltipText (std::string& target, std::string const& value);
+
     void    SetShortcut (guint64 shortcut);
     
     guint64 GetShortcut ();
@@ -228,7 +226,6 @@ protected:
     
     void OnRemoteProgressVisibleChanged (LauncherEntryRemote *remote);
 
-    std::string tooltip_text;
     //! the window this icon belong too.
     nux::BaseWindow* m_Window;
     Launcher* _launcher;

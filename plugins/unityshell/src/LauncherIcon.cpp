@@ -60,7 +60,6 @@ gboolean LauncherIcon::_skip_tooltip_delay = false;
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
   _launcher = launcher;
-  tooltip_text = "blank";
 
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -84,6 +83,9 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   
   _emblem = 0;
   _superkey_label = 0;
+  
+  tooltip_text.SetSetterFunction (sigc::mem_fun (this, &LauncherIcon::SetTooltipText));
+  tooltip_text = "blank";
 
   _quicklist = new QuicklistView ();
   _quicklist->SinkReference ();
@@ -182,7 +184,7 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
     .add("z", _center.z)
     .add("related-windows", _related_windows)
     .add("icon-type", _icon_type)
-    .add("tooltip-text", tooltip_text.c_str ())
+    .add("tooltip-text", tooltip_text().c_str ())
     .add("sort-priority", _sort_priority)
     .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
     .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
@@ -449,15 +451,20 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
   return result;
 }
 
-void LauncherIcon::SetTooltipText(std::string text)
+bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
 {
-    tooltip_text = g_markup_escape_text (text.c_str (), -1);
-    _tooltip->SetText (nux::NString (tooltip_text.c_str ()));
-}
+  bool result = false;
 
-std::string LauncherIcon::GetTooltipText()
-{
-    return tooltip_text;
+  std::string escaped = g_markup_escape_text (value.c_str (), -1);
+
+  if (escaped != target)
+  {
+    target = escaped;
+    _tooltip->SetText (nux::NString (target.c_str ()));
+    result = true;
+  }
+
+  return result;
 }
 
 void
@@ -497,7 +504,7 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   
   if (!self->_quicklist->IsVisible ())
   {
-    self->_tooltip->ShowWindow (!self->tooltip_text.empty ());
+    self->_tooltip->ShowWindow (!self->tooltip_text().empty ());
     _skip_tooltip_delay = true;
   }
   

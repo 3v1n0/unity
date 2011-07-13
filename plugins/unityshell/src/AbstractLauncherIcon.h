@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,7 @@
 #define ABSTRACTLAUNCHERICON_H
 
 #include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 #include <NuxCore/Math/MathInc.h>
 
 #include <sigc++/sigc++.h>
@@ -64,12 +65,10 @@ public:
 
     virtual ~AbstractLauncherIcon () {}
 
+    nux::Property<std::string> tooltip_text;
+
     virtual void HideTooltip () = 0;
 
-    virtual void SetTooltipText (std::string) = 0;
-    
-    virtual std::string GetTooltipText () = 0;
-    
     virtual void    SetShortcut (guint64 shortcut) = 0;
     
     virtual guint64 GetShortcut () = 0;

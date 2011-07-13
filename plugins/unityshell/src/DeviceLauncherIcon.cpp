@@ -63,10 +63,8 @@ DeviceLauncherIcon::UpdateDeviceIcon ()
 {
   {
     gchar *name;
-
     name = g_volume_get_name (_volume);
-
-    SetTooltipText (name);
+    tooltip_text = name;
 
     g_free (name);
   }
