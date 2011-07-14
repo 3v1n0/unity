@@ -75,6 +75,9 @@ void SwitcherController::SetWorkspace (nux::Geometry geo)
 
 void SwitcherController::Hide ()
 {
+  if (!visible_)
+    return;
+  
   model_.reset ();
   visible_ = false;
 
