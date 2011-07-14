@@ -2038,15 +2038,13 @@ Launcher::OnPluginStateChanged ()
   _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
   _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
   
-  if (PluginAdapter::Default ()->IsScaleActive ())
-  {                     
+  if (_hidemode == LAUNCHER_HIDE_NEVER)
+    return;
+    
+  if (PluginAdapter::Default ()->IsScaleActive ())                   
     _parent->InputWindowEnableStruts (true);
-  }
   else
-  {
-    if (!_hidemode == LAUNCHER_HIDE_NEVER)
       _parent->InputWindowEnableStruts (false);
-  }
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode ()
