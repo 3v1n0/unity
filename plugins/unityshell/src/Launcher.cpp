@@ -2044,7 +2044,7 @@ Launcher::OnPluginStateChanged ()
   if (PluginAdapter::Default ()->IsScaleActive ())                   
     _parent->InputWindowEnableStruts (true);
   else
-      _parent->InputWindowEnableStruts (false);
+    _parent->InputWindowEnableStruts (false);
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode ()
