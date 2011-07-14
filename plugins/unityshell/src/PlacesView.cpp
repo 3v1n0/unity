@@ -150,7 +150,7 @@ PlacesView::~PlacesView ()
   UBusServer* ubus = ubus_server_get_default ();
   if (_home_button_hover > 0)
   	ubus_server_unregister_interest (ubus, _home_button_hover);
-  	
+
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
   {
     if (_ubus_handles[i] != 0)
@@ -161,7 +161,8 @@ PlacesView::~PlacesView ()
     g_source_remove (_close_idle);
   if (_resize_id)
     g_source_remove (_resize_id);
-    
+
+  delete _results_controller;
   delete _home_entry;
 }
 
@@ -530,12 +531,6 @@ PlaceEntry *
 PlacesView::GetActiveEntry ()
 {
   return _entry;
-}
-
-PlacesResultsController *
-PlacesView::GetResultsController ()
-{
-  return _results_controller;
 }
 
 gboolean

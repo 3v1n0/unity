@@ -78,8 +78,6 @@ public:
                                bool        signal=true);
 
   PlaceEntry * GetActiveEntry ();
-  
-  PlacesResultsController * GetResultsController ();
 
   nux::TextEntry* GetTextEntryView ();
   PlacesSearchBar* GetSearchBar ();
