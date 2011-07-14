@@ -600,7 +600,11 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
       if ((*it)->ShowInSwitcher ())
         results.push_back (*it);
 
-    switcherController->SetWorkspace (nux::Geometry (100, 100, 1480, 850));
+    // maybe check launcher position/hide state?
+    switcherController->SetWorkspace (nux::Geometry (_primary_monitor.x + 100, 
+                                                     _primary_monitor.y + 100, 
+                                                     _primary_monitor.width - 200, 
+                                                     _primary_monitor.height - 200));
     switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
   }
   
