@@ -22,10 +22,13 @@
 // Single include for headers
 
 #include <UnityCore/DBusIndicators.h>
+#include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSignal-inl.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibWrapper-inl.h>
+#include <UnityCore/Lens.h>
+#include <UnityCore/Lenses.h>
 #include <UnityCore/Indicator.h>
 #include <UnityCore/IndicatorEntry.h>
 #include <UnityCore/Indicators.h>

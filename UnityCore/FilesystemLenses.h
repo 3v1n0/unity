@@ -36,14 +36,14 @@ public:
   typedef boost::shared_ptr<FilesystemLenses> Ptr;
 
   FilesystemLenses();
-  FilesystemLenses(std::string const& lens_directory);
+  FilesystemLenses(std::vector<std::string> const& lens_directories);
 
   ~FilesystemLenses();
 
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
 
-  // For QML
+  // For QML AbstractList
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
   unsigned int LensCount() const;
 

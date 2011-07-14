@@ -19,14 +19,30 @@
 
 #include "FilesystemLenses.h"
 
+#include <gio/gio.h>
+#include <glib.h>
+#include <NuxCore/Logger.h>
+#include <vector>
+
+#include "config.h"
+#include "GLibWrapper.h"
+
+
 namespace unity {
 namespace dash {
+
+namespace {
+nux::logging::Logger logger("unity.dash.filesystemlenses");
+}
 
 class FilesystemLenses::Impl
 {
 public:
+  typedef std::vector<glib::Object<GFile>> Directories;
+  typedef std::vector<std::string> LensIDs;
+
   Impl(FilesystemLenses* owner);
-  Impl(FilesystemLenses* owner, std::string const& lens_directory);
+  Impl(FilesystemLenses* owner, std::vector<std::string> const& lens_directories);
 
   ~Impl();
 
@@ -35,18 +51,121 @@ public:
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
   unsigned int LensCount() const;
 
+  void Init();
+  glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
+  void LoadLensesFromDirectory(glib::Object<GFile>& directory); 
+  static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl *self);
+  void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
+
   FilesystemLenses* owner_;
+  Directories directories_;
+  LensIDs lens_ids_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
   : owner_(owner)
-{}
+{
+  LOG_DEBUG(logger) << "Initialising in standard directories mode";
 
-FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_directory)
-{}
+  // Add all Lens file search paths in order of system -> local
+  directories_.push_back(BuildLensPathFileWithSuffix(g_get_user_data_dir()));
+  directories_.push_back(BuildLensPathFileWithSuffix(DATADIR));
+  directories_.push_back(BuildLensPathFileWithSuffix("/usr/local/share"));
+  directories_.push_back(BuildLensPathFileWithSuffix("/usr/share"));
+
+  Init();
+}
+
+FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::vector<std::string> const& lens_directories)
+  : owner_(owner)
+{
+  LOG_DEBUG(logger) << "Initialising in override directories mode";
+
+  for (std::string const& directory: lens_directories)
+  {
+    glib::Object<GFile> file(g_file_new_for_path(directory.c_str()));
+    directories_.push_back(file);
+  }
+
+  Init();
+}
 
 FilesystemLenses::Impl::~Impl()
 {}
+
+void FilesystemLenses::Impl::Init()
+{
+  // Start reading the directories
+  for (glib::Object<GFile> &directory: directories_)
+  {
+    glib::String path(g_file_get_path(directory));
+    LOG_DEBUG(logger) << "Searching for Lenses in: " << path.Str();
+
+    LoadLensesFromDirectory(directory);
+  }
+}
+
+glib::Object<GFile> FilesystemLenses::Impl::BuildLensPathFileWithSuffix(std::string const& directory)
+{
+  glib::String ret(g_build_filename(directory.c_str(), "unity", "lenses", NULL));
+  glib::Object<GFile> file(g_file_new_for_path (ret.Value()));
+  return file;
+}
+
+void FilesystemLenses::Impl::LoadLensesFromDirectory(glib::Object<GFile>& directory)
+{
+  g_file_enumerate_children_async(directory,
+                                  G_FILE_ATTRIBUTE_STANDARD_NAME,
+                                  G_FILE_QUERY_INFO_NONE,
+                                  G_PRIORITY_DEFAULT,
+                                  NULL,
+                                  (GAsyncReadyCallback)OnDirectoryEnumerated,
+                                  this);
+
+}
+
+void FilesystemLenses::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl *self)
+{
+  glib::Error error;
+  glib::Object<GFileEnumerator> enumerator(g_file_enumerate_children_finish(source, res, error.AsOutParam()));
+
+  if (error || !enumerator)
+  {
+    glib::String path(g_file_get_path(source));
+    LOG_WARN(logger) << "Unabled to enumerate children of directory "
+                      << path.Str() << " "
+                      << error.Message();
+    return;
+  }
+  self->EnumerateLensesDirectoryChildren(enumerator);
+}
+
+void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator)
+{
+  glib::Error error;
+  glib::Object<GFileInfo> info;
+
+  while (info = g_file_enumerator_next_file(enumerator, NULL, error.AsOutParam()))
+  {
+    if (error || !info)
+    {
+      LOG_WARN(logger) << "Cannot enumerate over directory: " << error.Message();
+      continue;
+    }
+
+    // If we've already loaded a Lens by the same name, we ignore this one
+    std::string name(g_file_info_get_name(info));
+
+    if (std::find(lens_ids_.begin(), lens_ids_.end(), name) != lens_ids_.end())
+    {
+      g_debug ("Already in list");
+      continue;
+    }
+    lens_ids_.push_back(name);
+
+    g_debug("%s", g_file_info_get_name(info));
+  }
+}
 
 Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 {
@@ -76,8 +195,8 @@ FilesystemLenses::FilesystemLenses()
   : pimpl(new Impl(this))
 {}
 
-FilesystemLenses::FilesystemLenses(std::string const& lens_directory)
-  :pimpl(new Impl(this, lens_directory))
+FilesystemLenses::FilesystemLenses(std::vector<std::string> const& lens_directories)
+  :pimpl(new Impl(this, lens_directories))
 {}
 
 FilesystemLenses::~FilesystemLenses()
