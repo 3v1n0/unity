@@ -455,7 +455,9 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
 {
   bool result = false;
 
-  std::string escaped = g_markup_escape_text (value.c_str (), -1);
+  gchar *esc = g_markup_escape_text (value.c_str (), -1);
+  std::string escaped = esc;
+  g_free (esc);
 
   if (escaped != target)
   {
@@ -494,7 +496,7 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   LauncherIcon *self = (LauncherIcon *) data;
 
   if (!self->_launcher)
-    return false;
+    return FALSE;
   
   nux::Geometry geo = self->_launcher->GetAbsoluteGeometry ();
   int tip_x = geo.x + geo.width + 1;
@@ -505,11 +507,11 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   if (!self->_quicklist->IsVisible ())
   {
     self->_tooltip->ShowWindow (!self->tooltip_text().empty ());
-    _skip_tooltip_delay = true;
+    _skip_tooltip_delay = TRUE;
   }
   
   self->_tooltip_delay_handle = 0;
-  return false;
+  return FALSE;
 }
 
 void
