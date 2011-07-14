@@ -3223,7 +3223,7 @@ Launcher::OnBusAcquired (GDBusConnection *connection,
   guint registration_id;
 
   if (!introspection_data) {
-    g_warning ("No introspection data loaded. Won't get dynamic launcher addition.");
+    LOG_WARNING(logger) << "No introspection data loaded. Won't get dynamic launcher addition.";
     return;
   }
 
@@ -3237,8 +3237,9 @@ Launcher::OnBusAcquired (GDBusConnection *connection,
                                                        NULL,
                                                        NULL);
   if (!registration_id)
-    g_warning ("Object registration failed. Won't get dynamic launcher addition.");
-
+  {
+    LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
+  }
 }
 
 void
@@ -3246,7 +3247,7 @@ Launcher::OnNameAcquired (GDBusConnection *connection,
                           const gchar     *name,
                           gpointer         user_data)
 {
-  g_debug ("Acquired the name %s on the session bus\n", name);
+  LOG_DEBUG(logger) << "Acquired the name " << name << " on the session bus";
 }
 
 void
@@ -3254,5 +3255,5 @@ Launcher::OnNameLost (GDBusConnection *connection,
                        const gchar     *name,
                        gpointer         user_data)
 {
-  g_debug ("Lost the name %s on the session bus\n", name);
+  LOG_DEBUG(logger) << "Lost the name " << name << " on the session bus";
 }
