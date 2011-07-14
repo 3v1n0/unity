@@ -86,6 +86,8 @@ struct LensFileData
 class FilesystemLenses::Impl
 {
 public:
+  typedef std::map<GFile*, glib::Object<GCancellable>> CancellableMap;
+
   Impl(FilesystemLenses* owner);
   Impl(FilesystemLenses* owner, std::string const& lens_directory);
 
@@ -105,10 +107,13 @@ public:
 
   FilesystemLenses* owner_;
   glib::Object<GFile> directory_;
+  unsigned int directory_children_;
+  CancellableMap cancel_map_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
   : owner_(owner)
+  , directory_children_(0)
 {
   LOG_DEBUG(logger) << "Initialising in standard lens directory mode";
 
@@ -119,6 +124,7 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_directory)
   : owner_(owner)
+  , directory_children_(0)
 {
   LOG_DEBUG(logger) << "Initialising in override lens directory mode";
 
@@ -128,21 +134,27 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_di
 }
 
 FilesystemLenses::Impl::~Impl()
-{}
+{
+  for (std::pair<GFile*, glib::Object<GCancellable>> pair: cancel_map_)
+  {
+    g_cancellable_cancel(pair.second);
+  }
+}
 
 void FilesystemLenses::Impl::Init()
 {
   glib::String path(g_file_get_path(directory_));
   LOG_DEBUG(logger) << "Searching for Lenses in: " << path.Str();
 
+  glib::Object<GCancellable> cancellable(g_cancellable_new());
   g_file_enumerate_children_async(directory_,
                                   G_FILE_ATTRIBUTE_STANDARD_NAME,
                                   G_FILE_QUERY_INFO_NONE,
                                   G_PRIORITY_DEFAULT,
-                                  NULL,
+                                  cancellable,
                                   (GAsyncReadyCallback)OnDirectoryEnumerated,
                                   this);
-
+  cancel_map_[directory_] = cancellable;
 }
 
 glib::Object<GFile> FilesystemLenses::Impl::BuildLensPathFileWithSuffix(std::string const& directory)
@@ -199,6 +211,9 @@ void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
 {
   glib::Object<GFile> file(g_file_new_for_path(lensfile_path.c_str()));
 
+  // How many files are we waiting for to load
+  directory_children_++;
+
   auto loaded_cb = [](GObject* source, GAsyncResult *res, gpointer user_data)
   {
     Impl* self = static_cast<Impl*>(user_data);
@@ -211,23 +226,31 @@ void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
     result = g_file_load_contents_finish(G_FILE(source), res,
                                          &contents, &length,
                                          NULL, error.AsOutParam());
-    if (error || !result)
+    if (result && !error)
+    {
+      self->CreateLensFromKeyFileData(G_FILE(source), contents, length);
+      g_free(contents);
+    }
+    else
     {
       LOG_WARN(logger) << "Unable to read lens file "
                        << path.Str() << ": "
                        << error.Message();
-      return;
     }
 
-    self->CreateLensFromKeyFileData(G_FILE(source), contents, length);
-
-    g_free(contents);
+    // If we're not waiting for any more children to load, signal that we're
+    // done reading the directory
+    self->directory_children_--;
+    if (!self->directory_children_)
+      self->owner_->lenses_loaded.emit();
   };
 
+  glib::Object<GCancellable> cancellable(g_cancellable_new());
   g_file_load_contents_async(file,
-                             NULL,
+                             cancellable,
                              (GAsyncReadyCallback)(loaded_cb),
                              this);
+  cancel_map_[file] = cancellable;
 }
 
 void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,

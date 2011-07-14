@@ -20,8 +20,9 @@
 #ifndef UNITY_DBUS_LENSES_H
 #define UNITY_DBUS_LENSES_H
 
-#include <sigc++/trackable.h>
 #include <boost/shared_ptr.hpp>
+#include <sigc++/signal.h>
+#include <sigc++/trackable.h>
 
 #include "Lenses.h"
 
@@ -46,6 +47,8 @@ public:
   // For QML AbstractList
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
   unsigned int LensCount() const;
+
+  sigc::signal<void> lenses_loaded;
 
   class Impl;
 private:

@@ -7,12 +7,41 @@ using namespace unity::dash;
 
 namespace {
 
+static void WaitForResult(bool& result)
+{
+  bool timeout_reached;
+
+  auto timeout_cb = [](gpointer data) -> gboolean
+  {
+    *(bool*)data = true;
+    return FALSE;
+  };
+
+  guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+
+  while (!result && !timeout_reached)
+  {
+    g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+  }
+  if (result)
+    g_source_remove(timeout_id);
+}
+
 TEST(TestFilesystemLenses, TestConstruction)
 {
-  FilesystemLenses lenses1(TESTDATADIR"/lenses");
+  FilesystemLenses lenses(TESTDATADIR"/lenses");
+}
 
-  while (1)
-    g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+TEST(TestFilesystemLenses, TestFileLoading)
+{
+  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  bool result = false;
+
+  auto lenses_loaded_cb = [&result]() {result = true;};
+  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
+
+  WaitForResult (result);
+  EXPECT_TRUE(result);
 }
 
 }

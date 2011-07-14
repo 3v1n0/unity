@@ -22,6 +22,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
 namespace unity {
@@ -32,7 +33,8 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef boost::shared_ptr<Lens> Ptr;
 
-  
+  nux::ROProperty<std::string> dbus_name;
+  nux::ROProperty<std::string> dbus_path;
 };
 
 }
