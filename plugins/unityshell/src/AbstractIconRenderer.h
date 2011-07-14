@@ -90,6 +90,7 @@ public:
 
   virtual ~AbstractIconRenderer() {}
 
+  // RenderArgs not const in case processor needs to modify positions to do a perspective correct.
   virtual void PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;
 
   virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo) = 0;
