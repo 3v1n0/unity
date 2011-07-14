@@ -77,7 +77,7 @@ gchar* String::Value()
 
 std::string String::Str() const
 {
-  return std::string(string_);
+  return std::string(string_ == NULL ? "" : string_);
 }
 
 

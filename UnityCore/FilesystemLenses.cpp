@@ -96,7 +96,7 @@ public:
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int LensCount() const;
+  unsigned int Count() const;
 
   void Init();
   glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
@@ -109,6 +109,7 @@ public:
   glib::Object<GFile> directory_;
   unsigned int directory_children_;
   CancellableMap cancel_map_;
+  LensList lenses_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
@@ -266,6 +267,17 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
     LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path.Str();
 
     LensFileData data(key_file);
+
+    Lens::Ptr lens(new Lens(data.dbus_name.Str(),
+                            data.dbus_path.Str(),
+                            data.name.Str(),
+                            data.icon.Str(),
+                            data.description.Str(),
+                            data.search_hint.Str(),
+                            data.visible,
+                            data.shortcut.Str()));
+    lenses_.push_back(lens);
+    owner_->lens_added.emit(lens);
   }
   else
   {
@@ -278,8 +290,7 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
 
 Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 {
-  LensList list;
-  return list;
+  return lenses_;
 }
 
 Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
@@ -290,13 +301,12 @@ Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 
 Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(unsigned int index) const
 {
-  Lens::Ptr p;
-  return p;
+  return lenses_[index];
 }
 
-unsigned int FilesystemLenses::Impl::LensCount() const
+unsigned int FilesystemLenses::Impl::Count() const
 {
-  return 0;
+  return (unsigned int)lenses_.size();
 }
 
 
@@ -328,9 +338,9 @@ Lens::Ptr FilesystemLenses::GetLensAtIndex(unsigned int index) const
   return pimpl->GetLensAtIndex(index);
 }
 
-unsigned int FilesystemLenses::LensCount() const
+unsigned int FilesystemLenses::Count() const
 {
-  return pimpl->LensCount();
+  return pimpl->Count();
 }
 
 

@@ -33,8 +33,29 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef boost::shared_ptr<Lens> Ptr;
 
+  Lens(std::string const& dbus_name,
+       std::string const& dbus_path,
+       std::string const& name,
+       std::string const& icon,
+       std::string const& description="",
+       std::string const& search_hint="",
+       bool visible=true,
+       std::string const& shortcut="");
+
+  ~Lens();
+
   nux::ROProperty<std::string> dbus_name;
   nux::ROProperty<std::string> dbus_path;
+  nux::ROProperty<std::string> name;
+  nux::ROProperty<std::string> icon;
+  nux::ROProperty<std::string> description;
+  nux::ROProperty<std::string> search_hint;
+  nux::ROProperty<bool> visible;
+  nux::ROProperty<std::string> shortcut;
+
+  class Impl;
+private:
+  Impl *pimpl;
 };
 
 }

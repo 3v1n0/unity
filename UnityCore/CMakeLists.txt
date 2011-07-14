@@ -28,6 +28,7 @@ set (CORE_SOURCES
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
+     Lens.cpp
      Variant.cpp
     )
 

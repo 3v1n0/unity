@@ -46,7 +46,7 @@ public:
 
   // For QML AbstractList
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int LensCount() const;
+  unsigned int Count() const;
 
   sigc::signal<void> lenses_loaded;
 

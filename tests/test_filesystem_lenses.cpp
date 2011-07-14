@@ -44,4 +44,22 @@ TEST(TestFilesystemLenses, TestFileLoading)
   EXPECT_TRUE(result);
 }
 
+TEST(TestFilesystemLenses, TestLensCreation)
+{
+  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  bool result = false;
+  int  n_lenses = 0;
+
+  auto lenses_loaded_cb = [&result]() { result = true; };
+  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
+
+  auto lens_added_cb = [&n_lenses](Lens::Ptr& p) { n_lenses++; };
+  lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
+
+  WaitForResult (result);
+  EXPECT_TRUE(result);
+  EXPECT_EQ(n_lenses, 3);
+  EXPECT_EQ(lenses.Count(), 3);
+}
+
 }
