@@ -36,7 +36,7 @@ public:
   typedef boost::shared_ptr<FilesystemLenses> Ptr;
 
   FilesystemLenses();
-  FilesystemLenses(std::vector<std::string> const& lens_directories);
+  FilesystemLenses(std::string const& lens_directory);
 
   ~FilesystemLenses();
 
