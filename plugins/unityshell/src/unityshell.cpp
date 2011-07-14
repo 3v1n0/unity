@@ -600,6 +600,7 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
       if ((*it)->ShowInSwitcher ())
         results.push_back (*it);
 
+    switcherController->SetWorkspace (nux::Geometry (100, 100, 1480, 850));
     switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
   }
   

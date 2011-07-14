@@ -39,7 +39,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   flat_spacing = 8;
   icon_size = 128;
   minimum_spacing = 20;
-  tile_size = 140;
+  tile_size = 170;
 }
 
 SwitcherView::~SwitcherView()
