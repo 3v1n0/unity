@@ -89,12 +89,12 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 static gchar * indicator_order[] = {
   "libappmenu.so",
   "libapplication.so",
-  "libsoundmenu.so",
+  "libmessaging.so",
+  "libpower.so",
   "libnetwork.so",
   "libnetworkmenu.so",
-  "libmessaging.so",
+  "libsoundmenu.so",
   "libdatetime.so",
-  "libme.so",
   "libsession.so",
   NULL
 };

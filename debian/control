@@ -1,7 +1,7 @@
 Source: unity
 Section: gnome
 Priority: optional
-Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                debhelper (>= 7.0.50~),
                dh-translations (>= 94),
@@ -63,7 +63,7 @@ Recommends: unity-place-applications,
             indicator-sound,
             indicator-datetime,
             indicator-messages,
-            indicator-me,
+            indicator-power,
             indicator-session,
             ubuntuone-control-panel-gtk,
 Breaks: compiz-core (<< 1:0.9.4+bzr20110606-0ubuntu5),

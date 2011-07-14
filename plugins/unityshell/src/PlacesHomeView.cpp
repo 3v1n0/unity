@@ -162,7 +162,7 @@ PlacesHomeView::PlacesHomeView ()
   _email_alternatives.push_back("claws-mail");
   _email_alternatives.push_back("kmail");
   
-  _music_alternatives.push_back("banshee-1");
+  _music_alternatives.push_back("banshee");
   _music_alternatives.push_back("rhythmbox");
   _music_alternatives.push_back("totem");
   _music_alternatives.push_back("vlc");

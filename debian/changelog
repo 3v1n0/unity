@@ -1,3 +1,21 @@
+unity (4.2.0-0ubuntu4) UNRELEASED; urgency=low
+
+  * debian/control
+    - Dropped recommends for indicator-me
+    - Added recommends for indicator-power
+  * services/panel-service.c
+    - Removed libme.so and added libpower.so
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Thu, 14 Jul 2011 15:16:20 -0400
+
+unity (4.2.0-0ubuntu3) oneiric; urgency=low
+
+  [ Chow Loong Jin ]
+  * plugins/unityshell/src/PlacesHomeView.cpp: update banshee-1 to banshee in
+    _music_alternatives (LP: #805938)
+
+ -- Jamie Strandboge <jamie@ubuntu.com>  Wed, 13 Jul 2011 08:22:38 -0500
+
 unity (4.2.0-0ubuntu2) oneiric; urgency=low
 
   * Upstream fixes:
