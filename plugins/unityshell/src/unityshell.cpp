@@ -93,6 +93,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
+  damaged = false;
 
   notify_init ("unityshell");
 
@@ -335,6 +336,7 @@ void UnityScreen::paintDisplay(const CompRegion &region)
   nuxEpilogue ();
 
   doShellRepaint = false;
+  damaged = false;
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -372,10 +374,26 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
 
+void UnityScreen::preparePaint (int ms)
+{
+  cScreen->preparePaint (ms);
+
+  if (damaged)
+  {
+    damaged = false;
+    damageNuxRegions ();
+  }
+
+}
+
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::damageNuxRegions()
 {
+  if (damaged)
+    return;
+
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)

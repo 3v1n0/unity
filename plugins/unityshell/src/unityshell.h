@@ -71,6 +71,8 @@ public:
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
 
+  void preparePaint (int ms);
+
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
 	bool glPaintOutput(const GLScreenPaintAttrib&,
