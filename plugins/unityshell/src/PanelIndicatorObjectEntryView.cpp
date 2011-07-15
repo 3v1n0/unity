@@ -37,7 +37,8 @@
 #include "PanelIndicatorObjectEntryView.h"
 
 #include "PanelStyle.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
 
 
 namespace unity {

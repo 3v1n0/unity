@@ -25,7 +25,7 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/IndicatorEntry.h>
 
 #include "Introspectable.h"
 

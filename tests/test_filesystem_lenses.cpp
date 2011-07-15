@@ -1,6 +1,6 @@
-#include <UnityCore/UnityCore.h>
-
 #include <gtest/gtest.h>
+#include <glib-object.h>
+#include <UnityCore/FilesystemLenses.h>
 
 using namespace std;
 using namespace unity::dash;

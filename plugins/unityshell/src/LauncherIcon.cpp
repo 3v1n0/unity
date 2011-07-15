@@ -42,7 +42,7 @@
 
 #include "ubus-server.h"
 #include "UBusMessages.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 #define DEFAULT_ICON "application-default-icon"
 #define MONO_TEST_ICON "gnome-home"
@@ -59,9 +59,7 @@ gboolean LauncherIcon::_skip_tooltip_delay = false;
 
 LauncherIcon::LauncherIcon(Launcher* launcher)
 {
-  _folding_angle = 0;
   _launcher = launcher;
-  m_TooltipText = "blank";
 
   for (int i = 0; i < QUIRK_LAST; i++)
   {
@@ -76,7 +74,6 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   _glow_color = nux::color::White;
 
   _remote_urgent = false;
-  _mouse_inside = false;
   _has_visible_window = false;
   _tooltip = new nux::Tooltip ();
   _tooltip->SinkReference ();
@@ -86,6 +83,9 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   
   _emblem = 0;
   _superkey_label = 0;
+  
+  tooltip_text.SetSetterFunction (sigc::mem_fun (this, &LauncherIcon::SetTooltipText));
+  tooltip_text = "blank";
 
   _quicklist = new QuicklistView ();
   _quicklist->SinkReference ();
@@ -106,11 +106,11 @@ LauncherIcon::LauncherIcon(Launcher* launcher)
   AddChild (_quicklist);
   AddChild (_tooltip);
 
-  MouseEnter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
-  MouseLeave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
-  MouseDown.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
-  MouseUp.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
-  MouseClick.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
+  mouse_enter.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseEnter));
+  mouse_leave.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseLeave));
+  mouse_down.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
+  mouse_up.connect (sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
+  mouse_click.connect (sigc::mem_fun (this, &LauncherIcon::RecvMouseClick));
 }
 
 LauncherIcon::~LauncherIcon()
@@ -164,7 +164,7 @@ LauncherIcon::~LauncherIcon()
 }
 
 bool
-LauncherIcon::HasVisibleWindow ()
+LauncherIcon::HasWindowOnViewport ()
 {
   return _has_visible_window;
 }
@@ -184,7 +184,7 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
     .add("z", _center.z)
     .add("related-windows", _related_windows)
     .add("icon-type", _icon_type)
-    .add("tooltip-text", m_TooltipText.GetTCharPtr ())
+    .add("tooltip-text", tooltip_text().c_str ())
     .add("sort-priority", _sort_priority)
     .add("quirk-active", GetQuirk (QUIRK_ACTIVE))
     .add("quirk-visible", GetQuirk (QUIRK_VISIBLE))
@@ -451,15 +451,22 @@ nux::BaseTexture * LauncherIcon::TextureFromPath (const char *icon_name, int siz
   return result;
 }
 
-void LauncherIcon::SetTooltipText(const TCHAR* text)
+bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
 {
-    m_TooltipText = g_markup_escape_text (text, -1);
-    _tooltip->SetText (m_TooltipText);
-}
+  bool result = false;
 
-nux::NString LauncherIcon::GetTooltipText()
-{
-    return m_TooltipText;
+  gchar *esc = g_markup_escape_text (value.c_str (), -1);
+  std::string escaped = esc;
+  g_free (esc);
+
+  if (escaped != target)
+  {
+    target = escaped;
+    _tooltip->SetText (nux::NString (target.c_str ()));
+    result = true;
+  }
+
+  return result;
 }
 
 void
@@ -487,6 +494,9 @@ gboolean
 LauncherIcon::OnTooltipTimeout (gpointer data)
 {
   LauncherIcon *self = (LauncherIcon *) data;
+
+  if (!self->_launcher)
+    return FALSE;
   
   nux::Geometry geo = self->_launcher->GetAbsoluteGeometry ();
   int tip_x = geo.x + geo.width + 1;
@@ -496,12 +506,12 @@ LauncherIcon::OnTooltipTimeout (gpointer data)
   
   if (!self->_quicklist->IsVisible ())
   {
-    self->_tooltip->ShowWindow (!self->m_TooltipText.IsEmpty ());
-    _skip_tooltip_delay = true;
+    self->_tooltip->ShowWindow (!self->tooltip_text().empty ());
+    _skip_tooltip_delay = TRUE;
   }
   
   self->_tooltip_delay_handle = 0;
-  return false;
+  return FALSE;
 }
 
 void
@@ -528,7 +538,7 @@ void LauncherIcon::RecvMouseLeave ()
   _tooltip->ShowWindow (false);
 }
 
-gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
+bool LauncherIcon::OpenQuicklist (bool default_to_first_item)
 {
    if (_tooltip_delay_handle)
     g_source_remove (_tooltip_delay_handle);
@@ -583,9 +593,18 @@ gboolean LauncherIcon::OpenQuicklist (bool default_to_first_item)
   if (default_to_first_item)
     _quicklist->DefaultToFirstItem ();
 
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
+  int tip_x, tip_y;
+  if (_launcher)
+  {
+    nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+    tip_x = geo.x + geo.width + 1;
+    tip_y = geo.y + _center.y;
+  }
+  else
+  {
+    tip_x = 0;
+    tip_y = _center.y;
+  }
   QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
   
   return true;
@@ -644,9 +663,18 @@ LauncherIcon::SetCenter (nux::Point3 center)
 {
   _center = center;
   
-  nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
-  int tip_x = geo.x + geo.width + 1;
-  int tip_y = geo.y + _center.y;
+  int tip_x, tip_y;
+  if (_launcher)
+  {
+    nux::Geometry geo = _launcher->GetAbsoluteGeometry ();
+    tip_x = geo.x + geo.width + 1;
+    tip_y = geo.y + _center.y;
+  }
+  else
+  {
+    tip_x = 0;
+    tip_y = _center.y;
+  }
     
   if (_quicklist->IsVisible ())
     QuicklistManager::Default ()->ShowQuicklist (_quicklist, tip_x, tip_y);
@@ -673,7 +701,7 @@ LauncherIcon::SaveCenter ()
 }
 
 void 
-LauncherIcon::SetHasVisibleWindow (bool val)
+LauncherIcon::SetHasWindowOnViewport (bool val)
 {
   if (_has_visible_window == val)
     return;
@@ -897,24 +925,6 @@ LauncherIcon::SetEmblem (nux::BaseTexture *emblem)
   needs_redraw.emit (this);
 }
 
-void
-LauncherIcon::SetSuperkeyLabel (nux::BaseTexture* label)
-{
-  if (_superkey_label == label)
-    return;
-  
-  if (_superkey_label)
-    _superkey_label->UnReference ();
-  
-  _superkey_label = label;  
-}
-
-nux::BaseTexture*
-LauncherIcon::GetSuperkeyLabel ()
-{
-  return _superkey_label;
-}
-
 void 
 LauncherIcon::SetEmblemIconName (const char *name)
 {
@@ -926,6 +936,15 @@ LauncherIcon::SetEmblemIconName (const char *name)
     emblem = TextureFromGtkTheme (name, 22, false);
     
   SetEmblem (emblem);
+}
+
+std::vector<nux::Vector4> &
+LauncherIcon::GetTransform (std::string name)
+{
+  if (transform_map.find (name) == transform_map.end ())
+    transform_map[name] = std::vector<nux::Vector4> (4);
+
+  return transform_map[name];
 }
 
 void 

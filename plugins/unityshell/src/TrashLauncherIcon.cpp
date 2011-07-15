@@ -33,7 +33,7 @@
 TrashLauncherIcon::TrashLauncherIcon (Launcher* IconManager)
 :   SimpleLauncherIcon(IconManager)
 {
-  SetTooltipText (_("Trash"));
+  tooltip_text = _("Trash");
   SetIconName ("user-trash");
   SetQuirk (QUIRK_VISIBLE, true);
   SetQuirk (QUIRK_RUNNING, false);

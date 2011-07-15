@@ -34,7 +34,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   _entry (entry),
   _n_sections (0)
 {
-  SetTooltipText (entry->GetName ());
+  tooltip_text = entry->GetName ();
   SetShortcut (entry->GetShortcut());
   SetIconName (entry->GetIcon ());
   SetQuirk (QUIRK_VISIBLE, true);
@@ -46,7 +46,7 @@ PlaceLauncherIcon::PlaceLauncherIcon (Launcher *launcher, PlaceEntry *entry)
   
   // We're interested in this as it's a great time to Connect () our PlaceEntry. The goal being
   // to have the PlaceEntry ready-and-connected by the time the user clicks on the icon
-  MouseEnter.connect (sigc::mem_fun (this, &PlaceLauncherIcon::RecvMouseEnter));
+  mouse_enter.connect (sigc::mem_fun (this, &PlaceLauncherIcon::RecvMouseEnter));
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()

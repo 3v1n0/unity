@@ -30,7 +30,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
                                     const char *label,

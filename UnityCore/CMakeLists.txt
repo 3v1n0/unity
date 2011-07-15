@@ -16,7 +16,6 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
-     UnityCore.h
      Variant.h
     )
 

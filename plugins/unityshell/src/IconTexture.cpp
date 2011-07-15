@@ -19,16 +19,17 @@
 
 #include "config.h"
 
-#include "Nux/Nux.h"
-#include "NuxGraphics/GLThread.h"
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <pango/pangocairo.h>
+
+#include <Nux/Nux.h>
+#include <NuxGraphics/GLThread.h>
+#include <UnityCore/Variant.h>
+
 #include "IconLoader.h"
 #include "IconTexture.h"
 #include "TextureCache.h"
-#include <UnityCore/UnityCore.h>
-
-#include <glib.h>
-#include <pango/pangocairo.h>
-#include <gtk/gtk.h>
 
 #define DEFAULT_ICON "text-x-preview"
 
