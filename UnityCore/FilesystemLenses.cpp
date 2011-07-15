@@ -44,11 +44,21 @@ struct LensFileData
     : dbus_name(g_key_file_get_string(file, GROUP, "DBusName", NULL))
     , dbus_path(g_key_file_get_string(file, GROUP, "DBusPath", NULL))
     , name(g_key_file_get_locale_string(file, GROUP, "Name", NULL, NULL))
+    , icon(g_key_file_get_string(file, GROUP, "Icon", NULL))
     , description(g_key_file_get_locale_string(file, GROUP, "Description", NULL, NULL))
     , search_hint(g_key_file_get_locale_string(file, GROUP, "SearchHint", NULL, NULL))
     , visible(g_key_file_get_boolean(file, GROUP, "Visible", NULL) ? true : false)
     , shortcut(g_key_file_get_string(file, GROUP, "Shortcut", NULL))
   {}
+
+  static bool IsValid(GKeyFile* file, glib::Error& error)
+  {
+    return (g_key_file_has_group(file, GROUP) &&
+            g_key_file_has_key(file, GROUP, "DBusName", error.AsOutParam()) &&
+            g_key_file_has_key(file, GROUP, "DBusPath", error.AsOutParam()) &&
+            g_key_file_has_key(file, GROUP, "Name", error.AsOutParam()) &&
+            g_key_file_has_key(file, GROUP, "Icon", error.AsOutParam()));
+  }
 
   glib::String dbus_name;
   glib::String dbus_path;
@@ -93,10 +103,10 @@ public:
 
   ~Impl();
 
-  LensList GetLenses() const;
+  List GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int Count() const;
+  unsigned int count() const;
 
   void Init();
   glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
@@ -109,7 +119,7 @@ public:
   glib::Object<GFile> directory_;
   unsigned int directory_children_;
   CancellableMap cancel_map_;
-  LensList lenses_;
+  List lenses_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
@@ -266,18 +276,27 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
   {
     LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path.Str();
 
-    LensFileData data(key_file);
-
-    Lens::Ptr lens(new Lens(data.dbus_name.Str(),
-                            data.dbus_path.Str(),
-                            data.name.Str(),
-                            data.icon.Str(),
-                            data.description.Str(),
-                            data.search_hint.Str(),
-                            data.visible,
-                            data.shortcut.Str()));
-    lenses_.push_back(lens);
-    owner_->lens_added.emit(lens);
+    if (LensFileData::IsValid(key_file, error))
+    {
+      LensFileData data(key_file);
+  
+      Lens::Ptr lens(new Lens(data.dbus_name.Str(),
+                              data.dbus_path.Str(),
+                              data.name.Str(),
+                              data.icon.Str(),
+                              data.description.Str(),
+                              data.search_hint.Str(),
+                              data.visible,
+                              data.shortcut.Str()));
+      lenses_.push_back(lens);
+      owner_->lens_added.emit(lens);
+    }
+    else
+    {
+      LOG_WARN(logger) << "Lens file  "
+                       << path.Str() << " is not valid: "
+                       << error.Message();
+    }
   }
   else
   {
@@ -288,7 +307,7 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
   g_key_file_free (key_file);
 }
 
-Lenses::LensList FilesystemLenses::Impl::GetLenses() const
+Lenses::List FilesystemLenses::Impl::GetLenses() const
 {
   return lenses_;
 }
@@ -304,7 +323,7 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(unsigned int index) const
   return lenses_[index];
 }
 
-unsigned int FilesystemLenses::Impl::Count() const
+unsigned int FilesystemLenses::Impl::count() const
 {
   return (unsigned int)lenses_.size();
 }
@@ -312,18 +331,27 @@ unsigned int FilesystemLenses::Impl::Count() const
 
 FilesystemLenses::FilesystemLenses()
   : pimpl(new Impl(this))
-{}
+{
+  Init();
+}
 
 FilesystemLenses::FilesystemLenses(std::string const& lens_directory)
   :pimpl(new Impl(this, lens_directory))
-{}
+{
+  Init();
+}
+
+void FilesystemLenses::Init()
+{
+  count.SetGetterFunction(sigc::mem_fun(pimpl, &Impl::count));
+}
 
 FilesystemLenses::~FilesystemLenses()
 {
   delete pimpl;
 }
 
-Lenses::LensList FilesystemLenses::GetLenses() const
+Lenses::List FilesystemLenses::GetLenses() const
 {
   return pimpl->GetLenses();
 }
@@ -337,12 +365,6 @@ Lens::Ptr FilesystemLenses::GetLensAtIndex(unsigned int index) const
 {
   return pimpl->GetLensAtIndex(index);
 }
-
-unsigned int FilesystemLenses::Count() const
-{
-  return pimpl->Count();
-}
-
 
 }
 }

@@ -51,13 +51,28 @@ public:
        bool visible,
        string const& shortcut);
 
+  string const& dbus_name();
+  string const& dbus_path();
   string const& name();
+  string const& icon();
+  string const& description();
+  string const& search_hint();
+  bool visible();
+  string const& shortcut();
+
 
   ~Impl();
 
   Lens* owner_;
 
+  std::string dbus_name_;
+  std::string dbus_path_;
   std::string name_;
+  std::string icon_;
+  std::string description_;
+  std::string search_hint_;
+  bool visible_;
+  std::string shortcut_;
 };
 
 Lens::Impl::Impl(Lens* owner,
@@ -70,17 +85,58 @@ Lens::Impl::Impl(Lens* owner,
                  bool visible,
                  string const& shortcut)
   : owner_(owner),
-    name_(name)
+    dbus_name_(dbus_name),
+    dbus_path_(dbus_path),
+    name_(name),
+    icon_(icon),
+    description_(description),
+    search_hint_(search_hint),
+    visible_(visible),
+    shortcut_(shortcut)
 {}
 
 Lens::Impl::~Impl()
 {}
+
+string const& Lens::Impl::dbus_name()
+{
+  return dbus_name_;
+}
+
+string const& Lens::Impl::dbus_path()
+{
+  return dbus_path_;
+}
 
 string const& Lens::Impl::name()
 {
   return name_;
 }
 
+string const& Lens::Impl::icon()
+{
+  return icon_;
+}
+
+string const& Lens::Impl::description()
+{
+  return description_;
+}
+
+string const& Lens::Impl::search_hint()
+{
+  return search_hint_;
+}
+
+bool Lens::Impl::visible()
+{
+  return visible_;
+}
+
+string const& Lens::Impl::shortcut()
+{
+  return shortcut_;
+}
 
 Lens::Lens(string const& dbus_name_,
            string const& dbus_path_,
@@ -101,7 +157,14 @@ Lens::Lens(string const& dbus_name_,
                    visible_,
                    shortcut_))
 {
+  dbus_name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
+  dbus_path.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
   name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::name));
+  icon.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::icon));
+  description.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::description));
+  search_hint.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
+  visible.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::visible));
+  shortcut.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
 }
 
 Lens::~Lens()

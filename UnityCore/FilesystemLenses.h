@@ -39,14 +39,13 @@ public:
   FilesystemLenses();
   FilesystemLenses(std::string const& lens_directory);
 
+  void Init();
+
   ~FilesystemLenses();
 
-  LensList GetLenses() const;
+  List GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
-
-  // For QML AbstractList
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int Count() const;
 
   sigc::signal<void> lenses_loaded;
 
