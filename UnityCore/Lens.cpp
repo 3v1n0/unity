@@ -34,14 +34,13 @@ namespace {
 nux::logging::Logger logger("unity.dash.lens");
 }
 
-using namespace std;
+using std::string;
 
 class Lens::Impl
 {
 public:
-  typedef map<GFile*, glib::Object<GCancellable>> CancellableMap;
-
   Impl(Lens* owner,
+       string const& id,
        string const& dbus_name,
        string const& dbus_path,
        string const& name,
@@ -51,6 +50,7 @@ public:
        bool visible,
        string const& shortcut);
 
+  string const& id();
   string const& dbus_name();
   string const& dbus_path();
   string const& name();
@@ -65,17 +65,19 @@ public:
 
   Lens* owner_;
 
-  std::string dbus_name_;
-  std::string dbus_path_;
-  std::string name_;
-  std::string icon_;
-  std::string description_;
-  std::string search_hint_;
+  string id_;
+  string dbus_name_;
+  string dbus_path_;
+  string name_;
+  string icon_;
+  string description_;
+  string search_hint_;
   bool visible_;
-  std::string shortcut_;
+  string shortcut_;
 };
 
 Lens::Impl::Impl(Lens* owner,
+                 string const& id,
                  string const& dbus_name,
                  string const& dbus_path,
                  string const& name,
@@ -84,19 +86,25 @@ Lens::Impl::Impl(Lens* owner,
                  string const& search_hint,
                  bool visible,
                  string const& shortcut)
-  : owner_(owner),
-    dbus_name_(dbus_name),
-    dbus_path_(dbus_path),
-    name_(name),
-    icon_(icon),
-    description_(description),
-    search_hint_(search_hint),
-    visible_(visible),
-    shortcut_(shortcut)
+  : owner_(owner)
+  , id_(id)
+  , dbus_name_(dbus_name)
+  , dbus_path_(dbus_path)
+  , name_(name)
+  , icon_(icon)
+  , description_(description)
+  , search_hint_(search_hint)
+  , visible_(visible)
+  , shortcut_(shortcut)
 {}
 
 Lens::Impl::~Impl()
 {}
+
+string const& Lens::Impl::id()
+{
+  return id_;
+}
 
 string const& Lens::Impl::dbus_name()
 {
@@ -138,7 +146,8 @@ string const& Lens::Impl::shortcut()
   return shortcut_;
 }
 
-Lens::Lens(string const& dbus_name_,
+Lens::Lens(string const& id_,
+           string const& dbus_name_,
            string const& dbus_path_,
            string const& name_,
            string const& icon_,
@@ -148,6 +157,7 @@ Lens::Lens(string const& dbus_name_,
            string const& shortcut_)
 
   : pimpl(new Impl(this,
+                   id_,
                    dbus_name_,
                    dbus_path_,
                    name_,
@@ -157,6 +167,7 @@ Lens::Lens(string const& dbus_name_,
                    visible_,
                    shortcut_))
 {
+  id.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::id));
   dbus_name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
   dbus_path.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
   name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::name));

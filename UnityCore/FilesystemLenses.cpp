@@ -117,14 +117,14 @@ public:
 
   FilesystemLenses* owner_;
   glib::Object<GFile> directory_;
-  unsigned int directory_children_;
+  unsigned int children_waiting_to_load_;
   CancellableMap cancel_map_;
   List lenses_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
   : owner_(owner)
-  , directory_children_(0)
+  , children_waiting_to_load_(0)
 {
   LOG_DEBUG(logger) << "Initialising in standard lens directory mode";
 
@@ -135,7 +135,7 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_directory)
   : owner_(owner)
-  , directory_children_(0)
+  , children_waiting_to_load_(0)
 {
   LOG_DEBUG(logger) << "Initialising in override lens directory mode";
 
@@ -223,7 +223,7 @@ void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
   glib::Object<GFile> file(g_file_new_for_path(lensfile_path.c_str()));
 
   // How many files are we waiting for to load
-  directory_children_++;
+  children_waiting_to_load_++;
 
   auto loaded_cb = [](GObject* source, GAsyncResult *res, gpointer user_data)
   {
@@ -251,8 +251,8 @@ void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
 
     // If we're not waiting for any more children to load, signal that we're
     // done reading the directory
-    self->directory_children_--;
-    if (!self->directory_children_)
+    self->children_waiting_to_load_--;
+    if (!self->children_waiting_to_load_)
       self->owner_->lenses_loaded.emit();
   };
 
@@ -274,13 +274,13 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
 
   if (g_key_file_load_from_data(key_file, data, length, G_KEY_FILE_NONE, error.AsOutParam()))
   {
-    LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path.Str();
-
     if (LensFileData::IsValid(key_file, error))
     {
       LensFileData data(key_file);
+      glib::String id (g_path_get_basename(path.Value()));
   
-      Lens::Ptr lens(new Lens(data.dbus_name.Str(),
+      Lens::Ptr lens(new Lens(id.Str(),
+                              data.dbus_name.Str(),
                               data.dbus_path.Str(),
                               data.name.Str(),
                               data.icon.Str(),
@@ -290,6 +290,8 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
                               data.shortcut.Str()));
       lenses_.push_back(lens);
       owner_->lens_added.emit(lens);
+
+      LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path.Str();
     }
     else
     {
@@ -315,6 +317,14 @@ Lenses::List FilesystemLenses::Impl::GetLenses() const
 Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 {
   Lens::Ptr p;
+
+  for(Lens::Ptr lens: lenses_)
+  {
+    std::string id = lens->id;
+    if (id == lens_id)
+      p = lens;
+  }
+
   return p;
 }
 

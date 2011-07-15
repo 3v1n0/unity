@@ -33,7 +33,8 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef boost::shared_ptr<Lens> Ptr;
 
-  Lens(std::string const& dbus_name,
+  Lens(std::string const& id,
+       std::string const& dbus_name,
        std::string const& dbus_path,
        std::string const& name,
        std::string const& icon,
@@ -44,6 +45,7 @@ public:
 
   ~Lens();
 
+  nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> dbus_name;
   nux::ROProperty<std::string> dbus_path;
   nux::ROProperty<std::string> name;

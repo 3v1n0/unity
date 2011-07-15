@@ -27,37 +27,38 @@ static void WaitForResult(bool& result)
     g_source_remove(timeout_id);
 }
 
+static void WaitForLensesToLoad(FilesystemLenses& lenses)
+{
+  bool result = false;
+
+  auto lenses_loaded_cb = [&result]() {result = true;};
+  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
+  
+  WaitForResult (result);
+  EXPECT_TRUE(result);
+}
+
 TEST(TestFilesystemLenses, TestConstruction)
 {
-  FilesystemLenses lenses(TESTDATADIR"/lenses");
+  FilesystemLenses lenses0();
+  FilesystemLenses lenses1(TESTDATADIR"/lenses");
 }
 
 TEST(TestFilesystemLenses, TestFileLoading)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  bool result = false;
-
-  auto lenses_loaded_cb = [&result]() {result = true;};
-  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
-
-  WaitForResult (result);
-  EXPECT_TRUE(result);
+  WaitForLensesToLoad(lenses);
 }
 
 TEST(TestFilesystemLenses, TestLensCreation)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  bool result = false;
   int  n_lenses = 0;
-
-  auto lenses_loaded_cb = [&result]() { result = true; };
-  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr& p) { n_lenses++; };
   lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
 
-  WaitForResult (result);
-  EXPECT_TRUE(result);
+  WaitForLensesToLoad(lenses);
   EXPECT_EQ(n_lenses, 3);
   EXPECT_EQ(lenses.count, 3);
 }
@@ -65,23 +66,14 @@ TEST(TestFilesystemLenses, TestLensCreation)
 TEST(TestFilesystemLenses, TestLensContent)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  bool result = false;
+  WaitForLensesToLoad(lenses);
 
-  auto lenses_loaded_cb = [&result]() { result = true; };
-  lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
-
-  WaitForResult (result);
-  EXPECT_TRUE(result);
-
-  Lenses::List list = lenses.GetLenses();
-  Lenses::List::iterator it = list.begin();
-
-  // We need to assign values as GTest uses heavy templating that breaks with
-  // the Property system
+  // We need to assign the std::string properties before using them
   std::string s;
   
-  // Test applications.lens
-  Lens::Ptr lens(*it);
+  // Test that the lenses have loaded correctly
+  Lens::Ptr lens = lenses.GetLens("applications.lens");
+  EXPECT_TRUE(lens);
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Applications");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/applications");
   EXPECT_EQ(s = lens->name, "Applications");
@@ -90,6 +82,28 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->search_hint, "Search Applications");
   EXPECT_EQ(lens->visible, true);
   EXPECT_EQ(s = lens->shortcut, "a");
+
+  lens = lenses.GetLens("files.lens");
+  EXPECT_TRUE(lens);
+  EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Files");
+  EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/files");
+  EXPECT_EQ(s = lens->name, "Files");
+  EXPECT_EQ(s = lens->icon, "/usr/share/unity-lens-files/files.png");
+  EXPECT_EQ(s = lens->description, "Search for Files & Folders");
+  EXPECT_EQ(s = lens->search_hint, "Search Files & Folders");
+  EXPECT_EQ(lens->visible, true);
+  EXPECT_EQ(s = lens->shortcut, "f");
+
+  lens = lenses.GetLens("social.lens");
+  EXPECT_TRUE(lens);
+  EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Social");
+  EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/social");
+  EXPECT_EQ(s = lens->name, "Social");
+  EXPECT_EQ(s = lens->icon, "/usr/share/unity-lens-social/social.png");
+  EXPECT_EQ(s = lens->description, "");
+  EXPECT_EQ(s = lens->search_hint, "");
+  EXPECT_EQ(lens->visible, false);
+  EXPECT_EQ(s = lens->shortcut, "");
 }
 
 }
