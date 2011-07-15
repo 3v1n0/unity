@@ -13,7 +13,6 @@ set (CORE_HEADERS
      IndicatorEntry.h
      Indicator.h
      Indicators.h
-     UnityCore.h
      Variant.h
     )
 

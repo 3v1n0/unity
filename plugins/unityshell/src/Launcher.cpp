@@ -48,7 +48,7 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 using namespace unity::ui;
 

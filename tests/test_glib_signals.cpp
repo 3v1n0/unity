@@ -1,4 +1,4 @@
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/GLibSignal.h>
 #include <gtest/gtest.h>
 
 #include "test_glib_signals_utils.h"
