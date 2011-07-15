@@ -30,7 +30,7 @@
 namespace unity {
 namespace glib {
 
-using namespace sigc;
+using sigc::nil;
 
 class SignalBase
 {
