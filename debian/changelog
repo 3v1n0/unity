@@ -1,4 +1,4 @@
-unity (4.2.0-0ubuntu4) UNRELEASED; urgency=low
+unity (4.2.0-0ubuntu4) oneiric; urgency=low
 
   * debian/control
     - Dropped recommends for indicator-me
