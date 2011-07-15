@@ -226,7 +226,11 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
 
-    int icon_glow_size = image_size + 14;
+    float icon_glow_size = 0.0f;
+    if (icon_size > 100)
+      icon_glow_size = icon_size * (200.0f / 170.0f);
+    else
+      icon_glow_size = icon_size * (62.0f / 54.0f);
     w = icon_glow_size;
     h = icon_glow_size;
     x = it->render_center.x - icon_glow_size/2.0f;
@@ -353,58 +357,50 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   if (arg.icon->TextureForSize (image_size) == 0)
     return;
 
+  IconSize size = icon_size > 100 ? IconRenderer::BIG : IconRenderer::SMALL;
+
   GfxContext.GetRenderStates ().SetBlend (true);
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
   GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
 
-    // draw keyboard-navigation "highlight" if any
+  nux::Color background_color = arg.icon->BackgroundColor ();
+  nux::Color glow_color = arg.icon->GlowColor ();
+  nux::Color edge_color (0x55555555);
+  float backlight_intensity = arg.backlight_intensity;
+  float glow_intensity = arg.glow_intensity;
+
   if (arg.keyboard_nav_hl)
   {
-    RenderElement (GfxContext,
-                   arg,
-                   _icon_glow_hl_texture->GetDeviceTexture (),
-                   nux::Color (0xFFFFFFFF),
-                   arg.alpha,
-                   arg.icon->GetTransform ("Glow"));
-
-    RenderElement (GfxContext,
-                   arg,
-                   _icon_outline_texture->GetDeviceTexture (),
-                   nux::Color(0xFFFFFFFF),
-                   0.95f * arg.alpha,
-                   arg.icon->GetTransform ("Tile"));
-
-    RenderElement (GfxContext,
-                   arg,
-                   _icon_bkg_texture->GetDeviceTexture (),
-                   nux::Color(0xFFFFFFFF),
-                   0.9f * arg.alpha,
-                   arg.icon->GetTransform ("Tile"));
+    background_color = nux::color::White;
+    glow_color = nux::color::White;
+    edge_color = nux::color::White;
+    backlight_intensity = 0.95;
+    glow_intensity = 1.0f;
   }
-  else
+
+  // draw tile
+  if (backlight_intensity > 0.0f)
   {
-    // draw tile
-    if (arg.backlight_intensity < 1.0f)
-    {
-      RenderElement(GfxContext,
-                    arg,
-                    _icon_outline_texture->GetDeviceTexture (),
-                    nux::Color(0xAAAAAAAA),
-                    (1.0f - arg.backlight_intensity) * arg.alpha,
-                    arg.icon->GetTransform ("Tile"));
-    }
-
-    if (arg.backlight_intensity > 0.0f)
-    {
-      RenderElement(GfxContext,
-                    arg,
-                    _icon_bkg_texture->GetDeviceTexture (),
-                    arg.icon->BackgroundColor (),
-                    arg.backlight_intensity * arg.alpha,
-                    arg.icon->GetTransform ("Tile"));
-    }
-    // end tile draw
+    RenderElement(GfxContext,
+                  arg,
+                  _icon_back[size]->GetDeviceTexture (),
+                  background_color,
+                  backlight_intensity * arg.alpha,
+                  arg.icon->GetTransform ("Tile"));
   }
+
+  edge_color.alpha = edge_color.alpha + (background_color.alpha - edge_color.alpha) * arg.backlight_intensity;
+  edge_color.red = edge_color.red + (background_color.red - edge_color.red) * arg.backlight_intensity;
+  edge_color.green = edge_color.green + (background_color.green - edge_color.green) * arg.backlight_intensity;
+  edge_color.blue = edge_color.blue + (background_color.blue - edge_color.blue) * arg.backlight_intensity;
+  
+  RenderElement(GfxContext,
+                arg,
+                _icon_edge[size]->GetDeviceTexture (),
+                edge_color,
+                arg.alpha,
+                arg.icon->GetTransform ("Tile"));
+  // end tile draw
 
   // draw icon
   RenderElement (GfxContext,
@@ -415,24 +411,21 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                  arg.icon->GetTransform ("Image"));
 
   // draw overlay shine
-  if (arg.backlight_intensity > 0.0f)
-  {
-    RenderElement(GfxContext,
-                  arg,
-                  _icon_shine_texture->GetDeviceTexture (),
-                  nux::color::White,
-                  arg.backlight_intensity * arg.alpha,
-                  arg.icon->GetTransform ("Tile"));
-  }
+  RenderElement(GfxContext,
+                arg,
+                _icon_shine[size]->GetDeviceTexture (),
+                nux::color::White,
+                arg.alpha,
+                arg.icon->GetTransform ("Tile"));
 
   // draw glow
-  if (arg.glow_intensity > 0.0f)
+  if (glow_intensity > 0.0f)
   {
     RenderElement(GfxContext,
                   arg,
-                  _icon_glow_texture->GetDeviceTexture (),
-                  arg.icon->GlowColor (),
-                  arg.glow_intensity * arg.alpha,
+                  _icon_glow[size]->GetDeviceTexture (),
+                  glow_color,
+                  glow_intensity * arg.alpha,
                   arg.icon->GetTransform ("Glow"));
   }
   
@@ -450,7 +443,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
 
     RenderElement(GfxContext,
                   arg,
-                  _icon_glow_texture->GetDeviceTexture (),
+                  _icon_glow[size]->GetDeviceTexture (),
                   arg.icon->GlowColor (),
                   fade_out * arg.alpha,
                   arg.icon->GetTransform ("Glow"));
@@ -500,11 +493,11 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
       label_map[shortcut] = RenderCharToTexture (shortcut, icon_size, icon_size);
 
     RenderElement (GfxContext,
-                    arg,
-                    label_map[shortcut]->GetDeviceTexture (),
-                    nux::Color (0xFFFFFFFF),
-                    arg.alpha,
-                    arg.icon->GetTransform ("Tile"));
+                  arg,
+                  label_map[shortcut]->GetDeviceTexture (),
+                  nux::Color (0xFFFFFFFF),
+                  arg.alpha,
+                  arg.icon->GetTransform ("Tile"));
   }
 }
 
@@ -889,11 +882,6 @@ void IconRenderer::DestroyTextures ()
   if (!textures_created)
     return;
 
-  _icon_bkg_texture->UnReference ();
-  _icon_outline_texture->UnReference ();
-  _icon_shine_texture->UnReference ();
-  _icon_glow_texture->UnReference ();
-  _icon_glow_hl_texture->UnReference ();
   _progress_bar_trough->UnReference ();
   _progress_bar_fill->UnReference ();
   
@@ -913,13 +901,26 @@ void IconRenderer::DestroyTextures ()
 
 void IconRenderer::GenerateTextures ()
 {
-  _icon_bkg_texture       = nux::CreateTexture2DFromFile (PKGDATADIR"/round_corner_54x54.png", -1, true);
-  _icon_outline_texture   = nux::CreateTexture2DFromFile (PKGDATADIR"/round_outline_54x54.png", -1, true);
-  _icon_shine_texture     = nux::CreateTexture2DFromFile (PKGDATADIR"/round_shine_54x54.png", -1, true);
-  _icon_glow_texture      = nux::CreateTexture2DFromFile (PKGDATADIR"/round_glow_62x62.png", -1, true);
-  _icon_glow_hl_texture   = nux::CreateTexture2DFromFile (PKGDATADIR"/round_glow_hl_62x62.png", -1, true);
   _progress_bar_trough    = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_trough.png", -1, true);
   _progress_bar_fill      = nux::CreateTexture2DFromFile (PKGDATADIR"/progress_bar_fill.png", -1, true);
+
+  _icon_back.resize (IconRenderer::LAST);
+  _icon_selected_back.resize (IconRenderer::LAST);
+  _icon_edge.resize (IconRenderer::LAST);
+  _icon_glow.resize (IconRenderer::LAST);
+  _icon_shine.resize (IconRenderer::LAST);
+
+  _icon_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_170.png", -1, true);
+  _icon_selected_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_selected_back_170.png", -1, true);
+  _icon_edge[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_edge_170.png", -1, true);
+  _icon_glow[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_glow_200.png", -1, true);
+  _icon_shine[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_shine_170.png", -1, true);
+
+  _icon_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_54.png", -1, true);
+  _icon_selected_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_54.png", -1, true);
+  _icon_edge[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_edge_54.png", -1, true);
+  _icon_glow[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_glow_62.png", -1, true);
+  _icon_shine[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_shine_54.png", -1, true);
 
   _pip_ltr                = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_pip_ltr.png", -1, true);
   _arrow_ltr              = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_arrow_ltr.png", -1, true);

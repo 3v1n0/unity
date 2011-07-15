@@ -64,6 +64,8 @@ private:
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
+
+  nux::BaseTexture * background_texture_;
 };
 
 }

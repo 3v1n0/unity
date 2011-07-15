@@ -81,6 +81,7 @@ void SwitcherController::Hide ()
   model_.reset ();
   visible_ = false;
 
+  view_window_->ShowWindow(false);
   view_window_->UnReference ();
 }
 

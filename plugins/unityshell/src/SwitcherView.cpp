@@ -16,6 +16,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include "config.h"
+
 #include "SwitcherView.h"
 #include "IconRenderer.h"
 
@@ -40,6 +42,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   icon_size = 128;
   minimum_spacing = 20;
   tile_size = 170;
+
+  background_texture_ = nux::CreateTexture2DFromFile (PKGDATADIR"/switcher_background.png", -1, true);
 }
 
 SwitcherView::~SwitcherView()
@@ -77,10 +81,11 @@ RenderArg SwitcherView::CreateBaseArgForIcon (AbstractLauncherIcon *icon)
 {
   RenderArg arg;
   arg.icon = icon;
+  arg.alpha = 0.95f;
 
+  arg.backlight_intensity = 1.0f;
   if (icon == model_->Selection ())
   {
-    arg.backlight_intensity = 1.0f;
     arg.keyboard_nav_hl = true;
   }
   else
@@ -188,8 +193,8 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   // clear region
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
-  // draw content
-  gPainter.Paint2DQuadColor (GfxContext, nux::Geometry (0, 0, 100, 100), nux::Color(0xAAAA0000));
+  nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
+  gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   std::list<RenderArg> args = RenderArgs ();
 
