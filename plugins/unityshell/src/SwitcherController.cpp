@@ -77,7 +77,9 @@ void SwitcherController::Hide ()
 {
   if (!visible_)
     return;
-  
+
+  model_->Selection ()->Activate ();
+
   model_.reset ();
   visible_ = false;
 
