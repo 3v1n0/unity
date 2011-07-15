@@ -26,12 +26,12 @@ const int BLUR_SIZE                =  7;
 
 PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
   : VScrollBar (NUX_FILE_LINE_PARAM),
-    _slider (NULL),
-    _track (NULL)
+    _slider_texture (NULL),
+    _track_texture (NULL)
 {
-  m_SlideBar->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
+  _slider->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
                               PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
-  m_Track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
+  _track->SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
                            PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
   SetMinimumSize (PLACES_VSCROLLBAR_WIDTH + 2 * BLUR_SIZE,
                   PLACES_VSCROLLBAR_HEIGHT + 2 * BLUR_SIZE);
@@ -39,11 +39,11 @@ PlacesVScrollBar::PlacesVScrollBar (NUX_FILE_LINE_DECL)
 
 PlacesVScrollBar::~PlacesVScrollBar ()
 {
-  if (_slider)
-    _slider->UnReference ();
+  if (_slider_texture)
+    _slider_texture->UnReference ();
 
-  if (_track)
-    _track->UnReference ();
+  if (_track_texture)
+    _track_texture->UnReference ();
 }
 
 void
@@ -73,7 +73,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   nux::GetPainter().PaintBackground (gfxContext, base);
 
   // check if textures have been computed... if they haven't, exit function
-  if (!_slider)
+  if (!_slider_texture)
     return;
 
   //texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -87,21 +87,21 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
 
   if (m_contentHeight > m_containerHeight)
   {
-    nux::Geometry track_geo = m_Track->GetGeometry ();
+    nux::Geometry track_geo = _track->GetGeometry ();
     gfxContext.QRP_1Tex (track_geo.x,
                          track_geo.y,
                          track_geo.width,
                          track_geo.height,
-                         _track->GetDeviceTexture (),
+                         _track_texture->GetDeviceTexture (),
                          texxform,
                          color);
 
-    nux::Geometry slider_geo = m_SlideBar->GetGeometry ();
+    nux::Geometry slider_geo = _slider->GetGeometry ();
     gfxContext.QRP_1Tex (slider_geo.x - BLUR_SIZE - 2,
                          slider_geo.y,
                          slider_geo.width,
                          slider_geo.height,
-                         _slider->GetDeviceTexture (),
+                         _slider_texture->GetDeviceTexture (),
                          texxform,
                          color);
   }
@@ -120,8 +120,8 @@ PlacesVScrollBar::UpdateTexture ()
   nux::NBitmapData*   bitmap        = NULL;
 
   // update texture of slider
-  width  = m_SlideBar->GetBaseWidth ();
-  height = m_SlideBar->GetBaseHeight ();
+  width  = _slider->GetBaseWidth ();
+  height = _slider->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   width  -= 2 * BLUR_SIZE;
   height -= 2 * BLUR_SIZE;
@@ -158,20 +158,20 @@ PlacesVScrollBar::UpdateTexture ()
 
   bitmap = cairoGraphics->GetBitmap ();
 
-  if (_slider)
-    _slider->UnReference ();
+  if (_slider_texture)
+    _slider_texture->UnReference ();
 
-  _slider = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
-  if (_slider)
-    _slider->Update (bitmap);
+  _slider_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
+  if (_slider_texture)
+    _slider_texture->Update (bitmap);
 
   cairo_destroy (cr);
   delete bitmap;
   delete cairoGraphics;
 
   // update texture of track
-  width  = m_Track->GetBaseWidth ();
-  height = m_Track->GetBaseHeight ();
+  width  = _track->GetBaseWidth ();
+  height = _track->GetBaseHeight ();
   cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
   width  -= 2 * BLUR_SIZE;
   height -= 2 * BLUR_SIZE;
@@ -203,12 +203,12 @@ PlacesVScrollBar::UpdateTexture ()
 
   bitmap = cairoGraphics->GetBitmap ();
 
-  if (_track)
-    _track->UnReference ();
+  if (_track_texture)
+    _track_texture->UnReference ();
 
-  _track = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
-  if (_track)
-    _track->Update (bitmap);
+  _track_texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
+  if (_track_texture)
+    _track_texture->Update (bitmap);
 
   cairo_destroy (cr);
   delete bitmap;

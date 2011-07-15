@@ -57,6 +57,10 @@ public:
 
   sigc::signal<void> expanded;
 
+protected:
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  
 private:
   void Refresh ();
 

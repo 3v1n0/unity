@@ -57,9 +57,10 @@ class QuicklistView;
 class LauncherIcon;
 class LauncherDragWindow;
 
+
 using namespace unity::ui;
 
-class Launcher : public Introspectable, public nux::View
+class Launcher : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (Launcher, nux::View);
 public:
@@ -175,6 +176,13 @@ public:
   sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
+
+
+  // Key navigation
+  virtual bool InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character);
+
 protected:
   // Introspectable methods
   const gchar* GetName ();

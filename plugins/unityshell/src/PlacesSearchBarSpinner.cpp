@@ -213,3 +213,12 @@ void PlacesSearchBarSpinner::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
 }
+
+//
+// Key navigation
+//
+bool 
+PlacesSearchBarSpinner::AcceptKeyNavFocus()
+{
+  return false;
+}

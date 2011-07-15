@@ -310,8 +310,10 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     SetDndEnabled (false, true);
 
+
     icon_renderer = AbstractIconRenderer::Ptr (new IconRenderer ());
     icon_renderer->SetTargetSize (_icon_size, _icon_image_size, _space_between_icons);
+    SetAcceptMouseWheelEvent (true);
 }
 
 Launcher::~Launcher()
@@ -548,7 +550,7 @@ Launcher::exitKeyNavMode ()
   UnGrabKeyboard ();
   UnGrabPointer ();
   SetStateKeyNav (false);
-
+  
   _current_icon_index = -1;
   _last_icon_index = _current_icon_index;
   QueueDraw ();
@@ -2431,6 +2433,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   /* FIXME: nux doesn't give nux::GetEventButton (button_flags) there, relying
    * on an internal Launcher property then
    */
+
   if (_last_button_press != 1)
     return;
 
@@ -3256,4 +3259,16 @@ Launcher::OnNameLost (GDBusConnection *connection,
                        gpointer         user_data)
 {
   LOG_DEBUG(logger) << "Lost the name " << name << " on the session bus";
+}
+
+//
+// Key navigation
+//
+bool
+Launcher::InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character)
+{
+  // The Launcher accepts all key inputs.
+  return true;
 }

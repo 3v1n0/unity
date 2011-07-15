@@ -99,13 +99,16 @@ PanelMenuView::PanelMenuView (int padding)
   _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons ();
+  _window_buttons->SetParentObject (this);
   _window_buttons->NeedRedraw ();
+  
   _on_winbutton_close_clicked_connection = _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
   _on_winbutton_minimize_clicked_connection = _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
   _on_winbutton_restore_clicked_connection = _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
   _on_winbutton_redraw_signal_connection = _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
+  _panel_titlebar_grab_area->SetParentObject (this);
   _panel_titlebar_grab_area->SinkReference ();
   _on_titlebargrab_mouse_down_connnection = _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
   _on_titlebargrab_mouse_doubleleftclick_connnection = _panel_titlebar_grab_area->mouse_doubleleftclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
@@ -124,6 +127,9 @@ PanelMenuView::PanelMenuView (int padding)
   _on_window_moved_connection = win_manager->window_moved.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMoved));
 
   _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+
+  OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
@@ -239,6 +245,51 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
+}
+
+nux::Area*
+PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+
+    if(mouse_inside == false)
+      return NULL;
+
+    Area* found_area = NULL;
+    if (!_we_control_active)
+    {
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    if (_is_maximized)
+    {
+      if (_window_buttons)
+      {
+        found_area = _window_buttons->FindAreaUnderMouse (mouse_position, event_type);
+        NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+      }
+
+      if (_panel_titlebar_grab_area)
+      {
+        found_area = _panel_titlebar_grab_area->FindAreaUnderMouse (mouse_position, event_type);
+        NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+      }
+    }
+    
+    if (_panel_titlebar_grab_area)
+    {
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse (mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    if (!_is_own_window)
+    {
+      found_area = _menu_layout->FindAreaUnderMouse (mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    return View::FindAreaUnderMouse (mouse_position, event_type);  
 }
 
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
@@ -1085,6 +1136,29 @@ bool
 PanelMenuView::HasOurWindowFocused ()
 {
   return _is_own_window;
+}
+
+void
+PanelMenuView::OnPanelViewMouseEnter (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+{
+  if (_is_inside != true)
+  {
+    if (_is_grabbed)
+      _is_grabbed = false;
+    else
+      _is_inside = true;
+    FullRedraw ();
+  }
+}
+
+void
+PanelMenuView::OnPanelViewMouseLeave (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+{
+  if (_is_inside != false)
+  {
+    _is_inside = false;
+    FullRedraw ();
+  }
 }
 
 } // namespace unity

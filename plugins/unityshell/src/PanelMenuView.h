@@ -99,6 +99,10 @@ protected:
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  void OnPanelViewMouseEnter (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+  void OnPanelViewMouseLeave (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+
 private:
   gchar * GetActiveViewName ();
   static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);

@@ -38,7 +38,7 @@
 
 namespace unity {
 
-class PanelView : public Introspectable, public nux::View
+class PanelView : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PanelView, nux::View);
 public:

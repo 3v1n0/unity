@@ -27,7 +27,7 @@
 #include "PlacesTile.h"
 #include "StaticCairoText.h"
 
-class PlacesHorizontalTile : public Introspectable, public PlacesTile
+class PlacesHorizontalTile : public unity::Introspectable, public PlacesTile
 {
 public:
 
