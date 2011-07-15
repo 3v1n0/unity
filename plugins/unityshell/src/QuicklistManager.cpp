@@ -83,7 +83,7 @@ void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x,
   }
 
   quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
-  nux::GetWindowCompositor().SetKeyboardEventReceiver(quicklist);
+  nux::GetWindowCompositor().SetKeyFocusArea(quicklist);
 }
 
 void QuicklistManager::HideQuicklist (QuicklistView *quicklist)

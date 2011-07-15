@@ -170,7 +170,7 @@ void PlacesController::Show ()
 
   ubus_server_send_message (ubus_server_get_default (), UBUS_PLACE_VIEW_SHOWN, NULL);
 
-  nux::GetWindowCompositor().SetKeyboardEventReceiver(_view->GetTextEntryView());
+  nux::GetWindowCompositor().SetKeyFocusArea(_view->GetTextEntryView());
 }
 void PlacesController::Hide ()
 {

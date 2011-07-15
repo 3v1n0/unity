@@ -105,7 +105,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layered_layout->AddLayer (_empty_view);
 
   _layered_layout->SetActiveLayer (_home_view);
-  nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+  nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
 
   SetLayout (_layout);
 
@@ -519,12 +519,12 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
   {
     _layered_layout->SetActiveLayer (_home_view);
-    nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
   else
   {
     _layered_layout->SetActiveLayer (_results_view);
-    nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
 
   if (_entry == _alt_f2_entry)
@@ -689,7 +689,7 @@ PlacesView::OnResultAdded (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntry
     if (_n_results == 1)
       _empty_view->SetText (result.GetName ());
     _layered_layout->SetActiveLayerN (2);
-    nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
 
   _results_controller->AddResult (entry, group, result);
@@ -705,7 +705,7 @@ PlacesView::OnResultRemoved (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEnt
           || g_strcmp0 (group.GetRenderer (), "UnityEmptySectionRenderer") == 0))
   {
     _layered_layout->SetActiveLayerN (1);
-    nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
 
   _results_controller->RemoveResult (entry, group, result);
@@ -799,14 +799,14 @@ PlacesView::OnSearchChanged (const char *search_string)
     if (g_strcmp0 (search_string, "") == 0)
     {
       _layered_layout->SetActiveLayer (_home_view);
-      nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+      nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
       _home_view->QueueDraw ();
       _search_empty = true;
     }
     else
     {
       _layered_layout->SetActiveLayer (_results_view);
-      nux::GetWindowCompositor().SetKeyboardEventReceiver(GetTextEntryView());
+      nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
       _results_view->QueueDraw ();
     }
 
