@@ -59,7 +59,7 @@ public:
 
   Signal0();
  
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
                SignalCallback     cb);
 private:
@@ -76,9 +76,9 @@ public:
 
   Signal1();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
   static R Callback(G object, T data1, Signal1* self);
 private:
@@ -93,13 +93,13 @@ public:
 
   Signal2();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
-  static R Callback(G        object,
-                    T1       data1,
-                    T2       data2,
+  static R Callback(G Object,
+                    T1 data1,
+                    T2 data2,
                     Signal2* self);
 private:
   SignalCallback callback_;
@@ -113,14 +113,14 @@ public:
 
   Signal3();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
-  static R Callback(G        object,
-                    T1       data1,
-                    T2       data2,
-                    T3       data3,
+  static R Callback(G Object,
+                    T1 data1,
+                    T2 data2,
+                    T3 data3,
                     Signal3* self);
 private:
   SignalCallback callback_;
@@ -134,15 +134,15 @@ public:
 
   Signal4();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
-  static R Callback(G        object,
-                    T1       data1,
-                    T2       data2,
-                    T3       data3,
-                    T4       data4,
+  static R Callback(G Object,
+                    T1 data1,
+                    T2 data2,
+                    T3 data3,
+                    T4 data4,
                     Signal4* self);
 private:
   SignalCallback callback_;
@@ -157,16 +157,16 @@ public:
 
   Signal5();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
-  static R Callback(G        object,
-                    T1       data1,
-                    T2       data2,
-                    T3       data3,
-                    T4       data4,
-                    T5       data5,
+  static R Callback(G Object,
+                    T1 data1,
+                    T2 data2,
+                    T3 data3,
+                    T4 data4,
+                    T5 data5,
                     Signal5* self);
 private:
   SignalCallback callback_;
@@ -181,17 +181,17 @@ public:
 
   Signal6();
 
-  void Connect(G                  object,
+  void Connect(G Object,
                std::string const& signal_name,
-               SignalCallback     callback);
+               SignalCallback callback);
 private:
-  static R Callback(G        object,
-                    T1       data1,
-                    T2       data2,
-                    T3       data3,
-                    T4       data4,
-                    T5       data5,
-                    T6       data6,
+  static R Callback(G Object,
+                    T1 data1,
+                    T2 data2,
+                    T3 data3,
+                    T4 data4,
+                    T5 data5,
+                    T6 data6,
                     Signal6* self);
 private:
   SignalCallback callback_;
@@ -207,9 +207,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4, T5, T6> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G>
@@ -219,9 +219,9 @@ public:
   typedef sigc::slot<R, G> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G, typename T1>
@@ -231,9 +231,9 @@ public:
   typedef sigc::slot<R, G, T1> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G, typename T1, typename T2>
@@ -243,9 +243,9 @@ public:
   typedef sigc::slot<R, G, T1, T2> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3>
@@ -255,9 +255,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4>
@@ -268,9 +268,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4, typename T5>
@@ -281,9 +281,9 @@ public:
   typedef sigc::slot<R, G, T1, T2, T3, T4, T5> SignalCallback;
 
   inline Signal();
-  inline Signal(G                  object,
+  inline Signal(G Object,
                 std::string const& signal_name,
-                SignalCallback     callback);
+                SignalCallback callback);
 };
 
 class SignalManager : public boost::noncopyable
