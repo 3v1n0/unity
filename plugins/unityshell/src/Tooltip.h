@@ -58,7 +58,7 @@ namespace nux
   class HLayout;
   class SpaceLayout;
 
-  class Tooltip : public BaseWindow, public Introspectable
+  class Tooltip : public BaseWindow, public ::Introspectable
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
   public:
