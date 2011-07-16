@@ -78,7 +78,7 @@ void SwitcherController::Hide ()
   if (!visible_)
     return;
 
-  model_->Selection ()->Activate ();
+  model_->Selection ()->Activate (ActionArg (ActionArg::SWITCHER, 0));
 
   model_.reset ();
   visible_ = false;

@@ -212,7 +212,7 @@ DeviceLauncherIcon::ShowMount (GMount *mount)
 }
 
 void
-DeviceLauncherIcon::ActivateLauncherIcon ()
+DeviceLauncherIcon::ActivateLauncherIcon (ActionArg arg)
 {
   GMount *mount;
   gchar  *name;
@@ -307,7 +307,7 @@ DeviceLauncherIcon::Eject ()
 void
 DeviceLauncherIcon::OnOpen (DbusmenuMenuitem *item, int time, DeviceLauncherIcon *self)
 {
-  self->ActivateLauncherIcon ();
+  self->ActivateLauncherIcon (ActionArg (ActionArg::OTHER, 0));
 }
 
 void

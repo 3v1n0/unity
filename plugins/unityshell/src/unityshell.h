@@ -127,6 +127,14 @@ public:
   bool altTabForwardTerminate(CompAction* action,
                                          CompAction::State state,
                                          CompOption::Vector& options);
+  
+  bool altTabPrevInitiate(CompAction* action,
+                          CompAction::State state,
+                          CompOption::Vector& options);
+
+  bool altTabPrevTerminate(CompAction* action,
+                           CompAction::State state,
+                           CompOption::Vector& options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */

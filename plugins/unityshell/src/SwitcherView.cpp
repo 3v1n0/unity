@@ -96,10 +96,13 @@ RenderArg SwitcherView::CreateBaseArgForIcon (AbstractLauncherIcon *icon)
   return arg;
 }
 
-std::list<RenderArg> SwitcherView::RenderArgs ()
+std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo)
 {
   std::list<RenderArg> results;
   nux::Geometry base = GetGeometry ();
+
+  background_geo.y = base.y + base.height / 2 - 150;
+  background_geo.height = 300;
 
   if (model_)
   {
@@ -113,8 +116,16 @@ std::list<RenderArg> SwitcherView::RenderArgs ()
 
     if (overflow < 0)
     {
+      background_geo.x = base.x - overflow / 2;
+      background_geo.width = base.width + overflow;
+
       x -= overflow / 2;
       overflow = 0;
+    }
+    else
+    {
+      background_geo.x = base.x;
+      background_geo.width = base.width;
     }
 
     float partial_overflow = (float) overflow / (float) (model_->Size () - 1);
@@ -193,10 +204,11 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   // clear region
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
-  nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
-  gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
+  nux::Geometry background_geo;
+  std::list<RenderArg> args = RenderArgs (background_geo);
 
-  std::list<RenderArg> args = RenderArgs ();
+  //nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
+  gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
   icon_renderer_->PreprocessIcons (args, base);
 

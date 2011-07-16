@@ -85,7 +85,7 @@ SimpleLauncherIcon::OnMouseLeave ()
 }
 
 void
-SimpleLauncherIcon::ActivateLauncherIcon ()
+SimpleLauncherIcon::ActivateLauncherIcon (ActionArg arg)
 {
   activate.emit ();
 }

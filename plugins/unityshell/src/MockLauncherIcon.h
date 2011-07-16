@@ -66,9 +66,9 @@ public:
     return transform_map[name];
   }
 
-  void Activate () {}
+  void Activate (ActionArg arg) {}
   
-  void OpenInstance () {}
+  void OpenInstance (ActionArg arg) {}
 
   int SortPriority () { return 0; }
   

@@ -80,9 +80,14 @@
             		    <default>&lt;Alt&gt;F1</default>
                   </option>
                   <option name="alt_tab_forward" type="key">
-            		    <_short>Key to start the alt-tab switcher</_short>
+            		    <_short>Key to start the switcher</_short>
             		    <_long>fixme</_long>
             		    <default>&lt;Control&gt;Tab</default>
+                  </option>
+                  <option name="alt_tab_prev" type="key">
+                        <_short>Key to start the switcher in reverse</_short>
+                        <_long>fixme</_long>
+                        <default>&lt;Control&gt;&lt;Shift&gt;Tab</default>
                   </option>
                   <option name="execute_command" type="key">
             		    <_short>Key to execute a command</_short>

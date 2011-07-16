@@ -68,7 +68,7 @@ PlaceLauncherIcon::GlowColor ()
 }
 
 void
-PlaceLauncherIcon::ActivateLauncherIcon ()
+PlaceLauncherIcon::ActivateLauncherIcon (ActionArg arg)
 {
   ActivatePlace (0, "");
 }

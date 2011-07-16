@@ -55,7 +55,7 @@ protected:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  std::list<RenderArg> RenderArgs ();
+  std::list<RenderArg> RenderArgs (nux::Geometry& background_geo);
 
   RenderArg CreateBaseArgForIcon (AbstractLauncherIcon *icon);
 private:
