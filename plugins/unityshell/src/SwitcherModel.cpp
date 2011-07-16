@@ -26,7 +26,7 @@ namespace switcher {
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
 : _inner (icons)
 , _index (0)
-, _last_index (-1)
+, _last_index (0)
 {
   _change_time.tv_sec = 0;
   _change_time.tv_nsec = 0;
