@@ -62,9 +62,13 @@ protected:
 private:
   void OnSelectionChanged (AbstractLauncherIcon *selection);
 
+  static gboolean OnDrawTimeout (gpointer data);
+
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
+
+  guint redraw_handle_;
 
   nux::BaseTexture * background_texture_;
 };

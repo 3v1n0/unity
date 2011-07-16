@@ -259,8 +259,8 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
       float emb_w = emblem->GetWidth ();
       float emb_h = emblem->GetHeight ();
 
-      x = it->render_center.x - (w - emb_w); // puts right edge of emblem just over the edge of the launcher icon
-      y = it->render_center.y - icon_size/2.0f;     // y = top left corner position of emblem
+      x = it->render_center.x + (icon_size * 0.50f - emb_w - icon_size * 0.05f); // puts right edge of emblem just over the edge of the launcher icon
+      y = it->render_center.y - icon_size * 0.50f;     // y = top left corner position of emblem
       z = it->render_center.z;
       
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width/2.0f, geo.height/2.0f, z) * // Translate the icon to the center of the viewport

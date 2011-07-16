@@ -35,6 +35,7 @@ NUX_IMPLEMENT_OBJECT_TYPE (SwitcherView);
 SwitcherView::SwitcherView(NUX_FILE_LINE_DECL) 
 : View (NUX_FILE_LINE_PARAM)
 , target_sizes_set_ (false)
+, redraw_handle_ (0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());
   border_size = 80;
@@ -48,7 +49,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 
 SwitcherView::~SwitcherView()
 {
-  
+  if (redraw_handle_ > 0)
+    g_source_remove (redraw_handle_);
 }
 
 static int
@@ -221,11 +223,12 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, Ab
   return results;
 }
 
-static gboolean on_draw_queue_timeout (gpointer data)
+gboolean SwitcherView::OnDrawTimeout (gpointer data)
 {
   SwitcherView *self = (SwitcherView *) data;
 
   self->QueueDraw ();
+  self->redraw_handle_ = 0;
   return false;
 }
 
@@ -280,7 +283,7 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   int ms_since_change = DeltaTTime (&current, &last_change_time);
 
   if (ms_since_change < 150)
-    g_timeout_add (0, on_draw_queue_timeout, this);
+    redraw_handle_ = g_timeout_add (0, &SwitcherView::OnDrawTimeout, this);
 }
 
 
