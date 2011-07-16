@@ -22,6 +22,7 @@
 
 #include "SwitcherModel.h"
 #include "AbstractIconRenderer.h"
+#include "StaticCairoText.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -49,6 +50,8 @@ public:
   nux::Property<int> icon_size;
   nux::Property<int> minimum_spacing;
   nux::Property<int> tile_size;
+  nux::Property<int> vertical_size;
+  nux::Property<int> text_size;
 
 protected:
   long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
@@ -71,6 +74,8 @@ private:
   guint redraw_handle_;
 
   nux::BaseTexture * background_texture_;
+
+  nux::StaticCairoText * text_view_;
 };
 
 }

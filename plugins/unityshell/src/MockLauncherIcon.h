@@ -38,14 +38,12 @@ class MockLauncherIcon : public AbstractLauncherIcon
 public:
   MockLauncherIcon ()
   : icon_ (0)
-  {}
+  {
+    tooltip_text = "Mock Icon";
+  }
 
   void HideTooltip () {}
 
-  void SetTooltipText (std::string) {}
-  
-  std::string GetTooltipText () { return std::string (); }
-  
   void    SetShortcut (guint64 shortcut) {}
   
   guint64 GetShortcut () { return 0; }

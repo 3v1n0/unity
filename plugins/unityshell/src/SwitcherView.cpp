@@ -38,17 +38,26 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 , redraw_handle_ (0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());
-  border_size = 80;
+  border_size = 60;
   flat_spacing = 8;
   icon_size = 128;
   minimum_spacing = 20;
   tile_size = 170;
+  vertical_size = 250;
+  text_size = 15;
 
   background_texture_ = nux::CreateTexture2DFromFile (PKGDATADIR"/switcher_background.png", -1, true);
+
+  text_view_ = new nux::StaticCairoText ("Testing");
+  text_view_->SinkReference ();
+  text_view_->SetGeometry (nux::Geometry (0, 0, 200, text_size));
+  text_view_->SetTextColor (nux::color::White);
+  text_view_->SetFont ("Ubuntu Bold 10");
 }
 
 SwitcherView::~SwitcherView()
 {
+  text_view_->UnReference ();
   if (redraw_handle_ > 0)
     g_source_remove (redraw_handle_);
 }
@@ -63,10 +72,15 @@ void SwitcherView::SetModel (SwitcherModel::Ptr model)
 {
   model_ = model;
   model->selection_changed.connect (sigc::mem_fun (this, &SwitcherView::OnSelectionChanged));
+
+  if (model->Selection ())
+    text_view_->SetText (model->Selection ()->tooltip_text().c_str ());
 }
 
 void SwitcherView::OnSelectionChanged (AbstractLauncherIcon *selection)
 {
+  if (selection)
+    text_view_->SetText (selection->tooltip_text().c_str ());
   QueueDraw ();
 }
 
@@ -120,8 +134,8 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, Ab
   std::list<RenderArg> results;
   nux::Geometry base = GetGeometry ();
 
-  background_geo.y = base.y + base.height / 2 - 150;
-  background_geo.height = 300;
+  background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
+  background_geo.height = vertical_size + text_size;
 
   if (model_)
   {
@@ -252,7 +266,7 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   ROP.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   // clear region
-  gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
+  gPainter.PaintBackground (GfxContext, base);
 
   nux::Geometry background_geo;
   std::list<RenderArg> args = RenderArgs (background_geo, model_->Selection (), current);
@@ -266,6 +280,8 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   std::list<RenderArg>::iterator it;
   for (it = args.begin (); it != args.end (); ++it)
   {
+    if (it->icon == model_->Selection ())
+      text_view_->SetBaseX (it->render_center.x - text_view_->GetBaseWidth () / 2);
     if (it->y_rotation < 0)
       icon_renderer_->RenderIcon (GfxContext, *it, base, base);
   }
@@ -278,6 +294,12 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   }
 
   GfxContext.PopClippingRectangle();
+  
+  // probably evil
+  gPainter.PopBackground ();
+
+  text_view_->SetBaseY (background_geo.y + background_geo.height - 45);
+  text_view_->Draw (GfxContext, force_draw);
 
   timespec last_change_time = model_->SelectionChangeTime ();
   int ms_since_change = DeltaTTime (&current, &last_change_time);
