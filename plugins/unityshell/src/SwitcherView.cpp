@@ -38,8 +38,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
 , redraw_handle_ (0)
 {
   icon_renderer_ = AbstractIconRenderer::Ptr (new IconRenderer ());
-  border_size = 60;
-  flat_spacing = 8;
+  border_size = 50;
+  flat_spacing = 10;
   icon_size = 128;
   minimum_spacing = 20;
   tile_size = 170;
@@ -207,7 +207,7 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, Ab
         }
       }
 
-      arg.render_center.z = abs (60.0f * arg.y_rotation);
+      arg.render_center.z = abs (80.0f * arg.y_rotation);
 
       arg.logical_center = arg.render_center;
       results.push_back (arg);
@@ -274,6 +274,10 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   //nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
   gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
 
+  int internal_offset = 21;
+  nux::Geometry internal_clip (background_geo.x + internal_offset, background_geo.y, background_geo.width - internal_offset * 2, background_geo.height);
+  GfxContext.PushClippingRectangle (internal_clip);
+
   icon_renderer_->PreprocessIcons (args, base);
 
   GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
@@ -293,6 +297,7 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
       icon_renderer_->RenderIcon (GfxContext, *rit, base, base);
   }
 
+  GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
   
   // probably evil

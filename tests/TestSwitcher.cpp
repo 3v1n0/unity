@@ -61,7 +61,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
-  icons.push_back (new MockLauncherIcon ());
 
 
   view->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);

@@ -389,10 +389,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                   arg.icon->GetTransform ("Tile"));
   }
 
-  edge_color.alpha = edge_color.alpha + (background_color.alpha - edge_color.alpha) * arg.backlight_intensity;
-  edge_color.red = edge_color.red + (background_color.red - edge_color.red) * arg.backlight_intensity;
-  edge_color.green = edge_color.green + (background_color.green - edge_color.green) * arg.backlight_intensity;
-  edge_color.blue = edge_color.blue + (background_color.blue - edge_color.blue) * arg.backlight_intensity;
+  edge_color = edge_color + ((background_color - edge_color) * arg.backlight_intensity);
   
   RenderElement(GfxContext,
                 arg,
