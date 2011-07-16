@@ -225,11 +225,11 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, Ab
 
 gboolean SwitcherView::OnDrawTimeout (gpointer data)
 {
-  SwitcherView *self = (SwitcherView *) data;
+  SwitcherView *self = static_cast<SwitcherView *> (data);
 
   self->QueueDraw ();
   self->redraw_handle_ = 0;
-  return false;
+  return FALSE;
 }
 
 void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
