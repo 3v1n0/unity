@@ -27,7 +27,8 @@ namespace unity {
 namespace switcher {
 
 SwitcherController::SwitcherController()
-  :  visible_(false)
+  :  view_window_ (0)
+  ,  visible_(false)
   ,  show_timer_ (0)
 {
   
@@ -43,7 +44,7 @@ void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherContro
   
   visible_ = true;
 
-  show_timer_ = g_timeout_add (250, &SwitcherController::OnShowTimer, this);
+  show_timer_ = g_timeout_add (150, &SwitcherController::OnShowTimer, this);
 }
 
 gboolean SwitcherController::OnShowTimer (gpointer data)
@@ -89,7 +90,9 @@ void SwitcherController::Hide ()
   if (!visible_)
     return;
 
-  model_->Selection ()->Activate (ActionArg (ActionArg::SWITCHER, 0));
+  AbstractLauncherIcon *selection = model_->Selection ();
+  if (selection)
+    selection->Activate (ActionArg (ActionArg::SWITCHER, 0));
 
   model_.reset ();
   visible_ = false;
