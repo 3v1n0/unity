@@ -55,7 +55,8 @@ protected:
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  std::list<RenderArg> RenderArgs (nux::Geometry& background_geo);
+  RenderArg InterpolateRenderArgs (RenderArg const& start, RenderArg const& end, float progress);
+  std::list<RenderArg> RenderArgs (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current);
 
   RenderArg CreateBaseArgForIcon (AbstractLauncherIcon *icon);
 private:

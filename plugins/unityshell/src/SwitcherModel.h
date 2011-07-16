@@ -20,6 +20,8 @@
 #ifndef SWITCHERMODEL_H
 #define SWITCHERMODEL_H
 
+#include <sys/time.h>
+
 #include "AbstractLauncherIcon.h"
 #include "LauncherModel.h"
 
@@ -50,20 +52,27 @@ public:
     
     int Size ();
     
-    AbstractLauncherIcon *Selection ();
+    AbstractLauncherIcon * Selection ();
     int SelectionIndex ();
+
+    AbstractLauncherIcon * LastSelection ();
+    int LastSelectionIndex ();
     
     void Next ();
     void Prev ();
     
     void Select (AbstractLauncherIcon *selection);
     void Select (int index);
+
+    timespec SelectionChangeTime ();
     
     sigc::signal<void, AbstractLauncherIcon *> selection_changed;
 
 private:
     Base             _inner;
-    unsigned int              _index;
+    unsigned int     _index;
+    unsigned int     _last_index;
+    timespec         _change_time;
 };
 
 }

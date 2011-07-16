@@ -51,6 +51,12 @@ SwitcherView::~SwitcherView()
   
 }
 
+static int
+DeltaTTime (struct timespec const *x, struct timespec const *y)
+{
+  return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
+}
+
 void SwitcherView::SetModel (SwitcherModel::Ptr model)
 {
   model_ = model;
@@ -59,7 +65,7 @@ void SwitcherView::SetModel (SwitcherModel::Ptr model)
 
 void SwitcherView::OnSelectionChanged (AbstractLauncherIcon *selection)
 {
-  NeedRedraw ();
+  QueueDraw ();
 }
 
 SwitcherModel::Ptr SwitcherView::GetModel ()
@@ -85,18 +91,29 @@ RenderArg SwitcherView::CreateBaseArgForIcon (AbstractLauncherIcon *icon)
 
   arg.backlight_intensity = 1.0f;
   if (icon == model_->Selection ())
-  {
     arg.keyboard_nav_hl = true;
-  }
-  else
-  {
-    // foo
-  }
 
   return arg;
 }
 
-std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo)
+RenderArg SwitcherView::InterpolateRenderArgs (RenderArg const& start, RenderArg const& end, float progress)
+{
+  RenderArg result = end;
+
+  result.x_rotation = start.x_rotation + (end.x_rotation - start.x_rotation) * progress;
+  result.y_rotation = start.y_rotation + (end.y_rotation - start.y_rotation) * progress;
+  result.z_rotation = start.z_rotation + (end.z_rotation - start.z_rotation) * progress;
+
+  result.render_center.x = start.render_center.x + (end.render_center.x - start.render_center.x) * progress;
+  result.render_center.y = start.render_center.y + (end.render_center.y - start.render_center.y) * progress;
+  result.render_center.z = start.render_center.z + (end.render_center.z - start.render_center.z) * progress;
+
+  result.logical_center = result.render_center;
+
+  return result;
+}
+
+std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current)
 {
   std::list<RenderArg> results;
   nux::Geometry base = GetGeometry ();
@@ -141,7 +158,7 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo)
       RenderArg arg = CreateBaseArgForIcon (*it);
 
       float scalar = partial_overflow_scalar;
-      bool is_selection = arg.icon == model_->Selection ();
+      bool is_selection = arg.icon == selection;
       if (is_selection)
       {
         seen_selected = true;
@@ -180,13 +197,43 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo)
       results.push_back (arg);
       ++i;
     }
+
+    timespec last_change_time = model_->SelectionChangeTime ();
+    int ms_since_change = DeltaTTime (&current, &last_change_time);
+    if (overflow > 0 && selection == model_->Selection () && selection != model_->LastSelection () && ms_since_change < 150)
+    {
+      float progress = (float) ms_since_change / 150.0f;
+
+      nux::Geometry last_geo;
+      std::list<RenderArg> start = RenderArgs (last_geo, model_->LastSelection (), current);
+      std::list<RenderArg> end = results;
+
+      results.clear ();
+
+      std::list<RenderArg>::iterator start_it, end_it;
+      for (start_it = start.begin (), end_it = end.begin (); start_it != start.end (); ++start_it, ++end_it)
+      {
+        results.push_back (InterpolateRenderArgs (*start_it, *end_it, progress));
+      }
+    }
   }
 
   return results;
 }
 
+static gboolean on_draw_queue_timeout (gpointer data)
+{
+  SwitcherView *self = (SwitcherView *) data;
+
+  self->QueueDraw ();
+  return false;
+}
+
 void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 {
+  timespec current;
+  clock_gettime (CLOCK_MONOTONIC, &current);
+
   if (!target_sizes_set_)
   {
     icon_renderer_->SetTargetSize (tile_size, icon_size, 10);
@@ -205,7 +252,7 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   gPainter.PushDrawColorLayer(GfxContext, base, nux::Color(0x00000000), true, ROP);
 
   nux::Geometry background_geo;
-  std::list<RenderArg> args = RenderArgs (background_geo);
+  std::list<RenderArg> args = RenderArgs (background_geo, model_->Selection (), current);
 
   //nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
   gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);
@@ -228,6 +275,12 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   }
 
   GfxContext.PopClippingRectangle();
+
+  timespec last_change_time = model_->SelectionChangeTime ();
+  int ms_since_change = DeltaTTime (&current, &last_change_time);
+
+  if (ms_since_change < 150)
+    g_timeout_add (0, on_draw_queue_timeout, this);
 }
 
 
