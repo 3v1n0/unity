@@ -609,7 +609,7 @@ PanelMenuView::Refresh ()
         cairo_pop_group_to_source (cr);
 
         linpat = cairo_pattern_create_linear (width-fading_width, y, width, y);
-        cairo_pattern_add_color_stop_rgb (linpat, 0, 0, 0, 0);
+        cairo_pattern_add_color_stop_rgba (linpat, 0, 0, 0, 0, 1);
         cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0, 0, 0);
 
         cairo_mask (cr, linpat);
