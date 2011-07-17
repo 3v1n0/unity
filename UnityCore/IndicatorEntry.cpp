@@ -155,6 +155,11 @@ void Entry::ShowMenu(int x, int y, int timestamp, int button)
   on_show_menu.emit(id_, x, y, timestamp, button);
 }
 
+void Entry::SecondaryActivate(int x, int y, int timestamp)
+{
+  on_secondary_activate.emit(id_, x, y, timestamp);
+}
+
 void Entry::Scroll(int delta)
 {
   on_scroll.emit(id_, delta);

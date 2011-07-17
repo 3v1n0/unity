@@ -54,6 +54,8 @@ public:
    */
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button) = 0;
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
+                                        int x, int y, int timestamp) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
