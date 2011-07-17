@@ -619,6 +619,7 @@ PanelMenuView::Refresh ()
     }
 
     gtk_widget_path_free (widget_path);
+
     gtk_style_context_restore (style_context);
   }
 
