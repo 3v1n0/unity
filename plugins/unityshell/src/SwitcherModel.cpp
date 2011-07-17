@@ -149,7 +149,13 @@ SwitcherModel::Select (AbstractLauncherIcon *selection)
 void 
 SwitcherModel::Select (int index)
 {
-  _index = CLAMP (index, 0, _inner.size () - 1);
+  unsigned int target = CLAMP (index, 0, _inner.size () - 1);
+
+  if (target != _index)
+  {
+    _last_index = _index;
+    _index = target;
+  }
 }
 
 }

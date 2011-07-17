@@ -297,8 +297,13 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   add_executable(test-gtest
                  test_timer.cpp
                  test_indicator_entry.cpp
+                 unit/TestSwitcherModel.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/SwitcherModel.cpp
+                 ${UNITY_SRC}/SwitcherModel.h
+                 ${UNITY_SRC}/MockLauncherIcon.h
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)
