@@ -519,7 +519,7 @@ PanelMenuView::Refresh ()
   char                 *font_description = NULL;
   GdkScreen            *screen = gdk_screen_get_default ();
   int                   dpi = 0;
-  const int             text_margin = 30;
+  const int             fading_pixels = 35;
 
   int  x = 0;
   int  y = 0;
@@ -527,6 +527,7 @@ PanelMenuView::Refresh ()
   int  height = geo.height;
   int  text_width = 0;
   int  text_height = 0;
+  int  text_space = 0;
 
   if (label)
   {
@@ -581,6 +582,7 @@ PanelMenuView::Refresh ()
   {
     PanelStyle *style = PanelStyle::GetDefault ();
     GtkStyleContext *style_context = style->GetStyleContext ();
+    text_space = width-x;
 
     gtk_style_context_save (style_context);
 
@@ -593,37 +595,30 @@ PanelMenuView::Refresh ()
     gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUBAR);
     gtk_style_context_add_class (style_context, GTK_STYLE_CLASS_MENUITEM);
 
-    GdkRGBA rgba_text;
-    gtk_style_context_get_color (style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
-
-    float red = rgba_text.red;
-    float green = rgba_text.green;
-    float blue = rgba_text.blue;
+    y += (height - text_height)/2;
 
     pango_cairo_update_layout (cr, layout);
 
-    y += (height - text_height)/2;
-    double startalpha = 1.0 - ((double)text_margin/(double)width);
-
-    // Once again for the homies that could
-    if (x+text_width >= width-1)
+    if (text_width > text_space)
     {
-        linpat = cairo_pattern_create_linear (x, y, width-1, y+text_height);
-        cairo_pattern_add_color_stop_rgb (linpat, 0, red, green, blue);
-        cairo_pattern_add_color_stop_rgb (linpat, startalpha, red, green, blue);
-        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0.0, 0.0, 0);
-        cairo_set_source(cr, linpat);
-        cairo_pattern_destroy(linpat);
-    }
-    else
-    {
-      cairo_set_source_rgb (cr, red, green, blue);
-    }
+        int out_pixels = text_width-text_space;      
+        int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;
 
-    gtk_render_layout (style_context, cr, x, y, layout);
+        cairo_push_group (cr);
+        gtk_render_layout (style_context, cr, x, y, layout);
+        cairo_pop_group_to_source (cr);
+
+        linpat = cairo_pattern_create_linear (width-fading_width, y, width, y);
+        cairo_pattern_add_color_stop_rgb (linpat, 0, 0, 0, 0);
+        cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0, 0, 0);
+
+        cairo_mask (cr, linpat);
+        cairo_pattern_destroy (linpat);
+    } else {
+        gtk_render_layout (style_context, cr, x, y, layout);
+    }
 
     gtk_widget_path_free (widget_path);
-
     gtk_style_context_restore (style_context);
   }
 
