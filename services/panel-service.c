@@ -1195,6 +1195,21 @@ panel_service_show_entry (PanelService *self,
 }
 
 void
+panel_service_secondary_activate_entry (PanelService *self,
+                                        const gchar  *entry_id,
+                                        guint32       timestamp,
+                                        gint32        x,
+                                        gint32        y)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
+                        timestamp, x, y);
+}
+
+void
 panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
