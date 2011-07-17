@@ -611,8 +611,8 @@ PanelMenuView::Refresh ()
         linpat = cairo_pattern_create_linear (width-fading_width, y, width, y);
         cairo_pattern_add_color_stop_rgba (linpat, 0, 0, 0, 0, 1);
         cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0, 0, 0);
-
         cairo_mask (cr, linpat);
+
         cairo_pattern_destroy (linpat);
     } else {
         gtk_render_layout (style_context, cr, x, y, layout);
