@@ -55,6 +55,8 @@
    the accessible root object, this include would not be required */
 #include "unity-util-accessible.h"
 
+using namespace unity::switcher;
+
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315 (unityshell, UnityPluginVTable);
 
@@ -146,6 +148,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
   optionSetKeyboardFocusInitiate  (boost::bind (&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
   //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
+  optionSetAltTabForwardInitiate     (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
+  optionSetAltTabForwardTerminate    (boost::bind (&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
@@ -579,6 +583,44 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
   return false;
 }
 
+bool UnityScreen::altTabForwardInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
+{
+  if (switcherController->Visible ())
+  {
+    switcherController->MoveNext ();
+  }
+  else
+  {
+    std::vector<AbstractLauncherIcon*> results;
+  
+    LauncherModel::iterator it;
+    for (it = launcher->GetModel ()->begin (); it != launcher->GetModel ()->end (); it++)
+      if ((*it)->ShowInSwitcher ())
+        results.push_back (*it);
+
+    // maybe check launcher position/hide state?
+    switcherController->SetWorkspace (nux::Geometry (_primary_monitor.x + 100, 
+                                                     _primary_monitor.y + 100, 
+                                                     _primary_monitor.width - 200, 
+                                                     _primary_monitor.height - 200));
+    switcherController->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, results);
+  }
+  
+  action->setState (action->state () | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabForwardTerminate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
+  switcherController->Hide ();
+  return false;
+}
+
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
 {
   UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
@@ -999,6 +1041,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->launcherWindow->InputWindowEnableStruts(true);
   self->launcherWindow->SetEnterFocusInputArea (self->launcher);
 
+  self->switcherController = new SwitcherController ();
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
   if (unity_a11y_initialized () == TRUE)

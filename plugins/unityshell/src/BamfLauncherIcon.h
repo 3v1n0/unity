@@ -45,6 +45,9 @@ public:
 
     virtual void Activate ();
     void ActivateLauncherIcon ();
+    
+    virtual bool ShowInSwitcher ();
+    virtual unsigned int SwitcherPriority ();
 
 protected:
     std::list<DbusmenuMenuitem *> GetMenus ();
