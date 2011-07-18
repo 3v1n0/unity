@@ -43,7 +43,8 @@
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public Introspectable, public nux::InitiallyUnownedObject
+
+class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
 public:

@@ -35,7 +35,7 @@ using namespace unity::ui;
 namespace unity {
 namespace switcher {
 
-class SwitcherView : public nux::View, nux::Introspectable
+class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (SwitcherView, nux::View);
 public:

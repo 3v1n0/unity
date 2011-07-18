@@ -46,7 +46,7 @@ typedef enum
   MENUITEM_TYPE_RADIO,
 } QuicklistMenuItemType;
 
-class QuicklistMenuItem : public nux::View, public Introspectable
+class QuicklistMenuItem : public nux::View, public unity::Introspectable
 {
   public:
     QuicklistMenuItem (DbusmenuMenuitem* item,

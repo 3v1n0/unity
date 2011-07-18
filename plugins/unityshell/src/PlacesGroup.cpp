@@ -82,9 +82,9 @@ PlacesGroup::PlacesGroup (NUX_FILE_LINE_DECL)
   _expand_label->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
   _expand_label->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor (kExpandDefaultTextColor);
-  _expand_label->SetCanFocus (true);
-  _expand_label->FocusActivated.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelActivated));
-  _expand_label->FocusChanged.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
+  _expand_label->SetAcceptKeyNavFocus (true);
+  _expand_label->OnKeyNavFocusActivate.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelActivated));
+  _expand_label->OnKeyNavFocusChange.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
     
   _header_layout->AddView (_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
@@ -128,7 +128,7 @@ PlacesGroup::OnLabelActivated (nux::Area *label)
 void
 PlacesGroup::OnLabelFocusChanged (nux::Area *label)
 {
-  if (_expand_label->GetFocused ())
+  if (_expand_label->HasKeyFocus() || _expand_icon->HasKeyFocus())
   {
     _expand_label->SetTextColor (kExpandHoverTextColor);
     _expand_icon->SetOpacity (kExpandHoverIconOpacity);
@@ -223,6 +223,21 @@ PlacesGroup::RefreshLabel ()
   
   _expand_label->SetText (final);
   _expand_label->SetVisible (_n_visible_items_in_unexpand_mode < _n_total_items);
+  _expand_label->SetAcceptKeyNavFocus ((_n_visible_items_in_unexpand_mode < _n_total_items) ? true : false);
+
+  if (_expand_label->IsVisible() == false)
+  {
+    if (_expand_icon->IsVisible())
+    {
+      _expand_icon->SetAcceptKeyNavFocus (true);
+      _expand_icon->OnKeyNavFocusChange.connect (sigc::mem_fun (this, &PlacesGroup::OnLabelFocusChanged));
+    }
+  }
+
+  if (_expand_icon->IsVisible() == false)
+  {
+    _expand_icon->SetAcceptKeyNavFocus (false);
+  }
 
   QueueDraw ();
 
@@ -350,7 +365,7 @@ PlacesGroup::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned 
 void
 PlacesGroup::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!_expand_label->GetFocused ())
+  if (!_expand_label->HasKeyFocus ())
   {
     _expand_label->SetTextColor (kExpandDefaultTextColor);
     _expand_icon->SetOpacity (kExpandDefaultIconOpacity);
@@ -369,4 +384,13 @@ PlacesGroup::SetDrawSeparator (bool draw_it)
   _draw_sep = draw_it;
 
   QueueDraw ();
+}
+
+//
+// Key navigation
+//
+bool 
+PlacesGroup::AcceptKeyNavFocus()
+{
+  return false;
 }
