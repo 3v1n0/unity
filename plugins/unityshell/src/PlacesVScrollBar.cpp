@@ -85,7 +85,7 @@ PlacesVScrollBar::Draw (nux::GraphicsEngine &gfxContext, bool force_draw)
   //base.OffsetPosition (0, PLACES_VSCROLLBAR_HEIGHT);
   //base.OffsetSize (0, -2 * PLACES_VSCROLLBAR_HEIGHT);
 
-  if (m_contentHeight > m_containerHeight)
+  if (content_height_ > container_height_)
   {
     nux::Geometry track_geo = _track->GetGeometry ();
     gfxContext.QRP_1Tex (track_geo.x,
