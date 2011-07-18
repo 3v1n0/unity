@@ -1,3 +1,10 @@
+unity (4.2.0-0ubuntu5) UNRELEASED; urgency=low
+
+  * debian/control:
+    - build-dep on latest compiz-dev for ABI bump
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 18 Jul 2011 20:33:37 +0200
+
 unity (4.2.0-0ubuntu4) oneiric; urgency=low
 
   * debian/control
