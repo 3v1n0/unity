@@ -45,7 +45,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
   SwitcherController *view = new SwitcherController ();
-  view->SetWorkspace (nux::Geometry (0, 0, 800, 500));
+  view->SetWorkspace (nux::Geometry (0, 0, 1000, 500));
 
   //view->SetMinMaxSize(1024, 24);
   layout->SetContentDistribution(nux::eStackCenter);
@@ -61,8 +61,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
   icons.push_back (new MockLauncherIcon ());
-  icons.push_back (new MockLauncherIcon ());
-  icons.push_back (new MockLauncherIcon ());
+
 
   view->Show (SwitcherController::ALL, SwitcherController::FOCUS_ORDER, false, icons);
   view->MoveNext ();
@@ -80,7 +79,7 @@ int main(int argc, char **argv)
 
   nux::NuxInitialize(0);
 
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 800, 500, 0, &ThreadWidgetInit, 0);
+  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1000, 500, 0, &ThreadWidgetInit, 0);
   
   wt->Run(NULL);
   delete wt;

@@ -40,7 +40,7 @@ protected:
   std::list<DbusmenuMenuitem *> GetMenus ();
 
 private:
-  void ActivateLauncherIcon ();
+  void ActivateLauncherIcon (ActionArg arg);
   void ActivatePlace (guint section_id, const char *search_string);
   void OnActiveChanged (bool is_active);
   void ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section);

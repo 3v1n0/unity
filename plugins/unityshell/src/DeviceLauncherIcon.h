@@ -43,7 +43,7 @@ protected:
   void UpdateDeviceIcon ();
 
 private:
-  void ActivateLauncherIcon ();
+  void ActivateLauncherIcon (ActionArg arg);
   void ShowMount (GMount *mount);
   void Unmount ();
   void StopDrive ();

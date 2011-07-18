@@ -43,8 +43,8 @@ public:
     bool IsSticky ();
     void UnStick ();
 
-    virtual void Activate ();
-    void ActivateLauncherIcon ();
+    virtual void Activate (ActionArg arg);
+    void ActivateLauncherIcon (ActionArg arg);
     
     virtual bool ShowInSwitcher ();
     virtual unsigned int SwitcherPriority ();

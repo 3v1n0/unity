@@ -76,6 +76,9 @@ private:
   nux::BaseWindow *view_window_;
   
   bool visible_;
+  guint show_timer_;
+
+  static gboolean OnShowTimer (gpointer data);
   
   static bool CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second);
 

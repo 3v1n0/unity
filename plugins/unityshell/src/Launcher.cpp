@@ -2588,9 +2588,9 @@ Launcher::CheckSuperShortcutPressed (unsigned int  key_sym,
         return true;
 
       if (g_ascii_isdigit ((gchar) (*it)->GetShortcut ()) && (key_state & ShiftMask))
-        (*it)->OpenInstance ();
+        (*it)->OpenInstance (ActionArg (ActionArg::LAUNCHER, 0));
       else
-        (*it)->Activate ();
+        (*it)->Activate (ActionArg (ActionArg::LAUNCHER, 0));
 
       _latest_shortcut = (*it)->GetShortcut ();
 
@@ -2704,7 +2704,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
       it = _model->at (_current_icon_index);
       if (it != (LauncherModel::iterator)NULL)
       {
-        (*it)->OpenInstance ();
+        (*it)->OpenInstance (ActionArg (ActionArg::LAUNCHER, 0));
       }
       exitKeyNavMode ();
       break;
@@ -2716,7 +2716,7 @@ Launcher::RecvKeyPressed (unsigned int  key_sym,
         // start currently selected icon
         it = _model->at (_current_icon_index);
         if (it != (LauncherModel::iterator)NULL)
-          (*it)->Activate ();
+          (*it)->Activate (ActionArg (ActionArg::LAUNCHER, 0));
       }
       exitKeyNavMode ();
     break;

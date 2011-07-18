@@ -93,6 +93,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
+  damaged = false;
 
   notify_init ("unityshell");
 
@@ -150,6 +151,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetAltTabForwardInitiate     (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate    (boost::bind (&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  optionSetAltTabPrevInitiate     (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  optionSetAltTabPrevTerminate    (boost::bind (&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
@@ -335,6 +338,7 @@ void UnityScreen::paintDisplay(const CompRegion &region)
   nuxEpilogue ();
 
   doShellRepaint = false;
+  damaged = false;
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -372,10 +376,26 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
 
+void UnityScreen::preparePaint (int ms)
+{
+  cScreen->preparePaint (ms);
+
+  if (damaged)
+  {
+    damaged = false;
+    damageNuxRegions ();
+  }
+
+}
+
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::damageNuxRegions()
 {
+  if (damaged)
+    return;
+
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
@@ -618,6 +638,25 @@ bool UnityScreen::altTabForwardTerminate(CompAction* action,
 {
   action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
   switcherController->Hide ();
+  return false;
+}
+
+bool UnityScreen::altTabPrevInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
+{
+  if (switcherController->Visible ())
+    switcherController->MovePrev ();
+
+  action->setState (action->state () | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabPrevTerminate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 

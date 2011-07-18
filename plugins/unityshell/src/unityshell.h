@@ -71,6 +71,8 @@ public:
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
 
+  void preparePaint (int ms);
+
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
 	bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -125,6 +127,14 @@ public:
   bool altTabForwardTerminate(CompAction* action,
                                          CompAction::State state,
                                          CompOption::Vector& options);
+  
+  bool altTabPrevInitiate(CompAction* action,
+                          CompAction::State state,
+                          CompOption::Vector& options);
+
+  bool altTabPrevTerminate(CompAction* action,
+                           CompAction::State state,
+                           CompOption::Vector& options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */

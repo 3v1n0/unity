@@ -29,9 +29,38 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 
+class ActionArg
+{
+public:
+  enum Source
+  {
+    LAUNCHER,
+    SWITCHER,
+    OTHER,
+  };
+
+  ActionArg ()
+  : source (OTHER)
+  , button (0)
+  {
+  }
+
+  ActionArg (Source source, int button)
+  : source (source)
+  , button (button)
+  {
+  }
+
+  Source source;
+  int button;
+};
+
 class AbstractLauncherIcon
 {
 public:
+
+    
+
     typedef enum
     {
       TYPE_NONE,
@@ -83,9 +112,9 @@ public:
 
     virtual std::vector<nux::Vector4> & GetTransform (std::string name) = 0;
 
-    virtual void Activate () = 0;
+    virtual void Activate (ActionArg arg) = 0;
     
-    virtual void OpenInstance () = 0;
+    virtual void OpenInstance (ActionArg arg) = 0;
 
     virtual int SortPriority () = 0;
     

@@ -27,7 +27,9 @@ namespace unity {
 namespace switcher {
 
 SwitcherController::SwitcherController()
-  :  visible_(false)
+  :  view_window_ (0)
+  ,  visible_(false)
+  ,  show_timer_ (0)
 {
   
 }
@@ -42,7 +44,18 @@ void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherContro
   
   visible_ = true;
 
-  ConstructView ();
+  show_timer_ = g_timeout_add (150, &SwitcherController::OnShowTimer, this);
+}
+
+gboolean SwitcherController::OnShowTimer (gpointer data)
+{
+  SwitcherController *self = static_cast<SwitcherController*> (data);
+
+  if (self->visible_)
+    self->ConstructView ();
+
+  self->show_timer_ = 0;
+  return FALSE;
 }
 
 void SwitcherController::ConstructView ()
@@ -62,10 +75,9 @@ void SwitcherController::ConstructView ()
   view_window_->SinkReference ();
   view_window_->SetLayout (layout);
   view_window_->SetBackgroundColor (nux::Color(0x00000000));
-  view_window_->ShowWindow(true);
-
   view_window_->SetGeometry (workarea_);
 
+  view_window_->ShowWindow(true);
 }
 
 void SwitcherController::SetWorkspace (nux::Geometry geo)
@@ -77,11 +89,24 @@ void SwitcherController::Hide ()
 {
   if (!visible_)
     return;
-  
+
+  AbstractLauncherIcon *selection = model_->Selection ();
+  if (selection)
+    selection->Activate (ActionArg (ActionArg::SWITCHER, 0));
+
   model_.reset ();
   visible_ = false;
 
-  view_window_->UnReference ();
+  if (view_window_)
+  {
+    view_window_->ShowWindow(false);
+    view_window_->UnReference ();
+    view_window_ = 0;
+  }
+
+  if (show_timer_)
+    g_source_remove (show_timer_);
+  show_timer_ = 0;
 }
 
 bool SwitcherController::Visible ()
