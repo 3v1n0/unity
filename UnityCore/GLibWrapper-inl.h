@@ -61,7 +61,7 @@ Object<T>& Object<T>::operator=(Object const& other)
 {
   if (object_)
     g_object_unref(object_);
-  object_ = other;
+  object_ = other.object_;
   if (object_)
     g_object_ref(object_);
 }
