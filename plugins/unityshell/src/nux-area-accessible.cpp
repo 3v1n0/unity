@@ -227,7 +227,7 @@ nux_area_accessible_ref_state_set (AtkObject *obj)
   if (area->CanFocus ())
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
 
-  if (area->GetFocused ())
+  if (area->HasKeyFocus ())
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
   return state_set;
@@ -412,7 +412,7 @@ check_focus_change (nux::Area *area,
 
   self = NUX_AREA_ACCESSIBLE (accessible);
 
-  if (area->GetFocused ())
+  if (area->HasKeyFocus ())
     focus_in = TRUE;
 
   is_parent_window_active = check_parent_window_active (self);
