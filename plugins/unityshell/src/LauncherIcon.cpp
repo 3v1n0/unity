@@ -196,10 +196,10 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 void
 LauncherIcon::Activate (ActionArg arg)
 {
-    if (PluginAdapter::Default ()->IsScaleActive())
-      PluginAdapter::Default ()->TerminateScale ();
+  if (PluginAdapter::Default ()->IsScaleActive())
+    PluginAdapter::Default ()->TerminateScale ();
     
-    ActivateLauncherIcon (arg);
+  ActivateLauncherIcon (arg);
 }
 
 void

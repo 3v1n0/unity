@@ -57,6 +57,8 @@ namespace nux
   _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
   SetCanFocus (false);
+
+  _accept_key_nav_focus = false;
 }
 
 StaticCairoText::~StaticCairoText ()
@@ -504,5 +506,22 @@ void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
   self->UpdateTexture ();
   self->sigFontChanged.emit (self);
 }
+
+//
+// Key navigation
+//
+
+void
+StaticCairoText::SetAcceptKeyNavFocus(bool accept)
+{
+  _accept_key_nav_focus = accept;
+}
+
+bool 
+StaticCairoText::AcceptKeyNavFocus()
+{
+  return _accept_key_nav_focus;
+}
+
 
 }

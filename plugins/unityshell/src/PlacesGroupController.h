@@ -33,7 +33,7 @@ enum PlacesGroupRendererType
   RENDERER_TYPE_HORI_TILE
 };
 
-class PlacesGroupController : public nux::Object, public Introspectable
+class PlacesGroupController : public nux::Object, public unity::Introspectable
 {
 public:
   PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup& group);

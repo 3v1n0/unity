@@ -41,8 +41,8 @@ PlacesTile::PlacesTile (NUX_FILE_LINE_DECL, const void *id) :
   OnMouseClick.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseClick));
   OnMouseEnter.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PlacesTile::RecvMouseLeave));
-  FocusChanged.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
-  FocusActivated.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
+  OnKeyNavFocusChange.connect (sigc::mem_fun (this, &PlacesTile::OnFocusChanged));
+  OnKeyNavFocusActivate.connect (sigc::mem_fun (this, &PlacesTile::OnFocusActivated));
   _can_pass_focus_to_composite_layout = false;
 }
 
@@ -69,7 +69,7 @@ PlacesTile::GetId ()
 }
 
 void
-PlacesTile::OnFocusChanged (nux::Area *area)
+PlacesTile::OnFocusChanged (nux::Area *label)
 {
   QueueDraw ();
 }
@@ -218,6 +218,17 @@ PlacesTile::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEve
   return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
 }
 
+nux::Area*
+PlacesTile::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+    bool mouse_inside = TestMousePointerInclusion(mouse_position, event_type);
+
+    if(mouse_inside == false)
+      return NULL;
+
+    return this;
+}
+
 void
 PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
                        bool                 forceDraw)
@@ -228,7 +239,7 @@ PlacesTile::Draw (nux::GraphicsEngine& gfxContext,
 
   gfxContext.PushClippingRectangle (base);
 
-  if (GetFocused () || IsMouseInside ())
+  if (HasKeyFocus () || IsMouseInside ())
   {
     UpdateBackground ();
     nux::Geometry hl_geo = GetHighlightGeometry ();
@@ -251,7 +262,7 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle (base);
 
-  if (GetFocused () || IsMouseInside ())
+  if (HasKeyFocus () || IsMouseInside ())
   {
     UpdateBackground ();
 
@@ -267,7 +278,7 @@ PlacesTile::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
   if (GetCompositionLayout ())
     GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
 
-  if (IsMouseInside () || GetFocused ())
+  if (IsMouseInside () || HasKeyFocus ())
     nux::GetPainter ().PopBackground ();
 
   GfxContext.PopClippingRectangle();
@@ -306,7 +317,7 @@ PlacesTile::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned l
 }
 
 void
-PlacesTile::OnFocusActivated (nux::Area *area)
+PlacesTile::OnFocusActivated (nux::Area *label)
 {
   sigClick.emit (this);
 }

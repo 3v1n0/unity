@@ -34,7 +34,7 @@ enum SpinnerState
   STATE_CLEAR
 };
 
-class PlacesSearchBarSpinner : public Introspectable, public nux::View
+class PlacesSearchBarSpinner : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBarSpinner, nux::View);
 public:
@@ -53,6 +53,9 @@ protected:
   void AddProperties (GVariantBuilder *builder);
   static gboolean OnFrame (PlacesSearchBarSpinner *self);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  
 private:
 
 private:
