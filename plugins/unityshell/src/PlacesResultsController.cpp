@@ -28,14 +28,15 @@
 
 #include "PlacesResultsController.h"
 
-PlacesResultsController::PlacesResultsController ()
-: _make_things_look_nice_id (0)
+PlacesResultsController::PlacesResultsController()
+  : _make_things_look_nice_id(0)
 {
   _results_view = NULL;
 }
 
-PlacesResultsController::~PlacesResultsController ()
+PlacesResultsController::~PlacesResultsController()
 {
+  Clear();
   if (_make_things_look_nice_id)
     g_source_remove (_make_things_look_nice_id);
   _results_view->UnReference ();
@@ -100,29 +101,27 @@ PlacesResultsController::RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group
     _make_things_look_nice_id = g_idle_add ((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
 }
 
-void
-PlacesResultsController::Clear ()
+void PlacesResultsController::Clear()
 {
   std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
-  
+
   for (it = _id_to_group.begin (); it != eit; ++it)
   {
     if (it->second)
       (it->second)->UnReference ();
   }
 
-  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
-  _groups.erase (_groups.begin (), _groups.end ());
+  _id_to_group.clear();
+  _groups.clear();
 
   if (_results_view)
-    _results_view->Clear ();
+    _results_view->Clear();
 }
 
-bool
-PlacesResultsController::ActivateFirst ()
+bool PlacesResultsController::ActivateFirst()
 {
   std::vector<PlacesGroupController *>::iterator it, eit = _groups.end ();
-  
+
   for (it = _groups.begin (); it != eit; ++it)
     if ((*it)->ActivateFirst ())
       return true;
@@ -133,20 +132,16 @@ PlacesResultsController::ActivateFirst ()
 //
 // Introspection
 //
-const gchar*
-PlacesResultsController::GetName ()
+const gchar* PlacesResultsController::GetName()
 {
   return "PlacesResultsController";
 }
 
-void
-PlacesResultsController::AddProperties (GVariantBuilder *builder)
+void PlacesResultsController::AddProperties(GVariantBuilder *builder)
 {
-
 }
 
-gboolean
-PlacesResultsController::MakeThingsLookNice (PlacesResultsController *self)
+gboolean PlacesResultsController::MakeThingsLookNice(PlacesResultsController *self)
 {
   PlacesGroup *last_active_group = NULL;
   std::vector<PlacesGroupController *>::iterator it, eit = self->_groups.end ();
