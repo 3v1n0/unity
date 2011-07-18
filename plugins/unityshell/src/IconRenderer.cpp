@@ -226,6 +226,11 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
 
     UpdateIconTransform (launcher_icon, ViewProjectionMatrix, geo, x, y, w, h, z, "Image");
 
+    // hardcode values for now until SVG's are in place and we can remove this
+    // 200 == size of large glow
+    // 170 == size of large tile
+    // 62 == size of small glow
+    // 54 == size of small tile
     float icon_glow_size = 0.0f;
     if (icon_size > 100)
       icon_glow_size = icon_size * (200.0f / 170.0f);
@@ -379,7 +384,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   }
 
   // draw tile
-  if (backlight_intensity > 0.0f)
+  if (backlight_intensity > 0)
   {
     RenderElement(GfxContext,
                   arg,
@@ -416,7 +421,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
                 arg.icon->GetTransform ("Tile"));
 
   // draw glow
-  if (glow_intensity > 0.0f)
+  if (glow_intensity > 0)
   {
     RenderElement(GfxContext,
                   arg,
@@ -427,7 +432,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   }
   
   // draw shimmer
-  if (arg.shimmer_progress > 0.0f && arg.shimmer_progress < 1.0f)
+  if (arg.shimmer_progress > 0 && arg.shimmer_progress < 1.0f)
   {
     int x1 = owner_geo.x + owner_geo.width;
     int x2 = owner_geo.x + owner_geo.width;

@@ -41,6 +41,9 @@ public:
     typedef Base::iterator iterator; 
     typedef Base::reverse_iterator reverse_iterator; 
     
+    // Icons are owned externally and assumed valid for life of switcher.
+    // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
+    // will no longer be a worry.
     SwitcherModel(std::vector<AbstractLauncherIcon*> icons);
     virtual ~SwitcherModel();
 
