@@ -24,6 +24,7 @@
 #include <NuxCore/Logger.h>
 
 #include "config.h"
+#include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
 
 
@@ -74,7 +75,10 @@ public:
   string search_hint_;
   bool visible_;
   string shortcut_;
+
+  glib::DBusProxy proxy_;
 };
+
 
 Lens::Impl::Impl(Lens* owner,
                  string const& id,
@@ -96,6 +100,7 @@ Lens::Impl::Impl(Lens* owner,
   , search_hint_(search_hint)
   , visible_(visible)
   , shortcut_(shortcut)
+  , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
 {}
 
 Lens::Impl::~Impl()
