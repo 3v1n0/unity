@@ -101,35 +101,35 @@ PanelMenuView::PanelMenuView (int padding)
   _window_buttons = new WindowButtons ();
   _window_buttons->SetParentObject (this);
   _window_buttons->NeedRedraw ();
-  
-  _on_winbutton_close_clicked_connection = _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
-  _on_winbutton_minimize_clicked_connection = _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
-  _on_winbutton_restore_clicked_connection = _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
-  _on_winbutton_redraw_signal_connection = _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
+
+  _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
+  _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
+  _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
+  _window_buttons->redraw_signal.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowButtonsRedraw));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
   _panel_titlebar_grab_area->SetParentObject (this);
   _panel_titlebar_grab_area->SinkReference ();
-  _on_titlebargrab_mouse_down_connnection = _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
-  _on_titlebargrab_mouse_doubleleftclick_connnection = _panel_titlebar_grab_area->mouse_doubleleftclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
-  _on_titlebargrab_mouse_middleclick_connnection = _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_doubleleftclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
+  _panel_titlebar_grab_area->mouse_middleclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
 
-  _on_window_minimized_connection = win_manager->window_minimized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMinimized));
-  _on_window_unminimized_connection = win_manager->window_unminimized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnminimized));
-  _on_window_initspread_connection = win_manager->initiate_spread.connect (sigc::mem_fun (this, &PanelMenuView::OnSpreadInitiate));
-  _on_window_terminatespread_connection = win_manager->terminate_spread.connect (sigc::mem_fun (this, &PanelMenuView::OnSpreadTerminate));
+  win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
+  win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
+  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
 
-  _on_window_maximized_connection = win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
-  _on_window_restored_connection = win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
-  _on_window_unmapped_connection = win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
-  _on_window_moved_connection = win_manager->window_moved.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMoved));
+  win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
+  win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
+  win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
+  win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
 
-  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+  PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
 
-  OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
-  OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
+  OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
@@ -145,23 +145,6 @@ PanelMenuView::PanelMenuView (int padding)
 
 PanelMenuView::~PanelMenuView ()
 {
-  _on_winbutton_close_clicked_connection.disconnect ();
-  _on_winbutton_minimize_clicked_connection.disconnect ();
-  _on_winbutton_restore_clicked_connection.disconnect ();
-  _on_winbutton_redraw_signal_connection.disconnect ();
-  _on_titlebargrab_mouse_down_connnection.disconnect ();
-  _on_titlebargrab_mouse_doubleleftclick_connnection.disconnect ();
-  _on_titlebargrab_mouse_middleclick_connnection.disconnect ();
-  _on_window_minimized_connection.disconnect ();
-  _on_window_unminimized_connection.disconnect ();
-  _on_window_initspread_connection.disconnect ();
-  _on_window_terminatespread_connection.disconnect ();
-  _on_window_maximized_connection.disconnect ();
-  _on_window_restored_connection.disconnect ();
-  _on_window_unmapped_connection.disconnect ();
-  _on_window_moved_connection.disconnect ();
-  _on_panelstyle_changed_connection.disconnect ();
-
   if (_name_changed_callback_id)
       g_signal_handler_disconnect (_name_changed_callback_instance,
                                    _name_changed_callback_id);

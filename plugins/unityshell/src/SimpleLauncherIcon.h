@@ -52,7 +52,7 @@ private:
 private:
   std::string icon_name_;
   nux::BaseTexture* icon_;
-  guint32 _theme_changed_id;
+  guint32 theme_changed_id_;
 };
 
 #endif // SIMPLELAUNCHERICON_H

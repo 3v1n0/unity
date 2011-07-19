@@ -85,10 +85,10 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   if (icon_name_.empty())
     return 0;
 
-  if (icon_name[0] == '/')
-    icon_ = TextureFromPath(icon_name.c_str(), size);
+  if (icon_name_[0] == '/')
+    icon_ = TextureFromPath(icon_name_.c_str(), size);
   else
-    icon_ = TextureFromGtkTheme(icon_name.c_str(), size);
+    icon_ = TextureFromGtkTheme(icon_name_.c_str(), size);
   return icon_;
 }
 
