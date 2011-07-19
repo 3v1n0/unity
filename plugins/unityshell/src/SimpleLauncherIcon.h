@@ -27,36 +27,32 @@ class Launcher;
 class SimpleLauncherIcon : public LauncherIcon
 {
 public:
-    SimpleLauncherIcon(Launcher* IconManager);
-    virtual ~SimpleLauncherIcon();
-    
-    /* override */
-    nux::BaseTexture * GetTextureForSize (int size);
-    
-    void SetIconName (const char *name);
-    
-    sigc::signal<void> activate;
+  SimpleLauncherIcon(Launcher* IconManager);
+  virtual ~SimpleLauncherIcon();
+
+  /* override */
+  nux::BaseTexture* GetTextureForSize (int size);
+
+  void SetIconName (const char *name);
+
+  sigc::signal<void> activate;
 
 protected:
-    virtual void OnMouseDown (int button);
-    virtual void OnMouseUp (int button);
-    virtual void OnMouseClick (int button);
-    virtual void OnMouseEnter ();
-    virtual void OnMouseLeave ();
+  virtual void OnMouseDown (int button);
+  virtual void OnMouseUp (int button);
+  virtual void OnMouseClick (int button);
+  virtual void OnMouseEnter ();
+  virtual void OnMouseLeave ();
 
 private:
+  void ActivateLauncherIcon(ActionArg arg);
+  void ReloadIcon();
+  static void OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data);
 
-    char *m_IconName;
-    nux::BaseTexture *m_Icon;
-    void ActivateLauncherIcon (ActionArg arg);
-    static void OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data);
-    guint32 _theme_changed_id;
-
-    sigc::connection _on_mouse_down_connection;
-    sigc::connection _on_mouse_up_connection;
-    sigc::connection _on_mouse_click_connection;
-    sigc::connection _on_mouse_enter_connection;
-    sigc::connection _on_mouse_leave_connection;
+private:
+  std::string icon_name_;
+  nux::BaseTexture* icon_;
+  guint32 _theme_changed_id;
 };
 
 #endif // SIMPLELAUNCHERICON_H
