@@ -129,7 +129,157 @@ RenderArg SwitcherView::InterpolateRenderArgs (RenderArg const& start, RenderArg
   return result;
 }
 
-std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current)
+std::list<RenderArg> SwitcherView::RenderArgsFlat (nux::Geometry& background_geo, int selection, timespec const& current)
+{
+  std::list<RenderArg> results;
+  nux::Geometry base = GetGeometry ();
+
+  background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
+  background_geo.height = vertical_size + text_size;
+
+
+  if (model_)
+  {
+    int size = model_->Size ();
+    int max_width = base.width - border_size * 2;
+    int padded_tile_size = tile_size + flat_spacing * 2;
+    int flat_width = size * padded_tile_size;
+
+    int n_flat_icons = CLAMP ((max_width - 30) / padded_tile_size - 1, 0, size);
+    
+    float x = 0;
+
+    int overflow = flat_width - max_width;
+
+    if (overflow < 0)
+    {
+      background_geo.x = base.x - overflow / 2;
+      background_geo.width = base.width + overflow;
+
+      x -= overflow / 2;
+      overflow = 0;
+    }
+    else
+    {
+      background_geo.x = base.x;
+      background_geo.width = base.width;
+    }
+
+
+    float partial_overflow = (float) overflow / MAX (1.0f, (float) (size - n_flat_icons - 1));
+    float partial_overflow_scalar = (float) (padded_tile_size - partial_overflow) / (float) (padded_tile_size);
+
+    int first_flat, last_flat;
+    int half_fold_left = -1;
+    int half_fold_right = -1;
+
+    if (selection == 0)
+    {
+      first_flat = 0;
+      last_flat = n_flat_icons;
+    }
+    else if (selection >= 1 && selection <= n_flat_icons)
+    {
+      first_flat = 1;
+      last_flat = n_flat_icons;
+
+      half_fold_left = 0;
+      half_fold_right = last_flat + 1;
+    }
+    else if (selection == size - 1)
+    {
+      first_flat = size - n_flat_icons - 1;
+      last_flat = size - 1;
+    }
+    else
+    {
+      first_flat = selection - n_flat_icons + 1;
+      last_flat = selection;
+
+      half_fold_left = first_flat - 1;
+      half_fold_right = last_flat + 1;
+    }
+
+
+    SwitcherModel::iterator it;
+    int i = 0;
+    int y = base.y + base.height / 2;
+    x += border_size;
+    for (it = model_->begin (); it != model_->end (); ++it)
+    {
+      RenderArg arg = CreateBaseArgForIcon (*it);
+
+      float scalar = partial_overflow_scalar;
+
+      bool should_flat = false;
+
+      if (i >= first_flat && i <= last_flat)
+      {
+        scalar = 1.0f;
+        should_flat = true;
+      }
+      else if (i == half_fold_left || i == half_fold_right)
+      {
+        scalar += (1.0f - scalar) * 0.5f;
+      }
+
+      x += flat_spacing * scalar;
+      
+      x += (tile_size / 2) * scalar;
+
+      if (should_flat)
+        arg.render_center = nux::Point3 ((int) x, y, 0);
+      else
+        arg.render_center = nux::Point3 (x, y, 0);
+
+      x += (tile_size / 2 + flat_spacing) * scalar;
+
+      arg.y_rotation = (1.0f - scalar);
+      
+      if (!should_flat && overflow > 0)
+      {
+        if (i > last_flat)
+        {
+          arg.render_center.x -= 20;
+        }
+        else
+        {
+          arg.render_center.x += 20;
+          arg.y_rotation = -arg.y_rotation;
+        }
+      }
+
+      arg.render_center.z = abs (80.0f * arg.y_rotation);
+
+      arg.logical_center = arg.render_center;
+      results.push_back (arg);
+      ++i;
+    }
+
+    timespec last_change_time = model_->SelectionChangeTime ();
+    int ms_since_change = DeltaTTime (&current, &last_change_time);
+    if (overflow > 0 && selection == model_->SelectionIndex () && selection != model_->LastSelectionIndex () && ms_since_change < 150)
+    {
+      float progress = (float) ms_since_change / 150.0f;
+
+      nux::Geometry last_geo;
+      std::list<RenderArg> start = RenderArgsFlat (last_geo, model_->LastSelectionIndex (), current);
+      std::list<RenderArg> end = results;
+
+      results.clear ();
+
+      std::list<RenderArg>::iterator start_it, end_it;
+      for (start_it = start.begin (), end_it = end.begin (); start_it != start.end (); ++start_it, ++end_it)
+      {
+        results.push_back (InterpolateRenderArgs (*start_it, *end_it, progress));
+      }
+    }
+  }
+
+  return results;
+}
+
+std::list<RenderArg> SwitcherView::RenderArgsMechanical (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current)
 {
   std::list<RenderArg> results;
   nux::Geometry base = GetGeometry ();
@@ -221,7 +371,7 @@ std::list<RenderArg> SwitcherView::RenderArgs (nux::Geometry& background_geo, Ab
       float progress = (float) ms_since_change / 150.0f;
 
       nux::Geometry last_geo;
-      std::list<RenderArg> start = RenderArgs (last_geo, model_->LastSelection (), current);
+      std::list<RenderArg> start = RenderArgsMechanical (last_geo, model_->LastSelection (), current);
       std::list<RenderArg> end = results;
 
       results.clear ();
@@ -269,7 +419,8 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   gPainter.PaintBackground (GfxContext, base);
 
   nux::Geometry background_geo;
-  std::list<RenderArg> args = RenderArgs (background_geo, model_->Selection (), current);
+
+  std::list<RenderArg> args = RenderArgsFlat (background_geo, model_->SelectionIndex (), current);
 
   //nux::Geometry background_geo (base.x, base.y + base.height / 2 - 150, base.width, 300);
   gPainter.PaintTextureShape (GfxContext, background_geo, background_texture_, 30, 30, 30, 30, false);

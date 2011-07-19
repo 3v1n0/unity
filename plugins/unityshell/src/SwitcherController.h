@@ -50,6 +50,7 @@ public:
   };
 
   SwitcherController();
+  virtual ~SwitcherController();
 
   void Show (ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
   void Hide ();

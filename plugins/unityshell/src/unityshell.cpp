@@ -86,6 +86,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
  , relayoutSourceId(0)
  , _edge_trigger_handle(0)
  , doShellRepaint(false)
+ , switcher_desktop_icon (0)
 {
   Timer timer;
   configure_logging();
@@ -614,7 +615,15 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   else
   {
     std::vector<AbstractLauncherIcon*> results;
+
+    if (!switcher_desktop_icon)
+    {
+      switcher_desktop_icon = new DesktopLauncherIcon (launcher);
+      switcher_desktop_icon->SinkReference ();
+    }
   
+    results.push_back (switcher_desktop_icon);
+    
     LauncherModel::iterator it;
     for (it = launcher->GetModel ()->begin (); it != launcher->GetModel ()->end (); it++)
       if ((*it)->ShowInSwitcher ())
