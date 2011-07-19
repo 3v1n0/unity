@@ -52,6 +52,7 @@ public:
   nux::Property<int> tile_size;
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
+  nux::Property<int> animation_length;
 
 protected:
   long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);

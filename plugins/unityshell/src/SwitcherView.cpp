@@ -45,6 +45,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   tile_size = 170;
   vertical_size = 250;
   text_size = 15;
+  animation_length = 250;
 
   background_texture_ = nux::CreateTexture2DFromFile (PKGDATADIR"/switcher_background.png", -1, true);
 
@@ -120,6 +121,7 @@ RenderArg SwitcherView::CreateBaseArgForIcon (AbstractLauncherIcon *icon)
 
 RenderArg SwitcherView::InterpolateRenderArgs (RenderArg const& start, RenderArg const& end, float progress)
 {
+  progress = -pow(progress-1.0f,2)+1;
   RenderArg result = end;
 
   result.x_rotation = start.x_rotation + (end.x_rotation - start.x_rotation) * progress;
@@ -264,9 +266,9 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat (nux::Geometry& background_geo
 
     timespec last_change_time = model_->SelectionChangeTime ();
     int ms_since_change = DeltaTTime (&current, &last_change_time);
-    if (overflow > 0 && selection == model_->SelectionIndex () && selection != model_->LastSelectionIndex () && ms_since_change < 150)
+    if (overflow > 0 && selection == model_->SelectionIndex () && selection != model_->LastSelectionIndex () && ms_since_change < animation_length)
     {
-      float progress = (float) ms_since_change / 150.0f;
+      float progress = (float) ms_since_change / (float) animation_length();
 
       nux::Geometry last_geo;
       std::list<RenderArg> start = RenderArgsFlat (last_geo, model_->LastSelectionIndex (), current);
@@ -372,9 +374,9 @@ std::list<RenderArg> SwitcherView::RenderArgsMechanical (nux::Geometry& backgrou
 
     timespec last_change_time = model_->SelectionChangeTime ();
     int ms_since_change = DeltaTTime (&current, &last_change_time);
-    if (overflow > 0 && selection == model_->Selection () && selection != model_->LastSelection () && ms_since_change < 150)
+    if (overflow > 0 && selection == model_->Selection () && selection != model_->LastSelection () && ms_since_change < animation_length)
     {
-      float progress = (float) ms_since_change / 150.0f;
+      float progress = (float) ms_since_change / (float) animation_length();
 
       nux::Geometry last_geo;
       std::list<RenderArg> start = RenderArgsMechanical (last_geo, model_->LastSelection (), current);
@@ -466,7 +468,7 @@ void SwitcherView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw
   timespec last_change_time = model_->SelectionChangeTime ();
   int ms_since_change = DeltaTTime (&current, &last_change_time);
 
-  if (ms_since_change < 150)
+  if (ms_since_change < animation_length)
     redraw_handle_ = g_timeout_add (0, &SwitcherView::OnDrawTimeout, this);
 }
 
