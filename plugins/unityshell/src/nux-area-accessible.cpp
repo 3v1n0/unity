@@ -26,6 +26,30 @@
  * nux::Area, exposing the common elements on each basic individual
  * element (position, extents, etc)
  *
+ * In this object is also implemented the main support for the focused
+ * object. This is complex due several reasons:
+ *
+ *  * We need to ensure the proper order when the objects gets the focus
+ *
+ * * It doesn't make too sense to give the focus to an object that it
+ *    is inside a inactive window, so it is also convenient to emit
+ *    the window:active event before the focus change.
+ *
+ * => this is the reason there is implemented a system to delay the
+ *    focus notification until the top level window became active
+ *
+ * * But the main complexity comes from the fact that not all the
+ *   objects on unity are implementing key nav in the same way.
+ *
+ *     * Launcher uses exclusively InputArea methods like
+ *       SetKeyboardFocus, OnStartKeyboardReceiver, etc. This is the
+ *       key focus at a low level abstraction
+ *
+ *     * Dash objects uses the events from Focusable. But in the same
+ *       way, they require the low level key focus (OnStartFocus) and
+ *       so on
+ *
+ *
  */
 
 #include "nux-area-accessible.h"
@@ -58,12 +82,14 @@ static void         nux_area_accessible_remove_focus_handler (AtkComponent *comp
 static void         nux_area_accessible_focus_handler        (AtkObject *accessible,
                                                               gboolean focus_in);
 /* private */
-static void on_focus_changed_cb               (nux::Area *area,
-                                               AtkObject *accessible);
-static void on_parent_window_activate_cb      (AtkObject *parent_window,
-                                               NuxAreaAccessible *self);
-static AtkObject   * search_for_parent_window (AtkObject *object);
-
+static void          on_focus_changed_cb                                 (nux::Area *area,
+                                                                          AtkObject *accessible);
+static void          on_parent_window_activate_cb                        (AtkObject *parent_window,
+                                                                          NuxAreaAccessible *self);
+static AtkObject   * search_for_parent_window                            (AtkObject *object);
+static gboolean      nux_area_accessible_real_check_pending_notification (NuxAreaAccessible *self);
+static void          check_parent_window_connected                       (NuxAreaAccessible *self);
+static void          check_focus                                         (NuxAreaAccessible *self);
 
 G_DEFINE_TYPE_WITH_CODE (NuxAreaAccessible,
                          nux_area_accessible,
@@ -77,8 +103,11 @@ G_DEFINE_TYPE_WITH_CODE (NuxAreaAccessible,
 
 struct _NuxAreaAccessiblePrivate
 {
-  /* Cached values (used to avoid extra notifications) */
+  /* focused as Focusable events */
   gboolean focused;
+
+  /* if there is any pending notification */
+  gboolean pending_notification;
 
   /* Top level parent window, it is not required to be the direct
      parent */
@@ -91,11 +120,15 @@ nux_area_accessible_class_init (NuxAreaAccessibleClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  NuxAreaAccessibleClass *area_class = NUX_AREA_ACCESSIBLE_CLASS (klass);
 
   /* AtkObject */
   atk_class->initialize = nux_area_accessible_initialize;
   atk_class->get_parent = nux_area_accessible_get_parent;
   atk_class->ref_state_set = nux_area_accessible_ref_state_set;
+
+  /* NuxAreaAccessible */
+  area_class->check_pending_notification = nux_area_accessible_real_check_pending_notification;
 
   g_type_class_add_private (gobject_class, sizeof (NuxAreaAccessiblePrivate));
 }
@@ -143,6 +176,10 @@ nux_area_accessible_initialize (AtkObject *accessible,
 
   atk_component_add_focus_handler (ATK_COMPONENT (accessible),
                                    nux_area_accessible_focus_handler);
+
+  /* NOTE: we can't search for the parent window on initilization, or
+     we could enter on a infinite loop, as this is called on the
+     initalization */
 }
 
 static AtkObject *
@@ -373,27 +410,48 @@ nux_area_accessible_focus_handler (AtkObject *accessible,
 }
 
 /* private */
-static gboolean
-check_parent_window_active (NuxAreaAccessible *self)
+static void
+check_parent_window_connected (NuxAreaAccessible *self)
+{
+  AtkObject *window = NULL;
+
+  if (self->priv->parent_window != NULL)
+    return;
+
+  window = search_for_parent_window (ATK_OBJECT (self));
+
+  if (window != NULL)
+  {
+    self->priv->parent_window = window;
+
+    g_signal_connect (self->priv->parent_window,
+                      "activate",
+                      G_CALLBACK (on_parent_window_activate_cb),
+                      self);
+  }
+}
+
+/*
+ * nux_area_accessible_parent_window_active
+ * @self: The accessible to check the focus change
+ *
+ * Returns if the top level parent window contains
+ * the state ATK_STATE_ACTIVE
+ *
+ * Returns: TRUE if the parent top level window contains
+ * ATK_STATE_ACTIVE, FALSE otherwise
+ */
+gboolean
+nux_area_accessible_parent_window_active (NuxAreaAccessible *self)
 {
   gboolean active = FALSE;
   AtkStateSet *state_set = NULL;
 
-  if (self->priv->parent_window == NULL)
-    {
-      self->priv->parent_window = search_for_parent_window (ATK_OBJECT (self));
-
-      g_signal_connect (self->priv->parent_window,
-                        "activate",
-                        G_CALLBACK (on_parent_window_activate_cb),
-                        self);
-    }
+  check_parent_window_connected (self);
 
   state_set = atk_object_ref_state_set (ATK_OBJECT (self->priv->parent_window));
 
   active = atk_state_set_contains_state (state_set, ATK_STATE_ACTIVE);
-
-  g_debug ("[a11y][area] check_parent_window_active %i", active);
 
   g_object_unref (state_set);
 
@@ -401,44 +459,10 @@ check_parent_window_active (NuxAreaAccessible *self)
 }
 
 static void
-check_focus_change (nux::Area *area,
-                    AtkObject *accessible)
-{
-  gboolean focus_in = FALSE;
-  NuxAreaAccessible *self = NULL;
-  gboolean is_parent_window_active = FALSE;
-
-  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (accessible));
-
-  self = NUX_AREA_ACCESSIBLE (accessible);
-
-  if (area->HasKeyFocus ())
-    focus_in = TRUE;
-
-  is_parent_window_active = check_parent_window_active (self);
-
-  /* We don't emit focus_in=TRUE events until the top level window is
-     active*/
-  if ((focus_in) && (!is_parent_window_active))
-    return;
-
-  if (self->priv->focused != focus_in)
-    {
-      self->priv->focused = focus_in;
-
-      g_debug ("[a11y][area] on_focus_change_cb (actual focus change) : (%p:%s:%i)",
-               accessible, atk_object_get_name (accessible), focus_in);
-
-      g_signal_emit_by_name (accessible, "focus_event", focus_in);
-      atk_focus_tracker_notify (accessible);
-    }
-}
-
-static void
 on_focus_changed_cb (nux::Area *area,
                      AtkObject *accessible)
 {
-  check_focus_change (area, accessible);
+  check_focus (NUX_AREA_ACCESSIBLE (accessible));
 }
 
 static AtkObject *
@@ -460,8 +484,63 @@ static void
 on_parent_window_activate_cb (AtkObject *parent_window,
                               NuxAreaAccessible *self)
 {
+  nux_area_accessible_check_pending_notification (self);
+}
+
+
+/*
+ * nux_area_check_pending_notification:
+ * @self: The accessible
+ *
+ * This method checks if there is any pending notification, and emits
+ * it if it is possible
+ *
+ * Returns: TRUE if a atk notification was emitted, FALSE otherwise
+ */
+gboolean
+nux_area_accessible_check_pending_notification  (NuxAreaAccessible *self)
+{
+  NuxAreaAccessibleClass *klass = NULL;
+
+  klass = NUX_AREA_ACCESSIBLE_GET_CLASS (self);
+  if (klass->check_pending_notification)
+    return klass->check_pending_notification (self);
+  else
+    return FALSE;
+}
+
+static gboolean
+nux_area_accessible_real_check_pending_notification (NuxAreaAccessible *self)
+{
   nux::Object *nux_object = NULL;
+
+  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (self), FALSE);
+
+  if (self->priv->pending_notification == FALSE)
+    return FALSE;
+
+  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  if (nux_object == NULL) /* defunct */
+    return FALSE;
+
+  g_debug ("[a11y][area] real_check_pending_notification, focus notification : (%p:%s:%i)",
+           self, atk_object_get_name (ATK_OBJECT (self)), self->priv->focused);
+
+  g_signal_emit_by_name (self, "focus_event", self->priv->focused);
+  atk_focus_tracker_notify (ATK_OBJECT (self));
+  self->priv->pending_notification = FALSE;
+
+  return TRUE;
+}
+
+static void
+check_focus (NuxAreaAccessible *self)
+{
+  gboolean focus_in = FALSE;
   nux::Area *area = NULL;
+  nux::Object *nux_object = NULL;
+
+  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (self));
 
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
   if (nux_object == NULL) /* defunct */
@@ -469,5 +548,49 @@ on_parent_window_activate_cb (AtkObject *parent_window,
 
   area = dynamic_cast<nux::Area *>(nux_object);
 
-  check_focus_change (area, ATK_OBJECT (self));
+  if (area->GetFocused ())
+    focus_in = TRUE;
+
+  if (self->priv->focused != focus_in)
+    {
+      gboolean is_parent_window_active = FALSE;
+
+      self->priv->focused = focus_in;
+      is_parent_window_active = nux_area_accessible_parent_window_active (self);
+
+      /* we don't emit focus_in=TRUE events until the top level window
+         is active */
+      if ((focus_in) && (!is_parent_window_active))
+        {
+          self->priv->pending_notification = TRUE;
+        }
+      else
+        {
+          g_debug ("[a11y][area] on_focus_change_cb (actual focus change) : (%p:%s:%i)",
+                   self, atk_object_get_name (ATK_OBJECT (self)), focus_in);
+
+          g_signal_emit_by_name (self, "focus_event", focus_in);
+          atk_focus_tracker_notify (ATK_OBJECT (self));
+          self->priv->pending_notification = FALSE;
+        }
+    }
+}
+
+
+/* public */
+/*
+ * nux_area_get_parent_window:
+ * @self: The accessible
+ *
+ * Returns: the top level window that contains this object
+ */
+AtkObject*
+nux_area_accessible_get_parent_window (NuxAreaAccessible *self)
+{
+  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (self), NULL);
+
+  /* Ensures that at least whe made a search for it */
+  check_parent_window_connected (self);
+
+  return self->priv->parent_window;
 }

@@ -188,7 +188,7 @@ unity_a11y_init (nux::WindowThread *wt)
 {
   gchar *bridge_path = NULL;
 
-  g_debug ("Unity accessibility initialization");
+  g_debug ("Unity Oneiric accessibility initialization");
 
   unity_a11y_restore_environment ();
 
