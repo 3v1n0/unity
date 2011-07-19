@@ -88,17 +88,20 @@ private:
 
   void DestroyTextures ();
 
+  enum IconSize
+  {
+    SMALL = 0,
+    BIG,
+
+    LAST,
+  };
+
   int icon_size;
   int image_size;
   int spacing;
 
   bool textures_created;
 
-  nux::BaseTexture* _icon_bkg_texture;
-  nux::BaseTexture* _icon_shine_texture;
-  nux::BaseTexture* _icon_outline_texture;
-  nux::BaseTexture* _icon_glow_texture;
-  nux::BaseTexture* _icon_glow_hl_texture;
   nux::BaseTexture* _progress_bar_trough;
   nux::BaseTexture* _progress_bar_fill;
   
@@ -108,6 +111,13 @@ private:
   nux::BaseTexture* _arrow_rtl;
   nux::BaseTexture* _arrow_empty_ltr;
   nux::BaseTexture* _arrow_empty_rtl;
+
+
+  std::vector<nux::BaseTexture*> _icon_back;
+  std::vector<nux::BaseTexture*> _icon_selected_back;
+  std::vector<nux::BaseTexture*> _icon_edge;
+  std::vector<nux::BaseTexture*> _icon_glow;
+  std::vector<nux::BaseTexture*> _icon_shine;
 
   nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
   nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;

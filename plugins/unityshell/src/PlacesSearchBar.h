@@ -41,7 +41,7 @@ class PlacesView;
 
 #include "StaticCairoText.h"
 
-class PlacesSearchBar : public Introspectable, public nux::View
+class PlacesSearchBar : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
 public:
@@ -71,6 +71,9 @@ protected:
   const gchar * GetName ();
   const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
+
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
 
 private:
   void UpdateBackground ();

@@ -45,6 +45,7 @@ PlacesGroupController::PlacesGroupController (PlaceEntry *entry, PlaceEntryGroup
     _type = RENDERER_TYPE_HORI_TILE;
   
   nux::GridHLayout *layout = new nux::GridHLayout (NUX_TRACKER_LOCATION);
+  layout->SetReconfigureParentLayoutOnGeometryChange (true);
   layout->ForceChildrenSize (true);
   layout->EnablePartialVisibility (false);
   layout->SetVerticalExternalMargin (kPadding);

@@ -109,7 +109,7 @@ TrashLauncherIcon::GetMenus ()
 }
 
 void
-TrashLauncherIcon::ActivateLauncherIcon ()
+TrashLauncherIcon::ActivateLauncherIcon (ActionArg arg)
 {
   GError *error = NULL;
 

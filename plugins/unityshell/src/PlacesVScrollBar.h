@@ -44,8 +44,8 @@ class PlacesVScrollBar : public nux::VScrollBar
     void UpdateTexture ();
 
   private:
-    nux::BaseTexture* _slider;
-    nux::BaseTexture* _track;
+    nux::BaseTexture* _slider_texture;
+    nux::BaseTexture* _track_texture;
 };
 
 #endif // PLACES_VSCROLLBAR_H

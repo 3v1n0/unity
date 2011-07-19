@@ -102,14 +102,16 @@ QuicklistView::QuicklistView ()
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
   OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
-  OnStartFocus.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
-  OnEndFocus.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
+  OnStartKeyboardReceiver.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
+  OnStopKeyboardReceiver.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
 
   _mouse_down = false;
   _enable_quicklist_for_testing = false;
   _compute_blur_bkg = true;
 
   _current_item_index = 0;
+
+  SetAcceptkKeyNavFocus(true);
 }
 
 void
@@ -1553,5 +1555,18 @@ void QuicklistView::AddProperties (GVariantBuilder *builder)
   g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (GetBaseWidth ()));
   g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (GetBaseHeight ()));
   g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (IsVisible ()));
+}
+
+//
+// Key navigation
+//
+bool
+QuicklistView::InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character)
+{
+  printf("QuicklistView::InspectKeyEvent\n");
+  // The Quicklist accepts all key inputs.
+  return true;
 }
 

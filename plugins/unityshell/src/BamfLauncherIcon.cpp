@@ -56,13 +56,13 @@ static void shortcut_activated (DbusmenuMenuitem* _sender, guint timestamp, gpoi
   indicator_desktop_shortcuts_nick_exec (data->shortcuts, data->nick);
 }
 
-void BamfLauncherIcon::Activate ()
+void BamfLauncherIcon::Activate (ActionArg arg)
 {
-  ActivateLauncherIcon ();
+  ActivateLauncherIcon (arg);
 }
 
 
-void BamfLauncherIcon::ActivateLauncherIcon ()
+void BamfLauncherIcon::ActivateLauncherIcon (ActionArg arg)
 {
   bool scaleWasActive = PluginAdapter::Default ()->IsScaleActive ();
 
@@ -102,7 +102,8 @@ void BamfLauncherIcon::ActivateLauncherIcon ()
       }
       else // #2 above
       {
-        Spread (0, false);
+        if (arg.source != ActionArg::SWITCHER)
+          Spread (0, false);
       }
     }
     else
@@ -111,7 +112,8 @@ void BamfLauncherIcon::ActivateLauncherIcon ()
       {
         PluginAdapter::Default ()->TerminateScale ();
         Focus ();
-        Spread (0, false);
+        if (arg.source != ActionArg::SWITCHER)
+          Spread (0, false);
       }
       else // #3 above
       {
@@ -819,7 +821,7 @@ static void OnAppLabelActivated (DbusmenuMenuitem* sender,
     return;
     
   self = (BamfLauncherIcon*) data;
-  self->ActivateLauncherIcon ();
+  self->ActivateLauncherIcon (ActionArg (ActionArg::OTHER, 0));
 }
 
 std::list<DbusmenuMenuitem *> BamfLauncherIcon::GetMenus ()

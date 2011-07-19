@@ -43,7 +43,8 @@
 
 class Launcher;
 
-class LauncherIcon : public AbstractLauncherIcon, public Introspectable, public nux::InitiallyUnownedObject
+
+class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
 {
   NUX_DECLARE_OBJECT_TYPE (LauncherIcon, nux::InitiallyUnownedObject);
 public:
@@ -80,9 +81,9 @@ public:
     
     nux::Point3 GetCenter ();
 
-    virtual void Activate ();
+    virtual void Activate (ActionArg arg);
 
-    void OpenInstance ();
+    void OpenInstance (ActionArg arg);
 
     void SaveCenter ();
     
@@ -196,9 +197,9 @@ protected:
     
     virtual void OnDndLeave () {}
     
-    virtual void ActivateLauncherIcon () {}
+    virtual void ActivateLauncherIcon (ActionArg arg) {}
     
-    virtual void OpenInstanceLauncherIcon () {}
+    virtual void OpenInstanceLauncherIcon (ActionArg arg) {}
 
     nux::BaseTexture * TextureFromGtkTheme         (const char *name, int size, bool update_glow_colors = true);
     

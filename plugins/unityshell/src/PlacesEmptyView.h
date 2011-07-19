@@ -27,7 +27,7 @@
 #include "Introspectable.h"
 #include "StaticCairoText.h"
 
-class PlacesEmptyView : public nux::View, public Introspectable
+class PlacesEmptyView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesEmptyView, nux::View);
 public:

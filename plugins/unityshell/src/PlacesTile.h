@@ -40,7 +40,8 @@ public:
 
 protected:
   virtual nux::Geometry GetHighlightGeometry ();
-  
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
 private:
   void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
@@ -61,8 +62,8 @@ private:
   nux::BaseTexture  *_hilight_background;
   nux::TextureLayer *_hilight_layer;
 
-  void OnFocusChanged (nux::Area *area);
-  void OnFocusActivated (nux::Area *area);
+  void OnFocusChanged (nux::Area *label);
+  void OnFocusActivated (nux::Area *label);
   int _last_width;
   int _last_height;
 

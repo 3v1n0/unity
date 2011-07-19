@@ -33,7 +33,7 @@
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface  (Introspectable *introspectable);
+  DebugDBusInterface  (unity::Introspectable *introspectable);
   ~DebugDBusInterface ();
 
 private:

@@ -29,7 +29,7 @@
 
 #include "Introspectable.h"
 
-class PanelTitlebarGrabArea : public nux::InputArea, public Introspectable
+class PanelTitlebarGrabArea : public nux::InputArea, public unity::Introspectable
 {
   // This acts a bit like a titlebar, it can be grabbed (such that we can pull
   // the window down)

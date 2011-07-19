@@ -22,6 +22,7 @@
 
 #include "SwitcherModel.h"
 #include "AbstractIconRenderer.h"
+#include "StaticCairoText.h"
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
@@ -34,7 +35,7 @@ using namespace unity::ui;
 namespace unity {
 namespace switcher {
 
-class SwitcherView : public nux::View, nux::Introspectable
+class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (SwitcherView, nux::View);
 public:
@@ -49,21 +50,35 @@ public:
   nux::Property<int> icon_size;
   nux::Property<int> minimum_spacing;
   nux::Property<int> tile_size;
+  nux::Property<int> vertical_size;
+  nux::Property<int> text_size;
 
 protected:
   long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
 
-  std::list<RenderArg> RenderArgs ();
+  RenderArg InterpolateRenderArgs (RenderArg const& start, RenderArg const& end, float progress);
+
+  std::list<RenderArg> RenderArgsMechanical (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current);
+  
+  std::list<RenderArg> RenderArgsFlat (nux::Geometry& background_geo, int selection, timespec const& current);
 
   RenderArg CreateBaseArgForIcon (AbstractLauncherIcon *icon);
 private:
   void OnSelectionChanged (AbstractLauncherIcon *selection);
 
+  static gboolean OnDrawTimeout (gpointer data);
+
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
   bool target_sizes_set_;
+
+  guint redraw_handle_;
+
+  nux::BaseTexture * background_texture_;
+
+  nux::StaticCairoText * text_view_;
 };
 
 }

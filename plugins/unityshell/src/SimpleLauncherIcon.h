@@ -48,7 +48,7 @@ private:
 
     char *m_IconName;
     nux::BaseTexture *m_Icon;
-    void ActivateLauncherIcon ();
+    void ActivateLauncherIcon (ActionArg arg);
     static void OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data);
     guint32 _theme_changed_id;
 

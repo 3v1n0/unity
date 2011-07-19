@@ -26,7 +26,7 @@
 #include "Introspectable.h"
 #include "PanelView.h"
 
-class PanelController : public nux::Object, public Introspectable
+class PanelController : public nux::Object, public unity::Introspectable
 {
 public:
   PanelController  ();

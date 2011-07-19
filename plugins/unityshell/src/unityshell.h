@@ -41,11 +41,13 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
+#include "DesktopLauncherIcon.h"
+
 using namespace unity::switcher;
 
 /* base screen class */
 class UnityScreen :
-    public Introspectable,
+    public unity::Introspectable,
     public sigc::trackable,
     public ScreenInterface,
     public CompositeScreenInterface,
@@ -70,6 +72,8 @@ public:
 	/* nux draw wrapper */
 	void paintDisplay(const CompRegion& region);
 	void paintPanelShadow(const GLMatrix& matrix);
+
+  void preparePaint (int ms);
 
 	/* paint on top of all windows if we could not find a window
 	 * to paint underneath */
@@ -125,6 +129,14 @@ public:
   bool altTabForwardTerminate(CompAction* action,
                                          CompAction::State state,
                                          CompOption::Vector& options);
+  
+  bool altTabPrevInitiate(CompAction* action,
+                          CompAction::State state,
+                          CompOption::Vector& options);
+
+  bool altTabPrevTerminate(CompAction* action,
+                           CompAction::State state,
+                           CompOption::Vector& options);
 
 	/* handle option changes and change settings inside of the
 	 * panel and dock views */
@@ -200,6 +212,8 @@ private:
 	bool    _key_nav_mode_requested;
 	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
+
+  DesktopLauncherIcon *switcher_desktop_icon;
 
   GdkRectangle _primary_monitor;
 

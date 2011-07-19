@@ -222,34 +222,45 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
   if (!PANEL_IS_SERVICE (self))
-    {
-      g_warning ("%s: Invalid PanelService instance", G_STRLOC);
-      return ret;
-    }
+  {
+    g_warning ("%s: Invalid PanelService instance", G_STRLOC);
+    return ret;
+  }
 
-  if (!GTK_IS_WIDGET (priv->last_menu))
+  if (!GTK_IS_WIDGET (self->priv->last_menu))
     return ret;
 
-  // Don't call any gdk/gtk/X functions in here or you risk creating graphical
-  // glitches (LP: #687567) and of course slowing down event processing.
-  if (e->type == ButtonRelease && priv->last_menu_button != 0)
+  /* Use XI2 to read the event data */
+  XGenericEventCookie *cookie = &e->xcookie;
+  if (cookie->type == GenericEvent)
     {
-      if (e->xbutton.x_root < priv->last_left ||
-          e->xbutton.x_root > priv->last_right ||
-          e->xbutton.y_root < priv->last_top ||
-          e->xbutton.y_root > priv->last_bottom)
+      XIDeviceEvent *event = cookie->data;
+            
+      if (event->evtype == XI_ButtonRelease &&
+          priv->last_menu_button != 0) //FocusChange
         {
-          ret = GDK_FILTER_REMOVE;
+          if (event->root_x < priv->last_left ||
+              event->root_x > priv->last_right ||
+              event->root_y < priv->last_top ||
+              event->root_y > priv->last_bottom)
+          {
+            ret = GDK_FILTER_REMOVE;
+          }
+
+          priv->last_menu_button = 0;
         }
-      priv->last_menu_button = 0;
+      else if (event->evtype == XI_Motion)
+        {
+          priv->last_menu_x = event->root_x;
+          priv->last_menu_y = event->root_y;
+
+          if (priv->last_menu_y <= priv->last_y)
+            {
+              g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
+            }
+        }
     }
-  else if (e->type == MotionNotify)
-    {
-      priv->last_menu_x = e->xmotion.x_root;
-      priv->last_menu_y = e->xmotion.y_root;
-      if (priv->last_menu_y <= priv->last_y)
-        g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
-    }
+
   return ret;
 }
 
@@ -1117,22 +1128,24 @@ panel_service_show_entry (PanelService *self,
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
       if (gdkwin != NULL)
-        {
-          gint left=0, top=0, width=0, height=0;
-          gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
-          gdk_window_get_origin (gdkwin, &left, &top);
-          priv->last_left = left;
-          priv->last_right = left + width -1;
-          priv->last_top = top;
-          priv->last_bottom = top + height -1;
-        }
+      {
+        gint left=0, top=0, width=0, height=0;
+
+        gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
+        gdk_window_get_origin (gdkwin, &left, &top);
+
+        priv->last_left = left;
+        priv->last_right = left + width -1;
+        priv->last_top = top;
+        priv->last_bottom = top + height -1;
+      }
       else
-        {
-          priv->last_left = 0;
-          priv->last_right = 0;
-          priv->last_top = 0;
-          priv->last_bottom = 0;
-        }
+      {
+        priv->last_left = 0;
+        priv->last_right = 0;
+        priv->last_top = 0;
+        priv->last_bottom = 0;
+      }
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }

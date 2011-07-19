@@ -19,6 +19,8 @@
 
 #include "Introspectable.h"
 
+namespace unity
+{
 GVariant*
 Introspectable::Introspect ()
 {
@@ -73,4 +75,5 @@ const gchar *
 Introspectable::GetChildsName ()
 {
   return GetName ();
+}
 }

@@ -24,9 +24,12 @@ namespace unity {
 namespace switcher {
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
+: _inner (icons)
+, _index (0)
+, _last_index (0)
 {
-  _inner = icons;
-  _index = 0;
+  _change_time.tv_sec = 0;
+  _change_time.tv_nsec = 0;
 }
 
 SwitcherModel::~SwitcherModel()
@@ -76,25 +79,49 @@ SwitcherModel::SelectionIndex ()
   return _index;
 }
 
+AbstractLauncherIcon *
+SwitcherModel::LastSelection ()
+{
+  return _inner.at (_last_index);
+}
+
+int 
+SwitcherModel::LastSelectionIndex ()
+{
+  return _last_index;
+}
+
 void 
 SwitcherModel::Next ()
 {
+  _last_index = _index;
+
   _index++;
   if (_index >= _inner.size ())
     _index = 0;
   
+  clock_gettime (CLOCK_MONOTONIC, &_change_time);
   selection_changed.emit (Selection ());
 }
 
 void 
 SwitcherModel::Prev ()
 {
+  _last_index = _index;
+
   if (_index > 0)
     _index--;
   else
     _index = _inner.size () - 1;
   
+  clock_gettime (CLOCK_MONOTONIC, &_change_time);
   selection_changed.emit (Selection ());
+}
+
+timespec
+SwitcherModel::SelectionChangeTime ()
+{
+  return _change_time;
 }
 
 void 
@@ -105,7 +132,14 @@ SwitcherModel::Select (AbstractLauncherIcon *selection)
   {
     if (*it == selection)
     {
-      _index = i;
+      if ((int) _index != i)
+      {
+        _last_index = _index;
+        _index = i;
+
+        clock_gettime (CLOCK_MONOTONIC, &_change_time);
+        selection_changed.emit (Selection ());
+      }
       break;
     }
     ++i;
@@ -115,7 +149,13 @@ SwitcherModel::Select (AbstractLauncherIcon *selection)
 void 
 SwitcherModel::Select (int index)
 {
-  _index = CLAMP (index, 0, _inner.size () - 1);
+  unsigned int target = CLAMP (index, 0, _inner.size () - 1);
+
+  if (target != _index)
+  {
+    _last_index = _index;
+    _index = target;
+  }
 }
 
 }

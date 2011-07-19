@@ -29,7 +29,7 @@
 
 #include "Introspectable.h"
 
-class PanelHomeButton : public nux::TextureArea, public Introspectable
+class PanelHomeButton : public nux::TextureArea, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PanelHomeButton, nux::TextureArea);
 public:

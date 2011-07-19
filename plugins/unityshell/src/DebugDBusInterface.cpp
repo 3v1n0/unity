@@ -141,10 +141,10 @@ static const GDBusInterfaceInfo ap_iface_info =
   NULL
 };
 
-static Introspectable *_introspectable;
+static unity::Introspectable *_introspectable;
 static Autopilot *_autopilot;
 
-DebugDBusInterface::DebugDBusInterface (Introspectable *introspectable)
+DebugDBusInterface::DebugDBusInterface (unity::Introspectable *introspectable)
 {
   _introspectable = introspectable;
   _owner_id = g_bus_own_name (G_BUS_TYPE_SESSION,

@@ -139,7 +139,7 @@ nux_area_accessible_initialize (AtkObject *accessible,
   area = dynamic_cast<nux::Area *>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
-  area->FocusChanged.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
+  (static_cast<nux::InputArea*>(area))->OnKeyNavFocusChange.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
 
   atk_component_add_focus_handler (ATK_COMPONENT (accessible),
                                    nux_area_accessible_focus_handler);
@@ -227,7 +227,7 @@ nux_area_accessible_ref_state_set (AtkObject *obj)
   if (area->CanFocus ())
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
 
-  if (area->GetFocused ())
+  if (area->HasKeyFocus ())
     atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
 
   return state_set;
@@ -412,7 +412,7 @@ check_focus_change (nux::Area *area,
 
   self = NUX_AREA_ACCESSIBLE (accessible);
 
-  if (area->GetFocused ())
+  if (area->HasKeyFocus ())
     focus_in = TRUE;
 
   is_parent_window_active = check_parent_window_active (self);

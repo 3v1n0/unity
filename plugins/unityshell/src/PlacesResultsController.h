@@ -28,11 +28,11 @@
 
 #include "PlacesGroupController.h"
 
-class PlacesResultsController : public nux::Object, public Introspectable
+class PlacesResultsController : public unity::Introspectable
 {
 public:
-  PlacesResultsController  ();
-  ~PlacesResultsController ();
+  PlacesResultsController();
+  ~PlacesResultsController();
 
   void                SetView (PlacesResultsView *view);
   PlacesResultsView * GetView ();
