@@ -2740,6 +2740,16 @@ void Launcher::RecvQuicklistOpened (QuicklistView *quicklist)
 
 void Launcher::RecvQuicklistClosed (QuicklistView *quicklist)
 {
+  nux::Point pt = nux::GetWindowCompositor ().GetMousePosition();
+  if (!GetAbsoluteGeometry().IsInside(pt))
+  {
+    // The Quicklist just closed and the mouse is outside the launcher.
+    SetHover(false);  
+    SetStateMouseOverLauncher (false);
+  }
+  // Cancel any prior state that was set before the Quicklist appeared.
+  SetActionState (ACTION_NONE);
+
   _hide_machine->SetQuirk (LauncherHideMachine::QUICKLIST_OPEN, false);
   _hover_machine->SetQuirk (LauncherHoverMachine::QUICKLIST_OPEN, false);
 
