@@ -178,8 +178,8 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
                                                           G_CALLBACK (&BamfLauncherIcon::OnDesktopFileChanged),
                                                           this);
 
-  _on_window_minimized_connection = (sigc::connection) PluginAdapter::Default ()->window_minimized.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnWindowMinimized));
-  _hidden_changed_connection = (sigc::connection) IconManager->hidden_changed.connect (sigc::mem_fun (this, &BamfLauncherIcon::OnLauncherHiddenChanged));
+  PluginAdapter::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   /* hack */
   SetProgress (0.0f);
@@ -204,12 +204,6 @@ BamfLauncherIcon::~BamfLauncherIcon()
   if (_on_desktop_file_changed_handler_id != 0)
     g_signal_handler_disconnect ((gpointer) _desktop_file_monitor,
                                  _on_desktop_file_changed_handler_id);
-
-  if (_on_window_minimized_connection.connected ())
-    _on_window_minimized_connection.disconnect ();
-  
-  if (_hidden_changed_connection.connected ())
-    _hidden_changed_connection.disconnect ();
 
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildRemoved,       this);
   g_signal_handlers_disconnect_by_func (m_App, (void *) &BamfLauncherIcon::OnChildAdded,         this);

@@ -105,13 +105,6 @@ private:
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
-
-  sigc::connection _on_panel_style_changed_connection;
-  sigc::connection _on_object_added_connection;
-  sigc::connection _on_menu_pointer_moved_connection;
-  sigc::connection _on_entry_activate_request_connection;
-  sigc::connection _on_entry_activated_connection;
-  sigc::connection _on_synced_connection;
 };
 
 }

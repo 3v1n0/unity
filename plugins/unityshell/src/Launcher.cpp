@@ -143,9 +143,9 @@ Launcher::Launcher (nux::BaseWindow* parent,
     _active_quicklist = 0;
 
     _hide_machine = new LauncherHideMachine ();
-    _set_hidden_connection = (sigc::connection) _hide_machine->should_hide_changed.connect (sigc::mem_fun (this, &Launcher::SetHidden));
+    _hide_machine->should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
     _hover_machine = new LauncherHoverMachine ();
-    _set_hover_connection = (sigc::connection) _hover_machine->should_hover_changed.connect (sigc::mem_fun (this, &Launcher::SetHover));
+    _hover_machine->should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
 
     _launcher_animation_timeout = 0;
 
@@ -164,32 +164,33 @@ Launcher::Launcher (nux::BaseWindow* parent,
 
     CaptureMouseDownAnyWhereElse (true);
 
-    _recv_quicklist_opened_connection = (sigc::connection) QuicklistManager::Default ()->quicklist_opened.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
-    _recv_quicklist_closed_connection = (sigc::connection) QuicklistManager::Default ()->quicklist_closed.connect (sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
+    QuicklistManager& ql_manager = *(QuicklistManager::Default());
+    ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
+    ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
-    _on_window_maximized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_maximized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_restored_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_restored.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_unminimized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_unminimized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_mapped_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_unmapped_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_shown_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_shown.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_hidden_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_hidden.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_resized_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_resized.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_moved_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_moved.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
-    _on_window_focuschanged_intellihide_connection = (sigc::connection) PluginAdapter::Default ()->window_focus_changed.connect (sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihideDelayed));
+    PluginAdapter& plugin_adapter = *(PluginAdapter::Default());
+    plugin_adapter.window_maximized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_restored.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_unminimized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_shown.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_hidden.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_resized.connect(sigc::mem_fun(this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_moved.connect(sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihide));
+    plugin_adapter.window_focus_changed.connect(sigc::mem_fun (this, &Launcher::OnWindowMaybeIntellihideDelayed));
+    plugin_adapter.window_mapped.connect(sigc::mem_fun(this, &Launcher::OnWindowMapped));
+    plugin_adapter.window_unmapped.connect(sigc::mem_fun(this, &Launcher::OnWindowUnmapped));
 
-    _on_window_mapped_connection = (sigc::connection) PluginAdapter::Default ()->window_mapped.connect (sigc::mem_fun (this, &Launcher::OnWindowMapped));
-    _on_window_unmapped_connection = (sigc::connection) PluginAdapter::Default ()->window_unmapped.connect (sigc::mem_fun (this, &Launcher::OnWindowUnmapped));
+    plugin_adapter.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+    plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+    plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+    plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
 
-    _on_initiate_spread_connection = (sigc::connection) PluginAdapter::Default ()->initiate_spread.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
-    _on_initiate_expo_connection = (sigc::connection) PluginAdapter::Default ()->initiate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
-    _on_terminate_spread_connection = (sigc::connection) PluginAdapter::Default ()->terminate_spread.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
-    _on_terminate_expo_connection = (sigc::connection) PluginAdapter::Default ()->terminate_expo.connect (sigc::mem_fun (this, &Launcher::OnPluginStateChanged));
-
-    GeisAdapter *adapter = GeisAdapter::Default (screen);
-    _on_drag_start_connection = (sigc::connection) adapter->drag_start.connect (sigc::mem_fun (this, &Launcher::OnDragStart));
-    _on_drag_update_connection = (sigc::connection) adapter->drag_update.connect (sigc::mem_fun (this, &Launcher::OnDragUpdate));
-    _on_drag_finish_connection = (sigc::connection) adapter->drag_finish.connect (sigc::mem_fun (this, &Launcher::OnDragFinish));
+    GeisAdapter& adapter = *(GeisAdapter::Default(screen));
+    adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
+    adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
+    adapter.drag_finish.connect(sigc::mem_fun(this, &Launcher::OnDragFinish));
 
     _current_icon       = NULL;
     _current_icon_index = -1;
@@ -341,76 +342,6 @@ Launcher::~Launcher()
   if (_settings_changed_id != 0)
     g_signal_handler_disconnect ((gpointer) _settings, _settings_changed_id);
   g_object_unref (_settings);
-
-  // disconnect the huge number of signal-slot callbacks
-  if (_set_hidden_connection.connected ())
-    _set_hidden_connection.disconnect ();
-
-  if (_set_hover_connection.connected ())
-    _set_hover_connection.disconnect ();
-
-  if (_recv_quicklist_opened_connection.connected ())
-    _recv_quicklist_opened_connection.disconnect ();
-
-  if (_recv_quicklist_closed_connection.connected ())
-    _recv_quicklist_closed_connection.disconnect ();
-
-  if (_on_window_maximized_intellihide_connection.connected ())
-    _on_window_maximized_intellihide_connection.disconnect ();
-
-  if (_on_window_restored_intellihide_connection.connected ())
-    _on_window_restored_intellihide_connection.disconnect ();
-
-  if (_on_window_unminimized_intellihide_connection.connected ())
-    _on_window_unminimized_intellihide_connection.disconnect ();
-
-  if (_on_window_mapped_intellihide_connection.connected ())
-    _on_window_mapped_intellihide_connection.disconnect ();
-
-  if (_on_window_unmapped_intellihide_connection.connected ())
-    _on_window_unmapped_intellihide_connection.disconnect ();
-
-  if (_on_window_shown_intellihide_connection.connected ())
-    _on_window_shown_intellihide_connection.disconnect ();
-
-  if (_on_window_hidden_intellihide_connection.connected ())
-    _on_window_hidden_intellihide_connection.disconnect ();
-
-  if (_on_window_resized_intellihide_connection.connected ())
-    _on_window_resized_intellihide_connection.disconnect ();
-
-  if (_on_window_moved_intellihide_connection.connected ())
-    _on_window_moved_intellihide_connection.disconnect ();
-
-  if (_on_window_moved_intellihide_connection.connected ())
-    _on_window_moved_intellihide_connection.disconnect ();
-
-  if (_on_window_mapped_connection.connected ())
-    _on_window_mapped_connection.disconnect ();
-
-  if (_on_window_unmapped_connection.connected ())
-    _on_window_unmapped_connection.disconnect ();
-
-  if (_on_initiate_spread_connection.connected ())
-    _on_initiate_spread_connection.disconnect ();
-
-  if (_on_initiate_expo_connection.connected ())
-    _on_initiate_expo_connection.disconnect ();
-
-  if (_on_terminate_spread_connection.connected ())
-    _on_terminate_spread_connection.disconnect ();
-
-  if (_on_terminate_expo_connection.connected ())
-    _on_terminate_expo_connection.disconnect ();
-
-  if (_on_drag_start_connection.connected ())
-    _on_drag_start_connection.disconnect ();
-
-  if (_on_drag_update_connection.connected ())
-    _on_drag_update_connection.disconnect ();
-
-  if (_on_drag_finish_connection.connected ())
-    _on_drag_finish_connection.disconnect ();
 
   if (_launcher_animation_timeout > 0)
     g_source_remove (_launcher_animation_timeout);
@@ -2060,7 +1991,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     EnsureAnimation();
 
     // needs to be disconnected
-    icon->needs_redraw_connection = (sigc::connection) icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+    icon->needs_redraw_connection = icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
     AddChild (icon);
 }
@@ -2094,15 +2025,15 @@ void Launcher::SetModel (LauncherModel *model)
 
     if (_model->on_icon_added_connection.connected ())
       _model->on_icon_added_connection.disconnect ();
-    _model->on_icon_added_connection = (sigc::connection) _model->icon_added.connect (sigc::mem_fun (this, &Launcher::OnIconAdded));
+    _model->on_icon_added_connection = _model->icon_added.connect (sigc::mem_fun (this, &Launcher::OnIconAdded));
 
     if (_model->on_icon_removed_connection.connected ())
       _model->on_icon_removed_connection.disconnect ();
-    _model->on_icon_removed_connection = (sigc::connection) _model->icon_removed.connect (sigc::mem_fun (this, &Launcher::OnIconRemoved));
+    _model->on_icon_removed_connection = _model->icon_removed.connect (sigc::mem_fun (this, &Launcher::OnIconRemoved));
 
     if (_model->on_order_changed_connection.connected ())
       _model->on_order_changed_connection.disconnect ();
-    _model->on_order_changed_connection = (sigc::connection) _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
+    _model->on_order_changed_connection = _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
 LauncherModel* Launcher::GetModel ()
@@ -2358,7 +2289,7 @@ void Launcher::EndIconDrag ()
 
       if (_drag_window->on_anim_completed.connected ())
         _drag_window->on_anim_completed.disconnect ();
-      _drag_window->on_anim_completed = (sigc::connection) _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed = _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
     }
   }
 

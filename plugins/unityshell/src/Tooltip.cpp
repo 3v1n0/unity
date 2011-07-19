@@ -69,8 +69,8 @@ namespace nux
     _vlayout->AddLayout(_top_space, 0);
 
     _tooltip_text = new nux::StaticCairoText (_labelText.GetTCharPtr (), NUX_TRACKER_LOCATION);
-    _on_text_changed_connection = (sigc::connection) _tooltip_text->sigTextChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
-    _on_font_changed_connection = (sigc::connection) _tooltip_text->sigFontChanged.connect (sigc::mem_fun (this, &Tooltip::RecvCairoTextChanged));
+    _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
+    _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
     _tooltip_text->Reference();
     
     _vlayout->AddView(_tooltip_text, 1, eCenter, eFull);
@@ -93,12 +93,6 @@ namespace nux
     
     if (_texture_bg)
       _texture_bg->UnReference ();
-
-    if (_on_text_changed_connection.connected ())
-      _on_text_changed_connection.disconnect ();
-
-    if (_on_font_changed_connection.connected ())
-      _on_font_changed_connection.disconnect ();
 
     _tooltip_text->UnReference();
   }

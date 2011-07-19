@@ -83,8 +83,6 @@ private:
     gchar *_remote_uri;
     bool _dnd_hovered;
     guint _dnd_hover_timer;
-    sigc::connection _on_window_minimized_connection;
-    sigc::connection _hidden_changed_connection;
 
     gchar *_cached_desktop_file;
     gchar *_cached_name;
