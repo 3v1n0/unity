@@ -1990,7 +1990,7 @@ void Launcher::OnIconAdded (LauncherIcon *icon)
     EnsureAnimation();
 
     // needs to be disconnected
-    icon->needs_redraw_connection = (sigc::connection) icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+    icon->needs_redraw_connection = icon->needs_redraw.connect (sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
 
     AddChild (icon);
 }
@@ -2024,15 +2024,15 @@ void Launcher::SetModel (LauncherModel *model)
 
     if (_model->on_icon_added_connection.connected ())
       _model->on_icon_added_connection.disconnect ();
-    _model->on_icon_added_connection = (sigc::connection) _model->icon_added.connect (sigc::mem_fun (this, &Launcher::OnIconAdded));
+    _model->on_icon_added_connection = _model->icon_added.connect (sigc::mem_fun (this, &Launcher::OnIconAdded));
 
     if (_model->on_icon_removed_connection.connected ())
       _model->on_icon_removed_connection.disconnect ();
-    _model->on_icon_removed_connection = (sigc::connection) _model->icon_removed.connect (sigc::mem_fun (this, &Launcher::OnIconRemoved));
+    _model->on_icon_removed_connection = _model->icon_removed.connect (sigc::mem_fun (this, &Launcher::OnIconRemoved));
 
     if (_model->on_order_changed_connection.connected ())
       _model->on_order_changed_connection.disconnect ();
-    _model->on_order_changed_connection = (sigc::connection) _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
+    _model->on_order_changed_connection = _model->order_changed.connect (sigc::mem_fun (this, &Launcher::OnOrderChanged));
 }
 
 LauncherModel* Launcher::GetModel ()
@@ -2288,7 +2288,7 @@ void Launcher::EndIconDrag ()
 
       if (_drag_window->on_anim_completed.connected ())
         _drag_window->on_anim_completed.disconnect ();
-      _drag_window->on_anim_completed = (sigc::connection) _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed = _drag_window->anim_completed.connect (sigc::mem_fun (this, &Launcher::OnDragWindowAnimCompleted));
     }
   }
 
