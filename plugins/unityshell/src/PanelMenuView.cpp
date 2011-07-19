@@ -131,6 +131,9 @@ PanelMenuView::PanelMenuView (int padding)
   OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
   OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
+  _panel_titlebar_grab_area->OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
+
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
   _place_shown_interest = ubus_server_register_interest (ubus, UBUS_PLACE_VIEW_SHOWN,
@@ -252,7 +255,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
 {
     bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
 
-    if(mouse_inside == false)
+    if (mouse_inside == false)
       return NULL;
 
     Area* found_area = NULL;
@@ -276,7 +279,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
         NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
       }
     }
-    
+
     if (_panel_titlebar_grab_area)
     {
       found_area = _panel_titlebar_grab_area->FindAreaUnderMouse (mouse_position, event_type);
@@ -289,7 +292,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
       NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
     }
 
-    return View::FindAreaUnderMouse (mouse_position, event_type);  
+    return View::FindAreaUnderMouse (mouse_position, event_type);
 }
 
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
@@ -751,6 +754,9 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
   entries_.push_back (view);
 
   AddChild (view);
+
+  view->OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
   QueueRelayout ();
   QueueDraw ();
