@@ -6,4 +6,4 @@ Exec=unity-preferences
 Terminal=false
 Type=Application
 Categories=GTK;GNOME;Settings;DesktopSettings;
-OnlyShowIn=GNOME;
+OnlyShowIn=Unity;
