@@ -77,10 +77,6 @@ private:
     Base             _inner;
     Base             _inner_shelf;
     Base             _inner_main;
-    sigc::connection _on_mouse_enter_connection;
-    sigc::connection _on_mouse_leave_connection;
-    sigc::connection _on_mouse_down_connection;
-    sigc::connection _on_mouse_up_connection;
     
     bool Populate ();
     
