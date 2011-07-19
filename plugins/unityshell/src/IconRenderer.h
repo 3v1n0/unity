@@ -81,13 +81,13 @@ protected:
 
   void RestoreSystemRenderTarget ();
 
-private:
   void SetupShaders ();
 
   void GenerateTextures ();
 
   void DestroyTextures ();
 
+private:
   enum IconSize
   {
     SMALL = 0,
@@ -100,31 +100,30 @@ private:
   int image_size;
   int spacing;
 
-  bool textures_created;
+  static bool textures_created;
 
-  nux::BaseTexture* _progress_bar_trough;
-  nux::BaseTexture* _progress_bar_fill;
+  static nux::BaseTexture* _progress_bar_trough;
+  static nux::BaseTexture* _progress_bar_fill;
   
-  nux::BaseTexture* _pip_ltr;
-  nux::BaseTexture* _pip_rtl;
-  nux::BaseTexture* _arrow_ltr;
-  nux::BaseTexture* _arrow_rtl;
-  nux::BaseTexture* _arrow_empty_ltr;
-  nux::BaseTexture* _arrow_empty_rtl;
+  static nux::BaseTexture* _pip_ltr;
+  static nux::BaseTexture* _pip_rtl;
+  static nux::BaseTexture* _arrow_ltr;
+  static nux::BaseTexture* _arrow_rtl;
+  static nux::BaseTexture* _arrow_empty_ltr;
+  static nux::BaseTexture* _arrow_empty_rtl;
 
+  static std::vector<nux::BaseTexture*> _icon_back;
+  static std::vector<nux::BaseTexture*> _icon_selected_back;
+  static std::vector<nux::BaseTexture*> _icon_edge;
+  static std::vector<nux::BaseTexture*> _icon_glow;
+  static std::vector<nux::BaseTexture*> _icon_shine;
 
-  std::vector<nux::BaseTexture*> _icon_back;
-  std::vector<nux::BaseTexture*> _icon_selected_back;
-  std::vector<nux::BaseTexture*> _icon_edge;
-  std::vector<nux::BaseTexture*> _icon_glow;
-  std::vector<nux::BaseTexture*> _icon_shine;
+  static nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
+  static nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
 
-  nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
-  nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
+  static nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
-
-  std::map<char, nux::BaseTexture*> label_map;
+  static std::map<char, nux::BaseTexture*> label_map;
 };
 
 }

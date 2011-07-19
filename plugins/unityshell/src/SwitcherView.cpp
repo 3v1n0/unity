@@ -42,8 +42,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   flat_spacing = 10;
   icon_size = 128;
   minimum_spacing = 20;
-  tile_size = 170;
-  vertical_size = 250;
+  tile_size = 150;
+  vertical_size = tile_size + 80;
   text_size = 15;
   animation_length = 250;
 
