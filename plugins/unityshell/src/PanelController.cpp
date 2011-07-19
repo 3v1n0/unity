@@ -37,23 +37,18 @@ PanelController::PanelController ()
   _open_menu_start_received (false)
 {
   UScreen *screen = UScreen::GetDefault ();
-
-  _on_screen_change_connection = screen->changed.connect (sigc::mem_fun (this, &PanelController::OnScreenChanged));
-
-  OnScreenChanged (screen->GetPrimaryMonitor (), screen->GetMonitors ());
+  screen->changed.connect(sigc::mem_fun(this, &PanelController::OnScreenChanged));
+  OnScreenChanged(screen->GetPrimaryMonitor(), screen->GetMonitors());
 }
 
 PanelController::~PanelController ()
 {
-  _on_screen_change_connection.disconnect ();
-
   std::vector<nux::BaseWindow *>::iterator it, eit = _windows.end ();
 
   for (it = _windows.begin (); it != eit; ++it)
   {
     (*it)->UnReference ();
   }
-
 }
 
 void
