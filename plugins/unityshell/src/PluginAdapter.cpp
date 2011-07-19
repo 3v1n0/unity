@@ -487,6 +487,12 @@ PluginAdapter::Lower (guint32 xid)
     window->lower ();
 }
 
+void
+PluginAdapter::ShowDesktop ()
+{
+  m_Screen->enterShowDesktopMode ();
+}
+
 nux::Geometry
 PluginAdapter::GetWindowGeometry (guint32 xid)
 {

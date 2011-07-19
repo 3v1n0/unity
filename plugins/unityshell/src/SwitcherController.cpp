@@ -31,7 +31,10 @@ SwitcherController::SwitcherController()
   ,  visible_(false)
   ,  show_timer_ (0)
 {
-  
+}
+
+SwitcherController::~SwitcherController ()
+{
 }
 
 void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
@@ -135,7 +138,9 @@ void SwitcherController::DetailCurrent ()
 
 bool SwitcherController::CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second)
 {
-  return first->SwitcherPriority () > second->SwitcherPriority ();
+  if (first->Type () == second->Type ())
+    return first->SwitcherPriority () > second->SwitcherPriority ();
+  return first->Type () < second->Type ();
 }
 
 void SwitcherController::SelectFirstItem ()
@@ -144,7 +149,7 @@ void SwitcherController::SelectFirstItem ()
     return;
   
   // Hack
-  model_->Select (1);
+  model_->Select (2);
 }
 
 }

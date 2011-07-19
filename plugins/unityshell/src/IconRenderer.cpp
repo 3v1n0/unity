@@ -373,6 +373,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   nux::Color edge_color (0x55555555);
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
+  nux::BaseTexture *background = _icon_back[size];
 
   if (arg.keyboard_nav_hl)
   {
@@ -381,6 +382,8 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
     edge_color = nux::color::White;
     backlight_intensity = 0.95;
     glow_intensity = 1.0f;
+
+    background = _icon_selected_back[size];
   }
 
   // draw tile
@@ -388,7 +391,7 @@ void IconRenderer::RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const&
   {
     RenderElement(GfxContext,
                   arg,
-                  _icon_back[size]->GetDeviceTexture (),
+                  background->GetDeviceTexture (),
                   background_color,
                   backlight_intensity * arg.alpha,
                   arg.icon->GetTransform ("Tile"));

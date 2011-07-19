@@ -41,6 +41,8 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
+#include "DesktopLauncherIcon.h"
+
 using namespace unity::switcher;
 
 /* base screen class */
@@ -210,6 +212,8 @@ private:
 	bool    _key_nav_mode_requested;
 	CompOutput *_last_output;
 	CompWindowList _withRemovedNuxWindows;
+
+  DesktopLauncherIcon *switcher_desktop_icon;
 
   GdkRectangle _primary_monitor;
 

@@ -45,7 +45,7 @@ private:
   gboolean _empty;
   GtkWidget   *_confirm_dialog;
 
-  void ActivateLauncherIcon ();
+  void ActivateLauncherIcon (ActionArg arg);
   std::list<DbusmenuMenuitem *> GetMenus ();
 
   static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
