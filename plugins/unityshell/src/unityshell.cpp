@@ -518,15 +518,8 @@ bool UnityScreen::showPanelFirstMenuKeyTerminate(CompAction* action,
 gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
 {
   UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
-
-  Window root_r, child_r;
-  int root_x_r, root_y_r, win_x_r, win_y_r;
-  unsigned int mask;
-  XQueryPointer(self->screen->dpy(), self->screen->root(),
-                &root_r, &child_r, &root_x_r, &root_y_r,
-                &win_x_r, &win_y_r, &mask);
-
-  if (root_x_r == 0)
+  
+  if (pointerX == 0)
     self->launcher->EdgeRevealTriggered ();
 
   self->_edge_trigger_handle = 0;
