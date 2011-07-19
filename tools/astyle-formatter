@@ -1,12 +1,11 @@
 --indent=spaces -s2
---style=gnu
+--style=bsd
 --indent-classes
 --indent-switches
---indent-namespaces
---indent-namespaces
 --min-conditional-indent=0
 --pad-oper
 --pad-header
 --convert-tabs
 --align-pointer=type
 --max-instatement-indent=80
+--unpad-paren-out
