@@ -1,30 +1,36 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="styleguide.xsl"?>
-<GUIDE title="Google C++ Style Guide">
+<GUIDE title="Unity C++ Style Guide">
 
+<!--
+<ACKNOWLEDGEMENTS>
+  This document was based on the Google C++ Style Guide
+  <p>Revision 3.188</p>
+  <address>
+    Benjy Weinberger<br/>
+    Craig Silverstein<br/>
+    Gregory Eitzmann<br/>
+    Mark Mentovai<br/>
+    Tashana Landray
+  </address>
+</ACKNOWLEDGEMENTS>
+-->
 <p align="right">
-
-Revision 3.188
+Revision 4.0
 </p>
 
-
-
 <address>
-Benjy Weinberger<br/>
-Craig Silverstein<br/>
-Gregory Eitzmann<br/>
-Mark Mentovai<br/>
-Tashana Landray
+Tim Penhey<br />
+Neil J. Patel
 </address>
 
 <OVERVIEW>
 <CATEGORY title="Important Note">
   <STYLEPOINT title="Displaying Hidden Details in this Guide">
      <SUMMARY>
-       This style guide contains many details that are initially
-       hidden from view.  They are marked by the triangle icon, which you
-       see here on your left.  Click it now.
-       You should see "Hooray" appear below.
+       This style guide contains many details that are initially hidden from
+       view.  They are marked by the triangle icon, which you see here on your
+       left.  Click it now.  You should see "Hooray" appear below.
      </SUMMARY>
      <BODY>
        <p>
@@ -37,77 +43,53 @@ Tashana Landray
 </CATEGORY>
 <CATEGORY title="Background">
   <p>
-    C++ is the main development language
-    
-    used by many of Google's open-source
-    projects.
     As every C++ programmer knows, the language has many powerful features,
-    but this power brings with it complexity, which in turn can make code
-    more bug-prone and harder to read and maintain.
+    but this power brings with it complexity, which in turn can make code more
+    bug-prone and harder to read and maintain.
   </p>
   <p>
-    The goal of this guide is to manage this complexity by describing
-    in detail the dos and don'ts of writing C++
-    code. These rules exist to
-    keep
-    
-    the
-    code base manageable while still allowing coders to use C++ language
+    The goal of this guide is to manage this complexity by describing in
+    detail the dos and don'ts of writing C++ code. These rules exist to keep
+    the code base manageable while still allowing coders to use C++ language
     features productively.
   </p>
   <p>
-    <em>Style</em>, also known as readability, is what we call the
-    conventions that govern our C++ code. The term Style is a bit of a
-    misnomer, since these conventions cover far more than just source
-    file formatting.
+    <em>Style</em>, also known as readability, is what we call the conventions
+    that govern our C++ code. The term Style is a bit of a misnomer, since
+    these conventions cover far more than just source file formatting.
   </p>
   <p>
     One way in which we keep the code base manageable is by enforcing
-    <em>consistency</em>.
-    
-    It is very important that any
-    
-    programmer
-    be able to look at another's code and quickly understand it.
-    Maintaining a uniform style and following conventions means that we can
-    more easily use "pattern-matching" to infer what various symbols are
-    and what invariants are true about them. Creating common, required
-    idioms and patterns makes code much easier to understand.  In some
-    cases there might be good arguments for changing certain style
-    rules, but we nonetheless keep things as they are in order to
-    preserve consistency.
+    <em>consistency</em>.  It is very important that any programmer be able to
+    look at another's code and quickly understand it.  Maintaining a uniform
+    style and following conventions means that we can more easily use
+    "pattern-matching" to infer what various symbols are and what invariants
+    are true about them. Creating common, required idioms and patterns makes
+    code much easier to understand.  In some cases there might be good
+    arguments for changing certain style rules, but we nonetheless keep things
+    as they are in order to preserve consistency.
   </p>
   <p>
-    Another issue this guide addresses is that of C++ feature bloat.
-    C++ is a huge language with many advanced features. In some cases
-    we constrain, or even ban, use of certain features. We do this to
-    keep code simple and to avoid the various common errors and
-    problems that these features can cause.  This guide lists these
-    features and explains why their use is restricted.
+    Another issue this guide addresses is that of C++ feature bloat.  C++ is a
+    huge language with many advanced features. In some cases we constrain, or
+    even ban, use of certain features. We do this to keep code simple and to
+    avoid the various common errors and problems that these features can
+    cause.  This guide lists these features and explains why their use is
+    restricted.
   </p>
   <p>
-    
-    Open-source projects developed by Google
-    conform to the requirements in this guide.
+    Note that this guide is not a C++ tutorial: we assume that the reader is
+    familiar with the language.
   </p>
-  
-  <p>
-    Note that this guide is not a C++ tutorial: we assume that the
-    reader is familiar with the language.
-    
-  </p>
-  
 </CATEGORY>
 </OVERVIEW>
 
 <CATEGORY title="Header Files">
   <p>
-    In general, every <code>.cc</code> file should have an associated
+    In general, every <code>.cpp</code> file should have an associated
     <code>.h</code> file. There are some common exceptions, such as
-    
-    unittests
-    and small <code>.cc</code> files containing just a <code>main()</code>
-    function.
+    unittests and small <code>.cpp</code> files containing just a
+    <code>main()</code> function.
   </p>
   <p>
     Correct use of header files can make a huge difference to the
@@ -126,7 +108,7 @@ Tashana Landray
       <code><i>&lt;PROJECT&gt;</i>_<i>&lt;PATH&gt;</i>_<i>&lt;FILE&gt;</i>_H_</code>.
     </SUMMARY>
     <BODY>
-      
+
       <p>
         To guarantee uniqueness, they should be based on the full path
         in a project's source tree.  For example, the file
@@ -141,7 +123,7 @@ Tashana Landray
 
          #endif  // FOO_BAR_BAZ_H_
       </CODE_SNIPPET>
-      
+
     </BODY>
   </STYLEPOINT>
 
@@ -182,7 +164,7 @@ Tashana Landray
              exception is if an argument <code>Foo</code>
              or <code>const Foo&amp;</code> has a
              non-<code>explicit</code>, one-argument constructor,
-             
+
              in which case we need the full definition to support
              automatic type conversion.)
              </li>
@@ -205,20 +187,20 @@ Tashana Landray
         in header files.
       </p>
       <p>
-        Of course, <code>.cc</code> files typically do require the
+        Of course, <code>.cpp</code> files typically do require the
         definitions of the classes they use, and usually have to
         include several header files.
       </p>
-      
+
       <SUBSECTION title="Note:">
         If you use a symbol <code>Foo</code> in your source file, you
         should bring in a definition for <code>Foo</code> yourself,
         either via an #include or via a forward declaration.  Do not
         depend on the symbol being brought in transitively via headers
         not directly included.  One exception is if <code>Foo</code>
-        is used in <code>myfile.cc</code>, it's ok to #include (or
+        is used in <code>myfile.cpp</code>, it's ok to #include (or
         forward-declare) <code>Foo</code> in <code>myfile.h</code>,
-        instead of <code>myfile.cc</code>.
+        instead of <code>myfile.cpp</code>.
       </SUBSECTION>
     </BODY>
   </STYLEPOINT>
@@ -285,7 +267,7 @@ Tashana Landray
         The definition of an inline function needs to be in a header
         file, so that the compiler has the definition available for
         inlining at the call sites.  However, implementation code
-        properly belongs in <code>.cc</code> files, and we do not like
+        properly belongs in <code>.cpp</code> files, and we do not like
         to have much actual code in <code>.h</code> files unless there
         is a readability or performance advantage.
       </p>
@@ -312,7 +294,7 @@ Tashana Landray
         <a href="#The__define_Guard"><code>#define</code> guard</a> just
         like any other header file.
       </p>
-      
+
     </BODY>
   </STYLEPOINT>
 
@@ -346,28 +328,28 @@ Tashana Landray
     <SUMMARY>
       Use standard order for readability and to avoid hidden
       dependencies: C library, C++ library,
-      
+
       other libraries' <code>.h</code>, your
       project's
       <code>.h</code>.
     </SUMMARY>
     <BODY>
       <p>
-        
+
         All of a project's header files should be
         listed as descendants of the project's source directory
         without use of UNIX directory shortcuts <code>.</code> (the current
         directory) or <code>..</code> (the parent directory).  For
         example,
-        
-        <code>google-awesome-project/src/base/logging.h</code>
+
+        <code>my-awesome-project/src/base/logging.h</code>
         should be included as
       </p>
       <CODE_SNIPPET>
         #include "base/logging.h"
       </CODE_SNIPPET>
       <p>
-        In <code><var>dir/foo</var>.cc</code> or <code><var>dir/foo_test</var>.cc</code>,
+        In <code><var>dir/foo</var>.cpp</code> or <code><var>dir/foo_test</var>.cpp</code>,
 	whose main purpose is to implement or test the stuff in
         <code><var>dir2/foo2</var>.h</code>, order your includes as
         follows:
@@ -378,7 +360,7 @@ Tashana Landray
         <li> C system files.</li>
         <li> C++ system files.</li>
         <li> Other libraries' <code>.h</code> files.</li>
-        <li> 
+        <li>
              Your project's
              <code>.h</code> files.</li>
       </ol>
@@ -387,24 +369,24 @@ Tashana Landray
         every header file to be compilable on its own.  The easiest
         way to achieve this is to make sure that every one of them is
         the first <code>.h</code> file <code>#include</code>d in some
-        <code>.cc</code>.  
+        <code>.cpp</code>.
       </p>
       <p>
-        <code><var>dir/foo</var>.cc</code> and
+        <code><var>dir/foo</var>.cpp</code> and
         <code><var>dir2/foo2</var>.h</code> are often in the same
-        directory (e.g. <code>base/basictypes_test.cc</code> and
+        directory (e.g. <code>base/basictypes_test.cpp</code> and
         <code>base/basictypes.h</code>), but can be in different
         directories too.
       </p>
-      
+
       <p>
         Within each section it is nice to order the includes
         alphabetically.
       </p>
       <p>
         For example, the includes in
-        
-        <code>google-awesome-project/src/foo/internal/fooserver.cc</code>
+
+        <code>my-awesome-project/src/foo/internal/fooserver.cpp</code>
         might look like this:
       </p>
       <CODE_SNIPPET>
@@ -427,9 +409,9 @@ Tashana Landray
 <CATEGORY title="Scoping">
   <STYLEPOINT title="Namespaces">
     <SUMMARY>
-      Unnamed namespaces in <code>.cc</code> files are encouraged.  With
+      Unnamed namespaces in <code>.cpp</code> files are encouraged.  With
       named namespaces, choose the name based on the
-      
+
       project, and possibly its path.
       Do not use a <SYNTAX>using-directive</SYNTAX>.
     </SUMMARY>
@@ -473,10 +455,10 @@ Tashana Landray
         <SUBSECTION title="Unnamed Namespaces">
           <ul>
             <li> Unnamed namespaces are allowed and even encouraged in
-                 <code>.cc</code> files, to avoid runtime naming
+                 <code>.cpp</code> files, to avoid runtime naming
                  conflicts:
                  <CODE_SNIPPET>
-                   namespace {                           // This is in a .cc file.
+                   namespace {                           // This is in a .cpp file.
 
                    // The content of a namespace is not indented
                    enum { kUnused, kEOF, kError };       // Commonly used tokens.
@@ -506,11 +488,10 @@ Tashana Landray
             Named namespaces should be used as follows:
           </p>
           <ul>
-            <li> Namespaces wrap the entire source file after includes,
-                 
-                 <a href="http://google-gflags.googlecode.com/">gflags</a>
-                 definitions/declarations, and forward declarations of classes
-                 from other namespaces:
+            <li> Namespaces wrap the entire source file after includes, <a
+            href="http://google-gflags.googlecode.com/">gflags</a>
+            definitions/declarations, and forward declarations of classes from
+            other namespaces:
                  <CODE_SNIPPET>
                    // In the .h file
                    namespace mynamespace {
@@ -526,7 +507,7 @@ Tashana Landray
                    }  // namespace mynamespace
                  </CODE_SNIPPET>
                  <CODE_SNIPPET>
-                   // In the .cc file
+                   // In the .cpp file
                    namespace mynamespace {
 
                    // Definition of functions is within scope of the namespace.
@@ -537,7 +518,7 @@ Tashana Landray
                    }  // namespace mynamespace
                  </CODE_SNIPPET>
                  <p>
-                   The typical <code>.cc</code> file might have more
+                   The typical <code>.cpp</code> file might have more
                    complex detail, including the need to reference classes
                    in other namespaces.
                  </p>
@@ -557,7 +538,7 @@ Tashana Landray
                  </CODE_SNIPPET>
                  </li>
 
-            
+
 
             <li> Do not declare anything in namespace
                  <code>std</code>, not even forward declarations of
@@ -577,21 +558,21 @@ Tashana Landray
                  </li>
 
             <li> You may use a <SYNTAX>using-declaration</SYNTAX>
-                 anywhere in a <code>.cc</code> file, and in functions,
+                 anywhere in a <code>.cpp</code> file, and in functions,
                  methods or classes in <code>.h</code> files.
                  <CODE_SNIPPET>
-                   // OK in .cc files.
+                   // OK in .cpp files.
                    // Must be in a function, method or class in .h files.
                    using ::foo::bar;
                  </CODE_SNIPPET>
                  </li>
 
             <li> Namespace aliases are allowed anywhere in a
-                 <code>.cc</code> file, anywhere inside the named
+                 <code>.cpp</code> file, anywhere inside the named
                  namespace that wraps an entire <code>.h</code> file,
                  and in functions and methods.
                  <CODE_SNIPPET>
-                   // Shorten access to some commonly used names in .cc files.
+                   // Shorten access to some commonly used names in .cpp files.
                    namespace fbz = ::foo::bar::baz;
 
                    // Shorten access to some commonly used names (in a .h file).
@@ -620,11 +601,11 @@ Tashana Landray
           </ul>
         </SUBSECTION>
 
-        
 
-        
 
-        
+
+
+
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -657,7 +638,7 @@ Tashana Landray
         enclosing class scope rather than polluting the outer scope
         with the class name.  Nested classes can be forward declared
         within the enclosing class and then defined in the
-        <code>.cc</code> file to avoid including the nested class
+        <code>.cpp</code> file to avoid including the nested class
         definition in the enclosing class declaration, since the
         nested class definition is usually only relevant to the
         implementation.
@@ -672,7 +653,7 @@ Tashana Landray
         Do not make nested classes public unless they are actually
         part of the interface, e.g., a class that holds a set of
         options for some method.
-        
+
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -715,7 +696,7 @@ Tashana Landray
         </p>
         <p>
           If you must define a nonmember function and it is only
-          needed in its <code>.cc</code> file, use an unnamed
+          needed in its <code>.cpp</code> file, use an unnamed
           <a HREF="#Namespaces">namespace</a> or <code>static</code>
           linkage (eg <code>static int Foo() {...}</code>) to limit
           its scope.
@@ -820,7 +801,7 @@ Tashana Landray
         rule completely disallows <code>vector</code> (use C arrays instead), or
         <code>string</code> (use <code>const char []</code>).
       </p>
-      
+
       <p>
         If you need a static or global variable of a class type, consider
         initializing a pointer (which will never be freed), from either your
@@ -828,8 +809,8 @@ Tashana Landray
         pointer, not a "smart" pointer, since the smart pointer's destructor
         will have the order-of-destructor issue that we are trying to avoid.
       </p>
-      
-      
+
+
     </BODY>
   </STYLEPOINT>
 </CATEGORY>
@@ -876,7 +857,7 @@ Tashana Landray
                constructor code will be called before
                <code>main()</code>, possibly breaking some implicit
                assumptions in the constructor code.  For instance,
-               
+
                <a href="http://google-gflags.googlecode.com/">gflags</a>
                will not yet have been initialized.
                </li>
@@ -929,7 +910,7 @@ Tashana Landray
           If your class inherits from an existing class but you add no
           new member variables, you are not required to have a default
           constructor.
-          
+
         </p>
       </DECISION>
     </BODY>
@@ -970,7 +951,7 @@ Tashana Landray
           The exception is copy constructors, which, in the rare
           cases when we allow them, should probably not be
           <code>explicit</code>.
-          
+
           Classes that are intended to be
           transparent wrappers around other classes are also
           exceptions.
@@ -1027,12 +1008,12 @@ Tashana Landray
         <p>
           If your class does not need a copy constructor or assignment
           operator, you must explicitly disable them.
-          
-          
+
+
           To do so, add dummy declarations for the copy constructor and
           assignment operator in the <code>private:</code> section of your
           class, but do not provide any corresponding definition (so that
-          any attempt to use them results in a link error). 
+          any attempt to use them results in a link error).
         </p>
         <p>
           For convenience, a <code>DISALLOW_COPY_AND_ASSIGN</code> macro
@@ -1060,7 +1041,7 @@ Tashana Landray
         </CODE_SNIPPET>
         <p>
         </p>
-        
+
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -1152,7 +1133,7 @@ Tashana Landray
         <p>
           Make your destructor <code>virtual</code> if necessary. If
           your class has virtual methods, its destructor
-          
+
           should be virtual.
         </p>
         <p>
@@ -1352,7 +1333,7 @@ Tashana Landray
       access to them through accessor functions as needed (for
       technical reasons, we allow data members of a test fixture class
       to be <code>protected</code> when using
-      
+
       <A HREF="http://code.google.com/p/googletest/">
       Google Test</A>). Typically a variable would be
       called <code>foo_</code> and the accessor function
@@ -1404,7 +1385,7 @@ Tashana Landray
         should be the last thing in the class. See <a HREF="#Copy_Constructors">Copy Constructors</a>.
       </p>
       <p>
-        Method definitions in the corresponding <code>.cc</code> file
+        Method definitions in the corresponding <code>.cpp</code> file
         should be the same as the declaration order, as much as possible.
       </p>
       <p>
@@ -1437,7 +1418,7 @@ Tashana Landray
       <p>
         You could find long and complicated functions when working
         with
-        
+
         some
         code.  Do not be intimidated by modifying existing
         code: if working with such a function proves to be difficult,
@@ -1450,17 +1431,17 @@ Tashana Landray
 </CATEGORY>
 
 <CATEGORY title="Google-Specific Magic">
-  
+
   <p>
     There are various tricks and utilities that we use to make C++
     code more robust, and various ways we use C++ that may differ from
     what you see elsewhere.
   </p>
 
-  
+
 
   <STYLEPOINT title="Smart Pointers">
-    
+
     <SUMMARY>
       If you actually need pointer semantics, <code>scoped_ptr</code>
       is great.  You should only use <code>std::tr1::shared_ptr</code>
@@ -1471,7 +1452,7 @@ Tashana Landray
     <BODY>
       <DEFINITION>
         "Smart" pointers are objects that act like pointers, but automate
-        management of the underlying memory. 
+        management of the underlying memory.
       </DEFINITION>
       <PROS>
         Smart pointers are extremely useful for preventing memory leaks, and
@@ -1500,7 +1481,7 @@ Tashana Landray
           Safe with const referents (i.e. <code>shared_ptr&lt;const
           T&gt;</code>). Reference-counted pointers with non-const referents
           can occasionally be the best design, but try to rewrite with single
-          owners where possible. 
+          owners where possible.
           </dd>
         </dl>
       </DECISION>
@@ -1522,7 +1503,7 @@ Tashana Landray
         positives can be ignored by putting <code>// NOLINT</code> at
         the end of the line.
       </p>
-      
+
       <p>
         Some projects have instructions on how to run <code>cpplint.py</code>
         from their project tools. If the project you are contributing to does
@@ -1531,7 +1512,7 @@ Tashana Landray
     </BODY>
   </STYLEPOINT>
 
-  
+
 </CATEGORY>
 
 <CATEGORY title="Other C++ Features">
@@ -1567,7 +1548,7 @@ Tashana Landray
           void Foo(const string &amp;in, string *out);
         </CODE_SNIPPET>
         <p>
-          In fact it is a very strong convention in Google code that input
+          In fact it is a very strong convention in Unity code that input
           arguments are values or <code>const</code> references while
           output arguments are pointers.  Input parameters may be
           <code>const</code> pointers, but we never allow
@@ -1627,7 +1608,7 @@ Tashana Landray
         name with some information about the arguments, e.g.,
         <code>AppendString()</code>, <code>AppendInt()</code> rather
         than just <code>Append()</code>.
-        
+
       </DECISION>
     </BODY>
   </STYLEPOINT>
@@ -1692,7 +1673,7 @@ Tashana Landray
         overwriting bugs: "It ran fine on my machine, but dies
         mysteriously in production".
       </CONS>
-      
+
       <DECISION>
         Use a safe allocator instead, such as
         <code>scoped_ptr</code>/<code>scoped_array</code>.
@@ -1738,7 +1719,7 @@ Tashana Landray
           nested functions, without the obscuring and error-prone
           bookkeeping of error codes.</li>
 
-          
+
 
           <li>Exceptions are used by most other modern
           languages.  Using them in C++ would make it more consistent with
@@ -1819,12 +1800,12 @@ Tashana Landray
           error-prone.  We don't believe that the available alternatives to
           exceptions, such as error codes and assertions, introduce a
           significant burden.
-          
+
         </p>
         <p>
           Our advice against using exceptions is not predicated on
           philosophical or moral grounds, but practical ones.
-          
+
           Because we'd like to use our open-source
           projects at Google and it's difficult to do so if those projects
           use exceptions, we need to advise against exceptions in Google
@@ -1887,7 +1868,7 @@ Tashana Landray
         </p>
         <p>
           If you think you truly cannot use those ideas,
-          
+
           you may use RTTI.  But think twice
           about it.  :-)  Then think twice again.
           Do not hand-implement an RTTI-like workaround. The arguments
@@ -1924,10 +1905,10 @@ Tashana Landray
         <p>
           Do not use C-style casts.  Instead, use these C++-style
           casts.
-          
+
         </p>
         <ul>
-          
+
           <li> Use <code>static_cast</code> as the equivalent of a
                C-style cast that does value conversion, or when you need to explicitly up-cast
                a pointer from a class to its superclass.
@@ -1935,13 +1916,13 @@ Tashana Landray
           <li> Use <code>const_cast</code> to remove the <code>const</code>
                qualifier (see <a HREF="#Use_of_const">const</a>).
                </li>
-          
-          
+
+
           <li> Use <code>reinterpret_cast</code> to do unsafe
                conversions of pointer types to and from integer and
                other pointer types. Use this only if you know what you are
                doing and you understand the aliasing issues.
-               
+
                </li>
           <li> Do not use <code>dynamic_cast</code> except in test code.
                If you need to know type information at runtime in this way
@@ -1980,7 +1961,7 @@ Tashana Landray
         internationalization.
       </CONS>
       <DECISION>
-        
+
         <p>
           Do not use streams, except where required by a logging interface.
           Use <code>printf</code>-like routines instead.
@@ -2176,7 +2157,7 @@ Tashana Landray
           describing.  However, this consistency argument doesn't
           apply in this case, because the "don't go crazy" dictum
           eliminates most of the uses you'd have to be consistent with.
-          
+
           Putting the <code>const</code> first is arguably more readable,
           since it follows English in putting the "adjective"
           (<code>const</code>) before the "noun" (<code>int</code>).
@@ -2193,10 +2174,10 @@ Tashana Landray
   <STYLEPOINT title="Integer Types">
     <SUMMARY>
       Of the built-in C++ integer types, the only one used
-      
+
       is <code>int</code>.  If a program needs a variable of a different
       size, use
-      
+
       a precise-width integer type from
       <code>&lt;stdint.h&gt;</code>, such as <code>int16_t</code>.
     </SUMMARY>
@@ -2216,7 +2197,7 @@ Tashana Landray
       </CONS>
       <DECISION>
         <p>
-          
+
           <code>&lt;stdint.h&gt;</code> defines
           types like <code>int16_t</code>, <code>uint32_t</code>,
           <code>int64_t</code>, etc.
@@ -2232,7 +2213,7 @@ Tashana Landray
           going to be too big, e.g., loop counters. Use plain old
           <code>int</code> for such things. You should assume that an
           <code>int</code> is
-          
+
           at least 32 bits,
           but don't assume that it has more than 32 bits.
           If you need a 64-bit integer type, use
@@ -2243,7 +2224,7 @@ Tashana Landray
           For integers we know can be "big",
            use
           <code>int64_t</code>.
-          
+
         </p>
         <p>
           You should not use the unsigned integer types such as
@@ -2252,10 +2233,10 @@ Tashana Landray
           rather than a number, or unless you need defined
           twos-complement overflow. In particular, do not use unsigned
           types to say a number will never be negative.  Instead, use
-          
+
           assertions for this.
         </p>
-        
+
       </DECISION>
 
       <SUBSECTION title="On Unsigned Integers">
@@ -2336,7 +2317,7 @@ Tashana Landray
                 <td><code>%p</code></td>
                 <td> </td>
               </tr>
-              
+
               <tr align="center">
                 <td><code>int64_t</code></td>
                 <td><code>%qd</code>,
@@ -2344,7 +2325,7 @@ Tashana Landray
                 <td><code>%"PRId64"</code></td>
                 <td/>
               </tr>
-              
+
               <tr align="center">
                 <td><code>uint64_t</code></td>
                 <td><code>%qu</code>,
@@ -2354,7 +2335,7 @@ Tashana Landray
                     <code>%"PRIx64"</code></td>
                 <td/>
               </tr>
-              
+
               <tr align="center">
                 <td><code>size_t</code></td>
                 <td><code>%u</code></td>
@@ -2368,7 +2349,7 @@ Tashana Landray
                 <td><code>%"PRIdS"</code></td>
                 <td>C99 specifies <code>%zd</code></td>
               </tr>
-              
+
             </TBODY>
           </table>
           <p>
@@ -2385,7 +2366,7 @@ Tashana Landray
             compiler will treat as <code>printf("x = %30u\n",
             x)</code>.
           </p>
-          
+
           </li>
 
         <li> Remember that <code>sizeof(void *)</code> !=
@@ -2396,13 +2377,13 @@ Tashana Landray
         <li> You may need to be careful with structure alignments,
              particularly for structures being stored on disk. Any
              class/structure with a
-             
+
              <code>int64_t</code>/<code>uint64_t</code>
              member will by default end up being 8-byte aligned on a 64-bit
              system. If you have such structures being shared on disk
              between 32-bit and 64-bit code, you will need to ensure
              that they are packed the same on both architectures.
-             
+
              Most compilers offer a way to alter
              structure alignment.  For gcc, you can use
              <code>__attribute__((packed))</code>.  MSVC offers
@@ -2411,10 +2392,10 @@ Tashana Landray
              </li>
 
         <li>
-             
+
              Use the <code>LL</code> or <code>ULL</code> suffixes as
              needed to create 64-bit constants.  For example:
-             
+
              <CODE_SNIPPET>
              int64_t my_value = 0x123456789LL;
              uint64_t my_mask = 3ULL &lt;&lt; 48;
@@ -2555,12 +2536,12 @@ Tashana Landray
       Some Boost libraries encourage coding practices which can hamper
       readability, such as metaprogramming and other advanced template
       techniques, and an excessively "functional" style of programming.
-      
+
     </CONS>
     <DECISION>
-      
+
       <div>
-        
+
         In order to maintain a high level of readability for all contributors
         who might read and maintain code, we only allow an approved subset of
         Boost features.  Currently, the following libraries are permitted:
@@ -2662,11 +2643,11 @@ Tashana Landray
     constant, a macro, etc., without requiring us to search for the
     declaration of that entity. The pattern-matching engine in our
     brains relies a great deal on these naming rules.
-    
+
   </p>
   <p>
     Naming rules are pretty arbitrary, but
-    
+
     we feel that consistency is more important than individual preferences
     in this area, so regardless of whether you find them sensible or not,
     the rules are the rules.
@@ -2702,7 +2683,7 @@ Tashana Landray
         <p>
           Type and variable names should typically be nouns: e.g.,
           <code>FileOpener</code>,
-          
+
           <code>num_errors</code>.
         </p>
         <p>
@@ -2749,7 +2730,7 @@ Tashana Landray
       Filenames should be all lowercase and can include underscores
       (<code>_</code>) or dashes (<code>-</code>).  Follow the
       convention that your
-      
+
       project
       uses. If there is no consistent local pattern to follow, prefer "_".
     </SUMMARY>
@@ -2759,14 +2740,14 @@ Tashana Landray
       </p>
       <p>
         <code>
-          my_useful_class.cc<br/>
-          my-useful-class.cc<br/>
-          myusefulclass.cc<br/>
-          myusefulclass_test.cc  // _unittest and _regtest are deprecated.<br/>
+          my_useful_class.cpp<br/>
+          my-useful-class.cpp<br/>
+          myusefulclass.cpp<br/>
+          myusefulclass_test.cpp  // _unittest and _regtest are deprecated.<br/>
         </code>
       </p>
       <p>
-        C++ files should end in <code>.cc</code> and header files
+        C++ files should end in <code>.cpp</code> and header files
         should end in <code>.h</code>.
       </p>
       <p>
@@ -2778,7 +2759,7 @@ Tashana Landray
         use <code>http_server_logs.h</code> rather
         than <code>logs.h</code>.  A very common case is to have a
         pair of files called, e.g., <code>foo_bar.h</code>
-        and <code>foo_bar.cc</code>, defining a class
+        and <code>foo_bar.cpp</code>, defining a class
         called <code>FooBar</code>.
       </p>
       <p>
@@ -2791,7 +2772,7 @@ Tashana Landray
       </p>
       <CODE_SNIPPET>
         url_table.h      // The class declaration.
-        url_table.cc     // The class definition.
+        url_table.cpp     // The class definition.
         url_table-inl.h  // Inline functions that include lots of code.
       </CODE_SNIPPET>
       <p>
@@ -2893,18 +2874,17 @@ Tashana Landray
 
   <STYLEPOINT title="Constant Names">
     <SUMMARY>
-      Use a <code>k</code> followed by mixed case:
-      <code>kDaysInAWeek</code>.
+      Use upper-case with underscores between words:
+      <code>DAYS_IN_A_WEEK</code>.
     </SUMMARY>
     <BODY>
       <p>
         All compile-time constants, whether they are declared locally,
-        globally, or as part of a class, follow a slightly different
-        naming convention from other variables. Use a <code>k</code>
-        followed by words with uppercase first letters:
+        globally, or as part of a class, follow a slightly different naming
+        convention from other variables. Use upper-case with underscores.
       </p>
       <CODE_SNIPPET>
-        const int kDaysInAWeek = 7;
+        const int DAYS_IN_A_WEEK = 7;
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
@@ -2965,11 +2945,11 @@ Tashana Landray
   </STYLEPOINT>
 
   <STYLEPOINT title="Namespace Names">
-    
+
     <SUMMARY>
       Namespace names are all lower-case, and based on project names and
       possibly their directory structure:
-      <code>google_awesome_project</code>.
+      <code>my_awesome_project</code>.
     </SUMMARY>
     <BODY>
       <p>
@@ -2982,42 +2962,23 @@ Tashana Landray
   <STYLEPOINT title="Enumerator Names">
     <SUMMARY>
       Enumerators should be named <i>either</i> like
-      <A HREF="#Constant_Names">constants</A> or like
-      <A HREF="#Macro_Names">macros</A>: either <code>kEnumName</code>
-      or <code>ENUM_NAME</code>.
+      <A HREF="#Constant_Names">constants</A> and
+      <A HREF="#Macro_Names">macros</A>: <code>ENUM_NAME</code>.
     </SUMMARY>
     <BODY>
       <p>
         Preferably, the individual enumerators should be named like
-        <A HREF="#Constant_Names">constants</A>.  However, it is also
-        acceptable to name them like <A HREF="#Macro_Names">macros</A>.    The enumeration name,
-        <code>UrlTableErrors</code> (and
-        <code>AlternateUrlTableErrors</code>), is a type, and
+        <A HREF="#Constant_Names">constants</A>.  The enumeration name,
+        <code>UrlTableErrors</code>, is a type, and
         therefore mixed case.
       </p>
       <CODE_SNIPPET>
         enum UrlTableErrors {
-          kOK = 0,
-          kErrorOutOfMemory,
-          kErrorMalformedInput,
-        };
-        enum AlternateUrlTableErrors {
-          OK = 0,
-          OUT_OF_MEMORY = 1,
-          MALFORMED_INPUT = 2,
+          OK,
+          OUT_OF_MEMORY,
+          MALFORMED_INPUT,
         };
       </CODE_SNIPPET>
-      <p>
-        Until January 2009, the style was to name enum values like
-        <A HREF="#Macro_Names">macros</A>.  This caused problems with
-        name collisions between enum values and macros.  Hence, the
-        change to prefer constant-style naming was put in place.  New
-        code should prefer constant-style naming if possible.
-        However, there is no reason to change old code to use
-        constant-style names, unless the old names are actually
-        causing a compile-time problem.
-      </p>
-      
     </BODY>
   </STYLEPOINT>
 
@@ -3077,14 +3038,10 @@ Tashana Landray
     names that you must then explain through comments.
   </p>
   <p>
-    When writing your comments, write for your audience: the next
-    
-    contributor
-    who will need to understand your code.  Be generous &#8212; the next
-    one may be you!
+    When writing your comments, write for your audience: the next contributor
+    who will need to understand your code.  Be generous &#8212; the next one
+    may be you!
   </p>
-
-  
 
   <STYLEPOINT title="Comment Style">
     <SUMMARY>
@@ -3107,28 +3064,23 @@ Tashana Landray
     </SUMMARY>
     <BODY>
       <SUBSECTION title="Legal Notice and Author Line">
-        
-        
         <p>
           Every file should contain the following items, in order:
           <ul>
+            <li>a optional mode line,
+            <code>// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-</code></li>
             <li>a copyright statement (for example,
-                <code>Copyright 2008 Google Inc.</code>)</li>
-            <li>a license boilerplate.  Choose the appropriate boilerplate
-                for the license used by the project (for example,
-                Apache 2.0, BSD, LGPL, GPL)</li>
+                <code>Copyright (C) 2011 Canonical Ltd</code>)</li>
+            <li>the license boilerplate.</li>
             <li>an author line to identify the original author of the
                 file</li>
           </ul>
         </p>
         <p>
           If you make significant changes to a file that someone else
-          originally wrote, add yourself to the author line. This can
-          be very helpful when another
-          
-          contributor
-          has questions about the file and needs to know whom to contact
-          about it.
+          originally wrote, add yourself to the author line. This can be very
+          helpful when another contributor has questions about the file and
+          needs to know whom to contact about it.
         </p>
       </SUBSECTION>
 
@@ -3140,18 +3092,18 @@ Tashana Landray
         <p>
           Generally a <code>.h</code> file will describe the classes
           that are declared in the file with an overview of what they
-          are for and how they are used. A <code>.cc</code> file
+          are for and how they are used. A <code>.cpp</code> file
           should contain more information about implementation details
           or discussions of tricky algorithms. If you feel the
           implementation details or a discussion of the algorithms
           would be useful for someone reading the <code>.h</code>,
           feel free to put it there instead, but mention in the
-          <code>.cc</code> that the documentation is in the
+          <code>.cpp</code> that the documentation is in the
           <code>.h</code> file.
         </p>
         <p>
           Do not duplicate comments in both the <code>.h</code> and
-          the <code>.cc</code>. Duplicated comments diverge.
+          the <code>.cpp</code>. Duplicated comments diverge.
         </p>
       </SUBSECTION>
     </BODY>
@@ -3469,7 +3421,7 @@ Tashana Landray
       <p>
         <code>TODO</code>s should include the string <code>TODO</code> in
         all caps, followed by the
-        
+
         name, e-mail address, or other
         identifier
         of the person who can best provide context about the problem
@@ -3479,11 +3431,11 @@ Tashana Landray
         A <code>TODO</code> is not a commitment that the person referenced
         will fix the problem.  Thus when you create a <code>TODO</code>, it is
         almost always your
-        
+
         name
         that is given.
       </p>
-      
+
       <CODE_SNIPPET>
         // TODO(kl@gmail.com): Use a "*" here for concatenation operator.
         // TODO(Zeke) change this to use relations.
@@ -3508,7 +3460,7 @@ Tashana Landray
       before the declaration of the interface or on the same line as the
       declaration.
       </p>
-      
+
       <p>
       After the word <code>DEPRECATED</code>, write your name, e-mail address,
       or other identifier in parentheses.
@@ -3530,7 +3482,7 @@ Tashana Landray
       directions, find the person who created the deprecation and ask them for
       help using the new interface point.
       </p>
-      
+
     </BODY>
   </STYLEPOINT>
 
@@ -3539,19 +3491,19 @@ Tashana Landray
 <CATEGORY title="Formatting">
   <p>
     Coding style and formatting are pretty arbitrary, but a
-    
+
     project
     is much easier to follow if everyone uses the same style. Individuals
     may not agree with every aspect of the formatting rules, and some of
     the rules may take some getting used to, but it is important that all
-    
+
     project contributors
     follow the style rules so that
-    
+
     they
     can all read and understand everyone's code easily.
   </p>
-  
+
   <p>
     To help you format code correctly, we've created a <A HREF="http://google-styleguide.googlecode.com/svn/trunk/google-c-style.el">settings
     file for emacs</A>.
@@ -3563,7 +3515,7 @@ Tashana Landray
       long.
     </SUMMARY>
     <BODY>
-      
+
       <p>
         We recognize that this rule is controversial, but so much existing
         code already adheres to it, and we feel that consistency is
@@ -3571,7 +3523,7 @@ Tashana Landray
       </p>
       <PROS>
           Those who favor
-          
+
           this rule argue
           that it is rude to force them to resize their windows and there
           is no need for anything longer.  Some folks are used to having
@@ -3584,13 +3536,13 @@ Tashana Landray
           Proponents of change argue that a wider line can make code
           more readable.  The 80-column limit is an hidebound
           throwback to 1960s mainframes;
-          
+
           modern equipment has
           wide screens that can easily show longer lines.
       </CONS>
       <DECISION>
         <p>
-          
+
           80 characters is the maximum.
         </p>
         <p>
@@ -3607,7 +3559,7 @@ Tashana Landray
           Exception:  you needn't be concerned about
           <a href="#The__define_Guard">header guards</a>
           that exceed the maximum length.
-          
+
         </p>
       </DECISION>
     </BODY>
@@ -3626,10 +3578,10 @@ Tashana Landray
         it may be appropriate to hard-code the non-ASCII string(s) used in
         those data files as delimiters.  More commonly, unittest code
         (which does not
-        
+
         need to be localized) might contain non-ASCII strings.  In such
         cases, you should use UTF-8, since that is
-        
+
         an encoding understood by most tools able
         to handle more than just ASCII.
         Hex encoding is also OK, and encouraged where it enhances
@@ -3898,7 +3850,7 @@ Tashana Landray
         statements, but they are allowed if you like them;
         conditional or loop statements with complex conditions or
         statements may be more readable with curly braces. Some
-        
+
         projects
         require that an <CODE>if</CODE> must always always have an
         accompanying brace.
@@ -3960,7 +3912,7 @@ Tashana Landray
         simply
         <code>assert</code>:
       </p>
-      
+
       <CODE_SNIPPET>
         switch (var) {
           case 0: {  // 2 space indent
@@ -4067,9 +4019,7 @@ Tashana Landray
       <p>
         Note that when the code wraps in this example, both of
         the <code>&amp;&amp;</code> logical AND operators are at the
-        end of the line.  This is more common in Google code, though
-        wrapping all operators at the beginning of the line is also
-        allowed.  Feel free to insert extra parentheses judiciously,
+        end of the line.  Feel free to insert extra parentheses judiciously,
         because they can be very helpful in increasing readability
         when used appropriately.  Also note that you should always use the
         punctuation operators, such as <code>&amp;&amp;</code> and
@@ -4101,7 +4051,7 @@ Tashana Landray
     </BODY>
   </STYLEPOINT>
 
-  
+
 
   <STYLEPOINT title="Variable and Array Initialization">
     <SUMMARY>
@@ -4315,7 +4265,7 @@ Tashana Landray
           whitespace.  So:  Don't introduce trailing whitespace.  Remove it
           if you're already changing that line, or do it in a separate
           clean-up
-          
+
           operation (preferably when no-one else
           is working on the file).
         </p>
@@ -4412,7 +4362,7 @@ Tashana Landray
     discuss here.
   </p>
 
-  
+
 
   <STYLEPOINT title="Existing Non-conformant Code">
     <SUMMARY>
@@ -4432,91 +4382,6 @@ Tashana Landray
     </BODY>
   </STYLEPOINT>
 
-  
-
-  <STYLEPOINT title="Windows Code">
-    <SUMMARY>
-      
-      Windows programmers have developed their own set of coding
-      conventions, mainly derived from the conventions in Windows headers
-      and other Microsoft code.  We want to make it easy for anyone to
-      understand your code, so we have a single set of guidelines for
-      everyone writing C++ on any platform.
-    </SUMMARY>
-    <BODY>
-      <p>
-        It is worth reiterating a few of the guidelines that you might
-        forget if you are used to the prevalent Windows style:
-      </p>
-      <ul>
-        <li> Do not use Hungarian notation (for example, naming an
-             integer <code>iNum</code>). Use the Google naming conventions,
-             including the <code>.cc</code> extension for source files.
-             </li>
-        <li> Windows defines many of its own synonyms for primitive
-             types, such as <code>DWORD</code>, <code>HANDLE</code>, etc.
-             It is perfectly acceptable, and encouraged, that you use these
-             types when calling Windows API functions. Even so, keep as
-             close as you can to the underlying C++ types. For example, use
-             <code>const TCHAR *</code> instead of <code>LPCTSTR</code>.
-             </li>
-        <li> When compiling with Microsoft Visual C++, set the
-             compiler to warning level 3 or higher, and treat all
-             warnings as errors.
-             </li>
-        <li> Do not use <code>#pragma once</code>; instead use the
-             standard Google include guards.  The path in the include
-             guards should be relative to the top of your project
-             tree.
-             </li>
-        <li> In fact, do not use any nonstandard extensions, like
-             <code>#pragma</code> and <code>__declspec</code>, unless you
-             absolutely must.  Using <code>__declspec(dllimport)</code> and
-             <code>__declspec(dllexport)</code> is allowed; however, you
-             must use them through macros such as <code>DLLIMPORT</code>
-             and <code>DLLEXPORT</code>, so that someone can easily disable
-             the extensions if they share the code.
-             </li>
-      </ul>
-      <p>
-        However, there are just a few rules that we occasionally need
-        to break on Windows:
-      </p>
-      <ul>
-        <li> Normally we <a HREF="#Multiple_Inheritance">forbid
-             the use of multiple implementation inheritance</a>; however,
-             it is required when using COM and some ATL/WTL
-             classes. You may use multiple implementation inheritance
-             to implement COM or ATL/WTL classes and interfaces.
-             </li>
-        <li> Although you should not use exceptions in your own code,
-             they are used extensively in the ATL and some STLs,
-             including the one that comes with Visual C++. When using
-             the ATL, you should define <code>_ATL_NO_EXCEPTIONS</code> to
-             disable exceptions. You should investigate whether you can
-             also disable exceptions in your STL, but if not, it is OK to
-             turn on exceptions in the compiler. (Note that this is
-             only to get the STL to compile. You should still not
-             write exception handling code yourself.)
-             </li>
-        <li> The usual way of working with precompiled headers is to
-             include a header file at the top of each source file,
-             typically with a name like <code>StdAfx.h</code> or
-             <code>precompile.h</code>. To make your code easier to share
-             with other projects, avoid including this file explicitly
-             (except in <code>precompile.cc</code>), and use the
-             <code>/FI</code> compiler option to include the file
-             automatically.
-             </li>
-        <li> Resource headers, which are usually named
-             <code>resource.h</code> and contain only macros, do not need
-             to conform to these style guidelines.
-             </li>
-      </ul>
-    </BODY>
-  </STYLEPOINT>
-
-  
 </CATEGORY>
 
 <PARTING_WORDS>
@@ -4540,27 +4405,11 @@ Tashana Landray
     the discontinuity throws readers out of their rhythm when they
     go to read it. Try to avoid this.
   </p>
-  
+
   <p>
     OK, enough writing about writing code; the code itself is much
     more interesting. Have fun!
   </p>
 </PARTING_WORDS>
-
-<HR/>
-
-<p align="right">
-Revision 3.188
-</p>
-
-
-
-<address>
-Benjy Weinberger<br/>
-Craig Silverstein<br/>
-Gregory Eitzmann<br/>
-Mark Mentovai<br/>
-Tashana Landray
-</address>
 
 </GUIDE>
