@@ -105,9 +105,15 @@ RenderArg SwitcherView::CreateBaseArgForIcon (AbstractLauncherIcon *icon)
   arg.icon = icon;
   arg.alpha = 0.95f;
 
-  arg.backlight_intensity = 1.0f;
   if (icon == model_->Selection ())
+  {
     arg.keyboard_nav_hl = true;
+    arg.backlight_intensity = 1.0f;
+  }
+  else
+  {
+    arg.backlight_intensity = 0.7f;  
+  }
 
   return arg;
 }
@@ -178,7 +184,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat (nux::Geometry& background_geo
       first_flat = 0;
       last_flat = n_flat_icons;
     }
-    else if (selection >= 1 && selection <= n_flat_icons)
+    else if (selection >= 1 && selection <= n_flat_icons - 1)
     {
       first_flat = 1;
       last_flat = n_flat_icons;
@@ -186,15 +192,15 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat (nux::Geometry& background_geo
       half_fold_left = 0;
       half_fold_right = last_flat + 1;
     }
-    else if (selection == size - 1)
+    else if (selection >= size - 2)
     {
       first_flat = size - n_flat_icons - 1;
       last_flat = size - 1;
     }
     else
     {
-      first_flat = selection - n_flat_icons + 1;
-      last_flat = selection;
+      first_flat = selection - n_flat_icons + 2;
+      last_flat = selection + 1;
 
       half_fold_left = first_flat - 1;
       half_fold_right = last_flat + 1;
