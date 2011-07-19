@@ -42,7 +42,6 @@ private:
 
   Launcher     *_launcher;
   PlaceFactory *_factory;
-  sigc::connection _on_place_added_connection;
 
   guint32 _priority;
 };
