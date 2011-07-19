@@ -1,0 +1,9 @@
+PROJECT(guides)
+
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.html
+    COMMAND xsltproc -o ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.html ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.xsl ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.xml
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/styleguide.xsl ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.xml
+    )
+
+ADD_CUSTOM_TARGET(guides ALL DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/cppguide.html)
