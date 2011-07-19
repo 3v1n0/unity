@@ -40,14 +40,14 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _sort_priority = 0;
   
   _launcher->SetModel (_model);
-  _on_launcher_add_request_connection = (sigc::connection) _launcher->launcher_addrequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherAddRequest));
-  _on_launcher_remove_request_connection = (sigc::connection) _launcher->launcher_removerequest.connect (sigc::mem_fun (this, &LauncherController::OnLauncherRemoveRequest));
+  _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
+  _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
 
   _place_section = new PlaceLauncherSection (_launcher);
-  _on_place_section_icon_added_connection = (sigc::connection) _place_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
- 
+  _place_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
+
   _device_section = new DeviceLauncherSection (_launcher);
-  _on_device_section_icon_added_connection = (sigc::connection) _device_section->IconAdded.connect (sigc::mem_fun (this, &LauncherController::OnIconAdded));
+  _device_section->IconAdded.connect(sigc::mem_fun(this, &LauncherController::OnIconAdded));
 
   _num_workspaces = _screen->vpSize ().width () * _screen->vpSize ().height ();
   if(_num_workspaces > 1)
@@ -59,32 +59,14 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen *screen)
   _bamf_timer_handler_id = g_timeout_add (500, (GSourceFunc) &LauncherController::BamfTimerCallback, this);
 
   _remote_model = LauncherEntryRemoteModel::GetDefault();
-  _on_remote_model_entry_added_connection = (sigc::connection) _remote_model->entry_added.connect   (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteAdded));
-  _on_remote_model_entry_removed_connection = (sigc::connection) _remote_model->entry_removed.connect (sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteRemoved));
+  _remote_model->entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
+  _remote_model->entry_removed.connect(sigc::mem_fun (this, &LauncherController::OnLauncherEntryRemoteRemoved));
 }
 
 LauncherController::~LauncherController()
 {
-  if (_on_launcher_add_request_connection.connected ())
-    _on_launcher_add_request_connection.disconnect ();
-
-  if (_on_launcher_remove_request_connection.connected ())
-    _on_launcher_remove_request_connection.disconnect ();
-
-  if (_on_place_section_icon_added_connection.connected ())
-    _on_place_section_icon_added_connection.disconnect ();
-
-  if (_on_device_section_icon_added_connection.connected ())
-    _on_device_section_icon_added_connection.disconnect ();
-
   if (_bamf_timer_handler_id != 0)
     g_source_remove (_bamf_timer_handler_id);
-
-  if (_on_remote_model_entry_added_connection.connected ())
-    _on_remote_model_entry_added_connection.disconnect ();
-
-  if (_on_remote_model_entry_removed_connection.connected ())
-    _on_remote_model_entry_removed_connection.disconnect ();
 
   if (_matcher != NULL && _on_view_opened_id != 0)
     g_signal_handler_disconnect ((gpointer) _matcher, _on_view_opened_id);
