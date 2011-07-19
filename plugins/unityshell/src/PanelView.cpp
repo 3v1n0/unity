@@ -51,7 +51,7 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle ();
-  _on_panel_style_changed_connection = _style->changed.connect (sigc::mem_fun (this, &PanelView::ForceUpdateBackground));
+  _style->changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
   _bg_layer = new nux::ColorLayer (nux::Color (0xff595853), true);
 
@@ -66,31 +66,23 @@ PanelView::PanelView (NUX_FILE_LINE_DECL)
    AddPanelView(_menu_view, 1);
 
    SetCompositionLayout (_layout);
-   
+
    // Pannel tray shouldn't be an indicator view
    _tray = new PanelTray ();
    _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
    AddChild(_tray);
 
    _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
-  _on_object_added_connection = _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
-  _on_menu_pointer_moved_connection = _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
-  _on_entry_activate_request_connection = _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
-  _on_entry_activated_connection = _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  _on_synced_connection = _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
-  _remote->on_entry_show_menu.connect(sigc::mem_fun(this,
-                                                    &PanelView::OnEntryShowMenu));
+   _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+   _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
+   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
+   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
+   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
+   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 }
 
 PanelView::~PanelView ()
 {
-  _on_panel_style_changed_connection.disconnect ();
-  _on_object_added_connection.disconnect ();
-  _on_menu_pointer_moved_connection.disconnect ();
-  _on_entry_activate_request_connection.disconnect ();
-  _on_entry_activated_connection.disconnect ();
-  _on_synced_connection.disconnect ();
-
   _style->UnReference ();
 
   delete _bg_layer;
