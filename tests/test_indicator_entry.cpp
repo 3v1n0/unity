@@ -1,4 +1,4 @@
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/IndicatorEntry.h>
 
 #include <gtest/gtest.h>
 

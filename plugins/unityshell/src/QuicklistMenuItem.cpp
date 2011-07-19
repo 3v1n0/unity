@@ -23,7 +23,7 @@
 
 #include "Nux/Nux.h"
 #include "QuicklistMenuItem.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 #include <X11/Xlib.h>
 

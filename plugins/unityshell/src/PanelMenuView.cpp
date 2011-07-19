@@ -31,7 +31,7 @@
 
 #include "PanelMenuView.h"
 #include "PanelStyle.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 #include "WindowManager.h"
 

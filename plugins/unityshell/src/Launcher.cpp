@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+  // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -48,7 +48,9 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
+
+using namespace unity::ui;
 
 using namespace unity::ui;
 
@@ -309,7 +311,6 @@ Launcher::Launcher (nux::BaseWindow* parent,
     SettingsChanged (_settings, (gchar *)"shows-on-edge", this);
 
     SetDndEnabled (false, true);
-
 
     icon_renderer = AbstractIconRenderer::Ptr (new IconRenderer ());
     icon_renderer->SetTargetSize (_icon_size, _icon_image_size, _space_between_icons);

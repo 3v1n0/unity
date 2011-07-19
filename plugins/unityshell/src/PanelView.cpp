@@ -33,7 +33,7 @@
 
 #include "PanelStyle.h"
 #include "PanelIndicatorObjectView.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 #include "PanelView.h"
 

@@ -24,8 +24,6 @@
 
 #include <gdk/gdkx.h>
 
-#include <UnityCore/UnityCore.h>
-
 #include "Introspectable.h"
 #include "PanelIndicatorObjectView.h"
 

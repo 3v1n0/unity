@@ -34,7 +34,7 @@
 #include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "PlacesView.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 
 static void place_entry_activate_request (GVariant *payload, PlacesView *self);
 
