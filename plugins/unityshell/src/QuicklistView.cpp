@@ -111,7 +111,7 @@ QuicklistView::QuicklistView ()
 
   _current_item_index = 0;
 
-  SetAcceptkKeyNavFocus(true);
+  SetAcceptKeyNavFocus(true);
 }
 
 void
@@ -1565,7 +1565,6 @@ QuicklistView::InspectKeyEvent(unsigned int eventType,
       unsigned int keysym,
       const char* character)
 {
-  printf("QuicklistView::InspectKeyEvent\n");
   // The Quicklist accepts all key inputs.
   return true;
 }
