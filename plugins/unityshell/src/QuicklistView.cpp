@@ -111,7 +111,7 @@ QuicklistView::QuicklistView ()
 
   _current_item_index = 0;
 
-  SetAcceptkKeyNavFocus(true);
+  SetAcceptKeyNavFocus(true);
 }
 
 void
