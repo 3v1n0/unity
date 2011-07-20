@@ -90,6 +90,7 @@ public:
   string const& shortcut() const;
   ResultsModel::Ptr const& results() const;
   ResultsModel::Ptr const& global_results() const;
+  CategoriesModel::Ptr const& categories() const;
 
   Lens* owner_;
 
@@ -105,6 +106,7 @@ public:
   string shortcut_;
   ResultsModel::Ptr results_;
   ResultsModel::Ptr global_results_;
+  CategoriesModel::Ptr categories_;
 
   string private_connection_name_;
 
@@ -135,6 +137,7 @@ Lens::Impl::Impl(Lens* owner,
   , shortcut_(shortcut)
   , results_(new ResultsModel())
   , global_results_(new ResultsModel())
+  , categories_(new CategoriesModel())
   , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
 {
   proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
@@ -292,6 +295,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
   results_->swarm_name = results_model_name;
   global_results_->swarm_name = global_results_model_name;
+  categories_->swarm_name = categories_model_name;
 }
 
 void Lens::Impl::OnActiveChanged(bool is_active)
@@ -387,6 +391,11 @@ ResultsModel::Ptr const& Lens::Impl::global_results() const
   return global_results_;
 }
 
+CategoriesModel::Ptr const& Lens::Impl::categories() const
+{
+  return categories_;
+}
+
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
@@ -420,6 +429,7 @@ Lens::Lens(string const& id_,
   shortcut.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
   results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
+  categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
   active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
 }
 

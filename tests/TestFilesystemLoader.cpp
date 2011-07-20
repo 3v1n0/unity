@@ -3,6 +3,15 @@
 #include <gio/gio.h>
 
 using unity::dash::FilesystemLenses;
+using unity::dash::CategoriesModelIter;
+
+void
+OnCategoryAdded(CategoriesModelIter& iter)
+{
+  std::string name = iter.name;
+  
+  g_debug("CATEGORY: %s", name.c_str());
+}
 
 int
 main(int argc, char** argv)
@@ -22,7 +31,11 @@ main(int argc, char** argv)
     FilesystemLenses* lenses = static_cast<FilesystemLenses*>(data);
     lenses->GetLenses()[0]->Search("Hello");
     lenses->GetLenses()[0]->GlobalSearch("Goodbye");
-    return TRUE;
+
+    unity::dash::CategoriesModel::Ptr model = lenses->GetLenses()[0]->categories;
+    model->row_added.connect(sigc::ptr_fun(&OnCategoryAdded));
+
+    return FALSE;
   };
   g_timeout_add_seconds(5, callback, &lenses);
   
