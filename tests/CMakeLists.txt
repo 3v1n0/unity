@@ -287,6 +287,10 @@ add_executable (test-places-backend
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
+add_executable (test-filesystem-lenses
+                TestFilesystemLoader.cpp) 
+add_dependencies (test-filesystem-lenses unity-core-${UNITY_API_VERSION})
+
 #
 # GTest tests
 #

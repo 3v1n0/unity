@@ -45,15 +45,15 @@ public:
   ~DBusProxy();
 
   void Call(std::string const& method_name,
-            GVariant* parameters,
-            MethodCallback callback,
+            GVariant* parameters=NULL,
+            MethodCallback callback = sigc::ptr_fun(&NoReplyCallback),
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
-
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;
 
+  static void NoReplyCallback(GVariant* v) {};
   class Impl;
 private:
   Impl *pimpl;

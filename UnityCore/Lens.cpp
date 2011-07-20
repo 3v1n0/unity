@@ -51,6 +51,12 @@ public:
        bool visible,
        string const& shortcut);
 
+  ~Impl();
+
+  void OnProxyConnected();
+  void OnProxyDisconnected();
+
+
   string const& id();
   string const& dbus_name();
   string const& dbus_path();
@@ -61,8 +67,6 @@ public:
   bool visible();
   string const& shortcut();
 
-
-  ~Impl();
 
   Lens* owner_;
 
@@ -101,10 +105,23 @@ Lens::Impl::Impl(Lens* owner,
   , visible_(visible)
   , shortcut_(shortcut)
   , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
-{}
+{
+  proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
+  proxy_.disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
+}
 
 Lens::Impl::~Impl()
 {}
+
+void Lens::Impl::OnProxyConnected()
+{
+  proxy_.Call("InfoRequest");
+}
+
+void Lens::Impl::OnProxyDisconnected()
+{
+
+}
 
 string const& Lens::Impl::id()
 {

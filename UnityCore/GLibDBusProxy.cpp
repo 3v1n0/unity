@@ -70,7 +70,6 @@ public:
             int timeout_msec);
   static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
 
-
   DBusProxy* owner_;
   string name_;
   string object_path_;
@@ -240,8 +239,11 @@ void DBusProxy::Impl::Call(string const& method_name,
                       DBusProxy::Impl::OnCallCallback,
                       data);
   }
-  LOG_WARNING(logger) << "Cannot call method " << method_name
-                      << " proxy " << object_path_ << " does not exist";
+  else
+  {
+    LOG_WARNING(logger) << "Cannot call method " << method_name
+                        << " proxy " << object_path_ << " does not exist";
+  }
 }
 
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
