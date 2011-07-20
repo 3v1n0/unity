@@ -93,7 +93,7 @@ public:
     dee_model_set_tag(model_, iter_, tag_, renderer);
   }
 
-  void* get_renderer_real()
+  void* get_renderer_real() const
   {
     return dee_model_get_tag(model_, iter_, tag_);
   }
@@ -102,7 +102,6 @@ public:
   DeeModelIter* iter_;
   DeeModelTag* tag_;
 };
-
 
 class ResultsModel::Impl
 {

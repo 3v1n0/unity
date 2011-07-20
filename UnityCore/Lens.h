@@ -46,7 +46,10 @@ public:
        std::string const& shortcut="");
 
   ~Lens();
-
+  
+  void GlobalSearch(std::string const& search_string);
+  void Search(std::string const& search_string);
+  
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
   nux::RWProperty<std::string> dbus_path;
@@ -57,9 +60,13 @@ public:
   nux::RWProperty<bool> visible;
   nux::RWProperty<bool> search_in_global;
   nux::RWProperty<std::string> shortcut;
-
   nux::RWProperty<ResultsModel::Ptr> results;
   nux::RWProperty<ResultsModel::Ptr> global_results;
+
+  nux::Property<bool> active;
+
+  sigc::signal<void, std::string const&> search_finished;
+  sigc::signal<void, std::string const&> global_search_finished;
   
   class Impl;
 private:

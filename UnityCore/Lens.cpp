@@ -59,6 +59,8 @@ public:
   void OnProxyConnected();
   void OnProxyDisconnected();
 
+  void OnSearchFinished(GVariant* parameters);
+  void OnGlobalSearchFinished(GVariant* parameters);
   void OnChanged(GVariant* parameters);
   URIPatterns URIPatternsFromIter(GVariantIter* iter);
   MIMEPatterns MIMEPatternsFromIter(GVariantIter* iter);
@@ -72,6 +74,10 @@ public:
                         string const& filters_model_name,
                         URIPatterns uri_patterns,
                         MIMEPatterns mime_patterns);
+
+  void OnActiveChanged(bool is_active);
+  void GlobalSearch(std::string const& search_string);
+  void Search(std::string const& search_string);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -135,6 +141,8 @@ Lens::Impl::Impl(Lens* owner,
   proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
   proxy_.disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
   proxy_.Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
+  proxy_.Connect("SearchFinished", sigc::mem_fun(this, &Lens::Impl::OnSearchFinished));
+  proxy_.Connect("GlobalSearchFinished", sigc::mem_fun(this, &Lens::Impl::OnGlobalSearchFinished));
 }
 
 Lens::Impl::~Impl()
@@ -143,10 +151,31 @@ Lens::Impl::~Impl()
 void Lens::Impl::OnProxyConnected()
 {
   proxy_.Call("InfoRequest");
+  proxy_.Call("SetActive", g_variant_new("b", owner_->active ? TRUE : FALSE));
 }
 
 void Lens::Impl::OnProxyDisconnected()
 {
+}
+
+void Lens::Impl::OnSearchFinished(GVariant* parameters)
+{
+  char* search_string;
+
+  g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
+  owner_->search_finished(search_string);
+
+  g_free(search_string);
+}
+
+void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
+{
+  char* search_string;
+
+  g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
+  owner_->global_search_finished(search_string);
+
+  g_free(search_string);
 }
 
 void Lens::Impl::OnChanged(GVariant* parameters)
@@ -258,12 +287,45 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
   if (private_connection_name_ != private_connection_name)
   {
+    // FIXME: Update all the models as they are no longer valid when we use this
     private_connection_name_ = private_connection_name;
-    // FIXME: Remove all the models as they are no longer valid when we use this
   }
 
   results_->swarm_name = results_model_name;
   global_results_->swarm_name = global_results_model_name;
+}
+
+void Lens::Impl::OnActiveChanged(bool is_active)
+{
+  proxy_.Call("SetActive", g_variant_new("b", is_active ? TRUE : FALSE));
+}
+
+void Lens::Impl::GlobalSearch(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Global Searching "<< id_ << " for " << search_string;
+
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+  
+  proxy_.Call("GlobalSearch",
+              g_variant_new("(sa{sv})",
+                            search_string.c_str(),
+                            &b));
+  g_variant_builder_clear(&b);
+}
+
+void Lens::Impl::Search(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Searching "<< id_ << " for " << search_string;
+  
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+  proxy_.Call("Search",
+              g_variant_new("(sa{sv})",
+                            search_string.c_str(),
+                            &b));
+  g_variant_builder_clear(&b);
 }
 
 string const& Lens::Impl::id() const
@@ -359,11 +421,22 @@ Lens::Lens(string const& id_,
   shortcut.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
   results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
+  active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
 }
 
 Lens::~Lens()
 {
   delete pimpl;
+}
+
+void Lens::GlobalSearch(std::string const& search_string)
+{
+  pimpl->GlobalSearch(search_string);
+}
+
+void Lens::Search(std::string const& search_string)
+{
+  pimpl->Search(search_string);
 }
 
 }

@@ -46,7 +46,7 @@ public:
 
 protected:
   virtual void set_renderer_real(void* renderer) = 0;
-  virtual void* get_renderer_real() = 0;
+  virtual void* get_renderer_real() const = 0;
 };
 
 class ResultsModel : public sigc::trackable, boost::noncopyable
