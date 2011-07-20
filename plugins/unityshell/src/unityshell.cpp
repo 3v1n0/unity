@@ -798,15 +798,23 @@ const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
   CompWindowList::iterator it = pl.end();
-  const std::list<Window>& xwns = nux::XInputWindow::NativeHandleList();
+  CompWindowList::iterator begin = pl.begin();
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
 
-  while (it != pl.begin())
+  unsigned int size = xwns.size ();
+
+  while (it != begin)
   {
     --it;
-
-    if (std::find(xwns.begin(), xwns.end(), (*it)->id()) != xwns.end())
+    
+    auto id = (*it)->id ();
+    for (unsigned int i = 0; i < size; ++i)
     {
-      it = pl.erase(it);
+      if (xwns[i] == id)
+      {
+        it = pl.erase(it);
+        break;
+      }
     }
   }
 
@@ -827,13 +835,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
   {
-    const std::list<Window>& xwns = nux::XInputWindow::NativeHandleList();
+    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+    unsigned int size = xwns.size ();
 
     for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
-      if (std::find(xwns.begin(), xwns.end(), w->id()) != xwns.end())
+      auto id = w->id ();
+      for (unsigned int i = 0; i < size; ++i)
       {
-        uScreen->paintDisplay(region);
+        if (xwns[i] == id)
+        {
+          uScreen->paintDisplay(region);
+          break;
+        }
       }
     }
   }

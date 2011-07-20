@@ -75,8 +75,10 @@ void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 
 nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 {
-  if (icon_ && size == icon_->GetHeight())
+  if (icon_ && size == last_size_)
     return icon_;
+  
+  last_size_ = size;
 
   if (icon_)
     icon_->UnReference ();

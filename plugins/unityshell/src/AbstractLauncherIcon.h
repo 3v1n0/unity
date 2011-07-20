@@ -110,7 +110,7 @@ public:
 
     virtual nux::Point3 GetCenter () = 0;
 
-    virtual std::vector<nux::Vector4> & GetTransform (std::string name) = 0;
+    virtual std::vector<nux::Vector4> & GetTransform (std::string const& name) = 0;
 
     virtual void Activate (ActionArg arg) = 0;
     

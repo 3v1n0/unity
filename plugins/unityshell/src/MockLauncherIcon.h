@@ -56,7 +56,7 @@ public:
 
   nux::Point3 GetCenter () { return nux::Point3 (); }
 
-  std::vector<nux::Vector4> & GetTransform (std::string name)
+  std::vector<nux::Vector4> & GetTransform (std::string const& name)
   {
     if (transform_map.find (name) == transform_map.end ())
       transform_map[name] = std::vector<nux::Vector4> (4);

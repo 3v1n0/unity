@@ -474,11 +474,9 @@ PanelMenuView::GetActiveViewName ()
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window))
   {
-    std::list<Window> our_xids = nux::XInputWindow::NativeHandleList ();
-    std::list<Window>::iterator it;
+    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList ();
 
-    it = std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window)));
-    if (it != our_xids.end ())
+    if (std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window))) != our_xids.end ())
       _is_own_window = true;
   }
 
