@@ -114,7 +114,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.9f), true, rop);
+    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.2f), true, rop);
   }
 
   for (unsigned int i = 0; i < G_N_ELEMENTS (_ubus_handles); i++)
@@ -248,15 +248,23 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay ()->GetGpuDevice ()->GetCurrentFrameBufferObject ();
     nux::GetGraphicsDisplay ()->GetGpuDevice ()->DeactivateFrameBuffer ();
     
-    GfxContext.SetViewport (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
-    GfxContext.SetScissor (0, 0, GfxContext.GetWindowWidth (), GfxContext.GetWindowHeight ());
+    GfxContext.SetViewport (0, 0, geo_absolute.width, geo_absolute.height);
+    GfxContext.SetScissor (0, 0, geo_absolute.width, geo_absolute.height);
     GfxContext.GetRenderStates ().EnableScissor (false);
 
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_texture = GfxContext.CreateTextureFromBackBuffer (
-    geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
+    // nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_texture = GfxContext.CreateTextureFromBackBuffer (
+    // geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
 
     nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::color::White, 1.0f, 2);
+    texxform__bg.flip_v_coord = false;
+    texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform__bg.uoffset = ((float) geo_absolute.x) / GfxContext.GetWindowWidth ();
+    texxform__bg.voffset = ((float) GfxContext.GetWindowHeight () - geo_absolute.y - geo_absolute.height) / GfxContext.GetWindowHeight ();
+
+    _bg_blur_texture = GfxContext.QRP_GetBlurTexture (0, 0, 
+    geo_absolute.width,
+    geo_absolute.height,
+    nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_, texxform__bg, nux::color::White, 18.0f, 4);
 
     if (current_fbo.IsValid ())
     { 
@@ -276,6 +284,11 @@ PlacesView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_bg_blur_texture.IsValid ()  && paint_blur)
   {
     nux::TexCoordXForm texxform_blur__bg;
+    texxform_blur__bg.flip_v_coord = false;
+    texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
+    texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
+
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
@@ -400,7 +413,13 @@ PlacesView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
 
   if (_bg_blur_texture.IsValid () && paint_blur)
   {
+    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur__bg;
+    texxform_blur__bg.flip_v_coord = false;
+    texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
+    texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
+
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
