@@ -258,7 +258,7 @@ const char* BamfLauncherIcon::DesktopFile ()
 const char* BamfLauncherIcon::BamfName ()
 {
   const char *name = NULL;
-  name = (char *)bamf_view_get_name (BAMF_VIEW (m_App));
+  name = bamf_view_get_name (BAMF_VIEW (m_App));
 
   if (name == NULL)
     name = "";
