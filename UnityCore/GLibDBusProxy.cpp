@@ -31,30 +31,50 @@ namespace {
 nux::logging::Logger logger("unity.glib.dbusproxy");
 }
 
+using std::string;
+
+struct CallData
+{
+  DBusProxy::MethodCallback callback;
+  DBusProxy::Impl* impl;
+};
+
 class DBusProxy::Impl
 {
 public:
 
   Impl(DBusProxy* owner,
-       std::string const& name,
-       std::string const& object_path,
-       std::string const& interface_name,
+       string const& name,
+       string const& object_path,
+       string const& interface_name,
        GBusType bus_type,
        GDBusProxyFlags flags);
   ~Impl();
 
-  static void OnNameAppeared(GDBusConnection* connection, const char* name, const char* name_owner, gpointer impl);
-  static void OnNameVanished(GDBusConnection* connection, const char* name, gpointer impl);
+  static void OnNameAppeared(GDBusConnection* connection, const char* name,
+                             const char* name_owner, gpointer impl);
+  static void OnNameVanished(GDBusConnection* connection, const char* name,
+                             gpointer impl);
   void StartReconnectionTimeout();
   void Connect();
-  static void OnProxyConnectCallback(GObject* source, GAsyncResult* res, gpointer impl);
+  static void OnProxyConnectCallback(GObject* source, GAsyncResult* res,
+                                     gpointer impl);
 
-  void OnProxySignal(GDBusProxy* proxy, char* sender_name, char* signal_name, GVariant* parameters);
+  void OnProxySignal(GDBusProxy* proxy, char* sender_name, char* signal_name,
+                     GVariant* parameters);
+
+  void Call(string const& method_name,
+            GVariant* parameters,
+            MethodCallback callback,
+            GDBusCallFlags flags,
+            int timeout_msec);
+  static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
+
 
   DBusProxy* owner_;
-  std::string name_;
-  std::string object_path_;
-  std::string interface_name_;
+  string name_;
+  string object_path_;
+  string interface_name_;
   GBusType bus_type_;
   GDBusProxyFlags flags_;
 
@@ -69,9 +89,9 @@ public:
 };
 
 DBusProxy::Impl::Impl(DBusProxy* owner,
-                      std::string const& name,
-                      std::string const& object_path,
-                      std::string const& interface_name,
+                      string const& name,
+                      string const& object_path,
+                      string const& interface_name,
                       GBusType bus_type,
                       GDBusProxyFlags flags)
   : owner_(owner)
@@ -110,23 +130,22 @@ void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
                                      const char* name_owner,
                                      gpointer impl)
 {
-  DBusProxy::Impl *self = reinterpret_cast<DBusProxy::Impl*>(impl);
+  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
 
   LOG_DEBUG(logger) << self->name_ << " appeared";
 
-  self->Connect();
+  self->connected_ = true;
+  self->owner_->connected.emit();
 }
 
 void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,
                                      const char* name,
                                      gpointer impl)
 {
-  DBusProxy::Impl *self = reinterpret_cast<DBusProxy::Impl*>(impl);
+  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
   
   LOG_DEBUG(logger) << self->name_ << " vanished";
   
-  self->proxy_ = NULL;
-  self->g_signal_connection_.Disconnect();
   self->connected_ = false;
   self->owner_->disconnected.emit();
 }
@@ -139,7 +158,7 @@ void DBusProxy::Impl::StartReconnectionTimeout()
 
   auto callback = [] (gpointer user_data) -> gboolean
   {
-    DBusProxy::Impl* self = reinterpret_cast<DBusProxy::Impl*>(user_data);
+    DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(user_data);
     if (!self->proxy_)
       self->Connect();
     
@@ -178,9 +197,12 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
     return;
   }
 
-  DBusProxy::Impl *self = reinterpret_cast<DBusProxy::Impl*>(impl);
+  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
+  LOG_DEBUG(logger) << "Sucessfully created proxy: " << self->object_path_;
+
   self->proxy_ = proxy;
-  self->g_signal_connection_.Connect(self->proxy_, "g-signal", sigc::mem_fun(self, &DBusProxy::Impl::OnProxySignal));
+  self->g_signal_connection_.Connect(self->proxy_, "g-signal",
+                                     sigc::mem_fun(self, &DBusProxy::Impl::OnProxySignal));
   self->connected_ = true;
   self->owner_->connected.emit();
 }
@@ -190,12 +212,61 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
                                     char* signal_name,
                                     GVariant* parameters)
 {
-  g_debug ("SIGNAL: %s %s", sender_name, signal_name);
+  LOG_DEBUG(logger) << "Signal Received for proxy (" << object_path_ << ") "
+                    << "SenderName: " << sender_name << " "
+                    << "SignalName: " << signal_name << " "
+                    << "ParameterType: " << g_variant_get_type_string(parameters);
+
 }
 
-DBusProxy::DBusProxy(std::string const& name,
-                     std::string const& object_path,
-                     std::string const& interface_name,
+void DBusProxy::Impl::Call(string const& method_name,
+                           GVariant* parameters,
+                           MethodCallback callback,
+                           GDBusCallFlags flags,
+                           int timeout_msec)
+{
+  if (proxy_)
+  {
+    auto data = new CallData();
+    data->callback = callback;
+    data->impl = this;
+
+    g_dbus_proxy_call(proxy_,
+                      method_name.c_str(),
+                      parameters,
+                      flags,
+                      timeout_msec,
+                      cancellable_,
+                      DBusProxy::Impl::OnCallCallback,
+                      data);
+  }
+  LOG_WARNING(logger) << "Cannot call method " << method_name
+                      << " proxy " << object_path_ << " does not exist";
+}
+
+void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
+{
+  glib::Error error;
+  CallData* data = static_cast<CallData*>(call_data);
+  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, error.AsOutParam());
+
+  if (result)
+  {
+    data->callback(result);
+    g_variant_unref(result);
+  }
+  else
+  {
+    // Do not touch the impl pointer as the operation may have been cancelled
+    LOG_WARNING(logger) << "Calling method failed: " << error.Message();
+  }
+
+  delete data;
+}
+
+DBusProxy::DBusProxy(string const& name,
+                     string const& object_path,
+                     string const& interface_name,
                      GBusType bus_type,
                      GDBusProxyFlags flags)
   : pimpl(new Impl(this, name, object_path, interface_name, bus_type, flags))
@@ -204,6 +275,15 @@ DBusProxy::DBusProxy(std::string const& name,
 DBusProxy::~DBusProxy()
 {
   delete pimpl;
+}
+
+void DBusProxy::Call(string const& method_name,
+                     GVariant* parameters,
+                     MethodCallback callback,
+                     GDBusCallFlags flags,
+                     int timeout_msec)
+{
+  pimpl->Call(method_name, parameters, callback, flags, timeout_msec);
 }
 
 }
