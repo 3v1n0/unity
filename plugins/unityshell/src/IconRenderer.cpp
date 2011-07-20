@@ -157,15 +157,36 @@ nux::NString PerspectiveCorrectTexRectFrg = TEXT (
                             MOV result.color.a, color;    \n\
                             END");
 
+bool IconRenderer::textures_created = false;
+nux::BaseTexture* IconRenderer::_progress_bar_trough = 0;
+nux::BaseTexture* IconRenderer::_progress_bar_fill = 0;
+nux::BaseTexture* IconRenderer::_pip_ltr = 0;
+nux::BaseTexture* IconRenderer::_pip_rtl = 0;
+nux::BaseTexture* IconRenderer::_arrow_ltr = 0;
+nux::BaseTexture* IconRenderer::_arrow_rtl = 0;
+nux::BaseTexture* IconRenderer::_arrow_empty_ltr = 0;
+nux::BaseTexture* IconRenderer::_arrow_empty_rtl = 0;
+std::vector<nux::BaseTexture*> IconRenderer::_icon_back;
+std::vector<nux::BaseTexture*> IconRenderer::_icon_selected_back;
+std::vector<nux::BaseTexture*> IconRenderer::_icon_edge;
+std::vector<nux::BaseTexture*> IconRenderer::_icon_glow;
+std::vector<nux::BaseTexture*> IconRenderer::_icon_shine;
+nux::IntrusiveSP<nux::IOpenGLBaseTexture> IconRenderer::_offscreen_progress_texture;
+nux::IntrusiveSP<nux::IOpenGLShaderProgram>    IconRenderer::_shader_program_uv_persp_correction;
+nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> IconRenderer::_AsmShaderProg;
+std::map<char, nux::BaseTexture*> IconRenderer::label_map;
+
 IconRenderer::IconRenderer ()
 {
   textures_created = false;
   SetupShaders ();
+
+  if (!textures_created)
+    GenerateTextures ();
 }
 
 IconRenderer::~IconRenderer ()
 {
-  DestroyTextures ();
 }
 
 void IconRenderer::SetTargetSize (int tile_size, int image_size_, int spacing_)
@@ -173,9 +194,6 @@ void IconRenderer::SetTargetSize (int tile_size, int image_size_, int spacing_)
   icon_size = tile_size;
   image_size = image_size_;
   spacing = spacing_;
-
-  DestroyTextures ();
-  GenerateTextures ();
 }
 
 void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& geo)
@@ -228,12 +246,12 @@ void IconRenderer::PreprocessIcons (std::list<RenderArg>& args, nux::Geometry co
 
     // hardcode values for now until SVG's are in place and we can remove this
     // 200 == size of large glow
-    // 170 == size of large tile
+    // 150 == size of large tile
     // 62 == size of small glow
     // 54 == size of small tile
     float icon_glow_size = 0.0f;
     if (icon_size > 100)
-      icon_glow_size = icon_size * (200.0f / 170.0f);
+      icon_glow_size = icon_size * (200.0f / 150.0f);
     else
       icon_glow_size = icon_size * (62.0f / 54.0f);
     w = icon_glow_size;
@@ -915,11 +933,11 @@ void IconRenderer::GenerateTextures ()
   _icon_glow.resize (IconRenderer::LAST);
   _icon_shine.resize (IconRenderer::LAST);
 
-  _icon_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_170.png", -1, true);
-  _icon_selected_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_selected_back_170.png", -1, true);
-  _icon_edge[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_edge_170.png", -1, true);
+  _icon_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_150.png", -1, true);
+  _icon_selected_back[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_selected_back_150.png", -1, true);
+  _icon_edge[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_edge_150.png", -1, true);
   _icon_glow[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_glow_200.png", -1, true);
-  _icon_shine[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_shine_170.png", -1, true);
+  _icon_shine[IconRenderer::BIG] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_shine_150.png", -1, true);
 
   _icon_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_54.png", -1, true);
   _icon_selected_back[IconRenderer::SMALL] = nux::CreateTexture2DFromFile (PKGDATADIR"/launcher_icon_back_54.png", -1, true);
