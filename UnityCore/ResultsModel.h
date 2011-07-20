@@ -33,8 +33,7 @@ class ResultsModel : public Model<ResultsModelIter>
 public:
   typedef boost::shared_ptr<ResultsModel> Ptr;
 
-  ResultsModel();
-  ~ResultsModel();
+  ResultsModel() {};
 };
 
 }

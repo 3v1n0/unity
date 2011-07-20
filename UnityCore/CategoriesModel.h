@@ -17,45 +17,23 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_CATEGORY_H
-#define UNITY_CATEGORY_H
+#ifndef UNITY_CATEGORIES_MODEL_H
+#define UNITY_CATEGORIES_MODEL_H
 
 #include <boost/shared_ptr.hpp>
-#include <boost/noncopyable.hpp>
-#include <NuxCore/Property.h>
-#include <sigc++/trackable.h>
+
+#include "Model.h"
+#include "CategoriesModelIter.h"
 
 namespace unity {
 namespace dash {
 
-/**
- * CategoryRenderer:
- *
- * @GRID: Standard Grid of tiles with icon above two lines of text
- * @GRID_WIDE: Tiles are wider, with text next to the icon horizontally.
- *   comment also shows
- * @LIST: List with three columns: [icon][name][comment]
- * @FLOW: Flow view with large icons and both name and comment showing
- */
-enum CategoryRenderer
-{
-  GRID=0,
-  GRID_WIDE,
-  LIST,
-  FLOW
-}
-
-class Category : boost::noncopyable
+class CategoriesModel : public Model<CategoriesModelIter>
 {
 public:
-  typedef boost::shared_ptr<Category> Ptr;
+  typedef boost::shared_ptr<CategoriesModel> Ptr;
 
-  Category();
-
-  nux::Property<unsigned int> index;
-  nux::Property<std::string> icon_hint;
-  nux::Property<std::string> name;
-  nux::Property<CategoryRenderer> renderer;
+  CategoriesModel() {};
 };
 
 }

@@ -37,10 +37,6 @@ Model<ModelIter>::Model()
 }
 
 template<class ModelIter>
-Model<ModelIter>::~Model()
-{}
-
-template<class ModelIter>
 void Model<ModelIter>::OnSwarmNameChanged(std::string const& swarm_name)
 {
   LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;

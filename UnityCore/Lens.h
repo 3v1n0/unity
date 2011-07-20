@@ -25,6 +25,7 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
+#include "CategoriesModel.h"
 #include "ResultsModel.h"
 
 namespace unity {
@@ -62,6 +63,7 @@ public:
   nux::RWProperty<std::string> shortcut;
   nux::RWProperty<ResultsModel::Ptr> results;
   nux::RWProperty<ResultsModel::Ptr> global_results;
+  nux::RWProperty<CategoriesModel::Ptr> categories;
 
   nux::Property<bool> active;
 

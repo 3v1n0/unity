@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RESULTS_MODEL_ITER_H
-#define UNITY_RESULTS_MODEL_ITER_H
+#ifndef UNITY_CATEGORIES_MODEL_ITER_H
+#define UNITY_CATEGORIES_MODEL_ITER_H
 
 #include <boost/noncopyable.hpp>
 #include <dee.h>
@@ -30,34 +30,28 @@
 namespace unity {
 namespace dash {
 
-// This class represents a DeeModelIter for a ResultsModel
+// This class represents a DeeModelIter for a CategoriesModel
 // It's slightly chunky, but that is because it's optimized to be stack-allocated
 // as it is not expected to be kept by the views, rather views can easily attach
 // a "renderer" to the iter, so when the changed or removed signals are called,
 // the view can easily find which widget/view belongs to this iter.
-class ResultsModelIter : public ModelIterBase
+class CategoriesModelIter : public ModelIterBase
 {
 public:
-  ResultsModelIter(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  CategoriesModelIter(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
-  ResultsModelIter(ResultsModelIter const& other);
+  CategoriesModelIter(CategoriesModelIter const& other);
 
-  nux::ROProperty<std::string> uri;
-  nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<unsigned int> category_index;
-  nux::ROProperty<std::string> mimetype;
   nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> comment;
-  nux::ROProperty<std::string> dnd_uri;
+  nux::ROProperty<std::string> icon_hint;
+  nux::ROProperty<unsigned int> index;
+  nux::ROProperty<std::string> renderer;
 
 private:
-  std::string get_uri() const;
-  std::string get_icon_hint() const;
-  unsigned int get_category() const;
-  std::string get_mimetype() const;
   std::string get_name() const;
-  std::string get_comment() const;
-  std::string get_dnd_uri() const;
+  std::string get_icon_hint() const;
+  unsigned int get_index() const;
+  std::string get_renderer() const;
 };
 
 }

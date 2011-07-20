@@ -31,13 +31,14 @@ nux::logging::Logger logger("unity.dash.resultsmodeliter");
 ResultsModelIter::ResultsModelIter(DeeModel* model,
                                    DeeModelIter* iter,
                                    DeeModelTag* renderer_tag)
-  : model_(model)
-  , iter_(iter)
-  , tag_(renderer_tag)
 {
+  model_ = model;
+  iter_ = iter;
+  tag_ = renderer_tag;
+
   uri.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_uri));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_icon_hint));
-  category.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_category));
+  category_index.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_category));
   mimetype.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_mimetype));
   name.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_name));
   comment.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_comment));
@@ -49,18 +50,6 @@ ResultsModelIter::ResultsModelIter(ResultsModelIter const& other)
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
-}
-
-template<typename T>
-void ResultsModelIter::set_renderer(T renderer)
-{
-  dee_model_set_tag(model_, iter_, tag_, renderer);
-}
-
-template<typename T>
-T ResultsModelIter::renderer()
-{
-  return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
 }
 
 std::string ResultsModelIter::get_uri() const

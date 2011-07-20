@@ -32,6 +32,27 @@
 namespace unity {
 namespace dash {
 
+// Convenience class to save some code duplication
+class ModelIterBase
+{
+  template<typename T>
+  void set_renderer(T renderer)
+  {
+    dee_model_set_tag(model_, iter_, tag_, renderer);
+  }
+
+  template<typename T>
+  T renderer()
+  {
+    return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
+  }
+
+protected:
+  DeeModel* model_;
+  DeeModelIter* iter_;
+  DeeModelTag* tag_;
+};
+
 // This template encapsulates the basics of talking to a DeeModel, however it is
 // a template as you can choose your own ModelIter (see ResultsModelIter.h for an
 // example) which then presents the data in the rows in a instance-specific way.
@@ -42,7 +63,6 @@ public:
   typedef boost::shared_ptr<Model> Ptr;
 
   Model();
-  ~Model();
 
   const ModelIter IterAtIndex(unsigned int index);
 
