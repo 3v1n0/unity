@@ -40,7 +40,7 @@ protected:
   std::list<DbusmenuMenuitem *> GetMenus ();
 
 private:
-  void ActivateLauncherIcon ();
+  void ActivateLauncherIcon (ActionArg arg);
   void ActivatePlace (guint section_id, const char *search_string);
   void OnActiveChanged (bool is_active);
   void ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section);
@@ -52,7 +52,6 @@ private:
 private:
   PlaceEntry *_entry;
   std::list<DbusmenuMenuitem *>  _current_menu;
-  sigc::connection _on_active_changed_connection;
   int _n_sections;
 };
 

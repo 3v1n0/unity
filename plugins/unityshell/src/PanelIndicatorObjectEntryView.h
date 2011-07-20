@@ -34,7 +34,7 @@
 
 namespace unity {
 
-class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
+class PanelIndicatorObjectEntryView : public nux::TextureArea, public unity::Introspectable
 {
 public:
   PanelIndicatorObjectEntryView(indicator::Entry::Ptr const& proxy,

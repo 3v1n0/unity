@@ -38,14 +38,12 @@ class MockLauncherIcon : public AbstractLauncherIcon
 public:
   MockLauncherIcon ()
   : icon_ (0)
-  {}
+  {
+    tooltip_text = "Mock Icon";
+  }
 
   void HideTooltip () {}
 
-  void SetTooltipText (std::string) {}
-  
-  std::string GetTooltipText () { return std::string (); }
-  
   void    SetShortcut (guint64 shortcut) {}
   
   guint64 GetShortcut () { return 0; }
@@ -58,7 +56,7 @@ public:
 
   nux::Point3 GetCenter () { return nux::Point3 (); }
 
-  std::vector<nux::Vector4> & GetTransform (std::string name)
+  std::vector<nux::Vector4> & GetTransform (std::string const& name)
   {
     if (transform_map.find (name) == transform_map.end ())
       transform_map[name] = std::vector<nux::Vector4> (4);
@@ -66,9 +64,9 @@ public:
     return transform_map[name];
   }
 
-  void Activate () {}
+  void Activate (ActionArg arg) {}
   
-  void OpenInstance () {}
+  void OpenInstance (ActionArg arg) {}
 
   int SortPriority () { return 0; }
   

@@ -194,21 +194,21 @@ LauncherIcon::AddProperties (GVariantBuilder *builder)
 }
 
 void
-LauncherIcon::Activate ()
+LauncherIcon::Activate (ActionArg arg)
 {
-    if (PluginAdapter::Default ()->IsScaleActive())
-      PluginAdapter::Default ()->TerminateScale ();
+  if (PluginAdapter::Default ()->IsScaleActive())
+    PluginAdapter::Default ()->TerminateScale ();
     
-    ActivateLauncherIcon ();
+  ActivateLauncherIcon (arg);
 }
 
 void
-LauncherIcon::OpenInstance ()
+LauncherIcon::OpenInstance (ActionArg arg)
 {
     if (PluginAdapter::Default ()->IsScaleActive())
       PluginAdapter::Default ()->TerminateScale ();
     
-    OpenInstanceLauncherIcon ();
+    OpenInstanceLauncherIcon (arg);
 }
 
 nux::Color LauncherIcon::BackgroundColor ()
@@ -627,10 +627,11 @@ void LauncherIcon::RecvMouseUp (int button)
 
 void LauncherIcon::RecvMouseClick (int button)
 {
+  ActionArg arg (ActionArg::LAUNCHER, button);
   if (button == 1)
-    Activate ();
+    Activate (arg);
   else if (button == 2)
-    OpenInstance ();
+    OpenInstance (arg);
 }
 
 void LauncherIcon::HideTooltip ()
@@ -939,12 +940,16 @@ LauncherIcon::SetEmblemIconName (const char *name)
 }
 
 std::vector<nux::Vector4> &
-LauncherIcon::GetTransform (std::string name)
+LauncherIcon::GetTransform (std::string const& name)
 {
-  if (transform_map.find (name) == transform_map.end ())
-    transform_map[name] = std::vector<nux::Vector4> (4);
+  auto iter = transform_map.find(name);
+  if (iter == transform_map.end())
+  {
+    auto iter2 = transform_map.insert(std::map<std::string, std::vector<nux::Vector4> >::value_type (name, std::vector<nux::Vector4>(4)));
+    return iter2.first->second;
+  }
 
-  return transform_map[name];
+  return iter->second;
 }
 
 void 

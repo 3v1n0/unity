@@ -99,6 +99,10 @@ protected:
   const gchar * GetChildsName ();
   void          AddProperties (GVariantBuilder *builder);
 
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  void OnPanelViewMouseEnter (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+  void OnPanelViewMouseLeave (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+
 private:
   gchar * GetActiveViewName ();
   static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
@@ -141,23 +145,6 @@ private:
   guint32 _active_xid;
   guint32 _active_moved_id;
   nux::Geometry _monitor_geo;
-
-  sigc::connection _on_winbutton_close_clicked_connection;
-  sigc::connection _on_winbutton_minimize_clicked_connection;
-  sigc::connection _on_winbutton_restore_clicked_connection;
-  sigc::connection _on_winbutton_redraw_signal_connection;
-  sigc::connection _on_titlebargrab_mouse_down_connnection;
-  sigc::connection _on_titlebargrab_mouse_doubleleftclick_connnection;
-  sigc::connection _on_titlebargrab_mouse_middleclick_connnection;
-  sigc::connection _on_window_minimized_connection;
-  sigc::connection _on_window_unminimized_connection;
-  sigc::connection _on_window_initspread_connection;
-  sigc::connection _on_window_terminatespread_connection;
-  sigc::connection _on_window_maximized_connection;
-  sigc::connection _on_window_restored_connection;
-  sigc::connection _on_window_unmapped_connection;
-  sigc::connection _on_window_moved_connection;
-  sigc::connection _on_panelstyle_changed_connection;
 
   gulong _activate_window_changed_id;
 

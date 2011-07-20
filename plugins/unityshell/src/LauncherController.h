@@ -61,13 +61,7 @@ private:
     SimpleLauncherIcon*    _expoIcon;
     int                    _num_workspaces;
 
-    sigc::connection _on_launcher_add_request_connection;
-    sigc::connection _on_launcher_remove_request_connection;
-    sigc::connection _on_place_section_icon_added_connection;
-    sigc::connection _on_device_section_icon_added_connection;
     guint            _bamf_timer_handler_id;
-    sigc::connection _on_remote_model_entry_added_connection;
-    sigc::connection _on_remote_model_entry_removed_connection;
 
     guint32 _on_view_opened_id;
 

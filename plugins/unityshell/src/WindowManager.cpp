@@ -26,6 +26,11 @@ class WindowManagerDummy : public WindowManager
   {
     return false;
   }
+
+  void ShowDesktop ()
+  {
+    g_debug ("%s", G_STRFUNC);
+  }
   
   bool IsWindowMaximized (guint32 xid)
   {

@@ -66,7 +66,7 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _spinner->SetMinMaxSize (icon->GetWidth (), icon->GetHeight ());
   //_spinner->SetMaximumWidth (icon->GetWidth ());
   _layout->AddView (_spinner, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _spinner_mouse_click_conn = _spinner->OnMouseClick.connect (sigc::mem_fun (this, &PlacesSearchBar::OnClearClicked));
+  _spinner->OnMouseClick.connect(sigc::mem_fun(this, &PlacesSearchBar::OnClearClicked));
   _spinner->SetCanFocus (false);
 
   _layered_layout = new nux::LayeredLayout ();
@@ -77,9 +77,9 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _layered_layout->AddLayer (_hint);
 
   _pango_entry = new nux::TextEntry ("", NUX_TRACKER_LOCATION);
-  _text_changed_conn = _pango_entry->sigTextChanged.connect (sigc::mem_fun (this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->sigTextChanged.connect(sigc::mem_fun(this, &PlacesSearchBar::OnSearchChanged));
   _pango_entry->SetCanFocus (true);
-  _entry_activated_conn = _pango_entry->activated.connect (sigc::mem_fun (this, &PlacesSearchBar::OnEntryActivated));
+  _pango_entry->activated.connect(sigc::mem_fun(this, &PlacesSearchBar::OnEntryActivated));
   _layered_layout->AddLayer (_pango_entry);
 
   _layered_layout->SetPaintAll (true);
@@ -90,21 +90,20 @@ PlacesSearchBar::PlacesSearchBar (NUX_FILE_LINE_DECL)
   _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
   _combo->SetMaximumWidth (style->GetTileWidth ());
   _combo->SetVisible (false);
-  _combo_changed_conn = _combo->sigTriggered.connect (sigc::mem_fun (this, &PlacesSearchBar::OnComboChanged));
-  _menu_conn = _combo->GetMenuPage ()->sigMouseDownOutsideMenuCascade.connect (sigc::mem_fun (this, &PlacesSearchBar::OnMenuClosing));
+  _combo->sigTriggered.connect(sigc::mem_fun(this, &PlacesSearchBar::OnComboChanged));
+  _combo->GetMenuPage()->sigMouseDownOutsideMenuCascade.connect(sigc::mem_fun(this, &PlacesSearchBar::OnMenuClosing));
   _layout->AddView (_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin (18);
   _layout->SetHorizontalExternalMargin (18);
 
   SetLayout (_layout);
-  SetCompositionLayout (_layout);
 
-  _font_changed_id = g_signal_connect (gtk_settings_get_default (), "notify::gtk-font-name",
+  _font_changed_id = g_signal_connect(gtk_settings_get_default (), "notify::gtk-font-name",
                                        G_CALLBACK (OnFontChanged), this);
   OnFontChanged (NULL, NULL, this);
 
-  _cursor_moved_conn = _pango_entry->cursor_moved.connect (sigc::mem_fun (this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
+  _pango_entry->cursor_moved.connect(sigc::mem_fun(this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
 
   _ubus_handle = ubus_server_register_interest (ubus_server_get_default (),
                                                 UBUS_PLACE_VIEW_HIDDEN,
@@ -118,17 +117,10 @@ PlacesSearchBar::~PlacesSearchBar ()
     delete _bg_layer;
 
   if (_font_changed_id)
-    g_signal_handler_disconnect (gtk_settings_get_default (), _font_changed_id);
+    g_signal_handler_disconnect(gtk_settings_get_default (), _font_changed_id);
 
   if (_live_search_timeout)
     g_source_remove (_live_search_timeout);
-
-  _spinner_mouse_click_conn.disconnect ();
-  _text_changed_conn.disconnect ();
-  _entry_activated_conn.disconnect ();
-  _combo_changed_conn.disconnect ();
-  _menu_conn.disconnect ();
-  _cursor_moved_conn.disconnect ();
 
   if (_ubus_handle != 0)
     ubus_server_unregister_interest (ubus_server_get_default (), _ubus_handle);
@@ -215,7 +207,7 @@ void PlacesSearchBar::SetActiveEntry (PlaceEntry *entry,
     _entry->SetActiveSection (section_id);
     _entry->SetSearch (search_string ? search_string : "", hints);
 
-    _entry->ForeachSection (sigc::mem_fun (this, &PlacesSearchBar::OnSectionAdded));
+    _entry->ForeachSection (sigc::mem_fun(this, &PlacesSearchBar::OnSectionAdded));
     if (_combo->IsVisible ())
       _combo->SetSelectionIndex (section_id);
 
@@ -508,3 +500,13 @@ void PlacesSearchBar::RecvMouseDownFromWindow (int x, int y,
     _hint->SetText ("");
   }
 }
+
+//
+// Key navigation
+//
+bool 
+PlacesSearchBar::AcceptKeyNavFocus()
+{
+  return false;
+}
+

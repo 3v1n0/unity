@@ -52,6 +52,8 @@ public:
   virtual bool IsWindowOnCurrentDesktop (guint32 xid) = 0;
   virtual bool IsWindowObscured (guint32 xid) = 0;
 
+  virtual void ShowDesktop () = 0;
+
   virtual void Restore (guint32 xid) = 0;
   virtual void Minimize (guint32 xid) = 0;
   virtual void Close (guint32 xid) = 0;

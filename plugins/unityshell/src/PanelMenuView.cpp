@@ -99,31 +99,40 @@ PanelMenuView::PanelMenuView (int padding)
   _name_changed_callback_id = 0;
 
   _window_buttons = new WindowButtons ();
+  _window_buttons->SetParentObject (this);
   _window_buttons->NeedRedraw ();
-  _on_winbutton_close_clicked_connection = _window_buttons->close_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnCloseClicked));
-  _on_winbutton_minimize_clicked_connection = _window_buttons->minimize_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnMinimizeClicked));
-  _on_winbutton_restore_clicked_connection = _window_buttons->restore_clicked.connect (sigc::mem_fun (this, &PanelMenuView::OnRestoreClicked));
-  _on_winbutton_redraw_signal_connection = _window_buttons->redraw_signal.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowButtonsRedraw));
+
+  _window_buttons->close_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnCloseClicked));
+  _window_buttons->minimize_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnMinimizeClicked));
+  _window_buttons->restore_clicked.connect(sigc::mem_fun(this, &PanelMenuView::OnRestoreClicked));
+  _window_buttons->redraw_signal.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowButtonsRedraw));
 
   _panel_titlebar_grab_area = new PanelTitlebarGrabArea ();
+  _panel_titlebar_grab_area->SetParentObject (this);
   _panel_titlebar_grab_area->SinkReference ();
-  _on_titlebargrab_mouse_down_connnection = _panel_titlebar_grab_area->mouse_down.connect (sigc::mem_fun (this, &PanelMenuView::OnMaximizedGrab));
-  _on_titlebargrab_mouse_doubleleftclick_connnection = _panel_titlebar_grab_area->mouse_doubleleftclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseDoubleClicked));
-  _on_titlebargrab_mouse_middleclick_connnection = _panel_titlebar_grab_area->mouse_middleclick.connect (sigc::mem_fun (this, &PanelMenuView::OnMouseMiddleClicked));
+  _panel_titlebar_grab_area->mouse_down.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrab));
+  _panel_titlebar_grab_area->mouse_doubleleftclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseDoubleClicked));
+  _panel_titlebar_grab_area->mouse_middleclick.connect(sigc::mem_fun(this, &PanelMenuView::OnMouseMiddleClicked));
 
   win_manager = WindowManager::Default ();
 
-  _on_window_minimized_connection = win_manager->window_minimized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMinimized));
-  _on_window_unminimized_connection = win_manager->window_unminimized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnminimized));
-  _on_window_initspread_connection = win_manager->initiate_spread.connect (sigc::mem_fun (this, &PanelMenuView::OnSpreadInitiate));
-  _on_window_terminatespread_connection = win_manager->terminate_spread.connect (sigc::mem_fun (this, &PanelMenuView::OnSpreadTerminate));
+  win_manager->window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
+  win_manager->window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
+  win_manager->initiate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadInitiate));
+  win_manager->terminate_spread.connect(sigc::mem_fun(this, &PanelMenuView::OnSpreadTerminate));
 
-  _on_window_maximized_connection = win_manager->window_maximized.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMaximized));
-  _on_window_restored_connection = win_manager->window_restored.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowRestored));
-  _on_window_unmapped_connection = win_manager->window_unmapped.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowUnmapped));
-  _on_window_moved_connection = win_manager->window_moved.connect (sigc::mem_fun (this, &PanelMenuView::OnWindowMoved));
+  win_manager->window_maximized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMaximized));
+  win_manager->window_restored.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowRestored));
+  win_manager->window_unmapped.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnmapped));
+  win_manager->window_moved.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMoved));
 
-  _on_panelstyle_changed_connection = PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &PanelMenuView::Refresh));
+  PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelMenuView::Refresh));
+
+  OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  OnMouseLeave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+
+  _panel_titlebar_grab_area->OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  _panel_titlebar_grab_area->OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
   // Register for all the interesting events
   UBusServer *ubus = ubus_server_get_default ();
@@ -139,23 +148,6 @@ PanelMenuView::PanelMenuView (int padding)
 
 PanelMenuView::~PanelMenuView ()
 {
-  _on_winbutton_close_clicked_connection.disconnect ();
-  _on_winbutton_minimize_clicked_connection.disconnect ();
-  _on_winbutton_restore_clicked_connection.disconnect ();
-  _on_winbutton_redraw_signal_connection.disconnect ();
-  _on_titlebargrab_mouse_down_connnection.disconnect ();
-  _on_titlebargrab_mouse_doubleleftclick_connnection.disconnect ();
-  _on_titlebargrab_mouse_middleclick_connnection.disconnect ();
-  _on_window_minimized_connection.disconnect ();
-  _on_window_unminimized_connection.disconnect ();
-  _on_window_initspread_connection.disconnect ();
-  _on_window_terminatespread_connection.disconnect ();
-  _on_window_maximized_connection.disconnect ();
-  _on_window_restored_connection.disconnect ();
-  _on_window_unmapped_connection.disconnect ();
-  _on_window_moved_connection.disconnect ();
-  _on_panelstyle_changed_connection.disconnect ();
-
   if (_name_changed_callback_id)
       g_signal_handler_disconnect (_name_changed_callback_instance,
                                    _name_changed_callback_id);
@@ -239,6 +231,51 @@ PanelMenuView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long Proces
     ret = _menu_layout->ProcessEvent (ievent, ret, ProcessEventInfo);
 
   return ret;
+}
+
+nux::Area*
+PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+
+    if (mouse_inside == false)
+      return NULL;
+
+    Area* found_area = NULL;
+    if (!_we_control_active)
+    {
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    if (_is_maximized)
+    {
+      if (_window_buttons)
+      {
+        found_area = _window_buttons->FindAreaUnderMouse (mouse_position, event_type);
+        NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+      }
+
+      if (_panel_titlebar_grab_area)
+      {
+        found_area = _panel_titlebar_grab_area->FindAreaUnderMouse (mouse_position, event_type);
+        NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+      }
+    }
+
+    if (_panel_titlebar_grab_area)
+    {
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse (mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    if (!_is_own_window)
+    {
+      found_area = _menu_layout->FindAreaUnderMouse (mouse_position, event_type);
+      NUX_RETURN_VALUE_IF_NOTNULL (found_area, found_area);
+    }
+
+    return View::FindAreaUnderMouse (mouse_position, event_type);
 }
 
 long PanelMenuView::PostLayoutManagement (long LayoutResult)
@@ -437,11 +474,9 @@ PanelMenuView::GetActiveViewName ()
   window = bamf_matcher_get_active_window (_matcher);
   if (BAMF_IS_WINDOW (window))
   {
-    std::list<Window> our_xids = nux::XInputWindow::NativeHandleList ();
-    std::list<Window>::iterator it;
+    std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList ();
 
-    it = std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window)));
-    if (it != our_xids.end ())
+    if (std::find (our_xids.begin (), our_xids.end (), bamf_window_get_xid (BAMF_WINDOW (window))) != our_xids.end ())
       _is_own_window = true;
   }
 
@@ -700,6 +735,9 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
   entries_.push_back (view);
 
   AddChild (view);
+
+  view->OnMouseEnter.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseEnter));
+  view->OnMouseLeave.connect (sigc::mem_fun (this, &PanelMenuView::OnPanelViewMouseLeave));
 
   QueueRelayout ();
   QueueDraw ();
@@ -1085,6 +1123,29 @@ bool
 PanelMenuView::HasOurWindowFocused ()
 {
   return _is_own_window;
+}
+
+void
+PanelMenuView::OnPanelViewMouseEnter (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+{
+  if (_is_inside != true)
+  {
+    if (_is_grabbed)
+      _is_grabbed = false;
+    else
+      _is_inside = true;
+    FullRedraw ();
+  }
+}
+
+void
+PanelMenuView::OnPanelViewMouseLeave (int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state)
+{
+  if (_is_inside != false)
+  {
+    _is_inside = false;
+    FullRedraw ();
+  }
 }
 
 } // namespace unity

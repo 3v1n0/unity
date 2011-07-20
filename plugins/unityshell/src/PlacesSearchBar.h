@@ -41,7 +41,7 @@ class PlacesView;
 
 #include "StaticCairoText.h"
 
-class PlacesSearchBar : public Introspectable, public nux::View
+class PlacesSearchBar : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
 public:
@@ -72,6 +72,9 @@ protected:
   const gchar * GetChildsName ();
   void AddProperties (GVariantBuilder *builder);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+
 private:
   void UpdateBackground ();
   void OnSearchChanged (nux::TextEntry *text_entry);
@@ -97,13 +100,7 @@ private:
   int _last_height;
   PlaceEntry              *_entry;
   guint                    _live_search_timeout;
-  sigc::connection         _spinner_mouse_click_conn;
-  sigc::connection         _text_changed_conn;
-  sigc::connection         _entry_activated_conn;
-  sigc::connection         _combo_changed_conn;
-  sigc::connection         _menu_conn;
   guint32                  _font_changed_id;
-  sigc::connection         _cursor_moved_conn;
 
   friend class PlacesView;
   PlacesSearchBarSpinner  *_spinner;

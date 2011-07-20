@@ -58,7 +58,7 @@ namespace nux
   class HLayout;
   class SpaceLayout;
 
-  class Tooltip : public BaseWindow, public ::Introspectable
+  class Tooltip : public BaseWindow, public unity::Introspectable
   {
     NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
   public:
@@ -130,9 +130,6 @@ namespace nux
     
     // Introspection
     gchar *_name;
-
-    sigc::connection _on_text_changed_connection;
-    sigc::connection _on_font_changed_connection;
   };
 }
 

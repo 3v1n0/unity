@@ -44,7 +44,7 @@
 
 #include "IconLoader.h"
 
-class PlacesView : public nux::View, public Introspectable
+class PlacesView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (PlacesView, nux::View);
 public:
@@ -78,8 +78,6 @@ public:
                                bool        signal=true);
 
   PlaceEntry * GetActiveEntry ();
-  
-  PlacesResultsController * GetResultsController ();
 
   nux::TextEntry* GetTextEntryView ();
   PlacesSearchBar* GetSearchBar ();
@@ -101,6 +99,9 @@ protected:
   const gchar* GetName ();
   void AddProperties (GVariantBuilder *builder);
 
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  
 private:
   static void     CloseRequest (GVariant *data, PlacesView *self);
   static gboolean OnCloseTimeout (PlacesView *self);

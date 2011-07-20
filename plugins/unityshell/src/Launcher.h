@@ -57,9 +57,10 @@ class QuicklistView;
 class LauncherIcon;
 class LauncherDragWindow;
 
+
 using namespace unity::ui;
 
-class Launcher : public Introspectable, public nux::View
+class Launcher : public unity::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE (Launcher, nux::View);
 public:
@@ -175,6 +176,13 @@ public:
   sigc::signal<void, LauncherIcon *> launcher_removerequest;
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
+
+
+  // Key navigation
+  virtual bool InspectKeyEvent(unsigned int eventType,
+      unsigned int keysym,
+      const char* character);
+
 protected:
   // Introspectable methods
   const gchar* GetName ();
@@ -453,30 +461,6 @@ private:
   struct timespec  _times[TIME_LAST];
   
   bool _initial_drag_animation;
-
-  sigc::connection _set_hidden_connection;
-  sigc::connection _set_hover_connection;
-  sigc::connection _recv_quicklist_opened_connection;
-  sigc::connection _recv_quicklist_closed_connection;
-  sigc::connection _on_window_maximized_intellihide_connection;
-  sigc::connection _on_window_restored_intellihide_connection;
-  sigc::connection _on_window_unminimized_intellihide_connection;
-  sigc::connection _on_window_mapped_intellihide_connection;
-  sigc::connection _on_window_unmapped_intellihide_connection;
-  sigc::connection _on_window_shown_intellihide_connection;
-  sigc::connection _on_window_hidden_intellihide_connection;
-  sigc::connection _on_window_resized_intellihide_connection;
-  sigc::connection _on_window_moved_intellihide_connection;
-  sigc::connection _on_window_focuschanged_intellihide_connection;
-  sigc::connection _on_window_mapped_connection;
-  sigc::connection _on_window_unmapped_connection;
-  sigc::connection _on_initiate_spread_connection;
-  sigc::connection _on_initiate_expo_connection;
-  sigc::connection _on_terminate_spread_connection;
-  sigc::connection _on_terminate_expo_connection;
-  sigc::connection _on_drag_start_connection;
-  sigc::connection _on_drag_update_connection;
-  sigc::connection _on_drag_finish_connection;
 
   GSettings *_settings;
   guint32 _settings_changed_id;

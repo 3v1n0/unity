@@ -48,6 +48,8 @@ IconTexture::IconTexture (nux::BaseTexture *texture, guint width, guint height)
   SetMinMaxSize (width, height);
   SetCanFocus (false);
   _can_pass_focus_to_composite_layout = false;
+
+  _accept_key_nav_focus = false;
 }
   
 IconTexture::IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading)
@@ -267,4 +269,20 @@ IconTexture::AddProperties (GVariantBuilder *builder)
   unity::variant::BuilderWrapper(builder)
     .add(GetGeometry())
     .add("iconname", _icon_name);
+}
+
+//
+// Key navigation
+//
+
+void
+IconTexture::SetAcceptKeyNavFocus(bool accept)
+{
+  _accept_key_nav_focus = accept;
+}
+
+bool 
+IconTexture::AcceptKeyNavFocus()
+{
+  return _accept_key_nav_focus;
 }

@@ -86,6 +86,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
  , relayoutSourceId(0)
  , _edge_trigger_handle(0)
  , doShellRepaint(false)
+ , switcher_desktop_icon (0)
 {
   Timer timer;
   configure_logging();
@@ -93,6 +94,7 @@ UnityScreen::UnityScreen(CompScreen *screen)
   _key_nav_mode_requested = false;
   int (*old_handler) (Display *, XErrorEvent *);
   old_handler = XSetErrorHandler (NULL);
+  damaged = false;
 
   notify_init ("unityshell");
 
@@ -150,6 +152,8 @@ UnityScreen::UnityScreen(CompScreen *screen)
   optionSetExecuteCommandInitiate  (boost::bind (&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetAltTabForwardInitiate     (boost::bind (&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate    (boost::bind (&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  optionSetAltTabPrevInitiate     (boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
+  optionSetAltTabPrevTerminate    (boost::bind (&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate (boost::bind (&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind (&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate (boost::bind (&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
@@ -335,6 +339,7 @@ void UnityScreen::paintDisplay(const CompRegion &region)
   nuxEpilogue ();
 
   doShellRepaint = false;
+  damaged = false;
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -372,10 +377,26 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   gScreen->glPaintOutput (attrib, transform, region, output, mask);
 }
 
+void UnityScreen::preparePaint (int ms)
+{
+  cScreen->preparePaint (ms);
+
+  if (damaged)
+  {
+    damaged = false;
+    damageNuxRegions ();
+  }
+
+}
+
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::damageNuxRegions()
 {
+  if (damaged)
+    return;
+
   std::vector<nux::Geometry> dirty = wt->GetDrawList();
+  damaged = true;
 
   for (std::vector<nux::Geometry>::iterator it = dirty.begin(), end = dirty.end();
        it != end; ++it)
@@ -594,7 +615,15 @@ bool UnityScreen::altTabForwardInitiate(CompAction* action,
   else
   {
     std::vector<AbstractLauncherIcon*> results;
+
+    if (!switcher_desktop_icon)
+    {
+      switcher_desktop_icon = new DesktopLauncherIcon (launcher);
+      switcher_desktop_icon->SinkReference ();
+    }
   
+    results.push_back (switcher_desktop_icon);
+    
     LauncherModel::iterator it;
     for (it = launcher->GetModel ()->begin (); it != launcher->GetModel ()->end (); it++)
       if ((*it)->ShowInSwitcher ())
@@ -618,6 +647,25 @@ bool UnityScreen::altTabForwardTerminate(CompAction* action,
 {
   action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
   switcherController->Hide ();
+  return false;
+}
+
+bool UnityScreen::altTabPrevInitiate(CompAction* action,
+                                        CompAction::State state,
+                                        CompOption::Vector& options)
+{
+  if (switcherController->Visible ())
+    switcherController->MovePrev ();
+
+  action->setState (action->state () | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabPrevTerminate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  action->setState (action->state () & (unsigned)~(CompAction::StateTermKey));
   return false;
 }
 
@@ -750,15 +798,23 @@ const CompWindowList& UnityScreen::getWindowPaintList()
 {
   CompWindowList& pl = _withRemovedNuxWindows = cScreen->getWindowPaintList();
   CompWindowList::iterator it = pl.end();
-  const std::list<Window>& xwns = nux::XInputWindow::NativeHandleList();
+  CompWindowList::iterator begin = pl.begin();
+  std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
 
-  while (it != pl.begin())
+  unsigned int size = xwns.size ();
+
+  while (it != begin)
   {
     --it;
-
-    if (std::find(xwns.begin(), xwns.end(), (*it)->id()) != xwns.end())
+    
+    auto id = (*it)->id ();
+    for (unsigned int i = 0; i < size; ++i)
     {
-      it = pl.erase(it);
+      if (xwns[i] == id)
+      {
+        it = pl.erase(it);
+        break;
+      }
     }
   }
 
@@ -779,13 +835,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   if (uScreen->doShellRepaint && uScreen->allowWindowPaint)
   {
-    const std::list<Window>& xwns = nux::XInputWindow::NativeHandleList();
+    std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
+    unsigned int size = xwns.size ();
 
     for (CompWindow* w = window; w && uScreen->doShellRepaint; w = w->prev)
     {
-      if (std::find(xwns.begin(), xwns.end(), w->id()) != xwns.end())
+      auto id = w->id ();
+      for (unsigned int i = 0; i < size; ++i)
       {
-        uScreen->paintDisplay(region);
+        if (xwns[i] == id)
+        {
+          uScreen->paintDisplay(region);
+          break;
+        }
       }
     }
   }

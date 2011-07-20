@@ -99,7 +99,7 @@ LauncherModel::AddIcon (LauncherIcon *icon)
 
   if (icon->on_icon_removed_connection.connected ())
     icon->on_icon_removed_connection.disconnect ();
-  icon->on_icon_removed_connection = (sigc::connection) icon->remove.connect (sigc::mem_fun (this, &LauncherModel::OnIconRemove));
+  icon->on_icon_removed_connection = icon->remove.connect(sigc::mem_fun(this, &LauncherModel::OnIconRemove));
 }
 
 void
