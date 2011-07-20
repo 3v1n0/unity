@@ -25,6 +25,8 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
+#include "ResultsModel.h"
+
 namespace unity {
 namespace dash {
 
@@ -45,16 +47,20 @@ public:
 
   ~Lens();
 
-  nux::ROProperty<std::string> id;
-  nux::ROProperty<std::string> dbus_name;
-  nux::ROProperty<std::string> dbus_path;
-  nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> icon;
-  nux::ROProperty<std::string> description;
-  nux::ROProperty<std::string> search_hint;
-  nux::ROProperty<bool> visible;
-  nux::ROProperty<std::string> shortcut;
+  nux::RWProperty<std::string> id;
+  nux::RWProperty<std::string> dbus_name;
+  nux::RWProperty<std::string> dbus_path;
+  nux::RWProperty<std::string> name;
+  nux::RWProperty<std::string> icon;
+  nux::RWProperty<std::string> description;
+  nux::RWProperty<std::string> search_hint;
+  nux::RWProperty<bool> visible;
+  nux::RWProperty<bool> search_in_global;
+  nux::RWProperty<std::string> shortcut;
 
+  nux::RWProperty<ResultsModel::Ptr> results;
+  nux::RWProperty<ResultsModel::Ptr> global_results;
+  
   class Impl;
 private:
   Impl *pimpl;

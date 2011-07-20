@@ -19,7 +19,9 @@
 
 #include "GLibDBusProxy.h"
 
+#include <map>
 #include <NuxCore/Logger.h>
+#include <vector>
 
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
@@ -35,13 +37,15 @@ using std::string;
 
 struct CallData
 {
-  DBusProxy::MethodCallback callback;
+  DBusProxy::ReplyCallback callback;
   DBusProxy::Impl* impl;
 };
 
 class DBusProxy::Impl
 {
 public:
+  typedef std::vector<ReplyCallback> Callbacks;
+  typedef std::map<string, Callbacks> SignalHandlers;
 
   Impl(DBusProxy* owner,
        string const& name,
@@ -65,10 +69,11 @@ public:
 
   void Call(string const& method_name,
             GVariant* parameters,
-            MethodCallback callback,
+            ReplyCallback callback,
             GDBusCallFlags flags,
             int timeout_msec);
   static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
+  void Connect(string const& signal_name, ReplyCallback callback);
 
   DBusProxy* owner_;
   string name_;
@@ -85,6 +90,7 @@ public:
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
 
+  SignalHandlers handlers_;
 };
 
 DBusProxy::Impl::Impl(DBusProxy* owner,
@@ -216,11 +222,13 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
                     << "SignalName: " << signal_name << " "
                     << "ParameterType: " << g_variant_get_type_string(parameters);
 
+  for (ReplyCallback callback: handlers_[signal_name])
+    callback(parameters);
 }
 
 void DBusProxy::Impl::Call(string const& method_name,
                            GVariant* parameters,
-                           MethodCallback callback,
+                           ReplyCallback callback,
                            GDBusCallFlags flags,
                            int timeout_msec)
 {
@@ -266,6 +274,11 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
   delete data;
 }
 
+void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
+{
+  handlers_[signal_name].push_back(callback);
+}
+
 DBusProxy::DBusProxy(string const& name,
                      string const& object_path,
                      string const& interface_name,
@@ -281,11 +294,16 @@ DBusProxy::~DBusProxy()
 
 void DBusProxy::Call(string const& method_name,
                      GVariant* parameters,
-                     MethodCallback callback,
+                     ReplyCallback callback,
                      GDBusCallFlags flags,
                      int timeout_msec)
 {
   pimpl->Call(method_name, parameters, callback, flags, timeout_msec);
+}
+
+void DBusProxy::Connect(std::string const& signal_name, ReplyCallback callback)
+{
+  pimpl->Connect(signal_name, callback);
 }
 
 }
