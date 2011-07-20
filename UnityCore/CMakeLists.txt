@@ -17,6 +17,8 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     Model.h
+     Model-inl.h
      ResultsModel.h
      ResultsModelIter.h
      Variant.h
