@@ -940,12 +940,16 @@ LauncherIcon::SetEmblemIconName (const char *name)
 }
 
 std::vector<nux::Vector4> &
-LauncherIcon::GetTransform (std::string name)
+LauncherIcon::GetTransform (std::string const& name)
 {
-  if (transform_map.find (name) == transform_map.end ())
-    transform_map[name] = std::vector<nux::Vector4> (4);
+  auto iter = transform_map.find(name);
+  if (iter == transform_map.end())
+  {
+    auto iter2 = transform_map.insert(std::map<std::string, std::vector<nux::Vector4> >::value_type (name, std::vector<nux::Vector4>(4)));
+    return iter2.first->second;
+  }
 
-  return transform_map[name];
+  return iter->second;
 }
 
 void 

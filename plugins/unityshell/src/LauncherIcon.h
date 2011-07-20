@@ -143,7 +143,7 @@ public:
     
     void SetIconType (IconType type);
 
-    std::vector<nux::Vector4> & GetTransform (std::string name);
+    std::vector<nux::Vector4> & GetTransform (std::string const& name);
     
     static void SetSkipTooltipDelay (gboolean skip_tooltip_delay);
 

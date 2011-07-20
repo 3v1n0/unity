@@ -52,6 +52,8 @@ private:
     static void OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data);
     guint32 _theme_changed_id;
 
+    int last_size_;
+
     sigc::connection _on_mouse_down_connection;
     sigc::connection _on_mouse_up_connection;
     sigc::connection _on_mouse_click_connection;
