@@ -27,7 +27,6 @@
 #include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
 
-
 namespace unity {
 namespace dash {
 

@@ -18,6 +18,7 @@ set (CORE_HEADERS
      Lens.h
      Lenses.h
      ResultsModel.h
+     ResultsModelIter.h
      Variant.h
     )
 
@@ -32,6 +33,7 @@ set (CORE_SOURCES
      Indicators.cpp
      Lens.cpp
      ResultsModel.cpp
+     ResultsModelIter.cpp
      Variant.cpp
     )
 

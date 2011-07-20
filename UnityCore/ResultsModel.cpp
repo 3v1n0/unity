@@ -19,7 +19,6 @@
 
 #include "ResultsModel.h"
 
-#include <dee.h>
 #include <NuxCore/Logger.h>
 
 #include "config.h"
@@ -33,76 +32,6 @@ namespace {
 nux::logging::Logger logger("unity.dash.resultsmodel");
 }
 
-class ResultsModelIterImpl : public ResultsModelIter
-{
-public:
-  ResultsModelIterImpl(DeeModel* model,
-                       DeeModelIter* iter,
-                       DeeModelTag* renderer_tag)
-    : model_(model)
-    , iter_(iter)
-    , tag_(renderer_tag)
-  {
-    uri.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_uri));
-    icon_hint.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_icon_hint));
-    category.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_category));
-    mimetype.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_mimetype));
-    name.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_name));
-    comment.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_comment));
-    dnd_uri.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIterImpl::get_dnd_uri));
-  }
-
-  std::string get_uri() const
-  {
-    return dee_model_get_string(model_, iter_, 0);
-  }
-
-  std::string get_icon_hint() const
-  {
-    return dee_model_get_string(model_, iter_, 1);
-  }
-
-  unsigned int get_category() const
-  {
-    return dee_model_get_uint32(model_, iter_, 2);
-  }
-
-  std::string get_mimetype() const
-  {
-    return dee_model_get_string(model_, iter_, 3);
-  }
-
-  std::string get_name() const
-  {
-    return dee_model_get_string(model_, iter_, 4);
-  }
-
-  std::string get_comment() const
-  {
-    return dee_model_get_string(model_, iter_, 5);
-  }
-
-  std::string get_dnd_uri() const
-  {
-    return dee_model_get_string(model_, iter_, 6);
-  }
-
-  // Work around non-virtual template functions
-  void set_renderer_real(void* renderer)
-  {
-    dee_model_set_tag(model_, iter_, tag_, renderer);
-  }
-
-  void* get_renderer_real() const
-  {
-    return dee_model_get_tag(model_, iter_, tag_);
-  }
-
-  DeeModel* model_;
-  DeeModelIter* iter_;
-  DeeModelTag* tag_;
-};
-
 class ResultsModel::Impl
 {
 public:
@@ -115,6 +44,8 @@ public:
 
   void OnSwarmNameChanged(std::string const& swarm_name);
   unsigned int count();
+
+  const ResultsModelIter IterAtIndex(unsigned int index);
 
   ResultsModel* owner_;
 
@@ -133,19 +64,19 @@ ResultsModel::Impl::~Impl()
 
 void ResultsModel::Impl::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  ResultsModelIterImpl it(model, iter, renderer_tag_);
+  ResultsModelIter it(model, iter, renderer_tag_);
   owner_->row_added(it);
 }
 
 void ResultsModel::Impl::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  ResultsModelIterImpl it(model, iter, renderer_tag_);
+  ResultsModelIter it(model, iter, renderer_tag_);
   owner_->row_changed(it);
 }
 
 void ResultsModel::Impl::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
-  ResultsModelIterImpl it(model, iter, renderer_tag_);
+  ResultsModelIter it(model, iter, renderer_tag_);
   owner_->row_removed(it);
 }
 
@@ -184,6 +115,12 @@ unsigned int ResultsModel::Impl::count()
     return 0;
 }
 
+const ResultsModelIter ResultsModel::Impl::IterAtIndex(unsigned int index)
+{
+  ResultsModelIter it(model_, dee_model_get_iter_at_row(model_, index), renderer_tag_);
+  return it;
+}
+
 ResultsModel::ResultsModel()
 
   : pimpl(new Impl(this))
@@ -195,6 +132,11 @@ ResultsModel::ResultsModel()
 ResultsModel::~ResultsModel()
 {
   delete pimpl;
+}
+
+const ResultsModelIter ResultsModel::IterAtIndex(unsigned int index)
+{
+  return pimpl->IterAtIndex(index);
 }
 
 }

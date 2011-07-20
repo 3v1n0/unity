@@ -22,32 +22,14 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <dee.h>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
+#include "ResultsModelIter.h"
+
 namespace unity {
 namespace dash {
-
-class ResultsModelIter : boost::noncopyable
-{
-public:
-  template<typename T>
-  void set_renderer(T renderer);
-  template<typename T>
-  T renderer();
-
-  nux::ROProperty<std::string> uri;
-  nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<unsigned int> category; //FIXME:this should be actual category
-  nux::ROProperty<std::string> mimetype;
-  nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> comment;
-  nux::ROProperty<std::string> dnd_uri;
-
-protected:
-  virtual void set_renderer_real(void* renderer) = 0;
-  virtual void* get_renderer_real() const = 0;
-};
 
 class ResultsModel : public sigc::trackable, boost::noncopyable
 {
@@ -57,16 +39,18 @@ public:
   ResultsModel();
   ~ResultsModel();
 
+  const ResultsModelIter IterAtIndex(unsigned int index);
+
   nux::Property<std::string> swarm_name;
   nux::ROProperty<unsigned int> count;
 
-  sigc::signal<void, ResultsModelIter&> row_added;
-  sigc::signal<void, ResultsModelIter&> row_changed;
-  sigc::signal<void, ResultsModelIter&> row_removed;
+  sigc::signal<void, ResultsModelIter const&> row_added;
+  sigc::signal<void, ResultsModelIter const&> row_changed;
+  sigc::signal<void, ResultsModelIter const&> row_removed;
 
   class Impl;
 private:
-  Impl *pimpl;
+  Impl* pimpl;
 };
 
 }
