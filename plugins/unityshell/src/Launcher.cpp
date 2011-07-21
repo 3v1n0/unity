@@ -1688,7 +1688,7 @@ Launcher::OnUpdateDragManagerTimeout (gpointer data)
   unsigned int mask;
   XQueryPointer (self->_screen->dpy (), self->_screen->root (), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
 
-  if (drag_owner && (mask | (Button1Mask & Button2Mask & Button3Mask)))
+  if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
   {
     self->_hide_machine->SetQuirk (LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
     return true;
