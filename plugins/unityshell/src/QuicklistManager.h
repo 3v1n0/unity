@@ -23,29 +23,29 @@
 class QuicklistManager : public sigc::trackable
 {
 public:
-  static QuicklistManager *Default ();
+  static QuicklistManager* Default();
 
-  QuicklistManager ();
+  QuicklistManager();
 
-  ~QuicklistManager ();
+  ~QuicklistManager();
 
-  QuicklistView *Current ();
+  QuicklistView* Current();
 
-  void RegisterQuicklist (QuicklistView *quicklist);
-  void ShowQuicklist (QuicklistView *quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
-  void HideQuicklist (QuicklistView *quicklist);
+  void RegisterQuicklist(QuicklistView* quicklist);
+  void ShowQuicklist(QuicklistView* quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
+  void HideQuicklist(QuicklistView* quicklist);
 
-  void RecvShowQuicklist (nux::BaseWindow *window);
-  void RecvHideQuicklist (nux::BaseWindow *window);
+  void RecvShowQuicklist(nux::BaseWindow* window);
+  void RecvHideQuicklist(nux::BaseWindow* window);
 
   sigc::signal<void, QuicklistView*> quicklist_opened;
   sigc::signal<void, QuicklistView*> quicklist_closed;
 
 private:
-  static QuicklistManager *_default;
+  static QuicklistManager* _default;
 
   std::list<QuicklistView*> _quicklist_list;
-  QuicklistView *_current_quicklist;
+  QuicklistView* _current_quicklist;
 
 };
 

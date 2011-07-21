@@ -15,7 +15,7 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
- 
+
 #include <math.h>
 
 #include <Nux/Nux.h>
@@ -23,103 +23,135 @@
 
 #include "SwitcherController.h"
 
-namespace unity {
-namespace switcher {
+namespace unity
+{
+namespace switcher
+{
 
 SwitcherController::SwitcherController()
-  :  visible_(false)
+  :  view_window_(0)
+  ,  visible_(false)
+  ,  show_timer_(0)
 {
-  
 }
 
-void SwitcherController::Show (SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
+SwitcherController::~SwitcherController()
+{
+}
+
+void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherController::SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results)
 {
   if (sort == FOCUS_ORDER)
-    std::sort (results.begin (), results.end (), CompareSwitcherItemsPriority);
-    
-  model_ = SwitcherModel::Ptr (new SwitcherModel (results));
-  SelectFirstItem ();
-  
+    std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
+
+  model_ = SwitcherModel::Ptr(new SwitcherModel(results));
+  SelectFirstItem();
+
   visible_ = true;
 
-  ConstructView ();
+  show_timer_ = g_timeout_add(150, &SwitcherController::OnShowTimer, this);
 }
 
-void SwitcherController::ConstructView ()
+gboolean SwitcherController::OnShowTimer(gpointer data)
 {
-  nux::HLayout *layout;
+  SwitcherController* self = static_cast<SwitcherController*>(data);
+
+  if (self->visible_)
+    self->ConstructView();
+
+  self->show_timer_ = 0;
+  return FALSE;
+}
+
+void SwitcherController::ConstructView()
+{
+  nux::HLayout* layout;
 
   layout = new nux::HLayout();
 
-  view_ = new SwitcherView ();
-  view_->SetModel (model_);
+  view_ = new SwitcherView();
+  view_->SetModel(model_);
 
-  layout->AddView (view_, 1);
+  layout->AddView(view_, 1);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 
-  view_window_ = new nux::BaseWindow ("Switcher");
-  view_window_->SinkReference ();
-  view_window_->SetLayout (layout);
-  view_window_->SetBackgroundColor (nux::Color(0x00000000));
+  view_window_ = new nux::BaseWindow("Switcher");
+  view_window_->SinkReference();
+  view_window_->SetLayout(layout);
+  view_window_->SetBackgroundColor(nux::Color(0x00000000));
+  view_window_->SetGeometry(workarea_);
+
   view_window_->ShowWindow(true);
-
-  view_window_->SetGeometry (workarea_);
-
 }
 
-void SwitcherController::SetWorkspace (nux::Geometry geo)
+void SwitcherController::SetWorkspace(nux::Geometry geo)
 {
-  workarea_ = geo;  
+  workarea_ = geo;
 }
 
-void SwitcherController::Hide ()
+void SwitcherController::Hide()
 {
   if (!visible_)
     return;
-  
-  model_.reset ();
+
+  AbstractLauncherIcon* selection = model_->Selection();
+  if (selection)
+    selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+
+  model_.reset();
   visible_ = false;
 
-  view_window_->UnReference ();
+  if (view_window_)
+  {
+    view_window_->ShowWindow(false);
+    view_window_->UnReference();
+    view_window_ = 0;
+  }
+
+  if (show_timer_)
+    g_source_remove(show_timer_);
+  show_timer_ = 0;
 }
 
-bool SwitcherController::Visible ()
+bool SwitcherController::Visible()
 {
   return visible_;
 }
 
-void SwitcherController::MoveNext ()
+void SwitcherController::MoveNext()
 {
   if (!model_)
     return;
-  model_->Next ();
+  model_->Next();
 }
 
-void SwitcherController::MovePrev ()
+void SwitcherController::MovePrev()
 {
   if (!model_)
     return;
-  model_->Prev ();
+  model_->Prev();
 }
 
-void SwitcherController::DetailCurrent ()
+void SwitcherController::DetailCurrent()
 {
 
 }
 
-bool SwitcherController::CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second)
+bool SwitcherController::CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
 {
-  return first->SwitcherPriority () > second->SwitcherPriority ();
+  if (first->Type() == second->Type())
+    return first->SwitcherPriority() > second->SwitcherPriority();
+  return first->Type() < second->Type();
 }
 
-void SwitcherController::SelectFirstItem ()
+void SwitcherController::SelectFirstItem()
 {
   if (!model_)
     return;
-  
+
   // Hack
-  model_->Select (1);
+  model_->Select(2);
 }
 
 }

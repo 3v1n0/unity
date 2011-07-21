@@ -23,18 +23,20 @@
 #include <gio/gio.h>
 
 #include "FavoriteStore.h"
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/GLibWrapper.h>
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session
-namespace unity {
-namespace internal {
+namespace unity
+{
+namespace internal
+{
 
 class FavoriteStoreGSettings : public FavoriteStore
 {
 public:
   FavoriteStoreGSettings();
-  FavoriteStoreGSettings(GSettingsBackend *backend);
+  FavoriteStoreGSettings(GSettingsBackend* backend);
 
   virtual FavoriteList const& GetFavorites();
   virtual void AddFavorite(std::string const& desktop_path, int position);

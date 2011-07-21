@@ -30,6 +30,6 @@
    When the Launcher thing became solved (as planned), this tests
    would be moved/adapted to the unity test system */
 
-void unity_run_a11y_unit_tests (void);
+void unity_run_a11y_unit_tests(void);
 
 #endif /* UNITY_A11Y_H */

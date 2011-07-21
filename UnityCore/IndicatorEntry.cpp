@@ -21,8 +21,10 @@
 
 #include <iostream>
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 std::string const Entry::UNUSED_ID("|");
 
@@ -113,7 +115,7 @@ Entry& Entry::operator=(Entry const& rhs)
   image_sensitive_ = rhs.image_sensitive_;
   image_visible_ = rhs.image_visible_;
 
-  updated.emit ();
+  updated.emit();
   return *this;
 }
 
@@ -173,7 +175,7 @@ std::ostream& operator<<(std::ostream& out, Entry const& e)
       << e.label_sensitive() << ", " << e.label_visible() << ") image ("
       << e.image_sensitive() << ", " << e.image_visible() << ") "
       << (e.active() ? "active" : "not-active") << " "
-      << (e.show_now() ? "show" : "dont-show" ) <<" >";
+      << (e.show_now() ? "show" : "dont-show") << " >";
   return out;
 }
 

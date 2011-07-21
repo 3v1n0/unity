@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
- * 
+ *
  */
 
 #ifndef ABSTRACTLAUNCHERICON_H
@@ -29,117 +29,146 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 
+class ActionArg
+{
+public:
+  enum Source
+  {
+    LAUNCHER,
+    SWITCHER,
+    OTHER,
+  };
+
+  ActionArg()
+    : source(OTHER)
+    , button(0)
+  {
+  }
+
+  ActionArg(Source source, int button)
+    : source(source)
+    , button(button)
+  {
+  }
+
+  Source source;
+  int button;
+};
+
 class AbstractLauncherIcon
 {
 public:
-    typedef enum
-    {
-      TYPE_NONE,
-      TYPE_BEGIN,
-      TYPE_FAVORITE,
-      TYPE_APPLICATION,
-      TYPE_EXPO,
-      TYPE_PLACE,
-      TYPE_DEVICE,
-      TYPE_TRASH,
-      TYPE_END,
-    } IconType;
 
-    typedef enum
-    {
-      QUIRK_VISIBLE,
-      QUIRK_ACTIVE,
-      QUIRK_RUNNING,
-      QUIRK_URGENT,
-      QUIRK_PRESENTED,
-      QUIRK_STARTING,
-      QUIRK_SHIMMER,
-      QUIRK_CENTER_SAVED,
-      QUIRK_PROGRESS,
-      QUIRK_DROP_PRELIGHT,
-      QUIRK_DROP_DIM,
-      QUIRK_DESAT,
-      
-      QUIRK_LAST,
-    } Quirk;
 
-    virtual ~AbstractLauncherIcon () {}
 
-    nux::Property<std::string> tooltip_text;
+  typedef enum
+  {
+    TYPE_NONE,
+    TYPE_BEGIN,
+    TYPE_FAVORITE,
+    TYPE_APPLICATION,
+    TYPE_EXPO,
+    TYPE_PLACE,
+    TYPE_DEVICE,
+    TYPE_TRASH,
+    TYPE_END,
+  } IconType;
 
-    virtual void HideTooltip () = 0;
+  typedef enum
+  {
+    QUIRK_VISIBLE,
+    QUIRK_ACTIVE,
+    QUIRK_RUNNING,
+    QUIRK_URGENT,
+    QUIRK_PRESENTED,
+    QUIRK_STARTING,
+    QUIRK_SHIMMER,
+    QUIRK_CENTER_SAVED,
+    QUIRK_PROGRESS,
+    QUIRK_DROP_PRELIGHT,
+    QUIRK_DROP_DIM,
+    QUIRK_DESAT,
 
-    virtual void    SetShortcut (guint64 shortcut) = 0;
-    
-    virtual guint64 GetShortcut () = 0;
-    
-    virtual void SetSortPriority (int priority) = 0;    
+    QUIRK_LAST,
+  } Quirk;
 
-    virtual bool OpenQuicklist (bool default_to_first_item = false) = 0;
+  virtual ~AbstractLauncherIcon() {}
 
-    virtual void        SetCenter (nux::Point3 center) = 0;
+  nux::Property<std::string> tooltip_text;
 
-    virtual nux::Point3 GetCenter () = 0;
+  virtual void HideTooltip() = 0;
 
-    virtual std::vector<nux::Vector4> & GetTransform (std::string name) = 0;
+  virtual void    SetShortcut(guint64 shortcut) = 0;
 
-    virtual void Activate () = 0;
-    
-    virtual void OpenInstance () = 0;
+  virtual guint64 GetShortcut() = 0;
 
-    virtual int SortPriority () = 0;
-    
-    virtual int RelatedWindows () = 0;
-    
-    virtual bool HasWindowOnViewport () = 0;
-    
-    virtual bool IsSpacer () = 0;
-    
-    virtual float PresentUrgency () = 0;
+  virtual void SetSortPriority(int priority) = 0;
 
-    virtual float GetProgress () = 0;
-    
-    virtual bool ShowInSwitcher () = 0;
+  virtual bool OpenQuicklist(bool default_to_first_item = false) = 0;
 
-    virtual unsigned int SwitcherPriority () = 0;
-    
-    virtual bool GetQuirk (Quirk quirk) = 0;
+  virtual void        SetCenter(nux::Point3 center) = 0;
 
-    virtual void SetQuirk (Quirk quirk, bool value) = 0;
+  virtual nux::Point3 GetCenter() = 0;
 
-    virtual struct timespec GetQuirkTime (Quirk quirk) = 0;
-    
-    virtual IconType Type () = 0;
-    
-    virtual nux::Color BackgroundColor () = 0;
+  virtual std::vector<nux::Vector4> & GetTransform(std::string const& name) = 0;
 
-    virtual nux::Color GlowColor () = 0;
-    
-    virtual const gchar * RemoteUri () = 0;
-    
-    virtual nux::BaseTexture * TextureForSize (int size) = 0;
+  virtual void Activate(ActionArg arg) = 0;
 
-    virtual nux::BaseTexture * Emblem () = 0;
+  virtual void OpenInstance(ActionArg arg) = 0;
 
-    virtual std::list<DbusmenuMenuitem *> Menus () = 0;
+  virtual int SortPriority() = 0;
 
-    virtual nux::DndAction QueryAcceptDrop (std::list<char *> paths) = 0;
+  virtual int RelatedWindows() = 0;
 
-    virtual void AcceptDrop (std::list<char *> paths) = 0;
+  virtual bool HasWindowOnViewport() = 0;
 
-    virtual void SendDndEnter () = 0;
+  virtual bool IsSpacer() = 0;
 
-    virtual void SendDndLeave () = 0;
-    
-    sigc::signal<void, int> mouse_down;
-    sigc::signal<void, int> mouse_up;
-    sigc::signal<void, int> mouse_click;
-    sigc::signal<void>      mouse_enter;
-    sigc::signal<void>      mouse_leave;
-    
-    sigc::signal<void, AbstractLauncherIcon *> show;
-    sigc::signal<void, AbstractLauncherIcon *> hide;
-    sigc::signal<void, AbstractLauncherIcon *> needs_redraw;
+  virtual float PresentUrgency() = 0;
+
+  virtual float GetProgress() = 0;
+
+  virtual bool ShowInSwitcher() = 0;
+
+  virtual unsigned int SwitcherPriority() = 0;
+
+  virtual bool GetQuirk(Quirk quirk) = 0;
+
+  virtual void SetQuirk(Quirk quirk, bool value) = 0;
+
+  virtual struct timespec GetQuirkTime(Quirk quirk) = 0;
+
+  virtual IconType Type() = 0;
+
+  virtual nux::Color BackgroundColor() = 0;
+
+  virtual nux::Color GlowColor() = 0;
+
+  virtual const gchar* RemoteUri() = 0;
+
+  virtual nux::BaseTexture* TextureForSize(int size) = 0;
+
+  virtual nux::BaseTexture* Emblem() = 0;
+
+  virtual std::list<DbusmenuMenuitem*> Menus() = 0;
+
+  virtual nux::DndAction QueryAcceptDrop(std::list<char*> paths) = 0;
+
+  virtual void AcceptDrop(std::list<char*> paths) = 0;
+
+  virtual void SendDndEnter() = 0;
+
+  virtual void SendDndLeave() = 0;
+
+  sigc::signal<void, int> mouse_down;
+  sigc::signal<void, int> mouse_up;
+  sigc::signal<void, int> mouse_click;
+  sigc::signal<void>      mouse_enter;
+  sigc::signal<void>      mouse_leave;
+
+  sigc::signal<void, AbstractLauncherIcon*> show;
+  sigc::signal<void, AbstractLauncherIcon*> hide;
+  sigc::signal<void, AbstractLauncherIcon*> needs_redraw;
 
 };
 

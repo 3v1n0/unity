@@ -31,26 +31,26 @@
 class DeviceLauncherSection : public sigc::trackable
 {
 public:
-  DeviceLauncherSection  (Launcher *launcher);
-  ~DeviceLauncherSection ();
+  DeviceLauncherSection(Launcher* launcher);
+  ~DeviceLauncherSection();
 
-  sigc::signal<void, LauncherIcon *> IconAdded;
+  sigc::signal<void, LauncherIcon*> IconAdded;
 
 private:
-  static bool PopulateEntries (DeviceLauncherSection *self);
-  static void OnVolumeAdded (GVolumeMonitor        *monitor,
-                             GVolume               *volume,
-                             DeviceLauncherSection *self);
-  static void OnVolumeRemoved (GVolumeMonitor        *monitor,
-                               GVolume               *volume,
-                               DeviceLauncherSection *self);
-  static void OnMountAdded (GVolumeMonitor        *monitor,
-                            GMount                *mount,
-                            DeviceLauncherSection *self);
+  static bool PopulateEntries(DeviceLauncherSection* self);
+  static void OnVolumeAdded(GVolumeMonitor*        monitor,
+                            GVolume*               volume,
+                            DeviceLauncherSection* self);
+  static void OnVolumeRemoved(GVolumeMonitor*        monitor,
+                              GVolume*               volume,
+                              DeviceLauncherSection* self);
+  static void OnMountAdded(GVolumeMonitor*        monitor,
+                           GMount*                mount,
+                           DeviceLauncherSection* self);
 public:
-  Launcher       *_launcher;
-  GVolumeMonitor *_monitor;
-  GHashTable     *_ht;
+  Launcher*       _launcher;
+  GVolumeMonitor* _monitor;
+  GHashTable*     _ht;
 
 private:
   gulong _on_volume_added_handler_id;

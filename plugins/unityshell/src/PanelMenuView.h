@@ -32,7 +32,8 @@
 
 #include <libbamf/libbamf.h>
 
-namespace unity {
+namespace unity
+{
 
 class PanelMenuView : public PanelIndicatorObjectView
 {
@@ -49,80 +50,84 @@ public:
   // It also deals with undecorating maximized windows (and redecorating them
   // on unmaximize)
 
-  PanelMenuView (int padding = 6);
-  ~PanelMenuView ();
+  PanelMenuView(int padding = 6);
+  ~PanelMenuView();
 
-  void FullRedraw ();
+  void FullRedraw();
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  virtual long PostLayoutManagement (long LayoutResult);
+  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long PostLayoutManagement(long LayoutResult);
 
   void SetProxy(indicator::Indicator::Ptr const& proxy);
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
-  void OnEntryRefreshed (PanelIndicatorObjectEntryView *view);
-  void OnActiveChanged (PanelIndicatorObjectEntryView *view, bool is_active);
-  void OnActiveWindowChanged (BamfView *old_view, BamfView *new_view);
-  void OnNameChanged (gchar* new_name, gchar* old_name);
+  void OnEntryRefreshed(PanelIndicatorObjectEntryView* view);
+  void OnActiveChanged(PanelIndicatorObjectEntryView* view, bool is_active);
+  void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
+  void OnNameChanged(gchar* new_name, gchar* old_name);
 
-  void OnSpreadInitiate ();
-  void OnSpreadTerminate ();
-  void OnWindowMinimized (guint32 xid);
-  void OnWindowUnminimized (guint32 xid);
-  void OnWindowUnmapped (guint32 xid);
-  void OnWindowMaximized (guint32 xid);
-  void OnWindowRestored  (guint32 xid);
-  void OnWindowMoved (guint32 xid);
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
+  void OnWindowMinimized(guint32 xid);
+  void OnWindowUnminimized(guint32 xid);
+  void OnWindowUnmapped(guint32 xid);
+  void OnWindowMaximized(guint32 xid);
+  void OnWindowRestored(guint32 xid);
+  void OnWindowMoved(guint32 xid);
 
-  guint32 GetMaximizedWindow ();
+  guint32 GetMaximizedWindow();
 
-  void OnMaximizedGrab (int x, int y);
-  void OnMouseDoubleClicked ();
-  void OnMouseMiddleClicked ();
+  void OnMaximizedGrab(int x, int y);
+  void OnMouseDoubleClicked();
+  void OnMouseMiddleClicked();
 
-  void Refresh ();
-  void AllMenusClosed ();
+  void Refresh();
+  void AllMenusClosed();
 
-  void OnCloseClicked ();
-  void OnMinimizeClicked ();
-  void OnRestoreClicked ();
-  void OnWindowButtonsRedraw ();
-  void SetMonitor (int monitor);
-  bool GetControlsActive ();
+  void OnCloseClicked();
+  void OnMinimizeClicked();
+  void OnRestoreClicked();
+  void OnWindowButtonsRedraw();
+  void SetMonitor(int monitor);
+  bool GetControlsActive();
 
-  bool HasOurWindowFocused ();
+  bool HasOurWindowFocused();
 
 protected:
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
+
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+  void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
 
 private:
-  gchar * GetActiveViewName ();
-  static void OnPlaceViewShown (GVariant *data, PanelMenuView *self);
-  static void OnPlaceViewHidden (GVariant *data, PanelMenuView *self);
-  void UpdateShowNow (bool ignore);
-  static gboolean UpdateActiveWindowPosition (PanelMenuView *self);
+  gchar* GetActiveViewName();
+  static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
+  static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
+  void UpdateShowNow(bool ignore);
+  static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
 
 private:
   BamfMatcher* _matcher;
 
-  nux::AbstractPaintLayer *_title_layer;
-  nux::HLayout            *_menu_layout;
+  nux::AbstractPaintLayer* _title_layer;
+  nux::HLayout*            _menu_layout;
   nux::CairoGraphics       _util_cg;
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> _gradient_texture;
-  nux::BaseTexture        *_title_tex;
+  nux::BaseTexture*        _title_tex;
 
   bool _is_inside;
   bool _is_grabbed;
   bool _is_maximized;
   bool _is_own_window;
-  PanelIndicatorObjectEntryView *_last_active_view;
+  PanelIndicatorObjectEntryView* _last_active_view;
 
-  WindowButtons * _window_buttons;
-  PanelTitlebarGrabArea * _panel_titlebar_grab_area;
+  WindowButtons* _window_buttons;
+  PanelTitlebarGrabArea* _panel_titlebar_grab_area;
 
   std::map<guint32, bool> _decor_map;
   std::set<guint32> _maximized_set;
@@ -141,23 +146,6 @@ private:
   guint32 _active_xid;
   guint32 _active_moved_id;
   nux::Geometry _monitor_geo;
-
-  sigc::connection _on_winbutton_close_clicked_connection;
-  sigc::connection _on_winbutton_minimize_clicked_connection;
-  sigc::connection _on_winbutton_restore_clicked_connection;
-  sigc::connection _on_winbutton_redraw_signal_connection;
-  sigc::connection _on_titlebargrab_mouse_down_connnection;
-  sigc::connection _on_titlebargrab_mouse_doubleleftclick_connnection;
-  sigc::connection _on_titlebargrab_mouse_middleclick_connnection;
-  sigc::connection _on_window_minimized_connection;
-  sigc::connection _on_window_unminimized_connection;
-  sigc::connection _on_window_initspread_connection;
-  sigc::connection _on_window_terminatespread_connection;
-  sigc::connection _on_window_maximized_connection;
-  sigc::connection _on_window_restored_connection;
-  sigc::connection _on_window_unmapped_connection;
-  sigc::connection _on_window_moved_connection;
-  sigc::connection _on_panelstyle_changed_connection;
 
   gulong _activate_window_changed_id;
 

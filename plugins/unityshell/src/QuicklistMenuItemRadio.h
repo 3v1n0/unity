@@ -30,38 +30,38 @@
 
 class QuicklistMenuItemRadio : public QuicklistMenuItem
 {
-  public:
-    QuicklistMenuItemRadio (DbusmenuMenuitem* item,
-                            NUX_FILE_LINE_PROTO);
+public:
+  QuicklistMenuItemRadio(DbusmenuMenuitem* item,
+                         NUX_FILE_LINE_PROTO);
 
-    QuicklistMenuItemRadio (DbusmenuMenuitem* item,
-                            bool              debug,
-                            NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemRadio(DbusmenuMenuitem* item,
+                         bool              debug,
+                         NUX_FILE_LINE_PROTO);
 
-    ~QuicklistMenuItemRadio ();
+  ~QuicklistMenuItemRadio();
 
-  protected:
-    void PreLayoutManagement ();
+protected:
+  void PreLayoutManagement();
 
-    long PostLayoutManagement (long layoutResult);
+  long PostLayoutManagement(long layoutResult);
 
-    long ProcessEvent (nux::IEvent& event,
-                       long         traverseInfo,
-                       long         processEventInfo);
+  long ProcessEvent(nux::IEvent& event,
+                    long         traverseInfo,
+                    long         processEventInfo);
 
-    void Draw (nux::GraphicsEngine& gfxContext,
-               bool                 forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext,
+            bool                 forceDraw);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext,
-                      bool                 forceDraw);
-
-    void PostDraw (nux::GraphicsEngine& gfxContext,
+  void DrawContent(nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-    void Initialize (DbusmenuMenuitem* item);
-    
-    virtual void UpdateTexture ();
-    virtual int CairoSurfaceWidth ();
+  void PostDraw(nux::GraphicsEngine& gfxContext,
+                bool                 forceDraw);
+
+  void Initialize(DbusmenuMenuitem* item);
+
+  virtual void UpdateTexture();
+  virtual int CairoSurfaceWidth();
 };
 
 #endif // QUICKLISTMENUITEMRADIO_H

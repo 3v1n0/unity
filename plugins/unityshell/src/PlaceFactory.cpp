@@ -19,19 +19,19 @@
 #include "PlaceFactory.h"
 #include "PlaceFactoryFile.h"
 
-static PlaceFactory *default_factory = NULL;
+static PlaceFactory* default_factory = NULL;
 
-PlaceFactory *
-PlaceFactory::GetDefault ()
+PlaceFactory*
+PlaceFactory::GetDefault()
 {
   if (!default_factory)
-    default_factory = new PlaceFactoryFile ();
+    default_factory = new PlaceFactoryFile();
 
   return default_factory;
 }
 
 void
-PlaceFactory::SetDefault (PlaceFactory *factory)
+PlaceFactory::SetDefault(PlaceFactory* factory)
 {
   if (default_factory)
     delete default_factory;

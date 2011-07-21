@@ -25,8 +25,10 @@
 #include <boost/utility.hpp>
 #include <glib.h>
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 template <typename T>
 class Object
@@ -40,7 +42,7 @@ public:
   Object& operator=(T* val);
   Object& operator=(Object const& other);
 
-  operator T*();
+  operator T* ();
   operator bool();
   T* operator->();
   T* RawPtr();

@@ -24,14 +24,14 @@
 
 #include "Introspectable.h"
 
-class WindowButtons : public nux::HLayout, public Introspectable
+class WindowButtons : public nux::HLayout, public unity::Introspectable
 {
   // These are the [close][minimize][restore] buttons on the panel when there
   // is a maximized window
 
 public:
-  WindowButtons ();
-  ~WindowButtons ();
+  WindowButtons();
+  ~WindowButtons();
 
   sigc::signal<void> close_clicked;
   sigc::signal<void> minimize_clicked;
@@ -39,26 +39,26 @@ public:
   sigc::signal<void> redraw_signal;
 
 protected:
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
 
 
   // For testing the buttons
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
 private:
-  void OnCloseClicked ();
-  void OnMinimizeClicked ();
-  void OnRestoreClicked ();
+  void OnCloseClicked();
+  void OnMinimizeClicked();
+  void OnRestoreClicked();
 
 private:
-  nux::HLayout *_layout;
+  nux::HLayout* _layout;
 };
 
 #endif

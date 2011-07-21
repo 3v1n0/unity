@@ -20,8 +20,10 @@
 #include "Indicators.h"
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 class Indicators::Impl
 {
@@ -31,7 +33,7 @@ public:
 
   Impl(Indicators* owner)
     : owner_(owner)
-    {}
+  {}
 
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);

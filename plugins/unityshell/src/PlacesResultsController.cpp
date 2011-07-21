@@ -28,103 +28,102 @@
 
 #include "PlacesResultsController.h"
 
-PlacesResultsController::PlacesResultsController ()
-: _make_things_look_nice_id (0)
+PlacesResultsController::PlacesResultsController()
+  : _make_things_look_nice_id(0)
 {
   _results_view = NULL;
 }
 
-PlacesResultsController::~PlacesResultsController ()
+PlacesResultsController::~PlacesResultsController()
 {
+  Clear();
   if (_make_things_look_nice_id)
-    g_source_remove (_make_things_look_nice_id);
-  _results_view->UnReference ();
+    g_source_remove(_make_things_look_nice_id);
+  _results_view->UnReference();
 }
 
 void
-PlacesResultsController::SetView (PlacesResultsView *view)
+PlacesResultsController::SetView(PlacesResultsView* view)
 {
   if (_results_view != NULL)
-    _results_view->UnReference ();
+    _results_view->UnReference();
 
-  view->Reference ();
+  view->Reference();
   _results_view = view;
 }
 
-PlacesResultsView *
-PlacesResultsController::GetView ()
+PlacesResultsView*
+PlacesResultsController::GetView()
 {
   return _results_view;
 }
 
 void
-PlacesResultsController::AddGroup (PlaceEntry *entry, PlaceEntryGroup& group)
+PlacesResultsController::AddGroup(PlaceEntry* entry, PlaceEntryGroup& group)
 {
-  PlacesGroupController *controller = new PlacesGroupController (entry, group);
+  PlacesGroupController* controller = new PlacesGroupController(entry, group);
 
-  _id_to_group[group.GetId ()] = controller;
-  _groups.push_back (controller);
-  _results_view->AddGroup (controller->GetGroup ());
-  _results_view->QueueRelayout ();
+  _id_to_group[group.GetId()] = controller;
+  _groups.push_back(controller);
+  _results_view->AddGroup(controller->GetGroup());
+  _results_view->QueueRelayout();
 }
 
 void
-PlacesResultsController::AddResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesResultsController::AddResult(PlaceEntry* entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesGroupController *controller = _id_to_group[group.GetId ()];
+  PlacesGroupController* controller = _id_to_group[group.GetId()];
 
   // We don't complain here because there are some shortcuts that the PlacesView takes which
   // mean we sometimes receive requests that we can't process
   if (!controller)
     return;
 
-  controller->AddResult (group, result);
-  
+  controller->AddResult(group, result);
+
   if (!_make_things_look_nice_id)
-    _make_things_look_nice_id = g_idle_add ((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
+    _make_things_look_nice_id = g_idle_add((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
 }
 
 void
-PlacesResultsController::RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result)
+PlacesResultsController::RemoveResult(PlaceEntry* entry, PlaceEntryGroup& group, PlaceEntryResult& result)
 {
-  PlacesGroupController *controller = _id_to_group[group.GetId ()];
+  PlacesGroupController* controller = _id_to_group[group.GetId()];
 
   // We don't complain here because there are some shortcuts that the PlacesView takes which
   // mean we sometimes receive requests that we can't process
   if (!controller)
     return;
 
-  controller->RemoveResult (group, result);
+  controller->RemoveResult(group, result);
 
   if (!_make_things_look_nice_id)
-    _make_things_look_nice_id = g_idle_add ((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
+    _make_things_look_nice_id = g_idle_add((GSourceFunc)PlacesResultsController::MakeThingsLookNice, this);
 }
 
-void
-PlacesResultsController::Clear ()
+void PlacesResultsController::Clear()
 {
-  std::map <const void *, PlacesGroupController *>::iterator it, eit = _id_to_group.end ();
-  
-  for (it = _id_to_group.begin (); it != eit; ++it)
+  std::map <const void*, PlacesGroupController*>::iterator it, eit = _id_to_group.end();
+
+  for (it = _id_to_group.begin(); it != eit; ++it)
   {
     if (it->second)
-      (it->second)->UnReference ();
+      (it->second)->UnReference();
   }
 
-  _id_to_group.erase (_id_to_group.begin (), _id_to_group.end ());
-  _groups.erase (_groups.begin (), _groups.end ());
+  _id_to_group.clear();
+  _groups.clear();
 
   if (_results_view)
-    _results_view->Clear ();
+    _results_view->Clear();
 }
 
-bool
-PlacesResultsController::ActivateFirst ()
+bool PlacesResultsController::ActivateFirst()
 {
-  std::vector<PlacesGroupController *>::iterator it, eit = _groups.end ();
-  
-  for (it = _groups.begin (); it != eit; ++it)
-    if ((*it)->ActivateFirst ())
+  std::vector<PlacesGroupController*>::iterator it, eit = _groups.end();
+
+  for (it = _groups.begin(); it != eit; ++it)
+    if ((*it)->ActivateFirst())
       return true;
 
   return false;
@@ -133,36 +132,32 @@ PlacesResultsController::ActivateFirst ()
 //
 // Introspection
 //
-const gchar*
-PlacesResultsController::GetName ()
+const gchar* PlacesResultsController::GetName()
 {
   return "PlacesResultsController";
 }
 
-void
-PlacesResultsController::AddProperties (GVariantBuilder *builder)
+void PlacesResultsController::AddProperties(GVariantBuilder* builder)
 {
-
 }
 
-gboolean
-PlacesResultsController::MakeThingsLookNice (PlacesResultsController *self)
+gboolean PlacesResultsController::MakeThingsLookNice(PlacesResultsController* self)
 {
-  PlacesGroup *last_active_group = NULL;
-  std::vector<PlacesGroupController *>::iterator it, eit = self->_groups.end ();
-  
-  for (it = self->_groups.begin (); it != eit; ++it)
-  {
-    PlacesGroupController *controller = *it;
+  PlacesGroup* last_active_group = NULL;
+  std::vector<PlacesGroupController*>::iterator it, eit = self->_groups.end();
 
-    if (controller && controller->GetTotalResults ())
+  for (it = self->_groups.begin(); it != eit; ++it)
+  {
+    PlacesGroupController* controller = *it;
+
+    if (controller && controller->GetTotalResults())
     {
-      last_active_group = controller->GetGroup ();
-      last_active_group->SetDrawSeparator (true);
+      last_active_group = controller->GetGroup();
+      last_active_group->SetDrawSeparator(true);
     }
   }
   if (last_active_group)
-    last_active_group->SetDrawSeparator (false);
+    last_active_group->SetDrawSeparator(false);
 
   self->_make_things_look_nice_id = 0;
 

@@ -19,51 +19,51 @@
 
 #include "DevicesSettings.h"
 
-static DevicesSettings *_devices_settings = NULL;
+static DevicesSettings* _devices_settings = NULL;
 
-DevicesSettings::DevicesSettings ()
-: _settings (NULL),
-  _raw_devices_option (1),
-  _devices_option (ONLY_MOUNTED)
+DevicesSettings::DevicesSettings()
+  : _settings(NULL),
+    _raw_devices_option(1),
+    _devices_option(ONLY_MOUNTED)
 {
-  _settings = g_settings_new ("com.canonical.Unity.Devices");
-  g_signal_connect (_settings, "changed",
-                    (GCallback)(DevicesSettings::Changed), this);
-  Refresh ();
+  _settings = g_settings_new("com.canonical.Unity.Devices");
+  g_signal_connect(_settings, "changed",
+                   (GCallback)(DevicesSettings::Changed), this);
+  Refresh();
 }
 
-DevicesSettings::~DevicesSettings ()
+DevicesSettings::~DevicesSettings()
 {
-  g_object_unref (_settings);
+  g_object_unref(_settings);
 }
 
 void
-DevicesSettings::Refresh ()
+DevicesSettings::Refresh()
 {
-  _raw_devices_option = g_settings_get_enum (_settings, "devices-option");
+  _raw_devices_option = g_settings_get_enum(_settings, "devices-option");
 
   _devices_option = (DevicesOption)_raw_devices_option;
 
-  changed.emit (this);
+  changed.emit(this);
 }
 
 void
-DevicesSettings::Changed (GSettings *settings, char *key, DevicesSettings *self)
+DevicesSettings::Changed(GSettings* settings, char* key, DevicesSettings* self)
 {
-  self->Refresh ();
+  self->Refresh();
 }
 
-DevicesSettings *
-DevicesSettings::GetDefault ()
+DevicesSettings*
+DevicesSettings::GetDefault()
 {
-  if (G_UNLIKELY (!_devices_settings))
-    _devices_settings = new DevicesSettings ();
+  if (G_UNLIKELY(!_devices_settings))
+    _devices_settings = new DevicesSettings();
 
   return _devices_settings;
 }
 
 DevicesSettings::DevicesOption
-DevicesSettings::GetDevicesOption ()
+DevicesSettings::GetDevicesOption()
 {
   return _devices_option;
 }

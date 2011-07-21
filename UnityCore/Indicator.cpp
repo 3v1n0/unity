@@ -22,8 +22,10 @@
 #include <iostream>
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 Indicator::Indicator(std::string const& name)
   : name_(name)
@@ -70,7 +72,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
 {
   for (Entries::const_iterator i = entries_.begin(),
-         end = entries_.end(); i != end; ++i)
+       end = entries_.end(); i != end; ++i)
   {
     if ((*i)->id() == entry_id)
       return *i;
@@ -101,7 +103,7 @@ std::ostream& operator<<(std::ostream& out, Indicator const& i)
 {
   out << "<Indicator " << i.name() << std::endl;
   for (Indicator::Entries::const_iterator iter = i.entries_.begin(),
-         end = i.entries_.end(); iter != end; ++iter)
+       end = i.entries_.end(); iter != end; ++iter)
   {
     out << "\t" << **iter << std::endl;
   }

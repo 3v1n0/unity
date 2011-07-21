@@ -33,75 +33,77 @@
 // codebase, that is just rude.
 namespace nux
 {
-  StaticCairoText::StaticCairoText (const TCHAR* text,
-                                    NUX_FILE_LINE_DECL) :
-  View (NUX_FILE_LINE_PARAM),
-  _fontstring (NULL),
-  _cairoGraphics (NULL),
-  _texture2D (NULL),
-  _lines (-2),
-  _actual_lines (0)
+StaticCairoText::StaticCairoText(const TCHAR* text,
+                                 NUX_FILE_LINE_DECL) :
+  View(NUX_FILE_LINE_PARAM),
+  _fontstring(NULL),
+  _cairoGraphics(NULL),
+  _texture2D(NULL),
+  _lines(-2),
+  _actual_lines(0)
 
 {
   _textColor  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-  _text       = TEXT (text);
+  _text       = TEXT(text);
   _texture2D  = 0;
   _need_new_extent_cache = true;
   _pre_layout_width = 0;
   _pre_layout_height = 0;
   _can_pass_focus_to_composite_layout = false;
 
-  SetMinimumSize (1, 1);
+  SetMinimumSize(1, 1);
   _ellipsize = NUX_ELLIPSIZE_END;
   _align = NUX_ALIGN_LEFT;
   _valign = NUX_ALIGN_TOP;
   _fontstring = NULL;
-  SetCanFocus (false);
+  SetCanFocus(false);
+
+  _accept_key_nav_focus = false;
 }
 
-StaticCairoText::~StaticCairoText ()
+StaticCairoText::~StaticCairoText()
 {
-  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
-  g_signal_handlers_disconnect_by_func (settings,
-                                        (void *) &StaticCairoText::OnFontChanged,
-                                        this);
+  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
+  g_signal_handlers_disconnect_by_func(settings,
+                                       (void*) &StaticCairoText::OnFontChanged,
+                                       this);
   if (_texture2D)
-    _texture2D->UnReference ();
+    _texture2D->UnReference();
 
   if (_fontstring)
-    g_free (_fontstring);
+    g_free(_fontstring);
 }
 
 void
-StaticCairoText::SetTextEllipsize (EllipsizeState state)
+StaticCairoText::SetTextEllipsize(EllipsizeState state)
 {
   _ellipsize = state;
-  NeedRedraw ();
+  NeedRedraw();
 }
 
 void
-StaticCairoText::SetTextAlignment (AlignState state)
+StaticCairoText::SetTextAlignment(AlignState state)
 {
   _align = state;
-  NeedRedraw ();
+  NeedRedraw();
 }
 
 void
-StaticCairoText::SetTextVerticalAlignment (AlignState state)
+StaticCairoText::SetTextVerticalAlignment(AlignState state)
 {
   _valign = state;
-  QueueDraw ();
+  QueueDraw();
 }
 
 void
-StaticCairoText::SetLines (int lines)
+StaticCairoText::SetLines(int lines)
 {
   _lines = lines;
-  UpdateTexture ();
-  QueueDraw ();
+  UpdateTexture();
+  QueueDraw();
 }
 
-void StaticCairoText::PreLayoutManagement ()
+void StaticCairoText::PreLayoutManagement()
 {
   int textWidth  = 0;
   int textHeight = 0;
@@ -109,26 +111,26 @@ void StaticCairoText::PreLayoutManagement ()
   textWidth = _cached_extent_width;
   textHeight = _cached_extent_height;
 
-  _pre_layout_width = GetBaseWidth ();
-  _pre_layout_height = GetBaseHeight ();
+  _pre_layout_width = GetBaseWidth();
+  _pre_layout_height = GetBaseHeight();
 
-  SetBaseSize (textWidth, textHeight);
+  SetBaseSize(textWidth, textHeight);
 
-  if((_texture2D == 0) )
+  if ((_texture2D == 0))
   {
-    GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
-    g_signal_connect (settings, "notify::gtk-font-name",
-                      (GCallback) &StaticCairoText::OnFontChanged, this);
-    g_signal_connect (settings, "notify::gtk-xft-dpi",
-                      (GCallback) &StaticCairoText::OnFontChanged, this);
+    GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
+    g_signal_connect(settings, "notify::gtk-font-name",
+                     (GCallback) &StaticCairoText::OnFontChanged, this);
+    g_signal_connect(settings, "notify::gtk-xft-dpi",
+                     (GCallback) &StaticCairoText::OnFontChanged, this);
 
-    UpdateTexture ();
+    UpdateTexture();
   }
 
-  View::PreLayoutManagement ();
+  View::PreLayoutManagement();
 }
 
-long StaticCairoText::PostLayoutManagement (long layoutResult)
+long StaticCairoText::PostLayoutManagement(long layoutResult)
 {
 //  long result = View::PostLayoutManagement (layoutResult);
 
@@ -155,75 +157,75 @@ long StaticCairoText::PostLayoutManagement (long layoutResult)
 }
 
 long
-StaticCairoText::ProcessEvent (IEvent& event,
-                                    long    traverseInfo,
-                                    long    processEventInfo)
+StaticCairoText::ProcessEvent(IEvent& event,
+                              long    traverseInfo,
+                              long    processEventInfo)
 {
   long ret = traverseInfo;
 
-  ret = PostProcessEvent2 (event, ret, processEventInfo);
+  ret = PostProcessEvent2(event, ret, processEventInfo);
   return ret;
 }
 
 void
-StaticCairoText::Draw (GraphicsEngine& gfxContext,
-                            bool             forceDraw)
+StaticCairoText::Draw(GraphicsEngine& gfxContext,
+                      bool             forceDraw)
 {
-  Geometry base = GetGeometry ();
+  Geometry base = GetGeometry();
 
   if (_texture2D == 0)
-    UpdateTexture ();
+    UpdateTexture();
 
-  gfxContext.PushClippingRectangle (base);
+  gfxContext.PushClippingRectangle(base);
 
-  gPainter.PaintBackground (gfxContext, base);
+  gPainter.PaintBackground(gfxContext, base);
 
   TexCoordXForm texxform;
-  texxform.SetWrap (TEXWRAP_REPEAT, TEXWRAP_REPEAT);
-  texxform.SetTexCoordType (TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(TEXWRAP_REPEAT, TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(TexCoordXForm::OFFSET_COORD);
 
   t_u32 alpha = 0, src = 0, dest = 0;
 
-  gfxContext.GetRenderStates ().GetBlend (alpha, src, dest);
-  gfxContext.GetRenderStates ().SetBlend (true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  gfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  gfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   Color col = color::Black;
   col.alpha = 0;
-  gfxContext.QRP_Color (base.x,
-                        base.y,
-                        base.width,
-                        base.height,
-                        col);
-
-  gfxContext.QRP_1Tex (base.x,
-                       base.y + ((base.height - _cached_extent_height)/2),
+  gfxContext.QRP_Color(base.x,
+                       base.y,
                        base.width,
                        base.height,
-                       _texture2D->GetDeviceTexture(),
-                       texxform,
-                       _textColor);
+                       col);
 
-  gfxContext.GetRenderStates ().SetBlend (alpha, src, dest);
+  gfxContext.QRP_1Tex(base.x,
+                      base.y + ((base.height - _cached_extent_height) / 2),
+                      base.width,
+                      base.height,
+                      _texture2D->GetDeviceTexture(),
+                      texxform,
+                      _textColor);
 
-  gfxContext.PopClippingRectangle ();
+  gfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
+  gfxContext.PopClippingRectangle();
 }
 
 void
-StaticCairoText::DrawContent (GraphicsEngine& gfxContext,
-                                   bool             forceDraw)
+StaticCairoText::DrawContent(GraphicsEngine& gfxContext,
+                             bool             forceDraw)
 {
   // intentionally left empty
 }
 
 void
-StaticCairoText::PostDraw (GraphicsEngine& gfxContext,
-                                bool             forceDraw)
+StaticCairoText::PostDraw(GraphicsEngine& gfxContext,
+                          bool             forceDraw)
 {
   // intentionally left empty
 }
 
 void
-StaticCairoText::SetText (NString text)
+StaticCairoText::SetText(NString text)
 {
   if (_text != text)
   {
@@ -231,66 +233,66 @@ StaticCairoText::SetText (NString text)
     _need_new_extent_cache = true;
     int width = 0;
     int height = 0;
-    GetTextExtents (width, height);
-    UpdateTexture ();
-    sigTextChanged.emit (this);
+    GetTextExtents(width, height);
+    UpdateTexture();
+    sigTextChanged.emit(this);
   }
 }
 
 void
-StaticCairoText::SetTextColor (Color textColor)
+StaticCairoText::SetTextColor(Color textColor)
 {
   if (_textColor != textColor)
   {
     _textColor = textColor;
-    UpdateTexture ();
-    QueueDraw ();
+    UpdateTexture();
+    QueueDraw();
 
-    sigTextColorChanged.emit (this);
+    sigTextColorChanged.emit(this);
   }
 }
 
 void
-StaticCairoText::SetFont (const char *fontstring)
+StaticCairoText::SetFont(const char* fontstring)
 {
-  g_free (_fontstring);
-  _fontstring = g_strdup (fontstring);
+  g_free(_fontstring);
+  _fontstring = g_strdup(fontstring);
   _need_new_extent_cache = true;
   int width = 0;
   int height = 0;
-  GetTextExtents (width, height);
-  SetMinimumHeight (height);
-  NeedRedraw ();
-  sigFontChanged.emit (this);
+  GetTextExtents(width, height);
+  SetMinimumHeight(height);
+  NeedRedraw();
+  sigFontChanged.emit(this);
 }
 
-int 
-StaticCairoText::GetLineCount ()
+int
+StaticCairoText::GetLineCount()
 {
   return _actual_lines;
 }
 
-void StaticCairoText::GetTextExtents (int &width, int &height)
+void StaticCairoText::GetTextExtents(int& width, int& height)
 {
-  GtkSettings* settings = gtk_settings_get_default (); // not ref'ed
+  GtkSettings* settings = gtk_settings_get_default();  // not ref'ed
   gchar*       fontName = NULL;
 
   if (_fontstring == NULL)
   {
-    g_object_get (settings, "gtk-font-name", &fontName, NULL);
+    g_object_get(settings, "gtk-font-name", &fontName, NULL);
   }
   else
   {
-    fontName = g_strdup (_fontstring);
+    fontName = g_strdup(_fontstring);
   }
 
-  GetTextExtents (fontName, width, height);
-  g_free (fontName);
+  GetTextExtents(fontName, width, height);
+  g_free(fontName);
 }
 
-void StaticCairoText::GetTextExtents (const TCHAR* font,
-                                      int&  width,
-                                      int&  height)
+void StaticCairoText::GetTextExtents(const TCHAR* font,
+                                     int&  width,
+                                     int&  height)
 {
   cairo_surface_t*      surface  = NULL;
   cairo_t*              cr       = NULL;
@@ -299,8 +301,8 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   PangoContext*         pangoCtx = NULL;
   PangoRectangle        logRect  = {0, 0, 0, 0};
   int                   dpi      = 0;
-  GdkScreen*            screen   = gdk_screen_get_default ();   // is not ref'ed
-  GtkSettings*          settings = gtk_settings_get_default (); // is not ref'ed
+  GdkScreen*            screen   = gdk_screen_get_default();    // is not ref'ed
+  GtkSettings*          settings = gtk_settings_get_default();  // is not ref'ed
 
   // sanity check
   if (!font)
@@ -313,52 +315,52 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
     return;
   }
 
-  int maxwidth = GetMaximumWidth ();
+  int maxwidth = GetMaximumWidth();
 
-  surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
-  cr = cairo_create (surface);
-  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
-  layout = pango_cairo_create_layout (cr);
-  desc = pango_font_description_from_string (font);
-  pango_layout_set_font_description (layout, desc);
-  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
+  cr = cairo_create(surface);
+  cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(font);
+  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 
   if (_ellipsize == NUX_ELLIPSIZE_START)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_START);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
   else if (_ellipsize == NUX_ELLIPSIZE_MIDDLE)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
   else if (_ellipsize == NUX_ELLIPSIZE_END)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
   else
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
 
   if (_align == NUX_ALIGN_LEFT)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
   else if (_align == NUX_ALIGN_CENTRE)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
   else
-    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
-  pango_layout_set_height (layout, _lines);
-  pango_layout_set_width (layout, maxwidth * PANGO_SCALE);
+  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_height(layout, _lines);
+  pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
 
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx,
-                                        gdk_screen_get_font_options (screen));
-  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
+  pango_cairo_context_set_font_options(pangoCtx,
+                                       gdk_screen_get_font_options(screen));
+  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
   if (dpi == -1)
   {
     // use some default DPI-value
-    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
   }
   else
   {
-    pango_cairo_context_set_resolution (pangoCtx,
-                                        (float) dpi / (float) PANGO_SCALE);
+    pango_cairo_context_set_resolution(pangoCtx,
+                                       (float) dpi / (float) PANGO_SCALE);
   }
-  pango_layout_context_changed (layout);
-  pango_layout_get_extents (layout, NULL, &logRect);
+  pango_layout_context_changed(layout);
+  pango_layout_get_extents(layout, NULL, &logRect);
 
   width  = (logRect.x + logRect.width) / PANGO_SCALE;
   height = (logRect.y + logRect.height) / PANGO_SCALE;
@@ -366,16 +368,16 @@ void StaticCairoText::GetTextExtents (const TCHAR* font,
   _cached_extent_width = width;
 
   // clean up
-  pango_font_description_free (desc);
-  g_object_unref (layout);
-  cairo_destroy (cr);
-  cairo_surface_destroy (surface);
+  pango_font_description_free(desc);
+  g_object_unref(layout);
+  cairo_destroy(cr);
+  cairo_surface_destroy(surface);
 }
 
-void StaticCairoText::DrawText (cairo_t*   cr,
-                                int        width,
-                                int        height,
-                                Color color)
+void StaticCairoText::DrawText(cairo_t*   cr,
+                               int        width,
+                               int        height,
+                               Color color)
 {
   int                   textWidth  = 0;
   int                   textHeight = 0;
@@ -383,79 +385,79 @@ void StaticCairoText::DrawText (cairo_t*   cr,
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
   int                   dpi        = 0;
-  GdkScreen*            screen     = gdk_screen_get_default ();   // not ref'ed
-  GtkSettings*          settings   = gtk_settings_get_default (); // not ref'ed
+  GdkScreen*            screen     = gdk_screen_get_default();    // not ref'ed
+  GtkSettings*          settings   = gtk_settings_get_default();  // not ref'ed
   gchar*                fontName   = NULL;
 
   if (_fontstring == NULL)
-    g_object_get (settings, "gtk-font-name", &fontName, NULL);
+    g_object_get(settings, "gtk-font-name", &fontName, NULL);
   else
-    fontName = g_strdup (_fontstring);
+    fontName = g_strdup(_fontstring);
 
-  GetTextExtents (fontName, textWidth, textHeight);
+  GetTextExtents(fontName, textWidth, textHeight);
 
-  cairo_set_font_options (cr, gdk_screen_get_font_options (screen));
-  layout = pango_cairo_create_layout (cr);
-  desc = pango_font_description_from_string (fontName);
+  cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+  layout = pango_cairo_create_layout(cr);
+  desc = pango_font_description_from_string(fontName);
 
-  pango_layout_set_font_description (layout, desc);
-  pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+  pango_layout_set_font_description(layout, desc);
+  pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
 
   if (_ellipsize == NUX_ELLIPSIZE_START)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_START);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_START);
   else if (_ellipsize == NUX_ELLIPSIZE_MIDDLE)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
   else if (_ellipsize == NUX_ELLIPSIZE_END)
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
   else
-    pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_NONE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_NONE);
 
   if (_align == NUX_ALIGN_LEFT)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_LEFT);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
   else if (_align == NUX_ALIGN_CENTRE)
-    pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
   else
-    pango_layout_set_alignment (layout, PANGO_ALIGN_RIGHT);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
 
-  pango_layout_set_markup (layout, _text.GetTCharPtr(), -1);
-  pango_layout_set_width (layout, textWidth * PANGO_SCALE);
+  pango_layout_set_markup(layout, _text.GetTCharPtr(), -1);
+  pango_layout_set_width(layout, textWidth * PANGO_SCALE);
 
-  pango_layout_set_height (layout, _lines);
-  pangoCtx = pango_layout_get_context (layout); // is not ref'ed
-  pango_cairo_context_set_font_options (pangoCtx,
-                                        gdk_screen_get_font_options (screen));
-  g_object_get (settings, "gtk-xft-dpi", &dpi, NULL);
+  pango_layout_set_height(layout, _lines);
+  pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
+  pango_cairo_context_set_font_options(pangoCtx,
+                                       gdk_screen_get_font_options(screen));
+  g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
   if (dpi == -1)
   {
     // use some default DPI-value
-    pango_cairo_context_set_resolution (pangoCtx, 96.0f);
+    pango_cairo_context_set_resolution(pangoCtx, 96.0f);
   }
   else
   {
-    pango_cairo_context_set_resolution (pangoCtx,
-                                        (float) dpi / (float) PANGO_SCALE);
+    pango_cairo_context_set_resolution(pangoCtx,
+                                       (float) dpi / (float) PANGO_SCALE);
   }
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, color.red, color.green, color.blue, color.alpha);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
 
-  pango_layout_context_changed (layout);
+  pango_layout_context_changed(layout);
 
-  cairo_move_to (cr, 0.0f, 0.0f);
-  pango_cairo_show_layout (cr, layout);
+  cairo_move_to(cr, 0.0f, 0.0f);
+  pango_cairo_show_layout(cr, layout);
 
-  _actual_lines = pango_layout_get_line_count (layout);
+  _actual_lines = pango_layout_get_line_count(layout);
 
   // clean up
-  pango_font_description_free (desc);
-  g_object_unref (layout);
-  g_free (fontName);
+  pango_font_description_free(desc);
+  g_object_unref(layout);
+  g_free(fontName);
 }
 
-void StaticCairoText::UpdateTexture ()
+void StaticCairoText::UpdateTexture()
 {
   int width = 0;
   int height = 0;
@@ -463,46 +465,63 @@ void StaticCairoText::UpdateTexture ()
 
   SetBaseSize(width, height);
 
-  _cairoGraphics = new CairoGraphics (CAIRO_FORMAT_ARGB32,
-                                      GetBaseWidth (),
-                                      GetBaseHeight ());
-  cairo_t *cr = cairo_reference (_cairoGraphics->GetContext ());
+  _cairoGraphics = new CairoGraphics(CAIRO_FORMAT_ARGB32,
+                                     GetBaseWidth(),
+                                     GetBaseHeight());
+  cairo_t* cr = cairo_reference(_cairoGraphics->GetContext());
 
-  DrawText (cr, GetBaseWidth (), GetBaseHeight (), _textColor);
+  DrawText(cr, GetBaseWidth(), GetBaseHeight(), _textColor);
 
-  cairo_destroy (cr);
+  cairo_destroy(cr);
 
-  NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
+  NBitmapData* bitmap = _cairoGraphics->GetBitmap();
 
   // NTexture2D is the high level representation of an image that is backed by
   // an actual opengl texture.
 
   if (_texture2D)
   {
-    _texture2D->UnReference ();
+    _texture2D->UnReference();
     _texture2D = NULL;
   }
 
-  _texture2D = GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
-  _texture2D->Update (bitmap);
+  _texture2D = GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  _texture2D->Update(bitmap);
 
   delete bitmap;
 
-  cairo_destroy (cr);
+  cairo_destroy(cr);
 
   delete _cairoGraphics;
 }
 
-void StaticCairoText::OnFontChanged (GObject *gobject, GParamSpec *pspec,
-                                     gpointer data)
+void StaticCairoText::OnFontChanged(GObject* gobject, GParamSpec* pspec,
+                                    gpointer data)
 {
-  StaticCairoText *self = (StaticCairoText*) data;
+  StaticCairoText* self = (StaticCairoText*) data;
   self->_need_new_extent_cache = true;
   int width = 0;
   int height = 0;
-  self->GetTextExtents (width, height);
-  self->UpdateTexture ();
-  self->sigFontChanged.emit (self);
+  self->GetTextExtents(width, height);
+  self->UpdateTexture();
+  self->sigFontChanged.emit(self);
 }
+
+//
+// Key navigation
+//
+
+void
+StaticCairoText::SetAcceptKeyNavFocus(bool accept)
+{
+  _accept_key_nav_focus = accept;
+}
+
+bool
+StaticCairoText::AcceptKeyNavFocus()
+{
+  return _accept_key_nav_focus;
+}
+
 
 }

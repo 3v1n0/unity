@@ -44,7 +44,7 @@ struct _NuxBaseWindowAccessible
   NuxViewAccessible parent;
 
   /*< private >*/
-  NuxBaseWindowAccessiblePrivate *priv;
+  NuxBaseWindowAccessiblePrivate* priv;
 };
 
 struct _NuxBaseWindowAccessibleClass
@@ -52,8 +52,8 @@ struct _NuxBaseWindowAccessibleClass
   NuxViewAccessibleClass parent_class;
 };
 
-GType      nux_base_window_accessible_get_type (void);
-AtkObject *nux_base_window_accessible_new      (nux::Object *object);
+GType      nux_base_window_accessible_get_type(void);
+AtkObject* nux_base_window_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

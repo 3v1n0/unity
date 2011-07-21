@@ -25,141 +25,141 @@
 #include "Place.h"
 #include "PlaceEntry.h"
 
-class TestApp 
+class TestApp
 {
 public:
-  TestApp ()
-  : _n_secs (0)
+  TestApp()
+    : _n_secs(0)
   {
-    _window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_resize (GTK_WINDOW (_window), 250, 450);
+    _window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_resize(GTK_WINDOW(_window), 250, 450);
 
-    _vbox = gtk_vbox_new (FALSE, 12);
-    gtk_container_add (GTK_CONTAINER (_window), _vbox);
+    _vbox = gtk_vbox_new(FALSE, 12);
+    gtk_container_add(GTK_CONTAINER(_window), _vbox);
 
-    _entry = gtk_entry_new ();
-    gtk_box_pack_start (GTK_BOX (_vbox), _entry, FALSE, FALSE, 0);
-    g_signal_connect (_entry, "changed", G_CALLBACK (OnEntryChanged), this);
-      
-    _combo = gtk_combo_box_text_new ();
-    gtk_box_pack_start (GTK_BOX (_vbox), _combo, FALSE, FALSE, 0);
-    g_signal_connect (_combo, "changed", G_CALLBACK (OnComboChanged), this);
+    _entry = gtk_entry_new();
+    gtk_box_pack_start(GTK_BOX(_vbox), _entry, FALSE, FALSE, 0);
+    g_signal_connect(_entry, "changed", G_CALLBACK(OnEntryChanged), this);
 
-    _seccombo= gtk_combo_box_text_new ();
-    gtk_box_pack_start (GTK_BOX (_vbox), _seccombo, FALSE, FALSE, 0);
-    
-    _factory = new PlaceFactoryFile ();
-    PopulateEntries ();
-    _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
+    _combo = gtk_combo_box_text_new();
+    gtk_box_pack_start(GTK_BOX(_vbox), _combo, FALSE, FALSE, 0);
+    g_signal_connect(_combo, "changed", G_CALLBACK(OnComboChanged), this);
 
-    gtk_combo_box_set_active (GTK_COMBO_BOX (_combo), 0);
+    _seccombo = gtk_combo_box_text_new();
+    gtk_box_pack_start(GTK_BOX(_vbox), _seccombo, FALSE, FALSE, 0);
 
-    gtk_widget_show_all (_window);
+    _factory = new PlaceFactoryFile();
+    PopulateEntries();
+    _factory->place_added.connect(sigc::mem_fun(this, &TestApp::OnPlaceAdded));
+
+    gtk_combo_box_set_active(GTK_COMBO_BOX(_combo), 0);
+
+    gtk_widget_show_all(_window);
   }
 
-  ~TestApp ()
+  ~TestApp()
   {
 
   }
 
-  void OnPlaceAdded (Place *place)
+  void OnPlaceAdded(Place* place)
   {
-    std::vector<PlaceEntry *> entries = place->GetEntries ();
-    std::vector<PlaceEntry *>::iterator i;
+    std::vector<PlaceEntry*> entries = place->GetEntries();
+    std::vector<PlaceEntry*>::iterator i;
 
-    for (i = entries.begin (); i != entries.end (); ++i)
+    for (i = entries.begin(); i != entries.end(); ++i)
     {
-      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-      gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+      PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
+      gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(_combo), entry->GetName());
     }
 
-    gtk_combo_box_set_active (GTK_COMBO_BOX (_combo), 0);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(_combo), 0);
   }
 
-  void PopulateEntries ()
+  void PopulateEntries()
   {
-    std::vector<Place *> places = _factory->GetPlaces ();
-    std::vector<Place *>::iterator it;
+    std::vector<Place*> places = _factory->GetPlaces();
+    std::vector<Place*>::iterator it;
 
-    for (it = places.begin (); it != places.end (); ++it)
+    for (it = places.begin(); it != places.end(); ++it)
     {
-      Place *place = static_cast<Place *> (*it);
-      std::vector<PlaceEntry *> entries = place->GetEntries ();
-      std::vector<PlaceEntry *>::iterator i;
+      Place* place = static_cast<Place*>(*it);
+      std::vector<PlaceEntry*> entries = place->GetEntries();
+      std::vector<PlaceEntry*>::iterator i;
 
-      for (i = entries.begin (); i != entries.end (); ++i)
+      for (i = entries.begin(); i != entries.end(); ++i)
       {
-        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-        gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (_combo), entry->GetName ());
+        PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(_combo), entry->GetName());
       }
     }
   }
 
-  static void OnEntryChanged (GtkEditable *editable, TestApp *self)
+  static void OnEntryChanged(GtkEditable* editable, TestApp* self)
   {
     if (self->_active)
     {
       std::map<gchar*, gchar*> hints;
-      self->_active->SetSearch (gtk_entry_get_text (GTK_ENTRY (self->_entry)),
-                                hints);
+      self->_active->SetSearch(gtk_entry_get_text(GTK_ENTRY(self->_entry)),
+                               hints);
     }
   }
 
-  static void OnComboChanged (GtkWidget *combo, TestApp *self)
+  static void OnComboChanged(GtkWidget* combo, TestApp* self)
   {
-    self->OnComboChangedFoRealz ();
+    self->OnComboChangedFoRealz();
   }
 
-  void OnComboChangedFoRealz ()
+  void OnComboChangedFoRealz()
   {
-    std::vector<Place *> places = _factory->GetPlaces ();
-    std::vector<Place *>::iterator it;
-    gchar *txt;
-    
-    txt = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (_combo));
+    std::vector<Place*> places = _factory->GetPlaces();
+    std::vector<Place*>::iterator it;
+    gchar* txt;
+
+    txt = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(_combo));
 
     // Find entry
-    for (it = places.begin (); it != places.end (); ++it)
+    for (it = places.begin(); it != places.end(); ++it)
     {
-      Place *place = static_cast<Place *> (*it);
-      std::vector<PlaceEntry *> entries = place->GetEntries ();
-      std::vector<PlaceEntry *>::iterator i;
+      Place* place = static_cast<Place*>(*it);
+      std::vector<PlaceEntry*> entries = place->GetEntries();
+      std::vector<PlaceEntry*>::iterator i;
 
-      for (i = entries.begin (); i != entries.end (); ++i)
+      for (i = entries.begin(); i != entries.end(); ++i)
       {
-        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+        PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
         _active = entry;
       }
     }
 
-    g_free (txt);
+    g_free(txt);
   }
 
-  PlaceFactoryFile *_factory;
+  PlaceFactoryFile* _factory;
 
-  GtkWidget *_window;
-  GtkWidget *_vbox;
-  GtkWidget *_entry;
-  GtkWidget *_combo;
-  GtkWidget *_seccombo;
+  GtkWidget* _window;
+  GtkWidget* _vbox;
+  GtkWidget* _entry;
+  GtkWidget* _combo;
+  GtkWidget* _seccombo;
   gint       _n_secs;
 
-  PlaceEntry *_active;
+  PlaceEntry* _active;
 };
 
 
 int
-main (int argc, char **argv)
+main(int argc, char** argv)
 {
-  TestApp *app;
+  TestApp* app;
 
-  g_type_init ();
-  g_thread_init (NULL);
-  gtk_init (&argc, &argv);
+  g_type_init();
+  g_thread_init(NULL);
+  gtk_init(&argc, &argv);
 
-  app = new TestApp ();
+  app = new TestApp();
 
-  gtk_main ();
+  gtk_main();
 
   delete app;
 

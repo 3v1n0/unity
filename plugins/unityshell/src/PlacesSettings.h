@@ -30,39 +30,39 @@ class PlacesSettings : public nux::Object
 public:
   enum FormFactor
   {
-    DESKTOP=1,
+    DESKTOP = 1,
     NETBOOK
 
   };
 
   enum DashBlurType
   {
-    NO_BLUR=0,
+    NO_BLUR = 0,
     STATIC_BLUR
   };
 
-  PlacesSettings ();
-  ~PlacesSettings ();
+  PlacesSettings();
+  ~PlacesSettings();
 
-  static PlacesSettings * GetDefault ();
+  static PlacesSettings* GetDefault();
 
-  FormFactor GetFormFactor ();
-  int        GetDefaultTileWidth ();
+  FormFactor GetFormFactor();
+  int        GetDefaultTileWidth();
 
-  DashBlurType GetDashBlurType ();
-  void         SetDashBlurType (DashBlurType type);
+  DashBlurType GetDashBlurType();
+  void         SetDashBlurType(DashBlurType type);
 
-  bool GetHomeExpanded ();
-  void SetHomeExpanded (bool expanded);
-  
-  sigc::signal<void, PlacesSettings *> changed;
+  bool GetHomeExpanded();
+  void SetHomeExpanded(bool expanded);
 
-private:
-  void Refresh ();
-  static void Changed (GSettings *settings, gchar *key, PlacesSettings *self);
+  sigc::signal<void, PlacesSettings*> changed;
 
 private:
-  GSettings   *_settings;
+  void Refresh();
+  static void Changed(GSettings* settings, gchar* key, PlacesSettings* self);
+
+private:
+  GSettings*   _settings;
   int          _raw_from_factor;
   FormFactor   _form_factor;
   DashBlurType _dash_blur_type;

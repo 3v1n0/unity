@@ -38,20 +38,20 @@
 using namespace unity;
 
 /* GObject */
-static void unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass);
-static void unity_panel_view_accessible_init       (UnityPanelViewAccessible *self);
+static void unity_panel_view_accessible_class_init(UnityPanelViewAccessibleClass* klass);
+static void unity_panel_view_accessible_init(UnityPanelViewAccessible* self);
 
 /* AtkObject */
-static void         unity_panel_view_accessible_initialize     (AtkObject *accessible, gpointer data);
-static gint         unity_panel_view_accessible_get_n_children (AtkObject *accessible);
-static AtkObject   *unity_panel_view_accessible_ref_child      (AtkObject *accessible, gint i);
+static void         unity_panel_view_accessible_initialize(AtkObject* accessible, gpointer data);
+static gint         unity_panel_view_accessible_get_n_children(AtkObject* accessible);
+static AtkObject*   unity_panel_view_accessible_ref_child(AtkObject* accessible, gint i);
 
-G_DEFINE_TYPE (UnityPanelViewAccessible, unity_panel_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+G_DEFINE_TYPE(UnityPanelViewAccessible, unity_panel_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
 static void
-unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass)
+unity_panel_view_accessible_class_init(UnityPanelViewAccessibleClass* klass)
 {
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->initialize = unity_panel_view_accessible_initialize;
@@ -60,77 +60,77 @@ unity_panel_view_accessible_class_init (UnityPanelViewAccessibleClass *klass)
 }
 
 static void
-unity_panel_view_accessible_init (UnityPanelViewAccessible *self)
+unity_panel_view_accessible_init(UnityPanelViewAccessible* self)
 {
 }
 
-AtkObject *
-unity_panel_view_accessible_new (nux::Object *object)
+AtkObject*
+unity_panel_view_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible;
+  AtkObject* accessible;
 
-  g_return_val_if_fail (dynamic_cast<PanelView *>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<PanelView*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_PANEL_VIEW_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PANEL_VIEW_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
+  atk_object_initialize(accessible, object);
 
   return accessible;
 }
 
 static void
-unity_panel_view_accessible_initialize (AtkObject *accessible, gpointer data)
+unity_panel_view_accessible_initialize(AtkObject* accessible, gpointer data)
 {
-  ATK_OBJECT_CLASS (unity_panel_view_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(unity_panel_view_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
 }
 
 static gint
-unity_panel_view_accessible_get_n_children (AtkObject *accessible)
+unity_panel_view_accessible_get_n_children(AtkObject* accessible)
 {
-  nux::Object *nux_object = NULL;
-  PanelView *panel;
-  PanelHomeButton *home_button;
+  nux::Object* nux_object = NULL;
+  PanelView* panel;
+  PanelHomeButton* home_button;
   gint rc = 0;
 
-  g_return_val_if_fail (UNITY_IS_PANEL_VIEW_ACCESSIBLE (accessible), 0);
+  g_return_val_if_fail(UNITY_IS_PANEL_VIEW_ACCESSIBLE(accessible), 0);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
   if (!nux_object) /* state is defunct */
     return 0;
 
-  panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->GetHomeButton ()) != NULL)
+  panel = dynamic_cast<PanelView*>(nux_object);
+  if ((home_button = panel->GetHomeButton()) != NULL)
     rc = 1;
 
   return rc;
 }
 
-static AtkObject *
-unity_panel_view_accessible_ref_child (AtkObject *accessible, gint i)
+static AtkObject*
+unity_panel_view_accessible_ref_child(AtkObject* accessible, gint i)
 {
-  nux::Object *nux_object = NULL;
-  PanelView *panel;
-  PanelHomeButton *home_button;
-  AtkObject *child_accessible = NULL;
+  nux::Object* nux_object = NULL;
+  PanelView* panel;
+  PanelHomeButton* home_button;
+  AtkObject* child_accessible = NULL;
 
-  g_return_val_if_fail (UNITY_IS_PANEL_VIEW_ACCESSIBLE (accessible), NULL);
+  g_return_val_if_fail(UNITY_IS_PANEL_VIEW_ACCESSIBLE(accessible), NULL);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
   if (!nux_object) /* state is defunct */
     return NULL;
 
-  panel = dynamic_cast<PanelView *>(nux_object);
-  if ((home_button = panel->GetHomeButton ()) != NULL)
-    {
-      nux::Object *child = NULL;
+  panel = dynamic_cast<PanelView*>(nux_object);
+  if ((home_button = panel->GetHomeButton()) != NULL)
+  {
+    nux::Object* child = NULL;
 
-      child = dynamic_cast<nux::Object *>(home_button);
-      child_accessible = unity_a11y_get_accessible (child);
-      if (child_accessible != NULL)
-        g_object_ref (child_accessible);
-    }
+    child = dynamic_cast<nux::Object*>(home_button);
+    child_accessible = unity_a11y_get_accessible(child);
+    if (child_accessible != NULL)
+      g_object_ref(child_accessible);
+  }
 
   return child_accessible;
 }

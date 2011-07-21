@@ -28,195 +28,199 @@
 
 namespace Unity
 {
-    namespace MT
-    {
-        typedef std::pair <GLTexture::List, CompSize> TextureSize;
-	typedef std::pair <GLTexture::List *, CompRect *> TextureLayout;
+namespace MT
+{
+typedef std::pair <GLTexture::List, CompSize> TextureSize;
+typedef std::pair <GLTexture::List*, CompRect*> TextureLayout;
 
 
-	class GrabHandle :
-            public CompRect
-	{
-	    public:
+class GrabHandle :
+  public CompRect
+{
+public:
 
-		GrabHandle (TextureSize *texture, Window owner, unsigned int id);
-		~GrabHandle ();
+  GrabHandle(TextureSize* texture, Window owner, unsigned int id);
+  ~GrabHandle();
 
-		void handleButtonPress (XButtonEvent *ev);
-		void reposition (CompPoint *p, bool);
+  void handleButtonPress(XButtonEvent* ev);
+  void reposition(CompPoint* p, bool);
 
-		void show ();
-		void hide ();
+  void show();
+  void hide();
 
-		TextureLayout layout ();
+  TextureLayout layout();
 
-	    private:
+private:
 
-		Window		mIpw;
-		Window		mOwner;
-		TextureSize     *mTexture;
-		unsigned int    mId;
-	};
+  Window    mIpw;
+  Window    mOwner;
+  TextureSize*     mTexture;
+  unsigned int    mId;
+};
 
-	class GrabHandleGroup :
-	    public std::vector <Unity::MT::GrabHandle>
-	{
-	    public:
+class GrabHandleGroup :
+  public std::vector <Unity::MT::GrabHandle>
+{
+public:
 
-		GrabHandleGroup (Window owner);
-		~GrabHandleGroup ();
+  GrabHandleGroup(Window owner);
+  ~GrabHandleGroup();
 
-		void relayout (const CompRect &, bool);
-		void restack ();
+  void relayout(const CompRect&, bool);
+  void restack();
 
-		bool visible ();
-		bool animate (unsigned int);
-		bool needsAnimate ();
+  bool visible();
+  bool animate(unsigned int);
+  bool needsAnimate();
 
-		int opacity ();
+  int opacity();
 
-                void hide ();
-                void show ();
+  void hide();
+  void show();
 
-		std::vector <TextureLayout> layout ();
+  std::vector <TextureLayout> layout();
 
-	    private:
+private:
 
-		typedef enum _state {
-		    FADE_IN = 1,
-		    FADE_OUT,
-		    NONE
-		} State;
+  typedef enum _state
+  {
+    FADE_IN = 1,
+    FADE_OUT,
+    NONE
+  } State;
 
-		State  mState;
-		int    mOpacity;
+  State  mState;
+  int    mOpacity;
 
-		bool mMoreAnimate;
-	};
-    };
+  bool mMoreAnimate;
+};
+};
 };
 
 class UnityMTGrabHandlesScreen :
-    public PluginClassHandler <UnityMTGrabHandlesScreen, CompScreen>,
-    public ScreenInterface,
-    public CompositeScreenInterface,
-    public GLScreenInterface,
-    public UnitymtgrabhandlesOptions
+  public PluginClassHandler <UnityMTGrabHandlesScreen, CompScreen>,
+  public ScreenInterface,
+  public CompositeScreenInterface,
+  public GLScreenInterface,
+  public UnitymtgrabhandlesOptions
 {
-    public:
+public:
 
-	UnityMTGrabHandlesScreen (CompScreen *);
-	~UnityMTGrabHandlesScreen ();
+  UnityMTGrabHandlesScreen(CompScreen*);
+  ~UnityMTGrabHandlesScreen();
 
-	CompositeScreen *cScreen;
-	GLScreen	*gScreen;
+  CompositeScreen* cScreen;
+  GLScreen*  gScreen;
 
-    public:
+public:
 
-	void handleEvent (XEvent *);
+  void handleEvent(XEvent*);
 
-	bool toggleHandles (CompAction         *action,
-			  CompAction::State  state,
-			  CompOption::Vector &options);
+  bool toggleHandles(CompAction*         action,
+                     CompAction::State  state,
+                     CompOption::Vector& options);
 
-  	bool showHandles (CompAction         *action,
-			  CompAction::State  state,
-			  CompOption::Vector &options);  
+  bool showHandles(CompAction*         action,
+                   CompAction::State  state,
+                   CompOption::Vector& options);
 
-	bool hideHandles (CompAction         *action,
-			  CompAction::State  state,
-			  CompOption::Vector &options);  
+  bool hideHandles(CompAction*         action,
+                   CompAction::State  state,
+                   CompOption::Vector& options);
 
-	void addHandles (Unity::MT::GrabHandleGroup *handles);
-	void removeHandles (Unity::MT::GrabHandleGroup *handles);
+  void addHandles(Unity::MT::GrabHandleGroup* handles);
+  void removeHandles(Unity::MT::GrabHandleGroup* handles);
 
-	void addHandleWindow (Unity::MT::GrabHandle *, Window);
-	void removeHandleWindow (Window);
+  void addHandleWindow(Unity::MT::GrabHandle*, Window);
+  void removeHandleWindow(Window);
 
-	void preparePaint (int);
-        void donePaint ();
+  void preparePaint(int);
+  void donePaint();
 
-	std::vector <Unity::MT::TextureSize>  & textures () { return mHandleTextures; }
+  std::vector <Unity::MT::TextureSize>  & textures()
+  {
+    return mHandleTextures;
+  }
 
-    private:
+private:
 
-	std::list <Unity::MT::GrabHandleGroup *> mGrabHandles;
-	std::vector <Unity::MT::TextureSize> mHandleTextures;
+  std::list <Unity::MT::GrabHandleGroup*> mGrabHandles;
+  std::vector <Unity::MT::TextureSize> mHandleTextures;
 
-	std::map <Window, Unity::MT::GrabHandle *> mInputHandles;
-	CompWindowVector			   mLastClientListStacking;
-	Atom					   mCompResizeWindowAtom;
+  std::map <Window, Unity::MT::GrabHandle*> mInputHandles;
+  CompWindowVector         mLastClientListStacking;
+  Atom             mCompResizeWindowAtom;
 
-	bool					mMoreAnimate;
-	
-	// hack
-	friend class UnityMTGrabHandlesWindow;
+  bool          mMoreAnimate;
+
+  // hack
+  friend class UnityMTGrabHandlesWindow;
 };
 
-#define UMTGH_SCREEN(screen)						      \
+#define UMTGH_SCREEN(screen)                  \
     UnityMTGrabHandlesScreen *us = UnityMTGrabHandlesScreen::get (screen)
 
 class UnityMTGrabHandlesWindow :
-    public PluginClassHandler <UnityMTGrabHandlesWindow, CompWindow>,
-    public WindowInterface,
-    public CompositeWindowInterface,
-    public GLWindowInterface
+  public PluginClassHandler <UnityMTGrabHandlesWindow, CompWindow>,
+  public WindowInterface,
+  public CompositeWindowInterface,
+  public GLWindowInterface
 {
-    public:
+public:
 
-	UnityMTGrabHandlesWindow (CompWindow *);
-	~UnityMTGrabHandlesWindow ();
+  UnityMTGrabHandlesWindow(CompWindow*);
+  ~UnityMTGrabHandlesWindow();
 
-	CompWindow	*window;
-	CompositeWindow *cWindow;
-	GLWindow	*gWindow;
+  CompWindow*  window;
+  CompositeWindow* cWindow;
+  GLWindow*  gWindow;
 
-    public:
+public:
 
-	bool allowHandles ();
-	bool handleTimerActive ();
+  bool allowHandles();
+  bool handleTimerActive();
 
-	void grabNotify (int, int, unsigned int, unsigned int);
-	void ungrabNotify ();
+  void grabNotify(int, int, unsigned int, unsigned int);
+  void ungrabNotify();
 
-	void relayout (const CompRect &, bool);
+  void relayout(const CompRect&, bool);
 
-	void getOutputExtents (CompWindowExtents &output);
+  void getOutputExtents(CompWindowExtents& output);
 
-	void moveNotify (int dx, int dy, bool immediate);
+  void moveNotify(int dx, int dy, bool immediate);
 
-	bool glDraw (const GLMatrix &,
-		     GLFragment::Attrib &,
-		     const CompRegion &,
-		     unsigned int);
+  bool glDraw(const GLMatrix&,
+              GLFragment::Attrib&,
+              const CompRegion&,
+              unsigned int);
 
- 	bool    handlesVisible ();
-	void    hideHandles ();
-	void    showHandles (bool use_timer);
-	void    restackHandles ();
+  bool    handlesVisible();
+  void    hideHandles();
+  void    showHandles(bool use_timer);
+  void    restackHandles();
 
-	void resetTimer ();
-	void disableTimer ();
+  void resetTimer();
+  void disableTimer();
 
-    private:
-  
-	static gboolean onHideTimeout (gpointer data);
+private:
 
-	Unity::MT::GrabHandleGroup *mHandles;
-	UnityMTGrabHandlesScreen *_mt_screen;
-	guint _timer_handle;
-	
-	friend class Unity::MT::GrabHandle;
+  static gboolean onHideTimeout(gpointer data);
+
+  Unity::MT::GrabHandleGroup* mHandles;
+  UnityMTGrabHandlesScreen* _mt_screen;
+  guint _timer_handle;
+
+  friend class Unity::MT::GrabHandle;
 };
 
-#define UMTGH_WINDOW(window)						      \
+#define UMTGH_WINDOW(window)                  \
     UnityMTGrabHandlesWindow *uw = UnityMTGrabHandlesWindow::get (window)
 
 class UnityMTGrabHandlesPluginVTable :
-    public CompPlugin::VTableForScreenAndWindow <UnityMTGrabHandlesScreen,
-						 UnityMTGrabHandlesWindow>
+  public CompPlugin::VTableForScreenAndWindow < UnityMTGrabHandlesScreen,
+  UnityMTGrabHandlesWindow >
 {
-    public:
+public:
 
-	bool init ();
+  bool init();
 };

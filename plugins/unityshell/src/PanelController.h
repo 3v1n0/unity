@@ -26,34 +26,34 @@
 #include "Introspectable.h"
 #include "PanelView.h"
 
-class PanelController : public nux::Object, public Introspectable
+class PanelController : public nux::Object, public unity::Introspectable
 {
 public:
-  PanelController  ();
-  ~PanelController ();
+  PanelController();
+  ~PanelController();
 
-  void SetBFBSize (int size);
-  void StartFirstMenuShow ();
-  void EndFirstMenuShow ();
-  void SetOpacity (float opacity);
+  void SetBFBSize(int size);
+  void StartFirstMenuShow();
+  void EndFirstMenuShow();
+  void SetOpacity(float opacity);
 
 protected:
-  const gchar * GetName       ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  void          AddProperties(GVariantBuilder* builder);
 
 private:
-  unity::PanelView * ViewForWindow (nux::BaseWindow *window);
-  void OnScreenChanged (int primary_monitor, std::vector<nux::Geometry>& monitors);
-  
-  static void WindowConfigureCallback (int            window_width,
-                                       int            window_height,
-                                       nux::Geometry& geo,
-                                       void          *user_data);
+  unity::PanelView* ViewForWindow(nux::BaseWindow* window);
+  void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+
+  static void WindowConfigureCallback(int            window_width,
+                                      int            window_height,
+                                      nux::Geometry& geo,
+                                      void*          user_data);
 private:
-  std::vector<nux::BaseWindow *> _windows;
+  std::vector<nux::BaseWindow*> _windows;
   int _bfb_size;
   float _opacity;
-  
+
   sigc::connection _on_screen_change_connection;
 
   bool _open_menu_start_received;

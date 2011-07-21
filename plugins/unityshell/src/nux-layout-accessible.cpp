@@ -33,31 +33,31 @@
 #include "unitya11y.h"
 
 /* GObject */
-static void nux_layout_accessible_class_init (NuxLayoutAccessibleClass *klass);
-static void nux_layout_accessible_init       (NuxLayoutAccessible *layout_accessible);
+static void nux_layout_accessible_class_init(NuxLayoutAccessibleClass* klass);
+static void nux_layout_accessible_init(NuxLayoutAccessible* layout_accessible);
 
 /* AtkObject.h */
-static void       nux_layout_accessible_initialize     (AtkObject *accessible,
-                                                        gpointer   data);
-static gint       nux_layout_accessible_get_n_children (AtkObject *obj);
-static AtkObject *nux_layout_accessible_ref_child      (AtkObject *obj,
-                                                        gint i);
+static void       nux_layout_accessible_initialize(AtkObject* accessible,
+                                                   gpointer   data);
+static gint       nux_layout_accessible_get_n_children(AtkObject* obj);
+static AtkObject* nux_layout_accessible_ref_child(AtkObject* obj,
+                                                  gint i);
 
 /* private */
-static void       on_view_changed_cb                   (nux::Layout *layout,
-                                                        nux::Area *area,
-                                                        AtkObject *acccessible,
-                                                        gboolean is_add);
-static int        search_for_child                     (AtkObject *accessible,
-                                                        nux::Layout *layout,
-                                                        nux::Area *area);
+static void       on_view_changed_cb(nux::Layout* layout,
+                                     nux::Area* area,
+                                     AtkObject* acccessible,
+                                     gboolean is_add);
+static int        search_for_child(AtkObject* accessible,
+                                   nux::Layout* layout,
+                                   nux::Area* area);
 
-G_DEFINE_TYPE (NuxLayoutAccessible, nux_layout_accessible,  NUX_TYPE_AREA_ACCESSIBLE)
+G_DEFINE_TYPE(NuxLayoutAccessible, nux_layout_accessible,  NUX_TYPE_AREA_ACCESSIBLE)
 
 static void
-nux_layout_accessible_class_init (NuxLayoutAccessibleClass *klass)
+nux_layout_accessible_class_init(NuxLayoutAccessibleClass* klass)
 {
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->initialize = nux_layout_accessible_initialize;
@@ -66,157 +66,157 @@ nux_layout_accessible_class_init (NuxLayoutAccessibleClass *klass)
 }
 
 static void
-nux_layout_accessible_init (NuxLayoutAccessible *layout_accessible)
+nux_layout_accessible_init(NuxLayoutAccessible* layout_accessible)
 {
 }
 
 AtkObject*
-nux_layout_accessible_new (nux::Object *object)
+nux_layout_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible = NULL;
+  AtkObject* accessible = NULL;
 
-  g_return_val_if_fail (dynamic_cast<nux::Layout *>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<nux::Layout*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (NUX_TYPE_LAYOUT_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(NUX_TYPE_LAYOUT_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
+  atk_object_initialize(accessible, object);
 
   return accessible;
 }
 
 /* AtkObject.h */
 static void
-nux_layout_accessible_initialize (AtkObject *accessible,
-                                  gpointer data)
+nux_layout_accessible_initialize(AtkObject* accessible,
+                                 gpointer data)
 {
-  nux::Object *nux_object = NULL;
-  nux::Layout *layout = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Layout* layout = NULL;
 
-  ATK_OBJECT_CLASS (nux_layout_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(nux_layout_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
-  layout = dynamic_cast<nux::Layout *>(nux_object);
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
+  layout = dynamic_cast<nux::Layout*>(nux_object);
 
-  layout->ViewAdded.connect (sigc::bind (sigc::ptr_fun (on_view_changed_cb),
-                                         accessible, TRUE));
+  layout->ViewAdded.connect(sigc::bind(sigc::ptr_fun(on_view_changed_cb),
+                                       accessible, TRUE));
 
-  layout->ViewRemoved.connect (sigc::bind (sigc::ptr_fun (on_view_changed_cb),
-                                           accessible, FALSE));
+  layout->ViewRemoved.connect(sigc::bind(sigc::ptr_fun(on_view_changed_cb),
+                                         accessible, FALSE));
 }
 
 static gint
-nux_layout_accessible_get_n_children (AtkObject *obj)
+nux_layout_accessible_get_n_children(AtkObject* obj)
 {
-  nux::Object *nux_object = NULL;
-  nux::Layout *layout = NULL;
-  std::list<nux::Area *> element_list;
+  nux::Object* nux_object = NULL;
+  nux::Layout* layout = NULL;
+  std::list<nux::Area*> element_list;
 
-  g_return_val_if_fail (NUX_IS_LAYOUT_ACCESSIBLE (obj), 0);
+  g_return_val_if_fail(NUX_IS_LAYOUT_ACCESSIBLE(obj), 0);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
   if (!nux_object) /* state is defunct */
     return 0;
 
-  layout = dynamic_cast<nux::Layout *>(nux_object);
+  layout = dynamic_cast<nux::Layout*>(nux_object);
 
-  element_list = layout->GetChildren ();
+  element_list = layout->GetChildren();
 
-  return element_list.size ();
+  return element_list.size();
 }
 
-static AtkObject *
-nux_layout_accessible_ref_child (AtkObject *obj,
-                                 gint i)
+static AtkObject*
+nux_layout_accessible_ref_child(AtkObject* obj,
+                                gint i)
 {
-  nux::Object *nux_object = NULL;
-  nux::Object *child = NULL;
-  AtkObject *child_accessible = NULL;
-  nux::Layout *layout = NULL;
-  std::list<nux::Area *> element_list;
+  nux::Object* nux_object = NULL;
+  nux::Object* child = NULL;
+  AtkObject* child_accessible = NULL;
+  nux::Layout* layout = NULL;
+  std::list<nux::Area*> element_list;
   gint num = 0;
-  std::list<nux::Area *>::iterator it;
+  std::list<nux::Area*>::iterator it;
 
-  g_return_val_if_fail (NUX_IS_LAYOUT_ACCESSIBLE (obj), 0);
-  num = atk_object_get_n_accessible_children (obj);
-  g_return_val_if_fail ((i < num)&&(i >= 0), NULL);
+  g_return_val_if_fail(NUX_IS_LAYOUT_ACCESSIBLE(obj), 0);
+  num = atk_object_get_n_accessible_children(obj);
+  g_return_val_if_fail((i < num) && (i >= 0), NULL);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
   if (!nux_object) /* state is defunct */
     return 0;
 
-  layout = dynamic_cast<nux::Layout *>(nux_object);
+  layout = dynamic_cast<nux::Layout*>(nux_object);
 
-  element_list = layout->GetChildren ();
+  element_list = layout->GetChildren();
 
-  it = element_list.begin ();
-  std::advance (it, i);
+  it = element_list.begin();
+  std::advance(it, i);
 
-  child = dynamic_cast<nux::Object *>(*it);
-  child_accessible = unity_a11y_get_accessible (child);
+  child = dynamic_cast<nux::Object*>(*it);
+  child_accessible = unity_a11y_get_accessible(child);
 
-  g_object_ref (child_accessible);
+  g_object_ref(child_accessible);
 
   return child_accessible;
 }
 
 /* private */
 static void
-on_view_changed_cb (nux::Layout *layout,
-                    nux::Area *area,
-                    AtkObject *accessible,
-                    gboolean is_add)
+on_view_changed_cb(nux::Layout* layout,
+                   nux::Area* area,
+                   AtkObject* accessible,
+                   gboolean is_add)
 {
-  const gchar *signal_name = NULL;
-  AtkObject *atk_child = NULL;
+  const gchar* signal_name = NULL;
+  AtkObject* atk_child = NULL;
   gint index;
 
-  g_return_if_fail (NUX_IS_LAYOUT_ACCESSIBLE (accessible));
+  g_return_if_fail(NUX_IS_LAYOUT_ACCESSIBLE(accessible));
 
-  atk_child = unity_a11y_get_accessible (area);
+  atk_child = unity_a11y_get_accessible(area);
 
   if (is_add)
-    {
-      signal_name = "children-changed::add";
-      index = nux_layout_accessible_get_n_children (accessible) - 1;
-    }
+  {
+    signal_name = "children-changed::add";
+    index = nux_layout_accessible_get_n_children(accessible) - 1;
+  }
   else
-    {
-      signal_name = "children-changed::remove";
-      index = search_for_child (accessible, layout, area);
-    }
+  {
+    signal_name = "children-changed::remove";
+    index = search_for_child(accessible, layout, area);
+  }
 
-  g_debug ("[a11y][layout] view change. parent=(%p:%s), child=(%p:%s) at (%i) added=(%i)",
-           accessible, atk_object_get_name (accessible),
-           atk_child, atk_object_get_name (atk_child),
-           index, is_add);
+  g_debug("[a11y][layout] view change. parent=(%p:%s), child=(%p:%s) at (%i) added=(%i)",
+          accessible, atk_object_get_name(accessible),
+          atk_child, atk_object_get_name(atk_child),
+          index, is_add);
 
-  g_signal_emit_by_name (accessible, signal_name, index, atk_child, NULL);
+  g_signal_emit_by_name(accessible, signal_name, index, atk_child, NULL);
 }
 
 static int
-search_for_child (AtkObject *accessible,
-                  nux::Layout *layout,
-                  nux::Area *area)
+search_for_child(AtkObject* accessible,
+                 nux::Layout* layout,
+                 nux::Area* area)
 {
-  std::list<nux::Area *> element_list;
-  std::list<nux::Area *>::iterator it;
-  nux::Area *current_area = NULL;
+  std::list<nux::Area*> element_list;
+  std::list<nux::Area*>::iterator it;
+  nux::Area* current_area = NULL;
   gint result = 0;
   gboolean found = FALSE;
 
-  element_list = layout->GetChildren ();
+  element_list = layout->GetChildren();
 
-  for (it = element_list.begin (); it != element_list.end (); it++,result++)
+  for (it = element_list.begin(); it != element_list.end(); it++, result++)
+  {
+    current_area = *it;
+    if (current_area == area)
     {
-      current_area = *it;
-      if (current_area == area)
-        {
-          found = TRUE;
-          break;
-        }
+      found = TRUE;
+      break;
     }
+  }
 
   if (!found) result = -1;
 
