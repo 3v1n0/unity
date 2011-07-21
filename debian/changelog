@@ -1,3 +1,12 @@
+unity (4.4.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - build-dep on libnotify-dev
+    - bump libnux-1.0-dev dep for ABI break
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jul 2011 17:58:36 +0200
+
 unity (4.2.0-0ubuntu5) oneiric; urgency=low
 
   * debian/control:

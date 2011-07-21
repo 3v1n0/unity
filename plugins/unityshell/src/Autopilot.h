@@ -33,8 +33,9 @@
 
 #define TEST_TIMEOUT 6000
 
-typedef struct {
-  gchar *name;
+typedef struct
+{
+  gchar* name;
   gboolean passed;
   guint ubus_handle;
   nux::TimerHandle expiration_handle;
@@ -43,13 +44,13 @@ typedef struct {
 class Autopilot
 {
 public:
-  Autopilot (CompScreen *screen, GDBusConnection *connection);
-  ~Autopilot ();
+  Autopilot(CompScreen* screen, GDBusConnection* connection);
+  ~Autopilot();
 
-  void StartTest (const gchar *name);
+  void StartTest(const gchar* name);
 
-  UBusServer *GetUBusConnection ();
-  GDBusConnection *GetDBusConnection ();
+  UBusServer* GetUBusConnection();
+  GDBusConnection* GetDBusConnection();
 };
 
 #endif /* _AUTOPILOT_H */

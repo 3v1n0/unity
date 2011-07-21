@@ -45,8 +45,8 @@ struct _UnityPanelViewAccessibleClass
   NuxViewAccessibleClass parent_class;
 };
 
-GType      unity_panel_view_accessible_get_type (void);
-AtkObject *unity_panel_view_accessible_new      (nux::Object *object);
+GType      unity_panel_view_accessible_get_type(void);
+AtkObject* unity_panel_view_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

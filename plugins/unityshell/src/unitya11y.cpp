@@ -20,7 +20,6 @@
 #include <gio/gio.h>
 #include <gmodule.h>
 #include <stdio.h>
-#include <gconf/gconf-client.h>
 
 #include "unitya11y.h"
 #include "unitya11ytests.h"
@@ -46,121 +45,119 @@
 
 using namespace unity;
 
-static GHashTable *accessible_table = NULL;
+static GHashTable* accessible_table = NULL;
 /* FIXME: remove accessible objects when not required anymore */
 
 static gboolean a11y_initialized = FALSE;
 
 #define INIT_METHOD "gnome_accessibility_module_init"
-#define A11Y_GCONF_KEY "/desktop/gnome/interface/accessibility"
+#define DESKTOP_SCHEMA "org.gnome.desktop.interface"
+#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
 #define AT_SPI_SCHEMA "org.a11y.atspi"
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
 static void
-unity_a11y_restore_environment (void)
+unity_a11y_restore_environment(void)
 {
-  g_unsetenv ("NO_AT_BRIDGE");
-  g_unsetenv ("NO_GAIL");
+  g_unsetenv("NO_AT_BRIDGE");
+  g_unsetenv("NO_GAIL");
 }
 
 static void
-load_unity_atk_util (nux::WindowThread *wt)
+load_unity_atk_util(nux::WindowThread* wt)
 {
-  unity_util_accessible_set_window_thread (wt);
-  g_type_class_unref (g_type_class_ref (UNITY_TYPE_UTIL_ACCESSIBLE));
+  unity_util_accessible_set_window_thread(wt);
+  g_type_class_unref(g_type_class_ref(UNITY_TYPE_UTIL_ACCESSIBLE));
 }
 
+/* This method is required because g_setting_new abort if the schema
+   is not present. */
 static gboolean
-has_gsettings_schema (const gchar *schema)
+has_gsettings_schema(const gchar* schema)
 {
-  const char * const *list_schemas = NULL;
+  const char* const* list_schemas = NULL;
   gboolean found = FALSE;
   int i = 0;
 
-  /* we need to check if AT_SPI_SCHEMA is present as g_setting_new
-     could abort if the schema is not here*/
-  list_schemas = g_settings_list_schemas ();
+  list_schemas = g_settings_list_schemas();
   for (i = 0; list_schemas [i]; i++)
+  {
+    if (!g_strcmp0(list_schemas[i], schema))
     {
-      if (!g_strcmp0 (list_schemas[i], schema))
-        {
-          found = TRUE;
-          break;
-        }
+      found = TRUE;
+      break;
     }
+  }
 
   return found;
 }
 
 static gboolean
-should_enable_a11y (void)
+should_enable_a11y(void)
 {
-  GConfClient *client = NULL;
+  GSettings* desktop_settings = NULL;
   gboolean value = FALSE;
-  GError *error = NULL;
 
-  client = gconf_client_get_default ();
-  value = gconf_client_get_bool (client, A11Y_GCONF_KEY, &error);
-  if (error != NULL)
-    {
-      g_warning ("Error getting gconf variable %s, a11y disabled by default",
-                 A11Y_GCONF_KEY);
-      g_error_free (error);
-    }
-  g_object_unref (client);
+  if (!has_gsettings_schema(DESKTOP_SCHEMA))
+    return FALSE;
+
+  desktop_settings = g_settings_new(DESKTOP_SCHEMA);
+  value = g_settings_get_boolean(desktop_settings, ACCESSIBILITY_ENABLED_KEY);
+
+  g_object_unref(desktop_settings);
 
   return value;
 }
 
 static gchar*
-get_atk_bridge_path (void)
+get_atk_bridge_path(void)
 {
-  GSettings *atspi_settings = NULL;
-  char *value = NULL;
+  GSettings* atspi_settings = NULL;
+  char* value = NULL;
 
-  if (!has_gsettings_schema (AT_SPI_SCHEMA))
+  if (!has_gsettings_schema(AT_SPI_SCHEMA))
     return NULL;
 
-  atspi_settings = g_settings_new (AT_SPI_SCHEMA);
-  value = g_settings_get_string (atspi_settings, ATK_BRIDGE_LOCATION_KEY);
+  atspi_settings = g_settings_new(AT_SPI_SCHEMA);
+  value = g_settings_get_string(atspi_settings, ATK_BRIDGE_LOCATION_KEY);
 
-  g_object_unref (atspi_settings);
+  g_object_unref(atspi_settings);
 
   return value;
 }
 
 static gboolean
-a11y_invoke_module (const char *module_path)
+a11y_invoke_module(const char* module_path)
 {
-  GModule    *handle;
-  void      (*invoke_fn) (void);
+  GModule*    handle;
+  void (*invoke_fn)(void);
 
   if (!module_path)
-    {
-      g_warning ("Accessibility: invalid module path (NULL)");
+  {
+    g_warning("Accessibility: invalid module path (NULL)");
 
-      return FALSE;
-    }
+    return FALSE;
+  }
 
-  if (!(handle = g_module_open (module_path, (GModuleFlags)0)))
-    {
-      g_warning ("Accessibility: failed to load module '%s': '%s'",
-                 module_path, g_module_error ());
+  if (!(handle = g_module_open(module_path, (GModuleFlags)0)))
+  {
+    g_warning("Accessibility: failed to load module '%s': '%s'",
+              module_path, g_module_error());
 
-      return FALSE;
-    }
+    return FALSE;
+  }
 
-  if (!g_module_symbol (handle, INIT_METHOD, (gpointer *)&invoke_fn))
-    {
-      g_warning ("Accessibility: error library '%s' does not include "
-                 "method '%s' required for accessibility support",
-                 module_path, INIT_METHOD);
-      g_module_close (handle);
+  if (!g_module_symbol(handle, INIT_METHOD, (gpointer*)&invoke_fn))
+  {
+    g_warning("Accessibility: error library '%s' does not include "
+              "method '%s' required for accessibility support",
+              module_path, INIT_METHOD);
+    g_module_close(handle);
 
-      return FALSE;
-    }
+    return FALSE;
+  }
 
-  invoke_fn ();
+  invoke_fn();
 
   return TRUE;
 }
@@ -173,10 +170,10 @@ a11y_invoke_module (const char *module_path)
  *
  */
 void
-unity_a11y_preset_environment (void)
+unity_a11y_preset_environment(void)
 {
-  g_setenv ("NO_AT_BRIDGE", "1", TRUE);
-  g_setenv ("NO_GAIL", "1", TRUE);
+  g_setenv("NO_AT_BRIDGE", "1", TRUE);
+  g_setenv("NO_GAIL", "1", TRUE);
 }
 
 /*
@@ -187,35 +184,35 @@ unity_a11y_preset_environment (void)
  *  * Loads the proper AtkUtil implementation
  */
 void
-unity_a11y_init (nux::WindowThread *wt)
+unity_a11y_init(nux::WindowThread* wt)
 {
-  gchar *bridge_path = NULL;
+  gchar* bridge_path = NULL;
 
-  g_debug ("Unity accessibility initialization");
+  g_debug("Unity accessibility initialization");
 
-  unity_a11y_restore_environment ();
+  unity_a11y_restore_environment();
 
-  if (!should_enable_a11y ())
+  if (!should_enable_a11y())
     return;
 
-  load_unity_atk_util (wt);
+  load_unity_atk_util(wt);
 
-  bridge_path = get_atk_bridge_path ();
+  bridge_path = get_atk_bridge_path();
 
-  if (a11y_invoke_module (bridge_path))
-    {
-      g_debug ("Unity accessibility started, using bridge on %s",
-               bridge_path);
-      a11y_initialized = TRUE;
-    }
+  if (a11y_invoke_module(bridge_path))
+  {
+    g_debug("Unity accessibility started, using bridge on %s",
+            bridge_path);
+    a11y_initialized = TRUE;
+  }
 
-  g_free (bridge_path);
+  g_free(bridge_path);
 
- // NOTE: we run manually the unit tests while developing by
- // uncommenting this. Take a look to the explanation on
- // unitya11ytests.h header for more information
+// NOTE: we run manually the unit tests while developing by
+// uncommenting this. Take a look to the explanation on
+// unitya11ytests.h header for more information
 
- //  unity_run_a11y_unit_tests ();
+//  unity_run_a11y_unit_tests ();
 }
 
 /*
@@ -224,13 +221,13 @@ unity_a11y_init (nux::WindowThread *wt)
  * It mainly clean the resources related with the accessibility
  */
 void
-unity_a11y_finalize (void)
+unity_a11y_finalize(void)
 {
   if (accessible_table != NULL)
-    {
-      g_hash_table_unref (accessible_table);
-      accessible_table = NULL;
-    }
+  {
+    g_hash_table_unref(accessible_table);
+    accessible_table = NULL;
+  }
   a11y_initialized = FALSE;
 }
 
@@ -253,66 +250,66 @@ unity_a11y_finalize (void)
  *
  */
 
-static AtkObject *
-unity_a11y_create_accessible (nux::Object *object)
+static AtkObject*
+unity_a11y_create_accessible(nux::Object* object)
 {
   /* UNITY classes*/
-  if (object->Type().IsDerivedFromType (Launcher::StaticObjectType))
-    return unity_launcher_accessible_new (object);
+  if (object->Type().IsDerivedFromType(Launcher::StaticObjectType))
+    return unity_launcher_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (LauncherIcon::StaticObjectType))
-    return unity_launcher_icon_accessible_new (object);
+  if (object->Type().IsDerivedFromType(LauncherIcon::StaticObjectType))
+    return unity_launcher_icon_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (PanelView::StaticObjectType))
-    return unity_panel_view_accessible_new (object);
+  if (object->Type().IsDerivedFromType(PanelView::StaticObjectType))
+    return unity_panel_view_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (PanelHomeButton::StaticObjectType))
-    return unity_panel_home_button_accessible_new (object);
+  if (object->Type().IsDerivedFromType(PanelHomeButton::StaticObjectType))
+    return unity_panel_home_button_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (PlacesView::StaticObjectType))
-    return unity_places_view_accessible_new (object);
+  if (object->Type().IsDerivedFromType(PlacesView::StaticObjectType))
+    return unity_places_view_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (PlacesSearchBar::StaticObjectType))
-    return unity_search_bar_accessible_new (object);
+  if (object->Type().IsDerivedFromType(PlacesSearchBar::StaticObjectType))
+    return unity_search_bar_accessible_new(object);
 
   /* NUX classes  */
-  if (object->Type().IsDerivedFromType (nux::BaseWindow::StaticObjectType))
-    return nux_base_window_accessible_new (object);
+  if (object->Type().IsDerivedFromType(nux::BaseWindow::StaticObjectType))
+    return nux_base_window_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (nux::View::StaticObjectType))
-    return nux_view_accessible_new (object);
+  if (object->Type().IsDerivedFromType(nux::View::StaticObjectType))
+    return nux_view_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (nux::Layout::StaticObjectType))
-    return nux_layout_accessible_new (object);
+  if (object->Type().IsDerivedFromType(nux::Layout::StaticObjectType))
+    return nux_layout_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType (nux::Area::StaticObjectType))
-    return nux_area_accessible_new (object);
+  if (object->Type().IsDerivedFromType(nux::Area::StaticObjectType))
+    return nux_area_accessible_new(object);
 
-  return nux_object_accessible_new (object);
+  return nux_object_accessible_new(object);
 }
 
 static void
-on_object_destroy_cb (nux::Object *base_object,
-                      AtkObject *accessible_object)
+on_object_destroy_cb(nux::Object* base_object,
+                     AtkObject* accessible_object)
 {
   /* NOTE: the pair key:value (base_object:accessible_object) could be
      already removed on on_accessible_destroy_cb. That just mean that
      g_hash_table_remove would return FALSE. We don't add a
      debug/warning message to avoid being too verbose */
 
-  g_hash_table_remove (accessible_table, base_object);
+  g_hash_table_remove(accessible_table, base_object);
 }
 
 static void
-on_accessible_destroy_cb (gpointer data,
-                          GObject *where_the_object_was)
+on_accessible_destroy_cb(gpointer data,
+                         GObject* where_the_object_was)
 {
   /* NOTE: the pair key:value (base_object:accessible_object) could be
      already removed on on_object_destroy_cb. That just mean that
      g_hash_table_remove would return FALSE. We don't add a
      debug/warning message to avoid being too verbose */
 
-  g_hash_table_remove (accessible_table, data);
+  g_hash_table_remove(accessible_table, data);
 }
 
 /*
@@ -328,36 +325,36 @@ on_accessible_destroy_cb (gpointer data,
  * subclasses itself.
  *
  */
-AtkObject *
-unity_a11y_get_accessible (nux::Object *object)
+AtkObject*
+unity_a11y_get_accessible(nux::Object* object)
 {
-  AtkObject *accessible_object = NULL;
+  AtkObject* accessible_object = NULL;
 
-  g_return_val_if_fail (object != NULL, NULL);
+  g_return_val_if_fail(object != NULL, NULL);
 
   if (accessible_table == NULL)
-    {
-      accessible_table = g_hash_table_new (g_direct_hash, g_direct_equal);
-    }
+  {
+    accessible_table = g_hash_table_new(g_direct_hash, g_direct_equal);
+  }
 
-  accessible_object = ATK_OBJECT (g_hash_table_lookup (accessible_table, object));
+  accessible_object = ATK_OBJECT(g_hash_table_lookup(accessible_table, object));
   if (accessible_object == NULL)
-    {
-      accessible_object = unity_a11y_create_accessible (object);
+  {
+    accessible_object = unity_a11y_create_accessible(object);
 
-      g_hash_table_insert (accessible_table, object, accessible_object);
+    g_hash_table_insert(accessible_table, object, accessible_object);
 
-      /* there are two reasons the object should be removed from the
-       * table: base object destroyed, or accessible object
-       * destroyed
-       */
-      g_object_weak_ref (G_OBJECT (accessible_object),
-                         on_accessible_destroy_cb,
-                         object);
+    /* there are two reasons the object should be removed from the
+     * table: base object destroyed, or accessible object
+     * destroyed
+     */
+    g_object_weak_ref(G_OBJECT(accessible_object),
+                      on_accessible_destroy_cb,
+                      object);
 
-      object->OnDestroyed.connect (sigc::bind(sigc::ptr_fun (on_object_destroy_cb),
-                                              accessible_object));
-    }
+    object->OnDestroyed.connect(sigc::bind(sigc::ptr_fun(on_object_destroy_cb),
+                                           accessible_object));
+  }
 
   return accessible_object;
 }
@@ -365,14 +362,14 @@ unity_a11y_get_accessible (nux::Object *object)
 /*
  * Returns if the accessibility support is properly initialized
  */
-gboolean unity_a11y_initialized (void)
+gboolean unity_a11y_initialized(void)
 {
   return a11y_initialized;
 }
 
 /* Returns the accessible_table. Just for unit testing purposes, you
    should not require to use it */
-GHashTable *_unity_a11y_get_accessible_table ()
+GHashTable* _unity_a11y_get_accessible_table()
 {
   return accessible_table;
 }

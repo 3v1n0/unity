@@ -1,14 +1,16 @@
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/IndicatorEntry.h>
 
 #include <gtest/gtest.h>
 
 using namespace std;
 using namespace unity;
 
-namespace {
+namespace
+{
 
 
-TEST(TestIndicatorEntry, TestConstruction) {
+TEST(TestIndicatorEntry, TestConstruction)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          1, "some icon", false, true);
@@ -30,9 +32,9 @@ struct Counter : sigc::trackable
 {
   Counter() : count(0) {}
   void increment()
-    {
-      ++count;
-    }
+  {
+    ++count;
+  }
   int count;
 };
 
@@ -40,19 +42,20 @@ template <typename T>
 struct ChangeRecorder : sigc::trackable
 {
   void value_changed(T const& value)
-    {
-      changed_values.push_back(value);
-    }
+  {
+    changed_values.push_back(value);
+  }
   typedef std::vector<T> ChangedValues;
   ChangedValues changed_values;
 };
 
-TEST(TestIndicatorEntry, TestAssignment) {
+TEST(TestIndicatorEntry, TestAssignment)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
   indicator::Entry other_entry("other_id", "other_label", false, false,
-                         2, "other icon", true, false);
+                               2, "other icon", true, false);
 
   Counter counter;
   entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
@@ -70,7 +73,8 @@ TEST(TestIndicatorEntry, TestAssignment) {
   EXPECT_EQ(counter.count, 1);
 }
 
-TEST(TestIndicatorEntry, TestUnused) {
+TEST(TestIndicatorEntry, TestUnused)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
@@ -84,7 +88,8 @@ TEST(TestIndicatorEntry, TestUnused) {
   EXPECT_EQ(counter.count, 1);
 }
 
-TEST(TestIndicatorEntry, TestShowNowEvents) {
+TEST(TestIndicatorEntry, TestShowNowEvents)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
@@ -108,7 +113,8 @@ TEST(TestIndicatorEntry, TestShowNowEvents) {
   EXPECT_TRUE(recorder.changed_values[0]);
 }
 
-TEST(TestIndicatorEntry, TestActiveEvents) {
+TEST(TestIndicatorEntry, TestActiveEvents)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
@@ -137,15 +143,16 @@ struct ScrollRecorder : public ChangeRecorder<int>
   ScrollRecorder(std::string const& name) : entry_name(name) {}
 
   void OnScroll(std::string const& name, int delta)
-    {
-      EXPECT_EQ(name, entry_name);
-      value_changed(delta);
-    }
+  {
+    EXPECT_EQ(name, entry_name);
+    value_changed(delta);
+  }
 
   std::string entry_name;
 };
 
-TEST(TestIndicatorEntry, TestOnScroll) {
+TEST(TestIndicatorEntry, TestOnScroll)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);
@@ -164,18 +171,19 @@ TEST(TestIndicatorEntry, TestOnScroll) {
 struct ShowMenuRecorder
 {
   void OnShowMenu(std::string const& a, int b, int c, int d, int e)
-    {
-      name = a;
-      x = b;
-      y = c;
-      timestamp = d;
-      button = e;
-    }
+  {
+    name = a;
+    x = b;
+    y = c;
+    timestamp = d;
+    button = e;
+  }
   std::string name;
   int x, y, timestamp, button;
 };
 
-TEST(TestIndicatorEntry, TestOnShowMenu) {
+TEST(TestIndicatorEntry, TestOnShowMenu)
+{
 
   indicator::Entry entry("id", "label", true, true,
                          0, "some icon", false, true);

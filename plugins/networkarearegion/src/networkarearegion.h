@@ -25,52 +25,52 @@
 #include "networkarearegion_options.h"
 
 class UnityNETWorkareaRegionScreen :
-    public PluginClassHandler <UnityNETWorkareaRegionScreen, CompScreen>,
-    public ScreenInterface,
-    public NetworkarearegionOptions
+  public PluginClassHandler <UnityNETWorkareaRegionScreen, CompScreen>,
+  public ScreenInterface,
+  public NetworkarearegionOptions
 {
-    public:
-        UnityNETWorkareaRegionScreen (CompScreen *);
-	~UnityNETWorkareaRegionScreen ();
+public:
+  UnityNETWorkareaRegionScreen(CompScreen*);
+  ~UnityNETWorkareaRegionScreen();
 
-        void
-        outputChangeNotify ();
+  void
+  outputChangeNotify();
 
-        void
-        setProperty ();
+  void
+  setProperty();
 
-        void
-        handleEvent (XEvent *event);
+  void
+  handleEvent(XEvent* event);
 
-	void
-	addSupportedAtoms (std::vector<Atom> &atoms);
+  void
+  addSupportedAtoms(std::vector<Atom> &atoms);
 
-    private:
+private:
 
-        Atom mUnityNETWorkareaRegionAtom;
+  Atom mUnityNETWorkareaRegionAtom;
 };
 
 class UnityNETWorkareaRegionWindow :
-    public PluginClassHandler <UnityNETWorkareaRegionWindow, CompWindow>,
-    public WindowInterface
+  public PluginClassHandler <UnityNETWorkareaRegionWindow, CompWindow>,
+  public WindowInterface
 {
-    public:
+public:
 
-        UnityNETWorkareaRegionWindow (CompWindow *);
-	~UnityNETWorkareaRegionWindow ();
+  UnityNETWorkareaRegionWindow(CompWindow*);
+  ~UnityNETWorkareaRegionWindow();
 
-        CompWindow *window;
+  CompWindow* window;
 
-        void
-        moveNotify (int dx, int dy, bool immediate);
+  void
+  moveNotify(int dx, int dy, bool immediate);
 
-        void
-        resizeNotify (int dx, int dy, unsigned int dwidth, unsigned int dheight);
+  void
+  resizeNotify(int dx, int dy, unsigned int dwidth, unsigned int dheight);
 };
 
 class UnityNETWorkareaRegionPluginVTable :
-    public CompPlugin::VTableForScreenAndWindow <UnityNETWorkareaRegionScreen, UnityNETWorkareaRegionWindow>
+  public CompPlugin::VTableForScreenAndWindow <UnityNETWorkareaRegionScreen, UnityNETWorkareaRegionWindow>
 {
-    public:
-        bool init ();
+public:
+  bool init();
 };

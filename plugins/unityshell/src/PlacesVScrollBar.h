@@ -29,23 +29,23 @@
 
 class PlacesVScrollBar : public nux::VScrollBar
 {
-  public:
-    PlacesVScrollBar (NUX_FILE_LINE_PROTO);
-    ~PlacesVScrollBar ();
+public:
+  PlacesVScrollBar(NUX_FILE_LINE_PROTO);
+  ~PlacesVScrollBar();
 
-  protected:
-    virtual void PreLayoutManagement ();
-    virtual long PostLayoutManagement (long LayoutResult);
+protected:
+  virtual void PreLayoutManagement();
+  virtual long PostLayoutManagement(long LayoutResult);
 
-    void Draw (nux::GraphicsEngine& gfxContext,
-               bool                 forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext,
+            bool                 forceDraw);
 
-  private:
-    void UpdateTexture ();
+private:
+  void UpdateTexture();
 
-  private:
-    nux::BaseTexture* _slider;
-    nux::BaseTexture* _track;
+private:
+  nux::BaseTexture* _slider_texture;
+  nux::BaseTexture* _track_texture;
 };
 
 #endif // PLACES_VSCROLLBAR_H

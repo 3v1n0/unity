@@ -35,40 +35,40 @@
 #include <gconf/gconf-client.h>
 #include <time.h>
 
-class PlacesHomeView : public Introspectable, public PlacesGroup
+class PlacesHomeView : public unity::Introspectable, public PlacesGroup
 {
 public:
-  PlacesHomeView ();
-  ~PlacesHomeView ();
+  PlacesHomeView();
+  ~PlacesHomeView();
 
-  void Refresh ();
-  
+  void Refresh();
+
 protected:
   // Introspectable methods
-  const gchar * GetName ();
-  const gchar * GetChildsName (); 
-  void AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void AddProperties(GVariantBuilder* builder);
 
 private:
-  static void DashVisible (GVariant *data, void *val);
-  void OnShortcutClicked (PlacesTile *_tile);
-  static void OnKeyChanged (GConfClient    *client,
-                            guint           cnxn_id,
-                            GConfEntry     *entry,
-                            PlacesHomeView *self);
-  void CreateShortcutFromExec (const char *exec, 
-                               const char *name,
-                               std::vector<std::string>& alternatives);
+  static void DashVisible(GVariant* data, void* val);
+  void OnShortcutClicked(PlacesTile* _tile);
+  static void OnKeyChanged(GConfClient*    client,
+                           guint           cnxn_id,
+                           GConfEntry*     entry,
+                           PlacesHomeView* self);
+  void CreateShortcutFromExec(const char* exec,
+                              const char* name,
+                              std::vector<std::string>& alternatives);
 
 private:
-  nux::GridHLayout        *_layout;
-  GConfClient *_client;
+  nux::GridHLayout*        _layout;
+  GConfClient* _client;
   std::vector<std::string> _browser_alternatives;
   std::vector<std::string> _photo_alternatives;
   std::vector<std::string> _email_alternatives;
   std::vector<std::string> _music_alternatives;
-  
-  struct timespec time_diff (struct timespec start, struct timespec end);
+
+  struct timespec time_diff(struct timespec start, struct timespec end);
   struct timespec _last_activate_time;
 
   guint _ubus_handle;

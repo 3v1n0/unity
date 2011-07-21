@@ -26,35 +26,35 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  TrashLauncherIcon  (Launcher *launcher);
-  ~TrashLauncherIcon ();
-  
-  virtual nux::Color BackgroundColor ();
-  virtual nux::Color GlowColor ();
+  TrashLauncherIcon(Launcher* launcher);
+  ~TrashLauncherIcon();
+
+  virtual nux::Color BackgroundColor();
+  virtual nux::Color GlowColor();
 
 protected:
-  void UpdateTrashIcon ();
-  
-  nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
-  void OnAcceptDrop (std::list<char *> uris);
+  void UpdateTrashIcon();
+
+  nux::DndAction OnQueryAcceptDrop(std::list<char*> uris);
+  void OnAcceptDrop(std::list<char*> uris);
 
 private:
   gulong _on_trash_changed_handler_id;
   gulong _on_confirm_dialog_close_id;
-  GFileMonitor *m_TrashMonitor;
+  GFileMonitor* m_TrashMonitor;
   gboolean _empty;
-  GtkWidget   *_confirm_dialog;
+  GtkWidget*   _confirm_dialog;
 
-  void ActivateLauncherIcon ();
-  std::list<DbusmenuMenuitem *> GetMenus ();
+  void ActivateLauncherIcon(ActionArg arg);
+  std::list<DbusmenuMenuitem*> GetMenus();
 
-  static void UpdateTrashIconCb (GObject *source, GAsyncResult *res, gpointer data);
-  static void OnTrashChanged (GFileMonitor *monitor, GFile *file, GFile *other_file,
-                              GFileMonitorEvent event_type, gpointer data);
-  static void OnEmptyTrash (DbusmenuMenuitem *item, int time, TrashLauncherIcon *self);
-  static void OnConfirmDialogClose (GtkDialog *dialog, gint response, gpointer user_data);
-  static void EmptyTrashAction ();
-  static void RecursiveDelete (GFile *location);
+  static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
+  static void OnTrashChanged(GFileMonitor* monitor, GFile* file, GFile* other_file,
+                             GFileMonitorEvent event_type, gpointer data);
+  static void OnEmptyTrash(DbusmenuMenuitem* item, int time, TrashLauncherIcon* self);
+  static void OnConfirmDialogClose(GtkDialog* dialog, gint response, gpointer user_data);
+  static void EmptyTrashAction();
+  static void RecursiveDelete(GFile* location);
 
 };
 

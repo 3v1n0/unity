@@ -28,183 +28,177 @@
 
 #include "PanelStyle.h"
 
-namespace {
-
-PanelStyle *_style = NULL;
-
-nux::Color ColorFromGdkColor(GdkColor const& gc)
+namespace
 {
-  return nux::Color(gc.red / static_cast<float>(0xffff),
-                    gc.green / static_cast<float>(0xffff),
-                    gc.blue / static_cast<float>(0xffff));
-}
 
-}
+PanelStyle* _style = NULL;
 
-PanelStyle::PanelStyle ()
-: _theme_name (NULL)
+nux::Color ColorFromGdkRGBA(GdkRGBA const& color)
 {
-  _offscreen = gtk_offscreen_window_new ();
-  gtk_widget_set_name (_offscreen, "UnityPanelWidget");
-  gtk_widget_set_size_request (_offscreen, 100, 24);
-  gtk_style_context_add_class (gtk_widget_get_style_context (_offscreen),
-                               "menubar");
-  gtk_widget_show_all (_offscreen);
-
-  _gtk_theme_changed_id = g_signal_connect (gtk_settings_get_default (), "notify::gtk-theme-name",
-                                            G_CALLBACK (PanelStyle::OnStyleChanged), this);
-
-  Refresh ();
+  return nux::Color(color.red,
+                    color.green,
+                    color.blue,
+                    color.alpha);
 }
 
-PanelStyle::~PanelStyle ()
+}
+
+PanelStyle::PanelStyle()
+  : _theme_name(NULL)
+{
+  _style_context = gtk_style_context_new();
+
+  GtkWidgetPath* widget_path = gtk_widget_path_new();
+  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
+  gtk_widget_path_append_type(widget_path, GTK_TYPE_WINDOW);
+
+  gtk_style_context_set_path(_style_context, widget_path);
+  gtk_style_context_add_class(_style_context, "gnome-panel-menu-bar");
+  gtk_style_context_add_class(_style_context, "unity-panel");
+
+  gtk_widget_path_free(widget_path);
+
+  _gtk_theme_changed_id = g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
+                                           G_CALLBACK(PanelStyle::OnStyleChanged), this);
+
+  Refresh();
+}
+
+PanelStyle::~PanelStyle()
 {
   if (_gtk_theme_changed_id)
-    g_signal_handler_disconnect (gtk_settings_get_default (),
-                                 _gtk_theme_changed_id);
-  
-  gtk_widget_destroy (_offscreen);
+    g_signal_handler_disconnect(gtk_settings_get_default(),
+                                _gtk_theme_changed_id);
+
+  g_object_unref(_style_context);
 
   if (_style == this)
     _style = NULL;
 
-  g_free (_theme_name);
+  g_free(_theme_name);
 }
 
-PanelStyle *
-PanelStyle::GetDefault ()
+PanelStyle*
+PanelStyle::GetDefault()
 {
-  if (G_UNLIKELY (!_style))
-    _style = new PanelStyle ();
+  if (G_UNLIKELY(!_style))
+    _style = new PanelStyle();
 
   return _style;
 }
 
 void
-PanelStyle::Refresh ()
+PanelStyle::Refresh()
 {
-  GtkStyle*  style    = NULL;
+  GdkRGBA rgba_text;
 
   if (_theme_name)
-    g_free (_theme_name);
+    g_free(_theme_name);
 
   _theme_name = NULL;
-  g_object_get (gtk_settings_get_default (), "gtk-theme-name", &_theme_name, NULL);
+  g_object_get(gtk_settings_get_default(), "gtk-theme-name", &_theme_name, NULL);
 
-  style = gtk_widget_get_style (_offscreen);
+  gtk_style_context_invalidate(_style_context);
 
-  _text = ColorFromGdkColor(style->text[0]);
-  _text_shadow = ColorFromGdkColor(style->text[3]);
-  _line = ColorFromGdkColor(style->dark[0]);
-  _bg_top = ColorFromGdkColor(style->bg[1]);
-  _bg_bottom = ColorFromGdkColor(style->bg[0]);
+  gtk_style_context_get_color(_style_context, GTK_STATE_FLAG_NORMAL, &rgba_text);
 
-  changed.emit ();
+  _text = ColorFromGdkRGBA(rgba_text);
+
+  changed.emit();
 }
 
-nux::Color const& PanelStyle::GetTextColor() const
+GtkStyleContext*
+PanelStyle::GetStyleContext()
 {
-  return _text;
-}
-
-nux::Color const& PanelStyle::GetBackgroundTop() const
-{
-  return _bg_top;
-}
-
-nux::Color const& PanelStyle::GetBackgroundBottom() const
-{
-  return _bg_bottom;
-}
-
-nux::Color const& PanelStyle::GetTextShadow() const
-{
-  return _text_shadow;
-}
-
-nux::Color const& PanelStyle::GetLineColor() const
-{
-  return _line;
+  return _style_context;
 }
 
 void
-PanelStyle::OnStyleChanged (GObject*    gobject,
-                            GParamSpec* pspec,
-                            gpointer    data)
+PanelStyle::OnStyleChanged(GObject*    gobject,
+                           GParamSpec* pspec,
+                           gpointer    data)
 {
   PanelStyle* self = (PanelStyle*) data;
 
-  self->Refresh ();
+  self->Refresh();
 }
 
-GdkPixbuf *
-PanelStyle::GetBackground (int width, int height)
+nux::NBitmapData*
+PanelStyle::GetBackground(int width, int height)
 {
-  gtk_widget_set_size_request (_offscreen, width, height);
-  gdk_window_process_updates (gtk_widget_get_window (_offscreen), TRUE);
-  
-  return gtk_offscreen_window_get_pixbuf (GTK_OFFSCREEN_WINDOW (_offscreen));
+  nux::CairoGraphics* context = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
+
+  cairo_t* cr = context->GetContext();
+
+  gtk_render_background(_style_context, cr, 0, 0, width, height);
+
+  nux::NBitmapData* bitmap = context->GetBitmap();
+
+  delete context;
+
+  return bitmap;
 }
 
-nux::BaseTexture *
-PanelStyle::GetWindowButton (WindowButtonType type, WindowState state)
+nux::BaseTexture*
+PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 {
 #define ICON_LOCATION "/usr/share/themes/%s/metacity-1/%s%s.png"
-  nux::BaseTexture * texture = NULL;
-  const char *names[] = { "close", "minimize", "unmaximize" };
-  const char *states[] = { "", "_focused_prelight", "_focused_pressed" };
+  nux::BaseTexture* texture = NULL;
+  const char* names[] = { "close", "minimize", "unmaximize" };
+  const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
 
   // I wish there was a magic bullet here, but not all themes actually set the panel to be
-  // the same style as the window titlebars (e.g. Clearlooks) so we can just grab the 
+  // the same style as the window titlebars (e.g. Clearlooks) so we can just grab the
   // metacity window buttons as that would look horrible
-  if (IsAmbianceOrRadiance ())
+  if (IsAmbianceOrRadiance())
   {
-    char      *filename;
-    GdkPixbuf *pixbuf;
-    GError    *error = NULL;
+    char*      filename;
+    GdkPixbuf* pixbuf;
+    GError*    error = NULL;
 
-    filename = g_strdup_printf (ICON_LOCATION, _theme_name, names[type], states[state]);
+    filename = g_strdup_printf(ICON_LOCATION, _theme_name, names[type], states[state]);
 
-    pixbuf = gdk_pixbuf_new_from_file (filename, &error);
+    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
     if (error)
     {
-      g_warning ("Unable to load window button %s: %s", filename, error->message);
-      g_error_free (error);
+      g_warning("Unable to load window button %s: %s", filename, error->message);
+      g_error_free(error);
       error = NULL;
     }
     else
-      texture = nux::CreateTexture2DFromPixbuf (pixbuf, true);
+      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
 
-    g_free (filename);
-    g_object_unref (pixbuf);
+    g_free(filename);
+    g_object_unref(pixbuf);
   }
   else
   {
-    texture = GetWindowButtonForTheme (type, state);
+    texture = GetWindowButtonForTheme(type, state);
   }
 
   return texture;
 }
 
 bool
-PanelStyle::IsAmbianceOrRadiance() {
-  return g_strcmp0 (_theme_name, "Ambiance") == 0 || g_strcmp0 (_theme_name, "Radiance") == 0;
+PanelStyle::IsAmbianceOrRadiance()
+{
+  return g_strcmp0(_theme_name, "Ambiance") == 0 || g_strcmp0(_theme_name, "Radiance") == 0;
 }
 
-nux::BaseTexture *
-PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
+nux::BaseTexture*
+PanelStyle::GetWindowButtonForTheme(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture *texture = NULL;
+  nux::BaseTexture* texture = NULL;
   int width = 18, height = 18;
-  float w = width/3.0f;
-  float h = height/3.0f;
+  float w = width / 3.0f;
+  float h = height / 3.0f;
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 22, 22);
-  cairo_t *cr;
+  cairo_t* cr;
   nux::Color main = _text;
 
   if (type == WINDOW_BUTTON_CLOSE)
   {
-    main = nux::Color (1.0f, 0.3f, 0.3f, 0.8f);
+    main = nux::Color(1.0f, 0.3f, 0.3f, 0.8f);
   }
 
   if (state == WINDOW_STATE_PRELIGHT)
@@ -213,67 +207,67 @@ PanelStyle::GetWindowButtonForTheme (WindowButtonType type, WindowState state)
     main = main * 0.8f;
 
   cr  = cairo_graphics.GetContext();
-  cairo_translate (cr, 0.5, 0.5);
-  cairo_set_line_width (cr, 1.5f);
+  cairo_translate(cr, 0.5, 0.5);
+  cairo_set_line_width(cr, 1.5f);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-  cairo_set_source_rgba (cr, main.red, main.green, main.blue, main.alpha);
+  cairo_set_source_rgba(cr, main.red, main.green, main.blue, main.alpha);
 
-  cairo_arc (cr, width/2.0f, height/2.0f, (width - 2)/2.0f, 0.0f, 360 * (M_PI/180));
-  cairo_stroke (cr);
+  cairo_arc(cr, width / 2.0f, height / 2.0f, (width - 2) / 2.0f, 0.0f, 360 * (M_PI / 180));
+  cairo_stroke(cr);
 
   if (type == WINDOW_BUTTON_CLOSE)
   {
-    cairo_move_to (cr, w, h);
-    cairo_line_to (cr, width - w, height - h);
-    cairo_move_to (cr, width -w, h);
-    cairo_line_to (cr, w, height - h);
+    cairo_move_to(cr, w, h);
+    cairo_line_to(cr, width - w, height - h);
+    cairo_move_to(cr, width - w, h);
+    cairo_line_to(cr, w, height - h);
   }
   else if (type == WINDOW_BUTTON_MINIMIZE)
   {
-    cairo_move_to (cr, w, height/2.0f);
-    cairo_line_to (cr, width - w, height/2.0f);
+    cairo_move_to(cr, w, height / 2.0f);
+    cairo_line_to(cr, width - w, height / 2.0f);
   }
   else
   {
-    cairo_move_to (cr, w, h);
-    cairo_line_to (cr, width - w, h);
-    cairo_line_to (cr, width - w, height - h);
-    cairo_line_to (cr, w, height -h);
-    cairo_close_path (cr);
+    cairo_move_to(cr, w, h);
+    cairo_line_to(cr, width - w, h);
+    cairo_line_to(cr, width - w, height - h);
+    cairo_line_to(cr, w, height - h);
+    cairo_close_path(cr);
   }
 
-  cairo_stroke (cr);
+  cairo_stroke(cr);
 
-  cairo_destroy (cr);
+  cairo_destroy(cr);
 
   nux::NBitmapData* bitmap =  cairo_graphics.GetBitmap();
-  texture = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
+  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   texture->Update(bitmap);
   delete bitmap;
 
   return texture;
 }
 
-GdkPixbuf *
-PanelStyle::GetHomeButton ()
+GdkPixbuf*
+PanelStyle::GetHomeButton()
 {
-  GdkPixbuf *pixbuf = NULL;
+  GdkPixbuf* pixbuf = NULL;
 
-  pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                     "start-here",
-                                     24,
-                                     (GtkIconLookupFlags)0,
-                                     NULL); 
+  pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
+                                    "start-here",
+                                    24,
+                                    (GtkIconLookupFlags)0,
+                                    NULL);
   if (pixbuf == NULL)
-    pixbuf = gtk_icon_theme_load_icon (gtk_icon_theme_get_default (),
-                                       "distributor-logo",
-                                       24,
-                                       (GtkIconLookupFlags)0,
-                                       NULL);
+    pixbuf = gtk_icon_theme_load_icon(gtk_icon_theme_get_default(),
+                                      "distributor-logo",
+                                      24,
+                                      (GtkIconLookupFlags)0,
+                                      NULL);
   return pixbuf;
 }

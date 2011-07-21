@@ -27,39 +27,45 @@
 
 #include "Introspectable.h"
 
-class IconTexture : public nux::TextureArea, public Introspectable
+class IconTexture : public nux::TextureArea, public unity::Introspectable
 {
 public:
-  IconTexture (nux::BaseTexture *texture, guint width, guint height);
-  IconTexture (const char *icon_name, unsigned int size, bool defer_icon_loading=false);
-  ~IconTexture ();
+  IconTexture(nux::BaseTexture* texture, guint width, guint height);
+  IconTexture(const char* icon_name, unsigned int size, bool defer_icon_loading = false);
+  ~IconTexture();
 
-  void SetByIconName (const char *icon_name, unsigned int size);
-  void SetByFilePath (const char *file_path, unsigned int size);
-  void GetTextureSize (int *width, int *height);
-  
-  void LoadIcon ();
+  void SetByIconName(const char* icon_name, unsigned int size);
+  void SetByFilePath(const char* file_path, unsigned int size);
+  void GetTextureSize(int* width, int* height);
 
-  void SetOpacity (float opacity);
-  void SetTexture (nux::BaseTexture *texture);
+  void LoadIcon();
+
+  void SetOpacity(float opacity);
+  void SetTexture(nux::BaseTexture* texture);
+
+  void SetAcceptKeyNavFocus(bool accept);
 
 protected:
-  const gchar* GetName ();
-  void AddProperties (GVariantBuilder *builder);
-  virtual bool DoCanFocus ();
-  
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  bool _accept_key_nav_focus;
+
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
+  virtual bool DoCanFocus();
+
 private:
-  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void CreateTextureCallback (const char *texid, int width, int height, nux::BaseTexture **texture);
-  void Refresh (GdkPixbuf *pixbuf);
-  void IconLoaded (const char *icon_name, guint size, GdkPixbuf *pixbuf);
+  void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture);
+  void Refresh(GdkPixbuf* pixbuf);
+  void IconLoaded(const char* icon_name, guint size, GdkPixbuf* pixbuf);
 
-  char *_icon_name;
+  char* _icon_name;
   unsigned int _size;
 
-  GdkPixbuf        *_pixbuf_cached;
-  nux::BaseTexture *_texture_cached;
+  GdkPixbuf*        _pixbuf_cached;
+  nux::BaseTexture* _texture_cached;
   int               _texture_width;
   int               _texture_height;
 

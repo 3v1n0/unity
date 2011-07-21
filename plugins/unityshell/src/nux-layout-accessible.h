@@ -48,8 +48,8 @@ struct _NuxLayoutAccessibleClass
   NuxAreaAccessibleClass parent_class;
 };
 
-GType      nux_layout_accessible_get_type (void);
-AtkObject *nux_layout_accessible_new      (nux::Object *object);
+GType      nux_layout_accessible_get_type(void);
+AtkObject* nux_layout_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

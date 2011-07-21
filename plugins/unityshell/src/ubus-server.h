@@ -42,38 +42,38 @@ struct _UBusServerClass
   GObjectClass parent_class;
 
   /* padding */
-  void (*_unity_padding1) (void);
-  void (*_unity_padding2) (void);
-  void (*_unity_padding3) (void);
-  void (*_unity_padding4) (void);
-  void (*_unity_padding5) (void);
-  void (*_unity_padding6) (void);
+  void (*_unity_padding1)(void);
+  void (*_unity_padding2)(void);
+  void (*_unity_padding3)(void);
+  void (*_unity_padding4)(void);
+  void (*_unity_padding5)(void);
+  void (*_unity_padding6)(void);
 };
 
 struct _UBusServer
 {
   GObject parent_instance;
 
-  UBusServerPrivate *priv;
+  UBusServerPrivate* priv;
 };
 
-typedef void (*UBusCallback)                 (GVariant     *data,
-                                              gpointer      user_data);
+typedef void (*UBusCallback)(GVariant*     data,
+                             gpointer      user_data);
 
-GType        ubus_server_get_type            (void) G_GNUC_CONST;
-UBusServer*  ubus_server_get_default         ();
-void         ubus_server_prime_context       (UBusServer   *server,
-                                              GMainContext *context);
-guint        ubus_server_register_interest   (UBusServer   *server,
-                                              const gchar  *message,
-                                              UBusCallback  callback,
-                                              gpointer      user_data);
-void         ubus_server_send_message        (UBusServer   *server,
-                                              const gchar  *message,
-                                              GVariant     *data);
-void         ubus_server_unregister_interest (UBusServer   *server,
-                                              guint handle);
-void         ubus_server_force_message_pump  (UBusServer   *server);
+GType        ubus_server_get_type(void) G_GNUC_CONST;
+UBusServer*  ubus_server_get_default();
+void         ubus_server_prime_context(UBusServer*   server,
+                                       GMainContext* context);
+guint        ubus_server_register_interest(UBusServer*   server,
+                                           const gchar*  message,
+                                           UBusCallback  callback,
+                                           gpointer      user_data);
+void         ubus_server_send_message(UBusServer*   server,
+                                      const gchar*  message,
+                                      GVariant*     data);
+void         ubus_server_unregister_interest(UBusServer*   server,
+                                             guint handle);
+void         ubus_server_force_message_pump(UBusServer*   server);
 
 G_END_DECLS
 

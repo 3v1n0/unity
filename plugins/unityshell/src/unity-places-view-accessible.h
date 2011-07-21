@@ -41,7 +41,7 @@ struct _UnityPlacesViewAccessible
   NuxViewAccessible parent;
 
   /*< private >*/
-  UnityPlacesViewAccessiblePrivate *priv;
+  UnityPlacesViewAccessiblePrivate* priv;
 };
 
 struct _UnityPlacesViewAccessibleClass
@@ -49,8 +49,8 @@ struct _UnityPlacesViewAccessibleClass
   NuxViewAccessibleClass parent_class;
 };
 
-GType      unity_places_view_accessible_get_type (void);
-AtkObject *unity_places_view_accessible_new      (nux::Object *object);
+GType      unity_places_view_accessible_get_type(void);
+AtkObject* unity_places_view_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

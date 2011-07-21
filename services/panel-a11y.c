@@ -16,7 +16,6 @@
  * Authored by: Rodrigo Moya <rodrigo.moya@canonical.com>
  */
 
-#include <gconf/gconf-client.h>
 #include <gio/gio.h>
 
 #include "panel-a11y.h"
@@ -25,10 +24,14 @@
 static gboolean a11y_initialized = FALSE;
 
 #define INIT_METHOD "gnome_accessibility_module_init"
-#define A11Y_GCONF_KEY "/desktop/gnome/interface/accessibility"
+#define DESKTOP_SCHEMA "org.gnome.desktop.interface"
+#define ACCESSIBILITY_ENABLED_KEY "toolkit-accessibility"
 #define AT_SPI_SCHEMA "org.a11y.atspi"
 #define ATK_BRIDGE_LOCATION_KEY "atk-bridge-location"
 
+
+/* This method is required because g_setting_new abort if the schema
+   is not present. */
 static gboolean
 has_gsettings_schema (const gchar *schema)
 {
@@ -36,8 +39,6 @@ has_gsettings_schema (const gchar *schema)
   gboolean found = FALSE;
   int i = 0;
 
-  /* we need to check if AT_SPI_SCHEMA is present as g_settings_new
-     could abort if the schema is not here*/
   list_schemas = g_settings_list_schemas ();
   for (i = 0; list_schemas [i]; i++)
     {
@@ -54,19 +55,16 @@ has_gsettings_schema (const gchar *schema)
 static gboolean
 should_enable_a11y (void)
 {
-  GConfClient *client = NULL;
+  GSettings *desktop_settings = NULL;
   gboolean value = FALSE;
-  GError *error = NULL;
 
-  client = gconf_client_get_default ();
-  value = gconf_client_get_bool (client, A11Y_GCONF_KEY, &error);
-  if (error != NULL)
-    {
-      g_warning ("Error getting gconf variable %s, a11y disabled by default",
-                 A11Y_GCONF_KEY);
-      g_error_free (error);
-    }
-  g_object_unref (client);
+  if (!has_gsettings_schema (DESKTOP_SCHEMA))
+    return FALSE;
+
+  desktop_settings = g_settings_new (DESKTOP_SCHEMA);
+  value = g_settings_get_boolean (desktop_settings, ACCESSIBILITY_ENABLED_KEY);
+
+  g_object_unref (desktop_settings);
 
   return value;
 }

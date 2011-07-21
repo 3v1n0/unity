@@ -25,7 +25,7 @@
 #include "Nux/BaseWindow.h"
 #include "Nux/WindowCompositor.h"
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/Variant.h>
 #include "WindowButtons.h"
 
 #include <glib.h>
@@ -35,37 +35,37 @@ class WindowButton : public nux::Button
 {
   // A single window button
 public:
-  WindowButton (PanelStyle::WindowButtonType type)
-  : nux::Button ("X", NUX_TRACKER_LOCATION),
-    _type (type),
-    _normal_tex (NULL),
-    _prelight_tex (NULL),
-    _pressed_tex (NULL)
+  WindowButton(PanelStyle::WindowButtonType type)
+    : nux::Button("X", NUX_TRACKER_LOCATION),
+      _type(type),
+      _normal_tex(NULL),
+      _prelight_tex(NULL),
+      _pressed_tex(NULL)
   {
-    LoadImages ();
-    PanelStyle::GetDefault ()->changed.connect (sigc::mem_fun (this, &WindowButton::LoadImages));
+    LoadImages();
+    PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
   }
 
-  ~WindowButton ()
+  ~WindowButton()
   {
-    _normal_tex->UnReference ();
-    _prelight_tex->UnReference ();
-    _pressed_tex->UnReference ();
+    _normal_tex->UnReference();
+    _prelight_tex->UnReference();
+    _pressed_tex->UnReference();
   }
 
-  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
-    nux::Geometry      geo  = GetGeometry ();
-    nux::BaseTexture  *tex;
+    nux::Geometry      geo  = GetGeometry();
+    nux::BaseTexture*  tex;
     nux::TexCoordXForm texxform;
- 
-    GfxContext.PushClippingRectangle (geo);
 
-    if (HasMouseFocus ())
+    GfxContext.PushClippingRectangle(geo);
+
+    if (HasMouseFocus())
     {
       tex = _pressed_tex;
     }
-    else if (IsMouseInside ())
+    else if (IsMouseInside())
     {
       tex = _prelight_tex;
     }
@@ -74,125 +74,118 @@ public:
       tex = _normal_tex;
     }
 
-    GfxContext.GetRenderStates ().SetBlend (true);
-    GfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
-    GfxContext.GetRenderStates ().SetColorMask (true, true, true, true);
+    GfxContext.GetRenderStates().SetBlend(true);
+    GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+    GfxContext.GetRenderStates().SetColorMask(true, true, true, true);
     if (tex)
-      GfxContext.QRP_1Tex (geo.x,
-                                geo.y,
-                                (float)geo.width,
-                                (float)geo.height,
-                                tex->GetDeviceTexture (),
-                                texxform,
-                                nux::color::White);
-    GfxContext.GetRenderStates ().SetBlend (false);
+      GfxContext.QRP_1Tex(geo.x,
+                          geo.y,
+                          (float)geo.width,
+                          (float)geo.height,
+                          tex->GetDeviceTexture(),
+                          texxform,
+                          nux::color::White);
+    GfxContext.GetRenderStates().SetBlend(false);
     GfxContext.PopClippingRectangle();
   }
 
-  void LoadImages ()
+  void LoadImages()
   {
-    PanelStyle *style = PanelStyle::GetDefault ();
+    PanelStyle* style = PanelStyle::GetDefault();
 
     if (_normal_tex)
-      _normal_tex->UnReference ();
+      _normal_tex->UnReference();
     if (_prelight_tex)
-      _prelight_tex->UnReference ();
+      _prelight_tex->UnReference();
     if (_pressed_tex)
-      _pressed_tex->UnReference ();
+      _pressed_tex->UnReference();
 
-    _normal_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_NORMAL);
-    _prelight_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_PRELIGHT);
-    _pressed_tex = style->GetWindowButton (_type, PanelStyle::WINDOW_STATE_PRESSED);
+    _normal_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_NORMAL);
+    _prelight_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRELIGHT);
+    _pressed_tex = style->GetWindowButton(_type, PanelStyle::WINDOW_STATE_PRESSED);
 
     if (_normal_tex)
-      SetMinMaxSize (_normal_tex->GetWidth (), _normal_tex->GetHeight ());
+      SetMinMaxSize(_normal_tex->GetWidth(), _normal_tex->GetHeight());
 
-    QueueDraw ();
+    QueueDraw();
   }
 
 private:
   PanelStyle::WindowButtonType _type;
-  nux::BaseTexture *_normal_tex;
-  nux::BaseTexture *_prelight_tex;
-  nux::BaseTexture *_pressed_tex;
+  nux::BaseTexture* _normal_tex;
+  nux::BaseTexture* _prelight_tex;
+  nux::BaseTexture* _pressed_tex;
 };
 
 
-WindowButtons::WindowButtons ()
-: HLayout ("", NUX_TRACKER_LOCATION)
+WindowButtons::WindowButtons()
+  : HLayout("", NUX_TRACKER_LOCATION)
 {
-  WindowButton *but;
+  WindowButton* but;
 
-  but = new WindowButton (PanelStyle::WINDOW_BUTTON_CLOSE);
-  AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnCloseClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  auto lambda_statechanged = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
+  {
+    redraw_signal.emit();
+  };
 
-  but = new WindowButton (PanelStyle::WINDOW_BUTTON_MINIMIZE);
-  AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnMinimizeClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
+  AddView(but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->OnMouseEnter.connect(lambda_statechanged);
+  but->OnMouseLeave.connect(lambda_statechanged);
 
-  but = new WindowButton (PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
-  AddView (but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect (sigc::mem_fun (this, &WindowButtons::OnRestoreClicked));
-  but->OnMouseEnter.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseEnter));
-  but->OnMouseLeave.connect (sigc::mem_fun (this, &WindowButtons::RecvMouseLeave));
+  but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
+  AddView(but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->OnMouseEnter.connect(lambda_statechanged);
+  but->OnMouseLeave.connect(lambda_statechanged);
 
-  SetContentDistribution (nux::eStackLeft);
+  but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
+  AddView(but, 0, nux::eCenter, nux::eFix);
+  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->OnMouseEnter.connect(lambda_statechanged);
+  but->OnMouseLeave.connect(lambda_statechanged);
+
+  SetContentDistribution(nux::eStackLeft);
 }
 
 
-WindowButtons::~WindowButtons ()
+WindowButtons::~WindowButtons()
 {
-}
-
-void
-WindowButtons::OnCloseClicked ()
-{
-  close_clicked.emit ();
-}
-
-void
-WindowButtons::OnMinimizeClicked ()
-{
-  minimize_clicked.emit ();
 }
 
 void
-WindowButtons::OnRestoreClicked ()
+WindowButtons::OnCloseClicked()
 {
-  restore_clicked.emit ();
+  close_clicked.emit();
 }
 
-const gchar *
-WindowButtons::GetName ()
+void
+WindowButtons::OnMinimizeClicked()
+{
+  minimize_clicked.emit();
+}
+
+void
+WindowButtons::OnRestoreClicked()
+{
+  restore_clicked.emit();
+}
+
+const gchar*
+WindowButtons::GetName()
 {
   return "window-buttons";
 }
 
-const gchar *
-WindowButtons::GetChildsName ()
+const gchar*
+WindowButtons::GetChildsName()
 {
   return "";
 }
 
 void
-WindowButtons::AddProperties (GVariantBuilder *builder)
+WindowButtons::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
-
-void WindowButtons::RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  redraw_signal.emit ();
-}
-
-void WindowButtons::RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  redraw_signal.emit ();
-}
-
-

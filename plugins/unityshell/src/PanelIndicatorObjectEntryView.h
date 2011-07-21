@@ -25,23 +25,24 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxGraphics/GraphicsEngine.h>
 
-#include <UnityCore/UnityCore.h>
+#include <UnityCore/IndicatorEntry.h>
 
 #include "Introspectable.h"
 
 #define PANEL_HEIGHT 24
 #define SPACING 3
 
-namespace unity {
+namespace unity
+{
 
-class PanelIndicatorObjectEntryView : public nux::TextureArea, public Introspectable
+class PanelIndicatorObjectEntryView : public nux::TextureArea, public unity::Introspectable
 {
 public:
   PanelIndicatorObjectEntryView(indicator::Entry::Ptr const& proxy,
-                                int padding = 3);
+                                int padding = 5);
   ~PanelIndicatorObjectEntryView();
 
-  void Refresh ();
+  void Refresh();
 
   void OnMouseDown(int x, int y, long button_flags, long key_flags);
   void OnMouseUp(int x, int y, long button_flags, long key_flags);
@@ -55,11 +56,11 @@ public:
   bool IsEntryValid() const;
   bool IsSensitive() const;
 
-  const gchar * GetName ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  void          AddProperties(GVariantBuilder* builder);
 
-  sigc::signal<void, PanelIndicatorObjectEntryView *, bool> active_changed;
-  sigc::signal<void, PanelIndicatorObjectEntryView *> refreshed;
+  sigc::signal<void, PanelIndicatorObjectEntryView*, bool> active_changed;
+  sigc::signal<void, PanelIndicatorObjectEntryView*> refreshed;
 
 private:
   unity::indicator::Entry::Ptr proxy_;
@@ -73,7 +74,7 @@ private:
 
   gulong on_font_changed_connection_;
 
-  static void OnFontChanged(GObject *gobject, GParamSpec *pspec, gpointer data);
+  static void OnFontChanged(GObject* gobject, GParamSpec* pspec, gpointer data);
 };
 
 }
