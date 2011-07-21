@@ -30,28 +30,28 @@ class PlaceFactory : public sigc::trackable
 {
 public:
 
-  static PlaceFactory * GetDefault ();
+  static PlaceFactory* GetDefault();
 
   // For testing
-  static void           SetDefault (PlaceFactory *factory);
+  static void           SetDefault(PlaceFactory* factory);
 
   // This could be empty, if the loading of places is async, so you
   // should be listening to the signals too
-  virtual std::vector<Place *>& GetPlaces () = 0;
+  virtual std::vector<Place*>& GetPlaces() = 0;
 
   // If the implementation supports it, you'll get a refreshed list of
   // Indicators (probably though a bunch of removed/added events)
-  virtual void ForceRefresh () = 0;
+  virtual void ForceRefresh() = 0;
 
   // For adding factory-specific properties
-  virtual void AddProperties (GVariantBuilder *builder) = 0;
+  virtual void AddProperties(GVariantBuilder* builder) = 0;
 
   // Signals
-  sigc::signal<void, Place *> place_added;
-  sigc::signal<void, Place *> place_removed;
+  sigc::signal<void, Place*> place_added;
+  sigc::signal<void, Place*> place_removed;
 
 protected:
-  std::vector<Place *> _places;
+  std::vector<Place*> _places;
 };
 
 #endif // PLACE_FACTORY_H

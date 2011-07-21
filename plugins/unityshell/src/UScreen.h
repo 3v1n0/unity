@@ -27,23 +27,23 @@
 class UScreen : public sigc::trackable
 {
 public:
-  UScreen ();
-  ~UScreen ();
+  UScreen();
+  ~UScreen();
 
-  static UScreen * GetDefault ();
+  static UScreen* GetDefault();
 
-  int             GetPrimaryMonitor ();
-  nux::Geometry&  GetMonitorGeometry (int monitor);
+  int             GetPrimaryMonitor();
+  nux::Geometry&  GetMonitorGeometry(int monitor);
 
-  std::vector<nux::Geometry>& GetMonitors ();
+  std::vector<nux::Geometry>& GetMonitors();
 
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;
 
 private:
-  static void     Changed (GdkScreen *screen, UScreen *self);
-  static gboolean OnIdleChanged (UScreen *self);
-  void            Refresh ();
+  static void     Changed(GdkScreen* screen, UScreen* self);
+  static gboolean OnIdleChanged(UScreen* self);
+  void            Refresh();
 
 private:
   std::vector<nux::Geometry> _monitors;

@@ -31,28 +31,28 @@ class PlacesSimpleTile : public unity::Introspectable, public PlacesTile
 {
 public:
 
-  PlacesSimpleTile (const char *icon, const char *label, int icon_size=64, bool defer_icon_loading=false, const void *id=NULL);
-  ~PlacesSimpleTile ();
+  PlacesSimpleTile(const char* icon, const char* label, int icon_size = 64, bool defer_icon_loading = false, const void* id = NULL);
+  ~PlacesSimpleTile();
 
-  const char * GetLabel ();
-  const char * GetIcon  ();
-  const char * GetURI   ();
-  void         SetURI   (const char *uri);
+  const char* GetLabel();
+  const char* GetIcon();
+  const char* GetURI();
+  void         SetURI(const char* uri);
 
-  void LoadIcon ();
+  void LoadIcon();
 
 protected:
-  nux::Geometry GetHighlightGeometry ();
+  nux::Geometry GetHighlightGeometry();
 
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
-  
-  virtual void                    DndSourceDragBegin      ();
-  virtual nux::NBitmapData *      DndSourceGetDragImage   ();
-  virtual std::list<const char *> DndSourceGetDragTypes   ();
-  virtual const char *            DndSourceGetDataForType (const char *type, int *size, int *format);
-  virtual void                    DndSourceDragFinished   (nux::DndAction result);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
+
+  virtual void                    DndSourceDragBegin();
+  virtual nux::NBitmapData*       DndSourceGetDragImage();
+  virtual std::list<const char*> DndSourceGetDragTypes();
+  virtual const char*             DndSourceGetDataForType(const char* type, int* size, int* format);
+  virtual void                    DndSourceDragFinished(nux::DndAction result);
 
 private:
   nux::Geometry _highlight_geometry;
@@ -60,8 +60,8 @@ private:
   char* _icon;
   char* _uri;
   int   _idealiconsize;
-  IconTexture *_icontex;
-  nux::StaticCairoText *_cairotext;
+  IconTexture* _icontex;
+  nux::StaticCairoText* _cairotext;
 };
 
 

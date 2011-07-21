@@ -41,7 +41,7 @@ struct _UnityLauncherAccessible
   NuxViewAccessible parent;
 
   /*< private >*/
-  UnityLauncherAccessiblePrivate *priv;
+  UnityLauncherAccessiblePrivate* priv;
 };
 
 struct _UnityLauncherAccessibleClass
@@ -49,8 +49,8 @@ struct _UnityLauncherAccessibleClass
   NuxViewAccessibleClass parent_class;
 };
 
-GType      unity_launcher_accessible_get_type (void);
-AtkObject *unity_launcher_accessible_new      (nux::Object *object);
+GType      unity_launcher_accessible_get_type(void);
+AtkObject* unity_launcher_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

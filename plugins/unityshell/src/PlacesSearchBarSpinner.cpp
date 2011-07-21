@@ -23,161 +23,161 @@
 
 #include "PlacesStyle.h"
 
-NUX_IMPLEMENT_OBJECT_TYPE (PlacesSearchBarSpinner);
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesSearchBarSpinner);
 
-PlacesSearchBarSpinner::PlacesSearchBarSpinner ()
-: nux::View (NUX_TRACKER_LOCATION),
-  _state (STATE_READY),
-  _rotation (0.0f),
-  _spinner_timeout (0)
+PlacesSearchBarSpinner::PlacesSearchBarSpinner()
+  : nux::View(NUX_TRACKER_LOCATION),
+    _state(STATE_READY),
+    _rotation(0.0f),
+    _spinner_timeout(0)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
+  PlacesStyle* style = PlacesStyle::GetDefault();
 
-  _magnify = style->GetSearchMagnifyIcon ();
-  _close = style->GetSearchCloseIcon ();
-  _close_glow = style->GetSearchCloseGlowIcon ();
-  _spin = style->GetSearchSpinIcon ();
-  _spin_glow = style->GetSearchSpinGlowIcon ();
+  _magnify = style->GetSearchMagnifyIcon();
+  _close = style->GetSearchCloseIcon();
+  _close_glow = style->GetSearchCloseGlowIcon();
+  _spin = style->GetSearchSpinIcon();
+  _spin_glow = style->GetSearchSpinGlowIcon();
 
-  _2d_rotate.Identity ();
-  _2d_rotate.Rotate_z (0.0);
+  _2d_rotate.Identity();
+  _2d_rotate.Rotate_z(0.0);
 }
 
-PlacesSearchBarSpinner::~PlacesSearchBarSpinner ()
+PlacesSearchBarSpinner::~PlacesSearchBarSpinner()
 {
   if (_spinner_timeout)
-    g_source_remove (_spinner_timeout);
+    g_source_remove(_spinner_timeout);
 }
 
 long
-PlacesSearchBarSpinner::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+PlacesSearchBarSpinner::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
+  return PostProcessEvent2(ievent, TraverseInfo, ProcessEventInfo);
 }
 
 void
-PlacesSearchBarSpinner::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+PlacesSearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetGeometry();
   nux::TexCoordXForm texxform;
 
-  GfxContext.PushClippingRectangle (geo);
+  GfxContext.PushClippingRectangle(geo);
 
-  nux::GetPainter ().PaintBackground (GfxContext, geo);
+  nux::GetPainter().PaintBackground(GfxContext, geo);
 
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
-  GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin_glow->GetWidth ())/2),
-                       geo.y + ((geo.height - _spin_glow->GetHeight ())/2),
-                       _spin_glow->GetWidth (),
-                       _spin_glow->GetHeight (),
-                       _spin_glow->GetDeviceTexture (),
-                       texxform,
-                       nux::color::White);
+  GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin_glow->GetWidth()) / 2),
+                      geo.y + ((geo.height - _spin_glow->GetHeight()) / 2),
+                      _spin_glow->GetWidth(),
+                      _spin_glow->GetHeight(),
+                      _spin_glow->GetDeviceTexture(),
+                      texxform,
+                      nux::color::White);
 
   if (_state == STATE_READY)
   {
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _magnify->GetWidth ())/2),
-                         geo.y + ((geo.height - _magnify->GetHeight ())/2),
-                         _magnify->GetWidth (),
-                         _magnify->GetHeight (),
-                         _magnify->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _magnify->GetWidth()) / 2),
+                        geo.y + ((geo.height - _magnify->GetHeight()) / 2),
+                        _magnify->GetWidth(),
+                        _magnify->GetHeight(),
+                        _magnify->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
   }
   else if (_state == STATE_SEARCHING)
   {
-    nux::Geometry spin_geo (geo.x + ((geo.width - _spin->GetWidth ())/2),
-                             geo.y + ((geo.height - _spin->GetHeight ())/2),
-                             _spin->GetWidth (),
-                             _spin->GetHeight ());
+    nux::Geometry spin_geo(geo.x + ((geo.width - _spin->GetWidth()) / 2),
+                           geo.y + ((geo.height - _spin->GetHeight()) / 2),
+                           _spin->GetWidth(),
+                           _spin->GetHeight());
     int spin_offset_w = (geo.width % 2) ? 0 : 1;
     int spin_offset_h = (geo.height % 2) ? 0 : 1;
 
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
-                                    -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
-    GfxContext.PushModelViewMatrix (_2d_rotate);    
-    GfxContext.PushModelViewMatrix (nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w)/ 2.0f,
-                                    spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
+    GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                                           -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
+    GfxContext.PushModelViewMatrix(_2d_rotate);
+    GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                                           spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
 
-    GfxContext.QRP_1Tex (spin_geo.x,
-                         spin_geo.y,
-                         spin_geo.width,
-                         spin_geo.height,
-                         _spin->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
+    GfxContext.QRP_1Tex(spin_geo.x,
+                        spin_geo.y,
+                        spin_geo.width,
+                        spin_geo.height,
+                        _spin->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
 
-    GfxContext.PopModelViewMatrix ();
-    GfxContext.PopModelViewMatrix ();
-    GfxContext.PopModelViewMatrix ();
+    GfxContext.PopModelViewMatrix();
+    GfxContext.PopModelViewMatrix();
+    GfxContext.PopModelViewMatrix();
   }
   else
   {
-    texxform.FlipVCoord (true);
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin->GetWidth ())/2),
-                         geo.y + ((geo.height - _spin->GetHeight ())/2),
-                         _spin->GetWidth (),
-                         _spin->GetHeight (),
-                         _spin->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
-    texxform.FlipVCoord (false);
+    texxform.FlipVCoord(true);
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
+                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
+                        _spin->GetWidth(),
+                        _spin->GetHeight(),
+                        _spin->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
+    texxform.FlipVCoord(false);
 
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _spin->GetWidth ())/2),
-                         geo.y + ((geo.height - _spin->GetHeight ())/2),
-                         _spin->GetWidth (),
-                         _spin->GetHeight (),
-                         _spin->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _spin->GetWidth()) / 2),
+                        geo.y + ((geo.height - _spin->GetHeight()) / 2),
+                        _spin->GetWidth(),
+                        _spin->GetHeight(),
+                        _spin->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
 
 
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _close_glow->GetWidth ())/2),
-                         geo.y + ((geo.height - _close_glow->GetHeight ())/2),
-                         _close_glow->GetWidth (),
-                         _close_glow->GetHeight (),
-                         _close_glow->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _close_glow->GetWidth()) / 2),
+                        geo.y + ((geo.height - _close_glow->GetHeight()) / 2),
+                        _close_glow->GetWidth(),
+                        _close_glow->GetHeight(),
+                        _close_glow->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
 
-    GfxContext.QRP_1Tex (geo.x + ((geo.width - _close->GetWidth ())/2),
-                         geo.y + ((geo.height - _close->GetHeight ())/2),
-                         _close->GetWidth (),
-                         _close->GetHeight (),
-                         _close->GetDeviceTexture (),
-                         texxform,
-                         nux::color::White);
+    GfxContext.QRP_1Tex(geo.x + ((geo.width - _close->GetWidth()) / 2),
+                        geo.y + ((geo.height - _close->GetHeight()) / 2),
+                        _close->GetWidth(),
+                        _close->GetHeight(),
+                        _close->GetDeviceTexture(),
+                        texxform,
+                        nux::color::White);
   }
 
-  GfxContext.PopClippingRectangle ();
+  GfxContext.PopClippingRectangle();
 }
 
 void
-PlacesSearchBarSpinner::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+PlacesSearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
 gboolean
-PlacesSearchBarSpinner::OnFrame (PlacesSearchBarSpinner *self)
+PlacesSearchBarSpinner::OnFrame(PlacesSearchBarSpinner* self)
 {
   self->_rotation += 0.1f;
 
   if (self->_rotation >= 360.0f)
     self->_rotation = 0.0f;
 
-  self->_2d_rotate.Rotate_z (self->_rotation);
+  self->_2d_rotate.Rotate_z(self->_rotation);
 
-  self->QueueDraw ();
+  self->QueueDraw();
 
   return TRUE;
 }
 
 void
-PlacesSearchBarSpinner::SetState (SpinnerState state)
+PlacesSearchBarSpinner::SetState(SpinnerState state)
 {
   if (_state == state)
     return;
@@ -185,39 +185,39 @@ PlacesSearchBarSpinner::SetState (SpinnerState state)
   _state = state;
 
   if (_spinner_timeout)
-    g_source_remove (_spinner_timeout);
+    g_source_remove(_spinner_timeout);
   _spinner_timeout = 0;
-  _2d_rotate.Rotate_z (0.0f);
+  _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
 
   if (_state == STATE_SEARCHING)
   {
-    _spinner_timeout = g_timeout_add (15, (GSourceFunc)PlacesSearchBarSpinner::OnFrame, this);
+    _spinner_timeout = g_timeout_add(15, (GSourceFunc)PlacesSearchBarSpinner::OnFrame, this);
   }
 
-  QueueDraw ();
+  QueueDraw();
 }
 
 const gchar*
-PlacesSearchBarSpinner::GetName ()
+PlacesSearchBarSpinner::GetName()
 {
-	return "PlacesSearchBarSpinner";
+  return "PlacesSearchBarSpinner";
 }
 
-void PlacesSearchBarSpinner::AddProperties (GVariantBuilder *builder)
+void PlacesSearchBarSpinner::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetGeometry();
 
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(geo.x));
+  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(geo.y));
+  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(geo.width));
+  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(geo.height));
 }
 
 //
 // Key navigation
 //
-bool 
+bool
 PlacesSearchBarSpinner::AcceptKeyNavFocus()
 {
   return false;

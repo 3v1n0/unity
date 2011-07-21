@@ -39,42 +39,45 @@
 class PlacesController : public unity::Introspectable
 {
 public:
-  PlacesController ();
-  ~PlacesController ();
+  PlacesController();
+  ~PlacesController();
 
-  void Show ();
-  void Hide ();
-  void ToggleShowHide ();
-  static void SetLauncherSize (int launcher_size);
+  void Show();
+  void Hide();
+  void ToggleShowHide();
+  static void SetLauncherSize(int launcher_size);
 
-  nux::BaseWindow* GetWindow () {return _window;}
+  nux::BaseWindow* GetWindow()
+  {
+    return _window;
+  }
 
 protected:
-  const gchar* GetName ();
-  void AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
 private:
-  static void ExternalActivation (GVariant *data, void *val);
-  static void CloseRequest (GVariant *data, void *val);
+  static void ExternalActivation(GVariant* data, void* val);
+  static void CloseRequest(GVariant* data, void* val);
   static void WindowConfigureCallback(int WindowWidth, int WindowHeight,
-                                      nux::Geometry& geo, void *user_data);
+                                      nux::Geometry& geo, void* user_data);
 
-  void RecvMouseDownOutsideOfView (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnActivePlaceEntryChanged (PlaceEntry *entry);
-  void OnSettingsChanged (PlacesSettings *settings);
-  void OnDashFullscreenRequest ();
-  void OnCompizScreenUngrabbed ();
-  void GetWindowSize (int *width, int *height);
-  void StartShowHideTimeline ();
-  static gboolean OnViewShowHideFrame (PlacesController *self);
-  static void Relayout (GdkScreen *screen, PlacesController *self);
+  void RecvMouseDownOutsideOfView(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnActivePlaceEntryChanged(PlaceEntry* entry);
+  void OnSettingsChanged(PlacesSettings* settings);
+  void OnDashFullscreenRequest();
+  void OnCompizScreenUngrabbed();
+  void GetWindowSize(int* width, int* height);
+  void StartShowHideTimeline();
+  static gboolean OnViewShowHideFrame(PlacesController* self);
+  static void Relayout(GdkScreen* screen, PlacesController* self);
 
 private:
 
-  nux::BaseWindow  *_window;
-  nux::HLayout     *_window_layout;
-  PlacesView       *_view;
-  PlaceFactory     *_factory;
+  nux::BaseWindow*  _window;
+  nux::HLayout*     _window_layout;
+  PlacesView*       _view;
+  PlaceFactory*     _factory;
   bool              _visible;
   bool              _fullscren_request;
   static int        _launcher_size;
@@ -82,11 +85,11 @@ private:
   float             _last_opacity;
   gint64            _start_time;
   GdkRectangle      _monitor_rect;
-  
-  bool IsActivationValid ();
-  struct timespec time_diff (struct timespec start, struct timespec end);
+
+  bool IsActivationValid();
+  struct timespec time_diff(struct timespec start, struct timespec end);
   struct timespec _last_activate_time;
-  
+
   bool              _need_show;
 
   guint             _ubus_handles[2];

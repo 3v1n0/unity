@@ -31,18 +31,18 @@ public:
   virtual ~SimpleLauncherIcon();
 
   /* override */
-  nux::BaseTexture* GetTextureForSize (int size);
+  nux::BaseTexture* GetTextureForSize(int size);
 
-  void SetIconName (const char *name);
+  void SetIconName(const char* name);
 
   sigc::signal<void> activate;
 
 protected:
-  virtual void OnMouseDown (int button);
-  virtual void OnMouseUp (int button);
-  virtual void OnMouseClick (int button);
-  virtual void OnMouseEnter ();
-  virtual void OnMouseLeave ();
+  virtual void OnMouseDown(int button);
+  virtual void OnMouseUp(int button);
+  virtual void OnMouseClick(int button);
+  virtual void OnMouseEnter();
+  virtual void OnMouseLeave();
 
 private:
   void ActivateLauncherIcon(ActionArg arg);
@@ -54,7 +54,7 @@ private:
   nux::BaseTexture* icon_;
   guint32 theme_changed_id_;
 
-   int last_size_;
+  int last_size_;
 };
 
 #endif // SIMPLELAUNCHERICON_H

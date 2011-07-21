@@ -38,38 +38,38 @@ class WindowManager
   // it.
 
 public:
-  WindowManager () :
-    m_MoveResizeAtom (XInternAtom (GDK_DISPLAY_XDISPLAY (gdk_display_get_default ()),
-                                   "_NET_WM_MOVERESIZE", FALSE))
+  WindowManager() :
+    m_MoveResizeAtom(XInternAtom(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                                 "_NET_WM_MOVERESIZE", FALSE))
   {
   }
 
-  static WindowManager * Default ();
-  static void            SetDefault (WindowManager *manager);
+  static WindowManager* Default();
+  static void            SetDefault(WindowManager* manager);
 
-  virtual bool IsWindowMaximized (guint32 xid) = 0;
-  virtual bool IsWindowDecorated (guint32 xid) = 0;
-  virtual bool IsWindowOnCurrentDesktop (guint32 xid) = 0;
-  virtual bool IsWindowObscured (guint32 xid) = 0;
+  virtual bool IsWindowMaximized(guint32 xid) = 0;
+  virtual bool IsWindowDecorated(guint32 xid) = 0;
+  virtual bool IsWindowOnCurrentDesktop(guint32 xid) = 0;
+  virtual bool IsWindowObscured(guint32 xid) = 0;
 
-  virtual void ShowDesktop () = 0;
+  virtual void ShowDesktop() = 0;
 
-  virtual void Restore (guint32 xid) = 0;
-  virtual void Minimize (guint32 xid) = 0;
-  virtual void Close (guint32 xid) = 0;
+  virtual void Restore(guint32 xid) = 0;
+  virtual void Minimize(guint32 xid) = 0;
+  virtual void Close(guint32 xid) = 0;
 
-  virtual void Activate (guint32 xid) = 0;
-  virtual void Raise (guint32 xid) = 0;
-  virtual void Lower (guint32 xid) = 0;
+  virtual void Activate(guint32 xid) = 0;
+  virtual void Raise(guint32 xid) = 0;
+  virtual void Lower(guint32 xid) = 0;
 
-  virtual void Decorate   (guint32 xid) {};
-  virtual void Undecorate (guint32 xid) {};
-  
-  virtual bool IsScreenGrabbed () = 0;
+  virtual void Decorate(guint32 xid) {};
+  virtual void Undecorate(guint32 xid) {};
 
-  void StartMove (guint32 id, int, int);
+  virtual bool IsScreenGrabbed() = 0;
 
-  virtual nux::Geometry GetWindowGeometry (guint32 xid) = 0;
+  void StartMove(guint32 id, int, int);
+
+  virtual nux::Geometry GetWindowGeometry(guint32 xid) = 0;
 
   // Signals
   sigc::signal<void, guint32> window_mapped;
@@ -85,13 +85,13 @@ public:
   sigc::signal<void, guint32> window_resized;
   sigc::signal<void, guint32> window_moved;
   sigc::signal<void, guint32> window_focus_changed;
-  
+
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;
 
   sigc::signal<void> initiate_expo;
   sigc::signal<void> terminate_expo;
-  
+
   sigc::signal<void> compiz_screen_grabbed;
   sigc::signal<void> compiz_screen_ungrabbed;
 

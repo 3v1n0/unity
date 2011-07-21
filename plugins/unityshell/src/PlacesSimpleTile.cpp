@@ -32,142 +32,142 @@
 
 #include <UnityCore/Variant.h>
 
-PlacesSimpleTile::PlacesSimpleTile (const char *icon_name,
-                                    const char *label,
-                                    int         icon_size,
-                                    bool defer_icon_loading,
-                                    const void *id)
-: PlacesTile (NUX_TRACKER_LOCATION, id),
-  _label (NULL),
-  _icon (NULL),
-  _uri (NULL),
-  _idealiconsize (icon_size)
+PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
+                                   const char* label,
+                                   int         icon_size,
+                                   bool defer_icon_loading,
+                                   const void* id)
+  : PlacesTile(NUX_TRACKER_LOCATION, id),
+    _label(NULL),
+    _icon(NULL),
+    _uri(NULL),
+    _idealiconsize(icon_size)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
-  nux::VLayout *layout = new nux::VLayout ("", NUX_TRACKER_LOCATION);
+  PlacesStyle* style = PlacesStyle::GetDefault();
+  nux::VLayout* layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
-  _label = g_strdup (label);
-  _icon = g_strdup (icon_name);
+  _label = g_strdup(label);
+  _icon = g_strdup(icon_name);
 
-  _icontex = new IconTexture (_icon, icon_size, defer_icon_loading);
-  _icontex->SetMinMaxSize (style->GetTileWidth (), icon_size);
-  AddChild (_icontex);
+  _icontex = new IconTexture(_icon, icon_size, defer_icon_loading);
+  _icontex->SetMinMaxSize(style->GetTileWidth(), icon_size);
+  AddChild(_icontex);
 
 
-  _cairotext = new nux::StaticCairoText ("");
-  _cairotext->SetMaximumWidth (style->GetTileWidth ());
-  _cairotext->SinkReference ();
-  _cairotext->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_START);
-  _cairotext->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  _cairotext->SetText (_label);
+  _cairotext = new nux::StaticCairoText("");
+  _cairotext->SetMaximumWidth(style->GetTileWidth());
+  _cairotext->SinkReference();
+  _cairotext->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_START);
+  _cairotext->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  _cairotext->SetText(_label);
 
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  layout->AddView (_icontex, 0, nux::eCenter, nux::eFull);
-  layout->AddLayout (new nux::SpaceLayout (0, 0, 12, 12));
-  layout->AddView (_cairotext, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout(new nux::SpaceLayout(0, 0, 12, 12));
+  layout->AddView(_icontex, 0, nux::eCenter, nux::eFull);
+  layout->AddLayout(new nux::SpaceLayout(0, 0, 12, 12));
+  layout->AddView(_cairotext, 0, nux::eCenter, nux::eFull);
 
-  SetMinMaxSize (style->GetTileWidth (), style->GetTileHeight ());
+  SetMinMaxSize(style->GetTileWidth(), style->GetTileHeight());
 
-  SetLayout (layout);
+  SetLayout(layout);
 
-  SetDndEnabled (true, false);
+  SetDndEnabled(true, false);
 }
 
 
-PlacesSimpleTile::~PlacesSimpleTile ()
+PlacesSimpleTile::~PlacesSimpleTile()
 {
-  g_free (_label);
-  g_free (_icon);
-  g_free (_uri);
+  g_free(_label);
+  g_free(_icon);
+  g_free(_uri);
 }
 
 void
-PlacesSimpleTile::DndSourceDragBegin ()
+PlacesSimpleTile::DndSourceDragBegin()
 {
-  Reference ();
-  ubus_server_send_message (ubus_server_get_default (),
-                            UBUS_PLACE_VIEW_CLOSE_REQUEST,
-                            NULL);
+  Reference();
+  ubus_server_send_message(ubus_server_get_default(),
+                           UBUS_PLACE_VIEW_CLOSE_REQUEST,
+                           NULL);
 }
 
-nux::NBitmapData *
-PlacesSimpleTile::DndSourceGetDragImage ()
+nux::NBitmapData*
+PlacesSimpleTile::DndSourceGetDragImage()
 {
-  nux::NBitmapData *result = 0;
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  GtkIconInfo *info;
-  GError *error = NULL;
-  GIcon *icon;
-  
-  const char *icon_name = _icon;
+  nux::NBitmapData* result = 0;
+  GdkPixbuf* pbuf;
+  GtkIconTheme* theme;
+  GtkIconInfo* info;
+  GError* error = NULL;
+  GIcon* icon;
+
+  const char* icon_name = _icon;
   int size = 64;
-  
+
   if (!icon_name)
     icon_name = "application-default-icon";
-  
-  theme = gtk_icon_theme_get_default ();
-  icon = g_icon_new_for_string (icon_name, NULL);
-  
-  if (G_IS_ICON (icon))
+
+  theme = gtk_icon_theme_get_default();
+  icon = g_icon_new_for_string(icon_name, NULL);
+
+  if (G_IS_ICON(icon))
   {
-    info = gtk_icon_theme_lookup_by_gicon (theme, icon, size, (GtkIconLookupFlags)0);
-    g_object_unref (icon);
+    info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    g_object_unref(icon);
   }
   else
-  {   
-    info = gtk_icon_theme_lookup_icon (theme,
-                                       icon_name,
-                                       size,
-                                       (GtkIconLookupFlags) 0);
+  {
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      icon_name,
+                                      size,
+                                      (GtkIconLookupFlags) 0);
   }
 
   if (!info)
   {
-    info = gtk_icon_theme_lookup_icon (theme,
-                                       "application-default-icon",
-                                       size,
-                                       (GtkIconLookupFlags) 0);
-  }
-        
-  if (gtk_icon_info_get_filename (info) == NULL)
-  {
-    gtk_icon_info_free (info);
-    info = gtk_icon_theme_lookup_icon (theme,
-                                       "application-default-icon",
-                                       size,
-                                       (GtkIconLookupFlags) 0);
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      "application-default-icon",
+                                      size,
+                                      (GtkIconLookupFlags) 0);
   }
 
-  pbuf = gtk_icon_info_load_icon (info, &error);
-  gtk_icon_info_free (info);
-
-  if (GDK_IS_PIXBUF (pbuf))
+  if (gtk_icon_info_get_filename(info) == NULL)
   {
-    nux::GdkGraphics graphics (pbuf);
-    result = graphics.GetBitmap ();
-    g_object_unref (pbuf);
+    gtk_icon_info_free(info);
+    info = gtk_icon_theme_lookup_icon(theme,
+                                      "application-default-icon",
+                                      size,
+                                      (GtkIconLookupFlags) 0);
   }
-  
+
+  pbuf = gtk_icon_info_load_icon(info, &error);
+  gtk_icon_info_free(info);
+
+  if (GDK_IS_PIXBUF(pbuf))
+  {
+    nux::GdkGraphics graphics(pbuf);
+    result = graphics.GetBitmap();
+    g_object_unref(pbuf);
+  }
+
   return result;
 }
 
-std::list<const char *> 
-PlacesSimpleTile::DndSourceGetDragTypes ()
+std::list<const char*>
+PlacesSimpleTile::DndSourceGetDragTypes()
 {
   std::list<const char*> result;
-  result.push_back ("text/uri-list");
+  result.push_back("text/uri-list");
   return result;
 }
 
-const char *
-PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *format)
+const char*
+PlacesSimpleTile::DndSourceGetDataForType(const char* type, int* size, int* format)
 {
   *format = 8;
 
   if (_uri)
   {
-    *size = strlen (_uri);
+    *size = strlen(_uri);
     return _uri;
   }
   else
@@ -178,19 +178,19 @@ PlacesSimpleTile::DndSourceGetDataForType (const char *type, int *size, int *for
 }
 
 void
-PlacesSimpleTile::DndSourceDragFinished (nux::DndAction result)
+PlacesSimpleTile::DndSourceDragFinished(nux::DndAction result)
 {
-  UnReference ();
+  UnReference();
 }
 
 nux::Geometry
-PlacesSimpleTile::GetHighlightGeometry ()
+PlacesSimpleTile::GetHighlightGeometry()
 {
-  nux::Geometry base = GetGeometry ();
+  nux::Geometry base = GetGeometry();
   int width = 0, height = 0;
 
-  _icontex->GetTextureSize (&width, &height);
-  
+  _icontex->GetTextureSize(&width, &height);
+
   _highlight_geometry.width = MAX(width, _idealiconsize);
   _highlight_geometry.height = MAX(height, _idealiconsize);
   _highlight_geometry.x = (base.width - _highlight_geometry.width) / 2;
@@ -199,58 +199,58 @@ PlacesSimpleTile::GetHighlightGeometry ()
   return _highlight_geometry;
 }
 
-const char *
-PlacesSimpleTile::GetLabel ()
+const char*
+PlacesSimpleTile::GetLabel()
 {
   return _label;
 }
 
-const char *
-PlacesSimpleTile::GetIcon ()
+const char*
+PlacesSimpleTile::GetIcon()
 {
   return _icon;
 }
 
-const char *
-PlacesSimpleTile::GetURI ()
+const char*
+PlacesSimpleTile::GetURI()
 {
   return _uri;
 }
 
 void
-PlacesSimpleTile::SetURI (const char *uri)
+PlacesSimpleTile::SetURI(const char* uri)
 {
   if (_uri)
-    g_free (_uri);
-  
+    g_free(_uri);
+
   _uri = NULL;
 
   if (uri)
-    _uri = g_strdup (uri);
+    _uri = g_strdup(uri);
 }
 
 const gchar*
-PlacesSimpleTile::GetName ()
+PlacesSimpleTile::GetName()
 {
-	return "PlacesTile";
+  return "PlacesTile";
 }
 
-const gchar *
-PlacesSimpleTile::GetChildsName ()
+const gchar*
+PlacesSimpleTile::GetChildsName()
 {
   return "PlacesTileContents";
 }
 
 void
-PlacesSimpleTile::AddProperties (GVariantBuilder *builder)
+PlacesSimpleTile::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
 void
-PlacesSimpleTile::LoadIcon ()
+PlacesSimpleTile::LoadIcon()
 {
-  _icontex->LoadIcon ();
+  _icontex->LoadIcon();
 
-  QueueDraw ();
+  QueueDraw();
 }

@@ -32,17 +32,17 @@ SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
   LauncherIcon::mouse_up.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseUp));
   LauncherIcon::mouse_click.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseClick));
-  LauncherIcon::mouse_enter.connect(sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
-  LauncherIcon::mouse_leave.connect(sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
+  LauncherIcon::mouse_enter.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseEnter));
+  LauncherIcon::mouse_leave.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseLeave));
 
-  theme_changed_id_ = g_signal_connect (gtk_icon_theme_get_default (), "changed",
-                                        G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
+  theme_changed_id_ = g_signal_connect(gtk_icon_theme_get_default(), "changed",
+                                       G_CALLBACK(SimpleLauncherIcon::OnIconThemeChanged), this);
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
   if (icon_)
-    icon_->UnReference ();
+    icon_->UnReference();
 
   if (theme_changed_id_)
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
@@ -77,11 +77,11 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 {
   if (icon_ && size == last_size_)
     return icon_;
-  
+
   last_size_ = size;
 
   if (icon_)
-    icon_->UnReference ();
+    icon_->UnReference();
   icon_ = 0;
 
   if (icon_name_.empty())
@@ -94,7 +94,7 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   return icon_;
 }
 
-void SimpleLauncherIcon::SetIconName(const char *name)
+void SimpleLauncherIcon::SetIconName(const char* name)
 {
   icon_name_ = name;
   ReloadIcon();
@@ -104,7 +104,7 @@ void SimpleLauncherIcon::ReloadIcon()
 {
   if (icon_)
   {
-    icon_->UnReference ();
+    icon_->UnReference();
     icon_ = 0;
   }
   needs_redraw.emit(this);
@@ -112,7 +112,7 @@ void SimpleLauncherIcon::ReloadIcon()
 
 void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
 {
-  SimpleLauncherIcon *self;
+  SimpleLauncherIcon* self;
 
   if (!data)
     return;

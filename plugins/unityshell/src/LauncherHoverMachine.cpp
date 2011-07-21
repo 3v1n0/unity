@@ -17,23 +17,23 @@
  * Authored by: Didier Roche <didrocks@ubuntu.com>
  */
 #include <boost/lexical_cast.hpp>
- 
+
 #include "LauncherHoverMachine.h"
 
-LauncherHoverMachine::LauncherHoverMachine ()
+LauncherHoverMachine::LauncherHoverMachine()
 {
   _quirks = DEFAULT;
   _should_hover = false;
   _latest_emit_should_hover = false;
   _hover_changed_emit_handle = 0;
-  
+
 }
 
-LauncherHoverMachine::~LauncherHoverMachine ()
+LauncherHoverMachine::~LauncherHoverMachine()
 {
   if (_hover_changed_emit_handle)
   {
-    g_source_remove (_hover_changed_emit_handle);
+    g_source_remove(_hover_changed_emit_handle);
     _hover_changed_emit_handle = 0;
   }
 }
@@ -51,68 +51,68 @@ LauncherHoverMachine::~LauncherHoverMachine ()
 */
 
 void
-LauncherHoverMachine::EnsureHoverState ()
+LauncherHoverMachine::EnsureHoverState()
 {
   bool should_hover;
-  
-  if (GetQuirk (LAUNCHER_HIDDEN) || GetQuirk (PLACES_VISIBLE))
+
+  if (GetQuirk(LAUNCHER_HIDDEN) || GetQuirk(PLACES_VISIBLE))
   {
-    SetShouldHover (false);
+    SetShouldHover(false);
     return;
   }
-    
-  if (GetQuirk ((HoverQuirk) (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB |
-                              SHORTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
-                              QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
+
+  if (GetQuirk((HoverQuirk)(MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB |
+                            SHORTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
+                            QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
     should_hover = true;
   else
     should_hover = false;
-    
-  
-  SetShouldHover (should_hover);
+
+
+  SetShouldHover(should_hover);
 }
 
 void
-LauncherHoverMachine::SetShouldHover (bool value)
-{  
+LauncherHoverMachine::SetShouldHover(bool value)
+{
   _should_hover = value;
-  
+
   if (_hover_changed_emit_handle)
-    g_source_remove (_hover_changed_emit_handle);
-  _hover_changed_emit_handle = g_timeout_add (0, &EmitShouldHoverChanged, this);  
+    g_source_remove(_hover_changed_emit_handle);
+  _hover_changed_emit_handle = g_timeout_add(0, &EmitShouldHoverChanged, this);
 }
 
 gboolean
-LauncherHoverMachine::EmitShouldHoverChanged (gpointer data)
+LauncherHoverMachine::EmitShouldHoverChanged(gpointer data)
 {
-  LauncherHoverMachine *self = static_cast<LauncherHoverMachine *> (data);
+  LauncherHoverMachine* self = static_cast<LauncherHoverMachine*>(data);
 
-  self->_hover_changed_emit_handle = 0;  
+  self->_hover_changed_emit_handle = 0;
   if (self->_should_hover == self->_latest_emit_should_hover)
     return false;
-  
+
   self->_latest_emit_should_hover = self->_should_hover;
-  self->should_hover_changed.emit (self->_should_hover);
+  self->should_hover_changed.emit(self->_should_hover);
 
   return false;
 }
 
 void
-LauncherHoverMachine::SetQuirk (LauncherHoverMachine::HoverQuirk quirk, bool active)
+LauncherHoverMachine::SetQuirk(LauncherHoverMachine::HoverQuirk quirk, bool active)
 {
-  if (GetQuirk (quirk) == active)
+  if (GetQuirk(quirk) == active)
     return;
-  
+
   if (active)
-    _quirks = (HoverQuirk) (_quirks | quirk);
+    _quirks = (HoverQuirk)(_quirks | quirk);
   else
-    _quirks = (HoverQuirk) (_quirks & ~quirk);
-  
-  EnsureHoverState ();
+    _quirks = (HoverQuirk)(_quirks & ~quirk);
+
+  EnsureHoverState();
 }
 
 bool
-LauncherHoverMachine::GetQuirk (LauncherHoverMachine::HoverQuirk quirk, bool allow_partial)
+LauncherHoverMachine::GetQuirk(LauncherHoverMachine::HoverQuirk quirk, bool allow_partial)
 {
   if (allow_partial)
     return _quirks & quirk;
@@ -120,7 +120,7 @@ LauncherHoverMachine::GetQuirk (LauncherHoverMachine::HoverQuirk quirk, bool all
 }
 
 std::string
-LauncherHoverMachine::DebugHoverQuirks ()
+LauncherHoverMachine::DebugHoverQuirks()
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.

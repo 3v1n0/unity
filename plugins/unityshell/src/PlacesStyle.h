@@ -27,46 +27,46 @@ class PlacesStyle : public nux::Object
 {
 public:
 
-  static PlacesStyle * GetDefault ();
+  static PlacesStyle* GetDefault();
 
-  PlacesStyle ();
-  ~PlacesStyle ();
+  PlacesStyle();
+  ~PlacesStyle();
 
-  nux::Color& GetTextColor ();
+  nux::Color& GetTextColor();
 
-  int  GetDefaultNColumns ();
-  void SetDefaultNColumns (int n_cols);
+  int  GetDefaultNColumns();
+  void SetDefaultNColumns(int n_cols);
 
-  int GetTileIconSize ();
-  int GetTileWidth    ();
-  int GetTileHeight   ();
+  int GetTileIconSize();
+  int GetTileWidth();
+  int GetTileHeight();
 
-  int GetHomeTileIconSize ();
-  int GetHomeTileWidth ();
-  int GetHomeTileHeight ();
+  int GetHomeTileIconSize();
+  int GetHomeTileWidth();
+  int GetHomeTileHeight();
 
-  nux::BaseTexture * GetDashBottomTile ();
-  nux::BaseTexture * GetDashRightTile ();
-  nux::BaseTexture * GetDashCorner ();
-  nux::BaseTexture * GetDashFullscreenIcon ();
+  nux::BaseTexture* GetDashBottomTile();
+  nux::BaseTexture* GetDashRightTile();
+  nux::BaseTexture* GetDashCorner();
+  nux::BaseTexture* GetDashFullscreenIcon();
 
-  nux::BaseTexture * GetSearchMagnifyIcon ();
-  nux::BaseTexture * GetSearchCloseIcon ();
-  nux::BaseTexture * GetSearchCloseGlowIcon ();
-  nux::BaseTexture * GetSearchSpinIcon ();
-  nux::BaseTexture * GetSearchSpinGlowIcon ();
+  nux::BaseTexture* GetSearchMagnifyIcon();
+  nux::BaseTexture* GetSearchCloseIcon();
+  nux::BaseTexture* GetSearchCloseGlowIcon();
+  nux::BaseTexture* GetSearchSpinIcon();
+  nux::BaseTexture* GetSearchSpinGlowIcon();
 
-  nux::BaseTexture * GetGroupUnexpandIcon ();
-  nux::BaseTexture * GetGroupExpandIcon ();
+  nux::BaseTexture* GetGroupUnexpandIcon();
+  nux::BaseTexture* GetGroupExpandIcon();
 
   sigc::signal<void> changed;
   sigc::signal<void> columns_changed;
 
 private:
-  void               Refresh ();
-  nux::BaseTexture * TextureFromFilename (const char *filename);
+  void               Refresh();
+  nux::BaseTexture* TextureFromFilename(const char* filename);
 
-  static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesStyle *self);
+  static void OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self);
 
 private:
   nux::CairoGraphics _util_cg;
@@ -76,19 +76,19 @@ private:
   int _text_height;
   int _n_cols;
 
-  nux::BaseTexture *_dash_bottom_texture;
-  nux::BaseTexture *_dash_right_texture;
-  nux::BaseTexture *_dash_corner_texture;
-  nux::BaseTexture *_dash_fullscreen_icon;
+  nux::BaseTexture* _dash_bottom_texture;
+  nux::BaseTexture* _dash_right_texture;
+  nux::BaseTexture* _dash_corner_texture;
+  nux::BaseTexture* _dash_fullscreen_icon;
 
-  nux::BaseTexture *_search_magnify_texture;
-  nux::BaseTexture *_search_close_texture;
-  nux::BaseTexture *_search_close_glow_texture;
-  nux::BaseTexture *_search_spin_texture;
-  nux::BaseTexture *_search_spin_glow_texture;
+  nux::BaseTexture* _search_magnify_texture;
+  nux::BaseTexture* _search_close_texture;
+  nux::BaseTexture* _search_close_glow_texture;
+  nux::BaseTexture* _search_spin_texture;
+  nux::BaseTexture* _search_spin_glow_texture;
 
-  nux::BaseTexture *_group_unexpand_texture;
-  nux::BaseTexture *_group_expand_texture;
+  nux::BaseTexture* _group_unexpand_texture;
+  nux::BaseTexture* _group_expand_texture;
 };
 
 #endif // PLACES_STYLE_H

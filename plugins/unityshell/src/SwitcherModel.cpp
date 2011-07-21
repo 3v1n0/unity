@@ -20,13 +20,15 @@
 
 #include "SwitcherModel.h"
 
-namespace unity {
-namespace switcher {
+namespace unity
+{
+namespace switcher
+{
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
-: _inner (icons)
-, _index (0)
-, _last_index (0)
+  : _inner(icons)
+  , _index(0)
+  , _last_index(0)
 {
   _change_time.tv_sec = 0;
   _change_time.tv_nsec = 0;
@@ -37,95 +39,95 @@ SwitcherModel::~SwitcherModel()
 
 }
 
-SwitcherModel::iterator 
-SwitcherModel::begin ()
+SwitcherModel::iterator
+SwitcherModel::begin()
 {
-  return _inner.begin ();
+  return _inner.begin();
 }
 
-SwitcherModel::iterator 
-SwitcherModel::end ()
+SwitcherModel::iterator
+SwitcherModel::end()
 {
-  return _inner.end ();
+  return _inner.end();
 }
 
-SwitcherModel::reverse_iterator 
-SwitcherModel::rbegin ()
+SwitcherModel::reverse_iterator
+SwitcherModel::rbegin()
 {
-  return _inner.rbegin ();
+  return _inner.rbegin();
 }
 
-SwitcherModel::reverse_iterator 
-SwitcherModel::rend ()
+SwitcherModel::reverse_iterator
+SwitcherModel::rend()
 {
-  return _inner.rend ();
+  return _inner.rend();
 }
 
-int 
-SwitcherModel::Size ()
+int
+SwitcherModel::Size()
 {
-  return _inner.size ();
+  return _inner.size();
 }
 
-AbstractLauncherIcon *
-SwitcherModel::Selection ()
+AbstractLauncherIcon*
+SwitcherModel::Selection()
 {
-  return _inner.at (_index);
+  return _inner.at(_index);
 }
 
-int 
-SwitcherModel::SelectionIndex ()
+int
+SwitcherModel::SelectionIndex()
 {
   return _index;
 }
 
-AbstractLauncherIcon *
-SwitcherModel::LastSelection ()
+AbstractLauncherIcon*
+SwitcherModel::LastSelection()
 {
-  return _inner.at (_last_index);
+  return _inner.at(_last_index);
 }
 
-int 
-SwitcherModel::LastSelectionIndex ()
+int
+SwitcherModel::LastSelectionIndex()
 {
   return _last_index;
 }
 
-void 
-SwitcherModel::Next ()
+void
+SwitcherModel::Next()
 {
   _last_index = _index;
 
   _index++;
-  if (_index >= _inner.size ())
+  if (_index >= _inner.size())
     _index = 0;
-  
-  clock_gettime (CLOCK_MONOTONIC, &_change_time);
-  selection_changed.emit (Selection ());
+
+  clock_gettime(CLOCK_MONOTONIC, &_change_time);
+  selection_changed.emit(Selection());
 }
 
-void 
-SwitcherModel::Prev ()
+void
+SwitcherModel::Prev()
 {
   _last_index = _index;
 
   if (_index > 0)
     _index--;
   else
-    _index = _inner.size () - 1;
-  
-  clock_gettime (CLOCK_MONOTONIC, &_change_time);
-  selection_changed.emit (Selection ());
+    _index = _inner.size() - 1;
+
+  clock_gettime(CLOCK_MONOTONIC, &_change_time);
+  selection_changed.emit(Selection());
 }
 
 timespec
-SwitcherModel::SelectionChangeTime ()
+SwitcherModel::SelectionChangeTime()
 {
   return _change_time;
 }
 
-void 
-SwitcherModel::Select (AbstractLauncherIcon *selection)
+void
+SwitcherModel::Select(AbstractLauncherIcon* selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)
@@ -137,8 +139,8 @@ SwitcherModel::Select (AbstractLauncherIcon *selection)
         _last_index = _index;
         _index = i;
 
-        clock_gettime (CLOCK_MONOTONIC, &_change_time);
-        selection_changed.emit (Selection ());
+        clock_gettime(CLOCK_MONOTONIC, &_change_time);
+        selection_changed.emit(Selection());
       }
       break;
     }
@@ -146,10 +148,10 @@ SwitcherModel::Select (AbstractLauncherIcon *selection)
   }
 }
 
-void 
-SwitcherModel::Select (int index)
+void
+SwitcherModel::Select(int index)
 {
-  unsigned int target = CLAMP (index, 0, _inner.size () - 1);
+  unsigned int target = CLAMP(index, 0, _inner.size() - 1);
 
   if (target != _index)
   {

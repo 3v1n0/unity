@@ -1,3 +1,963 @@
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix make release deps
+
+2011-07-21  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Update formatting to match style (as close as possible)
+
+2011-07-19  Gord Allott  <gord.allott@canonical.com>
+
+	reorganise
+
+2011-07-19  Gord Allott  <gord.allott@canonical.com>
+
+	bsd style, unpad parans, no namespace indents
+
+2011-07-19  Gord Allott  <gord.allott@canonical.com>
+
+	added an astyle formatter to the tools
+
+2011-07-21  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Some cleanup
+	* A bit of event signal refactoring (temporary)
+	* Support for Escape key closing the Dash.
+
+2011-07-21  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed Escape key support in Dash
+
+2011-07-21  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use XQueryPointer if other methods exist. It is a round trip, so it can be slow.
+
+2011-07-19  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Don't use XQueryPointer if you can. It is a round-trip request, do it can be slow.
+
+2011-07-21  Marco Trevisan  <mail@3v1n0.net>
+
+	Bug #809907: Title fade effect no longer works
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	attach cairo_mask to pattern craetion
+	
+	too keep a logical separation between "creation"
+	and "destruction" of the elements (again)
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Keep the space before gtk_style_context_restore
+	
+	too keep a logical separation between "creation" and
+	"destruction" of the elements
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use always cairo_pattern_add_color_stop_rgba
+	
+	For better readability...
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Just use a cairo mask to fade the title
+	
+	Don't use the gtk colors to fade the title, but just make
+	gtk to paint the panel title, then set it as a cairo_source
+	(using the cairo group trick) and finally draw over a mask
+	with proper alpha values to make the text fade out correctly.
+	
+	This should work fine with GTK theming and Cimi likes it ;)
+
+2011-07-17  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Fix panel title fading for long titles
+	
+	The previous implementation wasn't working any more with
+	gtk_render_layout support, this patch makes it to work
+	again writing over the result of the gtk rendering.
+
+2011-07-21  Didier Roche  <didier.roche@canonical.com>
+
+	merged Didiers branch to remove qt apps from our systray whitelist
+
+2011-07-20  Didier Roche  <didier.roche@canonical.com>
+
+	remove qt apps from systray whitelist: we have sni-qt now
+
+2011-07-21  Daniel van Vugt  <vanvugt@gmail.com>
+
+	merged Daniels branch to fix dead code in the launcher
+
+2011-07-04  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fixed dead code in Launcher::OnUpdateDragManagerTimeout (LP: #805327)
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged Marco's branch fix the opengl detection code for locales that use , instead of .
+
+2011-07-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Added missing parenthesis.
+
+2011-07-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	OpenGL version string can be divided by a "comma" too
+	
+	If the OpenGL version string is in the form X,Y unity
+	won't start. With this additional check we allow it to run.
+	
+	Also, we check that the char after the float divsor is a digit.
+
+2011-07-13  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with upstream
+
+2011-07-21  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merged Marco's branch to send the entry-scrolled signal in the indicators
+
+2011-07-02  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Use the "entry-scrolled" signal instead of the old ones
+	
+	It follows the API change of libindicator
+
+2011-07-21  Didier Roche  <didier.roche@canonical.com>
+
+	Add schema (prefer centralized schema for gsettings unity values) for runner in
+	unity-place-applications
+
+2011-07-20  Didier Roche  <didier.roche@canonical.com>
+
+	add runner schema
+
+2011-07-21  Jason Smith  <jason.smith@canonical.com>
+
+	merge null icon crash fix
+
+2011-07-20  Jason Smith  <jason.smith@canonical.com>
+
+	remove useless cast
+
+2011-07-20  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when bamf gave a null name string
+
+2011-07-20  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab cleanups branch
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	Share texture memory in IconRenderer
+	Make alt-tab 150 size tiles
+	Add 150 size tile resources
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	add easing and configurable animation time
+
+2011-07-20  Jason Smith  <jason.smith@canonical.com>
+
+	merge xwin perf branch
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	General performance improvements
+	Match nux performance updates
+
+2011-07-20  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the unneeded sigc::connection objects due to the class inheriting from sigc::trackable.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Another connection not needed.  And a small amount of trailing whitespace tweaking.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Yet another connection not needed.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Connection not needed.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Cast is not needed.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Private members not used.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Casts are not needed.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Removed the connection objects from PanelView.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Kill connection objects from PlacesSearchBar.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	More connections removed.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Clean up the connections on the SimpleLauncherIcon.  Also fixed the naming and layout.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	A note about tribool.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the unneeded connection objects as LauncherController directly inherits from sigc::trackable.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the unneeded sigc::connection objects in Launcher.  Launcher inherits from nux::View, which is a nux::Object, and that inherits from sigc::tractable.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the unneeded sigc::connection objects in BamfLauncherIcon.  The AbstractLauncherIcon inherits indirectly from nux::Object, which inherits from sigc::tractable.
+
+2011-07-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	* fix bug in the launcher introduced following the revised nux event architecture
+	* fix typo
+
+2011-07-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix launcher mouse in/out bug
+
+2011-07-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed typo
+
+2011-07-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] This changes unity-preference's desktop file to use OnlyShowIn=Unity instead of OnlyShowIn=GNOME.
+
+2011-07-19  Michael Terry  <michael.terry@canonical.com>
+
+	use OnlyShowIn=Unity
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	Minor design changes from design
+
+2011-07-19  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] GLibSignal branch that makes signal connection a fun and joyous occasion\!
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Try to not pad out the parameters for a method
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Get rid of UnityCore.h
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	s/using namepspace sigc/using sigc::nil/
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Make SignalManager noncopyable
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	cleanup
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] c++0x support
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-13  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Switch to sigc::nil
+
+2011-07-12  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Prioritise library in UnityCore
+
+2011-07-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Remove Signal manager destructor
+
+2011-07-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Use std::string const& in Signal template
+
+2011-07-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	get_foo/foo
+
+2011-07-11  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Don't use upper case o
+
+2011-07-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	some style fixes
+
+2011-07-10  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Duh, commit and push all the work before merge review
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some cleanups
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	[merge] trunk
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Some clean up + comments
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Forgot to add support for sending the emitting GObject!
+	This had the awesome effect of cleaning up a bunch of the code and basically things fell into place nicely after that.
+	
+	The only downside is we needed to drop Signal7 as Signal6 now reaches the sigc::slot limit of 8 types (we can easily make Signal7 if we need to in the future, i just went through Devhelp and couldn't find something that send out 7 args!).
+	
+	With it working and the tests passing, I've ported over DBusIndicators to use glib::SignalManager, which seems to work fine.
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix return value on get_name
+
+2011-07-09  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add support to SignalManager for disconnections and add a test for that
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Yay, auto-disconnection works
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Test connections are still working
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add a test case that connects up all the diffrent types of signals
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add an ass load of constructors. Template programming is a lot of repeating the same code...
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Beginnings of SignalManager
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some more tests, clean up file
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Complete testing of connection & emmision
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add all the signal types
+
+2011-07-08  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Got the test infrastructure working finally
+
+2011-07-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Add some more testing infrastructure and fix the definitions
+
+2011-07-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Initial testing support
+
+2011-07-07  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Import Signal work as merging old trunk was breaking things
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab fixes branch
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	Add missing files
+
+2011-07-19  Jason Smith  <jason.smith@canonical.com>
+
+	implement fixes and changes to alt tab as requested by design
+
+2011-07-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed bug in panel:
+	- Correctly detects when mouse enters the panel and then show the global menu.
+
+2011-07-19  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fix Panel
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix a leak on closing.
+
+2011-07-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Merge trunk
+
+2011-07-14  Tim Penhey  <tim.penhey@canonical.com>
+
+	Remove the unused GetResultsController method.
+	Reformat some of the methods.
+	Delete the _results_controller in the PlacesView destructor.
+	Make sure the ResultsController clears its results in the destructor.
+
+2011-07-19  Tim Penhey  <tim.penhey@canonical.com>
+
+	Fix a slight omission in the glib object wrapper template assignment operator.
+
+2011-07-18  Tim Penhey  <tim.penhey@canonical.com>
+
+	Ooops.
+
+2011-07-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	This branch has been adapted to the new event system in Nux.
+	
+	All the member functions ::ProcessEvent are now obsolete. However you should see that the changes to Unity are not that big.
+	Here is what to expect with this branch:
+	- Keyboard navigation in the dash is functional, minus a few glitches to resolve.
+	- Alt+F1 is working in the launcher. Key navigation in and out of the quicklist is also working.
+	
+	Please report all the regressions you see.
+
+2011-07-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed conflict
+
+2011-07-18  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-15  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixes
+
+2011-07-14  Jay Taoko  <jay.taoko@canonical.com>
+
+	Merged with trunk
+
+2011-07-13  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Key navigation fixes
+
+2011-07-12  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes
+
+2011-07-07  Jay Taoko  <jay.taoko@canonical.com>
+
+	Fixed signal callback
+
+2011-06-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Merge with unity trunk
+
+2011-06-28  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Added Introspectable to the "unity" namesapce
+
+2011-06-22  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fixes
+
+2011-06-21  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Ported to the Unity new file layout
+
+2011-06-21  Jay Taoko  <jay.taoko@canonical.com>
+
+	This branch has been adapted to the new event system in Nux.
+	
+	All the member functions ::ProcessEvent are now obsolete. However you should see that the changes to Unity are not that big.
+	Here is what to expect with this branch:
+	- Keyboard navigation in the dash is not working. 
+	- You have to click in the search bar text entry before you start typing some text into it
+	- There is a regression in the scroll speed of the Dash ScrollView
+	- Alt+F1 is working in the launcher. Key navigation in and out of the quicklist is also working.
+	
+	Please report all the regressions you see.
+
+2011-06-12  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Nux event architecture: fixed most of the dash
+
+2011-06-12  Jay Taoko  <jay.taoko@canonical.com>
+
+	* Fix unity for the new event architecture
+
+2011-07-18  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Checking if a11y is enabled using gsettings instead of gconf
+
+2011-07-13  Alejandro Piñeiro  <apinheiro@igalia.com>
+
+	[a11y] Checking if a11y is enabled using gsettings instead of gconf
+
+2011-07-17  Jason Smith  <jason.smith@canonical.com>
+
+	merge renderer updates branch
+
+2011-07-17  Jason Smith  <jason.smith@canonical.com>
+
+	fix merge issues
+
+2011-07-17  Jason Smith  <jason.smith@canonical.com>
+
+	Add switcher model unit tests
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	increase draw distance of folded icons
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	add text to switcher
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash when first switch doesn't show switcher
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	add popup delay behavior
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	cleanup redraw handle
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	fix crash
+
+2011-07-16  Jason Smith  <jason.smith@canonical.com>
+
+	start animation work
+
+2011-07-15  Jason Smith  <jason.smith@canonical.com>
+
+	allow backwards movement for switcher
+	fix background size drawing
+
+2011-07-15  Jason Smith  <jason.smith@canonical.com>
+
+	make switcher start to be more than just a thing of pretty
+
+2011-07-15  Jason Smith  <jason.smith@canonical.com>
+
+	improve damage performance
+
+2011-07-15  Jason Smith  <jason.smith@canonical.com>
+
+	sexier rendering
+
+2011-07-15  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Fix the panel-service
+
+2011-07-15  Gord Allott  <gord.allott@canonical.com>
+
+	enables c++0x support
+
+2011-07-14  Gord Allott  <gord.allott@canonical.com>
+
+	enables C++0x support in unity
+
+2011-07-12  Gord Allott  <gord.allott@canonical.com>
+
+	enables c++0x support in unity
+
+2011-07-14  Ted Gould  <ted@gould.cx>
+
+	Indicators love you long time.
+
+2011-07-14  Ted Gould  <ted@gould.cx>
+
+	Dropping Me, adding Power, and reshuffling slightly to match http://wiki.ubuntu.com/MenuBar
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge alt-tab branch
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	improve layout of alt-tab
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	merge fixes
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	fix logger merge issues
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	mark reason for not const
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	protect double hide calls
+
+2011-07-14  Jason Smith  <jason.smith@canonical.com>
+
+	set workspace and tile size properly
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	fix signal names
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	prefer ++i
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	remove trailing whitespace
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	more review fixes
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	more merge review fixes
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	pass nux::Geometry as const&
+
+2011-07-13  Jason Smith  <jason.smith@canonical.com>
+
+	migrate tooltip to using a nux::Property
+	fix header dates
+
+2011-07-12  Jason Smith  <jason.smith@canonical.com>
+
+	remove leftover function definition
+	more icons in switcher test
+
+2011-07-12  Jason Smith  <jason.smith@canonical.com>
+
+	start work on proper rendering of alt-tab
+
+2011-07-12  Jason Smith  <jason.smith@canonical.com>
+
+	Get icons renderering in mockup
+
+2011-07-12  Jason Smith  <jason.smith@canonical.com>
+
+	fix build issues with newest build rules
+
+2011-07-11  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-07-11  Jason Smith  <jason.smith@canonical.com>
+
+	minor updates
+
+2011-07-08  Jason Smith  <jason.smith@canonical.com>
+
+	fix math error
+
+2011-07-08  Jason Smith  <jason.smith@canonical.com>
+
+	properly destroy icon labels
+
+2011-07-08  Jason Smith  <jason.smith@canonical.com>
+
+	make labels work again with new renderer
+
+2011-07-08  Jason Smith  <jason.smith@canonical.com>
+
+	all put together and working
+
+2011-07-08  Jason Smith  <jason.smith@canonical.com>
+
+	theoretical completion of IconRenderer
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	almost finished building icon renderer
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	more progress porting the IconRenderer
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	finish making LauncherIcon use a proper API for transforms
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	start moving rendering of icons into own class
+	make transforms a proper API
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	add switcher test and IconRenderer.h
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	migrate switcher away from concrete implementations
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	remove random gboolean usage, bool works fine here
+
+2011-07-07  Jason Smith  <jason.smith@canonical.com>
+
+	Make LauncherIcon use standard string
+
+2011-07-06  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-07-06  Jason Smith  <jason.smith@canonical.com>
+
+	Add missing files
+	Rebase LauncherIcon on top of AbstractLauncherIcon
+
+2011-06-29  Jason Smith  <jason.smith@canonical.com>
+
+	more work towards teh glorious switcher future. Something is now painted on the screen and a unit test is started but not working
+
+2011-06-27  Jason Smith  <jason.smith@canonical.com>
+
+	merge trunk
+
+2011-06-27  Jason Smith  <jason.smith@canonical.com>
+
+	more updates
+
+2011-06-17  Jason Smith  <jason.smith@canonical.com>
+
+	add switcher controller
+
+2011-06-17  Jason Smith  <jason.smith@canonical.com>
+
+	Start work on switcher model
+
+2011-07-14  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Fix white flashes seen in the panel menus during scrubbing, or when they're unmapped (LP: #687567)
+
+2011-07-14  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Optimize the GDK event filter used to implement panel scrubbing, so that it
+	does not need to call gdk/gtk/X11 functions. Avoiding these function calls
+	inside the event filter fixes graphics glitches seen in the panel menus
+	(LP: #687567)
+
+2011-07-13  Rafał Cieślak  <rafalcieslak256@gmail.com>
+
+	Merged in Rafałs branch to fix lp:734010
+
+2011-07-11  Rafał Cieślak  <rafalcieslak256@gmail.com>
+
+	[fix 734010] spacing between indicators should be 5 pixels
+	
+	modified:
+	plugins/unityshell/src/PanelIndicatorObjectEntryView.h
+	- changed default indicator padding to 5px
+
+2011-07-13  Rafał Cieślak  <rafalcieslak256@gmail.com>
+
+	Merged in Rafałs branch to fix lp:691808
+
+2011-07-10  Rafał Cieślak  <rafalcieslak256@gmail.com>
+
+	[fix #691808] Don't switch title to menu when hovering window buttons
+	
+	modified:
+	plugins/unityshell/src/PanelMenuView.cpp
+	- Check whether the window is maximized, and do not exclude the buttons' area in case it's not.
+
+2011-07-10  Rafał Cieślak  <rafalcieslak256@gmail.com>
+
+	[fix #691808] Don't switch title to menu when hovering window buttons
+	
+	modified:
+	plugins/unityshell/src/PanelMenuView.cpp
+	- Extended appropriate if statement checking for pointer location to exclude window buttons' area.
+
+2011-07-12  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	modified:
+	CMakeLists.txt
+	plugins/unityshell/src/DeviceLauncherIcon.cpp
+	plugins/unityshell/src/DeviceLauncherIcon.h
+	plugins/unityshell/src/LauncherController.cpp
+	plugins/unityshell/src/unityshell.cpp
+	
+	Merged Andrea Azzarone's fix-764905 branch to unity trunk after review,
+	test and approval by me. Unmounts/ejects an USB-stick by dragging it to
+	the trash-icon on the launcher. This also spawns a notification to inform
+	the use of the succeeded operation. Thanks again for the great work,
+	Andrea! Fixes LP: #764905
+
+2011-07-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	The strings used for the notification need to be translated.
+
+2011-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Show an OSD notifaction is a drive is successful ejected.
+
+2011-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Eject an "eject-able" device when drag and drop it into the trash.
+
+2011-07-12  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	modified:
+	plugins/unityshell/src/Launcher.cpp
+	plugins/unityshell/src/LauncherController.cpp
+	plugins/unityshell/src/LauncherController.h
+	
+	Merged Andrea Azzorone's fix-733425 branch after review, test and approval
+	by me. Eliminates superfluous disk-I/O while dragging a launcher-icon to a
+	new position. Thanks for the patch, Andrea! Fixes LP: #733425
+
+2011-07-10  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Tries to solve bug #733425 (Moving a launcher icon around generates lots of disk write activity).
+
+2011-07-12  Mirco Müller  <mirco.mueller@ubuntu.com>
+
+	modified:
+	plugins/unityshell/src/BamfLauncherIcon.cpp
+	plugins/unityshell/src/SimpleLauncherIcon.cpp
+	plugins/unityshell/src/TrashLauncherIcon.cpp
+	
+	Merged Andrea Azzarone's fix-some-memory-leaks branch after review, test
+	and approval by me. This solves 5 mem-leaks identfied via valgrind.
+	Thanks a lot for this patch Andrea. Fixes LP: #806984
+
+2011-07-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fixes some memory leaks.
+
+2011-07-12  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Merged in Daniel's branch to fix lp:761465
+
+2011-07-07  Daniel van Vugt  <vanvugt@gmail.com>
+
+	Make icon highlight box the same size (maximum) for all icons in the
+	dash (LP: #761465)
+
+2011-07-12  Oliver Sauder  <os@esite.ch>
+
+	This fixes the issue that the command history is not shown first time after login.
+
+2011-06-28  Oliver Sauder  <os@esite.ch>
+
+	Reactive entry after successful connection
+
+2011-07-08  Sebastien Bacher  <seb128@ubuntu.com>
+
+	updated to the new indicator .pc naming.
+
+2011-07-07  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Merge in  lp:~unity-team/unity/unity.dialog_gtk3_hack
+
+2011-06-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Bump to gtk3
+
+2011-06-27  Sam Spilsbury  <sam.spilsbury@canonical.com>
+
+	Add gtk3 menubar hack
+
+2011-07-07  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use Gtk3 rendering to draw panel and it's menuitems
+
+2011-07-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Use prelight instead active on menubar items (I think this is correct, sorry neil)
+
+2011-07-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Seems to fix slowdown, much faster. gtk_widget_path_copy can be quite slow
+
+2011-07-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Fix the titlebar and free the widget path on menuitems
+
+2011-07-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	Coding style fix
+
+2011-07-01  Andrea Cimitan  <andrea.cimitan@canonical.com>
+
+	First work of switching to gtk+ style context API for panel widgets
+
+2011-07-07  Andrea Azzarone  <azzaronea@gmail.com>
+
+	[merge] Fix leak in PanelIndicatorObjectEntryView::make_pixbuf
+
+2011-07-06  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix a memory leaking in make_pixbuf (#806485).
+
+2011-07-04  Neil Jagdish Patel  <neil.patel@canonical.com>
+
+	Release\ 4.2.0
+
 2011-07-04  Neil Jagdish Patel  <neil.patel@canonical.com>
 
 	Remove dependancy on gtkloader as it doesn't work for upgrading Unity on existing installs

@@ -30,62 +30,62 @@
 
 struct _UBusServerPrivate
 {
-  GHashTable   *message_interest_table;
-  GHashTable   *dispatch_table;
+  GHashTable*   message_interest_table;
+  GHashTable*   dispatch_table;
 
-  GQueue       *message_queue;
-  GStringChunk *message_names;
+  GQueue*       message_queue;
+  GStringChunk* message_names;
 
   guint         id_sequencial_number;
   gboolean      message_pump_queued;
 };
 
 
-G_DEFINE_TYPE (UBusServer, ubus_server, G_TYPE_INITIALLY_UNOWNED);
+G_DEFINE_TYPE(UBusServer, ubus_server, G_TYPE_INITIALLY_UNOWNED);
 
 struct _UBusDispatchInfo
 {
   guint         id;
   UBusCallback  callback;
-  gchar        *message;
+  gchar*        message;
   gpointer      user_data;
 };
 typedef struct _UBusDispatchInfo UBusDispatchInfo;
 
-UBusDispatchInfo *
-ubus_dispatch_info_new (UBusServer   *server,
-                        const gchar  *message,
-                        UBusCallback  callback,
-                        gpointer      user_data)
+UBusDispatchInfo*
+ubus_dispatch_info_new(UBusServer*   server,
+                       const gchar*  message,
+                       UBusCallback  callback,
+                       gpointer      user_data)
 {
-  g_return_val_if_fail (UBUS_IS_SERVER (server), NULL);
-  UBusServerPrivate *priv = server->priv;
-  UBusDispatchInfo *info;
+  g_return_val_if_fail(UBUS_IS_SERVER(server), NULL);
+  UBusServerPrivate* priv = server->priv;
+  UBusDispatchInfo* info;
 
   if (priv->id_sequencial_number < 1)
-    {
-      g_critical (G_STRLOC ": ID's are overflowing");
-    }
+  {
+    g_critical(G_STRLOC ": ID's are overflowing");
+  }
 
-  info = g_slice_new (UBusDispatchInfo);
+  info = g_slice_new(UBusDispatchInfo);
   info->id = priv->id_sequencial_number++;
   info->callback = callback;
-  info->message = g_string_chunk_insert_const (priv->message_names, message);
+  info->message = g_string_chunk_insert_const(priv->message_names, message);
   info->user_data = user_data;
 
   return info;
 }
 
 void
-ubus_dispatch_info_free (UBusDispatchInfo *info)
+ubus_dispatch_info_free(UBusDispatchInfo* info)
 {
-  g_slice_free (UBusDispatchInfo, info);
+  g_slice_free(UBusDispatchInfo, info);
 }
 
 struct _UBusMessageInfo
 {
-  gchar     *message;
-  GVariant  *data;
+  gchar*     message;
+  GVariant*  data;
 };
 
 typedef struct _UBusMessageInfo UBusMessageInfo;
@@ -103,155 +103,155 @@ typedef struct _UBusMessageInfo UBusMessageInfo;
  * us to compare message names with direct pointer comparison.
  */
 static UBusMessageInfo*
-ubus_message_info_new (GVariant *data)
+ubus_message_info_new(GVariant* data)
 {
-  UBusMessageInfo *info;
+  UBusMessageInfo* info;
 
-  info = g_slice_new0 (UBusMessageInfo);
+  info = g_slice_new0(UBusMessageInfo);
   info->data = data;
 
   if (data != NULL)
-    g_variant_ref_sink (data);
+    g_variant_ref_sink(data);
 
   return info;
 }
 
 static void
-ubus_message_info_free (UBusMessageInfo *info)
+ubus_message_info_free(UBusMessageInfo* info)
 {
   if (info->data != NULL)
   {
-    g_variant_unref (info->data);
+    g_variant_unref(info->data);
     info->data = NULL;
   }
 
-  g_slice_free (UBusMessageInfo, info);
+  g_slice_free(UBusMessageInfo, info);
 }
 
 static void
-ubus_server_init (UBusServer *server)
+ubus_server_init(UBusServer* server)
 {
-  UBusServerPrivate *priv;
+  UBusServerPrivate* priv;
 
-  priv = server->priv = UBUS_SERVER_GET_PRIVATE (server);
+  priv = server->priv = UBUS_SERVER_GET_PRIVATE(server);
 
   /* message_interest_table holds the message/DispatchInfo relationship
    * We can use g_direct_* hash functions because we are interning all
    * message names in our GStringChunk
    */
-  priv->message_interest_table = g_hash_table_new_full (g_direct_hash,
-                                                        g_direct_equal,
-                                                        NULL,
-                                                        (GDestroyNotify) g_sequence_free);
+  priv->message_interest_table = g_hash_table_new_full(g_direct_hash,
+                                                       g_direct_equal,
+                                                       NULL,
+                                                       (GDestroyNotify) g_sequence_free);
   // dispatch_table holds the individial id/DispatchInfo pairs
-  priv->dispatch_table = g_hash_table_new_full (g_direct_hash,
-                                                g_direct_equal,
-                                                NULL,
-                                                (GDestroyNotify) ubus_dispatch_info_free);
+  priv->dispatch_table = g_hash_table_new_full(g_direct_hash,
+                                               g_direct_equal,
+                                               NULL,
+                                               (GDestroyNotify) ubus_dispatch_info_free);
 
   // for anyone thats wondering (hi kamstrup!), there are two hash tables so
   // that lookups are fast when sending messages and removing handlers
 
-  priv->message_queue = g_queue_new ();
-  priv->message_names = g_string_chunk_new (512);
+  priv->message_queue = g_queue_new();
+  priv->message_names = g_string_chunk_new(512);
   priv->id_sequencial_number = 1;
 }
 
 static void
-ubus_server_finalize (GObject *object)
+ubus_server_finalize(GObject* object)
 {
-  UBusServer        *server;
-  UBusServerPrivate *priv;
+  UBusServer*        server;
+  UBusServerPrivate* priv;
 
-  server = UBUS_SERVER (object);
+  server = UBUS_SERVER(object);
   priv = server->priv;
 
-  g_hash_table_destroy (priv->message_interest_table);
-  g_hash_table_destroy (priv->dispatch_table);
+  g_hash_table_destroy(priv->message_interest_table);
+  g_hash_table_destroy(priv->dispatch_table);
 
-  UBusMessageInfo *info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue);
-  for (; info != NULL; info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue))
+  UBusMessageInfo* info = (UBusMessageInfo*)g_queue_pop_tail(priv->message_queue);
+  for (; info != NULL; info = (UBusMessageInfo*)g_queue_pop_tail(priv->message_queue))
   {
-    ubus_message_info_free (info);
+    ubus_message_info_free(info);
   }
 
-  g_queue_free (priv->message_queue);
-  g_string_chunk_free (priv->message_names);
+  g_queue_free(priv->message_queue);
+  g_string_chunk_free(priv->message_names);
 
-  G_OBJECT_CLASS (ubus_server_parent_class)->finalize (object);
+  G_OBJECT_CLASS(ubus_server_parent_class)->finalize(object);
 }
 
 static void
-ubus_server_class_init (UBusServerClass *klass)
+ubus_server_class_init(UBusServerClass* klass)
 {
-  GObjectClass* object_class = G_OBJECT_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (UBusServerPrivate));
+  GObjectClass* object_class = G_OBJECT_CLASS(klass);
+  g_type_class_add_private(klass, sizeof(UBusServerPrivate));
   object_class->finalize = ubus_server_finalize;
 }
 
-UBusServer *
-ubus_server_get_default ()
+UBusServer*
+ubus_server_get_default()
 {
-  UBusServer *server;
+  UBusServer* server;
   static gsize singleton;
 
-  if (g_once_init_enter (&singleton))
-    {
-      server = (UBusServer *)g_object_new (UBUS_TYPE_SERVER, NULL);
-      g_object_ref_sink (server);
-      g_once_init_leave (&singleton, (gsize) server);
-    }
+  if (g_once_init_enter(&singleton))
+  {
+    server = (UBusServer*)g_object_new(UBUS_TYPE_SERVER, NULL);
+    g_object_ref_sink(server);
+    g_once_init_leave(&singleton, (gsize) server);
+  }
 
   // we actually just want to hold our own reference and not let anything
   // else reference us, because we never want to lose that reference, we are
   // only allowed to initalise once
-  return (UBusServer *)singleton;
+  return (UBusServer*)singleton;
 }
 
 guint
-ubus_server_register_interest (UBusServer   *server,
-                               const gchar  *message,
-                               UBusCallback  callback,
-                               gpointer      user_data)
+ubus_server_register_interest(UBusServer*   server,
+                              const gchar*  message,
+                              UBusCallback  callback,
+                              gpointer      user_data)
 {
-  UBusServerPrivate *priv;
-  GSequence         *dispatch_list;
-  gchar             *interned_message;
-  UBusDispatchInfo  *info;
+  UBusServerPrivate* priv;
+  GSequence*         dispatch_list;
+  gchar*             interned_message;
+  UBusDispatchInfo*  info;
 
-  g_return_val_if_fail (UBUS_IS_SERVER (server), 0);
-  g_return_val_if_fail (message != NULL, 0);
+  g_return_val_if_fail(UBUS_IS_SERVER(server), 0);
+  g_return_val_if_fail(message != NULL, 0);
 
   priv = server->priv;
-  interned_message = g_string_chunk_insert_const (priv->message_names, message);
-  dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
-                                                    interned_message);
+  interned_message = g_string_chunk_insert_const(priv->message_names, message);
+  dispatch_list = (GSequence*)g_hash_table_lookup(priv->message_interest_table,
+                                                  interned_message);
 
   if (dispatch_list == NULL)
-    {
-      // not had this message before so add a new entry to the message_interest table
-      dispatch_list = g_sequence_new (NULL); // we use a sequence because its a stable pointer
-      g_hash_table_insert (priv->message_interest_table,
-                           interned_message,
-                           dispatch_list);
-    }
+  {
+    // not had this message before so add a new entry to the message_interest table
+    dispatch_list = g_sequence_new(NULL);  // we use a sequence because its a stable pointer
+    g_hash_table_insert(priv->message_interest_table,
+                        interned_message,
+                        dispatch_list);
+  }
 
   // add the callback to the dispatch table
-  info = ubus_dispatch_info_new (server, message, callback, user_data);
-  g_hash_table_insert (priv->dispatch_table, GUINT_TO_POINTER (info->id), info);
+  info = ubus_dispatch_info_new(server, message, callback, user_data);
+  g_hash_table_insert(priv->dispatch_table, GUINT_TO_POINTER(info->id), info);
 
   // add the dispatch info to the dispatch list in the message interest table
-  g_sequence_append (dispatch_list, info);
+  g_sequence_append(dispatch_list, info);
 
   return info->id;
 }
 
 static gboolean
-ubus_server_pump_message_queue (UBusServer *server)
+ubus_server_pump_message_queue(UBusServer* server)
 {
-  g_return_val_if_fail (UBUS_IS_SERVER (server), FALSE);
-  UBusServerPrivate *priv = server->priv;
-  UBusMessageInfo *info;
+  g_return_val_if_fail(UBUS_IS_SERVER(server), FALSE);
+  UBusServerPrivate* priv = server->priv;
+  UBusMessageInfo* info;
 
   priv->message_pump_queued = FALSE;
 
@@ -260,134 +260,134 @@ ubus_server_pump_message_queue (UBusServer *server)
   // situations to sort the queue first so that duplicate messages can re-use
   // the same dispatch_list lookups.. but thats a specific case.
 
-  info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue);
-  for (; info != NULL; info = (UBusMessageInfo *)g_queue_pop_tail (priv->message_queue))
+  info = (UBusMessageInfo*)g_queue_pop_tail(priv->message_queue);
+  for (; info != NULL; info = (UBusMessageInfo*)g_queue_pop_tail(priv->message_queue))
+  {
+    GSequence* dispatch_list;
+    dispatch_list = (GSequence*)g_hash_table_lookup(priv->message_interest_table,
+                                                    info->message);
+
+    if (dispatch_list == NULL)
     {
-      GSequence *dispatch_list;
-      dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
-                                                        info->message);
-
-      if (dispatch_list == NULL)
-        {
-          continue; // no handlers for this message
-        }
-
-      GSequenceIter *iter = g_sequence_get_begin_iter (dispatch_list);
-      GSequenceIter *end = g_sequence_get_end_iter (dispatch_list);
-
-      while (iter != end)
-        {
-          GSequenceIter *next = g_sequence_iter_next (iter);
-          UBusDispatchInfo *dispatch_info = (UBusDispatchInfo *)g_sequence_get (iter);
-          UBusCallback callback = dispatch_info->callback;
-
-          (*callback) (info->data, dispatch_info->user_data);
-
-          iter = next;
-        }
-
-      ubus_message_info_free (info);
+      continue; // no handlers for this message
     }
+
+    GSequenceIter* iter = g_sequence_get_begin_iter(dispatch_list);
+    GSequenceIter* end = g_sequence_get_end_iter(dispatch_list);
+
+    while (iter != end)
+    {
+      GSequenceIter* next = g_sequence_iter_next(iter);
+      UBusDispatchInfo* dispatch_info = (UBusDispatchInfo*)g_sequence_get(iter);
+      UBusCallback callback = dispatch_info->callback;
+
+      (*callback)(info->data, dispatch_info->user_data);
+
+      iter = next;
+    }
+
+    ubus_message_info_free(info);
+  }
 
   return FALSE;
 }
 
 static void
-ubus_server_queue_message_pump (UBusServer *server)
+ubus_server_queue_message_pump(UBusServer* server)
 {
-  UBusServerPrivate *priv;
+  UBusServerPrivate* priv;
 
-  g_return_if_fail (UBUS_IS_SERVER (server));
+  g_return_if_fail(UBUS_IS_SERVER(server));
 
   priv = server->priv;
   if (priv->message_pump_queued)
     return;
 
-  g_idle_add ((GSourceFunc)ubus_server_pump_message_queue, server);
+  g_idle_add((GSourceFunc)ubus_server_pump_message_queue, server);
   priv->message_pump_queued = TRUE;
 }
 
 void
-ubus_server_send_message (UBusServer  *server,
-                          const gchar *message,
-                          GVariant    *data)
+ubus_server_send_message(UBusServer*  server,
+                         const gchar* message,
+                         GVariant*    data)
 {
-  UBusServerPrivate *priv;
-  UBusMessageInfo   *message_info;
+  UBusServerPrivate* priv;
+  UBusMessageInfo*   message_info;
 
-  g_return_if_fail (UBUS_IS_SERVER (server));
-  g_return_if_fail (message != NULL);
+  g_return_if_fail(UBUS_IS_SERVER(server));
+  g_return_if_fail(message != NULL);
 
   priv = server->priv;
-  message_info = ubus_message_info_new (data);
-  message_info->message = g_string_chunk_insert_const (priv->message_names,
-                                                       message);
+  message_info = ubus_message_info_new(data);
+  message_info->message = g_string_chunk_insert_const(priv->message_names,
+                                                      message);
 
-  g_queue_push_head (priv->message_queue, message_info);
-  ubus_server_queue_message_pump (server);
+  g_queue_push_head(priv->message_queue, message_info);
+  ubus_server_queue_message_pump(server);
 }
 
 void
-ubus_server_unregister_interest (UBusServer* server, guint handle)
+ubus_server_unregister_interest(UBusServer* server, guint handle)
 {
-  UBusServerPrivate *priv;
-  GSequence         *dispatch_list;
-  UBusDispatchInfo  *info;
+  UBusServerPrivate* priv;
+  GSequence*         dispatch_list;
+  UBusDispatchInfo*  info;
 
-  g_return_if_fail (UBUS_IS_SERVER (server));
-  g_return_if_fail (handle > 0);
+  g_return_if_fail(UBUS_IS_SERVER(server));
+  g_return_if_fail(handle > 0);
 
   priv = server->priv;
-  info = (UBusDispatchInfo *)g_hash_table_lookup (priv->dispatch_table, GUINT_TO_POINTER (handle));
+  info = (UBusDispatchInfo*)g_hash_table_lookup(priv->dispatch_table, GUINT_TO_POINTER(handle));
 
   if (info == NULL)
-    {
-      g_warning (G_STRLOC ": Handle %u does not exist", handle);
-      return;
-    }
+  {
+    g_warning(G_STRLOC ": Handle %u does not exist", handle);
+    return;
+  }
 
   // now the slightly sucky bit, we have to remove from our message-interest
   // table, but we can only find it by itterating through a sequence
   // but this is not so bad because we know *which* sequence its in
 
-  dispatch_list = (GSequence *)g_hash_table_lookup (priv->message_interest_table,
-                                                    info->message);
+  dispatch_list = (GSequence*)g_hash_table_lookup(priv->message_interest_table,
+                                                  info->message);
 
   if (dispatch_list == NULL)
   {
-    g_critical (G_STRLOC ": Handle exists but not dispatch list, ubus has "\
-                         "become unstable");
+    g_critical(G_STRLOC ": Handle exists but not dispatch list, ubus has "\
+               "become unstable");
     return;
   }
 
-  GSequenceIter *iter = g_sequence_get_begin_iter (dispatch_list);
-  GSequenceIter *end = g_sequence_get_end_iter (dispatch_list);
+  GSequenceIter* iter = g_sequence_get_begin_iter(dispatch_list);
+  GSequenceIter* end = g_sequence_get_end_iter(dispatch_list);
   while (iter != end)
+  {
+    GSequenceIter* next = g_sequence_iter_next(iter);
+    UBusDispatchInfo* info_test = (UBusDispatchInfo*)g_sequence_get(iter);
+
+    if (info_test->id == handle)
     {
-      GSequenceIter *next = g_sequence_iter_next (iter);
-      UBusDispatchInfo *info_test = (UBusDispatchInfo *)g_sequence_get (iter);
-
-      if (info_test->id == handle)
-      {
-        g_sequence_remove (iter);
-      }
-
-      iter = next;
+      g_sequence_remove(iter);
     }
 
-  if (g_sequence_get_length (dispatch_list) == 0)
+    iter = next;
+  }
+
+  if (g_sequence_get_length(dispatch_list) == 0)
   {
     // free the key/value pair
-    g_hash_table_remove (priv->message_interest_table, info->message);
+    g_hash_table_remove(priv->message_interest_table, info->message);
   }
 
   // finally remove the dispatch_table hash table.
-  g_hash_table_remove (priv->dispatch_table, &handle);
+  g_hash_table_remove(priv->dispatch_table, &handle);
 
 }
 
 void
-ubus_server_force_message_pump (UBusServer* server)
+ubus_server_force_message_pump(UBusServer* server)
 {
-  ubus_server_pump_message_queue (server);
+  ubus_server_pump_message_queue(server);
 }

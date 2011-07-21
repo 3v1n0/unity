@@ -12,19 +12,19 @@ G_BEGIN_DECLS
 #define TEST_TYPE_SIGNALS (test_signals_get_type ())
 
 #define TestSignals(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj),\
-	TEST_TYPE_SIGNALS, TestSignals))
+  TEST_TYPE_SIGNALS, TestSignals))
 
 #define TestSignals_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass),\
-	TEST_TYPE_SIGNALS, TestSignalsClass))
+  TEST_TYPE_SIGNALS, TestSignalsClass))
 
 #define TEST_IS_SIGNALS(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj),\
-	TEST_TYPE_SIGNALS))
+  TEST_TYPE_SIGNALS))
 
 #define TEST_IS_SIGNALS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),\
-	TEST_TYPE_SIGNALS))
+  TEST_TYPE_SIGNALS))
 
 #define TestSignals_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-	TEST_TYPE_SIGNALS, TestSignalsClass))
+  TEST_TYPE_SIGNALS, TestSignalsClass))
 
 typedef struct _TEST_SIGNALS        TestSignals;
 typedef struct _TEST_SIGNALSClass   TestSignalsClass;

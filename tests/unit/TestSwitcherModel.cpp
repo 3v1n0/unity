@@ -28,75 +28,76 @@
 
 using namespace unity::switcher;
 
-namespace {
-
-TEST(TestSwitcher, TestConstructor) 
+namespace
 {
-  AbstractLauncherIcon *first  = new MockLauncherIcon ();
-  AbstractLauncherIcon *second = new MockLauncherIcon ();
+
+TEST(TestSwitcher, TestConstructor)
+{
+  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon* second = new MockLauncherIcon();
   std::vector<AbstractLauncherIcon*> icons;
-  icons.push_back (first);
-  icons.push_back (second);
+  icons.push_back(first);
+  icons.push_back(second);
 
-  SwitcherModel::Ptr model (new SwitcherModel (icons));
+  SwitcherModel::Ptr model(new SwitcherModel(icons));
 
-  EXPECT_EQ(model->Size (), 2);
-  EXPECT_EQ(model->Selection (), first);
-  EXPECT_EQ(model->LastSelection (), first);
-  EXPECT_EQ(model->SelectionIndex (), 0);
-  EXPECT_EQ(model->LastSelectionIndex (), 0);
+  EXPECT_EQ(model->Size(), 2);
+  EXPECT_EQ(model->Selection(), first);
+  EXPECT_EQ(model->LastSelection(), first);
+  EXPECT_EQ(model->SelectionIndex(), 0);
+  EXPECT_EQ(model->LastSelectionIndex(), 0);
 
   delete first;
   delete second;
 }
 
-TEST(TestSwitcher, TestSelection) 
+TEST(TestSwitcher, TestSelection)
 {
   std::vector<AbstractLauncherIcon*> icons;
-  AbstractLauncherIcon *first  = new MockLauncherIcon ();
-  AbstractLauncherIcon *second = new MockLauncherIcon ();
-  AbstractLauncherIcon *third  = new MockLauncherIcon ();
-  AbstractLauncherIcon *fourth = new MockLauncherIcon ();
-  
-  icons.push_back (first);
-  icons.push_back (second);
-  icons.push_back (third);
-  icons.push_back (fourth);
+  AbstractLauncherIcon* first  = new MockLauncherIcon();
+  AbstractLauncherIcon* second = new MockLauncherIcon();
+  AbstractLauncherIcon* third  = new MockLauncherIcon();
+  AbstractLauncherIcon* fourth = new MockLauncherIcon();
 
-  SwitcherModel::Ptr model (new SwitcherModel (icons));
+  icons.push_back(first);
+  icons.push_back(second);
+  icons.push_back(third);
+  icons.push_back(fourth);
 
-  EXPECT_EQ(model->Size (), 4);
-  EXPECT_EQ(model->Selection (), first);
+  SwitcherModel::Ptr model(new SwitcherModel(icons));
 
-  model->Next ();
-  EXPECT_EQ (model->Selection (), second);
-  EXPECT_EQ (model->LastSelection (), first);
-  model->Next ();
-  EXPECT_EQ (model->Selection (), third);
-  EXPECT_EQ (model->LastSelection (), second);
-  model->Next ();
-  EXPECT_EQ (model->Selection (), fourth);
-  EXPECT_EQ (model->LastSelection (), third);
-  model->Next ();
-  EXPECT_EQ (model->Selection (), first);
-  EXPECT_EQ (model->LastSelection (), fourth);
-  model->Next ();
-  EXPECT_EQ (model->Selection (), second);
-  EXPECT_EQ (model->LastSelection (), first);
-  model->Prev ();
-  EXPECT_EQ (model->Selection (), first);
-  EXPECT_EQ (model->LastSelection (), second);
-  model->Prev ();
-  EXPECT_EQ (model->Selection (), fourth);
-  EXPECT_EQ (model->LastSelection (), first);
+  EXPECT_EQ(model->Size(), 4);
+  EXPECT_EQ(model->Selection(), first);
 
-  model->Select (2);
-  EXPECT_EQ (model->Selection (), third);
-  EXPECT_EQ (model->LastSelection (), fourth);
+  model->Next();
+  EXPECT_EQ(model->Selection(), second);
+  EXPECT_EQ(model->LastSelection(), first);
+  model->Next();
+  EXPECT_EQ(model->Selection(), third);
+  EXPECT_EQ(model->LastSelection(), second);
+  model->Next();
+  EXPECT_EQ(model->Selection(), fourth);
+  EXPECT_EQ(model->LastSelection(), third);
+  model->Next();
+  EXPECT_EQ(model->Selection(), first);
+  EXPECT_EQ(model->LastSelection(), fourth);
+  model->Next();
+  EXPECT_EQ(model->Selection(), second);
+  EXPECT_EQ(model->LastSelection(), first);
+  model->Prev();
+  EXPECT_EQ(model->Selection(), first);
+  EXPECT_EQ(model->LastSelection(), second);
+  model->Prev();
+  EXPECT_EQ(model->Selection(), fourth);
+  EXPECT_EQ(model->LastSelection(), first);
 
-  model->Select (first);
-  EXPECT_EQ (model->Selection (), first);
-  EXPECT_EQ (model->LastSelection (), third);
+  model->Select(2);
+  EXPECT_EQ(model->Selection(), third);
+  EXPECT_EQ(model->LastSelection(), fourth);
+
+  model->Select(first);
+  EXPECT_EQ(model->Selection(), first);
+  EXPECT_EQ(model->LastSelection(), third);
 
   delete first;
   delete second;

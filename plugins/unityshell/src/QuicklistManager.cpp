@@ -27,50 +27,51 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-QuicklistManager * QuicklistManager::_default = 0;
+QuicklistManager* QuicklistManager::_default = 0;
 
 /* static */
-QuicklistManager *QuicklistManager::Default ()
+QuicklistManager* QuicklistManager::Default()
 {
   if (!_default)
-    _default = new QuicklistManager ();
+    _default = new QuicklistManager();
   return _default;
 }
 
-QuicklistManager::QuicklistManager ()
+QuicklistManager::QuicklistManager()
 {
   _current_quicklist = 0;
 }
 
-QuicklistManager::~QuicklistManager ()
+QuicklistManager::~QuicklistManager()
 {
 }
 
-QuicklistView *QuicklistManager::Current ()
+QuicklistView* QuicklistManager::Current()
 {
   return _current_quicklist;
 }
 
-void QuicklistManager::RegisterQuicklist (QuicklistView *quicklist)
+void QuicklistManager::RegisterQuicklist(QuicklistView* quicklist)
 {
   std::list<QuicklistView*>::iterator it;
 
-  if (std::find (_quicklist_list.begin(), _quicklist_list.end(), quicklist) != _quicklist_list.end()) {
+  if (std::find(_quicklist_list.begin(), _quicklist_list.end(), quicklist) != _quicklist_list.end())
+  {
     // quicklist has already been registered
-    g_warning ("Attempted to register a quicklist that was previously registered");
+    g_warning("Attempted to register a quicklist that was previously registered");
     return;
   }
 
-  _quicklist_list.push_back (quicklist);
+  _quicklist_list.push_back(quicklist);
 
-  quicklist->sigVisible.connect (sigc::mem_fun (this, &QuicklistManager::RecvShowQuicklist));
-  quicklist->sigHidden.connect (sigc::mem_fun (this, &QuicklistManager::RecvHideQuicklist));
+  quicklist->sigVisible.connect(sigc::mem_fun(this, &QuicklistManager::RecvShowQuicklist));
+  quicklist->sigHidden.connect(sigc::mem_fun(this, &QuicklistManager::RecvHideQuicklist));
 }
 
-void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x, 
-                                      int tip_y, bool hide_existing_if_open)
+void QuicklistManager::ShowQuicklist(QuicklistView* quicklist, int tip_x,
+                                     int tip_y, bool hide_existing_if_open)
 {
-  if (_current_quicklist == quicklist) 
+  if (_current_quicklist == quicklist)
   {
     // this quicklist is already active
     // do we want to still redraw in case the position has changed?
@@ -79,38 +80,38 @@ void QuicklistManager::ShowQuicklist (QuicklistView *quicklist, int tip_x,
 
   if (hide_existing_if_open && _current_quicklist)
   {
-    HideQuicklist (_current_quicklist);
+    HideQuicklist(_current_quicklist);
   }
 
-  quicklist->ShowQuicklistWithTipAt (tip_x, tip_y);
+  quicklist->ShowQuicklistWithTipAt(tip_x, tip_y);
   nux::GetWindowCompositor().SetKeyFocusArea(quicklist);
 }
 
-void QuicklistManager::HideQuicklist (QuicklistView *quicklist)
+void QuicklistManager::HideQuicklist(QuicklistView* quicklist)
 {
   quicklist->Hide();
 }
 
-void QuicklistManager::RecvShowQuicklist (nux::BaseWindow *window)
+void QuicklistManager::RecvShowQuicklist(nux::BaseWindow* window)
 {
-  QuicklistView *quicklist = (QuicklistView*) window;
+  QuicklistView* quicklist = (QuicklistView*) window;
 
   _current_quicklist = quicklist;
 
-  quicklist_opened.emit (quicklist);
-  UBusServer *ubus = ubus_server_get_default ();
-  ubus_server_send_message (ubus, UBUS_QUICKLIST_SHOWN, NULL);
+  quicklist_opened.emit(quicklist);
+  UBusServer* ubus = ubus_server_get_default();
+  ubus_server_send_message(ubus, UBUS_QUICKLIST_SHOWN, NULL);
 }
 
-void QuicklistManager::RecvHideQuicklist (nux::BaseWindow *window)
+void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)
 {
-  QuicklistView *quicklist = (QuicklistView*) window;
+  QuicklistView* quicklist = (QuicklistView*) window;
 
-  if (_current_quicklist == quicklist) 
-  { 
+  if (_current_quicklist == quicklist)
+  {
     _current_quicklist = 0;
   }
 
-  quicklist_closed.emit (quicklist);
+  quicklist_closed.emit(quicklist);
 }
 

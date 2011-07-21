@@ -20,14 +20,14 @@
 #include "StartupNotifyService.h"
 #include <stdio.h>
 
-StartupNotifyService * StartupNotifyService::_default = 0;
+StartupNotifyService* StartupNotifyService::_default = 0;
 
-StartupNotifyService *
-StartupNotifyService::Default ()
+StartupNotifyService*
+StartupNotifyService::Default()
 {
   if (!_default)
-    _default = new StartupNotifyService ();
-    
+    _default = new StartupNotifyService();
+
   return _default;
 }
 
@@ -40,32 +40,32 @@ StartupNotifyService::~StartupNotifyService()
 }
 
 void
-StartupNotifyService::OnMonitorEvent (SnMonitorEvent *sn_event, void *user_data)
+StartupNotifyService::OnMonitorEvent(SnMonitorEvent* sn_event, void* user_data)
 {
-  StartupNotifyService *service = (StartupNotifyService*) user_data;
-  SnStartupSequence *seq;
-  const char *id;
-  
-  seq = sn_monitor_event_get_startup_sequence (sn_event);
-  id = sn_startup_sequence_get_id (seq);
-  
-  switch (sn_monitor_event_get_type (sn_event))
+  StartupNotifyService* service = (StartupNotifyService*) user_data;
+  SnStartupSequence* seq;
+  const char* id;
+
+  seq = sn_monitor_event_get_startup_sequence(sn_event);
+  id = sn_startup_sequence_get_id(seq);
+
+  switch (sn_monitor_event_get_type(sn_event))
   {
     case SN_MONITOR_EVENT_INITIATED:
-      service->StartupInitiated.emit (id);
+      service->StartupInitiated.emit(id);
       break;
     case SN_MONITOR_EVENT_COMPLETED:
-      service->StartupCompleted.emit (id);
+      service->StartupCompleted.emit(id);
       break;
     default:
       break;
   }
-  
+
 }
 
 void
-StartupNotifyService::SetSnDisplay (SnDisplay *sn_display, int screen)
+StartupNotifyService::SetSnDisplay(SnDisplay* sn_display, int screen)
 {
   _sn_display = sn_display;
-  _sn_monitor = sn_monitor_context_new (_sn_display, screen, &StartupNotifyService::OnMonitorEvent, this, NULL);
+  _sn_monitor = sn_monitor_context_new(_sn_display, screen, &StartupNotifyService::OnMonitorEvent, this, NULL);
 }

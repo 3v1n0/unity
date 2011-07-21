@@ -26,16 +26,19 @@ class DesktopLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  DesktopLauncherIcon  (Launcher *launcher);
-  ~DesktopLauncherIcon ();
-  
-  virtual nux::Color BackgroundColor ();
-  virtual nux::Color GlowColor ();
+  DesktopLauncherIcon(Launcher* launcher);
+  ~DesktopLauncherIcon();
 
-  bool ShowInSwitcher () { return true; }
+  virtual nux::Color BackgroundColor();
+  virtual nux::Color GlowColor();
+
+  bool ShowInSwitcher()
+  {
+    return true;
+  }
 
 protected:
-  void ActivateLauncherIcon (ActionArg arg);
+  void ActivateLauncherIcon(ActionArg arg);
 };
 
 #endif // DESKTOPLAUNCHERICON_H

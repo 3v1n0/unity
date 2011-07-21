@@ -29,40 +29,40 @@
 
 class QuicklistMenuItemSeparator : public QuicklistMenuItem
 {
-  public:
-    QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
-                                NUX_FILE_LINE_PROTO);
+public:
+  QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
+                             NUX_FILE_LINE_PROTO);
 
-    QuicklistMenuItemSeparator (DbusmenuMenuitem* item,
-                                bool              debug,
-                                NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemSeparator(DbusmenuMenuitem* item,
+                             bool              debug,
+                             NUX_FILE_LINE_PROTO);
 
-    ~QuicklistMenuItemSeparator ();
+  ~QuicklistMenuItemSeparator();
 
-  protected:
-    
-    void PreLayoutManagement ();
+protected:
 
-    long PostLayoutManagement (long layoutResult);
+  void PreLayoutManagement();
 
-    long ProcessEvent (nux::IEvent& event, long traverseInfo, long processEventInfo);
+  long PostLayoutManagement(long layoutResult);
 
-    void Draw (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  long ProcessEvent(nux::IEvent& event, long traverseInfo, long processEventInfo);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    virtual void UpdateTexture ();
-    
-    //! Returns the width of the separator line as defined by the size of the _normalTexture.
-    virtual int CairoSurfaceWidth ();
-    
-    friend class QuicklistView;
+  void PostDraw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
- private:
+  virtual void UpdateTexture();
 
-    nux::Color _premultiplied_color;
+  //! Returns the width of the separator line as defined by the size of the _normalTexture.
+  virtual int CairoSurfaceWidth();
+
+  friend class QuicklistView;
+
+private:
+
+  nux::Color _premultiplied_color;
 };
 
 #endif // QUICKLISTMENUITEMSEPARATOR_H

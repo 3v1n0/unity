@@ -31,39 +31,39 @@
 class PlacesTile : public nux::View
 {
 public:
-  PlacesTile (NUX_FILE_LINE_PROTO, const void *id=NULL);
-  ~PlacesTile ();
+  PlacesTile(NUX_FILE_LINE_PROTO, const void* id = NULL);
+  ~PlacesTile();
 
-  const void * GetId ();
+  const void* GetId();
 
   sigc::signal<void, PlacesTile*> sigClick;
 
 protected:
-  virtual nux::Geometry GetHighlightGeometry ();
+  virtual nux::Geometry GetHighlightGeometry();
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
 private:
-  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
 
-  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnDestroyNotify (nux::Trackable *Object);
+  void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnDestroyNotify(nux::Trackable* Object);
 
-  void UpdateBackground ();
-  void DrawHighlight (const char *texid, int width, int height, nux::BaseTexture **texture);
+  void UpdateBackground();
+  void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
 
 private:
-  const void *_id;
-  nux::BaseTexture  *_hilight_background;
-  nux::TextureLayer *_hilight_layer;
+  const void* _id;
+  nux::BaseTexture*  _hilight_background;
+  nux::TextureLayer* _hilight_layer;
 
-  void OnFocusChanged (nux::Area *label);
-  void OnFocusActivated (nux::Area *label);
+  void OnFocusChanged(nux::Area* label);
+  void OnFocusActivated(nux::Area* label);
   int _last_width;
   int _last_height;
 

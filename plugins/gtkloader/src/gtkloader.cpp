@@ -18,29 +18,29 @@
 
 #include "gtkloader.h"
 
-COMPIZ_PLUGIN_20090315 (gtkloader, GTKLoaderPluginVTable);
+COMPIZ_PLUGIN_20090315(gtkloader, GTKLoaderPluginVTable);
 
-GTKLoaderScreen::GTKLoaderScreen (CompScreen *screen) :
-    PluginClassHandler <GTKLoaderScreen, CompScreen> (screen)
+GTKLoaderScreen::GTKLoaderScreen(CompScreen* screen) :
+  PluginClassHandler <GTKLoaderScreen, CompScreen> (screen)
 {
 }
 
 bool
-GTKLoaderPluginVTable::init ()
+GTKLoaderPluginVTable::init()
 {
-    int (*old_handler) (Display *, XErrorEvent *);
-    old_handler = XSetErrorHandler (NULL);
+  int (*old_handler)(Display*, XErrorEvent*);
+  old_handler = XSetErrorHandler(NULL);
 
-    XSetErrorHandler (old_handler);
+  XSetErrorHandler(old_handler);
 
-    if (!CompPlugin::checkPluginABI ("core", CORE_ABIVERSION))
-	return false;
+  if (!CompPlugin::checkPluginABI("core", CORE_ABIVERSION))
+    return false;
 
-    if (!gtk_init_check (&programArgc, &programArgv))
-    {
-	compLogMessage ("gtkloader", CompLogLevelError, "Couldn't initialize gtk");
-	return false;
-    }
+  if (!gtk_init_check(&programArgc, &programArgv))
+  {
+    compLogMessage("gtkloader", CompLogLevelError, "Couldn't initialize gtk");
+    return false;
+  }
 
-    return true;
+  return true;
 }

@@ -32,26 +32,26 @@
 class PlaceFactoryFile : public PlaceFactory
 {
 public:
-  PlaceFactoryFile (const char *directory = NULL);
-  ~PlaceFactoryFile ();
+  PlaceFactoryFile(const char* directory = NULL);
+  ~PlaceFactoryFile();
 
-  std::vector<Place *>& GetPlaces     ();
-  void                  ForceRefresh  ();
-  void                  AddProperties (GVariantBuilder *builder);
+  std::vector<Place*>& GetPlaces();
+  void                  ForceRefresh();
+  void                  AddProperties(GVariantBuilder* builder);
 
   /* Callbacks, not interesting to others */
-  void OnDirectoryEnumerationReady (GObject      *source,
-                                    GAsyncResult *result);
+  void OnDirectoryEnumerationReady(GObject*      source,
+                                   GAsyncResult* result);
 private:
-  static bool DoSortThemMister (Place *a, Place *b);
- 
+  static bool DoSortThemMister(Place* a, Place* b);
+
 public:
   /* For Debugging */
   bool read_directory;
 
 private:
-  char  *_directory;
-  GFile *_dir;
+  char*  _directory;
+  GFile* _dir;
 };
 
 #endif // PLACE_FACTORY_FILE_H
