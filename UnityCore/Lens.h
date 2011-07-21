@@ -25,8 +25,8 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
-#include "CategoriesModel.h"
-#include "ResultsModel.h"
+#include "Categories.h"
+#include "Results.h"
 
 namespace unity {
 namespace dash {
@@ -61,9 +61,9 @@ public:
   nux::RWProperty<bool> visible;
   nux::RWProperty<bool> search_in_global;
   nux::RWProperty<std::string> shortcut;
-  nux::RWProperty<ResultsModel::Ptr> results;
-  nux::RWProperty<ResultsModel::Ptr> global_results;
-  nux::RWProperty<CategoriesModel::Ptr> categories;
+  nux::RWProperty<Results::Ptr> results;
+  nux::RWProperty<Results::Ptr> global_results;
+  nux::RWProperty<Categories::Ptr> categories;
 
   nux::Property<bool> active;
 

@@ -88,9 +88,9 @@ public:
   bool visible() const;
   bool search_in_global() const;
   string const& shortcut() const;
-  ResultsModel::Ptr const& results() const;
-  ResultsModel::Ptr const& global_results() const;
-  CategoriesModel::Ptr const& categories() const;
+  Results::Ptr const& results() const;
+  Results::Ptr const& global_results() const;
+  Categories::Ptr const& categories() const;
 
   Lens* owner_;
 
@@ -104,9 +104,9 @@ public:
   bool visible_;
   bool search_in_global_;
   string shortcut_;
-  ResultsModel::Ptr results_;
-  ResultsModel::Ptr global_results_;
-  CategoriesModel::Ptr categories_;
+  Results::Ptr results_;
+  Results::Ptr global_results_;
+  Categories::Ptr categories_;
 
   string private_connection_name_;
 
@@ -135,9 +135,9 @@ Lens::Impl::Impl(Lens* owner,
   , visible_(visible)
   , search_in_global_(false)
   , shortcut_(shortcut)
-  , results_(new ResultsModel())
-  , global_results_(new ResultsModel())
-  , categories_(new CategoriesModel())
+  , results_(new Results())
+  , global_results_(new Results())
+  , categories_(new Categories())
   , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
 {
   proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
@@ -214,10 +214,10 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                     << "  SearchInGlobal: " << search_in_global << "\n"
                     << "  Visible: " << visible << "\n"
                     << "  PrivateConnName: " << private_connection_name << "\n"
-                    << "  ResultsModel: " << results_model_name << "\n"
+                    << "  Results: " << results_model_name << "\n"
                     << "  GlobalModel: " << global_results_model_name << "\n"
-                    << "  CategoriesModel: " << categories_model_name << "\n"
-                    << "  FiltersModel: " << filters_model_name << "\n";
+                    << "  Categories: " << categories_model_name << "\n"
+                    << "  Filters: " << filters_model_name << "\n";
   if (dbus_path == dbus_path_)
   {
     URIPatterns uri_patterns = URIPatternsFromIter(uri_patterns_iter);
@@ -381,17 +381,17 @@ string const& Lens::Impl::shortcut() const
   return shortcut_;
 }
 
-ResultsModel::Ptr const& Lens::Impl::results() const
+Results::Ptr const& Lens::Impl::results() const
 {
   return results_;
 }
 
-ResultsModel::Ptr const& Lens::Impl::global_results() const
+Results::Ptr const& Lens::Impl::global_results() const
 {
   return global_results_;
 }
 
-CategoriesModel::Ptr const& Lens::Impl::categories() const
+Categories::Ptr const& Lens::Impl::categories() const
 {
   return categories_;
 }

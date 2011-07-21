@@ -17,23 +17,23 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RESULTS_MODEL_H
-#define UNITY_RESULTS_MODEL_H
+#ifndef UNITY_CATEGORIES_MODEL_H
+#define UNITY_CATEGORIES_MODEL_H
 
 #include <boost/shared_ptr.hpp>
 
 #include "Model.h"
-#include "Result.h"
+#include "Category.h"
 
 namespace unity {
 namespace dash {
 
-class ResultsModel : public Model<Result>
+class Categories : public Model<Category>
 {
 public:
-  typedef boost::shared_ptr<ResultsModel> Ptr;
+  typedef boost::shared_ptr<Categories> Ptr;
 
-  ResultsModel() {};
+  Categories() {};
 };
 
 }
