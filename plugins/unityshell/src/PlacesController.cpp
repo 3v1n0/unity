@@ -82,7 +82,6 @@ PlacesController::PlacesController ()
 
   _window->SetLayout (_window_layout);
   // Set a InputArea to get the keyboard focus when window receives the enter focus event.
-  _window->SetEnterFocusInputArea (_view->GetTextEntryView ());
   _window->SetFocused (true);
 
   _window->OnMouseDown.connect (sigc::mem_fun (_view->GetSearchBar (), &PlacesSearchBar::RecvMouseDownFromWindow));

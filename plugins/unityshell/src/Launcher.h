@@ -156,7 +156,13 @@ public:
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDownOutsideArea (int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvKeyPressed (unsigned int key_sym, unsigned long key_code, unsigned long key_state);
+  virtual void RecvKeyPressed (
+      nux::GraphicsEngine &GfxContext ,   /*Graphics Context for text operation*/
+      unsigned long    eventType  ,   /*event type*/
+      unsigned long    keysym     ,   /*event keysym*/
+      unsigned long    state      ,   /*event state*/
+      const char*      character  ,   /*character*/
+      unsigned short   keyCount       /*key repeat count*/);
 
   virtual void RecvQuicklistOpened (QuicklistView *quicklist);
   virtual void RecvQuicklistClosed (QuicklistView *quicklist);

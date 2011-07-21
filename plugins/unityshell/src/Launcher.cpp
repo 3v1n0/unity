@@ -158,7 +158,7 @@ Launcher::Launcher (nux::BaseWindow* parent,
     OnMouseLeave.connect (sigc::mem_fun (this, &Launcher::RecvMouseLeave));
     OnMouseMove.connect (sigc::mem_fun (this, &Launcher::RecvMouseMove));
     OnMouseWheel.connect (sigc::mem_fun (this, &Launcher::RecvMouseWheel));
-    OnKeyPressed.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
+    OnKeyEvent.connect (sigc::mem_fun (this, &Launcher::RecvKeyPressed));
     OnMouseDownOutsideArea.connect (sigc::mem_fun (this, &Launcher::RecvMouseDownOutsideArea));
     //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
@@ -2549,9 +2549,12 @@ Launcher::EdgeRevealTriggered ()
 }
 
 void
-Launcher::RecvKeyPressed (unsigned int  key_sym,
-                          unsigned long key_code,
-                          unsigned long key_state)
+Launcher::RecvKeyPressed (nux::GraphicsEngine &GfxContext,
+      unsigned long    eventType,
+      unsigned long    key_sym,
+      unsigned long    key_state,
+      const char*      character,
+      unsigned short   keyCount)
 {
 
   LauncherModel::iterator it;

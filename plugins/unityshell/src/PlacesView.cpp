@@ -105,7 +105,7 @@ PlacesView::PlacesView (PlaceFactory *factory)
   _layered_layout->AddLayer (_empty_view);
 
   _layered_layout->SetActiveLayer (_home_view);
-  nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
+  //nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
 
   SetLayout (_layout);
 
@@ -520,13 +520,13 @@ PlacesView::SetActiveEntry (PlaceEntry *entry, guint section_id, const char *sea
   if (_entry == _home_entry && (g_strcmp0 (search_string, "") == 0))
   {
     _layered_layout->SetActiveLayer (_home_view);
-    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
   else
   {
     _layered_layout->SetActiveLayer (_results_view);
-    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
   }
+
+  nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
 
   if (_entry == _alt_f2_entry)
   _actual_height = _target_height = _last_height = _search_bar->GetGeometry ().height;
@@ -794,16 +794,16 @@ PlacesView::OnSearchChanged (const char *search_string)
     if (g_strcmp0 (search_string, "") == 0)
     {
       _layered_layout->SetActiveLayer (_home_view);
-      nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
       _home_view->QueueDraw ();
       _search_empty = true;
     }
     else
     {
       _layered_layout->SetActiveLayer (_results_view);
-      nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
       _results_view->QueueDraw ();
     }
+
+    nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
 
     _results_view->QueueDraw ();
     _home_view->QueueDraw ();
@@ -1059,3 +1059,18 @@ PlacesView::AcceptKeyNavFocus()
 {
   return false;
 }
+
+bool
+PlacesView::InspectKeyEvent(unsigned int eventType,
+      unsigned int key_sym,
+      const char* character)
+{
+  if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
+  {
+    SetActiveEntry (NULL, 0, "");
+    return true;
+  }
+  return false;
+}
+
+
