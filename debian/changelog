@@ -20,6 +20,8 @@ unity (4.4.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - build-dep on libnotify-dev
     - bump libnux-1.0-dev dep for ABI break
+  * debian/rules:
+    - bump libunity-core-4.0-4 shlib for ABI break
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jul 2011 17:58:36 +0200
 
