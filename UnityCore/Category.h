@@ -17,30 +17,23 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_CATEGORIES_MODEL_ITER_H
-#define UNITY_CATEGORIES_MODEL_ITER_H
+#ifndef UNITY_CATEGORY_H
+#define UNITY_CATEGORY_H
 
-#include <boost/noncopyable.hpp>
-#include <dee.h>
 #include <NuxCore/Property.h>
-#include <sigc++/trackable.h>
 
-#include "Model.h"
+#include "ModelRowAdaptor.h"
 
 namespace unity {
 namespace dash {
 
-// This class represents a DeeModelIter for a CategoriesModel
-// It's slightly chunky, but that is because it's optimized to be stack-allocated
-// as it is not expected to be kept by the views, rather views can easily attach
-// a "renderer" to the iter, so when the changed or removed signals are called,
-// the view can easily find which widget/view belongs to this iter.
-class CategoriesModelIter : public ModelIterBase
+/* This class represents a DeeModelIter for a CategoriesModel  */
+class Category : public RowAdaptorBase
 {
 public:
-  CategoriesModelIter(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  Category(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
-  CategoriesModelIter(CategoriesModelIter const& other);
+  Category(Category const& other);
 
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> icon_hint;

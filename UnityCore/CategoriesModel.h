@@ -23,12 +23,12 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Model.h"
-#include "CategoriesModelIter.h"
+#include "Category.h"
 
 namespace unity {
 namespace dash {
 
-class CategoriesModel : public Model<CategoriesModelIter>
+class CategoriesModel : public Model<Category>
 {
 public:
   typedef boost::shared_ptr<CategoriesModel> Ptr;

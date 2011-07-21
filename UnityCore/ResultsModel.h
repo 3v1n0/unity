@@ -23,12 +23,12 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Model.h"
-#include "ResultsModelIter.h"
+#include "Result.h"
 
 namespace unity {
 namespace dash {
 
-class ResultsModel : public Model<ResultsModelIter>
+class ResultsModel : public Model<Result>
 {
 public:
   typedef boost::shared_ptr<ResultsModel> Ptr;

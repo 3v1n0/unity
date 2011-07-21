@@ -17,7 +17,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "ResultsModelIter.h"
+#include "Result.h"
 
 #include <NuxCore/Logger.h>
 
@@ -28,61 +28,61 @@ namespace {
 nux::logging::Logger logger("unity.dash.resultsmodeliter");
 }
 
-ResultsModelIter::ResultsModelIter(DeeModel* model,
-                                   DeeModelIter* iter,
-                                   DeeModelTag* renderer_tag)
+Result::Result(DeeModel* model,
+               DeeModelIter* iter,
+               DeeModelTag* renderer_tag)
 {
   model_ = model;
   iter_ = iter;
   tag_ = renderer_tag;
 
-  uri.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_uri));
-  icon_hint.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_icon_hint));
-  category_index.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_category));
-  mimetype.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_mimetype));
-  name.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_name));
-  comment.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_comment));
-  dnd_uri.SetGetterFunction(sigc::mem_fun(this, &ResultsModelIter::get_dnd_uri));
+  uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_uri));
+  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::get_icon_hint));
+  category_index.SetGetterFunction(sigc::mem_fun(this, &Result::get_category));
+  mimetype.SetGetterFunction(sigc::mem_fun(this, &Result::get_mimetype));
+  name.SetGetterFunction(sigc::mem_fun(this, &Result::get_name));
+  comment.SetGetterFunction(sigc::mem_fun(this, &Result::get_comment));
+  dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_dnd_uri));
 }
 
-ResultsModelIter::ResultsModelIter(ResultsModelIter const& other)
+Result::Result(Result const& other)
 {
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
 }
 
-std::string ResultsModelIter::get_uri() const
+std::string Result::get_uri() const
 {
   return dee_model_get_string(model_, iter_, 0);
 }
 
-std::string ResultsModelIter::get_icon_hint() const
+std::string Result::get_icon_hint() const
 {
   return dee_model_get_string(model_, iter_, 1);
 }
 
-unsigned int ResultsModelIter::get_category() const
+unsigned int Result::get_category() const
 {
   return dee_model_get_uint32(model_, iter_, 2);
 }
 
-std::string ResultsModelIter::get_mimetype() const
+std::string Result::get_mimetype() const
 {
   return dee_model_get_string(model_, iter_, 3);
 }
 
-std::string ResultsModelIter::get_name() const
+std::string Result::get_name() const
 {
   return dee_model_get_string(model_, iter_, 4);
 }
 
-std::string ResultsModelIter::get_comment() const
+std::string Result::get_comment() const
 {
   return dee_model_get_string(model_, iter_, 5);
 }
 
-std::string ResultsModelIter::get_dnd_uri() const
+std::string Result::get_dnd_uri() const
 {
   return dee_model_get_string(model_, iter_, 6);
 }

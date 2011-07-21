@@ -20,58 +20,42 @@
 #ifndef UNITY_MODEL_H
 #define UNITY_MODEL_H
 
-#include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <dee.h>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
 #include "GLibSignal.h"
 #include "GLibWrapper.h"
+#include "ModelRowAdaptor.h"
 
 namespace unity {
 namespace dash {
 
-// Convenience class to save some code duplication
-class ModelIterBase
-{
-  template<typename T>
-  void set_renderer(T renderer)
-  {
-    dee_model_set_tag(model_, iter_, tag_, renderer);
-  }
-
-  template<typename T>
-  T renderer()
-  {
-    return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
-  }
-
-protected:
-  DeeModel* model_;
-  DeeModelIter* iter_;
-  DeeModelTag* tag_;
-};
-
-// This template encapsulates the basics of talking to a DeeModel, however it is
-// a template as you can choose your own ModelIter (see ResultsModelIter.h for an
-// example) which then presents the data in the rows in a instance-specific way.
-template<class ModelIter>
+/* This template class encapsulates the basics of talking to a DeeSharedModel,
+ * however it is a template as you can choose your own RowAdaptor (see
+ * ResultsRowAdaptor.h for an example) which then presents the data in the rows
+ * in a instance-specific way.
+ */
+template<class RowAdaptor>
 class Model : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef boost::shared_ptr<Model> Ptr;
 
   Model();
+  virtual ~Model();
 
-  const ModelIter IterAtIndex(unsigned int index);
+  const RowAdaptor RowAtIndex(unsigned int index);
 
   nux::Property<std::string> swarm_name;
   nux::ROProperty<unsigned int> count;
+  nux::ROProperty<bool> synchronized;
 
-  sigc::signal<void, ModelIter&> row_added;
-  sigc::signal<void, ModelIter&> row_changed;
-  sigc::signal<void, ModelIter&> row_removed;
+  sigc::signal<void, RowAdaptor&> row_added;
+  sigc::signal<void, RowAdaptor&> row_changed;
+  sigc::signal<void, RowAdaptor&> row_removed;
 
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);
@@ -79,6 +63,7 @@ private:
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void OnSwarmNameChanged(std::string const& swarm_name);
   unsigned int get_count();
+  bool is_synchronized();
 
 private:
   glib::Object<DeeModel> model_;

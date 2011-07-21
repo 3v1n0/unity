@@ -17,7 +17,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "CategoriesModelIter.h"
+#include "Category.h"
 
 #include <NuxCore/Logger.h>
 
@@ -25,46 +25,46 @@ namespace unity {
 namespace dash {
 
 namespace {
-nux::logging::Logger logger("unity.dash.resultsmodeliter");
+nux::logging::Logger logger("unity.dash.categoriesmodeliter");
 }
 
-CategoriesModelIter::CategoriesModelIter(DeeModel* model,
-                                         DeeModelIter* iter,
-                                         DeeModelTag* renderer_tag)
+Category::Category(DeeModel* model,
+                   DeeModelIter* iter,
+                   DeeModelTag* renderer_tag)
 {
   model_ = model;
   iter_ = iter;
   tag_ = renderer_tag;
 
-  name.SetGetterFunction(sigc::mem_fun(this, &CategoriesModelIter::get_name));
-  icon_hint.SetGetterFunction(sigc::mem_fun(this, &CategoriesModelIter::get_icon_hint));
-  index.SetGetterFunction(sigc::mem_fun(this, &CategoriesModelIter::get_index));
-  renderer.SetGetterFunction(sigc::mem_fun(this, &CategoriesModelIter::get_renderer));
+  name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
+  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));
+  index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
+  renderer.SetGetterFunction(sigc::mem_fun(this, &Category::get_renderer));
 }
 
-CategoriesModelIter::CategoriesModelIter(CategoriesModelIter const& other)
+Category::Category(Category const& other)
 {
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
 }
 
-std::string CategoriesModelIter::get_name() const
+std::string Category::get_name() const
 {
   return dee_model_get_string(model_, iter_, 0);
 }
 
-std::string CategoriesModelIter::get_icon_hint() const
+std::string Category::get_icon_hint() const
 {
   return dee_model_get_string(model_, iter_, 1);
 }
 
-unsigned int CategoriesModelIter::get_index() const
+unsigned int Category::get_index() const
 {
   return dee_model_get_position(model_, iter_);
 }
 
-std::string CategoriesModelIter::get_renderer() const
+std::string Category::get_renderer() const
 {
   return dee_model_get_string(model_, iter_, 2);
 }

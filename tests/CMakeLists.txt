@@ -287,10 +287,6 @@ add_executable (test-places-backend
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
-add_executable (test-filesystem-lenses
-                TestFilesystemLoader.cpp) 
-add_dependencies (test-filesystem-lenses unity-core-${UNITY_API_VERSION})
-
 #
 # GTest tests
 #
@@ -307,6 +303,14 @@ enable_testing()
 find_package(GTest)
 if (${GTEST_FOUND} STREQUAL TRUE)
   include_directories(${GTEST_INCLUDE_DIRS})
+
+# The service that provides DBus services to test against
+  add_executable(test-gtest-service
+                 test_service_main.c
+                 test_service_model.c
+                 test_service_model.h)
+
+# The actual test executable
   add_executable(test-gtest
                  test_filesystem_lenses.cpp
                  test_glib_signals.cpp
@@ -315,6 +319,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator_entry.cpp
                  test_main.cpp
+                 test_model.cpp
                  test_timer.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/Timer.cpp
@@ -325,8 +330,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)
-  add_dependencies (test-gtest unity-core-${UNITY_API_VERSION})
-  add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
+  add_dependencies (test-gtest unity-core-${UNITY_API_VERSION} test-gtest-service)
 endif (${GTEST_FOUND} STREQUAL TRUE)
 
 #
@@ -335,7 +339,9 @@ endif (${GTEST_FOUND} STREQUAL TRUE)
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
+set (DBUS_TEST_COMMAND dbus-test-runner --task ./test-gtest-service --task ./test-gtest)
+set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ${DBUS_TEST_COMMAND})
 add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
+add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest)
 

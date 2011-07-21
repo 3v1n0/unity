@@ -29,15 +29,16 @@ namespace {
 nux::logging::Logger _model_inl_logger("unity.dash.model");
 }
 
-template<class ModelIter>
-Model<ModelIter>::Model()
+template<class RowAdaptor>
+Model<RowAdaptor>::Model()
 {
-  swarm_name.changed.connect(sigc::mem_fun(this, &Model<ModelIter>::OnSwarmNameChanged));
-  count.SetGetterFunction(sigc::mem_fun(this, &Model<ModelIter>::get_count));
+  swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
+  count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
+  synchronized.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::is_synchronized));
 }
 
-template<class ModelIter>
-void Model<ModelIter>::OnSwarmNameChanged(std::string const& swarm_name)
+template<class RowAdaptor>
+void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
   LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
 
@@ -51,54 +52,69 @@ void Model<ModelIter>::OnSwarmNameChanged(std::string const& swarm_name)
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-added",
-                                                      sigc::mem_fun(this, &Model<ModelIter>::OnRowAdded)));
+                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
 
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-changed",
-                                                      sigc::mem_fun(this, &Model<ModelIter>::OnRowChanged)));
+                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
 
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-removed",
-                                                      sigc::mem_fun(this, &Model<ModelIter>::OnRowRemoved)));
+                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
 }
 
-template<class ModelIter>
-void Model<ModelIter>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
+template<class RowAdaptor>
+Model<RowAdaptor>::~Model()
+{}
+
+template<class RowAdaptor>
+void Model<RowAdaptor>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  ModelIter it(model, iter, renderer_tag_);
+  RowAdaptor it(model, iter, renderer_tag_);
   row_added.emit(it);
 }
 
-template<class ModelIter>
-void Model<ModelIter>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
+template<class RowAdaptor>
+void Model<RowAdaptor>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  ModelIter it(model, iter, renderer_tag_);
+  RowAdaptor it(model, iter, renderer_tag_);
   row_changed.emit(it);
 }
 
-template<class ModelIter>
-void Model<ModelIter>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
+template<class RowAdaptor>
+void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
-  ModelIter it(model, iter, renderer_tag_);
+  RowAdaptor it(model, iter, renderer_tag_);
   row_removed.emit(it);
 }
 
-template<class ModelIter>
-const ModelIter Model<ModelIter>::IterAtIndex(unsigned int index)
+template<class RowAdaptor>
+const RowAdaptor Model<RowAdaptor>::RowAtIndex(unsigned int index)
 {
-  ModelIter it(model_, dee_model_get_iter_at_row(model_, index), renderer_tag_);
+  RowAdaptor it(model_,
+                dee_model_get_iter_at_row(model_, index),
+                renderer_tag_);
   return it;
 }
 
-template<class ModelIter>
-unsigned int Model<ModelIter>::get_count()
+template<class RowAdaptor>
+unsigned int Model<RowAdaptor>::get_count()
 {
   if (model_)
     return dee_model_get_n_rows(model_);
   else
     return 0;
+}
+
+template<class RowAdaptor>
+bool Model<RowAdaptor>::is_synchronized()
+{
+  if (model_)
+    return dee_shared_model_is_synchronized(DEE_SHARED_MODEL(model_.RawPtr())) != FALSE;
+  else
+    return false;
 }
 
 }

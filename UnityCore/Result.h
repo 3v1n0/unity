@@ -17,30 +17,28 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RESULTS_MODEL_ITER_H
-#define UNITY_RESULTS_MODEL_ITER_H
+#ifndef UNITY_RESULT_H
+#define UNITY_RESULT_H
 
-#include <boost/noncopyable.hpp>
-#include <dee.h>
 #include <NuxCore/Property.h>
-#include <sigc++/trackable.h>
 
-#include "Model.h"
+#include "ModelRowAdaptor.h"
 
 namespace unity {
 namespace dash {
 
-// This class represents a DeeModelIter for a ResultsModel
-// It's slightly chunky, but that is because it's optimized to be stack-allocated
-// as it is not expected to be kept by the views, rather views can easily attach
-// a "renderer" to the iter, so when the changed or removed signals are called,
-// the view can easily find which widget/view belongs to this iter.
-class ResultsModelIter : public ModelIterBase
+/* This class represents a DeeModelIter for a ResultsModel
+ * It's slightly chunky, but that is because it's optimized to be stack-allocated
+ * as it is not expected to be kept by the views, rather views can easily attach
+ * a "renderer" to the iter, so when the changed or removed signals are called,
+ * the view can easily find which widget/view belongs to this iter.
+ */
+class Result : public RowAdaptorBase
 {
 public:
-  ResultsModelIter(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  Result(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
-  ResultsModelIter(ResultsModelIter const& other);
+  Result(Result const& other);
 
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;

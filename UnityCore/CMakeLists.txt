@@ -6,7 +6,7 @@ pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-co
 #
 set (CORE_HEADERS
      CategoriesModel.h
-     CategoriesModelIter.h
+     Category.h
      DBusIndicators.h
      FilesystemLenses.h
      GLibDBusProxy.h
@@ -21,13 +21,14 @@ set (CORE_HEADERS
      Lenses.h
      Model.h
      Model-inl.h
+     ModelRowAdaptor.h
+     Result.h
      ResultsModel.h
-     ResultsModelIter.h
      Variant.h
     )
 
 set (CORE_SOURCES
-     CategoriesModelIter.cpp
+     Category.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
      GLibDBusProxy.cpp
@@ -37,7 +38,7 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
-     ResultsModelIter.cpp
+     Result.cpp
      Variant.cpp
     )
 
