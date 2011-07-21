@@ -137,7 +137,7 @@ BamfLauncherIcon::BamfLauncherIcon (Launcher* IconManager, BamfApplication *app,
   _menu_desktop_shortcuts = NULL;
   char *icon_name = bamf_view_get_icon (BAMF_VIEW (m_App));
 
-  SetTooltipText (BamfName ());
+  tooltip_text = BamfName ();
   SetIconName (icon_name);
   SetIconType (TYPE_APPLICATION);
 
@@ -592,7 +592,7 @@ void BamfLauncherIcon::EnsureWindowState ()
   }
 
   SetRelatedWindows (count);
-  SetHasVisibleWindow (has_visible);
+  SetHasWindowOnViewport (has_visible);
 
   g_list_free (children);
 }
@@ -1099,4 +1099,38 @@ void BamfLauncherIcon::OnDesktopFileChanged (GFileMonitor        *monitor,
   default:
     break;
   }
+}
+
+bool 
+BamfLauncherIcon::ShowInSwitcher ()
+{
+  return GetQuirk (QUIRK_RUNNING) && GetQuirk (QUIRK_VISIBLE);
+}
+
+unsigned int 
+BamfLauncherIcon::SwitcherPriority ()
+{
+  GList *children, *l;
+  BamfView *view;
+  unsigned int result = 0;
+
+  children = bamf_view_get_children (BAMF_VIEW (m_App));
+
+  /* get the list of windows */
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView *) l->data;
+
+    if (BAMF_IS_WINDOW (view))
+    {
+      guint32 xid = bamf_window_get_xid (BAMF_WINDOW (view));
+      CompWindow *window = m_Screen->findWindow ((Window) xid);
+      
+      if (window)
+        result = std::max (result, window->activeNum ());
+    }
+  }
+  
+  g_list_free (children);
+  return result;
 }

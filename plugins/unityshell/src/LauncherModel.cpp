@@ -19,7 +19,6 @@
 
 #include "LauncherModel.h"
 #include "LauncherIcon.h"
-#include "Launcher.h"
 
 typedef struct
 {
@@ -201,17 +200,20 @@ LauncherModel::ReorderBefore (LauncherIcon *icon, LauncherIcon *other, bool save
     if ((*it) == other)
     {
       icon->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
+      if (i != j && save) 
+        (*it)->SaveCenter ();
       i++;
       
       (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
+      if (i != j && save) 
+        (*it)->SaveCenter ();
       i++;
     }
     else
     {
       (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
+      if (i != j && save) 
+        (*it)->SaveCenter ();
       i++;
     }
     j++;
@@ -245,25 +247,29 @@ LauncherModel::ReorderSmart (LauncherIcon *icon, LauncherIcon *other, bool save)
       if (!skipped)
       {
         icon->SetSortPriority (i);
-        if (i != j && save) (*it)->SaveCenter ();
+        if (i != j && save) 
+          (*it)->SaveCenter ();
         i++;
       }
       
       (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
+      if (i != j && save) 
+        (*it)->SaveCenter ();
       i++;
       
       if (skipped)
       {
         icon->SetSortPriority (i);
-        if (i != j && save) (*it)->SaveCenter ();
+        if (i != j && save) 
+          (*it)->SaveCenter ();
         i++;
       }
     }
     else
     {
       (*it)->SetSortPriority (i);
-      if (i != j && save) (*it)->SaveCenter ();
+      if (i != j && save) 
+        (*it)->SaveCenter ();
       i++;
     }
     j++;

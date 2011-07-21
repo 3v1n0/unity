@@ -239,7 +239,7 @@ LauncherController::InsertExpoAction ()
 {
   _expoIcon = new SimpleLauncherIcon (_launcher);
   
-  _expoIcon->SetTooltipText (_("Workspace Switcher"));
+  _expoIcon->tooltip_text = _("Workspace Switcher");
   _expoIcon->SetIconName ("workspace-switcher");
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_VISIBLE, true);
   _expoIcon->SetQuirk (LauncherIcon::QUIRK_RUNNING, false);

@@ -36,6 +36,8 @@
 #include "Nux/TimerProc.h"
 #include "PluginAdapter.h"
 #include "GeisAdapter.h"
+
+#include "AbstractIconRenderer.h"
  
 #define ANIM_DURATION_SHORT 125
 #define ANIM_DURATION       200
@@ -54,6 +56,8 @@ class LauncherModel;
 class QuicklistView;
 class LauncherIcon;
 class LauncherDragWindow;
+
+using namespace unity::ui;
 
 class Launcher : public Introspectable, public nux::View
 {
@@ -204,32 +208,6 @@ private:
     TIME_LAST
   } LauncherActionTimes;
 
-  typedef struct
-  {
-    LauncherIcon *icon;
-    nux::Point3   render_center;
-    nux::Point3   logical_center;
-    float         x_rotation;
-    float         y_rotation;
-    float         z_rotation;
-    float         alpha;
-    float         saturation;
-    float         backlight_intensity;
-    float         glow_intensity;
-    float         shimmer_progress;
-    float         progress;
-    float         progress_bias;
-    bool          running_arrow;
-    bool          running_colored;
-    bool          running_on_viewport;
-    bool          active_arrow;
-    bool          active_colored;
-    bool          skip;
-    bool          stick_thingy;
-    bool          keyboard_nav_hl;
-    int           window_indicators;
-  } RenderArg;
-
   void OnWindowMaybeIntellihide (guint32 xid);
   void OnWindowMaybeIntellihideDelayed (guint32 xid);
   static gboolean CheckWindowOverLauncherSync (Launcher *self);
@@ -319,16 +297,14 @@ private:
                       float animation_neg_rads,
                       struct timespec const &current);
                       
-  void RenderArgs (std::list<Launcher::RenderArg> &launcher_args,
+  void RenderArgs (std::list<RenderArg> &launcher_args,
                    nux::Geometry &box_geo, float *launcher_alpha);
-
-  void DrawRenderArg (nux::GraphicsEngine& GfxContext, RenderArg const &arg, nux::Geometry geo);
 
   void OnIconAdded    (LauncherIcon *icon);
   void OnIconRemoved  (LauncherIcon *icon);
   void OnOrderChanged ();
 
-  void OnIconNeedsRedraw (LauncherIcon *icon);
+  void OnIconNeedsRedraw (AbstractLauncherIcon *icon);
   
   static void OnPlaceViewHidden (GVariant *data, void *val);
   static void OnPlaceViewShown (GVariant *data, void *val);
@@ -338,30 +314,7 @@ private:
 
   static void OnActionDone (GVariant *data, void *val);
 
-  void RenderIndicators (nux::GraphicsEngine& GfxContext,
-                         RenderArg const &arg,
-                         int running,
-                         int active,
-                         float alpha,
-                         nux::Geometry& geo);
-
-  void RenderIcon (nux::GraphicsEngine& GfxContext,
-                   RenderArg const &arg,
-                   nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
-                   nux::Color bkg_color,
-                   float alpha,
-                   nux::Vector4 xform_coords[]);
-                   
   void RenderIconToTexture (nux::GraphicsEngine& GfxContext, LauncherIcon *icon, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
-  void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, float progress_fill, float bias);
-
-  void SetIconXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
-                     float x, float y, float w, float h, float z, std::string name);
-  
-  void SetIconSectionXForm (LauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry geo,
-                             float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
-  
-  void UpdateIconXForm (std::list<Launcher::RenderArg> &args, nux::Geometry geo);
 
   LauncherIcon* MouseIconIntersection (int x, int y);
   void EventLogic ();
@@ -384,11 +337,6 @@ private:
   void RestoreSystemRenderTarget ();
   
   gboolean TapOnSuper ();
-
-  nux::BaseTexture*
-  cairoToTexture2D (const char label,
-                    int        width,
-                    int        height);
 
   std::list<char *> StringToUriList (char * input);
 
@@ -435,6 +383,8 @@ private:
   UrgentAnimation _urgent_animation;
   AutoHideAnimation _autohide_animation;  
 
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
+
   int _space_between_icons;
   int _icon_size;
   int _icon_image_size;
@@ -453,26 +403,6 @@ private:
   int _bfb_width;
   int _bfb_height;
 
-  nux::BaseTexture* _icon_bkg_texture;
-  nux::BaseTexture* _icon_shine_texture;
-  nux::BaseTexture* _icon_outline_texture;
-  nux::BaseTexture* _icon_glow_texture;
-  nux::BaseTexture* _icon_glow_hl_texture;
-  nux::BaseTexture* _progress_bar_trough;
-  nux::BaseTexture* _progress_bar_fill;
-  
-  nux::BaseTexture* _pip_ltr;
-  nux::BaseTexture* _pip_rtl;
-  nux::BaseTexture* _arrow_ltr;
-  nux::BaseTexture* _arrow_rtl;
-  nux::BaseTexture* _arrow_empty_ltr;
-  nux::BaseTexture* _arrow_empty_rtl;
-
-  nux::BaseTexture* _superkey_labels[MAX_SUPERKEY_LABELS];
-
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
-
   guint _autoscroll_handle;
   guint _focus_keynav_handle;
   guint _super_show_launcher_handle;
@@ -484,8 +414,6 @@ private:
 
   nux::Point2   _mouse_position;
   nux::Point2   _bfb_mouse_position;
-  nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
-  nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
   nux::AbstractPaintLayer* m_BackgroundLayer;
   nux::BaseWindow* _parent;
   LauncherModel* _model;
@@ -554,6 +482,8 @@ private:
   guint32 _settings_changed_id;
 
   guint _ubus_handles[5];
+
+  AbstractIconRenderer::Ptr icon_renderer;
 };
 
 #endif // LAUNCHER_H

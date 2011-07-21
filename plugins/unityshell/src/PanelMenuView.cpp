@@ -609,16 +609,17 @@ PanelMenuView::Refresh ()
         cairo_pop_group_to_source (cr);
 
         linpat = cairo_pattern_create_linear (width-fading_width, y, width, y);
-        cairo_pattern_add_color_stop_rgb (linpat, 0, 0, 0, 0);
+        cairo_pattern_add_color_stop_rgba (linpat, 0, 0, 0, 0, 1);
         cairo_pattern_add_color_stop_rgba (linpat, 1, 0, 0, 0, 0);
-
         cairo_mask (cr, linpat);
+
         cairo_pattern_destroy (linpat);
     } else {
         gtk_render_layout (style_context, cr, x, y, layout);
     }
 
     gtk_widget_path_free (widget_path);
+
     gtk_style_context_restore (style_context);
   }
 
