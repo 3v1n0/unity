@@ -101,7 +101,10 @@ protected:
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();
-  
+  virtual bool InspectKeyEvent(unsigned int eventType,
+      unsigned int key_sym,
+      const char* character);
+
 private:
   static void     CloseRequest (GVariant *data, PlacesView *self);
   static gboolean OnCloseTimeout (PlacesView *self);

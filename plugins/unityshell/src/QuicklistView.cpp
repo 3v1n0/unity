@@ -101,7 +101,7 @@ QuicklistView::QuicklistView ()
   OnMouseClick.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseClick));
   OnMouseMove.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseMove));
   OnMouseDrag.connect (sigc::mem_fun (this, &QuicklistView::RecvMouseDrag));
-  OnKeyPressed.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
+  OnKeyEvent.connect (sigc::mem_fun (this, &QuicklistView::RecvKeyPressed));
   OnStartKeyboardReceiver.connect (sigc::mem_fun (this, &QuicklistView::RecvStartFocus));
   OnStopKeyboardReceiver.connect   (sigc::mem_fun (this, &QuicklistView::RecvEndFocus));
 
@@ -154,9 +154,12 @@ QuicklistView::IsMenuItemSeperator (int index)
 }
 
 void
-QuicklistView::RecvKeyPressed (unsigned int  key_sym,
-                               unsigned long key_code,
-                               unsigned long key_state)
+QuicklistView::RecvKeyPressed (nux::GraphicsEngine &GfxContext,
+      unsigned long    eventType,
+      unsigned long    key_sym,
+      unsigned long    key_state,
+      const char*      character,
+      unsigned short   keyCount)
 {
   switch (key_sym)
   {

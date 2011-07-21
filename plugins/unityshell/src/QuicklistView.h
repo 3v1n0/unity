@@ -120,9 +120,12 @@ private:
   void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags);
     
-  void RecvKeyPressed (unsigned int  key_sym,
-                       unsigned long key_code,
-                       unsigned long key_state);
+  void RecvKeyPressed (nux::GraphicsEngine &GfxContext ,   /*Graphics Context for text operation*/
+      unsigned long    eventType  ,   /*event type*/
+      unsigned long    keysym     ,   /*event keysym*/
+      unsigned long    state      ,   /*event state*/
+      const TCHAR*     character  ,   /*character*/
+      unsigned short   keyCount    );
 
   void RecvStartFocus ();
   void RecvEndFocus ();
