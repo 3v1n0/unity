@@ -88,10 +88,9 @@ void Indicator::OnEntryShowMenu(std::string const& entry_id,
 }
 
 void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,
-                                         int x, int y,
-                                         int timestamp)
+                                         unsigned int timestamp)
 {
-  on_secondary_activate.emit(entry_id, x, y, timestamp);
+  on_secondary_activate.emit(entry_id, timestamp);
 }
 
 void Indicator::OnEntryScroll(std::string const& entry_id, int delta)

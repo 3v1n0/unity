@@ -97,9 +97,7 @@ void              panel_service_show_entry    (PanelService *self,
 
 void              panel_service_secondary_activate_entry (PanelService *self,
 					       const gchar  *entry_id,
-					       guint32       timestamp,
-					       gint32        x,
-					       gint32        y);
+					       guint32       timestamp);
 
 void              panel_service_scroll_entry   (PanelService *self,
 						const gchar  *entry_id,

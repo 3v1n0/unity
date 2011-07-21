@@ -123,7 +123,7 @@ public:
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
   virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        int x, int y, int timestamp);
+                                        unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;
@@ -229,10 +229,10 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
 }
 
 void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
-                                                    int x, int y, int timestamp)
+                                                    unsigned int timestamp)
 {
   g_dbus_proxy_call(proxy_, "SecondaryActivateEntry",
-                    g_variant_new("(suii)", entry_id.c_str(), 0, x, y),
+                    g_variant_new("(su)", entry_id.c_str(), timestamp),
                     G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL, NULL);
 }
 
@@ -485,9 +485,9 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
 }
 
 void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id,
-                                              int x, int y, int timestamp)
+                                              unsigned int timestamp)
 {
-  pimpl->OnEntrySecondaryActivate(entry_id, x, y, timestamp);
+  pimpl->OnEntrySecondaryActivate(entry_id, timestamp);
 }
 
 std::string DBusIndicators::name() const

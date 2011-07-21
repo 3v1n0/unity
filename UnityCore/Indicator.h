@@ -45,13 +45,13 @@ public:
   Entry::Ptr GetEntry(std::string const& entry_id) const;
 
   void OnEntryShowMenu(std::string const& entry_id, int x, int y, int timestamp, int button);
-  void OnEntrySecondaryActivate(std::string const& entry_id, int x, int y, int timestamp);
+  void OnEntrySecondaryActivate(std::string const& entry_id, unsigned int timestamp);
   void OnEntryScroll(std::string const& entry_id, int delta);
 
   // Signals
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
   sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
-  sigc::signal<void, std::string const&, int, int, int> on_secondary_activate;
+  sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
 private:
