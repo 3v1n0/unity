@@ -35,64 +35,64 @@ class PlacesGroup : public nux::View
 {
 public:
 
-  PlacesGroup (NUX_FILE_LINE_PROTO);
-  ~PlacesGroup ();
+  PlacesGroup(NUX_FILE_LINE_PROTO);
+  ~PlacesGroup();
 
-  void SetIcon (const char *icon);
-  void SetName (const char *name);
+  void SetIcon(const char* icon);
+  void SetName(const char* name);
 
-  void          SetChildLayout (nux::Layout *layout);
-  nux::Layout * GetChildLayout ();
+  void          SetChildLayout(nux::Layout* layout);
+  nux::Layout* GetChildLayout();
 
-  void Relayout ();
+  void Relayout();
 
-  void SetCounts (guint n_visible_items_in_unexpand_mode, guint n_total_items);
+  void SetCounts(guint n_visible_items_in_unexpand_mode, guint n_total_items);
 
-  void SetExpanded (bool is_expanded);
-  bool GetExpanded ();
+  void SetExpanded(bool is_expanded);
+  bool GetExpanded();
 
-  int  GetHeaderHeight ();
+  int  GetHeaderHeight();
 
-  void SetDrawSeparator (bool draw_it);
+  void SetDrawSeparator(bool draw_it);
 
   sigc::signal<void> expanded;
 
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
-  
-private:
-  void Refresh ();
-
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw (nux::GraphicsEngine &GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
-
-  static gboolean OnIdleRelayout (PlacesGroup *self);
-
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnLabelActivated (nux::Area *label);
-  void OnLabelFocusChanged (nux::Area *label);
-  void RefreshLabel ();
 
 private:
-  nux::VLayout *_group_layout;
-  nux::HLayout *_header_layout;
-  nux::Layout  *_content_layout;
+  void Refresh();
 
-  IconTexture          *_icon;
-  nux::StaticCairoText *_name;
-  nux::StaticCairoText *_expand_label;
-  IconTexture          *_expand_icon;
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+  static gboolean OnIdleRelayout(PlacesGroup* self);
+
+  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnLabelActivated(nux::Area* label);
+  void OnLabelFocusChanged(nux::Area* label);
+  void RefreshLabel();
+
+private:
+  nux::VLayout* _group_layout;
+  nux::HLayout* _header_layout;
+  nux::Layout*  _content_layout;
+
+  IconTexture*          _icon;
+  nux::StaticCairoText* _name;
+  nux::StaticCairoText* _expand_label;
+  IconTexture*          _expand_icon;
 
   guint32 _idle_id;
 
   bool  _is_expanded;
   guint _n_visible_items_in_unexpand_mode;
   guint _n_total_items;
-  char *_cached_name;
+  char* _cached_name;
   bool  _draw_sep;
 };
 

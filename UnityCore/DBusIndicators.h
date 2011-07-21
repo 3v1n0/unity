@@ -23,8 +23,10 @@
 #include "Indicators.h"
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 // Connects to the remote panel service (unity-panel-service) and translates
 // that into something that the panel can show

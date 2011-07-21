@@ -31,34 +31,34 @@
 
 class QuicklistMenuItemCheckmark : public QuicklistMenuItem
 {
-  public:
-    QuicklistMenuItemCheckmark (DbusmenuMenuitem* item,
-                                NUX_FILE_LINE_PROTO);
+public:
+  QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
+                             NUX_FILE_LINE_PROTO);
 
-    QuicklistMenuItemCheckmark (DbusmenuMenuitem* item,
-                                bool              debug,
-                                NUX_FILE_LINE_PROTO);
+  QuicklistMenuItemCheckmark(DbusmenuMenuitem* item,
+                             bool              debug,
+                             NUX_FILE_LINE_PROTO);
 
-    ~QuicklistMenuItemCheckmark ();
-    
-  protected:
-    
-    void PreLayoutManagement ();
+  ~QuicklistMenuItemCheckmark();
 
-    long PostLayoutManagement (long layoutResult);
+protected:
 
-    long ProcessEvent (nux::IEvent& event, long traverseInfo, long processEventInfo);
+  void PreLayoutManagement();
 
-    void Draw (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  long PostLayoutManagement(long layoutResult);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext, bool forceDraw);
+  long ProcessEvent(nux::IEvent& event, long traverseInfo, long processEventInfo);
 
-    void PostDraw (nux::GraphicsEngine& gfxContext, bool forceDraw);
-    
-    void Initialize (DbusmenuMenuitem* item);
+  void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-    virtual void UpdateTexture ();
-    virtual int CairoSurfaceWidth ();
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
+
+  void PostDraw(nux::GraphicsEngine& gfxContext, bool forceDraw);
+
+  void Initialize(DbusmenuMenuitem* item);
+
+  virtual void UpdateTexture();
+  virtual int CairoSurfaceWidth();
 };
 
 #endif // QUICKLISTMENUITEMCHECKMARK_H

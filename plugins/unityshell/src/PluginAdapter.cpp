@@ -16,51 +16,52 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
- 
+
 #include <glib.h>
 #include <sstream>
 #include "PluginAdapter.h"
 
 #include "NuxCore/Logger.h"
 
-namespace {
+namespace
+{
 
 nux::logging::Logger logger("unity.plugin");
 
 }
 
-PluginAdapter * PluginAdapter::_default = 0;
+PluginAdapter* PluginAdapter::_default = 0;
 
 #define MAXIMIZABLE (CompWindowActionMaximizeHorzMask & CompWindowActionMaximizeVertMask & CompWindowActionResizeMask)
 
 #define MWM_HINTS_FUNCTIONS     (1L << 0)
 #define MWM_HINTS_DECORATIONS   (1L << 1)
-#define _XA_MOTIF_WM_HINTS		"_MOTIF_WM_HINTS"
+#define _XA_MOTIF_WM_HINTS    "_MOTIF_WM_HINTS"
 
 /* static */
-PluginAdapter *
-PluginAdapter::Default ()
+PluginAdapter*
+PluginAdapter::Default()
 {
   if (!_default)
-      return 0;
+    return 0;
   return _default;
 }
 
 /* static */
 void
-PluginAdapter::Initialize (CompScreen *screen)
+PluginAdapter::Initialize(CompScreen* screen)
 {
-  _default = new PluginAdapter (screen);
+  _default = new PluginAdapter(screen);
 }
 
-PluginAdapter::PluginAdapter(CompScreen *screen) :
-    m_Screen (screen),
-    m_ExpoActionList (0),
-    m_ScaleActionList (0)
+PluginAdapter::PluginAdapter(CompScreen* screen) :
+  m_Screen(screen),
+  m_ExpoActionList(0),
+  m_ScaleActionList(0)
 {
   _spread_state = false;
   _expo_state = false;
-  
+
   _grab_show_action = 0;
   _grab_hide_action = 0;
   _grab_toggle_action = 0;
@@ -73,113 +74,113 @@ PluginAdapter::~PluginAdapter()
 
 /* A No-op for now, but could be useful later */
 void
-PluginAdapter::OnScreenGrabbed ()
+PluginAdapter::OnScreenGrabbed()
 {
-  compiz_screen_grabbed.emit ();
+  compiz_screen_grabbed.emit();
 
-  if (!_spread_state && screen->grabExist ("scale"))
+  if (!_spread_state && screen->grabExist("scale"))
   {
     _spread_state = true;
-    initiate_spread.emit ();
+    initiate_spread.emit();
   }
-  
-  if (!_expo_state && screen->grabExist ("expo"))
+
+  if (!_expo_state && screen->grabExist("expo"))
   {
     _expo_state = true;
-    initiate_expo.emit ();
+    initiate_expo.emit();
   }
 }
 
 void
-PluginAdapter::OnScreenUngrabbed ()
+PluginAdapter::OnScreenUngrabbed()
 {
-  if (_spread_state && !screen->grabExist ("scale"))
+  if (_spread_state && !screen->grabExist("scale"))
   {
     // restore windows to their pre-spread minimized state
-    for (std::list<guint32>::iterator itr = m_SpreadedWindows.begin (); itr != m_SpreadedWindows.end (); ++itr)
+    for (std::list<guint32>::iterator itr = m_SpreadedWindows.begin(); itr != m_SpreadedWindows.end(); ++itr)
     {
-      if (*itr != m_Screen->activeWindow ())
+      if (*itr != m_Screen->activeWindow())
       {
-        CompWindow* window = m_Screen->findWindow (*itr);
+        CompWindow* window = m_Screen->findWindow(*itr);
         if (window)
-          window->minimize ();
+          window->minimize();
       }
     }
-    m_SpreadedWindows.clear ();
+    m_SpreadedWindows.clear();
     _spread_state = false;
-    terminate_spread.emit ();
+    terminate_spread.emit();
   }
-  
-  if (_expo_state && !screen->grabExist ("expo"))
+
+  if (_expo_state && !screen->grabExist("expo"))
   {
     _expo_state = false;
-    terminate_expo.emit ();
+    terminate_expo.emit();
   }
-  
-  compiz_screen_ungrabbed.emit ();
+
+  compiz_screen_ungrabbed.emit();
 }
 
 void
-PluginAdapter::NotifyResized (CompWindow *window, int x, int y, int w, int h)
+PluginAdapter::NotifyResized(CompWindow* window, int x, int y, int w, int h)
 {
-  window_resized.emit (window->id ());
-}
-
-void 
-PluginAdapter::NotifyMoved (CompWindow *window, int x, int y)
-{
-  window_moved.emit (window->id ());
+  window_resized.emit(window->id());
 }
 
 void
-PluginAdapter::NotifyStateChange (CompWindow *window, unsigned int state, unsigned int last_state)
+PluginAdapter::NotifyMoved(CompWindow* window, int x, int y)
+{
+  window_moved.emit(window->id());
+}
+
+void
+PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state)
 {
   if (!((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
       && ((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    WindowManager::window_maximized.emit (window->id ());
+    WindowManager::window_maximized.emit(window->id());
   }
   else if (((last_state & MAXIMIZE_STATE) == MAXIMIZE_STATE)
            && !((state & MAXIMIZE_STATE) == MAXIMIZE_STATE))
   {
-    WindowManager::window_restored.emit (window->id ());
+    WindowManager::window_restored.emit(window->id());
   }
 }
 
-void 
-PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
+void
+PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
 {
   switch (notify)
   {
     case CompWindowNotifyMinimize:
-      window_minimized.emit (window->id ());
+      window_minimized.emit(window->id());
       break;
     case CompWindowNotifyUnminimize:
-      window_unminimized.emit (window->id ());
+      window_unminimized.emit(window->id());
       break;
     case CompWindowNotifyShade:
-      window_shaded.emit (window->id ());
+      window_shaded.emit(window->id());
       break;
     case CompWindowNotifyUnshade:
-      window_unshaded.emit (window->id ());
+      window_unshaded.emit(window->id());
       break;
     case CompWindowNotifyHide:
-      window_hidden.emit (window->id ());
+      window_hidden.emit(window->id());
       break;
     case CompWindowNotifyShow:
-      window_shown.emit (window->id ());
+      window_shown.emit(window->id());
       break;
     case CompWindowNotifyMap:
-      WindowManager::window_mapped.emit (window->id ());
+      WindowManager::window_mapped.emit(window->id());
       break;
     case CompWindowNotifyUnmap:
-      WindowManager::window_unmapped.emit (window->id ());
+      WindowManager::window_unmapped.emit(window->id());
       break;
     case CompWindowNotifyReparent:
-      MaximizeIfBigEnough (window);
+      MaximizeIfBigEnough(window);
       break;
     case CompWindowNotifyFocusChange:
-      WindowManager::window_focus_changed.emit (window->id ());
+      WindowManager::window_focus_changed.emit(window->id());
       break;
     default:
       break;
@@ -187,101 +188,101 @@ PluginAdapter::Notify (CompWindow *window, CompWindowNotify notify)
 }
 
 void
-MultiActionList::AddNewAction (CompAction *a, bool primary)
+MultiActionList::AddNewAction(CompAction* a, bool primary)
 {
-  if (std::find (m_ActionList.begin (), m_ActionList.end (), a)  == m_ActionList.end ())
-    m_ActionList.push_back (a);
+  if (std::find(m_ActionList.begin(), m_ActionList.end(), a)  == m_ActionList.end())
+    m_ActionList.push_back(a);
 
   if (primary)
     _primary_action = a;
 }
 
 void
-MultiActionList::RemoveAction (CompAction *a)
+MultiActionList::RemoveAction(CompAction* a)
 {
-  m_ActionList.remove (a);
+  m_ActionList.remove(a);
 }
 
 void
-MultiActionList::InitiateAll (CompOption::Vector &extraArgs, int state)
+MultiActionList::InitiateAll(CompOption::Vector& extraArgs, int state)
 {
   CompOption::Vector argument;
-  if (!m_ActionList.size ())
+  if (!m_ActionList.size())
     return;
 
-  argument.resize (1);
-  argument[0].setName ("root", CompOption::TypeInt);
-  argument[0].value ().set ((int) screen->root ());
-  foreach (CompOption &arg, extraArgs)
+  argument.resize(1);
+  argument[0].setName("root", CompOption::TypeInt);
+  argument[0].value().set((int) screen->root());
+  foreach(CompOption & arg, extraArgs)
   {
-    argument.push_back (arg);
+    argument.push_back(arg);
   }
 
-  CompAction *a;
-  
+  CompAction* a;
+
   if (_primary_action)
     a = _primary_action;
   else
-    a = m_ActionList.front ();
-  
+    a = m_ActionList.front();
+
   /* Initiate the first available action with the arguments */
-  a->initiate () (a, state, argument);
+  a->initiate()(a, state, argument);
 }
 
 void
-MultiActionList::TerminateAll (CompOption::Vector &extraArgs)
+MultiActionList::TerminateAll(CompOption::Vector& extraArgs)
 {
   CompOption::Vector argument;
   CompOption::Value  value;
-  if (!m_ActionList.size ())
+  if (!m_ActionList.size())
     return;
 
-  argument.resize (1);
-  argument[0].setName ("root", CompOption::TypeInt);
-  argument[0].value ().set ((int) screen->root ());
+  argument.resize(1);
+  argument[0].setName("root", CompOption::TypeInt);
+  argument[0].value().set((int) screen->root());
 
-  foreach (CompOption &a, extraArgs)
-    argument.push_back (a);
-    
+  foreach(CompOption & a, extraArgs)
+  argument.push_back(a);
+
   if (_primary_action)
   {
-    _primary_action->terminate () (_primary_action, 0, argument);
+    _primary_action->terminate()(_primary_action, 0, argument);
     return;
   }
-  
-  foreach (CompAction *action, m_ActionList)
+
+  foreach(CompAction * action, m_ActionList)
   {
-    if (action->state () & (CompAction::StateTermKey |
-                            CompAction::StateTermButton |
-                            CompAction::StateTermEdge |
-                            CompAction::StateTermEdgeDnd))
+    if (action->state() & (CompAction::StateTermKey |
+                           CompAction::StateTermButton |
+                           CompAction::StateTermEdge |
+                           CompAction::StateTermEdgeDnd))
     {
-      action->terminate () (action, 0, argument);
+      action->terminate()(action, 0, argument);
     }
   }
 }
 
 void
-PluginAdapter::SetExpoAction (MultiActionList &expo)
+PluginAdapter::SetExpoAction(MultiActionList& expo)
 {
   m_ExpoActionList = expo;
 }
 
 void
-PluginAdapter::SetScaleAction (MultiActionList &scale)
+PluginAdapter::SetScaleAction(MultiActionList& scale)
 {
   m_ScaleActionList = scale;
 }
 
 std::string
-PluginAdapter::MatchStringForXids (std::list<Window> *windows)
+PluginAdapter::MatchStringForXids(std::list<Window> *windows)
 {
   std::ostringstream sout;
 
   sout << "any & (";
 
   std::list<Window>::iterator it;
-  for (it = windows->begin (); it != windows->end (); ++it)
+  for (it = windows->begin(); it != windows->end(); ++it)
   {
     sout << "| xid=" << static_cast<int>(*it) << " ";
   }
@@ -291,91 +292,91 @@ PluginAdapter::MatchStringForXids (std::list<Window> *windows)
 }
 
 void
-PluginAdapter::InitiateScale (std::string const& match, int state)
+PluginAdapter::InitiateScale(std::string const& match, int state)
 {
   CompOption::Vector argument;
-  CompMatch	     m (match);
+  CompMatch      m(match);
 
-  argument.resize (1);
-  argument[0].setName ("match", CompOption::TypeMatch);
-  argument[0].value ().set (m);
+  argument.resize(1);
+  argument[0].setName("match", CompOption::TypeMatch);
+  argument[0].value().set(m);
 
   /* FIXME: Lame */
-  foreach (CompWindow *w, screen->windows ())
+  foreach(CompWindow * w, screen->windows())
   {
-    if (m.evaluate (w))
+    if (m.evaluate(w))
     {
       /* FIXME:
-         just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only 
+         just unminimize minimized window for now, don't minimize them after the scale if not picked as TerminateScale is only
          called if you click on the launcher, not on any icon. More generally, we should hook up InitiateScale and TerminateScale
          to a Scale plugin signal as the shortcut will have a different behaviour then.
       */
-      if (w->minimized ())
+      if (w->minimized())
       {
         // keep track of windows that were unminimzed to restore their state after the spread
-        if (std::find (m_SpreadedWindows.begin (), m_SpreadedWindows.end (), w->id ()) == m_SpreadedWindows.end ())
-          m_SpreadedWindows.push_back (w->id ());
-        w->unminimize ();
+        if (std::find(m_SpreadedWindows.begin(), m_SpreadedWindows.end(), w->id()) == m_SpreadedWindows.end())
+          m_SpreadedWindows.push_back(w->id());
+        w->unminimize();
       }
     }
   }
 
-  m_ScaleActionList.InitiateAll (argument, state);
+  m_ScaleActionList.InitiateAll(argument, state);
 }
 
-void 
-PluginAdapter::TerminateScale ()
+void
+PluginAdapter::TerminateScale()
 {
-  CompOption::Vector argument (0);
-  m_ScaleActionList.TerminateAll (argument);
-}
-
-bool
-PluginAdapter::IsScaleActive ()
-{
-  return m_Screen->grabExist ("scale");
+  CompOption::Vector argument(0);
+  m_ScaleActionList.TerminateAll(argument);
 }
 
 bool
-PluginAdapter::IsExpoActive ()
+PluginAdapter::IsScaleActive()
 {
-  return m_Screen->grabExist ("expo");
+  return m_Screen->grabExist("scale");
 }
 
-void 
-PluginAdapter::InitiateExpo ()
+bool
+PluginAdapter::IsExpoActive()
 {
-    CompOption::Vector argument (0);
-    
-    m_ExpoActionList.InitiateAll (argument, 0);
+  return m_Screen->grabExist("expo");
+}
+
+void
+PluginAdapter::InitiateExpo()
+{
+  CompOption::Vector argument(0);
+
+  m_ExpoActionList.InitiateAll(argument, 0);
 }
 
 // WindowManager implementation
 bool
-PluginAdapter::IsWindowMaximized (guint xid)
+PluginAdapter::IsWindowMaximized(guint xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
   {
-    return ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE);
+    return ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE);
   }
 
   return false;
 }
 
 bool
-PluginAdapter::IsWindowDecorated (guint32 xid)
+PluginAdapter::IsWindowDecorated(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
   {
-    unsigned int decor = window->mwmDecor ();
+    unsigned int decor = window->mwmDecor();
 
     return decor & (MwmDecorAll | MwmDecorTitle);
   }
@@ -383,37 +384,37 @@ PluginAdapter::IsWindowDecorated (guint32 xid)
 }
 
 bool
-PluginAdapter::IsWindowOnCurrentDesktop (guint32 xid)
+PluginAdapter::IsWindowOnCurrentDesktop(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
   {
     // we aren't checking window->onCurrentDesktop (), as the name implies, because that is broken
-    return (window->defaultViewport () == m_Screen->vp ());
+    return (window->defaultViewport() == m_Screen->vp());
   }
 
   return false;
 }
 
 bool
-PluginAdapter::IsWindowObscured (guint32 xid)
+PluginAdapter::IsWindowObscured(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
   {
-    CompPoint window_vp = window->defaultViewport ();
+    CompPoint window_vp = window->defaultViewport();
     // Check if any windows above this one are blocking it
-    for (CompWindow *sibling = window->next; sibling != NULL; sibling = sibling->next)
+    for (CompWindow* sibling = window->next; sibling != NULL; sibling = sibling->next)
     {
-      if (sibling->defaultViewport () == window_vp
-          && !sibling->minimized ()
-          && (sibling->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+      if (sibling->defaultViewport() == window_vp
+          && !sibling->minimized()
+          && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
         return true;
     }
   }
@@ -422,115 +423,115 @@ PluginAdapter::IsWindowObscured (guint32 xid)
 }
 
 void
-PluginAdapter::Restore (guint32 xid)
+PluginAdapter::Restore(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->maximize (0);
+    window->maximize(0);
 }
 
 void
-PluginAdapter::Minimize (guint32 xid)
+PluginAdapter::Minimize(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->minimize ();
+    window->minimize();
 }
 
 void
-PluginAdapter::Close (guint32 xid)
+PluginAdapter::Close(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->close (CurrentTime);
+    window->close(CurrentTime);
 }
 
 void
-PluginAdapter::Activate (guint32 xid)
+PluginAdapter::Activate(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->activate ();
+    window->activate();
 }
 
 void
-PluginAdapter::Raise (guint32 xid)
+PluginAdapter::Raise(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->raise ();
+    window->raise();
 }
 
 void
-PluginAdapter::Lower (guint32 xid)
+PluginAdapter::Lower(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
+  CompWindow* window;
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
-    window->lower ();
+    window->lower();
 }
 
 void
-PluginAdapter::ShowDesktop ()
+PluginAdapter::ShowDesktop()
 {
-  m_Screen->enterShowDesktopMode ();
+  m_Screen->enterShowDesktopMode();
 }
 
 nux::Geometry
-PluginAdapter::GetWindowGeometry (guint32 xid)
+PluginAdapter::GetWindowGeometry(guint32 xid)
 {
   Window win = (Window)xid;
-  CompWindow *window;
-  nux::Geometry geo (0, 0, 1, 1);
+  CompWindow* window;
+  nux::Geometry geo(0, 0, 1, 1);
 
-  window = m_Screen->findWindow (win);
+  window = m_Screen->findWindow(win);
   if (window)
   {
-    geo.x = window->x ();
-    geo.y = window->y ();
-    geo.width = window->width ();
-    geo.height = window->height ();
+    geo.x = window->x();
+    geo.y = window->y();
+    geo.width = window->width();
+    geo.height = window->height();
   }
   return geo;
 }
 
 void
-PluginAdapter::SetMwmWindowHints (Window xid, MotifWmHints *new_hints)
+PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints)
 {
-  Display *display = m_Screen->dpy ();
+  Display* display = m_Screen->dpy();
   Atom hints_atom = None;
-  MotifWmHints *data = NULL;
-  MotifWmHints *hints = NULL;
+  MotifWmHints* data = NULL;
+  MotifWmHints* hints = NULL;
   Atom type = None;
   gint format;
   gulong nitems;
   gulong bytes_after;
 
-  hints_atom = XInternAtom (display, _XA_MOTIF_WM_HINTS, false);
+  hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
 
-  XGetWindowProperty (display, 
-                      xid,
-		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
-		                  False, AnyPropertyType, &type, &format, &nitems,
-		                  &bytes_after, (guchar **)&data);
-    
+  XGetWindowProperty(display,
+                     xid,
+                     hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
+                     False, AnyPropertyType, &type, &format, &nitems,
+                     &bytes_after, (guchar**)&data);
+
   if (type != hints_atom || !data)
   {
     hints = new_hints;
@@ -538,11 +539,11 @@ PluginAdapter::SetMwmWindowHints (Window xid, MotifWmHints *new_hints)
   else
   {
     hints = data;
-	
+
     if (new_hints->flags & MWM_HINTS_FUNCTIONS)
     {
       hints->flags |= MWM_HINTS_FUNCTIONS;
-      hints->functions = new_hints->functions;  
+      hints->functions = new_hints->functions;
     }
     if (new_hints->flags & MWM_HINTS_DECORATIONS)
     {
@@ -550,45 +551,45 @@ PluginAdapter::SetMwmWindowHints (Window xid, MotifWmHints *new_hints)
       hints->decorations = new_hints->decorations;
     }
   }
-  
-  XChangeProperty (display, 
-                   xid,
-                   hints_atom, hints_atom, 32, PropModeReplace,
-                   (guchar *)hints, sizeof (MotifWmHints)/sizeof (long));
-  
+
+  XChangeProperty(display,
+                  xid,
+                  hints_atom, hints_atom, 32, PropModeReplace,
+                  (guchar*)hints, sizeof(MotifWmHints) / sizeof(long));
+
   if (data)
-    XFree (data);
+    XFree(data);
 }
 
 void
-PluginAdapter::Decorate (guint32 xid)
+PluginAdapter::Decorate(guint32 xid)
 {
   MotifWmHints hints = { 0 };
-    
+
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = GDK_DECOR_ALL;
- 
-  SetMwmWindowHints (xid, &hints);
+
+  SetMwmWindowHints(xid, &hints);
 }
 
 void
-PluginAdapter::Undecorate (guint32 xid)
+PluginAdapter::Undecorate(guint32 xid)
 {
   MotifWmHints hints = { 0 };
-    
+
   hints.flags = MWM_HINTS_DECORATIONS;
   hints.decorations = 0;
- 
-  SetMwmWindowHints (xid, &hints);
+
+  SetMwmWindowHints(xid, &hints);
 }
 
 bool
-PluginAdapter::IsScreenGrabbed ()
+PluginAdapter::IsScreenGrabbed()
 {
-  return m_Screen->grabbed ();
+  return m_Screen->grabbed();
 }
 
-void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
+void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
 {
   XClassHint   classHint;
   Status       status;
@@ -602,15 +603,15 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   if (!window)
     return;
 
-  if (window->type () != CompWindowTypeNormalMask
-      || (window->actions () & MAXIMIZABLE) != MAXIMIZABLE)
+  if (window->type() != CompWindowTypeNormalMask
+      || (window->actions() & MAXIMIZABLE) != MAXIMIZABLE)
     return;
 
-  status = XGetClassHint (m_Screen->dpy (), window->id (), &classHint);
+  status = XGetClassHint(m_Screen->dpy(), window->id(), &classHint);
   if (status && classHint.res_class)
   {
-	win_wmclass = classHint.res_class;
-    XFree (classHint.res_class);
+    win_wmclass = classHint.res_class;
+    XFree(classHint.res_class);
   }
   else
     return;
@@ -618,19 +619,20 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
   num_monitor = window->outputDevice();
   screen = m_Screen->outputDevs().at(num_monitor);
 
-  screen_height = screen.workArea().height ();
-  screen_width = screen.workArea().width ();
+  screen_height = screen.workArea().height();
+  screen_width = screen.workArea().width();
 
-  if ((window->state () & MAXIMIZE_STATE) == MAXIMIZE_STATE) {
+  if ((window->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE)
+  {
     LOG_DEBUG(logger) << "window mapped and already maximized, just undecorate";
-    Undecorate (window->id ());
+    Undecorate(window->id());
     return;
   }
 
   // use server<parameter> because the window won't show the real parameter as
   // not mapped yet
-  const XSizeHints& hints = window->sizeHints ();
-  covering_part = (float)(window->serverWidth () * window->serverHeight ()) / (float)(screen_width * screen_height);
+  const XSizeHints& hints = window->sizeHints();
+  covering_part = (float)(window->serverWidth() * window->serverHeight()) / (float)(screen_width * screen_height);
   if ((covering_part < _coverage_area_before_automaximize) || (covering_part > 1.0) ||
       (hints.flags & PMaxSize && (screen_width > hints.max_width || screen_height > hints.max_height)))
   {
@@ -638,67 +640,68 @@ void PluginAdapter::MaximizeIfBigEnough (CompWindow *window)
     return;
   }
 
-  Undecorate (window->id ());
-  window->maximize (MAXIMIZE_STATE);
-}
-
-void 
-PluginAdapter::ShowGrabHandles (CompWindow *window, bool use_timer)
-{
-  if (!_grab_show_action || !window)
-    return;
-    
-  CompOption::Vector argument;
-
-  argument.resize (3);
-  argument[0].setName ("root", CompOption::TypeInt);
-  argument[0].value ().set ((int) screen->root ());
-  argument[1].setName ("window", CompOption::TypeInt);
-  argument[1].value ().set ((int) window->id ());
-  argument[2].setName ("use-timer", CompOption::TypeBool);
-  argument[2].value ().set (use_timer);
-
-  /* Initiate the first available action with the arguments */
-  _grab_show_action->initiate () (_grab_show_action, 0, argument);
-}
-
-void 
-PluginAdapter::HideGrabHandles (CompWindow *window)
-{
-  if (!_grab_hide_action || !window)
-    return;
-    
-  CompOption::Vector argument;
-
-  argument.resize (2);
-  argument[0].setName ("root", CompOption::TypeInt);
-  argument[0].value ().set ((int) screen->root ());
-  argument[1].setName ("window", CompOption::TypeInt);
-  argument[1].value ().set ((int) window->id ());
-
-  /* Initiate the first available action with the arguments */
-  _grab_hide_action->initiate () (_grab_hide_action, 0, argument);
-}
-
-void 
-PluginAdapter::ToggleGrabHandles (CompWindow *window)
-{
-  if (!_grab_toggle_action || !window)
-    return;
-    
-  CompOption::Vector argument;
-
-  argument.resize (2);
-  argument[0].setName ("root", CompOption::TypeInt);
-  argument[0].value ().set ((int) screen->root ());
-  argument[1].setName ("window", CompOption::TypeInt);
-  argument[1].value ().set ((int) window->id ());
-
-  /* Initiate the first available action with the arguments */
-  _grab_toggle_action->initiate () (_grab_toggle_action, 0, argument);
+  Undecorate(window->id());
+  window->maximize(MAXIMIZE_STATE);
 }
 
 void
-PluginAdapter::SetCoverageAreaBeforeAutomaximize (float area) {
+PluginAdapter::ShowGrabHandles(CompWindow* window, bool use_timer)
+{
+  if (!_grab_show_action || !window)
+    return;
+
+  CompOption::Vector argument;
+
+  argument.resize(3);
+  argument[0].setName("root", CompOption::TypeInt);
+  argument[0].value().set((int) screen->root());
+  argument[1].setName("window", CompOption::TypeInt);
+  argument[1].value().set((int) window->id());
+  argument[2].setName("use-timer", CompOption::TypeBool);
+  argument[2].value().set(use_timer);
+
+  /* Initiate the first available action with the arguments */
+  _grab_show_action->initiate()(_grab_show_action, 0, argument);
+}
+
+void
+PluginAdapter::HideGrabHandles(CompWindow* window)
+{
+  if (!_grab_hide_action || !window)
+    return;
+
+  CompOption::Vector argument;
+
+  argument.resize(2);
+  argument[0].setName("root", CompOption::TypeInt);
+  argument[0].value().set((int) screen->root());
+  argument[1].setName("window", CompOption::TypeInt);
+  argument[1].value().set((int) window->id());
+
+  /* Initiate the first available action with the arguments */
+  _grab_hide_action->initiate()(_grab_hide_action, 0, argument);
+}
+
+void
+PluginAdapter::ToggleGrabHandles(CompWindow* window)
+{
+  if (!_grab_toggle_action || !window)
+    return;
+
+  CompOption::Vector argument;
+
+  argument.resize(2);
+  argument[0].setName("root", CompOption::TypeInt);
+  argument[0].value().set((int) screen->root());
+  argument[1].setName("window", CompOption::TypeInt);
+  argument[1].value().set((int) window->id());
+
+  /* Initiate the first available action with the arguments */
+  _grab_toggle_action->initiate()(_grab_toggle_action, 0, argument);
+}
+
+void
+PluginAdapter::SetCoverageAreaBeforeAutomaximize(float area)
+{
   _coverage_area_before_automaximize = area;
 }

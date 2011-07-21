@@ -24,39 +24,39 @@
 
 #define HOME_EXPANDED "home-expanded"
 
-static PlacesSettings *_places_settings = NULL;
+static PlacesSettings* _places_settings = NULL;
 
-PlacesSettings::PlacesSettings ()
-: _settings (NULL),
-  _raw_from_factor (0),
-  _form_factor (DESKTOP),
-  _dash_blur_type (NO_BLUR)
+PlacesSettings::PlacesSettings()
+  : _settings(NULL),
+    _raw_from_factor(0),
+    _form_factor(DESKTOP),
+    _dash_blur_type(NO_BLUR)
 {
-  _settings = g_settings_new ("com.canonical.Unity");
-  g_signal_connect (_settings, "changed",
-                    (GCallback)(PlacesSettings::Changed), this);
-  Refresh ();
+  _settings = g_settings_new("com.canonical.Unity");
+  g_signal_connect(_settings, "changed",
+                   (GCallback)(PlacesSettings::Changed), this);
+  Refresh();
 }
 
-PlacesSettings::~PlacesSettings ()
+PlacesSettings::~PlacesSettings()
 {
-  g_object_unref (_settings);
+  g_object_unref(_settings);
 }
 
 void
-PlacesSettings::Refresh ()
+PlacesSettings::Refresh()
 {
-  _raw_from_factor = g_settings_get_enum (_settings, "form-factor");
+  _raw_from_factor = g_settings_get_enum(_settings, "form-factor");
 
   if (_raw_from_factor == 0) //Automatic
   {
-    GdkScreen   *screen;
+    GdkScreen*   screen;
     gint         primary_monitor;
     GdkRectangle geo;
 
-    screen = gdk_screen_get_default ();
-    primary_monitor = gdk_screen_get_primary_monitor (screen);
-    gdk_screen_get_monitor_geometry (screen, primary_monitor, &geo);
+    screen = gdk_screen_get_default();
+    primary_monitor = gdk_screen_get_primary_monitor(screen);
+    gdk_screen_get_monitor_geometry(screen, primary_monitor, &geo);
 
     _form_factor = geo.height > 799 ? DESKTOP : NETBOOK;
   }
@@ -65,56 +65,56 @@ PlacesSettings::Refresh ()
     _form_factor = (FormFactor)_raw_from_factor;
   }
 
-  changed.emit (this);
+  changed.emit(this);
 }
 
 void
-PlacesSettings::Changed (GSettings *settings, char *key, PlacesSettings *self)
+PlacesSettings::Changed(GSettings* settings, char* key, PlacesSettings* self)
 {
-  self->Refresh ();
+  self->Refresh();
 }
 
-PlacesSettings *
-PlacesSettings::GetDefault ()
+PlacesSettings*
+PlacesSettings::GetDefault()
 {
-  if (G_UNLIKELY (!_places_settings))
-    _places_settings = new PlacesSettings ();
+  if (G_UNLIKELY(!_places_settings))
+    _places_settings = new PlacesSettings();
 
   return _places_settings;
 }
 
 PlacesSettings::FormFactor
-PlacesSettings::GetFormFactor ()
+PlacesSettings::GetFormFactor()
 {
   return _form_factor;
 }
 
 int
-PlacesSettings::GetDefaultTileWidth ()
+PlacesSettings::GetDefaultTileWidth()
 {
-  return PlacesStyle::GetDefault ()->GetTileWidth ();
+  return PlacesStyle::GetDefault()->GetTileWidth();
 }
 
 PlacesSettings::DashBlurType
-PlacesSettings::GetDashBlurType ()
+PlacesSettings::GetDashBlurType()
 {
   return _dash_blur_type;
 }
 
 void
-PlacesSettings::SetDashBlurType (PlacesSettings::DashBlurType type)
+PlacesSettings::SetDashBlurType(PlacesSettings::DashBlurType type)
 {
   _dash_blur_type = type;
 }
 
 bool
-PlacesSettings::GetHomeExpanded ()
+PlacesSettings::GetHomeExpanded()
 {
-  return g_settings_get_enum (_settings, HOME_EXPANDED) == 1 ? true : false;
+  return g_settings_get_enum(_settings, HOME_EXPANDED) == 1 ? true : false;
 }
 
 void
-PlacesSettings::SetHomeExpanded (bool expanded)
+PlacesSettings::SetHomeExpanded(bool expanded)
 {
-  g_settings_set_enum (_settings, HOME_EXPANDED, expanded ? 1 : 0);
+  g_settings_set_enum(_settings, HOME_EXPANDED, expanded ? 1 : 0);
 }

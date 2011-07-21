@@ -48,101 +48,101 @@ typedef enum
 
 class QuicklistMenuItem : public nux::View, public unity::Introspectable
 {
-  public:
-    QuicklistMenuItem (DbusmenuMenuitem* item,
-                       NUX_FILE_LINE_PROTO);
+public:
+  QuicklistMenuItem(DbusmenuMenuitem* item,
+                    NUX_FILE_LINE_PROTO);
 
-    QuicklistMenuItem (DbusmenuMenuitem* item,
-                       bool              debug,
-                       NUX_FILE_LINE_PROTO);
+  QuicklistMenuItem(DbusmenuMenuitem* item,
+                    bool              debug,
+                    NUX_FILE_LINE_PROTO);
 
-    virtual ~QuicklistMenuItem ();
+  virtual ~QuicklistMenuItem();
 
-    void PreLayoutManagement ();
+  void PreLayoutManagement();
 
-    long PostLayoutManagement (long layoutResult);
+  long PostLayoutManagement(long layoutResult);
 
-    long ProcessEvent (nux::IEvent& event,
-                       long         traverseInfo,
-                       long         processEventInfo);
+  long ProcessEvent(nux::IEvent& event,
+                    long         traverseInfo,
+                    long         processEventInfo);
 
-    void Draw (nux::GraphicsEngine& gfxContext,
-               bool                 forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext,
+            bool                 forceDraw);
 
-    void DrawContent (nux::GraphicsEngine& gfxContext,
-                      bool                 forceDraw);
-
-    void PostDraw (nux::GraphicsEngine& gfxContext,
+  void DrawContent(nux::GraphicsEngine& gfxContext,
                    bool                 forceDraw);
 
-    QuicklistMenuItemType GetItemType ();
-    
-    void ItemActivated ();
+  void PostDraw(nux::GraphicsEngine& gfxContext,
+                bool                 forceDraw);
 
-    sigc::signal<void, QuicklistMenuItem&> sigChanged;
-    sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
-    sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
-    
-    virtual const gchar* GetLabel ();
+  QuicklistMenuItemType GetItemType();
 
-    virtual bool GetEnabled ();
+  void ItemActivated();
 
-    virtual bool GetActive ();
+  sigc::signal<void, QuicklistMenuItem&> sigChanged;
+  sigc::signal<void, QuicklistMenuItem*> sigTextChanged;
+  sigc::signal<void, QuicklistMenuItem*> sigColorChanged;
 
-    virtual bool GetVisible ();
-    
-    // Introspection
-    const gchar* GetName ();
-    void AddProperties (GVariantBuilder *builder);
-  protected:
-    
-    gchar*                _text;
-    nux::Color            _textColor;
-    int                   _pre_layout_width;
-    int                   _pre_layout_height;
-    nux::CairoGraphics*   _cairoGraphics;
-    
-    nux::BaseTexture*     _normalTexture[2];
-    nux::BaseTexture*     _prelightTexture[2];
-    
-    //! Return the size of the text + size of associated radio button or check box
-    void GetTextExtents (int &width, int &height);
-    void GetTextExtents (const gchar* font, int& width, int& height);
-    virtual void UpdateTexture () = 0;
-    virtual int CairoSurfaceWidth () = 0;
+  virtual const gchar* GetLabel();
 
-    void RecvMouseEnter (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseLeave (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-    
-    sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
-    sigc::signal<void, QuicklistMenuItem*> sigMouseLeave;
-    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseReleased;
-    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseClick;
-    sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
-    
-    DbusmenuMenuitem* _menuItem;
-    QuicklistMenuItemType _item_type;
-    
-    nux::Color        _color;   //!< Item rendering color factor.
-    bool              _debug;
-    
-    
-    bool _prelight;   //!< True when the mouse is over the item.
+  virtual bool GetEnabled();
 
-    void DrawText (cairo_t*   cr,
-                   int        width,
-                   int        height,
-                   nux::Color color);
+  virtual bool GetActive();
 
-    // Introspection
-    gchar *_name;
-    
-    friend class QuicklistView;
+  virtual bool GetVisible();
+
+  // Introspection
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
+protected:
+
+  gchar*                _text;
+  nux::Color            _textColor;
+  int                   _pre_layout_width;
+  int                   _pre_layout_height;
+  nux::CairoGraphics*   _cairoGraphics;
+
+  nux::BaseTexture*     _normalTexture[2];
+  nux::BaseTexture*     _prelightTexture[2];
+
+  //! Return the size of the text + size of associated radio button or check box
+  void GetTextExtents(int& width, int& height);
+  void GetTextExtents(const gchar* font, int& width, int& height);
+  virtual void UpdateTexture() = 0;
+  virtual int CairoSurfaceWidth() = 0;
+
+  void RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  sigc::signal<void, QuicklistMenuItem*> sigMouseEnter;
+  sigc::signal<void, QuicklistMenuItem*> sigMouseLeave;
+  sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseReleased;
+  sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseClick;
+  sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
+
+  DbusmenuMenuitem* _menuItem;
+  QuicklistMenuItemType _item_type;
+
+  nux::Color        _color;   //!< Item rendering color factor.
+  bool              _debug;
+
+
+  bool _prelight;   //!< True when the mouse is over the item.
+
+  void DrawText(cairo_t*   cr,
+                int        width,
+                int        height,
+                nux::Color color);
+
+  // Introspection
+  gchar* _name;
+
+  friend class QuicklistView;
 };
 
 #endif // QUICKLISTMENUITEM_H

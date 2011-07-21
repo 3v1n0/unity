@@ -24,74 +24,74 @@
 #include "Nux/Nux.h"
 #include "QuicklistMenuItemLabel.h"
 
-QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
-                                                        NUX_FILE_LINE_DECL) :
-QuicklistMenuItem (item,
-                   NUX_FILE_LINE_PARAM)
+QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
+                                               NUX_FILE_LINE_DECL) :
+  QuicklistMenuItem(item,
+                    NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup ("QuicklistMenuItemLabel");
-  Initialize (item);
+  _name = g_strdup("QuicklistMenuItemLabel");
+  Initialize(item);
 }
 
-QuicklistMenuItemLabel::QuicklistMenuItemLabel (DbusmenuMenuitem* item,
-                                                        bool              debug,
-                                                        NUX_FILE_LINE_DECL) :
-QuicklistMenuItem (item,
-                   debug,
-                   NUX_FILE_LINE_PARAM)
+QuicklistMenuItemLabel::QuicklistMenuItemLabel(DbusmenuMenuitem* item,
+                                               bool              debug,
+                                               NUX_FILE_LINE_DECL) :
+  QuicklistMenuItem(item,
+                    debug,
+                    NUX_FILE_LINE_PARAM)
 {
-  _name = g_strdup ("QuicklistMenuItemLabel");
-  Initialize (item);
+  _name = g_strdup("QuicklistMenuItemLabel");
+  Initialize(item);
 }
 
 void
-QuicklistMenuItemLabel::Initialize (DbusmenuMenuitem* item)
+QuicklistMenuItemLabel::Initialize(DbusmenuMenuitem* item)
 {
   _item_type  = MENUITEM_TYPE_LABEL;
 
   if (item)
-    _text = g_strdup (dbusmenu_menuitem_property_get (item, DBUSMENU_MENUITEM_PROP_LABEL));
+    _text = g_strdup(dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL));
   else
-    _text = g_strdup ("Label");
+    _text = g_strdup("Label");
 
   int textWidth = 1;
   int textHeight = 1;
-  GetTextExtents (textWidth, textHeight);
-  SetMinimumSize (textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
-                  textHeight + 2 * ITEM_MARGIN);
+  GetTextExtents(textWidth, textHeight);
+  SetMinimumSize(textWidth + ITEM_INDENT_ABS + 3 * ITEM_MARGIN,
+                 textHeight + 2 * ITEM_MARGIN);
 }
 
-QuicklistMenuItemLabel::~QuicklistMenuItemLabel ()
+QuicklistMenuItemLabel::~QuicklistMenuItemLabel()
 {
   if (_normalTexture[0])
-    _normalTexture[0]->UnReference ();
+    _normalTexture[0]->UnReference();
 
   if (_normalTexture[1])
-    _normalTexture[1]->UnReference ();
+    _normalTexture[1]->UnReference();
 
   if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference ();
+    _prelightTexture[0]->UnReference();
 
   if (_prelightTexture[1])
-    _prelightTexture[1]->UnReference ();
+    _prelightTexture[1]->UnReference();
 }
 
 void
-QuicklistMenuItemLabel::PreLayoutManagement ()
+QuicklistMenuItemLabel::PreLayoutManagement()
 {
-  _pre_layout_width = GetBaseWidth ();
-  _pre_layout_height = GetBaseHeight ();
+  _pre_layout_width = GetBaseWidth();
+  _pre_layout_height = GetBaseHeight();
 
   if (_normalTexture[0] == 0)
   {
-    UpdateTexture ();
+    UpdateTexture();
   }
 
-  QuicklistMenuItem::PreLayoutManagement ();
+  QuicklistMenuItem::PreLayoutManagement();
 }
 
 long
-QuicklistMenuItemLabel::PostLayoutManagement (long layoutResult)
+QuicklistMenuItemLabel::PostLayoutManagement(long layoutResult)
 {
   int w = GetBaseWidth();
   int h = GetBaseHeight();
@@ -116,19 +116,19 @@ QuicklistMenuItemLabel::PostLayoutManagement (long layoutResult)
 }
 
 long
-QuicklistMenuItemLabel::ProcessEvent (nux::IEvent& event,
-                                          long         traverseInfo,
-                                          long         processEventInfo)
+QuicklistMenuItemLabel::ProcessEvent(nux::IEvent& event,
+                                     long         traverseInfo,
+                                     long         processEventInfo)
 {
   long result = traverseInfo;
 
-  result = nux::View::PostProcessEvent2 (event, result, processEventInfo);
+  result = nux::View::PostProcessEvent2(event, result, processEventInfo);
   return result;
 }
 
 void
-QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
-                                  bool                 forceDraw)
+QuicklistMenuItemLabel::Draw(nux::GraphicsEngine& gfxContext,
+                             bool                 forceDraw)
 {
   // Check if the texture have been computed. If they haven't, exit the function.
   if (_normalTexture[0] == NULL)
@@ -136,129 +136,129 @@ QuicklistMenuItemLabel::Draw (nux::GraphicsEngine& gfxContext,
 
   nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture;
 
-  nux::Geometry base = GetGeometry ();
+  nux::Geometry base = GetGeometry();
 
-  gfxContext.PushClippingRectangle (base);
+  gfxContext.PushClippingRectangle(base);
 
   nux::TexCoordXForm texxform;
-  texxform.SetWrap (nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  gfxContext.GetRenderStates ().SetBlend (true);
-  gfxContext.GetRenderStates ().SetPremultipliedBlend (nux::SRC_OVER);
+  gfxContext.GetRenderStates().SetBlend(true);
+  gfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (GetEnabled ())
+  if (GetEnabled())
   {
     if (_prelight)
     {
-      texture = _prelightTexture[0]->GetDeviceTexture ();
+      texture = _prelightTexture[0]->GetDeviceTexture();
     }
     else
     {
-      texture = _normalTexture[0]->GetDeviceTexture ();
+      texture = _normalTexture[0]->GetDeviceTexture();
     }
     _color = nux::color::White;
   }
   else
   {
-    texture = _normalTexture[0]->GetDeviceTexture ();
-    _color = nux::Color (0.8f, 0.8f, 0.8f, 1.0f);
+    texture = _normalTexture[0]->GetDeviceTexture();
+    _color = nux::Color(0.8f, 0.8f, 0.8f, 1.0f);
   }
 
-  gfxContext.QRP_1Tex (base.x,
-                            base.y,
-                            base.width,
-                            base.height,
-                            texture,
-                            texxform,
-                            _color);
+  gfxContext.QRP_1Tex(base.x,
+                      base.y,
+                      base.width,
+                      base.height,
+                      texture,
+                      texxform,
+                      _color);
 
-  gfxContext.GetRenderStates().SetBlend (false);
+  gfxContext.GetRenderStates().SetBlend(false);
 
-  gfxContext.PopClippingRectangle ();
+  gfxContext.PopClippingRectangle();
 }
 
 void
-QuicklistMenuItemLabel::DrawContent (nux::GraphicsEngine& gfxContext,
-                                         bool                 forceDraw)
+QuicklistMenuItemLabel::DrawContent(nux::GraphicsEngine& gfxContext,
+                                    bool                 forceDraw)
 {
 }
 
 void
-QuicklistMenuItemLabel::PostDraw (nux::GraphicsEngine& gfxContext,
-                                      bool                 forceDraw)
+QuicklistMenuItemLabel::PostDraw(nux::GraphicsEngine& gfxContext,
+                                 bool                 forceDraw)
 {
 }
 
 void
-QuicklistMenuItemLabel::UpdateTexture ()
+QuicklistMenuItemLabel::UpdateTexture()
 {
-  nux::Color transparent = nux::Color (0.0f, 0.0f, 0.0f, 0.0f);
-  int        width       = GetBaseWidth ();
-  int        height      = GetBaseHeight ();
+  nux::Color transparent = nux::Color(0.0f, 0.0f, 0.0f, 0.0f);
+  int        width       = GetBaseWidth();
+  int        height      = GetBaseHeight();
 
-  _cairoGraphics = new nux::CairoGraphics (CAIRO_FORMAT_ARGB32, width, height);
-  cairo_t *cr = _cairoGraphics->GetContext ();
+  _cairoGraphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = _cairoGraphics->GetContext();
 
   // draw normal, unchecked version
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale (cr, 1.0f, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width (cr, 1.0f);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_scale(cr, 1.0f, 1.0f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width(cr, 1.0f);
 
-  DrawText (cr, width, height, nux::color::White);
+  DrawText(cr, width, height, nux::color::White);
 
-  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap ();
+  nux::NBitmapData* bitmap = _cairoGraphics->GetBitmap();
 
   if (_normalTexture[0])
-    _normalTexture[0]->UnReference ();
+    _normalTexture[0]->UnReference();
 
-  _normalTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
-  _normalTexture[0]->Update (bitmap);
+  _normalTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  _normalTexture[0]->Update(bitmap);
   delete bitmap;
 
   // draw active/prelight, unchecked version
-  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint (cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-  cairo_scale (cr, 1.0f, 1.0f);
-  cairo_set_source_rgba (cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  cairo_set_line_width (cr, 1.0f);
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_scale(cr, 1.0f, 1.0f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
+  cairo_set_line_width(cr, 1.0f);
 
-  _cairoGraphics->DrawRoundedRectangle (cr,
-                                        1.0f,
-                                        0.5f,
-                                        0.5f,
-                                        ITEM_CORNER_RADIUS_ABS,
-                                        width - 1.0f,
-                                        height - 1.0f);
-  cairo_fill (cr);
+  _cairoGraphics->DrawRoundedRectangle(cr,
+                                       1.0f,
+                                       0.5f,
+                                       0.5f,
+                                       ITEM_CORNER_RADIUS_ABS,
+                                       width - 1.0f,
+                                       height - 1.0f);
+  cairo_fill(cr);
 
-  cairo_set_source_rgba (cr, 0.0f, 0.0f, 0.0f, 0.0f);
+  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.0f);
 
-  DrawText (cr, width, height, transparent);
+  DrawText(cr, width, height, transparent);
 
-  bitmap = _cairoGraphics->GetBitmap ();
+  bitmap = _cairoGraphics->GetBitmap();
 
   if (_prelightTexture[0])
-    _prelightTexture[0]->UnReference ();
+    _prelightTexture[0]->UnReference();
 
-  _prelightTexture[0] = nux::GetGraphicsDisplay ()->GetGpuDevice ()->CreateSystemCapableTexture ();
-  _prelightTexture[0]->Update (bitmap);
+  _prelightTexture[0] = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  _prelightTexture[0]->Update(bitmap);
   delete bitmap;
 
   // finally clean up
   delete _cairoGraphics;
 }
 
-int QuicklistMenuItemLabel::CairoSurfaceWidth ()
+int QuicklistMenuItemLabel::CairoSurfaceWidth()
 {
   if (_normalTexture[0])
-    return _normalTexture[0]->GetWidth ();
+    return _normalTexture[0]->GetWidth();
 
   return 0;
 }

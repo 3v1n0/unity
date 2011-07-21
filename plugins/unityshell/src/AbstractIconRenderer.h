@@ -25,39 +25,41 @@
 
 #include "AbstractLauncherIcon.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
 
 class RenderArg
 {
 public:
-  RenderArg () 
-  : icon (0)
-  , x_rotation (0)
-  , y_rotation (0)
-  , z_rotation (0)
-  , alpha (1.0f)
-  , saturation (1.0f)
-  , backlight_intensity (0.0f)
-  , glow_intensity (0.0f)
-  , shimmer_progress (0.0f)
-  , progress (0.0f)
-  , progress_bias (-1.0f)
-  , running_arrow (false)
-  , running_colored (false)
-  , running_on_viewport (false)
-  , active_arrow (false)
-  , active_colored (false)
-  , skip (false)
-  , stick_thingy (false)
-  , keyboard_nav_hl (false)
-  , draw_shortcut (false)
-  , window_indicators (0)
-  , shortcut_label (0)
+  RenderArg()
+    : icon(0)
+    , x_rotation(0)
+    , y_rotation(0)
+    , z_rotation(0)
+    , alpha(1.0f)
+    , saturation(1.0f)
+    , backlight_intensity(0.0f)
+    , glow_intensity(0.0f)
+    , shimmer_progress(0.0f)
+    , progress(0.0f)
+    , progress_bias(-1.0f)
+    , running_arrow(false)
+    , running_colored(false)
+    , running_on_viewport(false)
+    , active_arrow(false)
+    , active_colored(false)
+    , skip(false)
+    , stick_thingy(false)
+    , keyboard_nav_hl(false)
+    , draw_shortcut(false)
+    , window_indicators(0)
+    , shortcut_label(0)
   {
   }
 
-  AbstractLauncherIcon *icon;
+  AbstractLauncherIcon* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
   float         x_rotation;
@@ -91,11 +93,11 @@ public:
   virtual ~AbstractIconRenderer() {}
 
   // RenderArgs not const in case processor needs to modify positions to do a perspective correct.
-  virtual void PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;
+  virtual void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window) = 0;
 
-  virtual void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo) = 0;
+  virtual void RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo) = 0;
 
-  virtual void SetTargetSize (int tile_size, int image_size, int spacing) = 0;
+  virtual void SetTargetSize(int tile_size, int image_size, int spacing) = 0;
 };
 
 }

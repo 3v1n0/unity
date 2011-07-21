@@ -55,100 +55,100 @@ class QuicklistMenuItemLabel;
 
 class QuicklistView : public nux::BaseWindow, public unity::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE (QuicklistView, nux::BaseWindow);
+  NUX_DECLARE_OBJECT_TYPE(QuicklistView, nux::BaseWindow);
 public:
-  QuicklistView ();
+  QuicklistView();
 
-  ~QuicklistView ();
+  ~QuicklistView();
 
-  long ProcessEvent (nux::IEvent& iEvent,
-    long    traverseInfo,
-    long    processEventInfo);
+  long ProcessEvent(nux::IEvent& iEvent,
+                    long    traverseInfo,
+                    long    processEventInfo);
 
-  void Draw (nux::GraphicsEngine& gfxContext,
-    bool             forceDraw);
+  void Draw(nux::GraphicsEngine& gfxContext,
+            bool             forceDraw);
 
-  void DrawContent (nux::GraphicsEngine& gfxContext,
-    bool             forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext,
+                   bool             forceDraw);
 
-  void SetText (nux::NString text);
-  
-  void RemoveAllMenuItem ();
-  
-  void AddMenuItem (QuicklistMenuItem* item);
-  
-  void RenderQuicklistView ();
+  void SetText(nux::NString text);
 
-  void ShowQuicklistWithTipAt (int anchor_tip_x, int anchor_tip_y);
-  virtual void ShowWindow (bool b, bool StartModal = false);
+  void RemoveAllMenuItem();
 
-  void Show ();
-  void Hide ();
-  
-  int GetNumItems ();
-  QuicklistMenuItem* GetNthItems (int index);
-  QuicklistMenuItemType GetNthType (int index);
-  std::list<QuicklistMenuItem*> GetChildren ();
-  void DefaultToFirstItem ();
+  void AddMenuItem(QuicklistMenuItem* item);
 
-  void TestMenuItems (DbusmenuMenuitem* root);
-  
+  void RenderQuicklistView();
+
+  void ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y);
+  virtual void ShowWindow(bool b, bool StartModal = false);
+
+  void Show();
+  void Hide();
+
+  int GetNumItems();
+  QuicklistMenuItem* GetNthItems(int index);
+  QuicklistMenuItemType GetNthType(int index);
+  std::list<QuicklistMenuItem*> GetChildren();
+  void DefaultToFirstItem();
+
+  void TestMenuItems(DbusmenuMenuitem* root);
+
   // Introspection
-  const gchar* GetName ();
-  void AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
-  void EnableQuicklistForTesting (bool enable_testing);
+  void EnableQuicklistForTesting(bool enable_testing);
 
   // Key navigation
   virtual bool InspectKeyEvent(unsigned int eventType,
-      unsigned int keysym,
-      const char* character);
-      
+                               unsigned int keysym,
+                               const char* character);
+
 private:
-  void RecvCairoTextChanged (QuicklistMenuItem* item);
-  void RecvCairoTextColorChanged (QuicklistMenuItem* item);
-  void RecvItemMouseClick (QuicklistMenuItem* item, int x, int y);
-  void RecvItemMouseRelease (QuicklistMenuItem* item, int x, int y);
-  void RecvItemMouseEnter (QuicklistMenuItem* item);
-  void RecvItemMouseLeave (QuicklistMenuItem* item);
-  void RecvItemMouseDrag (QuicklistMenuItem* item, int x, int y);
+  void RecvCairoTextChanged(QuicklistMenuItem* item);
+  void RecvCairoTextColorChanged(QuicklistMenuItem* item);
+  void RecvItemMouseClick(QuicklistMenuItem* item, int x, int y);
+  void RecvItemMouseRelease(QuicklistMenuItem* item, int x, int y);
+  void RecvItemMouseEnter(QuicklistMenuItem* item);
+  void RecvItemMouseLeave(QuicklistMenuItem* item);
+  void RecvItemMouseDrag(QuicklistMenuItem* item, int x, int y);
 
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseMove (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDrag (int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDownOutsideOfQuicklist (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    
-  void RecvKeyPressed (nux::GraphicsEngine &GfxContext ,   /*Graphics Context for text operation*/
-      unsigned long    eventType  ,   /*event type*/
-      unsigned long    keysym     ,   /*event keysym*/
-      unsigned long    state      ,   /*event state*/
-      const TCHAR*     character  ,   /*character*/
-      unsigned short   keyCount    );
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDownOutsideOfQuicklist(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  void RecvStartFocus ();
-  void RecvEndFocus ();
+  void RecvKeyPressed(nux::GraphicsEngine& GfxContext ,    /*Graphics Context for text operation*/
+                      unsigned long    eventType  ,   /*event type*/
+                      unsigned long    keysym     ,   /*event keysym*/
+                      unsigned long    state      ,   /*event state*/
+                      const TCHAR*     character  ,   /*character*/
+                      unsigned short   keyCount);
 
-  void PreLayoutManagement ();
+  void RecvStartFocus();
+  void RecvEndFocus();
 
-  long PostLayoutManagement (long layoutResult);
+  void PreLayoutManagement();
 
-  void PositionChildLayout (float offsetX, float offsetY);
+  long PostLayoutManagement(long layoutResult);
 
-  void LayoutWindowElements ();
+  void PositionChildLayout(float offsetX, float offsetY);
 
-  void NotifyConfigurationChange (int width, int height);
+  void LayoutWindowElements();
+
+  void NotifyConfigurationChange(int width, int height);
 
   //! A convenience function to fill in the default quicklist with some random items.
-  void FillInDefaultItems ();
-  
-  void CancelItemsPrelightStatus ();
-  
-  //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
-  void CheckAndEmitItemSignal (int x, int y);
+  void FillInDefaultItems();
 
-  bool IsMenuItemSeperator (int index);
+  void CancelItemsPrelightStatus();
+
+  //! Check the mouse up event sent by an item. Detect the item where the mous is and emit the appropriate signal.
+  void CheckAndEmitItemSignal(int x, int y);
+
+  bool IsMenuItemSeperator(int index);
 
   //nux::CairoGraphics*   _cairo_graphics;
   int                   _anchorX;
@@ -174,24 +174,24 @@ private:
   float _anchor_height;
   float _corner_radius;
   float _padding;
-  nux::HLayout *_hlayout;
-  nux::VLayout *_vlayout;
-  nux::VLayout *_item_layout;
-  nux::VLayout *_default_item_layout;
-  nux::SpaceLayout *_left_space;  //!< Space from the left of the widget to the left of the text.
-  nux::SpaceLayout *_right_space; //!< Space from the right of the text to the right of the widget.
-  nux::SpaceLayout *_top_space;  //!< Space from the left of the widget to the left of the text.
-  nux::SpaceLayout *_bottom_space; //!< Space from the right of the text to the right of the widget.
+  nux::HLayout* _hlayout;
+  nux::VLayout* _vlayout;
+  nux::VLayout* _item_layout;
+  nux::VLayout* _default_item_layout;
+  nux::SpaceLayout* _left_space;  //!< Space from the left of the widget to the left of the text.
+  nux::SpaceLayout* _right_space; //!< Space from the right of the text to the right of the widget.
+  nux::SpaceLayout* _top_space;  //!< Space from the left of the widget to the left of the text.
+  nux::SpaceLayout* _bottom_space; //!< Space from the right of the text to the right of the widget.
 
   bool _cairo_text_has_changed;
-  void UpdateTexture ();
+  void UpdateTexture();
   std::list<QuicklistMenuItem*> _item_list;
   std::list<QuicklistMenuItem*> _default_item_list;
-  
+
   bool _compute_blur_bkg;          //!< If true, compute the blurred background
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;  // Texture holding a blurred copy of the background behind the QuicklistView
   // Introspection
-  gchar *_name;
+  gchar* _name;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;

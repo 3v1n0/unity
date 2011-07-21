@@ -41,7 +41,7 @@
 #define ANCHOR_WIDTH         10.0f
 #define ANCHOR_HEIGHT        18.0f
 #define HIGH_LIGHT_Y         -30.0f
-#define HIGH_LIGHT_MIN_WIDTH 200.0f 
+#define HIGH_LIGHT_MIN_WIDTH 200.0f
 #define RADIUS               5.0f
 #define BLUR_INTENSITY       8
 #define LINE_WIDTH           1.0f
@@ -51,86 +51,86 @@
 #define FONT_FACE            "Ubuntu 13"
 
 class QuicklistMenuItem;
-  
+
 namespace nux
 {
-  class VLayout;
-  class HLayout;
-  class SpaceLayout;
+class VLayout;
+class HLayout;
+class SpaceLayout;
 
-  class Tooltip : public BaseWindow, public unity::Introspectable
-  {
-    NUX_DECLARE_OBJECT_TYPE (Tooltip, BaseWindow);
-  public:
-    Tooltip ();
+class Tooltip : public BaseWindow, public unity::Introspectable
+{
+  NUX_DECLARE_OBJECT_TYPE(Tooltip, BaseWindow);
+public:
+  Tooltip();
 
-    ~Tooltip ();
+  ~Tooltip();
 
-    long ProcessEvent (IEvent& iEvent,
-      long    traverseInfo,
-      long    processEventInfo);
+  long ProcessEvent(IEvent& iEvent,
+                    long    traverseInfo,
+                    long    processEventInfo);
 
-    void Draw (GraphicsEngine& gfxContext,
-      bool             forceDraw);
+  void Draw(GraphicsEngine& gfxContext,
+            bool             forceDraw);
 
-    void DrawContent (GraphicsEngine& gfxContext,
-      bool             forceDraw);
+  void DrawContent(GraphicsEngine& gfxContext,
+                   bool             forceDraw);
 
-    void SetText (NString text);
+  void SetText(NString text);
 
-    void ShowTooltipWithTipAt (int anchor_tip_x, int anchor_tip_y);
-    
-    // Introspection
-    const gchar* GetName ();
-    void AddProperties (GVariantBuilder *builder);
-  
-  private:
-    void RecvCairoTextChanged (StaticCairoText* cairo_text);
+  void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 
-    void PreLayoutManagement ();
+  // Introspection
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
-    long PostLayoutManagement (long layoutResult);
+private:
+  void RecvCairoTextChanged(StaticCairoText* cairo_text);
 
-    void PositionChildLayout (float offsetX,
-      float offsetY);
+  void PreLayoutManagement();
 
-    void LayoutWindowElements ();
+  long PostLayoutManagement(long layoutResult);
 
-    void NotifyConfigurationChange (int width,
-      int height);
+  void PositionChildLayout(float offsetX,
+                           float offsetY);
 
-    //nux::CairoGraphics*   _cairo_graphics;
-    int                   _anchorX;
-    int                   _anchorY;
-    nux::NString          _labelText;
-    int                   _dpiX;
-    int                   _dpiY;
-    int                   _top_size; // size of the segment from point 13 to 14. See figure in _compute_full_mask_path.
+  void LayoutWindowElements();
 
-    cairo_font_options_t* _fontOpts;
+  void NotifyConfigurationChange(int width,
+                                 int height);
 
-    nux::StaticCairoText* _tooltip_text;
-    nux::BaseTexture*     _texture_bg;
-    nux::BaseTexture*     _texture_mask;
-    nux::BaseTexture*     _texture_outline;
+  //nux::CairoGraphics*   _cairo_graphics;
+  int                   _anchorX;
+  int                   _anchorY;
+  nux::NString          _labelText;
+  int                   _dpiX;
+  int                   _dpiY;
+  int                   _top_size; // size of the segment from point 13 to 14. See figure in _compute_full_mask_path.
 
-    float _anchor_width;
-    float _anchor_height;
-    float _corner_radius;
-    float _padding;
-    nux::HLayout *_hlayout;
-    VLayout *_vlayout;
-    nux::SpaceLayout *_left_space;  //!< Space from the left of the widget to the left of the text.
-    nux::SpaceLayout *_right_space; //!< Space from the right of the text to the right of the widget.
-    nux::SpaceLayout *_top_space;  //!< Space from the left of the widget to the left of the text.
-    nux::SpaceLayout *_bottom_space; //!< Space from the right of the text to the right of the widget.
+  cairo_font_options_t* _fontOpts;
 
-    bool _cairo_text_has_changed;
-    void UpdateTexture ();
-    
-    // Introspection
-    gchar *_name;
-  };
+  nux::StaticCairoText* _tooltip_text;
+  nux::BaseTexture*     _texture_bg;
+  nux::BaseTexture*     _texture_mask;
+  nux::BaseTexture*     _texture_outline;
+
+  float _anchor_width;
+  float _anchor_height;
+  float _corner_radius;
+  float _padding;
+  nux::HLayout* _hlayout;
+  VLayout* _vlayout;
+  nux::SpaceLayout* _left_space;  //!< Space from the left of the widget to the left of the text.
+  nux::SpaceLayout* _right_space; //!< Space from the right of the text to the right of the widget.
+  nux::SpaceLayout* _top_space;  //!< Space from the left of the widget to the left of the text.
+  nux::SpaceLayout* _bottom_space; //!< Space from the right of the text to the right of the widget.
+
+  bool _cairo_text_has_changed;
+  void UpdateTexture();
+
+  // Introspection
+  gchar* _name;
+};
 }
 
 #endif // TOOLTIP_H

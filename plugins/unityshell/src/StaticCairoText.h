@@ -36,106 +36,106 @@
 
 namespace nux
 {
-  class Validator;
+class Validator;
 
-  class StaticCairoText : public View
+class StaticCairoText : public View
+{
+public:
+  typedef enum
   {
-    public:
-      typedef enum
-      {
-        NUX_ELLIPSIZE_END,
-        NUX_ELLIPSIZE_START,
-        NUX_ELLIPSIZE_MIDDLE,
-        NUX_ELLIPSIZE_NONE,
-      } EllipsizeState;
+    NUX_ELLIPSIZE_END,
+    NUX_ELLIPSIZE_START,
+    NUX_ELLIPSIZE_MIDDLE,
+    NUX_ELLIPSIZE_NONE,
+  } EllipsizeState;
 
-      typedef enum
-      {
-        NUX_ALIGN_LEFT,
-        NUX_ALIGN_CENTRE,
-        NUX_ALIGN_RIGHT,
-        NUX_ALIGN_TOP = NUX_ALIGN_LEFT,
-        NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
-      } AlignState;
+  typedef enum
+  {
+    NUX_ALIGN_LEFT,
+    NUX_ALIGN_CENTRE,
+    NUX_ALIGN_RIGHT,
+    NUX_ALIGN_TOP = NUX_ALIGN_LEFT,
+    NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
+  } AlignState;
 
-      StaticCairoText (const TCHAR* text, NUX_FILE_LINE_PROTO);
+  StaticCairoText(const TCHAR* text, NUX_FILE_LINE_PROTO);
 
-      ~StaticCairoText ();
+  ~StaticCairoText();
 
-      void PreLayoutManagement ();
+  void PreLayoutManagement();
 
-      long PostLayoutManagement (long layoutResult);
+  long PostLayoutManagement(long layoutResult);
 
-      long ProcessEvent (IEvent& event,
-                         long    traverseInfo,
-                         long    processEventInfo);
+  long ProcessEvent(IEvent& event,
+                    long    traverseInfo,
+                    long    processEventInfo);
 
-      void Draw (GraphicsEngine& gfxContext,
-                 bool             forceDraw);
+  void Draw(GraphicsEngine& gfxContext,
+            bool             forceDraw);
 
-      void DrawContent (GraphicsEngine& gfxContext,
-                        bool             forceDraw);
+  void DrawContent(GraphicsEngine& gfxContext,
+                   bool             forceDraw);
 
-      void PostDraw (GraphicsEngine& gfxContext,
-                     bool             forceDraw);
+  void PostDraw(GraphicsEngine& gfxContext,
+                bool             forceDraw);
 
-      // public API
-      void SetText (NString text);
-      void SetTextColor (Color textColor);
-      void SetTextEllipsize (EllipsizeState state);
-      void SetTextAlignment (AlignState state);
-      void SetTextVerticalAlignment (AlignState state);
-      void SetFont (const char *fontstring);
-      void SetLines (int maximum_lines);
+  // public API
+  void SetText(NString text);
+  void SetTextColor(Color textColor);
+  void SetTextEllipsize(EllipsizeState state);
+  void SetTextAlignment(AlignState state);
+  void SetTextVerticalAlignment(AlignState state);
+  void SetFont(const char* fontstring);
+  void SetLines(int maximum_lines);
 
-      int  GetLineCount ();
+  int  GetLineCount();
 
-      void GetTextExtents (int &width, int &height);
+  void GetTextExtents(int& width, int& height);
 
-      sigc::signal<void, StaticCairoText*> sigTextChanged;
-      sigc::signal<void, StaticCairoText*> sigTextColorChanged;
-      sigc::signal<void, StaticCairoText*> sigFontChanged;
+  sigc::signal<void, StaticCairoText*> sigTextChanged;
+  sigc::signal<void, StaticCairoText*> sigTextColorChanged;
+  sigc::signal<void, StaticCairoText*> sigFontChanged;
 
-      void SetAcceptKeyNavFocus(bool accept);
-    protected:
-      // Key navigation
-      virtual bool AcceptKeyNavFocus();
-      bool _accept_key_nav_focus;
+  void SetAcceptKeyNavFocus(bool accept);
+protected:
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+  bool _accept_key_nav_focus;
 
-    private:
-      int            _cached_extent_width;
-      int            _cached_extent_height;
-      bool           _need_new_extent_cache;
+private:
+  int            _cached_extent_width;
+  int            _cached_extent_height;
+  bool           _need_new_extent_cache;
 
-      NString        _text;
-      Color          _textColor;
-      EllipsizeState _ellipsize;
-      AlignState     _align;
-      AlignState     _valign;
-      char*           _fontstring;
+  NString        _text;
+  Color          _textColor;
+  EllipsizeState _ellipsize;
+  AlignState     _align;
+  AlignState     _valign;
+  char*           _fontstring;
 
-      CairoGraphics* _cairoGraphics;
-      BaseTexture*   _texture2D;
+  CairoGraphics* _cairoGraphics;
+  BaseTexture*   _texture2D;
 
-      int            _pre_layout_width;
-      int            _pre_layout_height;
+  int            _pre_layout_width;
+  int            _pre_layout_height;
 
-      int            _lines;
-      int            _actual_lines;
+  int            _lines;
+  int            _actual_lines;
 
-      void GetTextExtents (const TCHAR* font,
-                           int&         width,
-                           int&         height);
-      void DrawText (cairo_t* cr,
-                     int      width,
-                     int      height,
-                     Color    color);
+  void GetTextExtents(const TCHAR* font,
+                      int&         width,
+                      int&         height);
+  void DrawText(cairo_t* cr,
+                int      width,
+                int      height,
+                Color    color);
 
-      void UpdateTexture ();
+  void UpdateTexture();
 
-      static void OnFontChanged (GObject *gobject, GParamSpec *pspec,
-                                 gpointer data);
-  };
+  static void OnFontChanged(GObject* gobject, GParamSpec* pspec,
+                            gpointer data);
+};
 }
 
 #endif // STATICCAIROTEXT_H

@@ -23,13 +23,14 @@
 
 #include "NuxCore/Logger.h"
 
-namespace {
+namespace
+{
 
 nux::logging::Logger logger("unity.launcher");
 
 }
 
-LauncherHideMachine::LauncherHideMachine ()
+LauncherHideMachine::LauncherHideMachine()
 {
   _mode  = HIDE_NEVER;
   _quirks = DEFAULT;
@@ -43,22 +44,22 @@ LauncherHideMachine::LauncherHideMachine ()
   _hide_delay_timeout_length = 750;
 }
 
-LauncherHideMachine::~LauncherHideMachine ()
+LauncherHideMachine::~LauncherHideMachine()
 {
   if (_hide_delay_handle)
   {
-    g_source_remove (_hide_delay_handle);
+    g_source_remove(_hide_delay_handle);
     _hide_delay_handle = 0;
   }
   if (_hide_changed_emit_handle)
   {
-    g_source_remove (_hide_changed_emit_handle);
+    g_source_remove(_hide_changed_emit_handle);
     _hide_changed_emit_handle = 0;
   }
 }
 
 void
-LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
+LauncherHideMachine::SetShouldHide(bool value, bool skip_delay)
 {
   if (_should_hide == value)
     return;
@@ -66,17 +67,17 @@ LauncherHideMachine::SetShouldHide (bool value, bool skip_delay)
   if (value && !skip_delay)
   {
     if (_hide_delay_handle)
-      g_source_remove (_hide_delay_handle);
+      g_source_remove(_hide_delay_handle);
 
-    _hide_delay_handle = g_timeout_add (_hide_delay_timeout_length, &OnHideDelayTimeout, this);
+    _hide_delay_handle = g_timeout_add(_hide_delay_timeout_length, &OnHideDelayTimeout, this);
   }
   else
   {
     _should_hide = value;
 
     if (_hide_changed_emit_handle)
-      g_source_remove (_hide_changed_emit_handle);
-    _hide_changed_emit_handle = g_timeout_add (0, &EmitShouldHideChanged, this);
+      g_source_remove(_hide_changed_emit_handle);
+    _hide_changed_emit_handle = g_timeout_add(0, &EmitShouldHideChanged, this);
   }
 }
 
@@ -109,20 +110,20 @@ KEY_NAV_ACTIVE | PLACES_VISIBLE | SCALE_ACTIVE | EXPO_ACTIVE |\
 MT_DRAG_OUT)
 
 void
-LauncherHideMachine::EnsureHideState (bool skip_delay)
+LauncherHideMachine::EnsureHideState(bool skip_delay)
 {
   bool should_hide;
 
   if (_mode == HIDE_NEVER)
   {
-    SetShouldHide (false, skip_delay);
+    SetShouldHide(false, skip_delay);
     return;
   }
 
   do
   {
     // first we check the condition where external DND is active and the push off has happened
-    if (GetQuirk ((HideQuirk) (EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
+    if (GetQuirk((HideQuirk)(EXTERNAL_DND_ACTIVE | DND_PUSHED_OFF), false))
     {
       should_hide = true;
       break;
@@ -133,12 +134,12 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
     if (_mode == AUTOHIDE)
       hide_for_window = true;
     else if (_mode == DODGE_WINDOWS)
-      hide_for_window = GetQuirk (ANY_WINDOW_UNDER);
+      hide_for_window = GetQuirk(ANY_WINDOW_UNDER);
     else if (_mode == DODGE_ACTIVE_WINDOW)
-      hide_for_window = GetQuirk (ACTIVE_WINDOW_UNDER);
+      hide_for_window = GetQuirk(ACTIVE_WINDOW_UNDER);
 
     // if we activated AND we would hide because of a window, go ahead and do it
-    if (GetQuirk (LAST_ACTION_ACTIVATE) && hide_for_window)
+    if (GetQuirk(LAST_ACTION_ACTIVATE) && hide_for_window)
     {
       should_hide = true;
       break;
@@ -146,26 +147,26 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
 
     // Is there anything holding us open?
     HideQuirk _should_show_quirk;
-    if (GetQuirk (LAUNCHER_HIDDEN))
+    if (GetQuirk(LAUNCHER_HIDDEN))
     {
-      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
+      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED | MOUSE_OVER_TRIGGER);
 
       if (_show_on_edge)
-        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
+        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
 
     }
     else
     {
-      _should_show_quirk = (HideQuirk) (VISIBLE_REQUIRED | MOUSE_OVER_BFB);
+      _should_show_quirk = (HideQuirk)(VISIBLE_REQUIRED | MOUSE_OVER_BFB);
       // mouse position over launcher is only taken into account if we move it after the revealing state
-      if (GetQuirk (MOUSE_MOVE_POST_REVEAL))
-        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_LAUNCHER);
+      if (GetQuirk(MOUSE_MOVE_POST_REVEAL))
+        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_LAUNCHER);
 
       if (_show_on_edge)
-        _should_show_quirk = (HideQuirk) (_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
+        _should_show_quirk = (HideQuirk)(_should_show_quirk | MOUSE_OVER_ACTIVE_EDGE);
     }
 
-    if (GetQuirk (_should_show_quirk))
+    if (GetQuirk(_should_show_quirk))
     {
       should_hide = false;
       break;
@@ -174,23 +175,24 @@ LauncherHideMachine::EnsureHideState (bool skip_delay)
     // nothing holding us open, any reason to hide?
     should_hide = hide_for_window;
 
-  } while (false);
+  }
+  while (false);
 
-  SetShouldHide (should_hide, skip_delay);
+  SetShouldHide(should_hide, skip_delay);
 }
 
 void
-LauncherHideMachine::SetMode (LauncherHideMachine::HideMode mode)
+LauncherHideMachine::SetMode(LauncherHideMachine::HideMode mode)
 {
   if (_mode == mode)
     return;
 
   _mode = mode;
-  EnsureHideState (true);
+  EnsureHideState(true);
 }
 
 LauncherHideMachine::HideMode
-LauncherHideMachine::GetMode ()
+LauncherHideMachine::GetMode()
 {
   return _mode;
 }
@@ -199,28 +201,28 @@ LauncherHideMachine::GetMode ()
 ANY_WINDOW_UNDER | EXPO_ACTIVE | SCALE_ACTIVE | MT_DRAG_OUT | TRIGGER_BUTTON_SHOW)
 
 void
-LauncherHideMachine::SetQuirk (LauncherHideMachine::HideQuirk quirk, bool active)
+LauncherHideMachine::SetQuirk(LauncherHideMachine::HideQuirk quirk, bool active)
 {
-  if (GetQuirk (quirk) == active)
+  if (GetQuirk(quirk) == active)
     return;
 
   if (active)
-    _quirks = (HideQuirk) (_quirks | quirk);
+    _quirks = (HideQuirk)(_quirks | quirk);
   else
-    _quirks = (HideQuirk) (_quirks & ~quirk);
+    _quirks = (HideQuirk)(_quirks & ~quirk);
 
   // no skipping when last action was activate on general case
-  bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk (LAST_ACTION_ACTIVATE);
+  bool skip = quirk & SKIP_DELAY_QUIRK && !GetQuirk(LAST_ACTION_ACTIVATE);
 
   // but skip on last action if we were out of the launcher/bfb
-  if (GetQuirk (LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB)))
+  if (GetQuirk(LAST_ACTION_ACTIVATE) && !active && (quirk & (MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB)))
     skip = true;
 
-  EnsureHideState (skip);
+  EnsureHideState(skip);
 }
 
 bool
-LauncherHideMachine::GetQuirk (LauncherHideMachine::HideQuirk quirk, bool allow_partial)
+LauncherHideMachine::GetQuirk(LauncherHideMachine::HideQuirk quirk, bool allow_partial)
 {
   if (allow_partial)
     return _quirks & quirk;
@@ -228,13 +230,13 @@ LauncherHideMachine::GetQuirk (LauncherHideMachine::HideQuirk quirk, bool allow_
 }
 
 bool
-LauncherHideMachine::ShouldHide ()
+LauncherHideMachine::ShouldHide()
 {
   return _should_hide;
 }
 
 void
-LauncherHideMachine::SetShowOnEdge (bool value)
+LauncherHideMachine::SetShowOnEdge(bool value)
 {
   if (value == _show_on_edge)
     return;
@@ -245,38 +247,38 @@ LauncherHideMachine::SetShowOnEdge (bool value)
 }
 
 bool
-LauncherHideMachine::GetShowOnEdge ()
+LauncherHideMachine::GetShowOnEdge()
 {
   return _show_on_edge;
 }
 
 gboolean
-LauncherHideMachine::OnHideDelayTimeout (gpointer data)
+LauncherHideMachine::OnHideDelayTimeout(gpointer data)
 {
-  LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
-  self->EnsureHideState (true);
+  LauncherHideMachine* self = static_cast<LauncherHideMachine*>(data);
+  self->EnsureHideState(true);
 
   self->_hide_delay_handle = 0;
   return false;
 }
 
 gboolean
-LauncherHideMachine::EmitShouldHideChanged (gpointer data)
+LauncherHideMachine::EmitShouldHideChanged(gpointer data)
 {
-  LauncherHideMachine *self = static_cast<LauncherHideMachine *> (data);
+  LauncherHideMachine* self = static_cast<LauncherHideMachine*>(data);
 
   self->_hide_changed_emit_handle = 0;
   if (self->_should_hide == self->_latest_emit_should_hide)
     return false;
 
   self->_latest_emit_should_hide = self->_should_hide;
-  self->should_hide_changed.emit (self->_should_hide);
+  self->should_hide_changed.emit(self->_should_hide);
 
   return false;
 }
 
 std::string
-LauncherHideMachine::DebugHideQuirks ()
+LauncherHideMachine::DebugHideQuirks()
 {
   // Although I do wonder why we are returning a string representation
   // of the enum value as an integer anyway.

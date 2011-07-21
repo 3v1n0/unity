@@ -20,8 +20,10 @@
 #ifndef UNITY_GLIB_WRAPPER_INL_H
 #define UNITY_GLIB_WRAPPER_INL_H
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 template <typename T>
 Object<T>::Object()
@@ -67,7 +69,7 @@ Object<T>& Object<T>::operator=(Object const& other)
 }
 
 template <typename T>
-Object<T>::operator T*()
+Object<T>::operator T* ()
 {
   return object_;
 }

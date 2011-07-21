@@ -22,34 +22,34 @@
 
 #include <glib/gi18n-lib.h>
 
-DesktopLauncherIcon::DesktopLauncherIcon (Launcher* IconManager)
-:   SimpleLauncherIcon(IconManager)
+DesktopLauncherIcon::DesktopLauncherIcon(Launcher* IconManager)
+  :   SimpleLauncherIcon(IconManager)
 {
   tooltip_text = _("Show Desktop");
-  SetIconName ("desktop");
-  SetQuirk (QUIRK_VISIBLE, true);
-  SetQuirk (QUIRK_RUNNING, true);
-  SetIconType (TYPE_BEGIN);
+  SetIconName("desktop");
+  SetQuirk(QUIRK_VISIBLE, true);
+  SetQuirk(QUIRK_RUNNING, true);
+  SetIconType(TYPE_BEGIN);
 }
 
 DesktopLauncherIcon::~DesktopLauncherIcon()
 {
 }
 
-nux::Color 
-DesktopLauncherIcon::BackgroundColor ()
+nux::Color
+DesktopLauncherIcon::BackgroundColor()
 {
-  return nux::Color (0xFF333333);
+  return nux::Color(0xFF333333);
 }
 
-nux::Color 
-DesktopLauncherIcon::GlowColor ()
+nux::Color
+DesktopLauncherIcon::GlowColor()
 {
-  return nux::Color (0xFF333333);
+  return nux::Color(0xFF333333);
 }
 
 void
-DesktopLauncherIcon::ActivateLauncherIcon (ActionArg arg)
+DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  WindowManager::Default ()->ShowDesktop ();
+  WindowManager::Default()->ShowDesktop();
 }

@@ -27,8 +27,10 @@
 #include <glib-object.h>
 #include <sigc++/sigc++.h>
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 using sigc::nil;
 
@@ -58,7 +60,7 @@ public:
   typedef sigc::slot<R, G> SignalCallback;
 
   Signal0();
- 
+
   void Connect(G Object,
                std::string const& signal_name,
                SignalCallback     cb);
@@ -148,8 +150,8 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename G, typename T1, typename T2,
-          typename T3, typename T4, typename T5>
+template < typename R, typename G, typename T1, typename T2,
+         typename T3, typename T4, typename T5 >
 class Signal5 : public SignalBase
 {
 public:
@@ -172,8 +174,8 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename G, typename T1, typename T2,
-          typename T3, typename T4, typename T5, typename T6>
+template < typename R, typename G, typename T1, typename T2,
+         typename T3, typename T4, typename T5, typename T6 >
 class Signal6 : public SignalBase
 {
 public:
@@ -197,10 +199,10 @@ private:
   SignalCallback callback_;
 };
 
-template <typename R, typename G,
-          typename T1 = nil, typename T2 = nil,
-          typename T3 = nil, typename T4 = nil,
-          typename T5 = nil, typename T6 = nil>
+template < typename R, typename G,
+         typename T1 = nil, typename T2 = nil,
+         typename T3 = nil, typename T4 = nil,
+         typename T5 = nil, typename T6 = nil >
 class Signal : public Signal6<R, G, T1, T2, T3, T4, T5, T6>
 {
 public:
@@ -249,7 +251,7 @@ public:
 };
 
 template <typename R, typename G, typename T1, typename T2, typename T3>
-class Signal<R, G, T1, T2, T3, nil, nil, nil> : public Signal3<R, G, T1, T2 ,T3>
+class Signal<R, G, T1, T2, T3, nil, nil, nil> : public Signal3<R, G, T1, T2 , T3>
 {
 public:
   typedef sigc::slot<R, G, T1, T2, T3> SignalCallback;
@@ -262,7 +264,7 @@ public:
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4>
 class Signal<R, G, T1, T2, T3, T4, nil, nil>
-  : public Signal4<R, G, T1, T2 ,T3, T4>
+  : public Signal4<R, G, T1, T2 , T3, T4>
 {
 public:
   typedef sigc::slot<R, G, T1, T2, T3, T4> SignalCallback;
@@ -275,7 +277,7 @@ public:
 
 template <typename R, typename G, typename T1, typename T2, typename T3, typename T4, typename T5>
 class Signal<R, G, T1, T2, T3, T4, T5, nil>
-  : public Signal5<R, G, T1, T2 ,T3, T4, T5>
+  : public Signal5<R, G, T1, T2 , T3, T4, T5>
 {
 public:
   typedef sigc::slot<R, G, T1, T2, T3, T4, T5> SignalCallback;
@@ -291,10 +293,10 @@ class SignalManager : public boost::noncopyable
 public:
   typedef std::vector<SignalBase::Ptr> ConnectionVector;
 
-  SignalManager();  
+  SignalManager();
   void Add(SignalBase* signal);
   void Disconnect(void* object, std::string const& signal_name);
-  
+
 private:
   ConnectionVector connections_;
 };

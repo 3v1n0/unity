@@ -34,22 +34,22 @@ class TextureCache
 {
 
 public:
-  // id, width, height, texture 
-  typedef sigc::slot<void, const char *, int, int, nux::BaseTexture **> CreateTextureCallback;
-  
+  // id, width, height, texture
+  typedef sigc::slot<void, const char*, int, int, nux::BaseTexture**> CreateTextureCallback;
+
   /* don't new this class, use getdefault */
 
-  static TextureCache * GetDefault ();
-  nux::BaseTexture * FindTexture (const char *texture_id, int width, int height, CreateTextureCallback callback);
+  static TextureCache* GetDefault();
+  nux::BaseTexture* FindTexture(const char* texture_id, int width, int height, CreateTextureCallback callback);
 
 protected:
-  TextureCache ();
-  ~TextureCache ();
-  char * Hash (const char *id, int width, int height);
-  std::map<std::string, nux::BaseTexture *> _cache;
-  std::map<nux::BaseTexture *, std::string> _cache_inverse; // just for faster lookups
-  std::map<nux::BaseTexture *, sigc::connection> _cache_con; // track our connections
-  void OnDestroyNotify (nux::Trackable *Object);
+  TextureCache();
+  ~TextureCache();
+  char* Hash(const char* id, int width, int height);
+  std::map<std::string, nux::BaseTexture*> _cache;
+  std::map<nux::BaseTexture*, std::string> _cache_inverse;  // just for faster lookups
+  std::map<nux::BaseTexture*, sigc::connection> _cache_con;  // track our connections
+  void OnDestroyNotify(nux::Trackable* Object);
 };
 
 #endif // TEXTURECACHE_H

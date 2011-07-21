@@ -34,27 +34,27 @@ public:
   PlacesResultsController();
   ~PlacesResultsController();
 
-  void                SetView (PlacesResultsView *view);
-  PlacesResultsView * GetView ();
+  void                SetView(PlacesResultsView* view);
+  PlacesResultsView* GetView();
 
-  void AddGroup     (PlaceEntry *entry, PlaceEntryGroup& group);
-  void AddResult    (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
-  void RemoveResult (PlaceEntry *entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void AddGroup(PlaceEntry* entry, PlaceEntryGroup& group);
+  void AddResult(PlaceEntry* entry, PlaceEntryGroup& group, PlaceEntryResult& result);
+  void RemoveResult(PlaceEntry* entry, PlaceEntryGroup& group, PlaceEntryResult& result);
 
   // Clears all the current groups and results
-  void Clear ();
+  void Clear();
 
-  bool ActivateFirst ();
+  bool ActivateFirst();
 
 protected:
-  const gchar* GetName ();
-  void         AddProperties (GVariantBuilder *builder);
-  static gboolean MakeThingsLookNice (PlacesResultsController *self);
+  const gchar* GetName();
+  void         AddProperties(GVariantBuilder* builder);
+  static gboolean MakeThingsLookNice(PlacesResultsController* self);
 
 private:
-  PlacesResultsView *_results_view;
-  std::map<const void *, PlacesGroupController *> _id_to_group;
-  std::vector<PlacesGroupController *> _groups;
+  PlacesResultsView* _results_view;
+  std::map<const void*, PlacesGroupController*> _id_to_group;
+  std::vector<PlacesGroupController*> _groups;
   guint32 _make_things_look_nice_id;
 };
 

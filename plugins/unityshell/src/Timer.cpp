@@ -21,8 +21,10 @@
 
 #include <ostream>
 
-namespace unity {
-namespace logger {
+namespace unity
+{
+namespace logger
+{
 
 Timer::Timer()
   : start_time_(g_get_monotonic_time())

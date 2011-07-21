@@ -32,18 +32,20 @@
 
 using namespace unity::ui;
 
-namespace unity {
-namespace switcher {
+namespace unity
+{
+namespace switcher
+{
 
 class SwitcherView : public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE (SwitcherView, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();
 
-  void SetModel (SwitcherModel::Ptr model);
-  SwitcherModel::Ptr GetModel ();
+  void SetModel(SwitcherModel::Ptr model);
+  SwitcherModel::Ptr GetModel();
 
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
@@ -55,21 +57,21 @@ public:
   nux::Property<int> animation_length;
 
 protected:
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  RenderArg InterpolateRenderArgs (RenderArg const& start, RenderArg const& end, float progress);
+  RenderArg InterpolateRenderArgs(RenderArg const& start, RenderArg const& end, float progress);
 
-  std::list<RenderArg> RenderArgsMechanical (nux::Geometry& background_geo, AbstractLauncherIcon *selection, timespec const& current);
-  
-  std::list<RenderArg> RenderArgsFlat (nux::Geometry& background_geo, int selection, timespec const& current);
+  std::list<RenderArg> RenderArgsMechanical(nux::Geometry& background_geo, AbstractLauncherIcon* selection, timespec const& current);
 
-  RenderArg CreateBaseArgForIcon (AbstractLauncherIcon *icon);
+  std::list<RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
+
+  RenderArg CreateBaseArgForIcon(AbstractLauncherIcon* icon);
 private:
-  void OnSelectionChanged (AbstractLauncherIcon *selection);
+  void OnSelectionChanged(AbstractLauncherIcon* selection);
 
-  static gboolean OnDrawTimeout (gpointer data);
+  static gboolean OnDrawTimeout(gpointer data);
 
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
@@ -77,9 +79,9 @@ private:
 
   guint redraw_handle_;
 
-  nux::BaseTexture * background_texture_;
+  nux::BaseTexture* background_texture_;
 
-  nux::StaticCairoText * text_view_;
+  nux::StaticCairoText* text_view_;
 };
 
 }

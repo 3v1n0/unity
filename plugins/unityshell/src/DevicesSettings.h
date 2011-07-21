@@ -29,27 +29,27 @@ class DevicesSettings : public nux::Object
 public:
   typedef enum
   {
-    NEVER=0,
+    NEVER = 0,
     ONLY_MOUNTED,
     ALWAYS
 
   } DevicesOption;
 
-  DevicesSettings ();
-  ~DevicesSettings ();
+  DevicesSettings();
+  ~DevicesSettings();
 
-  static DevicesSettings * GetDefault ();
+  static DevicesSettings* GetDefault();
 
-  DevicesOption GetDevicesOption ();
+  DevicesOption GetDevicesOption();
 
-  sigc::signal<void, DevicesSettings *> changed;
-
-private:
-  void Refresh ();
-  static void Changed (GSettings *settings, gchar *key, DevicesSettings *self);
+  sigc::signal<void, DevicesSettings*> changed;
 
 private:
-  GSettings    *_settings;
+  void Refresh();
+  static void Changed(GSettings* settings, gchar* key, DevicesSettings* self);
+
+private:
+  GSettings*    _settings;
   int           _raw_devices_option;
   DevicesOption _devices_option;
 };

@@ -19,8 +19,10 @@
 
 #include "GLibSignal.h"
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 SignalBase::SignalBase()
   : object_(0),
@@ -36,7 +38,7 @@ void SignalBase::Disconnect()
 {
   if (G_IS_OBJECT(object_) && connection_id_)
     g_signal_handler_disconnect(object_, connection_id_);
-  
+
   object_ = 0;
   connection_id_ = 0;
 }

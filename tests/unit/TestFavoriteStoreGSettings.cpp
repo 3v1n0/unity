@@ -36,12 +36,14 @@
 #define BASE_STORE_CONTENTS "[desktop/unity/launcher]\n" \
                             "favorites=['evolution.desktop', 'firefox.desktop', '%s']"
 
-namespace {
+namespace
+{
 
-const char *base_store_favs[] = { "evolution.desktop",
+const char* base_store_favs[] = { "evolution.desktop",
                                   "firefox.desktop",
                                   CUSTOM_DESKTOP,
-                                  NULL };
+                                  NULL
+                                };
 const int n_base_store_favs = G_N_ELEMENTS(base_store_favs) - 1; /* NULL */
 
 void TestAllocation();
@@ -64,38 +66,39 @@ using namespace unity;
 void TestFavoriteStoreGSettingsCreateSuite()
 {
 #define TEST_DOMAIN "/Unit/FavoriteStoreGSettings"
-  g_test_add_func (TEST_DOMAIN"/Allocation", TestAllocation);
-  g_test_add_func (TEST_DOMAIN"/GetFavorites", TestGetFavorites);
-  g_test_add_func (TEST_DOMAIN"/AddFavorite", TestAddFavorite);
-  g_test_add_func (TEST_DOMAIN"/AddFavoritePosition", TestAddFavoritePosition);
-  g_test_add_func (TEST_DOMAIN"/AddFavoriteLast", TestAddFavoriteLast);
-  g_test_add_func (TEST_DOMAIN"/AddFavoriteOutOfRange", TestAddFavoriteOutOfRange);
-  g_test_add_func (TEST_DOMAIN"/RemoveFavorite", TestRemoveFavorite);
-  g_test_add_func (TEST_DOMAIN"/RemoveFavoriteBad", TestRemoveFavoriteBad);
-  g_test_add_func (TEST_DOMAIN"/MoveFavorite", TestMoveFavorite);
-  g_test_add_func (TEST_DOMAIN"/MoveFavoriteBad", TestMoveFavoriteBad);
+  g_test_add_func(TEST_DOMAIN"/Allocation", TestAllocation);
+  g_test_add_func(TEST_DOMAIN"/GetFavorites", TestGetFavorites);
+  g_test_add_func(TEST_DOMAIN"/AddFavorite", TestAddFavorite);
+  g_test_add_func(TEST_DOMAIN"/AddFavoritePosition", TestAddFavoritePosition);
+  g_test_add_func(TEST_DOMAIN"/AddFavoriteLast", TestAddFavoriteLast);
+  g_test_add_func(TEST_DOMAIN"/AddFavoriteOutOfRange", TestAddFavoriteOutOfRange);
+  g_test_add_func(TEST_DOMAIN"/RemoveFavorite", TestRemoveFavorite);
+  g_test_add_func(TEST_DOMAIN"/RemoveFavoriteBad", TestRemoveFavoriteBad);
+  g_test_add_func(TEST_DOMAIN"/MoveFavorite", TestMoveFavorite);
+  g_test_add_func(TEST_DOMAIN"/MoveFavoriteBad", TestMoveFavoriteBad);
 #undef TEST_DOMAIN
 }
 
-namespace {
+namespace
+{
 
 GSettingsBackend* CreateDefaultKeyFileBackend()
 {
-  GSettingsBackend *b;
-  GError *error = NULL;
-  gchar  *contents = NULL;
+  GSettingsBackend* b;
+  GError* error = NULL;
+  gchar*  contents = NULL;
 
-  contents = g_strdup_printf (BASE_STORE_CONTENTS, CUSTOM_DESKTOP);
+  contents = g_strdup_printf(BASE_STORE_CONTENTS, CUSTOM_DESKTOP);
 
-  g_file_set_contents (BASE_STORE_FILE,
-                       contents,
-                       -1,
-                       &error);
-  g_assert (error == NULL);
+  g_file_set_contents(BASE_STORE_FILE,
+                      contents,
+                      -1,
+                      &error);
+  g_assert(error == NULL);
 
-  b = g_keyfile_settings_backend_new (BASE_STORE_FILE, "/", "root");
+  b = g_keyfile_settings_backend_new(BASE_STORE_FILE, "/", "root");
 
-  g_free (contents);
+  g_free(contents);
   return b;
 }
 
@@ -127,7 +130,7 @@ void TestGetFavorites()
   internal::FavoriteStoreGSettings settings(backend.Release());
 
   FavoriteList const& favs = settings.GetFavorites();
-  g_assert_cmpint(favs.size(), ==, 3);
+  g_assert_cmpint(favs.size(), == , 3);
   g_assert(ends_with(at(favs, 0), base_store_favs[0]));
   g_assert(ends_with(at(favs, 1), base_store_favs[1]));
   g_assert(at(favs, 2) == base_store_favs[2]);
@@ -142,7 +145,7 @@ void TestAddFavorite()
   settings.AddFavorite(other_desktop, 0);
   FavoriteList const& favs = settings.GetFavorites();
   g_assert(other_desktop == at(favs, 0));
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs + 1);
 }
 
 void TestAddFavoritePosition()
@@ -154,7 +157,7 @@ void TestAddFavoritePosition()
   settings.AddFavorite(other_desktop, 2);
   FavoriteList const& favs = settings.GetFavorites();
   g_assert(other_desktop == at(favs, 2));
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs + 1);
 }
 
 void TestAddFavoriteLast()
@@ -166,7 +169,7 @@ void TestAddFavoriteLast()
   settings.AddFavorite(other_desktop, -1);
   FavoriteList const& favs = settings.GetFavorites();
   g_assert(other_desktop == favs.back());
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs + 1);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs + 1);
 }
 
 void TestAddFavoriteOutOfRange()
@@ -178,7 +181,7 @@ void TestAddFavoriteOutOfRange()
   FavoriteList const& favs = settings.GetFavorites();
   settings.AddFavorite(other_desktop, n_base_store_favs + 1);
   // size didn't change
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs);
   // didn't get inserted
   FavoriteList::const_iterator iter = std::find(favs.begin(), favs.end(), other_desktop);
   g_assert(iter == favs.end());
@@ -192,11 +195,11 @@ void TestRemoveFavorite()
   FavoriteList const& favs = settings.GetFavorites();
   settings.RemoveFavorite(at(favs, 0));
 
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs - 1);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs - 1);
   g_assert(ends_with(at(favs, 0), base_store_favs[1]));
 
   settings.RemoveFavorite(at(favs, 1));
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs - 2);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs - 2);
   g_assert(ends_with(at(favs, 0), base_store_favs[1]));
 }
 
@@ -207,13 +210,13 @@ void TestRemoveFavoriteBad()
 
   FavoriteList const& favs = settings.GetFavorites();
   settings.RemoveFavorite("");
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs);
 
   settings.RemoveFavorite("foo.desktop");
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs);
 
   settings.RemoveFavorite("/this/desktop/doesnt/exist/hopefully.desktop");
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs);
 }
 
 void TestMoveFavorite()
@@ -225,7 +228,7 @@ void TestMoveFavorite()
 
   settings.MoveFavorite(base_store_favs[2], 0);
 
-  g_assert_cmpint(favs.size(), ==, n_base_store_favs);
+  g_assert_cmpint(favs.size(), == , n_base_store_favs);
   g_assert(at(favs, 0) == base_store_favs[2]);
   g_assert(ends_with(at(favs, 1), base_store_favs[0]));
   g_assert(ends_with(at(favs, 2), base_store_favs[1]));
@@ -241,7 +244,7 @@ void TestMoveFavoriteBad()
   settings.MoveFavorite("", 0);
   settings.MoveFavorite(at(favs, 0), 100);
 
-  g_assert_cmpint(favs.size(), ==, 3);
+  g_assert_cmpint(favs.size(), == , 3);
   g_assert(ends_with(at(favs, 0), base_store_favs[0]));
   g_assert(ends_with(at(favs, 1), base_store_favs[1]));
   g_assert(at(favs, 2) == base_store_favs[2]);

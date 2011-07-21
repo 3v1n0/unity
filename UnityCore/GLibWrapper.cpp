@@ -19,8 +19,10 @@
 
 #include "GLibWrapper.h"
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 Error::Error()
   : error_(0)

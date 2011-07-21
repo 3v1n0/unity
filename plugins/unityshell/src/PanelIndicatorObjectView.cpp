@@ -32,15 +32,17 @@
 
 #include <glib.h>
 
-namespace {
+namespace
+{
 nux::logging::Logger logger("unity.indicators");
 }
 
-namespace unity {
+namespace unity
+{
 
 PanelIndicatorObjectView::PanelIndicatorObjectView()
-  : View (NUX_TRACKER_LOCATION)
-  , layout_ (NULL)
+  : View(NUX_TRACKER_LOCATION)
+  , layout_(NULL)
 {
 }
 
@@ -49,13 +51,13 @@ PanelIndicatorObjectView::PanelIndicatorObjectView(indicator::Indicator::Ptr con
   , proxy_(proxy)
 {
   LOG_DEBUG(logger) << "IndicatorAdded: " << proxy_->name();
-  layout_ = new nux::HLayout ("", NUX_TRACKER_LOCATION);
+  layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
 
-  SetCompositionLayout (layout_);
+  SetCompositionLayout(layout_);
 
   // default in Nux is 32, we have some PanelIndicatorObjectEntryView which are smaller than that.
   // so redefining the minimum value for them.
-  SetMinimumWidth (MINIMUM_INDICATOR_WIDTH);
+  SetMinimumWidth(MINIMUM_INDICATOR_WIDTH);
 
   on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorObjectView::OnEntryAdded));
 }
@@ -66,17 +68,17 @@ PanelIndicatorObjectView::~PanelIndicatorObjectView()
 }
 
 long
-PanelIndicatorObjectView::ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+PanelIndicatorObjectView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
 
   if (layout_)
-    ret = layout_->ProcessEvent (ievent, ret, ProcessEventInfo);
+    ret = layout_->ProcessEvent(ievent, ret, ProcessEventInfo);
   return ret;
 }
 
 void
-PanelIndicatorObjectView::Draw (nux::GraphicsEngine& GfxContext, bool force_draw)
+PanelIndicatorObjectView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
@@ -146,21 +148,21 @@ void PanelIndicatorObjectView::OnPointerMoved(int x, int y)
 }
 
 void
-PanelIndicatorObjectView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+PanelIndicatorObjectView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GfxContext.PushClippingRectangle (GetGeometry() );
+  GfxContext.PushClippingRectangle(GetGeometry());
   if (layout_)
-    layout_->ProcessDraw (GfxContext, force_draw);
+    layout_->ProcessDraw(GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 
 void PanelIndicatorObjectView::OnEntryAdded(indicator::Entry::Ptr const& proxy)
 {
-  PanelIndicatorObjectEntryView *view = new PanelIndicatorObjectEntryView(proxy);
-  layout_->AddView (view, 0, nux::eCenter, nux::eFull);
-  layout_->SetContentDistribution (nux::eStackRight);
+  PanelIndicatorObjectEntryView* view = new PanelIndicatorObjectEntryView(proxy);
+  layout_->AddView(view, 0, nux::eCenter, nux::eFull);
+  layout_->SetContentDistribution(nux::eStackRight);
 
-  entries_.push_back (view);
+  entries_.push_back(view);
 
   AddChild(view);
 
@@ -179,15 +181,15 @@ const gchar* PanelIndicatorObjectView::GetChildsName()
 }
 
 void
-PanelIndicatorObjectView::AddProperties (GVariantBuilder *builder)
+PanelIndicatorObjectView::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry geo = GetGeometry ();
+  nux::Geometry geo = GetGeometry();
 
   /* Now some props from ourselves */
-  g_variant_builder_add (builder, "{sv}", "x", g_variant_new_int32 (geo.x));
-  g_variant_builder_add (builder, "{sv}", "y", g_variant_new_int32 (geo.y));
-  g_variant_builder_add (builder, "{sv}", "width", g_variant_new_int32 (geo.width));
-  g_variant_builder_add (builder, "{sv}", "height", g_variant_new_int32 (geo.height));
+  g_variant_builder_add(builder, "{sv}", "x", g_variant_new_int32(geo.x));
+  g_variant_builder_add(builder, "{sv}", "y", g_variant_new_int32(geo.y));
+  g_variant_builder_add(builder, "{sv}", "width", g_variant_new_int32(geo.width));
+  g_variant_builder_add(builder, "{sv}", "height", g_variant_new_int32(geo.height));
 }
 
 } // namespace unity

@@ -29,7 +29,8 @@
 
 #define MINIMUM_INDICATOR_WIDTH 12
 
-namespace unity {
+namespace unity
+{
 
 class PanelIndicatorObjectEntryView;
 
@@ -40,9 +41,9 @@ public:
   PanelIndicatorObjectView(indicator::Indicator::Ptr const& proxy);
   ~PanelIndicatorObjectView();
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   virtual void OnEntryAdded(indicator::Entry::Ptr const& proxy);
   virtual void QueueDraw();
@@ -53,9 +54,9 @@ public:
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
 
 protected:
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
 
   nux::HLayout* layout_;
   indicator::Indicator::Ptr proxy_;

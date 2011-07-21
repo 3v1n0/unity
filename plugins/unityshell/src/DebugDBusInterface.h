@@ -33,24 +33,24 @@
 class DebugDBusInterface
 {
 public:
-  DebugDBusInterface  (unity::Introspectable *introspectable);
-  ~DebugDBusInterface ();
+  DebugDBusInterface(unity::Introspectable* introspectable);
+  ~DebugDBusInterface();
 
 private:
   /* methods */
 
-  static void OnBusAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
 
-  static void OnNameAcquired (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
 
-  static void OnNameLost (GDBusConnection *connection, const gchar *name, gpointer data);
+  static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
 
   //static GVariant *GetState (const char *piece);
 
-  static GVariant *BuildFakeReturn ();
+  static GVariant* BuildFakeReturn();
 
   /* members */
-  guint						_owner_id;
+  guint           _owner_id;
 };
 
 #endif /* _DEBUG_DBUS_INTERFACE_H */
