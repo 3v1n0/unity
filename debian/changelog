@@ -1,4 +1,4 @@
-unity (4.4.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.4.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - moving a launcher icon around generates lots of disk write activity
@@ -23,7 +23,7 @@ unity (4.4.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - bump libunity-core-4.0-4 shlib for ABI break
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jul 2011 17:58:36 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jul 2011 18:41:15 +0200
 
 unity (4.2.0-0ubuntu5) oneiric; urgency=low
 
