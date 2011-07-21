@@ -29,8 +29,10 @@
 
 #include "NuxCore/Rect.h"
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 // The EntryLocationMap is used to map the entry name to the
 // physical location on the screen.

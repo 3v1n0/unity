@@ -35,8 +35,8 @@ class PanelTitlebarGrabArea : public nux::InputArea, public unity::Introspectabl
   // the window down)
 
 public:
-  PanelTitlebarGrabArea ();
-  ~PanelTitlebarGrabArea ();
+  PanelTitlebarGrabArea();
+  ~PanelTitlebarGrabArea();
 
   sigc::signal <void, int, int> mouse_down;
   sigc::signal <void> mouse_middleclick;
@@ -44,17 +44,17 @@ public:
   sigc::signal <void> mouse_doubleleftclick;
 
 protected:
-  void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseDoubleClick (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
   // TODO: can be safely removed once OnMouseDoubleClick is fixed in nux
-  void RecvMouseUp (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  struct timespec time_diff (struct timespec start, struct timespec end);
-  
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  struct timespec time_diff(struct timespec start, struct timespec end);
+
   struct timespec _last_click_time;
-  
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
+
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
 };
 
 #endif

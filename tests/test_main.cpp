@@ -2,7 +2,7 @@
 #include <glib-object.h>
 #include <NuxCore/Logger.h>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
   g_type_init();

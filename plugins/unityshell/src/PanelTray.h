@@ -31,43 +31,44 @@
 #include <unity-misc/na-tray-child.h>
 #include <unity-misc/na-tray-manager.h>
 
-namespace unity {
+namespace unity
+{
 
 // NOTE: Why does this inherit from PanelIndicatorObjectView?
 // It doesn't ever get any indicator object.
 class PanelTray : public PanelIndicatorObjectView
 {
 public:
-  PanelTray ();
-  ~PanelTray ();
+  PanelTray();
+  ~PanelTray();
 
-  void Draw (nux::GraphicsEngine& gfx_content, bool force_draw);
+  void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
 
-  void Sync ();
+  void Sync();
 
   virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
 
 public:
   guint8     _n_children;
-  char     **_whitelist;
+  char**     _whitelist;
 protected:
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
 
 private:
-  static gboolean FilterTrayCallback (NaTray *tray, NaTrayChild *child, PanelTray *self);
-  static void     OnTrayIconRemoved  (NaTrayManager *manager, NaTrayChild *child, PanelTray *self);
-  static gboolean IdleSync (PanelTray *tray);
-  static gboolean OnTrayDraw (GtkWidget *widget, cairo_t *cr, PanelTray *tray);
+  static gboolean FilterTrayCallback(NaTray* tray, NaTrayChild* child, PanelTray* self);
+  static void     OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* child, PanelTray* self);
+  static gboolean IdleSync(PanelTray* tray);
+  static gboolean OnTrayDraw(GtkWidget* widget, cairo_t* cr, PanelTray* tray);
 
 private:
-  GSettings *_settings;
-  GtkWidget *_window;
-  NaTray    *_tray;
+  GSettings* _settings;
+  GtkWidget* _window;
+  NaTray*    _tray;
   int        _last_x;
   int        _last_y;
-  
+
   gulong  _tray_expose_id;
   gulong  _tray_icon_added_id;
 };

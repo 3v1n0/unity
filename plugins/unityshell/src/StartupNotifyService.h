@@ -31,24 +31,24 @@ class StartupNotifyService : public sigc::trackable
 {
 
 public:
-  static StartupNotifyService * Default();
-  
-  void SetSnDisplay (SnDisplay *sn_display, int screen);
+  static StartupNotifyService* Default();
+
+  void SetSnDisplay(SnDisplay* sn_display, int screen);
 
   sigc::signal<void, const char*> StartupInitiated;
   sigc::signal<void, const char*> StartupCompleted;
-  
+
 protected:
   StartupNotifyService();
   ~StartupNotifyService();
 
 private:
-  static void OnMonitorEvent (SnMonitorEvent *sn_event, void *user_data);
+  static void OnMonitorEvent(SnMonitorEvent* sn_event, void* user_data);
 
-  static StartupNotifyService *_default;
+  static StartupNotifyService* _default;
 
-  SnDisplay                   *_sn_display;
-  SnMonitorContext            *_sn_monitor;
+  SnDisplay*                   _sn_display;
+  SnMonitorContext*            _sn_monitor;
 };
 
 #endif // STARTUPNOTIFYSERVICE_H

@@ -28,54 +28,56 @@
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
-namespace unity {
-namespace switcher {
+namespace unity
+{
+namespace switcher
+{
 
 class SwitcherModel : public sigc::trackable
 {
 
 public:
-    typedef boost::shared_ptr<SwitcherModel> Ptr;
+  typedef boost::shared_ptr<SwitcherModel> Ptr;
 
-    typedef std::vector<AbstractLauncherIcon*> Base;
-    typedef Base::iterator iterator; 
-    typedef Base::reverse_iterator reverse_iterator; 
-    
-    // Icons are owned externally and assumed valid for life of switcher.
-    // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
-    // will no longer be a worry.
-    SwitcherModel(std::vector<AbstractLauncherIcon*> icons);
-    virtual ~SwitcherModel();
+  typedef std::vector<AbstractLauncherIcon*> Base;
+  typedef Base::iterator iterator;
+  typedef Base::reverse_iterator reverse_iterator;
 
-    iterator begin ();
-    iterator end ();
+  // Icons are owned externally and assumed valid for life of switcher.
+  // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
+  // will no longer be a worry.
+  SwitcherModel(std::vector<AbstractLauncherIcon*> icons);
+  virtual ~SwitcherModel();
 
-    reverse_iterator rbegin ();
-    reverse_iterator rend ();
-    
-    int Size ();
-    
-    AbstractLauncherIcon * Selection ();
-    int SelectionIndex ();
+  iterator begin();
+  iterator end();
 
-    AbstractLauncherIcon * LastSelection ();
-    int LastSelectionIndex ();
-    
-    void Next ();
-    void Prev ();
-    
-    void Select (AbstractLauncherIcon *selection);
-    void Select (int index);
+  reverse_iterator rbegin();
+  reverse_iterator rend();
 
-    timespec SelectionChangeTime ();
-    
-    sigc::signal<void, AbstractLauncherIcon *> selection_changed;
+  int Size();
+
+  AbstractLauncherIcon* Selection();
+  int SelectionIndex();
+
+  AbstractLauncherIcon* LastSelection();
+  int LastSelectionIndex();
+
+  void Next();
+  void Prev();
+
+  void Select(AbstractLauncherIcon* selection);
+  void Select(int index);
+
+  timespec SelectionChangeTime();
+
+  sigc::signal<void, AbstractLauncherIcon*> selection_changed;
 
 private:
-    Base             _inner;
-    unsigned int     _index;
-    unsigned int     _last_index;
-    timespec         _change_time;
+  Base             _inner;
+  unsigned int     _index;
+  unsigned int     _last_index;
+  timespec         _change_time;
 };
 
 }

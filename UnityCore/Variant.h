@@ -25,8 +25,10 @@
 
 #include <NuxCore/Rect.h>
 
-namespace unity {
-namespace variant {
+namespace unity
+{
+namespace variant
+{
 
 class BuilderWrapper
 {

@@ -43,74 +43,68 @@ class PlacesView;
 
 class PlacesSearchBar : public unity::Introspectable, public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE (PlacesSearchBar, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(PlacesSearchBar, nux::View);
 public:
-  PlacesSearchBar (NUX_FILE_LINE_PROTO);
-  ~PlacesSearchBar ();
+  PlacesSearchBar(NUX_FILE_LINE_PROTO);
+  ~PlacesSearchBar();
 
-  virtual long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void SetActiveEntry (PlaceEntry *entry,
-                       guint       section_id,
-                       const char *search_string);
-  void OnSearchFinished ();
+  void SetActiveEntry(PlaceEntry* entry,
+                      guint       section_id,
+                      const char* search_string);
+  void OnSearchFinished();
 
-  sigc::signal<void, const char *> search_changed;
+  sigc::signal<void, const char*> search_changed;
   sigc::signal<void> activated;
 
-  nux::TextEntry* GetTextEntry ()
+  nux::TextEntry* GetTextEntry()
   {
     return _pango_entry;
   }
 
-  void RecvMouseDownFromWindow (int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDownFromWindow(int x, int y, unsigned long button_flags, unsigned long key_flags);
 protected:
   // Introspectable methods
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void AddProperties(GVariantBuilder* builder);
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
 private:
-  void UpdateBackground ();
-  void OnSearchChanged (nux::TextEntry *text_entry);
-  void EmitLiveSearch ();
-  void OnClearClicked (int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnSectionAdded (PlaceEntry *entry, PlaceEntrySection& section);
-  void OnComboChanged (nux::ComboBoxSimple *simple);
-  void OnMenuClosing (nux::MenuPage *menu, int x, int y);
-  void OnEntryActivated ();
-  void OnLayeredLayoutQueueDraw (int i);
+  void UpdateBackground();
+  void OnSearchChanged(nux::TextEntry* text_entry);
+  void EmitLiveSearch();
+  void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnSectionAdded(PlaceEntry* entry, PlaceEntrySection& section);
+  void OnComboChanged(nux::ComboBoxSimple* simple);
+  void OnMenuClosing(nux::MenuPage* menu, int x, int y);
+  void OnEntryActivated();
+  void OnLayeredLayoutQueueDraw(int i);
 
-  static bool OnLiveSearchTimeout (PlacesSearchBar *self);
-  static void OnFontChanged (GObject *object, GParamSpec *pspec, PlacesSearchBar *self);
-  static void OnPlacesClosed (GVariant *variant, PlacesSearchBar *self); 
+  static bool OnLiveSearchTimeout(PlacesSearchBar* self);
+  static void OnFontChanged(GObject* object, GParamSpec* pspec, PlacesSearchBar* self);
+  static void OnPlacesClosed(GVariant* variant, PlacesSearchBar* self);
 
 private:
-  nux::AbstractPaintLayer *_bg_layer;
-  nux::HLayout            *_layout;
-  nux::LayeredLayout      *_layered_layout;
-  nux::StaticCairoText    *_hint;
-  nux::TextEntry          *_pango_entry;
+  nux::AbstractPaintLayer* _bg_layer;
+  nux::HLayout*            _layout;
+  nux::LayeredLayout*      _layered_layout;
+  nux::StaticCairoText*    _hint;
+  nux::TextEntry*          _pango_entry;
   int _last_width;
   int _last_height;
-  PlaceEntry              *_entry;
+  PlaceEntry*              _entry;
   guint                    _live_search_timeout;
-  sigc::connection         _spinner_mouse_click_conn;
-  sigc::connection         _text_changed_conn;
-  sigc::connection         _entry_activated_conn;
-  sigc::connection         _combo_changed_conn;
-  sigc::connection         _menu_conn;
   guint32                  _font_changed_id;
-  sigc::connection         _cursor_moved_conn;
 
   friend class PlacesView;
-  PlacesSearchBarSpinner  *_spinner;
-  nux::ComboBoxSimple     *_combo;
+  PlacesSearchBarSpinner*  _spinner;
+  nux::ComboBoxSimple*     _combo;
 
   guint _ubus_handle;
 };

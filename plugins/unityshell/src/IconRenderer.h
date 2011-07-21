@@ -27,8 +27,10 @@
 #include "AbstractLauncherIcon.h"
 #include "AbstractIconRenderer.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
 
 class IconRenderer : public AbstractIconRenderer
 {
@@ -36,39 +38,39 @@ public:
   IconRenderer();
   virtual ~IconRenderer();
 
-  void PreprocessIcons (std::list<RenderArg>& args, nux::Geometry const& target_window);
+  void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window);
 
-  void RenderIcon (nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo);
+  void RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& anchor_geo, nux::Geometry const& owner_geo);
 
-  void SetTargetSize (int tile_size, int image_size, int spacing);
+  void SetTargetSize(int tile_size, int image_size, int spacing);
 
 protected:
-  nux::BaseTexture* RenderCharToTexture (const char label, int width, int height);                              
+  nux::BaseTexture* RenderCharToTexture(const char label, int width, int height);
 
-  void RenderElement (nux::GraphicsEngine& GfxContext,
-                      RenderArg const& arg,
-                      nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
-                      nux::Color bkg_color,
-                      float alpha,
-                      std::vector<nux::Vector4>& xform_coords);
-  
-  void RenderIndicators (nux::GraphicsEngine& GfxContext,
-                         RenderArg const& arg,
-                         int running,
-                         int active,
-                         float alpha,
-                         nux::Geometry const& geo);
+  void RenderElement(nux::GraphicsEngine& GfxContext,
+                     RenderArg const& arg,
+                     nux::IntrusiveSP<nux::IOpenGLBaseTexture> icon,
+                     nux::Color bkg_color,
+                     float alpha,
+                     std::vector<nux::Vector4>& xform_coords);
 
-  void RenderProgressToTexture (nux::GraphicsEngine& GfxContext, 
-                                nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture, 
-                                float progress_fill, 
-                                float bias);
+  void RenderIndicators(nux::GraphicsEngine& GfxContext,
+                        RenderArg const& arg,
+                        int running,
+                        int active,
+                        float alpha,
+                        nux::Geometry const& geo);
 
-  void UpdateIconTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                            float x, float y, float w, float h, float z, std::string name);
-  
-  void UpdateIconSectionTransform (AbstractLauncherIcon *icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
-                                   float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
+  void RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
+                               nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture,
+                               float progress_fill,
+                               float bias);
+
+  void UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                           float x, float y, float w, float h, float z, std::string name);
+
+  void UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+                                  float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name);
 
   void GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
                                          int ViewportWidth,
@@ -77,17 +79,17 @@ protected:
                                          float FarClipPlane,
                                          float Fovy);
 
-  void SetOffscreenRenderTarget (nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
+  void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
 
-  void RestoreSystemRenderTarget ();
+  void RestoreSystemRenderTarget();
+
+  void SetupShaders();
+
+  void GenerateTextures();
+
+  void DestroyTextures();
 
 private:
-  void SetupShaders ();
-
-  void GenerateTextures ();
-
-  void DestroyTextures ();
-
   enum IconSize
   {
     SMALL = 0,
@@ -100,31 +102,30 @@ private:
   int image_size;
   int spacing;
 
-  bool textures_created;
+  static bool textures_created;
 
-  nux::BaseTexture* _progress_bar_trough;
-  nux::BaseTexture* _progress_bar_fill;
-  
-  nux::BaseTexture* _pip_ltr;
-  nux::BaseTexture* _pip_rtl;
-  nux::BaseTexture* _arrow_ltr;
-  nux::BaseTexture* _arrow_rtl;
-  nux::BaseTexture* _arrow_empty_ltr;
-  nux::BaseTexture* _arrow_empty_rtl;
+  static nux::BaseTexture* _progress_bar_trough;
+  static nux::BaseTexture* _progress_bar_fill;
 
+  static nux::BaseTexture* _pip_ltr;
+  static nux::BaseTexture* _pip_rtl;
+  static nux::BaseTexture* _arrow_ltr;
+  static nux::BaseTexture* _arrow_rtl;
+  static nux::BaseTexture* _arrow_empty_ltr;
+  static nux::BaseTexture* _arrow_empty_rtl;
 
-  std::vector<nux::BaseTexture*> _icon_back;
-  std::vector<nux::BaseTexture*> _icon_selected_back;
-  std::vector<nux::BaseTexture*> _icon_edge;
-  std::vector<nux::BaseTexture*> _icon_glow;
-  std::vector<nux::BaseTexture*> _icon_shine;
+  static std::vector<nux::BaseTexture*> _icon_back;
+  static std::vector<nux::BaseTexture*> _icon_selected_back;
+  static std::vector<nux::BaseTexture*> _icon_edge;
+  static std::vector<nux::BaseTexture*> _icon_glow;
+  static std::vector<nux::BaseTexture*> _icon_shine;
 
-  nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
-  nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
+  static nux::IntrusiveSP<nux::IOpenGLShaderProgram>    _shader_program_uv_persp_correction;
+  static nux::IntrusiveSP<nux::IOpenGLAsmShaderProgram> _AsmShaderProg;
 
-  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
+  static nux::IntrusiveSP<nux::IOpenGLBaseTexture> _offscreen_progress_texture;
 
-  std::map<char, nux::BaseTexture*> label_map;
+  static std::map<char, nux::BaseTexture*> label_map;
 };
 
 }

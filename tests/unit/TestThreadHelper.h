@@ -18,6 +18,6 @@
  *
  */
 
-extern nux::WindowThread* createThread (void);
-extern void               runThread (nux::WindowThread* thread);
-extern void               stopThread (nux::WindowThread* thread);
+extern nux::WindowThread* createThread(void);
+extern void               runThread(nux::WindowThread* thread);
+extern void               stopThread(nux::WindowThread* thread);

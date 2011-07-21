@@ -19,8 +19,10 @@
 
 #include "Variant.h"
 
-namespace unity {
-namespace variant {
+namespace unity
+{
+namespace variant
+{
 
 BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
   : builder_(builder)

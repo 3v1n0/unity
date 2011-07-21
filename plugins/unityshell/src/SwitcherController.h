@@ -30,8 +30,10 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-namespace unity {
-namespace switcher {
+namespace unity
+{
+namespace switcher
+{
 
 class SwitcherController : public sigc::trackable
 {
@@ -52,36 +54,36 @@ public:
   SwitcherController();
   virtual ~SwitcherController();
 
-  void Show (ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
-  void Hide ();
+  void Show(ShowMode show, SortMode sort, bool reverse, std::vector<AbstractLauncherIcon*> results);
+  void Hide();
 
-  bool Visible ();
+  bool Visible();
 
-  void MoveNext ();
-  void MovePrev ();
+  void MoveNext();
+  void MovePrev();
 
-  void DetailCurrent ();
-  
-  void SelectFirstItem ();
+  void DetailCurrent();
 
-  void SetWorkspace (nux::Geometry geo);
+  void SelectFirstItem();
+
+  void SetWorkspace(nux::Geometry geo);
 
 private:
-  void ConstructView ();
+  void ConstructView();
 
   SwitcherModel::Ptr model_;
-  SwitcherView *view_;
+  SwitcherView* view_;
 
   nux::Geometry workarea_;
 
-  nux::BaseWindow *view_window_;
-  
+  nux::BaseWindow* view_window_;
+
   bool visible_;
   guint show_timer_;
 
-  static gboolean OnShowTimer (gpointer data);
-  
-  static bool CompareSwitcherItemsPriority (AbstractLauncherIcon *first, AbstractLauncherIcon *second);
+  static gboolean OnShowTimer(gpointer data);
+
+  static bool CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second);
 
 };
 

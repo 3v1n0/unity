@@ -39,23 +39,23 @@
 class PlacesResultsView : public nux::ScrollView
 {
 public:
-  PlacesResultsView (NUX_FILE_LINE_PROTO);
-  ~PlacesResultsView ();
+  PlacesResultsView(NUX_FILE_LINE_PROTO);
+  ~PlacesResultsView();
 
-  void AddGroup    (PlacesGroup *group);
-  void RemoveGroup (PlacesGroup *group);
-  void Clear       ();
+  void AddGroup(PlacesGroup* group);
+  void RemoveGroup(PlacesGroup* group);
+  void Clear();
 
-  nux::Layout * GetLayout ()
+  nux::Layout* GetLayout()
   {
     return _layout;
   }
 
 private:
-  nux::Layout *_layout;
-  std::list<PlacesGroup *> _groups;
+  nux::Layout* _layout;
+  std::list<PlacesGroup*> _groups;
   uint _idle_id;
-  static gboolean OnIdleFocus (PlacesResultsView *self);
+  static gboolean OnIdleFocus(PlacesResultsView* self);
 };
 
 #endif // PLACE_RESULTS_VIEW_H

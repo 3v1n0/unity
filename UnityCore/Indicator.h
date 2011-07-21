@@ -26,8 +26,10 @@
 #include "IndicatorEntry.h"
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 class Indicator : public sigc::trackable, boost::noncopyable
 {

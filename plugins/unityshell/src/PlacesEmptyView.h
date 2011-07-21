@@ -29,27 +29,27 @@
 
 class PlacesEmptyView : public nux::View, public unity::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE (PlacesEmptyView, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(PlacesEmptyView, nux::View);
 public:
 
-  PlacesEmptyView ();
-  ~PlacesEmptyView ();
+  PlacesEmptyView();
+  ~PlacesEmptyView();
 
   // nux::View overrides
-  long ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void SetText (const char *text);
+  void SetText(const char* text);
 
 protected:
 
-  const gchar* GetName ();
-  void AddProperties (GVariantBuilder *builder);
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
 private:
 
-  nux::StaticCairoText *_text;
+  nux::StaticCairoText* _text;
 };
 
 #endif // PLACES_EMPTY_VIEW_H

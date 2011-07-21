@@ -36,15 +36,15 @@
 #include "PlacesView.h"
 
 /* GObject */
-static void unity_places_view_accessible_class_init (UnityPlacesViewAccessibleClass *klass);
-static void unity_places_view_accessible_init       (UnityPlacesViewAccessible *self);
-static void unity_places_view_accessible_finalize   (GObject *object);
+static void unity_places_view_accessible_class_init(UnityPlacesViewAccessibleClass* klass);
+static void unity_places_view_accessible_init(UnityPlacesViewAccessible* self);
+static void unity_places_view_accessible_finalize(GObject* object);
 
 /* AtkObject.h */
-static void       unity_places_view_accessible_initialize     (AtkObject *accessible,
-                                                               gpointer   data);
+static void       unity_places_view_accessible_initialize(AtkObject* accessible,
+                                                          gpointer   data);
 
-G_DEFINE_TYPE (UnityPlacesViewAccessible, unity_places_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+G_DEFINE_TYPE(UnityPlacesViewAccessible, unity_places_view_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
 #define UNITY_PLACES_VIEW_ACCESSIBLE_GET_PRIVATE(obj)                      \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), UNITY_TYPE_PLACES_VIEW_ACCESSIBLE,  \
@@ -52,60 +52,60 @@ G_DEFINE_TYPE (UnityPlacesViewAccessible, unity_places_view_accessible,  NUX_TYP
 
 struct _UnityPlacesViewAccessiblePrivate
 {
-  
+
 };
 
 
 static void
-unity_places_view_accessible_class_init (UnityPlacesViewAccessibleClass *klass)
+unity_places_view_accessible_class_init(UnityPlacesViewAccessibleClass* klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   gobject_class->finalize = unity_places_view_accessible_finalize;
 
   /* AtkObject */
   atk_class->initialize = unity_places_view_accessible_initialize;
 
-  g_type_class_add_private (gobject_class, sizeof (UnityPlacesViewAccessiblePrivate));
+  g_type_class_add_private(gobject_class, sizeof(UnityPlacesViewAccessiblePrivate));
 }
 
 static void
-unity_places_view_accessible_init (UnityPlacesViewAccessible *self)
+unity_places_view_accessible_init(UnityPlacesViewAccessible* self)
 {
-  UnityPlacesViewAccessiblePrivate *priv =
-    UNITY_PLACES_VIEW_ACCESSIBLE_GET_PRIVATE (self);
+  UnityPlacesViewAccessiblePrivate* priv =
+    UNITY_PLACES_VIEW_ACCESSIBLE_GET_PRIVATE(self);
 
   self->priv = priv;
 }
 
 static void
-unity_places_view_accessible_finalize (GObject *object)
+unity_places_view_accessible_finalize(GObject* object)
 {
-  G_OBJECT_CLASS (unity_places_view_accessible_parent_class)->finalize (object);
+  G_OBJECT_CLASS(unity_places_view_accessible_parent_class)->finalize(object);
 }
 
 AtkObject*
-unity_places_view_accessible_new (nux::Object *object)
+unity_places_view_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible = NULL;
+  AtkObject* accessible = NULL;
 
-  g_return_val_if_fail (dynamic_cast<PlacesView *>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<PlacesView*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_PLACES_VIEW_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PLACES_VIEW_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
-  atk_object_set_name (accessible, _("Places"));
+  atk_object_initialize(accessible, object);
+  atk_object_set_name(accessible, _("Places"));
 
   return accessible;
 }
 
 /* AtkObject.h */
 static void
-unity_places_view_accessible_initialize (AtkObject *accessible,
-                                      gpointer data)
+unity_places_view_accessible_initialize(AtkObject* accessible,
+                                        gpointer data)
 {
-  ATK_OBJECT_CLASS (unity_places_view_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(unity_places_view_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_PANEL;
 }

@@ -1,0 +1,11 @@
+--indent=spaces -s2
+--style=bsd
+--indent-switches
+--min-conditional-indent=0
+--unpad-paren
+--pad-oper
+--pad-header
+--convert-tabs
+--align-pointer=type
+--max-instatement-indent=80
+

@@ -24,129 +24,102 @@
 #include "Launcher.h"
 #include "PluginAdapter.h"
 
-SimpleLauncherIcon::SimpleLauncherIcon (Launcher* IconManager)
-:   LauncherIcon(IconManager),
-  _theme_changed_id (0)
+SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
+  : LauncherIcon(IconManager)
+  , icon_(0)
+  , theme_changed_id_(0)
 {
-  m_Icon = 0;
-  m_IconName = 0;
+  LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
+  LauncherIcon::mouse_up.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseUp));
+  LauncherIcon::mouse_click.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseClick));
+  LauncherIcon::mouse_enter.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseEnter));
+  LauncherIcon::mouse_leave.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseLeave));
 
-  _on_mouse_down_connection = (sigc::connection) LauncherIcon::mouse_down.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseDown));
-  _on_mouse_up_connection = (sigc::connection) LauncherIcon::mouse_up.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseUp));
-  _on_mouse_click_connection = (sigc::connection) LauncherIcon::mouse_click.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseClick));
-  _on_mouse_enter_connection = (sigc::connection) LauncherIcon::mouse_enter.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseEnter));
-  _on_mouse_leave_connection = (sigc::connection) LauncherIcon::mouse_leave.connect (sigc::mem_fun (this, &SimpleLauncherIcon::OnMouseLeave));
-
-  _theme_changed_id = g_signal_connect (gtk_icon_theme_get_default (), "changed",
-                                        G_CALLBACK (SimpleLauncherIcon::OnIconThemeChanged), this);
+  theme_changed_id_ = g_signal_connect(gtk_icon_theme_get_default(), "changed",
+                                       G_CALLBACK(SimpleLauncherIcon::OnIconThemeChanged), this);
 }
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
-  _on_mouse_down_connection.disconnect ();
-  _on_mouse_up_connection.disconnect ();
-  _on_mouse_click_connection.disconnect ();
-  _on_mouse_enter_connection.disconnect ();
-  _on_mouse_leave_connection.disconnect ();
+  if (icon_)
+    icon_->UnReference();
 
-  if (m_Icon)
-    m_Icon->UnReference ();
-    
-  if (m_IconName)
-    g_free (m_IconName);
-
-  if (_theme_changed_id)
-    g_signal_handler_disconnect (gtk_icon_theme_get_default (), _theme_changed_id);
+  if (theme_changed_id_)
+    g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
 }
 
-void
-SimpleLauncherIcon::OnMouseDown (int button)
+void SimpleLauncherIcon::OnMouseDown(int button)
 {
 }
 
-void
-SimpleLauncherIcon::OnMouseUp (int button)
+void SimpleLauncherIcon::OnMouseUp(int button)
 {
 }
 
-void
-SimpleLauncherIcon::OnMouseClick (int button)
+void SimpleLauncherIcon::OnMouseClick(int button)
 {
 }
 
-void
-SimpleLauncherIcon::OnMouseEnter ()
+void SimpleLauncherIcon::OnMouseEnter()
 {
 }
 
-void
-SimpleLauncherIcon::OnMouseLeave ()
+void SimpleLauncherIcon::OnMouseLeave()
 {
 }
 
-void
-SimpleLauncherIcon::ActivateLauncherIcon (ActionArg arg)
+void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  activate.emit ();
+  activate.emit();
 }
 
-nux::BaseTexture *
-SimpleLauncherIcon::GetTextureForSize (int size)
+nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 {
-  if (m_Icon && size == m_Icon->GetHeight ())
-    return m_Icon;
-    
-  if (m_Icon)
-    m_Icon->UnReference ();
-  m_Icon = 0;
-  
-  if (!m_IconName)
+  if (icon_ && size == last_size_)
+    return icon_;
+
+  last_size_ = size;
+
+  if (icon_)
+    icon_->UnReference();
+  icon_ = 0;
+
+  if (icon_name_.empty())
     return 0;
-  
-  if (g_str_has_prefix (m_IconName, "/"))
-    m_Icon = TextureFromPath (m_IconName, size);
+
+  if (icon_name_[0] == '/')
+    icon_ = TextureFromPath(icon_name_.c_str(), size);
   else
-    m_Icon = TextureFromGtkTheme (m_IconName, size);
-  return m_Icon;
+    icon_ = TextureFromGtkTheme(icon_name_.c_str(), size);
+  return icon_;
 }
 
-void 
-SimpleLauncherIcon::SetIconName (const char *name)
+void SimpleLauncherIcon::SetIconName(const char* name)
 {
-  if (m_IconName)
-    g_free (m_IconName);
-  m_IconName = g_strdup (name);
-  
-  if (m_Icon)
+  icon_name_ = name;
+  ReloadIcon();
+}
+
+void SimpleLauncherIcon::ReloadIcon()
+{
+  if (icon_)
   {
-    m_Icon->UnReference ();
-    m_Icon = 0;
+    icon_->UnReference();
+    icon_ = 0;
   }
-  
-  needs_redraw.emit (this);
+  needs_redraw.emit(this);
 }
 
-void
-SimpleLauncherIcon::OnIconThemeChanged (GtkIconTheme* icon_theme, gpointer data)
+void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
 {
-  SimpleLauncherIcon *self;
+  SimpleLauncherIcon* self;
 
   if (!data)
     return;
-  
+
   // invalidate the current cache
   _current_theme_is_mono = -1;
 
   self = (SimpleLauncherIcon*) data;
-  
-  /*
-   * Unreference the previous icon and redraw
-   * (forcing the new icon to be loaded)
-   */
-  if (self->m_Icon)
-  {
-    self->m_Icon->UnReference ();
-    self->m_Icon = 0;
-    self->needs_redraw.emit (self);
-  }
+  self->ReloadIcon();
 }

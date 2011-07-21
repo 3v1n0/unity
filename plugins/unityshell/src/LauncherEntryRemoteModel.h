@@ -30,46 +30,46 @@ class LauncherEntryRemoteModel : public sigc::trackable
 
 public:
 
-  static LauncherEntryRemoteModel* GetDefault ();
+  static LauncherEntryRemoteModel* GetDefault();
 
-  guint                Size ();
-  LauncherEntryRemote* LookupByUri (const gchar *app_uri);
-  LauncherEntryRemote* LookupByDesktopId (const gchar *desktop_id);
-  LauncherEntryRemote* LookupByDesktopFile (const gchar *desktop_file_path);
-  GList*               GetUris ();
+  guint                Size();
+  LauncherEntryRemote* LookupByUri(const gchar* app_uri);
+  LauncherEntryRemote* LookupByDesktopId(const gchar* desktop_id);
+  LauncherEntryRemote* LookupByDesktopFile(const gchar* desktop_file_path);
+  GList*               GetUris();
 
-  void AddEntry            (LauncherEntryRemote *entry);
-  void RemoveEntry         (LauncherEntryRemote *entry);
-  void HandleUpdateRequest (const gchar *sender_name,
-                            GVariant    *paramaters);
+  void AddEntry(LauncherEntryRemote* entry);
+  void RemoveEntry(LauncherEntryRemote* entry);
+  void HandleUpdateRequest(const gchar* sender_name,
+                           GVariant*    paramaters);
 
-  sigc::signal<void, LauncherEntryRemote *> entry_added;
-  sigc::signal<void, LauncherEntryRemote *> entry_removed;
+  sigc::signal<void, LauncherEntryRemote*> entry_added;
+  sigc::signal<void, LauncherEntryRemote*> entry_removed;
 
 private:
   LauncherEntryRemoteModel();
   ~LauncherEntryRemoteModel();
-  
-  static void on_launcher_entry_signal_received (GDBusConnection *connection,
-                                   const gchar     *sender_name,
-                                   const gchar     *object_path,
-                                   const gchar     *interface_name,
-                                   const gchar     *signal_name,
-                                   GVariant        *parameters,
-                                   gpointer         user_data);
 
-  static void on_dbus_name_owner_changed_signal_received (GDBusConnection *connection,
-                                            const gchar *sender_name,
-                                            const gchar *object_path,
-                                            const gchar *interface_name,
-                                            const gchar *signal_name,
-                                            GVariant *parameters,
-                                            gpointer user_data);
+  static void on_launcher_entry_signal_received(GDBusConnection* connection,
+                                                const gchar*     sender_name,
+                                                const gchar*     object_path,
+                                                const gchar*     interface_name,
+                                                const gchar*     signal_name,
+                                                GVariant*        parameters,
+                                                gpointer         user_data);
 
-  GDBusConnection *_conn;
+  static void on_dbus_name_owner_changed_signal_received(GDBusConnection* connection,
+                                                         const gchar* sender_name,
+                                                         const gchar* object_path,
+                                                         const gchar* interface_name,
+                                                         const gchar* signal_name,
+                                                         GVariant* parameters,
+                                                         gpointer user_data);
+
+  GDBusConnection* _conn;
   guint            _launcher_entry_dbus_signal_id;
   guint            _dbus_name_owner_changed_signal_id;
-  GHashTable      *_entries_by_uri;
+  GHashTable*      _entries_by_uri;
 };
 
 #endif // LAUNCHER_ENTRY_REMOTE_MODEL_H

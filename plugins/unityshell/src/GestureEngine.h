@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Unity; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, 
+ * Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
 
@@ -28,42 +28,42 @@
 
 class GestureEngine : public sigc::trackable
 {
-  public:
-    GestureEngine (CompScreen *screen);
-    virtual ~GestureEngine ();
-    
-    void OnTap (GeisAdapter::GeisTapData *data);
-    
-    void OnDragStart (GeisAdapter::GeisDragData *data);
-    void OnDragUpdate (GeisAdapter::GeisDragData *data);
-    void OnDragFinish (GeisAdapter::GeisDragData *data);
+public:
+  GestureEngine(CompScreen* screen);
+  virtual ~GestureEngine();
 
-    void OnRotateStart (GeisAdapter::GeisRotateData *data);
-    void OnRotateUpdate (GeisAdapter::GeisRotateData *data);
-    void OnRotateFinish (GeisAdapter::GeisRotateData *data);
-    
-    void OnPinchStart (GeisAdapter::GeisPinchData *data);
-    void OnPinchUpdate (GeisAdapter::GeisPinchData *data);
-    void OnPinchFinish (GeisAdapter::GeisPinchData *data);
-    
-    void OnTouchStart (GeisAdapter::GeisTouchData *data);
-    void OnTouchUpdate (GeisAdapter::GeisTouchData *data);
-    void OnTouchFinish (GeisAdapter::GeisTouchData *data);
-    
-    void EndDrag ();
-  private:
-    CompWindow * FindCompWindow (Window window);
-  
-    CompScreen *_screen;
-    CompWindow *_drag_window;
-    CompWindow *_pinch_window;
-    CompWindow *_touch_window;
-    CompScreen::GrabHandle _drag_grab;
-    CompScreen::GrabHandle _pinch_grab;
-    
-    int _drag_id;
-    int _pinch_id;
-    int _touch_id;
-    
-    float _pinch_start_radius;
+  void OnTap(GeisAdapter::GeisTapData* data);
+
+  void OnDragStart(GeisAdapter::GeisDragData* data);
+  void OnDragUpdate(GeisAdapter::GeisDragData* data);
+  void OnDragFinish(GeisAdapter::GeisDragData* data);
+
+  void OnRotateStart(GeisAdapter::GeisRotateData* data);
+  void OnRotateUpdate(GeisAdapter::GeisRotateData* data);
+  void OnRotateFinish(GeisAdapter::GeisRotateData* data);
+
+  void OnPinchStart(GeisAdapter::GeisPinchData* data);
+  void OnPinchUpdate(GeisAdapter::GeisPinchData* data);
+  void OnPinchFinish(GeisAdapter::GeisPinchData* data);
+
+  void OnTouchStart(GeisAdapter::GeisTouchData* data);
+  void OnTouchUpdate(GeisAdapter::GeisTouchData* data);
+  void OnTouchFinish(GeisAdapter::GeisTouchData* data);
+
+  void EndDrag();
+private:
+  CompWindow* FindCompWindow(Window window);
+
+  CompScreen* _screen;
+  CompWindow* _drag_window;
+  CompWindow* _pinch_window;
+  CompWindow* _touch_window;
+  CompScreen::GrabHandle _drag_grab;
+  CompScreen::GrabHandle _pinch_grab;
+
+  int _drag_id;
+  int _pinch_id;
+  int _touch_id;
+
+  float _pinch_start_radius;
 };
