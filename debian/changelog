@@ -1,6 +1,22 @@
 unity (4.4.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - moving a launcher icon around generates lots of disk write activity
+      (LP: #733425)
+    - compiz crashed with SIGSEGV in sigc::signal_base::impl() (LP: #762801)
+    - Drag and drop a USB key into the trash should eject the USB key
+      (LP: #764905)
+    - unity window decorator needs to support different metacity frame types
+      (LP: #795048)
+    - Don't switch title to menu when hovering window buttons (LP: #691808)
+    - spacing between indicators should be 5 pixels (LP: #734010)
+    - Dash: highlight box is mis-aligned with smaller icon (LP: #761465)
+    - Merge libindicator scroll signals (LP: #804618)
+    - unity: Dead code in Launcher.cpp: "mask | (Button1Mask & Button2Mask &
+      Button3Mask)" (LP: #805327)
+    - TrashLauncherIcon::UpdateTrashIconCb  is leaking (LP: #806984)
+    - Title fade effect no longer works (LP: #809907)
+    - Accessibility support not initialized on Oneiric (LP: #810033)
   * debian/control:
     - build-dep on libnotify-dev
     - bump libnux-1.0-dev dep for ABI break
