@@ -25,18 +25,18 @@
 #include "gtkloader_options.h"
 
 class GTKLoaderScreen :
-    public PluginClassHandler <GTKLoaderScreen, CompScreen>,
-    public GtkloaderOptions
+  public PluginClassHandler <GTKLoaderScreen, CompScreen>,
+  public GtkloaderOptions
 {
-    public:
+public:
 
-	GTKLoaderScreen (CompScreen *);
+  GTKLoaderScreen(CompScreen*);
 };
 
 class GTKLoaderPluginVTable :
-    public CompPlugin::VTableForScreen <GTKLoaderScreen>
+  public CompPlugin::VTableForScreen <GTKLoaderScreen>
 {
-    public:
+public:
 
-	bool init ();
+  bool init();
 };

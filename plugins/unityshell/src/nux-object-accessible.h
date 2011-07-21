@@ -42,7 +42,7 @@ struct _NuxObjectAccessible
   AtkObject parent;
 
   /* < private > */
-  NuxObjectAccessiblePrivate *priv;
+  NuxObjectAccessiblePrivate* priv;
 };
 
 struct _NuxObjectAccessibleClass
@@ -50,10 +50,10 @@ struct _NuxObjectAccessibleClass
   AtkObjectClass parent_class;
 };
 
-GType      nux_object_accessible_get_type (void);
-AtkObject *nux_object_accessible_new      (nux::Object *object);
+GType      nux_object_accessible_get_type(void);
+AtkObject* nux_object_accessible_new(nux::Object* object);
 
-nux::Object *nux_object_accessible_get_object (NuxObjectAccessible *self);
+nux::Object* nux_object_accessible_get_object(NuxObjectAccessible* self);
 
 G_END_DECLS
 

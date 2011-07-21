@@ -31,18 +31,17 @@
 class PlaceLauncherSection : public sigc::trackable
 {
 public:
-  PlaceLauncherSection  (Launcher *launcher);
-  ~PlaceLauncherSection ();
+  PlaceLauncherSection(Launcher* launcher);
+  ~PlaceLauncherSection();
 
-  sigc::signal<void, LauncherIcon *> IconAdded;
+  sigc::signal<void, LauncherIcon*> IconAdded;
 
 private:
-  void PopulateEntries ();
-  void OnPlaceAdded (Place *place);
+  void PopulateEntries();
+  void OnPlaceAdded(Place* place);
 
-  Launcher     *_launcher;
-  PlaceFactory *_factory;
-  sigc::connection _on_place_added_connection;
+  Launcher*     _launcher;
+  PlaceFactory* _factory;
 
   guint32 _priority;
 };

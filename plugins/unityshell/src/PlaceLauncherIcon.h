@@ -29,30 +29,29 @@ class PlaceLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  PlaceLauncherIcon  (Launcher *launcher, PlaceEntry *entry);
-  ~PlaceLauncherIcon ();
-  
-  virtual nux::Color BackgroundColor ();
-  virtual nux::Color GlowColor ();
+  PlaceLauncherIcon(Launcher* launcher, PlaceEntry* entry);
+  ~PlaceLauncherIcon();
+
+  virtual nux::Color BackgroundColor();
+  virtual nux::Color GlowColor();
 
 protected:
-  void UpdatePlaceIcon ();
-  std::list<DbusmenuMenuitem *> GetMenus ();
+  void UpdatePlaceIcon();
+  std::list<DbusmenuMenuitem*> GetMenus();
 
 private:
-  void ActivateLauncherIcon ();
-  void ActivatePlace (guint section_id, const char *search_string);
-  void OnActiveChanged (bool is_active);
-  void ForeachSectionCallback (PlaceEntry *entry, PlaceEntrySection& section);
+  void ActivateLauncherIcon(ActionArg arg);
+  void ActivatePlace(guint section_id, const char* search_string);
+  void OnActiveChanged(bool is_active);
+  void ForeachSectionCallback(PlaceEntry* entry, PlaceEntrySection& section);
 
-  static void OnOpen (DbusmenuMenuitem *item, int time, PlaceLauncherIcon *self);
-  
-  void RecvMouseEnter ();
+  static void OnOpen(DbusmenuMenuitem* item, int time, PlaceLauncherIcon* self);
+
+  void RecvMouseEnter();
 
 private:
-  PlaceEntry *_entry;
-  std::list<DbusmenuMenuitem *>  _current_menu;
-  sigc::connection _on_active_changed_connection;
+  PlaceEntry* _entry;
+  std::list<DbusmenuMenuitem*>  _current_menu;
   int _n_sections;
 };
 

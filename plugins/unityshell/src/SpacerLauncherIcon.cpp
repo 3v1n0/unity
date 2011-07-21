@@ -22,14 +22,14 @@
 
 #include <glib/gi18n-lib.h>
 
-SpacerLauncherIcon::SpacerLauncherIcon (Launcher* IconManager)
-:   SimpleLauncherIcon(IconManager)
+SpacerLauncherIcon::SpacerLauncherIcon(Launcher* IconManager)
+  :   SimpleLauncherIcon(IconManager)
 {
-  SetQuirk (QUIRK_VISIBLE, true);
-  SetQuirk (QUIRK_RUNNING, false);
-  SetIconType (TYPE_APPLICATION); 
-  
-  SetTooltipText (_("Drop To Add Application"));
+  SetQuirk(QUIRK_VISIBLE, true);
+  SetQuirk(QUIRK_RUNNING, false);
+  SetIconType(TYPE_APPLICATION);
+
+  tooltip_text = _("Drop To Add Application");
 }
 
 SpacerLauncherIcon::~SpacerLauncherIcon()

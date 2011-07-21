@@ -26,60 +26,52 @@
 
 class PanelStyle : public nux::Object
 {
-  public:
-    typedef enum
-    {
-      WINDOW_BUTTON_CLOSE = 0,
-      WINDOW_BUTTON_MINIMIZE,
-      WINDOW_BUTTON_UNMAXIMIZE
+public:
+  typedef enum
+  {
+    WINDOW_BUTTON_CLOSE = 0,
+    WINDOW_BUTTON_MINIMIZE,
+    WINDOW_BUTTON_UNMAXIMIZE
 
-    } WindowButtonType;
+  } WindowButtonType;
 
-    typedef enum
-    {
-      WINDOW_STATE_NORMAL,
-      WINDOW_STATE_PRELIGHT,
-      WINDOW_STATE_PRESSED
+  typedef enum
+  {
+    WINDOW_STATE_NORMAL,
+    WINDOW_STATE_PRELIGHT,
+    WINDOW_STATE_PRESSED
 
-    } WindowState;
+  } WindowState;
 
-    static PanelStyle * GetDefault ();
+  static PanelStyle* GetDefault();
 
-    PanelStyle ();
-    ~PanelStyle ();
+  PanelStyle();
+  ~PanelStyle();
 
-    nux::Color const& GetTextColor() const;
-    nux::Color const& GetBackgroundTop() const;
-    nux::Color const& GetBackgroundBottom() const;
-    nux::Color const& GetTextShadow() const;
-    nux::Color const& GetLineColor() const;
+  GtkStyleContext* GetStyleContext();
 
-    GdkPixbuf * GetBackground (int width, int height);
+  nux::NBitmapData* GetBackground(int width, int height);
 
-    nux::BaseTexture * GetWindowButton (WindowButtonType type, WindowState state);
+  nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
 
-    GdkPixbuf * GetHomeButton ();
+  GdkPixbuf* GetHomeButton();
 
-    sigc::signal<void> changed;
+  sigc::signal<void> changed;
 
-    bool IsAmbianceOrRadiance ();
+  bool IsAmbianceOrRadiance();
 
-  private:
-    void        Refresh ();
-    static void OnStyleChanged (GObject*    gobject,
-                                GParamSpec* pspec,
-                                gpointer    data);
-    nux::BaseTexture * GetWindowButtonForTheme (WindowButtonType type, WindowState state);
-  private:
-    GtkWidget         *_offscreen;
-    char              *_theme_name;
-    nux::Color         _text;
-    nux::Color         _bg_top;
-    nux::Color         _bg_bottom;
-    nux::Color         _text_shadow;
-    nux::Color         _line;
+private:
+  void        Refresh();
+  static void OnStyleChanged(GObject*    gobject,
+                             GParamSpec* pspec,
+                             gpointer    data);
+  nux::BaseTexture* GetWindowButtonForTheme(WindowButtonType type, WindowState state);
+private:
+  GtkStyleContext*   _style_context;
+  char*              _theme_name;
+  nux::Color         _text;
 
-    gulong            _gtk_theme_changed_id;
+  gulong            _gtk_theme_changed_id;
 };
 
 #endif // PANEL_STYLE_H

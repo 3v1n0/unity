@@ -20,36 +20,36 @@
 
 #include "PlacesStyle.h"
 
-NUX_IMPLEMENT_OBJECT_TYPE (PlacesEmptyView);
+NUX_IMPLEMENT_OBJECT_TYPE(PlacesEmptyView);
 
-PlacesEmptyView::PlacesEmptyView ()
-: nux::View (NUX_TRACKER_LOCATION)
+PlacesEmptyView::PlacesEmptyView()
+  : nux::View(NUX_TRACKER_LOCATION)
 {
-  PlacesStyle *style = PlacesStyle::GetDefault ();
+  PlacesStyle* style = PlacesStyle::GetDefault();
 
-  SetLayout (new nux::HLayout (NUX_TRACKER_LOCATION));
+  SetLayout(new nux::HLayout(NUX_TRACKER_LOCATION));
 
-  _text = new nux::StaticCairoText ("");
-  _text->SetMaximumWidth (style->GetTileWidth () * style->GetDefaultNColumns ());
-  _text->SetTextEllipsize (nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _text->SetTextAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  _text->SetTextVerticalAlignment (nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  _text->SetTextColor (nux::Color (1.0f, 1.0f, 1.0f, 0.8f));
+  _text = new nux::StaticCairoText("");
+  _text->SetMaximumWidth(style->GetTileWidth() * style->GetDefaultNColumns());
+  _text->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  _text->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  _text->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  _text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.8f));
 
-  GetCompositionLayout ()->AddSpace (1, 1);
-  GetCompositionLayout ()->AddView (_text, 1, nux::eCenter, nux::eFix);
-  GetCompositionLayout ()->AddSpace (1, 1);
+  GetCompositionLayout()->AddSpace(1, 1);
+  GetCompositionLayout()->AddView(_text, 1, nux::eCenter, nux::eFix);
+  GetCompositionLayout()->AddSpace(1, 1);
 }
 
-PlacesEmptyView::~PlacesEmptyView ()
+PlacesEmptyView::~PlacesEmptyView()
 {
 
 }
 
 long
-PlacesEmptyView::ProcessEvent(nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo)
+PlacesEmptyView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
-  return GetCompositionLayout ()->ProcessEvent (ievent, TraverseInfo, ProcessEventInfo);
+  return GetCompositionLayout()->ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
 }
 
 void
@@ -58,34 +58,34 @@ PlacesEmptyView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 void
-PlacesEmptyView::DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw)
+PlacesEmptyView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
+  GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
 }
 
 void
-PlacesEmptyView::SetText (const char *text)
+PlacesEmptyView::SetText(const char* text)
 {
-  char *clean;
-  char *markup;
+  char* clean;
+  char* markup;
 
-  clean = g_markup_escape_text (text, -1);
-  markup = g_strdup_printf ("<big>%s</big>", clean);
+  clean = g_markup_escape_text(text, -1);
+  markup = g_strdup_printf("<big>%s</big>", clean);
 
-  _text->SetText (markup);
+  _text->SetText(markup);
 
-  g_free (clean);
-  g_free (markup);
+  g_free(clean);
+  g_free(markup);
 }
 
 const gchar*
-PlacesEmptyView::GetName ()
+PlacesEmptyView::GetName()
 {
   return "PlacesEmptyView";
 }
 
 void
-PlacesEmptyView::AddProperties (GVariantBuilder *builder)
+PlacesEmptyView::AddProperties(GVariantBuilder* builder)
 {
-  
+
 }

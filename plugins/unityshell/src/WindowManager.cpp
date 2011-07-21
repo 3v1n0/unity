@@ -18,82 +18,87 @@
 
 #include "WindowManager.h"
 
-static WindowManager *window_manager = NULL;
+static WindowManager* window_manager = NULL;
 
 class WindowManagerDummy : public WindowManager
 {
-  bool IsScreenGrabbed ()
-  {
-    return false;
-  }
-  
-  bool IsWindowMaximized (guint32 xid)
+  bool IsScreenGrabbed()
   {
     return false;
   }
 
-  bool IsWindowDecorated (guint32 xid)
+  void ShowDesktop()
+  {
+    g_debug("%s", G_STRFUNC);
+  }
+
+  bool IsWindowMaximized(guint32 xid)
+  {
+    return false;
+  }
+
+  bool IsWindowDecorated(guint32 xid)
   {
     return true;
   }
-  
-  bool IsWindowOnCurrentDesktop (guint32 xid)
+
+  bool IsWindowOnCurrentDesktop(guint32 xid)
   {
     return true;
   }
-  
-  bool IsWindowObscured (guint32 xid)
+
+  bool IsWindowObscured(guint32 xid)
   {
     return false;
   }
 
-  void Restore (guint32 xid)
+  void Restore(guint32 xid)
   {
-    g_debug ("%s", G_STRFUNC);
+    g_debug("%s", G_STRFUNC);
   }
 
-  void Minimize (guint32 xid)
+  void Minimize(guint32 xid)
   {
-    g_debug ("%s", G_STRFUNC);
+    g_debug("%s", G_STRFUNC);
   }
 
-  void Close (guint32 xid)
+  void Close(guint32 xid)
   {
-    g_debug ("%s", G_STRFUNC);
-  }
-  
- void Activate (guint32 xid)
-  {
-    g_debug ("%s", G_STRFUNC);
+    g_debug("%s", G_STRFUNC);
   }
 
- void Raise (guint32 xid)
+  void Activate(guint32 xid)
   {
-    g_debug ("%s", G_STRFUNC);
+    g_debug("%s", G_STRFUNC);
   }
 
- void Lower (guint32 xid)
+  void Raise(guint32 xid)
   {
-    g_debug ("%s", G_STRFUNC);
+    g_debug("%s", G_STRFUNC);
   }
 
-  nux::Geometry GetWindowGeometry (guint xid)
+  void Lower(guint32 xid)
   {
-    return nux::Geometry (0, 0, 1, 1);
+    g_debug("%s", G_STRFUNC);
+  }
+
+  nux::Geometry GetWindowGeometry(guint xid)
+  {
+    return nux::Geometry(0, 0, 1, 1);
   }
 };
 
-WindowManager *
-WindowManager::Default ()
+WindowManager*
+WindowManager::Default()
 {
   if (!window_manager)
-    window_manager = new WindowManagerDummy ();
+    window_manager = new WindowManagerDummy();
 
   return window_manager;
 }
 
 void
-WindowManager::SetDefault (WindowManager *manager)
+WindowManager::SetDefault(WindowManager* manager)
 {
   window_manager = manager;
 }
@@ -102,19 +107,20 @@ WindowManager::SetDefault (WindowManager *manager)
 
 
 void
-WindowManager::StartMove (guint32 xid, int x, int y)
+WindowManager::StartMove(guint32 xid, int x, int y)
 {
   XEvent ev;
-  Display* d = nux::GetGraphicsDisplay ()->GetX11Display();
+  Display* d = nux::GetGraphicsDisplay()->GetX11Display();
 
   /* We first need to ungrab the pointer. FIXME: Evil */
 
-    XUngrabPointer(d, CurrentTime);
+  XUngrabPointer(d, CurrentTime);
 
   // --------------------------------------------------------------------------
   // FIXME: This is a workaround until the non-paired events issue is fixed in
   // nux
-  XButtonEvent bev = {
+  XButtonEvent bev =
+  {
     ButtonRelease,
     0,
     False,
@@ -129,8 +135,8 @@ WindowManager::StartMove (guint32 xid, int x, int y)
     Button1,
     True
   };
-  XEvent *e = (XEvent*)&bev;
-  nux::GetGraphicsThread()->ProcessForeignEvent (e, NULL);
+  XEvent* e = (XEvent*)&bev;
+  nux::GetGraphicsThread()->ProcessForeignEvent(e, NULL);
 
   ev.xclient.type    = ClientMessage;
   ev.xclient.display = d;
@@ -148,9 +154,9 @@ WindowManager::StartMove (guint32 xid, int x, int y)
   ev.xclient.data.l[3] = 1;
   ev.xclient.data.l[4] = 1;
 
-  XSendEvent (d, DefaultRootWindow (d), FALSE,
-                 SubstructureRedirectMask | SubstructureNotifyMask,
-                 &ev);
+  XSendEvent(d, DefaultRootWindow(d), FALSE,
+             SubstructureRedirectMask | SubstructureNotifyMask,
+             &ev);
 
-  XSync (d, FALSE);
+  XSync(d, FALSE);
 }

@@ -26,10 +26,13 @@ class SpacerLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  SpacerLauncherIcon  (Launcher *launcher);
-  ~SpacerLauncherIcon ();
-  
-  bool IsSpacer () { return true; }
+  SpacerLauncherIcon(Launcher* launcher);
+  ~SpacerLauncherIcon();
+
+  bool IsSpacer()
+  {
+    return true;
+  }
 protected:
 
 private:
