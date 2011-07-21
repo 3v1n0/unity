@@ -1476,19 +1476,9 @@ void Launcher::OnPlaceViewHidden (GVariant *data, void *val)
 
     // as the leave event is no more received when the place is opened
     // FIXME: remove when we change the mouse grab strategy in nux
-    // get info about current pointer position
-    XEvent event;
-    XQueryPointer (self->_screen->dpy (),
-                   RootWindow (self->_screen->dpy (), DefaultScreen (self->_screen->dpy ())),
-                   &event.xbutton.root, &event.xbutton.window,
-                   &event.xbutton.x_root, &event.xbutton.y_root,
-                   &event.xbutton.x, &event.xbutton.y,
-                   &event.xbutton.state);
+    nux::Point pt = nux::GetWindowCompositor ().GetMousePosition();
 
-    self->SetStateMouseOverLauncher (event.xbutton.x >= self->GetAbsoluteX () &&
-                                     event.xbutton.x <= self->GetAbsoluteX () + self->GetAbsoluteWidth () &&
-                                     event.xbutton.y >= self->GetAbsoluteY () &&
-                                     event.xbutton.y <= self->GetAbsoluteY () + self->GetAbsoluteHeight ());
+    self->SetStateMouseOverLauncher (self->GetAbsoluteGeometry().IsInside(pt));
     self->SetStateMouseOverBFB (false);
 
     // TODO: add in a timeout for seeing the animation (and make it smoother)
