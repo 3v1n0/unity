@@ -53,14 +53,14 @@ TEST(TestFilesystemLenses, TestFileLoading)
 TEST(TestFilesystemLenses, TestLensCreation)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  int  n_lenses = 0;
+  unsigned int n_lenses = 0;
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr& p) { n_lenses++; };
   lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
 
   WaitForLensesToLoad(lenses);
   EXPECT_EQ(n_lenses, 3);
-  EXPECT_EQ(lenses.count, 3);
+  EXPECT_EQ(lenses.count, n_lenses);
 }
 
 TEST(TestFilesystemLenses, TestLensContent)

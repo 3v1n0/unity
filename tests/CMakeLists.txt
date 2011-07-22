@@ -312,6 +312,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
 # The actual test executable
   add_executable(test-gtest
+                 test_categories.cpp
                  test_filesystem_lenses.cpp
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
@@ -320,6 +321,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_indicator_entry.cpp
                  test_main.cpp
                  test_model.cpp
+                 test_utils.h
+                 test_results.cpp
                  test_timer.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/Timer.cpp

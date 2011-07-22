@@ -48,9 +48,11 @@ main(gint argc, gchar** argv)
                  NULL,
                  NULL);
 
+  model_ = service_model_new();
+  
   g_main_loop_run(loop_);
   g_main_loop_unref(loop_);
- 
+
   g_object_unref(model_);
   g_dbus_node_info_unref(introspection_data);
 
@@ -68,7 +70,6 @@ on_bus_aquired(GDBusConnection* conn, const gchar* name, gpointer null)
                                     NULL,
                                     NULL,
                                     NULL);
-  model_ = service_model_new();  
 }
 
 static void

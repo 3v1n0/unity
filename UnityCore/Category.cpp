@@ -30,16 +30,16 @@ nux::logging::Logger logger("unity.dash.categoriesmodeliter");
 
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,
-                   DeeModelTag* renderer_tag)
+                   DeeModelTag* renderer_name_tag)
 {
   model_ = model;
   iter_ = iter;
-  tag_ = renderer_tag;
+  tag_ = renderer_name_tag;
 
   name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));
   index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
-  renderer.SetGetterFunction(sigc::mem_fun(this, &Category::get_renderer));
+  renderer_name.SetGetterFunction(sigc::mem_fun(this, &Category::get_renderer_name));
 }
 
 Category::Category(Category const& other)
@@ -64,7 +64,7 @@ unsigned int Category::get_index() const
   return dee_model_get_position(model_, iter_);
 }
 
-std::string Category::get_renderer() const
+std::string Category::get_renderer_name() const
 {
   return dee_model_get_string(model_, iter_, 2);
 }

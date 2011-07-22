@@ -30,6 +30,8 @@ struct _ServiceModel
   GObject parent;
 
   DeeModel* model_;
+  DeeModel* results_model_;
+  DeeModel* categories_model_;
 };
 
 struct _ServiceModelClass
