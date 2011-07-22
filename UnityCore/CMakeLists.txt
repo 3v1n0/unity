@@ -28,6 +28,7 @@ set (CORE_HEADERS
     )
 
 set (CORE_SOURCES
+     Categories.cpp
      Category.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
@@ -39,6 +40,7 @@ set (CORE_SOURCES
      Indicators.cpp
      Lens.cpp
      Result.cpp
+     Results.cpp
      Variant.cpp
     )
 

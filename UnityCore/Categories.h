@@ -33,7 +33,16 @@ class Categories : public Model<Category>
 public:
   typedef boost::shared_ptr<Categories> Ptr;
 
-  Categories() {};
+  Categories();
+
+  sigc::signal<void, Category const&> category_added;
+  sigc::signal<void, Category const&> category_changed;
+  sigc::signal<void, Category const&> category_removed;
+
+private:
+  void OnRowAdded(Category& category);
+  void OnRowChanged(Category& category);
+  void OnRowRemoved(Category& category);
 };
 
 }

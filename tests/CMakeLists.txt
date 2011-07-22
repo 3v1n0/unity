@@ -340,7 +340,10 @@ set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (DBUS_TEST_COMMAND dbus-test-runner --task ./test-gtest-service --task ./test-gtest)
-set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ${DBUS_TEST_COMMAND})
+
+set (TEST_COMMAND
+     gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
+  && ${DBUS_TEST_COMMAND})
 add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest)

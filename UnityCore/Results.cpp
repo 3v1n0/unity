@@ -17,35 +17,32 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RESULTS_MODEL_H
-#define UNITY_RESULTS_MODEL_H
-
-#include <boost/shared_ptr.hpp>
-
-#include "Model.h"
-#include "Result.h"
+#include "Results.h"
 
 namespace unity {
 namespace dash {
 
-class Results : public Model<Result>
+Results::Results()
 {
-public:
-  typedef boost::shared_ptr<Results> Ptr;
+  row_added.connect(sigc::mem_fun(this, &Results::OnRowAdded));
+  row_changed.connect(sigc::mem_fun(this, &Results::OnRowChanged));
+  row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
+}
 
-  Results();
+void Results::OnRowAdded(Result& result)
+{
+  result_added.emit(result);
+}
 
-  sigc::signal<void, Result const&> result_added;
-  sigc::signal<void, Result const&> result_changed;
-  sigc::signal<void, Result const&> result_removed;
+void Results::OnRowChanged(Result& result)
+{
+  result_changed.emit(result);
+}
 
-private:
-  void OnRowAdded(Result& result);
-  void OnRowChanged(Result& result);
-  void OnRowRemoved(Result& result);
-};
+void Results::OnRowRemoved(Result& result)
+{
+  result_removed.emit(result);
+}
 
 }
 }
-
-#endif
