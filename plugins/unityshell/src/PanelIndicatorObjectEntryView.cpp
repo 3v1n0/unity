@@ -66,6 +66,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
 
   InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseUp.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseUp));
+
+  InputArea::SetAcceptMouseWheelEvent(true);
   InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
