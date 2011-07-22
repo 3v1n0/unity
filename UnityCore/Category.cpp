@@ -19,14 +19,8 @@
 
 #include "Category.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity {
 namespace dash {
-
-namespace {
-nux::logging::Logger logger("unity.dash.categoriesmodeliter");
-}
 
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,

@@ -19,14 +19,8 @@
 
 #include "Result.h"
 
-#include <NuxCore/Logger.h>
-
 namespace unity {
 namespace dash {
-
-namespace {
-nux::logging::Logger logger("unity.dash.resultsmodeliter");
-}
 
 Result::Result(DeeModel* model,
                DeeModelIter* iter,

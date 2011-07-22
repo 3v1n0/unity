@@ -19,13 +19,13 @@ static void WaitForSynchronize(Categories& model)
   ::Utils::WaitForModelSynchronize<Category>(model, n_rows);
 }
 
-TEST(TestModel, TestConstruction)
+TEST(TestCategories, TestConstruction)
 {
   Categories model;
   model.swarm_name = swarm_name;
 }
 
-TEST(TestModel, TestSynchronization)
+TEST(TestCategories, TestSynchronization)
 {
   Categories model;
   model.swarm_name = swarm_name;
@@ -34,7 +34,7 @@ TEST(TestModel, TestSynchronization)
   EXPECT_EQ(model.count, n_rows);
 }
 
-TEST(TestModel, TestRowsValid)
+TEST(TestCategories, TestRowsValid)
 {
   Categories model;
   model.swarm_name = swarm_name;
@@ -55,7 +55,7 @@ TEST(TestModel, TestRowsValid)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestModel, TestSetGetRenderer)
+TEST(TestCategories, TestSetGetRenderer)
 {
   Categories model;
   model.swarm_name = swarm_name;
