@@ -61,7 +61,6 @@ private:
   char* _icon;
   char* _uri;
   IconTexture* _icontex;
-  nux::StaticCairoText* _cairotext;
 };
 
 
