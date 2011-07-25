@@ -44,6 +44,8 @@ public:
 
   void SetTargetSize(int tile_size, int image_size, int spacing);
 
+  static void DestroyTextures();
+
 protected:
   nux::BaseTexture* RenderCharToTexture(const char label, int width, int height);
 
@@ -82,8 +84,6 @@ protected:
   void SetOffscreenRenderTarget(nux::IntrusiveSP<nux::IOpenGLBaseTexture> texture);
 
   void RestoreSystemRenderTarget();
-
-  static void DestroyTextures();
 
 private:
   int icon_size;

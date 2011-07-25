@@ -25,6 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include "IconRenderer.h"
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
@@ -215,6 +216,8 @@ UnityScreen::~UnityScreen()
     g_source_remove(relayoutSourceId);
 
   delete wt;
+
+  ::unity::ui::IconRenderer::DestroyTextures();
 }
 
 void UnityScreen::nuxPrologue()
