@@ -25,8 +25,10 @@
 #include "Model.h"
 #include "Category.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Categories : public Model<Category>
 {

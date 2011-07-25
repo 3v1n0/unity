@@ -26,8 +26,10 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 // A light wrapper around GDBusProxy which allows for some nicer signal and async
 // method usage from C++
@@ -45,7 +47,7 @@ public:
   ~DBusProxy();
 
   void Call(std::string const& method_name,
-            GVariant* parameters=NULL,
+            GVariant* parameters = NULL,
             ReplyCallback callback = sigc::ptr_fun(&NoReplyCallback),
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
@@ -58,7 +60,7 @@ public:
   static void NoReplyCallback(GVariant* v) {};
   class Impl;
 private:
-  Impl *pimpl;
+  Impl* pimpl;
 };
 
 }

@@ -26,10 +26,13 @@
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
-namespace {
+namespace
+{
 nux::logging::Logger logger("unity.glib.dbusproxy");
 }
 
@@ -127,7 +130,7 @@ DBusProxy::Impl::~Impl()
   if (watcher_id_)
     g_bus_unwatch_name(watcher_id_);
   if (reconnect_timeout_id_)
-    g_source_remove (reconnect_timeout_id_);
+    g_source_remove(reconnect_timeout_id_);
 }
 
 void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
@@ -135,7 +138,7 @@ void DBusProxy::Impl::OnNameAppeared(GDBusConnection* connection,
                                      const char* name_owner,
                                      gpointer impl)
 {
-  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
+  DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
 
   LOG_DEBUG(logger) << self->name_ << " appeared";
 
@@ -147,10 +150,10 @@ void DBusProxy::Impl::OnNameVanished(GDBusConnection* connection,
                                      const char* name,
                                      gpointer impl)
 {
-  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
-  
+  DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
+
   LOG_DEBUG(logger) << self->name_ << " vanished";
-  
+
   self->connected_ = false;
   self->owner_->disconnected.emit();
 }
@@ -161,12 +164,12 @@ void DBusProxy::Impl::StartReconnectionTimeout()
   if (reconnect_timeout_id_)
     g_source_remove(reconnect_timeout_id_);
 
-  auto callback = [] (gpointer user_data) -> gboolean
+  auto callback = [](gpointer user_data) -> gboolean
   {
     DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(user_data);
     if (!self->proxy_)
       self->Connect();
-    
+
     self->reconnect_timeout_id_ = 0;
     return FALSE;
   };
@@ -202,7 +205,7 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
     return;
   }
 
-  DBusProxy::Impl *self = static_cast<DBusProxy::Impl*>(impl);
+  DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(impl);
   LOG_DEBUG(logger) << "Sucessfully created proxy: " << self->object_path_;
 
   self->proxy_ = proxy;
@@ -222,7 +225,7 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
                     << "SignalName: " << signal_name << " "
                     << "ParameterType: " << g_variant_get_type_string(parameters);
 
-  for (ReplyCallback callback: handlers_[signal_name])
+for (ReplyCallback callback: handlers_[signal_name])
     callback(parameters);
 }
 

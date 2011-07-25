@@ -28,8 +28,10 @@
 #include "Categories.h"
 #include "Results.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Lens : public sigc::trackable, boost::noncopyable
 {
@@ -41,16 +43,16 @@ public:
        std::string const& dbus_path,
        std::string const& name,
        std::string const& icon,
-       std::string const& description="",
-       std::string const& search_hint="",
-       bool visible=true,
-       std::string const& shortcut="");
+       std::string const& description = "",
+       std::string const& search_hint = "",
+       bool visible = true,
+       std::string const& shortcut = "");
 
   ~Lens();
-  
+
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
-  
+
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
   nux::RWProperty<std::string> dbus_path;
@@ -69,10 +71,10 @@ public:
 
   sigc::signal<void, std::string const&> search_finished;
   sigc::signal<void, std::string const&> global_search_finished;
-  
+
   class Impl;
 private:
-  Impl *pimpl;
+  Impl* pimpl;
 };
 
 }

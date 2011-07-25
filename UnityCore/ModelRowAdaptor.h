@@ -22,8 +22,10 @@
 
 #include <dee.h>
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 /* RowAdaptors represent a row of a Model<RowAdaptorType> in a form that's easily
  * accessible for consumers of the Model. It means you can convert the

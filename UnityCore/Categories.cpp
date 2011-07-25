@@ -19,8 +19,10 @@
 
 #include "Categories.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 Categories::Categories()
 {

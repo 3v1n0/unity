@@ -19,8 +19,10 @@
 
 #include "Result.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 Result::Result(DeeModel* model,
                DeeModelIter* iter,

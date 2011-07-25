@@ -25,8 +25,10 @@
 #include "Model.h"
 #include "Result.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Results : public Model<Result>
 {

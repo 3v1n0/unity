@@ -19,8 +19,10 @@
 
 #include "Filters.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class FilterAdaptor : public RowAdaptorBase
 {
@@ -32,8 +34,8 @@ public:
   nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> renderer_name;
 private:
-   std::string get_id() const;
-   std::string get_renderer_name() const;
+  std::string get_id() const;
+  std::string get_renderer_name() const;
 };
 
 FilterAdaptor::FilterAdaptor(DeeModel* model,

@@ -25,8 +25,10 @@
 
 #include "Lens.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Lenses : public sigc::trackable, boost::noncopyable
 {

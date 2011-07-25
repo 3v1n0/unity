@@ -30,8 +30,10 @@
 #include "GLibWrapper.h"
 #include "ModelRowAdaptor.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 /* This template class encapsulates the basics of talking to a DeeSharedModel,
  * however it is a template as you can choose your own RowAdaptor (see

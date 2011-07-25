@@ -28,8 +28,10 @@
 
 #include "GLibSignal.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Filter : public sigc::trackable
 {
@@ -64,7 +66,7 @@ private:
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void UpdateProperties();
   void HintsToMap(Hints& hints);
-  
+
 protected:
   DeeModel* model_;
   DeeModelIter* iter_;

@@ -41,7 +41,7 @@ struct _ServiceModelClass
 
 GType service_model_get_type(void) G_GNUC_CONST;
 
-ServiceModel * service_model_new (void);
+ServiceModel* service_model_new(void);
 
 G_END_DECLS
 

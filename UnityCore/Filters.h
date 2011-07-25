@@ -25,8 +25,10 @@
 #include "Model.h"
 #include "Filter.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class FilterAdaptor;
 

@@ -24,8 +24,10 @@
 
 #include "ModelRowAdaptor.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 /* This class represents a DeeModelIter for a CategoriesModel  */
 class Category : public RowAdaptorBase

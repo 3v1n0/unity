@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
   // but you can still change it if your debugging ;)
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  
+
   int ret = RUN_ALL_TESTS();
 
   tell_service_to_exit();
@@ -42,10 +42,10 @@ static bool wait_until_test_service_appears()
     return FALSE;
   };
 
-  auto callback = [] (GDBusConnection *conn,
-                      const char *name,
-                      const char *name_owner,
-                      gpointer user_data)
+  auto callback = [](GDBusConnection * conn,
+                     const char * name,
+                     const char * name_owner,
+                     gpointer user_data)
   {
     *(bool*)user_data = true;
   };
@@ -68,7 +68,7 @@ static bool wait_until_test_service_appears()
 static void tell_service_to_exit()
 {
   // Ask the service to exit
-  GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+  GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
   g_dbus_connection_call_sync(connection,
                               "com.canonical.Unity.Test",
                               "/com/canonical/unity/test/controller",

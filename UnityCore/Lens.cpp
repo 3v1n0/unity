@@ -27,10 +27,13 @@
 #include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
-namespace {
+namespace
+{
 nux::logging::Logger logger("unity.dash.lens");
 }
 
@@ -280,7 +283,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
     search_in_global_ = search_in_global;
     owner_->search_in_global.EmitChanged(search_in_global_);
   }
-  
+
   if (visible_ != visible)
   {
     visible_ = visible;
@@ -305,11 +308,11 @@ void Lens::Impl::OnActiveChanged(bool is_active)
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Global Searching "<< id_ << " for " << search_string;
+  LOG_DEBUG(logger) << "Global Searching " << id_ << " for " << search_string;
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-  
+
   proxy_.Call("GlobalSearch",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
@@ -319,8 +322,8 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
 
 void Lens::Impl::Search(std::string const& search_string)
 {
-  LOG_DEBUG(logger) << "Searching "<< id_ << " for " << search_string;
-  
+  LOG_DEBUG(logger) << "Searching " << id_ << " for " << search_string;
+
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
@@ -418,15 +421,15 @@ Lens::Lens(string const& id_,
                    shortcut_))
 {
   id.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::id));
-  dbus_name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
-  dbus_path.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
-  name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::name));
-  icon.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::icon));
-  description.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::description));
-  search_hint.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
-  visible.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::visible));
+  dbus_name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
+  dbus_path.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
+  name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::name));
+  icon.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon));
+  description.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::description));
+  search_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
+  visible.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::visible));
   search_in_global.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_in_global));
-  shortcut.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
+  shortcut.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
   results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));

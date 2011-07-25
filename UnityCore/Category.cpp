@@ -19,8 +19,10 @@
 
 #include "Category.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,

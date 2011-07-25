@@ -3,7 +3,8 @@
 
 #include <UnityCore/Model.h>
 
-namespace {
+namespace
+{
 
 using unity::dash::Model;
 

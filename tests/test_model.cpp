@@ -9,7 +9,8 @@
 using namespace std;
 using namespace unity::dash;
 
-namespace {
+namespace
+{
 
 static const string swarm_name = "com.canonical.test.model";
 static const unsigned int n_rows = 100;
@@ -63,7 +64,7 @@ TEST(TestModel, TestRowsValid)
 
   WaitForSynchronize(model);
 
-  for(unsigned int i = 0; i < n_rows; i++)
+  for (unsigned int i = 0; i < n_rows; i++)
   {
     TestAdaptor adaptor = model.RowAtIndex(i);
 
@@ -81,7 +82,7 @@ TEST(TestModel, TestSetGetRenderer)
 
   WaitForSynchronize(model);
 
-  for(unsigned int i = 0; i < n_rows; i++)
+  for (unsigned int i = 0; i < n_rows; i++)
   {
     TestAdaptor adaptor = model.RowAtIndex(i);
 
@@ -89,13 +90,13 @@ TEST(TestModel, TestSetGetRenderer)
     adaptor.set_renderer<char*>(value);
   }
 
-  for(unsigned int i = 0; i < n_rows; i++)
+  for (unsigned int i = 0; i < n_rows; i++)
   {
     TestAdaptor adaptor = model.RowAtIndex(i);
 
     unity::glib::String value(adaptor.renderer<char*>());
-    unity::glib::String renderer (g_strdup_printf("Renderer%d", i));
-  
+    unity::glib::String renderer(g_strdup_printf("Renderer%d", i));
+
     EXPECT_EQ(value.Str(), renderer.Str());
   }
 }

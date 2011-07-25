@@ -21,10 +21,13 @@
 
 #include <NuxCore/Logger.h>
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
-namespace {
+namespace
+{
 nux::logging::Logger logger("unity.dash.filter");
 }
 

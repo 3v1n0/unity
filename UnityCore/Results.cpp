@@ -19,8 +19,10 @@
 
 #include "Results.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 Results::Results()
 {

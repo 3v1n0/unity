@@ -5,7 +5,8 @@
 using namespace std;
 using namespace unity::dash;
 
-namespace {
+namespace
+{
 
 static void WaitForResult(bool& result)
 {
@@ -31,10 +32,13 @@ static void WaitForLensesToLoad(FilesystemLenses& lenses)
 {
   bool result = false;
 
-  auto lenses_loaded_cb = [&result]() {result = true;};
+  auto lenses_loaded_cb = [&result]()
+  {
+    result = true;
+  };
   lenses.lenses_loaded.connect(sigc::slot<void>(lenses_loaded_cb));
-  
-  WaitForResult (result);
+
+  WaitForResult(result);
   EXPECT_TRUE(result);
 }
 
@@ -55,7 +59,10 @@ TEST(TestFilesystemLenses, TestLensCreation)
   FilesystemLenses lenses(TESTDATADIR"/lenses");
   unsigned int n_lenses = 0;
 
-  auto lens_added_cb = [&n_lenses](Lens::Ptr& p) { n_lenses++; };
+  auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
+  {
+    n_lenses++;
+  };
   lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
 
   WaitForLensesToLoad(lenses);
@@ -70,7 +77,7 @@ TEST(TestFilesystemLenses, TestLensContent)
 
   // We need to assign the std::string properties before using them
   std::string s;
-  
+
   // Test that the lenses have loaded correctly
   Lens::Ptr lens = lenses.GetLens("applications.lens");
   EXPECT_TRUE(lens);

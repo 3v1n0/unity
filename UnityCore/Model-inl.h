@@ -22,10 +22,13 @@
 
 #include <NuxCore/Logger.h>
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
-namespace {
+namespace
+{
 nux::logging::Logger _model_inl_logger("unity.dash.model");
 }
 
@@ -52,17 +55,17 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-added",
-                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
+                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
 
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-changed",
-                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
+                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
 
   signal_manager_.Add(
     new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
                                                      "row-removed",
-                                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
+                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
 }
 
 template<class RowAdaptor>
