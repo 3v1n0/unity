@@ -27,10 +27,13 @@
 #include "GLibWrapper.h"
 
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
-namespace {
+namespace
+{
 nux::logging::Logger logger("unity.dash.lens");
 }
 
@@ -168,14 +171,14 @@ Lens::Lens(string const& id_,
                    shortcut_))
 {
   id.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::id));
-  dbus_name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
-  dbus_path.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
-  name.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::name));
-  icon.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::icon));
-  description.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::description));
-  search_hint.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
-  visible.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::visible));
-  shortcut.SetGetterFunction (sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
+  dbus_name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
+  dbus_path.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
+  name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::name));
+  icon.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon));
+  description.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::description));
+  search_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
+  visible.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::visible));
+  shortcut.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::shortcut));
 }
 
 Lens::~Lens()

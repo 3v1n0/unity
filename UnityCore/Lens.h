@@ -25,8 +25,10 @@
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 class Lens : public sigc::trackable, boost::noncopyable
 {
@@ -38,10 +40,10 @@ public:
        std::string const& dbus_path,
        std::string const& name,
        std::string const& icon,
-       std::string const& description="",
-       std::string const& search_hint="",
-       bool visible=true,
-       std::string const& shortcut="");
+       std::string const& description = "",
+       std::string const& search_hint = "",
+       bool visible = true,
+       std::string const& shortcut = "");
 
   ~Lens();
 
@@ -57,7 +59,7 @@ public:
 
   class Impl;
 private:
-  Impl *pimpl;
+  Impl* pimpl;
 };
 
 }

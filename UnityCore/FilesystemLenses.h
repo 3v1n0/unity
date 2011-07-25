@@ -26,8 +26,10 @@
 
 #include "Lenses.h"
 
-namespace unity {
-namespace dash {
+namespace unity
+{
+namespace dash
+{
 
 // Reads Lens information from the filesystem, as per-specification, and creates
 // Lens instances using this data
@@ -51,7 +53,7 @@ public:
 
   class Impl;
 private:
-  Impl *pimpl;
+  Impl* pimpl;
 };
 
 }
