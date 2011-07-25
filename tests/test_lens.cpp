@@ -43,7 +43,6 @@ public:
     if (lens_->connected)
       g_source_remove(timeout_id);
 
-    g_debug("BOO: %s", lens_->connected ? "TRUE" : "FALSE");
     EXPECT_FALSE(timeout_reached);
   }
 
@@ -53,7 +52,11 @@ public:
 
 TEST_F(TestLens, TestConnection)
 {
-  ;
+  EXPECT_EQ(lens_->id, "testlens");
+  EXPECT_EQ(lens_->dbus_name, lens_name);
+  EXPECT_EQ(lens_->dbus_path, lens_path);
+  EXPECT_EQ(lens_->name, "Test Lens");
+  EXPECT_EQ(lens_->icon_hint, "gtk-apply");
 }
 
 TEST_F(TestLens, TestSynchronization)
