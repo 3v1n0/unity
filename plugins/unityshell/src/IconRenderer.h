@@ -83,20 +83,9 @@ protected:
 
   void RestoreSystemRenderTarget();
 
-  void SetupShaders();
-
-  static void GenerateTextures();
   static void DestroyTextures();
 
 private:
-  enum IconSize
-  {
-    SMALL = 0,
-    BIG,
-
-    LAST,
-  };
-
   int icon_size;
   int image_size;
   int spacing;
