@@ -77,6 +77,28 @@ public:
     EXPECT_FALSE(timeout_reached);
   }
 
+  void WaitForSearchResults()
+  {
+    bool timeout_reached = false;
+
+    auto timeout_cb = [](gpointer data) -> gboolean
+    {
+      *(bool*)data = true;
+      return FALSE;
+    };
+    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+
+    Results::Ptr results = lens_->results;
+    while (results->count != (unsigned int)5 && !timeout_reached)
+    {
+      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+    }
+    if (results->count == (unsigned int)5)
+      g_source_remove(timeout_id);
+
+    EXPECT_FALSE(timeout_reached);
+  }
+
   Lens::Ptr lens_;
   unsigned int n_categories_;
 };
@@ -122,6 +144,28 @@ TEST_F(TestLens, TestCategories)
   EXPECT_EQ(category.icon_hint, "gtk-close");
   EXPECT_EQ(category.index, (unsigned int)2);
   EXPECT_EQ(category.renderer_name, "grid");
+}
+
+TEST_F(TestLens, TestSearch)
+{
+  Results::Ptr results = lens_->results;
+
+  lens_->Search("Test Search String");
+  WaitForSearchResults();
+
+  for (unsigned int i = 0; i < 5; i++)
+  {
+    unity::glib::String name(g_strdup_printf("Test Search String%d", i));
+
+    Result result = results->RowAtIndex(i);
+    EXPECT_EQ(result.uri, "file:///test");
+    EXPECT_EQ(result.icon_hint, "gtk-apply");
+    EXPECT_EQ(result.category_index, i);
+    EXPECT_EQ(result.mimetype, "text/html");
+    EXPECT_EQ(result.name, name.Str());
+    EXPECT_EQ(result.comment, "kamstrup likes ponies");
+    EXPECT_EQ(result.dnd_uri, "file:///test");
+  }
 }
 
 }

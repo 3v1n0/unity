@@ -41,6 +41,7 @@ public:
   Result(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
   Result(Result const& other);
+  void operator=(Result const& other);
 
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;
