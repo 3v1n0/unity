@@ -20,7 +20,7 @@ class TestLens : public ::testing::Test
 public:
   TestLens()
     : lens_(new Lens("testlens", lens_name, lens_path,
-                          "Test Lens", "gtk-apply")),
+                     "Test Lens", "gtk-apply")),
       n_categories_(0)
   {
     WaitForConnected();
@@ -55,7 +55,8 @@ public:
     EXPECT_FALSE(timeout_reached);
   }
 
-  void WaitForCategories()
+  template<typename Adaptor>
+  void WaitForModel(Model<Adaptor>* model, unsigned int n_rows)
   {
     bool timeout_reached = false;
 
@@ -66,61 +67,15 @@ public:
     };
     guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
 
-    Categories::Ptr categories = lens_->categories;
-    while (categories->count != (unsigned int)3 && !timeout_reached)
+    while (model->count != n_rows && !timeout_reached)
     {
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
     }
-    if (categories->count == (unsigned int)3)
+    if (model->count == n_rows)
       g_source_remove(timeout_id);
 
     EXPECT_FALSE(timeout_reached);
   }
-
-  void WaitForSearchResults()
-  {
-    bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
-
-    Results::Ptr results = lens_->results;
-    while (results->count != (unsigned int)5 && !timeout_reached)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-    if (results->count == (unsigned int)5)
-      g_source_remove(timeout_id);
-
-    EXPECT_FALSE(timeout_reached);
-  }
-
-  void WaitForGlobalSearchResults()
-  {
-    bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
-
-    Results::Ptr results = lens_->global_results;
-    while (results->count != (unsigned int)10 && !timeout_reached)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-    if (results->count == (unsigned int)10)
-      g_source_remove(timeout_id);
-
-    EXPECT_FALSE(timeout_reached);
-  }
-
 
   Lens::Ptr lens_;
   unsigned int n_categories_;
@@ -145,7 +100,7 @@ TEST_F(TestLens, TestSynchronization)
 TEST_F(TestLens, TestCategories)
 {
   Categories::Ptr categories = lens_->categories;
-  WaitForCategories();
+  WaitForModel<Category>(categories.get(), 3);
 
   EXPECT_EQ(categories->count, (unsigned int)3);
   EXPECT_EQ(n_categories_, 3);
@@ -174,7 +129,7 @@ TEST_F(TestLens, TestSearch)
   Results::Ptr results = lens_->results;
 
   lens_->Search("Test Search String");
-  WaitForSearchResults();
+  WaitForModel<Result>(results.get(), 5);
 
   for (unsigned int i = 0; i < 5; i++)
   {
@@ -196,7 +151,7 @@ TEST_F(TestLens, TestGlobalSearch)
   Results::Ptr results = lens_->global_results;
 
   lens_->GlobalSearch("Test Global Search String");
-  WaitForGlobalSearchResults();
+  WaitForModel<Result>(results.get(), 10);
 
   for (unsigned int i = 0; i < 10; i++)
   {
