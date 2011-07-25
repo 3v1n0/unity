@@ -163,10 +163,10 @@ nux::BaseTexture* progress_bar_trough = 0;
 nux::BaseTexture* progress_bar_fill = 0;
 nux::BaseTexture* pip_ltr = 0;
 nux::BaseTexture* pip_rtl = 0;
-nux::BaseTexture* _arrow_ltr = 0;
-nux::BaseTexture* _arrow_rtl = 0;
-nux::BaseTexture* _arrow_empty_ltr = 0;
-nux::BaseTexture* _arrow_empty_rtl = 0;
+nux::BaseTexture* arrow_ltr = 0;
+nux::BaseTexture* arrow_rtl = 0;
+nux::BaseTexture* arrow_empty_ltr = 0;
+nux::BaseTexture* arrow_empty_rtl = 0;
 std::vector<nux::BaseTexture*> _icon_back;
 std::vector<nux::BaseTexture*> _icon_selected_back;
 std::vector<nux::BaseTexture*> _icon_edge;
@@ -769,7 +769,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     if (running == 1)
     {
       markers.push_back(markerCenter);
-      texture = _arrow_ltr;
+      texture = local::arrow_ltr;
     }
     else if (running == 2)
     {
@@ -804,11 +804,11 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - _arrow_rtl->GetWidth(),
-                        markerCenter - (_arrow_rtl->GetHeight() / 2),
-                        (float) _arrow_rtl->GetWidth(),
-                        (float) _arrow_rtl->GetHeight(),
-                        _arrow_rtl->GetDeviceTexture(),
+    GfxContext.QRP_1Tex((geo.x + geo.width) - local::arrow_rtl->GetWidth(),
+                        markerCenter - (local::arrow_rtl->GetHeight() / 2),
+                        (float) local::arrow_rtl->GetWidth(),
+                        (float) local::arrow_rtl->GetHeight(),
+                        local::arrow_rtl->GetDeviceTexture(),
                         texxform,
                         color);
   }
@@ -921,12 +921,12 @@ void IconRenderer::DestroyTextures()
   local::progress_bar_fill->UnReference();
 
   local::pip_ltr->UnReference();
-  _arrow_ltr->UnReference();
-  _arrow_empty_ltr->UnReference();
+  local::arrow_ltr->UnReference();
+  local::arrow_empty_ltr->UnReference();
 
   local::pip_rtl->UnReference();
-  _arrow_rtl->UnReference();
-  _arrow_empty_rtl->UnReference();
+  local::arrow_rtl->UnReference();
+  local::arrow_empty_rtl->UnReference();
 
   std::map<char, nux::BaseTexture*>::iterator it;
   for (it = label_map.begin(); it != label_map.end(); it++)
@@ -959,13 +959,13 @@ void IconRenderer::GenerateTextures()
   _icon_glow[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_glow_62.png", -1, true);
   _icon_shine[IconRenderer::SMALL] = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_icon_shine_54.png", -1, true);
 
-  local::pip_ltr                = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_ltr.png", -1, true);
-  _arrow_ltr              = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_ltr.png", -1, true);
-  _arrow_empty_ltr        = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_ltr.png", -1, true);
+  local::pip_ltr = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_ltr.png", -1, true);
+  local::arrow_ltr = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_ltr.png", -1, true);
+  local::arrow_empty_ltr = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_ltr.png", -1, true);
 
-  local::pip_rtl                = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_rtl.png", -1, true);
-  _arrow_rtl              = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
-  _arrow_empty_rtl        = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
+  local::pip_rtl = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_pip_rtl.png", -1, true);
+  local::arrow_rtl = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_rtl.png", -1, true);
+  local::arrow_empty_rtl = nux::CreateTexture2DFromFile(PKGDATADIR"/launcher_arrow_outline_rtl.png", -1, true);
 
   _offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
   local::textures_created = true;
