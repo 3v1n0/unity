@@ -112,8 +112,24 @@ static void
 on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self)
 {
   UnityLensSearch* search = unity_scope_get_active_global_search(self->priv->scope);
+  DeeModel* model = (DeeModel*)unity_scope_get_global_results_model(self->priv->scope);
+  int i = 0;
 
-  g_debug ("GLOBAL_SEARCH: %s", unity_lens_search_get_search_string(search));
+  for (i = 0; i < 10; i++)
+  {
+    gchar* name = g_strdup_printf("%s%d",
+                                  unity_lens_search_get_search_string(search),
+                                  i);
+    dee_model_append(model,
+                     "file:///test",
+                     "gtk-apply",
+                     i,
+                     "text/html",
+                     name,
+                     "kamstrup likes ponies",
+                     "file:///test");
+    g_free(name);
+  }
 }
 
 ServiceLens*
