@@ -66,6 +66,7 @@ public:
   nux::RWProperty<Results::Ptr> results;
   nux::RWProperty<Results::Ptr> global_results;
   nux::RWProperty<Categories::Ptr> categories;
+  nux::RWProperty<bool> connected;
 
   nux::Property<bool> active;
 

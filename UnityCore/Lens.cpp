@@ -94,6 +94,7 @@ public:
   Results::Ptr const& results() const;
   Results::Ptr const& global_results() const;
   Categories::Ptr const& categories() const;
+  bool connected() const;
 
   Lens* owner_;
 
@@ -110,6 +111,7 @@ public:
   Results::Ptr results_;
   Results::Ptr global_results_;
   Categories::Ptr categories_;
+  bool connected_;
 
   string private_connection_name_;
 
@@ -141,6 +143,7 @@ Lens::Impl::Impl(Lens* owner,
   , results_(new Results())
   , global_results_(new Results())
   , categories_(new Categories())
+  , connected_(false)
   , proxy_(dbus_name, dbus_path, "com.canonical.Unity.Lens")
 {
   proxy_.connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnected));
@@ -156,11 +159,13 @@ Lens::Impl::~Impl()
 void Lens::Impl::OnProxyConnected()
 {
   proxy_.Call("InfoRequest");
-  proxy_.Call("SetActive", g_variant_new("b", owner_->active ? TRUE : FALSE));
+  proxy_.Call("SetActive", g_variant_new("(b)", owner_->active ? TRUE : FALSE));
 }
 
 void Lens::Impl::OnProxyDisconnected()
 {
+  connected_ = false;
+  owner_->connected.EmitChanged(connected_);
 }
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
@@ -168,7 +173,7 @@ void Lens::Impl::OnSearchFinished(GVariant* parameters)
   char* search_string;
 
   g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->search_finished(search_string);
+  owner_->search_finished.emit(search_string);
 
   g_free(search_string);
 }
@@ -178,7 +183,7 @@ void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
   char* search_string;
 
   g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->global_search_finished(search_string);
+  owner_->global_search_finished.emit(search_string);
 
   g_free(search_string);
 }
@@ -242,6 +247,9 @@ void Lens::Impl::OnChanged(GVariant* parameters)
     LOG_WARNING(logger) << "Paths do not match " << dbus_path_ << " != " << dbus_path;
   }
 
+  connected_ = true;
+  owner_->connected.EmitChanged(connected_);
+
   g_free(dbus_path);
   g_free(search_hint);
   g_free(private_connection_name);
@@ -278,6 +286,12 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
                                   MIMEPatterns mime_patterns)
 {
   // Diff the properties received from those we have
+  if (search_hint_ != search_hint)
+  {
+    search_hint_ = search_hint;
+    owner_->search_hint.EmitChanged(search_hint_);
+  }
+
   if (search_in_global_ != search_in_global)
   {
     search_in_global_ = search_in_global;
@@ -303,7 +317,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
 
 void Lens::Impl::OnActiveChanged(bool is_active)
 {
-  proxy_.Call("SetActive", g_variant_new("b", is_active ? TRUE : FALSE));
+  proxy_.Call("SetActive", g_variant_new("(b)", is_active ? TRUE : FALSE));
 }
 
 void Lens::Impl::GlobalSearch(std::string const& search_string)
@@ -399,6 +413,11 @@ Categories::Ptr const& Lens::Impl::categories() const
   return categories_;
 }
 
+bool Lens::Impl::connected() const
+{
+  return connected_;
+}
+
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
@@ -433,6 +452,7 @@ Lens::Lens(string const& id_,
   results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::results));
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
+  connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
   active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
 }
 

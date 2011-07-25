@@ -261,6 +261,10 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 {
   glib::Error error;
   CallData* data = static_cast<CallData*>(call_data);
+
+  if (!G_IS_DBUS_PROXY(source))
+    return;
+
   GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, error.AsOutParam());
 
   if (result)
