@@ -57,7 +57,7 @@ public:
   nux::RWProperty<std::string> dbus_name;
   nux::RWProperty<std::string> dbus_path;
   nux::RWProperty<std::string> name;
-  nux::RWProperty<std::string> icon;
+  nux::RWProperty<std::string> icon_hint;
   nux::RWProperty<std::string> description;
   nux::RWProperty<std::string> search_hint;
   nux::RWProperty<bool> visible;

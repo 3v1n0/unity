@@ -84,7 +84,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Applications");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/applications");
   EXPECT_EQ(s = lens->name, "Applications");
-  EXPECT_EQ(s = lens->icon, "/usr/share/unity-lens-applications/applications.png");
+  EXPECT_EQ(s = lens->icon_hint, "/usr/share/unity-lens-applications/applications.png");
   EXPECT_EQ(s = lens->description, "Search for applications");
   EXPECT_EQ(s = lens->search_hint, "Search Applications");
   EXPECT_EQ(lens->visible, true);
@@ -95,7 +95,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Files");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/files");
   EXPECT_EQ(s = lens->name, "Files");
-  EXPECT_EQ(s = lens->icon, "/usr/share/unity-lens-files/files.png");
+  EXPECT_EQ(s = lens->icon_hint, "/usr/share/unity-lens-files/files.png");
   EXPECT_EQ(s = lens->description, "Search for Files & Folders");
   EXPECT_EQ(s = lens->search_hint, "Search Files & Folders");
   EXPECT_EQ(lens->visible, true);
@@ -106,7 +106,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Social");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/social");
   EXPECT_EQ(s = lens->name, "Social");
-  EXPECT_EQ(s = lens->icon, "/usr/share/unity-lens-social/social.png");
+  EXPECT_EQ(s = lens->icon_hint, "/usr/share/unity-lens-social/social.png");
   EXPECT_EQ(s = lens->description, "");
   EXPECT_EQ(s = lens->search_hint, "");
   EXPECT_EQ(lens->visible, false);

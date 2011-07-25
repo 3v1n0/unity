@@ -50,7 +50,7 @@ public:
        string const& dbus_name,
        string const& dbus_path,
        string const& name,
-       string const& icon,
+       string const& icon_hint,
        string const& description,
        string const& search_hint,
        bool visible,
@@ -85,7 +85,7 @@ public:
   string const& dbus_name() const;
   string const& dbus_path() const;
   string const& name() const;
-  string const& icon() const;
+  string const& icon_hint() const;
   string const& description() const;
   string const& search_hint() const;
   bool visible() const;
@@ -102,7 +102,7 @@ public:
   string dbus_name_;
   string dbus_path_;
   string name_;
-  string icon_;
+  string icon_hint_;
   string description_;
   string search_hint_;
   bool visible_;
@@ -124,7 +124,7 @@ Lens::Impl::Impl(Lens* owner,
                  string const& dbus_name,
                  string const& dbus_path,
                  string const& name,
-                 string const& icon,
+                 string const& icon_hint,
                  string const& description,
                  string const& search_hint,
                  bool visible,
@@ -134,7 +134,7 @@ Lens::Impl::Impl(Lens* owner,
   , dbus_name_(dbus_name)
   , dbus_path_(dbus_path)
   , name_(name)
-  , icon_(icon)
+  , icon_hint_(icon_hint)
   , description_(description)
   , search_hint_(search_hint)
   , visible_(visible)
@@ -368,9 +368,9 @@ string const& Lens::Impl::name() const
   return name_;
 }
 
-string const& Lens::Impl::icon() const
+string const& Lens::Impl::icon_hint() const
 {
-  return icon_;
+  return icon_hint_;
 }
 
 string const& Lens::Impl::description() const
@@ -422,7 +422,7 @@ Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
            string const& name_,
-           string const& icon_,
+           string const& icon_hint_,
            string const& description_,
            string const& search_hint_,
            bool visible_,
@@ -433,7 +433,7 @@ Lens::Lens(string const& id_,
                    dbus_name_,
                    dbus_path_,
                    name_,
-                   icon_,
+                   icon_hint_,
                    description_,
                    search_hint_,
                    visible_,
@@ -443,7 +443,7 @@ Lens::Lens(string const& id_,
   dbus_name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_name));
   dbus_path.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::dbus_path));
   name.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::name));
-  icon.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon));
+  icon_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::icon_hint));
   description.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::description));
   search_hint.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::search_hint));
   visible.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::visible));
