@@ -314,6 +314,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
   add_executable(test-gtest
                  test_categories.cpp
                  test_filesystem_lenses.cpp
+                 test_filter.cpp
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h

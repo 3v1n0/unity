@@ -17,33 +17,37 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RESULTS_H
-#define UNITY_RESULTS_H
+#ifndef UNITY_FILTERS_H
+#define UNITY_FILTERS_H
 
 #include <boost/shared_ptr.hpp>
 
 #include "Model.h"
-#include "Result.h"
+#include "Filter.h"
 
 namespace unity {
 namespace dash {
 
-class Results : public Model<Result>
+class FilterAdaptor;
+
+class Filters : public Model<FilterAdaptor>
 {
 public:
-  typedef boost::shared_ptr<Results> Ptr;
+  typedef boost::shared_ptr<Filters> Ptr;
 
-  Results();
+  Filters();
+  ~Filters();
 
-  sigc::signal<void, Result const&> result_added;
-  sigc::signal<void, Result const&> result_changed;
-  sigc::signal<void, Result const&> result_removed;
+  //sigc::signal<void, Filter const&> filter_added;
+  //sigc::signal<void, Filter const&> filter_changed;
+  //sigc::signal<void, Filter const&> filter_removed;
 
 private:
-  void OnRowAdded(Result& result);
-  void OnRowChanged(Result& result);
-  void OnRowRemoved(Result& result);
+  void OnRowAdded(FilterAdaptor& filter);
+  void OnRowChanged(FilterAdaptor& filter);
+  void OnRowRemoved(FilterAdaptor& filter);
 };
+
 
 }
 }

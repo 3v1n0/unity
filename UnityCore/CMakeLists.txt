@@ -9,6 +9,8 @@ set (CORE_HEADERS
      Category.h
      DBusIndicators.h
      FilesystemLenses.h
+     Filter.h
+     Filters.h
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
@@ -32,6 +34,8 @@ set (CORE_SOURCES
      Category.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
+     Filter.cpp
+     Filters.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp

@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_CATEGORIES_MODEL_H
-#define UNITY_CATEGORIES_MODEL_H
+#ifndef UNITY_CATEGORIES_H
+#define UNITY_CATEGORIES_H
 
 #include <boost/shared_ptr.hpp>
 
