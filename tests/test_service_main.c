@@ -39,6 +39,8 @@ main(gint argc, gchar** argv)
 
   loop_ = g_main_loop_new(NULL, FALSE);
 
+  model_ = service_model_new();
+
   g_bus_own_name(G_BUS_TYPE_SESSION,
                  "com.canonical.Unity.Test",
                  G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -48,8 +50,6 @@ main(gint argc, gchar** argv)
                  NULL,
                  NULL);
 
-  model_ = service_model_new();
-  
   g_main_loop_run(loop_);
   g_main_loop_unref(loop_);
 

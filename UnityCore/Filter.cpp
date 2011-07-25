@@ -80,12 +80,7 @@ void Filter::Connect()
                                                  sigc::mem_fun(this, &Filter::OnRowRemoved)));
 
     // Now we have a valid model_ and iter_, let's update the properties
-    UpdateProperties();
-
-    // Ask our sub-classes to update their state
-    HintsMap hints;
-    HintsToMap(hints);
-    Update(hints);
+    OnRowChanged(model_, iter_);
   }
   else
   {
@@ -93,7 +88,7 @@ void Filter::Connect()
   }
 }
 
-void Filter::Update(HintsMap& hints)
+void Filter::Update(Hints& hints)
 {
 
 }
@@ -107,10 +102,20 @@ void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
   if (iter_ != iter)
     return;
+
+  UpdateProperties();
+
+  // Ask our sub-classes to update their state
+  Hints hints;
+  HintsToMap(hints);
+  Update(hints);
 }
 
 void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
+  if (iter_ != iter)
+    return;
+
   model_ = 0;
   iter_ = 0;
   removed.emit();
@@ -127,7 +132,7 @@ void Filter::UpdateProperties()
   filtering = dee_model_get_bool(model_, iter_, 7) != FALSE;
 }
 
-void Filter::HintsToMap(HintsMap& map)
+void Filter::HintsToMap(Hints& map)
 {
 
 }

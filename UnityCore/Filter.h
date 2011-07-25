@@ -35,7 +35,7 @@ class Filter : public sigc::trackable
 {
 public:
   typedef boost::shared_ptr<Filter> Ptr;
-  typedef std::map<std::string, GVariant*> HintsMap;
+  typedef std::map<std::string, GVariant*> Hints;
 
   Filter();
   virtual ~Filter();
@@ -56,14 +56,14 @@ public:
 
 protected:
   void Connect();
-  virtual void Update(HintsMap& hints);
+  virtual void Update(Hints& hints);
 
 private:
   static void OnModelDestroyed(Filter* self, DeeModel* old_location);
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void UpdateProperties();
-  void HintsToMap(HintsMap& hints);
+  void HintsToMap(Hints& hints);
   
 protected:
   DeeModel* model_;
