@@ -24,6 +24,7 @@ set (CORE_HEADERS
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
+     RatingsFilter.h
      Result.h
      Results.h
      Variant.h
@@ -43,6 +44,7 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     RatingsFilter.cpp
      Result.cpp
      Results.cpp
      Variant.cpp

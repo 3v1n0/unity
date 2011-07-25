@@ -56,7 +56,6 @@ public:
                               TRUE,
                               TRUE,
                               FALSE);
-    g_variant_unref(hints);
   }
 
   glib::Object<DeeModel> model_;
@@ -98,8 +97,7 @@ public:
 
 TEST_F(TestFilter, TestConstruction)
 {
-  Filter filter;
-  Filter::Ptr(new Filter());
+  FilterRecorder filter(model_, iter0_);
 }
 
 TEST_F(TestFilter, TestConnect)
@@ -110,9 +108,9 @@ TEST_F(TestFilter, TestConnect)
   EXPECT_EQ(recorder.name, "Ratings0");
   EXPECT_EQ(recorder.icon_hint, "gtk-apply");
   EXPECT_EQ(recorder.renderer_name, "ratings");
-  EXPECT_EQ(recorder.visible, true);
-  EXPECT_EQ(recorder.collapsed, true);
-  EXPECT_EQ(recorder.filtering, false);
+  EXPECT_TRUE(recorder.visible);
+  EXPECT_TRUE(recorder.collapsed);
+  EXPECT_FALSE(recorder.filtering);
 }
 
 TEST_F(TestFilter, TestChanged)
@@ -127,9 +125,9 @@ TEST_F(TestFilter, TestChanged)
   EXPECT_EQ(recorder.name, "Ratings1");
   EXPECT_EQ(recorder.icon_hint, "gtk-apply");
   EXPECT_EQ(recorder.renderer_name, "ratings");
-  EXPECT_EQ(recorder.visible, true);
-  EXPECT_EQ(recorder.collapsed, true);
-  EXPECT_EQ(recorder.filtering, true);
+  EXPECT_TRUE(recorder.visible);
+  EXPECT_TRUE(recorder.collapsed);
+  EXPECT_TRUE(recorder.filtering);
 }
 
 TEST_F(TestFilter, TestRemoved)

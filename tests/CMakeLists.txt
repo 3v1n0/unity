@@ -323,6 +323,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_main.cpp
                  test_model.cpp
                  test_utils.h
+                 test_ratings_filter.cpp
                  test_results.cpp
                  test_timer.cpp
                  ${UNITY_SRC}/Timer.h

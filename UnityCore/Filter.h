@@ -33,6 +33,18 @@ namespace unity
 namespace dash
 {
 
+enum FilterColumn
+{
+  ID = 0,
+  NAME,
+  ICON_HINT,
+  RENDERER_NAME,
+  RENDERER_STATE,
+  VISIBLE,
+  COLLAPSED,
+  FILTERING
+};
+
 class Filter : public sigc::trackable
 {
 public:
@@ -44,7 +56,7 @@ public:
 
   static Filter::Ptr FilterFromIter(DeeModel* model, DeeModelIter* iter);
 
-  virtual void Clear();
+  virtual void Clear() = 0;
 
   nux::Property<std::string> id;
   nux::Property<std::string> name;
@@ -58,7 +70,7 @@ public:
 
 protected:
   void Connect();
-  virtual void Update(Hints& hints);
+  virtual void Update(Hints& hints) = 0;
 
 private:
   static void OnModelDestroyed(Filter* self, DeeModel* old_location);

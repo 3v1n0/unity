@@ -21,6 +21,8 @@
 
 #include <NuxCore/Logger.h>
 
+#include "RatingsFilter.h"
+
 namespace unity
 {
 namespace dash
@@ -55,12 +57,12 @@ Filter::~Filter()
 
 Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
 {
-  return Filter::Ptr(new Filter());
-}
+  std::string renderer = dee_model_get_string(model, iter, 3);
 
-void Filter::Clear()
-{
-  // Do nothing as we don't know the schema of the hints
+  if (renderer == "ratings")
+    return Filter::Ptr(new RatingsFilter(model, iter));
+
+  return Filter::Ptr(new RatingsFilter(model, iter));
 }
 
 void Filter::Connect()
@@ -89,11 +91,6 @@ void Filter::Connect()
   {
     LOG_WARNING(logger) << "Cannot connect if model_ or iter_ are invalid";
   }
-}
-
-void Filter::Update(Hints& hints)
-{
-
 }
 
 void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
@@ -126,18 +123,29 @@ void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 
 void Filter::UpdateProperties()
 {
-  id = dee_model_get_string(model_, iter_, 0);
-  name = dee_model_get_string(model_, iter_, 1);
-  icon_hint = dee_model_get_string(model_, iter_, 2);
-  renderer_name = dee_model_get_string(model_, iter_, 3);
-  visible = dee_model_get_bool(model_, iter_, 5) != FALSE;
-  collapsed = dee_model_get_bool(model_, iter_, 6) != FALSE;
-  filtering = dee_model_get_bool(model_, iter_, 7) != FALSE;
+  id = dee_model_get_string(model_, iter_, FilterColumn::ID);
+  name = dee_model_get_string(model_, iter_, FilterColumn::NAME);
+  icon_hint = dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
+  renderer_name = dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
+  visible = dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE) != FALSE;
+  collapsed = dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED) != FALSE;
+  filtering = dee_model_get_bool(model_, iter_, FilterColumn::FILTERING) != FALSE;
 }
 
 void Filter::HintsToMap(Hints& map)
 {
+  GVariant* row_value = dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE);
 
+  GVariantIter iter;
+  g_variant_iter_init(&iter, row_value);
+
+  char* key = NULL;
+  GVariant* value = NULL;
+  while (g_variant_iter_loop(&iter, "{sv}", &key, &value))
+  {
+    map[key] = value;
+  }
+  g_variant_unref(row_value);
 }
 
 }
