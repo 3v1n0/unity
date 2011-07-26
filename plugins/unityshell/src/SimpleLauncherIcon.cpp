@@ -17,12 +17,18 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
+#include <NuxCore/Logger.h>
 #include "Nux/Nux.h"
 #include "Nux/BaseWindow.h"
 
 #include "SimpleLauncherIcon.h"
 #include "Launcher.h"
 #include "PluginAdapter.h"
+
+namespace
+{
+  nux::logging::Logger logger("unity.dash.CategoryViewGrid");
+}
 
 SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
   : LauncherIcon(IconManager)
@@ -96,7 +102,16 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 
 void SimpleLauncherIcon::SetIconName(const char* name)
 {
-  icon_name_ = name;
+  if (name == NULL)
+  {
+    LOG_WARNING(logger) << "attempted to set NULL as IconName";
+    icon_name_.clear();
+  }
+  else
+  {
+    icon_name_ = name;
+  }
+
   ReloadIcon();
 }
 
