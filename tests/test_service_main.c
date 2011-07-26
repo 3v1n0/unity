@@ -57,6 +57,7 @@ main(gint argc, gchar** argv)
   g_main_loop_run(loop_);
   g_main_loop_unref(loop_);
 
+  g_object_unref(lens_);
   g_object_unref(model_);
   g_dbus_node_info_unref(introspection_data);
 
