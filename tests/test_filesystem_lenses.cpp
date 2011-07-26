@@ -66,8 +66,8 @@ TEST(TestFilesystemLenses, TestLensCreation)
   lenses.lens_added.connect(sigc::slot<void, Lens::Ptr&>(lens_added_cb));
 
   WaitForLensesToLoad(lenses);
-  EXPECT_EQ(n_lenses, 3);
-  EXPECT_EQ(lenses.count, 3);
+  EXPECT_EQ(n_lenses, (unsigned int)3);
+  EXPECT_EQ(lenses.count, (unsigned int)3);
 }
 
 TEST(TestFilesystemLenses, TestLensContent)

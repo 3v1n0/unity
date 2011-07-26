@@ -116,6 +116,7 @@ public:
   static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
+  static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
   void CreateLensFromKeyFileData(GFile* path, const char* data, gsize length);
 
   FilesystemLenses* owner_;
@@ -224,47 +225,49 @@ void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* e
 void FilesystemLenses::Impl::LoadLensFile(std::string const& lensfile_path)
 {
   glib::Object<GFile> file(g_file_new_for_path(lensfile_path.c_str()));
+  glib::Object<GCancellable> cancellable(g_cancellable_new());
 
   // How many files are we waiting for to load
   children_waiting_to_load_++;
 
-  auto loaded_cb = [](GObject * source, GAsyncResult * res, gpointer user_data)
-  {
-    Impl* self = static_cast<Impl*>(user_data);
-    glib::Error error;
-    char* contents = NULL;
-    gsize length = 0;
-    gboolean result;
-    glib::String path(g_file_get_path(G_FILE(source)));
-
-    result = g_file_load_contents_finish(G_FILE(source), res,
-                                         &contents, &length,
-                                         NULL, error.AsOutParam());
-    if (result && !error)
-    {
-      self->CreateLensFromKeyFileData(G_FILE(source), contents, length);
-      g_free(contents);
-    }
-    else
-    {
-      LOG_WARN(logger) << "Unable to read lens file "
-      << path.Str() << ": "
-      << error.Message();
-    }
-
-    // If we're not waiting for any more children to load, signal that we're
-    // done reading the directory
-    self->children_waiting_to_load_--;
-    if (!self->children_waiting_to_load_)
-      self->owner_->lenses_loaded.emit();
-  };
-
-  glib::Object<GCancellable> cancellable(g_cancellable_new());
   g_file_load_contents_async(file,
                              cancellable,
-                             (GAsyncReadyCallback)(loaded_cb),
+                             (GAsyncReadyCallback)(FilesystemLenses::Impl::LoadFileContentCallback),
                              this);
   cancel_map_[file] = cancellable;
+}
+
+void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
+                                                     GAsyncResult* res,
+                                                     gpointer user_data)
+{
+  Impl* self = static_cast<Impl*>(user_data);
+  glib::Error error;
+  char* contents = NULL;
+  gsize length = 0;
+  gboolean result;
+  glib::String path(g_file_get_path(G_FILE(source)));
+
+  result = g_file_load_contents_finish(G_FILE(source), res,
+                                       &contents, &length,
+                                       NULL, error.AsOutParam());
+  if (result && !error)
+  {
+    self->CreateLensFromKeyFileData(G_FILE(source), contents, length);
+    g_free(contents);
+  }
+  else
+  {
+    LOG_WARN(logger) << "Unable to read lens file "
+    << path.Str() << ": "
+    << error.Message();
+  }
+
+  // If we're not waiting for any more children to load, signal that we're
+  // done reading the directory
+  self->children_waiting_to_load_--;
+  if (!self->children_waiting_to_load_)
+    self->owner_->lenses_loaded.emit();
 }
 
 void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
