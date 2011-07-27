@@ -33,7 +33,7 @@ namespace dash
 class Lenses : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef std::vector<Lens::Ptr> List;
+  typedef std::vector<Lens::Ptr> LensList;
 
   /**
    * Get the currently loaded Lenses. This is necessary as some of the consumers
@@ -42,11 +42,11 @@ public:
    * the objects have been initiated (and so just connecting to the signals is not
    * enough)
    */
-  virtual List GetLenses() const = 0;
+  virtual LensList GetLenses() const = 0;
   virtual Lens::Ptr GetLens(std::string const& lens_id) const = 0;
-  virtual Lens::Ptr GetLensAtIndex(unsigned int index) const = 0;
+  virtual Lens::Ptr GetLensAtIndex(std::size_t index) const = 0;
 
-  nux::ROProperty<unsigned int> count;
+  nux::ROProperty<std::size_t> count;
 
   sigc::signal<void, Lens::Ptr&> lens_added;
 };
