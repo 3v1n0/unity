@@ -80,7 +80,7 @@ void RatingsFilter::UpdateState()
   g_variant_builder_add(&b, "{sv}", "rating", g_variant_new("d", raw_rating));
 
   dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, g_variant_builder_end(&b));
-  dee_model_set_value(model_, iter_, FilterColumn::FILTERING, g_variant_new ("b", raw_filtering));
+  dee_model_set_value(model_, iter_, FilterColumn::FILTERING, g_variant_new("b", raw_filtering));
 }
 
 }

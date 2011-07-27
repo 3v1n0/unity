@@ -25,7 +25,7 @@ public:
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
     g_variant_builder_add(&b, "{sv}", "rating", g_variant_new("d", 0.6));
-   
+
     iter_ = dee_model_append(model_,
                              "ratings",
                              "Ratings0",
