@@ -144,6 +144,9 @@ PlacesView::PlacesView(PlaceFactory* factory)
   _icon_loader = IconLoader::GetDefault();
 
   SetActiveEntry(_home_entry, 0, "");
+
+
+  noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
 }
 
 PlacesView::~PlacesView()
@@ -256,16 +259,70 @@ PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform__bg.flip_v_coord = false;
     texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform__bg.uoffset = ((float) geo_absolute.x) / GfxContext.GetWindowWidth ();
-    texxform__bg.voffset = ((float) GfxContext.GetWindowHeight () - geo_absolute.y - geo_absolute.height) / GfxContext.GetWindowHeight ();
+    texxform__bg.voffset = ((float) GfxContext.GetWindowHeight () - geo_absolute.y - _bg_blur_geo.height) / GfxContext.GetWindowHeight ();
 
     if (nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Vertex_Shader() &&
         nux::GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().Support_ARB_Fragment_Shader() &&
         (nux::GetGraphicsDisplay()->GetGpuDevice()->GetOpenGLMajorVersion() >= 3))
     {
-      _bg_blur_texture = GfxContext.QRP_GLSL_GetHQBlur (0, 0,
-      geo_absolute.width,
-      geo_absolute.height,
-      nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_, texxform__bg, nux::color::White, 9.0f, 1);
+      float noise_factor = 1.2f;
+      float horizontal_noise_factor = 1.0f;
+      float vertical_noise_factor = 1.0f;
+      float gaussian_sigma = 5.0f;
+      int blur_passes = 1;
+
+      unsigned int window_width, window_height;
+      window_width = GfxContext.GetWindowWidth ();
+      window_height = GfxContext.GetWindowHeight ();
+
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_;
+      nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = GfxContext.CacheResource(noise_texture_);
+
+      unsigned int offset = 0;
+      int quad_width = _bg_blur_geo.width;
+      int quad_height = _bg_blur_geo.height;
+
+      int down_size_factor = 1;
+      unsigned int buffer_width = quad_width + 2 * offset;
+      unsigned int buffer_height = quad_height + 2 * offset;
+
+      int x =  (buffer_width - quad_width)/2;
+      int y =  (buffer_height - quad_height)/2;
+
+      unsigned int down_size_width = buffer_width / down_size_factor;
+      unsigned int down_size_height = buffer_height / down_size_factor;
+
+      nux::TexCoordXForm texxform;
+      nux::TexCoordXForm noise_texxform;
+      
+      noise_texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+      noise_texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+      noise_texxform.SetFilter(nux::TEXFILTER_NEAREST, nux::TEXFILTER_NEAREST);
+
+      // Down size
+      GfxContext.QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture0_,
+       device_texture, texxform__bg, nux::color::White);
+
+      // Blur at a lower resolution (less pixels to process)
+      temp_device_texture1_ = GfxContext.QRP_GetHQBlur(x, y, down_size_width, down_size_height,
+       temp_device_texture0_, texxform, nux::color::White,
+       gaussian_sigma, blur_passes);
+
+      // Copy to new texture
+      GfxContext.QRP_GetCopyTexture(down_size_width, down_size_height, temp_device_texture0_, temp_device_texture1_, texxform, nux::color::White);
+
+      // Add Noise
+      _bg_blur_texture = GfxContext.QRP_GLSL_GetDisturbedTexture(
+        0, 0, down_size_width, down_size_height,
+        noise_device_texture->m_Texture, noise_texxform, nux::Color (
+        noise_factor * horizontal_noise_factor * 1.0f/down_size_width,
+        noise_factor * vertical_noise_factor * 1.0f/down_size_height, 1.0f, 1.0f),
+        temp_device_texture0_, texxform, nux::color::White);
+
+      // _bg_blur_texture = GfxContext.QRP_GLSL_GetHQBlur (0, 0,
+      // geo_absolute.width,
+      // geo_absolute.height,
+      // nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_, texxform__bg, nux::color::White, 5.0f, 1);
     }
     else
     {
@@ -293,7 +350,7 @@ PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (_bg_blur_texture.IsValid()  && paint_blur)
   {
     nux::TexCoordXForm texxform_blur__bg;
-    texxform_blur__bg.flip_v_coord = false;
+    texxform_blur__bg.flip_v_coord = true;
     texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
     texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
@@ -429,7 +486,7 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur__bg;
-    texxform_blur__bg.flip_v_coord = false;
+    texxform_blur__bg.flip_v_coord = true;
     texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
     texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;

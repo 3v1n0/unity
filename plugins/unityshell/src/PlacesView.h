@@ -160,6 +160,10 @@ private:
   nux::SpaceLayout* _h_spacer;
   nux::SpaceLayout* _v_spacer;
 
+  nux::BaseTexture*                       noise_texture_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
+
   SizeMode   _size_mode;
   ShrinkMode _shrink_mode;
 
