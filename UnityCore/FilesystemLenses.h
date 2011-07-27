@@ -45,7 +45,7 @@ public:
 
   ~FilesystemLenses();
 
-  List GetLenses() const;
+  LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
 

@@ -35,10 +35,11 @@ namespace dash
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.filesystemlenses");
-}
 
+nux::logging::Logger logger("unity.dash.filesystemlenses");
 static const char* GROUP = "Lens";
+
+}
 
 // Loads data from a Lens key-file in a usable form
 struct LensFileData
@@ -50,7 +51,7 @@ struct LensFileData
     , icon(g_key_file_get_string(file, GROUP, "Icon", NULL))
     , description(g_key_file_get_locale_string(file, GROUP, "Description", NULL, NULL))
     , search_hint(g_key_file_get_locale_string(file, GROUP, "SearchHint", NULL, NULL))
-    , visible(g_key_file_get_boolean(file, GROUP, "Visible", NULL) ? true : false)
+    , visible(g_key_file_get_boolean(file, GROUP, "Visible", NULL))
     , shortcut(g_key_file_get_string(file, GROUP, "Shortcut", NULL))
   {}
 
@@ -106,24 +107,25 @@ public:
 
   ~Impl();
 
-  List GetLenses() const;
+  LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(unsigned int index) const;
   unsigned int count() const;
 
   void Init();
   glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
-  static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
-  static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
   void CreateLensFromKeyFileData(GFile* path, const char* data, gsize length);
+
+  static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
+  static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
 
   FilesystemLenses* owner_;
   glib::Object<GFile> directory_;
   unsigned int children_waiting_to_load_;
   CancellableMap cancel_map_;
-  List lenses_;
+  LensList lenses_;
 };
 
 FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
@@ -150,7 +152,7 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner, std::string const& lens_di
 
 FilesystemLenses::Impl::~Impl()
 {
-for (std::pair<GFile*, glib::Object<GCancellable>> pair: cancel_map_)
+  for (auto pair: cancel_map_)
   {
     g_cancellable_cancel(pair.second);
   }
@@ -193,6 +195,7 @@ void FilesystemLenses::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResult* 
     return;
   }
   self->EnumerateLensesDirectoryChildren(enumerator);
+  self->cancel_map_.erase(source);
 }
 
 void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator)
@@ -246,14 +249,15 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
   char* contents = NULL;
   gsize length = 0;
   gboolean result;
-  glib::String path(g_file_get_path(G_FILE(source)));
+  GFile* file = G_FILE(source);
+  glib::String path(g_file_get_path(file));
 
-  result = g_file_load_contents_finish(G_FILE(source), res,
+  result = g_file_load_contents_finish(file, res,
                                        &contents, &length,
                                        NULL, error.AsOutParam());
   if (result && !error)
   {
-    self->CreateLensFromKeyFileData(G_FILE(source), contents, length);
+    self->CreateLensFromKeyFileData(file, contents, length);
     g_free(contents);
   }
   else
@@ -268,6 +272,8 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
   self->children_waiting_to_load_--;
   if (!self->children_waiting_to_load_)
     self->owner_->lenses_loaded.emit();
+
+  self->cancel_map_.erase(file);
 }
 
 void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
@@ -315,7 +321,7 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
   g_key_file_free(key_file);
 }
 
-Lenses::List FilesystemLenses::Impl::GetLenses() const
+Lenses::LensList FilesystemLenses::Impl::GetLenses() const
 {
   return lenses_;
 }
@@ -367,7 +373,7 @@ FilesystemLenses::~FilesystemLenses()
   delete pimpl;
 }
 
-Lenses::List FilesystemLenses::GetLenses() const
+Lenses::LensList FilesystemLenses::GetLenses() const
 {
   return pimpl->GetLenses();
 }
