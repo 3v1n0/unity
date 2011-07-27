@@ -47,7 +47,7 @@ public:
 
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(unsigned int index) const;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const;
 
   sigc::signal<void> lenses_loaded;
 

@@ -19,9 +19,11 @@
 
 #include "FilesystemLenses.h"
 
+#include <boost/lexical_cast.hpp>
 #include <gio/gio.h>
 #include <glib.h>
 #include <NuxCore/Logger.h>
+#include <stdexcept>
 #include <vector>
 
 #include "config.h"
@@ -109,21 +111,22 @@ public:
 
   LensList GetLenses() const;
   Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(unsigned int index) const;
-  unsigned int count() const;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const;
+  std::size_t count() const;
 
   void Init();
   glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
   void CreateLensFromKeyFileData(GFile* path, const char* data, gsize length);
-
+  void DecrementAndCheckChildrenWaiting();
+  
   static void OnDirectoryEnumerated(GFile* source, GAsyncResult* res, Impl* self);
   static void LoadFileContentCallback(GObject* source, GAsyncResult* res, gpointer user_data);
 
   FilesystemLenses* owner_;
   glib::Object<GFile> directory_;
-  unsigned int children_waiting_to_load_;
+  std::size_t children_waiting_to_load_;
   CancellableMap cancel_map_;
   LensList lenses_;
 };
@@ -248,13 +251,12 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
   glib::Error error;
   char* contents = NULL;
   gsize length = 0;
-  gboolean result;
   GFile* file = G_FILE(source);
   glib::String path(g_file_get_path(file));
 
-  result = g_file_load_contents_finish(file, res,
-                                       &contents, &length,
-                                       NULL, error.AsOutParam());
+  gboolean result = g_file_load_contents_finish(file, res,
+                                                &contents, &length,
+                                                NULL, error.AsOutParam());
   if (result && !error)
   {
     self->CreateLensFromKeyFileData(file, contents, length);
@@ -266,14 +268,18 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
                      << path.Str() << ": "
                      << error.Message();
   }
+  
+  self->DecrementAndCheckChildrenWaiting();
+  self->cancel_map_.erase(file);
+}
 
+void FilesystemLenses::Impl::DecrementAndCheckChildrenWaiting()
+{
   // If we're not waiting for any more children to load, signal that we're
   // done reading the directory
-  self->children_waiting_to_load_--;
-  if (!self->children_waiting_to_load_)
-    self->owner_->lenses_loaded.emit();
-
-  self->cancel_map_.erase(file);
+  children_waiting_to_load_--;
+  if (!children_waiting_to_load_)
+    owner_->lenses_loaded.emit();
 }
 
 void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
@@ -330,24 +336,31 @@ Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
 {
   Lens::Ptr p;
 
-for (Lens::Ptr lens: lenses_)
+  for (Lens::Ptr lens: lenses_)
   {
-    std::string id = lens->id;
-    if (id == lens_id)
+    if (lens->id == lens_id)
       p = lens;
   }
 
   return p;
 }
 
-Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(unsigned int index) const
+Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
 {
-  return lenses_[index];
+  try
+  {
+    return lenses_.at(index);
+  }
+  catch (std::out_of_range& error)
+  {
+    LOG_WARN(logger) << error.what();
+  }
+  return Lens::Ptr();
 }
 
-unsigned int FilesystemLenses::Impl::count() const
+std::size_t FilesystemLenses::Impl::count() const
 {
-  return (unsigned int)lenses_.size();
+  return (std::size_t)lenses_.size();
 }
 
 
@@ -383,7 +396,7 @@ Lens::Ptr FilesystemLenses::GetLens(std::string const& lens_id) const
   return pimpl->GetLens(lens_id);
 }
 
-Lens::Ptr FilesystemLenses::GetLensAtIndex(unsigned int index) const
+Lens::Ptr FilesystemLenses::GetLensAtIndex(std::size_t index) const
 {
   return pimpl->GetLensAtIndex(index);
 }

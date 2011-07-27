@@ -44,7 +44,7 @@ static void WaitForLensesToLoad(FilesystemLenses& lenses)
 
 TEST(TestFilesystemLenses, TestConstruction)
 {
-  FilesystemLenses lenses0();
+  FilesystemLenses lenses0;
   FilesystemLenses lenses1(TESTDATADIR"/lenses");
 }
 
