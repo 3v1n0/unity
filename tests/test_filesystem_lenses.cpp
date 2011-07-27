@@ -75,9 +75,6 @@ TEST(TestFilesystemLenses, TestLensContent)
   FilesystemLenses lenses(TESTDATADIR"/lenses");
   WaitForLensesToLoad(lenses);
 
-  // We need to assign the std::string properties before using them
-  std::string s;
-
   // Test that the lenses have loaded correctly
   Lens::Ptr lens = lenses.GetLens("applications.lens");
   EXPECT_TRUE(lens.get());
