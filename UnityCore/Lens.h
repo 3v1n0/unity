@@ -58,8 +58,8 @@ public:
   nux::ROProperty<bool> visible;
   nux::ROProperty<std::string> shortcut;
 
-  class Impl;
 private:
+  class Impl;
   Impl* pimpl;
 };
 

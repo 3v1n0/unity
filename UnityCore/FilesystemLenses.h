@@ -51,8 +51,8 @@ public:
 
   sigc::signal<void> lenses_loaded;
 
-  class Impl;
 private:
+  class Impl;
   Impl* pimpl;
 };
 
