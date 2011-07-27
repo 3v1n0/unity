@@ -80,5 +80,4 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
-
 }
