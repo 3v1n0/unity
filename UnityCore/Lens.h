@@ -22,6 +22,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
@@ -33,7 +34,7 @@ namespace dash
 class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<Lens> Ptr;
+  typedef std::shared_ptr<Lens> Ptr;
 
   Lens(std::string const& id,
        std::string const& dbus_name,

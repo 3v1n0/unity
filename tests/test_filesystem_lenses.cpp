@@ -80,7 +80,7 @@ TEST(TestFilesystemLenses, TestLensContent)
 
   // Test that the lenses have loaded correctly
   Lens::Ptr lens = lenses.GetLens("applications.lens");
-  EXPECT_TRUE(lens);
+  EXPECT_TRUE(lens.get());
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Applications");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/applications");
   EXPECT_EQ(s = lens->name, "Applications");
@@ -91,7 +91,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->shortcut, "a");
 
   lens = lenses.GetLens("files.lens");
-  EXPECT_TRUE(lens);
+  EXPECT_TRUE(lens.get());
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Files");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/files");
   EXPECT_EQ(s = lens->name, "Files");
@@ -102,7 +102,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(s = lens->shortcut, "f");
 
   lens = lenses.GetLens("social.lens");
-  EXPECT_TRUE(lens);
+  EXPECT_TRUE(lens.get());
   EXPECT_EQ(s = lens->dbus_name, "com.canonical.tests.Lens.Social");
   EXPECT_EQ(s = lens->dbus_path, "/com/canonical/tests/lens/social");
   EXPECT_EQ(s = lens->name, "Social");

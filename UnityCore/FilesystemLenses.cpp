@@ -212,7 +212,7 @@ void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* e
     {
       std::string name(g_file_info_get_name(info));
       glib::String dir_path(g_file_get_path(g_file_enumerator_get_container(enumerator)));
-      auto lensfile_name = name + ".lens";
+      std::string lensfile_name = name + ".lens";
 
       glib::String lensfile_path(g_build_filename(dir_path.Value(),
                                                   name.c_str(),

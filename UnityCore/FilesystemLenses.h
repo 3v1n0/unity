@@ -17,10 +17,10 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_DBUS_LENSES_H
-#define UNITY_DBUS_LENSES_H
+#ifndef UNITY_FILESYSTEM_LENSES_H
+#define UNITY_FILESYSTEM_LENSES_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
@@ -36,7 +36,7 @@ namespace dash
 class FilesystemLenses : public Lenses
 {
 public:
-  typedef boost::shared_ptr<FilesystemLenses> Ptr;
+  typedef std::shared_ptr<FilesystemLenses> Ptr;
 
   FilesystemLenses();
   FilesystemLenses(std::string const& lens_directory);
