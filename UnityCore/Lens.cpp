@@ -116,7 +116,6 @@ public:
   glib::DBusProxy proxy_;
 };
 
-
 Lens::Impl::Impl(Lens* owner,
                  string const& id,
                  string const& dbus_name,
