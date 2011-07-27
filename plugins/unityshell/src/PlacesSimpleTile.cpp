@@ -144,7 +144,6 @@ PlacesSimpleTile::DndSourceGetDragImage()
   {
     nux::GdkGraphics graphics(pbuf);
     result = graphics.GetBitmap();
-    g_object_unref(pbuf);
   }
 
   return result;

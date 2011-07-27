@@ -19,14 +19,19 @@
 #ifndef _DEVICE_LAUNCHER_SECTION_H_
 #define _DEVICE_LAUNCHER_SECTION_H_
 
-#include <sigc++/sigc++.h>
-#include <sigc++/signal.h>
-
-#include "Launcher.h"
-#include "LauncherIcon.h"
-#include "DevicesSettings.h"
+#include <map>
 
 #include <gio/gio.h>
+#include <sigc++/sigc++.h>
+#include <sigc++/signal.h>
+#include <UnityCore/GLibWrapper.h>
+
+#include "DeviceLauncherIcon.h"
+
+class Launcher;
+class LauncherIcon;
+
+namespace unity {
 
 class DeviceLauncherSection : public sigc::trackable
 {
@@ -38,25 +43,34 @@ public:
 
 private:
   static bool PopulateEntries(DeviceLauncherSection* self);
-  static void OnVolumeAdded(GVolumeMonitor*        monitor,
-                            GVolume*               volume,
+  
+  static void OnVolumeAdded(GVolumeMonitor* monitor,
+                            GVolume* volume,
                             DeviceLauncherSection* self);
-  static void OnVolumeRemoved(GVolumeMonitor*        monitor,
-                              GVolume*               volume,
+
+  static void OnVolumeRemoved(GVolumeMonitor* monitor,
+                              GVolume* volume,
                               DeviceLauncherSection* self);
-  static void OnMountAdded(GVolumeMonitor*        monitor,
-                           GMount*                mount,
+
+  static void OnMountAdded(GVolumeMonitor* monitor,
+                           GMount* mount,
                            DeviceLauncherSection* self);
-public:
-  Launcher*       _launcher;
-  GVolumeMonitor* _monitor;
-  GHashTable*     _ht;
+
+  static void OnMountPreUnmount(GVolumeMonitor* monitor,
+                                GMount* mount,
+                                DeviceLauncherSection* self);
 
 private:
-  gulong _on_volume_added_handler_id;
-  gulong _on_volume_removed_handler_id;
-  gulong _on_mount_added_handler_id;
-  gulong _on_device_populate_entry_id;
+  Launcher* launcher_;
+  glib::Object<GVolumeMonitor> monitor_;
+  std::map<GVolume*, DeviceLauncherIcon*> map_;
+  gulong on_volume_added_handler_id_;
+  gulong on_volume_removed_handler_id_;
+  gulong on_mount_added_handler_id_;
+  gulong on_mount_pre_unmount_handler_id_;
+  gulong on_device_populate_entry_id_;
 };
+
+} // namespace unity
 
 #endif // _DEVICE_LAUNCHER_SECTION_H_
