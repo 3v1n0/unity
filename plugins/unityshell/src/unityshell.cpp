@@ -30,6 +30,7 @@
 #include "LauncherController.h"
 #include "PlacesSettings.h"
 #include "GeisAdapter.h"
+#include "DevicesSettings.h"
 #include "PluginAdapter.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
@@ -146,6 +147,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetDevicesOptionNotify(boost::bind (&UnityScreen::optionChanged, this, _1, _2));
   optionSetShowLauncherInitiate(boost::bind(&UnityScreen::showLauncherKeyInitiate, this, _1, _2, _3));
   optionSetShowLauncherTerminate(boost::bind(&UnityScreen::showLauncherKeyTerminate, this, _1, _2, _3));
   optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
@@ -967,17 +969,18 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
       PlacesController::SetLauncherSize(optionGetIconSize() + 18);
-
       break;
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
       break;
-
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
+      break;
+    case UnityshellOptions::DevicesOption:
+      unity::DevicesSettings::GetDefault().SetDevicesOption((unity::DevicesSettings::DevicesOption) optionGetDevicesOption());
       break;
     default:
       break;
