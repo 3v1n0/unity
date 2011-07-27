@@ -524,7 +524,31 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
   UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
 
   if (pointerX == 0)
-    self->launcher->EdgeRevealTriggered();
+  {
+    if (abs(pointerY-self->_edge_pointerY) <= 5)
+    {
+      self->launcher->EdgeRevealTriggered();
+    }
+    else
+    {
+      /* We are still in the edge, but moving in Y, maybe we need another chance */
+
+      if (abs(pointerY-self->_edge_pointerY) > 20)
+      {
+        /* We're quite far from the first hit spot, let's wait again */
+        self->_edge_pointerY = pointerY;
+        return true;
+      }
+      else
+      {
+        /* We're quite near to the first hit spot, so we can reduce our timeout */
+        self->_edge_pointerY = pointerY;
+        g_source_remove(self->_edge_trigger_handle);
+        self->_edge_trigger_handle = g_timeout_add(75, &UnityScreen::OnEdgeTriggerTimeout, self);
+        return false;
+      }
+    }
+  }
 
   self->_edge_trigger_handle = 0;
   return false;
@@ -540,7 +564,12 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
   if (_edge_trigger_handle)
     g_source_remove(_edge_trigger_handle);
 
-  _edge_trigger_handle = g_timeout_add(500, &UnityScreen::OnEdgeTriggerTimeout, this);
+  if (pointerX == 0)
+  {
+    _edge_pointerY = pointerY;
+    _edge_trigger_handle = g_timeout_add(150, &UnityScreen::OnEdgeTriggerTimeout, this);
+  }
+
   return false;
 }
 
