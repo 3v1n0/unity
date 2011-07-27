@@ -259,8 +259,8 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
   else
   {
     LOG_WARN(logger) << "Unable to read lens file "
-    << path.Str() << ": "
-    << error.Message();
+                     << path.Str() << ": "
+                     << error.Message();
   }
 
   // If we're not waiting for any more children to load, signal that we're
