@@ -49,10 +49,10 @@ public:
   Model();
   virtual ~Model();
 
-  const RowAdaptor RowAtIndex(unsigned int index);
+  const RowAdaptor RowAtIndex(std::size_t index);
 
   nux::Property<std::string> swarm_name;
-  nux::ROProperty<unsigned int> count;
+  nux::ROProperty<std::size_t> count;
   nux::ROProperty<bool> synchronized;
 
   sigc::signal<void, RowAdaptor&> row_added;
@@ -64,7 +64,7 @@ private:
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void OnSwarmNameChanged(std::string const& swarm_name);
-  unsigned int get_count();
+  std::size_t get_count();
   bool is_synchronized();
 
 private:

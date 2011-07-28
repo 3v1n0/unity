@@ -94,7 +94,7 @@ void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 }
 
 template<class RowAdaptor>
-const RowAdaptor Model<RowAdaptor>::RowAtIndex(unsigned int index)
+const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 {
   RowAdaptor it(model_,
                 dee_model_get_iter_at_row(model_, index),
@@ -103,7 +103,7 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(unsigned int index)
 }
 
 template<class RowAdaptor>
-unsigned int Model<RowAdaptor>::get_count()
+std::size_t Model<RowAdaptor>::get_count()
 {
   if (model_)
     return dee_model_get_n_rows(model_);

@@ -44,7 +44,7 @@ public:
 
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<unsigned int> category_index;
+  nux::ROProperty<std::size_t> category_index;
   nux::ROProperty<std::string> mimetype;
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> comment;
@@ -53,7 +53,7 @@ public:
 private:
   std::string get_uri() const;
   std::string get_icon_hint() const;
-  unsigned int get_category() const;
+  std::size_t get_category() const;
   std::string get_mimetype() const;
   std::string get_name() const;
   std::string get_comment() const;

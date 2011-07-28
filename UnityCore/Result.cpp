@@ -55,7 +55,7 @@ std::string Result::get_icon_hint() const
   return dee_model_get_string(model_, iter_, 1);
 }
 
-unsigned int Result::get_category() const
+std::size_t Result::get_category() const
 {
   return dee_model_get_uint32(model_, iter_, 2);
 }

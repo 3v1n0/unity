@@ -39,13 +39,13 @@ public:
 
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<unsigned int> index;
+  nux::ROProperty<std::size_t> index;
   nux::ROProperty<std::string> renderer_name;
 
 private:
   std::string get_name() const;
   std::string get_icon_hint() const;
-  unsigned int get_index() const;
+  std::size_t get_index() const;
   std::string get_renderer_name() const;
 };
 
