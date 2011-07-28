@@ -76,7 +76,6 @@ public:
                         string const& filters_model_name,
                         URIPatterns uri_patterns,
                         MIMEPatterns mime_patterns);
-
   void OnActiveChanged(bool is_active);
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);

@@ -127,9 +127,9 @@ void Filter::UpdateProperties()
   name = dee_model_get_string(model_, iter_, FilterColumn::NAME);
   icon_hint = dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
   renderer_name = dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
-  visible = dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE) != FALSE;
-  collapsed = dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED) != FALSE;
-  filtering = dee_model_get_bool(model_, iter_, FilterColumn::FILTERING) != FALSE;
+  visible = dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE);
+  collapsed = dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED);
+  filtering = dee_model_get_bool(model_, iter_, FilterColumn::FILTERING);
 }
 
 void Filter::HintsToMap(Hints& map)

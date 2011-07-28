@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_DBUS_LENSES_H
-#define UNITY_DBUS_LENSES_H
+#ifndef UNITY_DBUS_PROXY_H
+#define UNITY_DBUS_PROXY_H
 
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>

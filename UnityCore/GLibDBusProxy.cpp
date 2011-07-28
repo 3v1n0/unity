@@ -20,6 +20,7 @@
 #include "GLibDBusProxy.h"
 
 #include <map>
+#include <memory>
 #include <NuxCore/Logger.h>
 #include <vector>
 
@@ -237,7 +238,7 @@ void DBusProxy::Impl::Call(string const& method_name,
 {
   if (proxy_)
   {
-    auto data = new CallData();
+    CallData* data = new CallData();
     data->callback = callback;
     data->impl = this;
 
@@ -260,7 +261,7 @@ void DBusProxy::Impl::Call(string const& method_name,
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
-  CallData* data = static_cast<CallData*>(call_data);
+  std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
   GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, error.AsOutParam());
 
   if (result)
@@ -273,8 +274,6 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
     // Do not touch the impl pointer as the operation may have been cancelled
     LOG_WARNING(logger) << "Calling method failed: " << error.Message();
   }
-
-  delete data;
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
