@@ -106,6 +106,7 @@ protected:
                                const char* character);
 
 private:
+  static void     OnBackgroundUpdate (GVariant *data, PlacesView *self);
   static void     CloseRequest(GVariant* data, PlacesView* self);
   static gboolean OnCloseTimeout(PlacesView* self);
   void OnGroupAdded(PlaceEntry* entry, PlaceEntryGroup& group);

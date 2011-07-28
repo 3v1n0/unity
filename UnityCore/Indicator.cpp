@@ -56,6 +56,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       Entry::Ptr new_entry = new_entries[new_index];
       entries_.push_back(new_entry);
       new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
+      new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
       new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
       on_entry_added.emit(new_entry);
     }
@@ -84,6 +85,12 @@ void Indicator::OnEntryShowMenu(std::string const& entry_id,
                                 int timestamp, int button)
 {
   on_show_menu.emit(entry_id, x, y, timestamp, button);
+}
+
+void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,
+                                         unsigned int timestamp)
+{
+  on_secondary_activate.emit(entry_id, timestamp);
 }
 
 void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
