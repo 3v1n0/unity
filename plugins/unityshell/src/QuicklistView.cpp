@@ -154,7 +154,8 @@ QuicklistView::IsMenuItemSeperator(int index)
 }
 
 void
-QuicklistView::RecvKeyPressed(unsigned long    eventType,
+QuicklistView::RecvKeyPressed(nux::GraphicsEngine& GfxContext,
+                              unsigned long    eventType,
                               unsigned long    key_sym,
                               unsigned long    key_state,
                               const char*      character,
