@@ -141,9 +141,15 @@ PlacesView::PlacesView(PlaceFactory* factory)
                                                    (UBusCallback)&PlacesView::OnPlaceViewQueueDrawNeeded,
                                                    this);
 
+  _ubus_handles[4] = ubus_server_register_interest (ubus, UBUS_BACKGROUND_COLOR_CHANGED,
+                                                    (UBusCallback)&PlacesView::OnBackgroundUpdate,
+                                                    this);
   _icon_loader = IconLoader::GetDefault();
 
   SetActiveEntry(_home_entry, 0, "");
+  
+  // do a request for the latest colour from bghash
+  ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 }
 
 PlacesView::~PlacesView()
@@ -310,6 +316,11 @@ PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       nux::Geometry bg = geo;
       bg.width -= corner->GetWidth();
       bg.height -= corner->GetHeight();
+
+      //FIXME - we need to be smarter here, mask out the corner of the background colour
+      // same for the blur
+      bg.width += 5;
+      bg.height += 5;
 
       _bg_layer->SetGeometry(bg);
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, bg, _bg_layer);
@@ -877,6 +888,22 @@ PlacesView::PlaceEntryActivateRequest(const char* entry_id,
             entry_id,
             section_id,
             search_string);
+}
+
+void
+PlacesView::OnBackgroundUpdate (GVariant *data, PlacesView *self)
+{
+  gdouble red, green, blue, alpha;
+  g_variant_get (data, "(dddd)", &red, &green, &blue, &alpha);
+
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+  nux::Color bg_color = nux::Color(red, green, blue, alpha);
+  self->_bg_layer = new nux::ColorLayer (bg_color, true, rop);
+  self->NeedRedraw ();
+
 }
 
 void

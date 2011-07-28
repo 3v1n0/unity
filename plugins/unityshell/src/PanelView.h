@@ -79,6 +79,10 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  static void OnBackgroundUpdate  (GVariant *data, PanelView *self);
+  static void OnDashShown         (GVariant *data, PanelView *self);
+  static void OnDashHidden        (GVariant *data, PanelView *self);
+
   void UpdateBackground();
   void ForceUpdateBackground();
   void SyncGeometries();
@@ -101,11 +105,17 @@ private:
   int _last_height;
 
   PanelStyle* _style;
+  nux::Color  _bg_color;
   bool        _is_dirty;
   float       _opacity;
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
+
+  bool        _dash_is_open;
+  guint       _handle_dash_hidden;
+  guint       _handle_dash_shown;
+  guint       _handle_bg_color_update;
 };
 
 }
