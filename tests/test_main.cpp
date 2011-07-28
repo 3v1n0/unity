@@ -14,7 +14,7 @@ int main(int argc, char** argv)
   // We need the service to be ready before we are
   if (!wait_until_test_service_appears())
   {
-    printf("FATAL: Unable to connect to test service\n");
+    std::cerr << "FATAL: Unable to connect to test service";
     return EXIT_FAILURE;
   }
 
