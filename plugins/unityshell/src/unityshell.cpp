@@ -139,6 +139,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   debugger = new DebugDBusInterface(this);
 
+  _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -160,6 +162,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -544,7 +547,9 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
         /* We're quite near to the first hit spot, so we can reduce our timeout */
         self->_edge_pointerY = pointerY;
         g_source_remove(self->_edge_trigger_handle);
-        self->_edge_trigger_handle = g_timeout_add(75, &UnityScreen::OnEdgeTriggerTimeout, self);
+        self->_edge_trigger_handle = g_timeout_add(self->_edge_timeout/2,
+                                                   &UnityScreen::OnEdgeTriggerTimeout,
+                                                   self);
         return false;
       }
     }
@@ -567,7 +572,9 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
   if (pointerX == 0)
   {
     _edge_pointerY = pointerY;
-    _edge_trigger_handle = g_timeout_add(150, &UnityScreen::OnEdgeTriggerTimeout, this);
+    _edge_trigger_handle = g_timeout_add(_edge_timeout,
+                                         &UnityScreen::OnEdgeTriggerTimeout,
+                                         this);
   }
 
   return false;
@@ -1010,6 +1017,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::DevicesOption:
       unity::DevicesSettings::GetDefault().SetDevicesOption((unity::DevicesSettings::DevicesOption) optionGetDevicesOption());
+      break;
+    case UnityshellOptions::LauncherRevealEdgeTimeout:
+      _edge_timeout = optionGetLauncherRevealEdgeTimeout();
       break;
     default:
       break;
