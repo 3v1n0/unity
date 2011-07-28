@@ -40,7 +40,8 @@ namespace unity {
       _new_color (nux::color::DimGray),
       _old_color (nux::color::DimGray),
       _hires_time_start(10),
-      _hires_time_end(20)
+      _hires_time_end(20),
+      _ubus_handle_request_colour(0)
   {
     background_monitor = gnome_bg_new ();
     client = g_settings_new ("org.gnome.desktop.background");
@@ -51,15 +52,15 @@ namespace unity {
     LoadPixbufToHash (pixbuf);
     g_object_unref (pixbuf);
 
-    g_signal_connect (client,
-                      "changed",
-                      (GCallback)(BGHash::OnGSettingsChanged),
-                      this);
+    signal_manager_.Add(
+      new glib::Signal<void, GnomeBG*>(background_monitor,
+                                       "changed",
+                                       sigc::mem_fun(this, &BGHash::OnBackgroundChanged)));
 
-    g_signal_connect (background_monitor,
-                      "changed",
-                      (GCallback)(BGHash::OnBackgroundChanged),
-                      (gpointer)this);
+    signal_manager_.Add(
+      new glib::Signal<void, GSettings*, gchar*>(client,
+                                                 "changed",
+                                                 sigc::mem_fun(this, &BGHash::OnGSettingsChanged))); 
 
     UBusServer *ubus = ubus_server_get_default ();
 
@@ -68,57 +69,58 @@ namespace unity {
     auto request_lambda =  [](GVariant *data, gpointer self) {
       reinterpret_cast<BGHash*>(self)->DoUbusColorEmit();
     };
-    ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
-                                   (UBusCallback)request_lambda,
-                                   this);
+    _ubus_handle_request_colour = ubus_server_register_interest (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT,
+                                                                 (UBusCallback)request_lambda,
+                                                                  this);
   }
 
   BGHash::~BGHash ()
   {
     g_object_unref (client);
     g_object_unref (background_monitor);
-
+    UBusServer *ubus = ubus_server_get_default ();
+    ubus_server_unregister_interest (ubus, _ubus_handle_request_colour);
   }
 
-  void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key, BGHash *self)
+  void BGHash::OnGSettingsChanged (GSettings *settings, gchar *key)
   {
-    gnome_bg_load_from_preferences (self->background_monitor, settings);
+    gnome_bg_load_from_preferences (background_monitor, settings);
   }
 
-  void BGHash::OnBackgroundChanged (GnomeBG *bg, BGHash *self)
+  void BGHash::OnBackgroundChanged (GnomeBG *bg)
   {
     const gchar *filename = gnome_bg_get_filename (bg);
-    if (self->_bg_slideshow != NULL)
+    if (_bg_slideshow != NULL)
     {
-      slideshow_unref (self->_bg_slideshow);
-      self->_bg_slideshow = NULL;
-      self->_current_slide = NULL;
+      slideshow_unref (_bg_slideshow);
+      _bg_slideshow = NULL;
+      _current_slide = NULL;
     }
 
-    if (self->_slideshow_handler)
+    if (_slideshow_handler)
     {
-      g_source_remove (self->_slideshow_handler);
-      self->_slideshow_handler = 0;
+      g_source_remove (_slideshow_handler);
+      _slideshow_handler = 0;
     }
 
     if (g_str_has_suffix (filename, "xml"))
     {
       GError *error = NULL;
 
-      if (self->_bg_slideshow != NULL)
+      if (_bg_slideshow != NULL)
       {
-        slideshow_unref (self->_bg_slideshow);
-        self->_bg_slideshow = NULL;
+        slideshow_unref (_bg_slideshow);
+        _bg_slideshow = NULL;
       }
 
-      self->_bg_slideshow = read_slideshow_file (filename, &error);
+      _bg_slideshow = read_slideshow_file (filename, &error);
 
       if (error != NULL)
       {
         g_warning ("BGHash.cpp: could not load filename %s: %s", filename, error->message);
         g_error_free (error);
       }
-      else if (self->_bg_slideshow == NULL)
+      else if (_bg_slideshow == NULL)
       {
         g_warning ("BGHash.cpp: could not load filename %s", filename);
       }
@@ -128,41 +130,41 @@ namespace unity {
         time_t current_time = time(0);
         double now = (double) current_time;
 
-        double time_diff = now - self->_bg_slideshow->start_time;
-        double progress = fmod (time_diff, self->_bg_slideshow->total_duration);
+        double time_diff = now - _bg_slideshow->start_time;
+        double progress = fmod (time_diff, _bg_slideshow->total_duration);
 
         // progress now holds how many seconds we are in to this slideshow.
         // iterate over the slideshows until we get in to the current slideshow
-        Slide *slide_itteratation;
+        Slide *slide_iteration;
         Slide *slide_current = NULL;
         double elapsed = 0;
         double time_to_next_change = 0;
         GList *list;
 
-        for (list = self->_bg_slideshow->slides->head; list != NULL; list = list->next)
+        for (list = _bg_slideshow->slides->head; list != NULL; list = list->next)
         {
-          slide_itteratation = reinterpret_cast<Slide *>(list->data);
-          if (elapsed + slide_itteratation->duration > progress)
+          slide_iteration = reinterpret_cast<Slide *>(list->data);
+          if (elapsed + slide_iteration->duration > progress)
           {
-            slide_current = slide_itteratation;
+            slide_current = slide_iteration;
             time_to_next_change = slide_current->duration- (progress - elapsed);
             break;
           }
 
-          elapsed += slide_itteratation->duration;
+          elapsed += slide_iteration->duration;
         }
 
         if (slide_current == NULL)
         {
-          slide_current = reinterpret_cast<Slide *>(g_queue_peek_head(self->_bg_slideshow->slides));
+          slide_current = reinterpret_cast<Slide *>(g_queue_peek_head(_bg_slideshow->slides));
           time_to_next_change = slide_current->duration;
         }
 
         // time_to_next_change now holds the seconds until the next slide change
         // the next slide change may or may not be a fixed slide.
-        self->_slideshow_handler = g_timeout_add ((guint)(time_to_next_change * 1000),
+        _slideshow_handler = g_timeout_add ((guint)(time_to_next_change * 1000),
                                                   (GSourceFunc)OnSlideshowTransition,
-                                                  (gpointer)self);
+                                                  (gpointer)this);
 
         // find our current slide now
         if (slide_current->file1 == NULL)
@@ -175,11 +177,11 @@ namespace unity {
           filename = reinterpret_cast<gchar *>(fs->file);
         }
 
-        self->_current_slide = slide_current;
+        _current_slide = slide_current;
       }
     }
 
-    self->LoadFileToHash (filename);
+    LoadFileToHash (filename);
   }
 
   gboolean BGHash::OnSlideshowTransition (BGHash *self)

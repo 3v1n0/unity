@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <libgnome-desktop/gnome-bg.h>
 #include <unity-misc/gnome-bg-slideshow.h>
+#include <UnityCore/GLibSignal.h>
 
 namespace unity
 {
@@ -36,8 +37,8 @@ namespace unity
     void LoadPixbufToHash (GdkPixbuf *pixbuf);
     GdkPixbuf *GetPixbufFromBG ();
     nux::Color CurrentColor ();
-    static void OnBackgroundChanged (GnomeBG *bg, BGHash *self);
-    static void OnGSettingsChanged (GSettings *settings, gchar *key, BGHash *self);
+    void OnBackgroundChanged (GnomeBG *bg);
+    void OnGSettingsChanged (GSettings *settings, gchar *key);
 
   private:
     static gboolean OnSlideshowTransition (BGHash *self);
@@ -65,6 +66,8 @@ namespace unity
 
     guint64 _hires_time_start;
     guint64 _hires_time_end;
+    glib::SignalManager signal_manager_; 
+    uint _ubus_handle_request_colour;
   };
 };
 
