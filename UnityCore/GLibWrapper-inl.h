@@ -56,6 +56,7 @@ Object<T>& Object<T>::operator=(T* val)
   if (object_)
     g_object_unref(object_);
   object_ = val;
+  return *this;
 }
 
 template <typename T>
