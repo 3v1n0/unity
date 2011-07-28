@@ -21,8 +21,8 @@
 #define UNITY_DBUS_PROXY_H
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <gio/gio.h>
+#include <memory>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
@@ -36,7 +36,7 @@ namespace glib
 class DBusProxy : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<DBusProxy> Ptr;
+  typedef std::shared_ptr<DBusProxy> Ptr;
   typedef sigc::slot<void, GVariant*> ReplyCallback;
 
   DBusProxy(std::string const& name,

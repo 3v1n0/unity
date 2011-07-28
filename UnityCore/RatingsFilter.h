@@ -30,7 +30,7 @@ namespace dash
 class RatingsFilter : public Filter
 {
 public:
-  typedef boost::shared_ptr<RatingsFilter> Ptr;
+  typedef std::shared_ptr<RatingsFilter> Ptr;
 
   RatingsFilter(DeeModel* model, DeeModelIter* iter);
 

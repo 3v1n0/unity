@@ -21,8 +21,8 @@
 #define UNITY_MODEL_H
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <dee.h>
+#include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
@@ -44,7 +44,7 @@ template<class RowAdaptor>
 class Model : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<Model> Ptr;
+  typedef std::shared_ptr<Model> Ptr;
 
   Model();
   virtual ~Model();

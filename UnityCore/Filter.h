@@ -20,9 +20,9 @@
 #ifndef UNITY_FILTER_H
 #define UNITY_FILTER_H
 
-#include <boost/shared_ptr.hpp>
 #include <dee.h>
 #include <map>
+#include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
@@ -48,7 +48,7 @@ enum FilterColumn
 class Filter : public sigc::trackable
 {
 public:
-  typedef boost::shared_ptr<Filter> Ptr;
+  typedef std::shared_ptr<Filter> Ptr;
   typedef std::map<std::string, GVariant*> Hints;
 
   Filter();
