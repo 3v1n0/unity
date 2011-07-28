@@ -36,7 +36,7 @@ public:
   Category(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
   Category(Category const& other);
-  void operator=(Category const& other);
+  Category& operator=(Category const& other);
 
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> icon_hint;

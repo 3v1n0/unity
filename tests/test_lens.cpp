@@ -1,3 +1,4 @@
+#include <boost/lexical_cast.hpp>
 #include <gtest/gtest.h>
 #include <glib-object.h>
 
@@ -133,14 +134,14 @@ TEST_F(TestLens, TestSearch)
 
   for (unsigned int i = 0; i < 5; i++)
   {
-    unity::glib::String name(g_strdup_printf("Test Search String%d", i));
+    std::string name("Test Search String" + boost::lexical_cast<std::string>(i));
 
     Result result = results->RowAtIndex(i);
     EXPECT_EQ(result.uri, "file:///test");
     EXPECT_EQ(result.icon_hint, "gtk-apply");
     EXPECT_EQ(result.category_index, i);
     EXPECT_EQ(result.mimetype, "text/html");
-    EXPECT_EQ(result.name, name.Str());
+    EXPECT_EQ(result.name, name);
     EXPECT_EQ(result.comment, "kamstrup likes ponies");
     EXPECT_EQ(result.dnd_uri, "file:///test");
   }
@@ -155,14 +156,14 @@ TEST_F(TestLens, TestGlobalSearch)
 
   for (unsigned int i = 0; i < 10; i++)
   {
-    unity::glib::String name(g_strdup_printf("Test Global Search String%d", i));
+    std::string name("Test Global Search String" + boost::lexical_cast<std::string>(i));
 
     Result result = results->RowAtIndex(i);
     EXPECT_EQ(result.uri, "file:///test");
     EXPECT_EQ(result.icon_hint, "gtk-apply");
     EXPECT_EQ(result.category_index, i);
     EXPECT_EQ(result.mimetype, "text/html");
-    EXPECT_EQ(result.name, name.Str());
+    EXPECT_EQ(result.name, name);
     EXPECT_EQ(result.comment, "kamstrup likes ponies");
     EXPECT_EQ(result.dnd_uri, "file:///test");
   }

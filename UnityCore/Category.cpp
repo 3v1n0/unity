@@ -42,11 +42,13 @@ Category::Category(Category const& other)
   tag_ = other.tag_;
 }
 
-void Category::operator=(Category const& other)
+Category& Category::operator=(Category const& other)
 {
   model_ = other.model_;
   iter_ = other.iter_;
   tag_ = other.tag_;
+
+  return *this;
 }
 
 std::string Category::get_name() const
