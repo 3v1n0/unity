@@ -41,6 +41,7 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
+#include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
 using namespace unity::switcher;
@@ -216,6 +217,8 @@ private:
   DesktopLauncherIcon* switcher_desktop_icon;
 
   GdkRectangle _primary_monitor;
+
+  unity::BGHash _bghash;
 
   friend class UnityWindow;
 };
