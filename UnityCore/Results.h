@@ -20,7 +20,7 @@
 #ifndef UNITY_RESULTS_H
 #define UNITY_RESULTS_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Model.h"
 #include "Result.h"
@@ -33,7 +33,7 @@ namespace dash
 class Results : public Model<Result>
 {
 public:
-  typedef boost::shared_ptr<Results> Ptr;
+  typedef std::shared_ptr<Results> Ptr;
 
   Results();
 
