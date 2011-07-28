@@ -18,6 +18,7 @@ set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
+     "-g"
      "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -113,6 +114,8 @@ add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
 set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
                           ${UNITY_SRC}/ubus-server.h
+                          ${UNITY_SRC}/BGHash.cpp
+                          ${UNITY_SRC}/BGHash.h
                           ${UNITY_SRC}/IconLoader.cpp
                           ${UNITY_SRC}/IconLoader.h
                           ${UNITY_SRC}/IconTexture.cpp
@@ -287,6 +290,14 @@ add_executable (test-places-backend
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
+add_executable (test-bg-hash
+                TestBGHash.cpp
+                ${UNITY_SRC}/BGHash.cpp
+                ${UNITY_SRC}/BGHash.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+               )
+add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
 #
 # GTest tests
 #

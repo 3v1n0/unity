@@ -138,6 +138,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ,   m_ContentOffsetY(0)
   ,   m_BackgroundLayer(0)
   ,   _model(0)
+  ,   _background_color (nux::color::DimGray)
+  ,   _dash_is_open (false)
 {
   _parent = parent;
   _screen = screen;
@@ -298,6 +300,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                                    (UBusCallback) &Launcher::OnBFBDndEnter,
                                                    this);
 
+  _ubus_handles[5] = ubus_server_register_interest (ubus,
+                                                    UBUS_BACKGROUND_COLOR_CHANGED,
+                                                    (UBusCallback) &Launcher::OnBGColorChanged,
+                                                    this);
+
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME,
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -316,6 +323,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
+  
+  // request the latest colour from bghash
+  ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+
   SetAcceptMouseWheelEvent(true);
 }
 
@@ -1450,11 +1461,22 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
   return false;
 }
 
+void Launcher::OnBGColorChanged(GVariant *data, void *val)
+{
+  Launcher *self = (Launcher*)val;
+  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  self->_background_color = nux::Color(red, green, blue, alpha);
+  self->NeedRedraw();
+}
+
 void Launcher::OnPlaceViewShown(GVariant* data, void* val)
 {
   Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
+  self->_dash_is_open = true;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
@@ -1474,6 +1496,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
+  self->_dash_is_open = false;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
@@ -2052,6 +2075,9 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
+
+
+
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry();
@@ -2085,9 +2111,17 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
+  
+  if (_dash_is_open)
+  {
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+  }
+  else
+  {
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0xAA000000));
+  }
+  
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0xAA000000));
 
   icon_renderer->PreprocessIcons(args, base);
   EventLogic();
