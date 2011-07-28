@@ -67,6 +67,11 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='button' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='SecondaryActivateEntry'>"
+  "      <arg type='s' name='entry_id' direction='in'/>"
+  "      <arg type='u' name='timestamp' direction='in'/>"
+  "    </method>"
+  ""
   "    <method name='ScrollEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
   "      <arg type='i' name='delta' direction='in'/>"
@@ -182,6 +187,17 @@ handle_method_call (GDBusConnection       *connection,
       g_variant_get (parameters, "(suiii)", &entry_id, &timestamp, &x, &y, &button, NULL);
 
       panel_service_show_entry (service, entry_id, timestamp, x, y, button);
+
+      g_dbus_method_invocation_return_value (invocation, NULL);
+      g_free (entry_id);
+    }
+  else if (g_strcmp0 (method_name, "SecondaryActivateEntry") == 0)
+    {
+      gchar  *entry_id;
+      guint32 timestamp;
+      g_variant_get (parameters, "(su)", &entry_id, &timestamp, NULL);
+
+      panel_service_secondary_activate_entry (service, entry_id, timestamp);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);

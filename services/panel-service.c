@@ -236,7 +236,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       XIDeviceEvent *event = cookie->data;
             
-      if (event->evtype == XI_ButtonRelease &&
+      if (event && event->evtype == XI_ButtonRelease &&
           priv->last_menu_button != 0) //FocusChange
         {
           if (event->root_x < priv->last_left ||
@@ -249,7 +249,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
           priv->last_menu_button = 0;
         }
-      else if (event->evtype == XI_Motion)
+      else if (event && event->evtype == XI_Motion)
         {
           priv->last_menu_x = event->root_x;
           priv->last_menu_y = event->root_y;
@@ -1156,6 +1156,19 @@ panel_service_show_entry (PanelService *self,
    */
   if (GTK_MENU (last_menu))
     gtk_menu_popdown (GTK_MENU (last_menu));
+}
+
+void
+panel_service_secondary_activate_entry (PanelService *self,
+                                        const gchar  *entry_id,
+                                        guint32       timestamp)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
+                        timestamp);
 }
 
 void
