@@ -40,10 +40,7 @@ public:
   Filters();
   ~Filters();
 
-  //sigc::signal<void, Filter const&> filter_added;
-  //sigc::signal<void, Filter const&> filter_changed;
-  //sigc::signal<void, Filter const&> filter_removed;
-
+  /* There will be added/changed/removed signals here when we have that working */
 private:
   void OnRowAdded(FilterAdaptor& filter);
   void OnRowChanged(FilterAdaptor& filter);

@@ -32,21 +32,15 @@ nux::logging::Logger logger("unity.dash.ratingsfilter");
 }
 
 RatingsFilter::RatingsFilter(DeeModel* model, DeeModelIter* iter)
+  : Filter(model, iter)
 {
-  model_ = model;
-  iter_ = iter;
-
-  Connect();
-
   rating.changed.connect(sigc::mem_fun(this, &RatingsFilter::OnRatingChanged));
+  Refresh();
 }
 
 void RatingsFilter::Clear()
 {
-  rating = 0.0f;
-  filtering = false;
-
-  UpdateState();
+  UpdateState(0.0f, false);
 }
 
 void RatingsFilter::Update(Filter::Hints& hints)
@@ -66,21 +60,24 @@ void RatingsFilter::Update(Filter::Hints& hints)
 
 void RatingsFilter::OnRatingChanged(float new_value)
 {
-  filtering = true;
-  UpdateState();
+  UpdateState(new_value, true);
 }
 
-void RatingsFilter::UpdateState()
+void RatingsFilter::UpdateState(float raw_rating, bool raw_filtering)
 {
-  float raw_rating = rating;
-  gboolean raw_filtering = filtering ? TRUE : FALSE;
-  GVariantBuilder b;
+  if (!IsValid())
+    return;
 
+  GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&b, "{sv}", "rating", g_variant_new("d", raw_rating));
 
-  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, g_variant_builder_end(&b));
-  dee_model_set_value(model_, iter_, FilterColumn::FILTERING, g_variant_new("b", raw_filtering));
+  dee_model_set_value(model_,iter_,
+                      FilterColumn::RENDERER_STATE,
+                      g_variant_builder_end(&b));
+  dee_model_set_value(model_, iter_,
+                      FilterColumn::FILTERING,
+                      g_variant_new("b", raw_filtering ? TRUE : FALSE));
 }
 
 }

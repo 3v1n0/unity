@@ -44,7 +44,6 @@ public:
 TEST_F(TestRatingsFilter, TestConstruction)
 {
   RatingsFilter::Ptr ratings(new RatingsFilter(model_, iter_));
-  //float rating = ratings->rating;
   EXPECT_FLOAT_EQ(ratings->rating, 0.6);
 }
 

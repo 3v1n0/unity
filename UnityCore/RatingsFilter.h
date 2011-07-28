@@ -43,7 +43,7 @@ protected:
 
 private:
   void OnRatingChanged(float new_value);
-  void UpdateState();
+  void UpdateState(float rating, bool filtering);
 };
 
 }

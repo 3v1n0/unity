@@ -37,7 +37,6 @@ Model<RowAdaptor>::Model()
 {
   swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
   count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
-  synchronized.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::is_synchronized));
 }
 
 template<class RowAdaptor>
@@ -109,15 +108,6 @@ std::size_t Model<RowAdaptor>::get_count()
     return dee_model_get_n_rows(model_);
   else
     return 0;
-}
-
-template<class RowAdaptor>
-bool Model<RowAdaptor>::is_synchronized()
-{
-  if (model_)
-    return dee_shared_model_is_synchronized(DEE_SHARED_MODEL(model_.RawPtr())) != FALSE;
-  else
-    return false;
 }
 
 }
