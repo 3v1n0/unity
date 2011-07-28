@@ -27,11 +27,8 @@ namespace dash
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,
                    DeeModelTag* renderer_name_tag)
+  : RowAdaptorBase(model, iter, renderer_name_tag)
 {
-  model_ = model;
-  iter_ = iter;
-  tag_ = renderer_name_tag;
-
   name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));
   index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
@@ -62,7 +59,7 @@ std::string Category::get_icon_hint() const
   return dee_model_get_string(model_, iter_, 1);
 }
 
-unsigned int Category::get_index() const
+std::size_t Category::get_index() const
 {
   return dee_model_get_position(model_, iter_);
 }

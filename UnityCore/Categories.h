@@ -20,7 +20,7 @@
 #ifndef UNITY_CATEGORIES_H
 #define UNITY_CATEGORIES_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include "Model.h"
 #include "Category.h"
@@ -33,7 +33,7 @@ namespace dash
 class Categories : public Model<Category>
 {
 public:
-  typedef boost::shared_ptr<Categories> Ptr;
+  typedef std::shared_ptr<Categories> Ptr;
 
   Categories();
 

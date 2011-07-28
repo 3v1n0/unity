@@ -33,7 +33,7 @@ public:
 
   nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> renderer_name;
-private:
+
   std::string get_id() const;
   std::string get_renderer_name() const;
 };
@@ -41,11 +41,8 @@ private:
 FilterAdaptor::FilterAdaptor(DeeModel* model,
                              DeeModelIter* iter,
                              DeeModelTag* renderer_tag)
+  : RowAdaptorBase(model, iter, renderer_tag)
 {
-  model_ = model;
-  iter_ = iter;
-  tag_ = renderer_tag;
-
   renderer_name.SetGetterFunction(sigc::mem_fun(this, &FilterAdaptor::get_renderer_name));
 }
 

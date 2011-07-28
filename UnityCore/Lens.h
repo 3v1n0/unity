@@ -20,7 +20,6 @@
 #ifndef UNITY_LENS_H
 #define UNITY_LENS_H
 
-#include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <memory>
 #include <NuxCore/Property.h>

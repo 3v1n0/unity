@@ -44,7 +44,6 @@ public:
 TEST_F(TestRatingsFilter, TestConstruction)
 {
   RatingsFilter::Ptr ratings(new RatingsFilter(model_, iter_));
-  //float rating = ratings->rating;
   EXPECT_FLOAT_EQ(ratings->rating, 0.6);
 }
 
@@ -101,7 +100,8 @@ TEST_F(TestRatingsFilter, TestClear)
   EXPECT_FLOAT_EQ(ratings->rating, 0.0f);
   EXPECT_FLOAT_EQ(ratings->rating, rating);
   EXPECT_FALSE(ratings->filtering);
-  
+  EXPECT_FALSE(dee_model_get_bool(model_, iter_, FilterColumn::FILTERING));
+
   g_variant_unref(row_value);
 }
 

@@ -68,13 +68,10 @@ class FilterRecorder : public Filter
 {
 public:
   FilterRecorder(DeeModel* model, DeeModelIter* iter)
-    : removed_(false)
+    : Filter(model, iter)
+    , removed_(false)
     , updated_(false)
   {
-    model_ = model;
-    iter_ = iter;
-    Connect();
-
     removed.connect(sigc::mem_fun(this, &FilterRecorder::OnRemoved));
   }
 
@@ -102,7 +99,9 @@ TEST_F(TestFilter, TestConstruction)
 
 TEST_F(TestFilter, TestConnect)
 {
+  g_debug("a");
   FilterRecorder recorder(model_, iter0_);
+  g_debug("b");
 
   EXPECT_EQ(recorder.id, "ratings");
   EXPECT_EQ(recorder.name, "Ratings0");

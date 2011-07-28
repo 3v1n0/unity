@@ -35,17 +35,26 @@ nux::logging::Logger logger("unity.dash.filter");
 
 using unity::glib::Signal;
 
-Filter::Filter()
-  : id("")
-  , name("")
-  , icon_hint("")
-  , renderer_name("")
-  , visible(false)
-  , collapsed(false)
-  , filtering(false)
-  , model_(0)
-  , iter_(0)
+Filter::Filter(DeeModel* model, DeeModelIter* iter)
+  : model_(model)
+  , iter_(iter)
 {
+  typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
+  // If the model is destroyed (say if the lens restarts) then we should handle
+  // that gracefully
+  g_object_weak_ref(reinterpret_cast<GObject*>(model_),
+                    (GWeakNotify)Filter::OnModelDestroyed, this);
+
+  // Add some filters to handle updates and removed
+  signal_manager_.Add(new RowSignalType(model_,
+                                        "row-changed",
+                                        sigc::mem_fun(this, &Filter::OnRowChanged)));
+  signal_manager_.Add(new RowSignalType(model_,
+                                        "row-removed",
+                                        sigc::mem_fun(this, &Filter::OnRowRemoved)));
+
+  SetupGetters();
 }
 
 Filter::~Filter()
@@ -53,6 +62,17 @@ Filter::~Filter()
   if (model_)
     g_object_weak_unref(reinterpret_cast<GObject*>(model_),
                         (GWeakNotify)Filter::OnModelDestroyed, this);
+}
+
+void Filter::SetupGetters()
+{
+  id.SetGetterFunction(sigc::mem_fun(this, &Filter::get_id));
+  name.SetGetterFunction(sigc::mem_fun(this, &Filter::get_name));
+  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Filter::get_icon_hint));
+  renderer_name.SetGetterFunction(sigc::mem_fun(this, &Filter::get_renderer_name));
+  visible.SetGetterFunction(sigc::mem_fun(this, &Filter::get_visible));
+  collapsed.SetGetterFunction(sigc::mem_fun(this, &Filter::get_collapsed));
+  filtering.SetGetterFunction(sigc::mem_fun(this, &Filter::get_filtering));
 }
 
 Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
@@ -65,32 +85,15 @@ Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
   return Filter::Ptr(new RatingsFilter(model, iter));
 }
 
-void Filter::Connect()
+bool Filter::IsValid() const
+{
+  return model_ && iter_;
+}
+
+void Filter::Refresh()
 {
   if (model_ && iter_)
-  {
-    // If the model is destroyed (say if the lens restarts) then we should handle
-    // that gracefully
-    g_object_weak_ref(reinterpret_cast<GObject*>(model_),
-                      (GWeakNotify)Filter::OnModelDestroyed, this);
-
-    // Add some filters to handle updates and removed
-    signal_manager_.Add(
-      new Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                 "row-changed",
-                                                 sigc::mem_fun(this, &Filter::OnRowChanged)));
-    signal_manager_.Add(
-      new Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                 "row-removed",
-                                                 sigc::mem_fun(this, &Filter::OnRowRemoved)));
-
-    // Now we have a valid model_ and iter_, let's update the properties
     OnRowChanged(model_, iter_);
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Cannot connect if model_ or iter_ are invalid";
-  }
 }
 
 void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
@@ -103,12 +106,13 @@ void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
   if (iter_ != iter)
     return;
 
-  UpdateProperties();
-
   // Ask our sub-classes to update their state
   Hints hints;
   HintsToMap(hints);
   Update(hints);
+
+  visible.EmitChanged(get_visible());
+  filtering.EmitChanged(get_filtering());
 }
 
 void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
@@ -119,17 +123,6 @@ void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
   model_ = 0;
   iter_ = 0;
   removed.emit();
-}
-
-void Filter::UpdateProperties()
-{
-  id = dee_model_get_string(model_, iter_, FilterColumn::ID);
-  name = dee_model_get_string(model_, iter_, FilterColumn::NAME);
-  icon_hint = dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
-  renderer_name = dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
-  visible = dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE) != FALSE;
-  collapsed = dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED) != FALSE;
-  filtering = dee_model_get_bool(model_, iter_, FilterColumn::FILTERING) != FALSE;
 }
 
 void Filter::HintsToMap(Hints& map)
@@ -146,6 +139,55 @@ void Filter::HintsToMap(Hints& map)
     map[key] = value;
   }
   g_variant_unref(row_value);
+}
+
+std::string Filter::get_id() const
+{
+  if (IsValid())
+    return dee_model_get_string(model_, iter_, FilterColumn::ID);
+  return "";
+}
+
+std::string Filter::get_name() const
+{
+  if (IsValid())
+    return dee_model_get_string(model_, iter_, FilterColumn::NAME);
+  return "";
+}
+
+std::string Filter::get_icon_hint() const
+{
+  if (IsValid())
+    return dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
+  return "";
+}
+
+std::string Filter::get_renderer_name() const
+{
+  if (IsValid())
+    return dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
+  return "";
+}
+
+bool Filter::get_visible() const
+{
+  if (IsValid())
+    return dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE);
+  return false;
+}
+
+bool Filter::get_collapsed() const
+{
+  if (IsValid())
+    return dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED);
+  return true;
+}
+
+bool Filter::get_filtering() const
+{
+  if (IsValid())
+    return dee_model_get_bool(model_, iter_, FilterColumn::FILTERING);
+  return false;
 }
 
 }

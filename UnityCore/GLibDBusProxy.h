@@ -17,12 +17,12 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_DBUS_LENSES_H
-#define UNITY_DBUS_LENSES_H
+#ifndef UNITY_DBUS_PROXY_H
+#define UNITY_DBUS_PROXY_H
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <gio/gio.h>
+#include <memory>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
@@ -36,7 +36,7 @@ namespace glib
 class DBusProxy : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<DBusProxy> Ptr;
+  typedef std::shared_ptr<DBusProxy> Ptr;
   typedef sigc::slot<void, GVariant*> ReplyCallback;
 
   DBusProxy(std::string const& name,
@@ -58,6 +58,8 @@ public:
   sigc::signal<void> disconnected;
 
   static void NoReplyCallback(GVariant* v) {};
+
+  // Public due to use in some callbacks
   class Impl;
 private:
   Impl* pimpl;

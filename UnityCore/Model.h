@@ -21,8 +21,8 @@
 #define UNITY_MODEL_H
 
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <dee.h>
+#include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
@@ -44,16 +44,15 @@ template<class RowAdaptor>
 class Model : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<Model> Ptr;
+  typedef std::shared_ptr<Model> Ptr;
 
   Model();
   virtual ~Model();
 
-  const RowAdaptor RowAtIndex(unsigned int index);
+  const RowAdaptor RowAtIndex(std::size_t index);
 
   nux::Property<std::string> swarm_name;
-  nux::ROProperty<unsigned int> count;
-  nux::ROProperty<bool> synchronized;
+  nux::ROProperty<std::size_t> count;
 
   sigc::signal<void, RowAdaptor&> row_added;
   sigc::signal<void, RowAdaptor&> row_changed;
@@ -64,12 +63,11 @@ private:
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
   void OnSwarmNameChanged(std::string const& swarm_name);
-  unsigned int get_count();
-  bool is_synchronized();
+  std::size_t get_count();
 
 private:
   glib::Object<DeeModel> model_;
-  glib::SignalManager signal_manager_;
+  glib::SignalManager sig_manager_;
   DeeModelTag* renderer_tag_;
 };
 

@@ -76,7 +76,6 @@ public:
                         string const& filters_model_name,
                         URIPatterns uri_patterns,
                         MIMEPatterns mime_patterns);
-
   void OnActiveChanged(bool is_active);
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
@@ -230,8 +229,8 @@ void Lens::Impl::OnChanged(GVariant* parameters)
     URIPatterns uri_patterns = URIPatternsFromIter(uri_patterns_iter);
     MIMEPatterns mime_patterns = MIMEPatternsFromIter(mime_patterns_iter);
     /* FIXME: We ignore hints for now */
-    UpdateProperties(search_in_global != FALSE,
-                     visible != FALSE,
+    UpdateProperties(search_in_global,
+                     visible,
                      search_hint,
                      private_connection_name,
                      results_model_name,

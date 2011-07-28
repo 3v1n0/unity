@@ -20,9 +20,9 @@
 #ifndef UNITY_FILTER_H
 #define UNITY_FILTER_H
 
-#include <boost/shared_ptr.hpp>
 #include <dee.h>
 #include <map>
+#include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
 
@@ -48,36 +48,45 @@ enum FilterColumn
 class Filter : public sigc::trackable
 {
 public:
-  typedef boost::shared_ptr<Filter> Ptr;
+  typedef std::shared_ptr<Filter> Ptr;
   typedef std::map<std::string, GVariant*> Hints;
 
-  Filter();
+  Filter(DeeModel* model, DeeModelIter* iter);
   virtual ~Filter();
 
   static Filter::Ptr FilterFromIter(DeeModel* model, DeeModelIter* iter);
 
   virtual void Clear() = 0;
+  bool IsValid() const;
 
-  nux::Property<std::string> id;
-  nux::Property<std::string> name;
-  nux::Property<std::string> icon_hint;
-  nux::Property<std::string> renderer_name;
-  nux::Property<bool> visible;
-  nux::Property<bool> collapsed;
-  nux::Property<bool> filtering;
+  nux::ROProperty<std::string> id;
+  nux::ROProperty<std::string> name;
+  nux::ROProperty<std::string> icon_hint;
+  nux::ROProperty<std::string> renderer_name;
+  nux::ROProperty<bool> visible;
+  nux::ROProperty<bool> collapsed;
+  nux::ROProperty<bool> filtering;
 
   sigc::signal<void> removed;
 
 protected:
-  void Connect();
   virtual void Update(Hints& hints) = 0;
+  void Refresh();
 
 private:
+  void SetupGetters();
   static void OnModelDestroyed(Filter* self, DeeModel* old_location);
   void OnRowChanged(DeeModel* model, DeeModelIter* iter);
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
-  void UpdateProperties();
   void HintsToMap(Hints& hints);
+
+  std::string get_id() const;
+  std::string get_name() const;
+  std::string get_icon_hint() const;
+  std::string get_renderer_name() const;
+  bool get_visible() const;
+  bool get_collapsed() const;
+  bool get_filtering() const;
 
 protected:
   DeeModel* model_;

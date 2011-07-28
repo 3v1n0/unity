@@ -37,12 +37,13 @@ Model<RowAdaptor>::Model()
 {
   swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
   count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
-  synchronized.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::is_synchronized));
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
+  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
   LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
 
   // Let the views clean up properly
@@ -52,20 +53,17 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   model_ = dee_shared_model_new(swarm_name.c_str());
   renderer_tag_ = dee_model_register_tag(model_, NULL);
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-added",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-added",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-changed",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-changed",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-removed",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-removed",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
 }
 
 template<class RowAdaptor>
@@ -94,7 +92,7 @@ void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 }
 
 template<class RowAdaptor>
-const RowAdaptor Model<RowAdaptor>::RowAtIndex(unsigned int index)
+const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 {
   RowAdaptor it(model_,
                 dee_model_get_iter_at_row(model_, index),
@@ -103,21 +101,12 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(unsigned int index)
 }
 
 template<class RowAdaptor>
-unsigned int Model<RowAdaptor>::get_count()
+std::size_t Model<RowAdaptor>::get_count()
 {
   if (model_)
     return dee_model_get_n_rows(model_);
   else
     return 0;
-}
-
-template<class RowAdaptor>
-bool Model<RowAdaptor>::is_synchronized()
-{
-  if (model_)
-    return dee_shared_model_is_synchronized(DEE_SHARED_MODEL(model_.RawPtr())) != FALSE;
-  else
-    return false;
 }
 
 }
