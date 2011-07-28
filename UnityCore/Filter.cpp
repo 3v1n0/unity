@@ -110,6 +110,9 @@ void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
   Hints hints;
   HintsToMap(hints);
   Update(hints);
+
+  visible.EmitChanged(get_visible());
+  filtering.EmitChanged(get_filtering());
 }
 
 void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)

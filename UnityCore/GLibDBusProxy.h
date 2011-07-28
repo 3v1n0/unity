@@ -58,6 +58,8 @@ public:
   sigc::signal<void> disconnected;
 
   static void NoReplyCallback(GVariant* v) {};
+
+  // Public due to use in some callbacks
   class Impl;
 private:
   Impl* pimpl;

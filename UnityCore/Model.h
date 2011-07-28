@@ -67,7 +67,7 @@ private:
 
 private:
   glib::Object<DeeModel> model_;
-  glib::SignalManager signal_manager_;
+  glib::SignalManager sig_manager_;
   DeeModelTag* renderer_tag_;
 };
 

@@ -42,6 +42,8 @@ Model<RowAdaptor>::Model()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
+  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
   LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
 
   // Let the views clean up properly
@@ -51,20 +53,17 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   model_ = dee_shared_model_new(swarm_name.c_str());
   renderer_tag_ = dee_model_register_tag(model_, NULL);
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-added",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-added",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowAdded)));
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-changed",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-changed",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowChanged)));
 
-  signal_manager_.Add(
-    new glib::Signal<void, DeeModel*, DeeModelIter*>(model_,
-                                                     "row-removed",
-                                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
+  sig_manager_.Add(new RowSignalType(model_,
+                                     "row-removed",
+                                     sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
 }
 
 template<class RowAdaptor>

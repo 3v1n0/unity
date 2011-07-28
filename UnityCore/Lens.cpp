@@ -159,6 +159,7 @@ void Lens::Impl::OnProxyConnected()
 
 void Lens::Impl::OnProxyDisconnected()
 {
+  //FIXME: When we're ready, we need to reset the entire model/category/filters state
 }
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
@@ -314,8 +315,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string)
   proxy_.Call("GlobalSearch",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
-                            &b));
-  g_variant_builder_clear(&b);
+                            g_variant_builder_end(&b)));
 }
 
 void Lens::Impl::Search(std::string const& search_string)
@@ -328,8 +328,7 @@ void Lens::Impl::Search(std::string const& search_string)
   proxy_.Call("Search",
               g_variant_new("(sa{sv})",
                             search_string.c_str(),
-                            &b));
-  g_variant_builder_clear(&b);
+                            g_variant_builder_end(&b)));
 }
 
 string const& Lens::Impl::id() const
