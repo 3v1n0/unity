@@ -27,10 +27,11 @@ namespace dash
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,
                    DeeModelTag* renderer_name_tag)
+  : RowAdaptorBase(model, iter, renderer_name_tag)
 {
-  model_ = model;
-  iter_ = iter;
-  tag_ = renderer_name_tag;
+  //model_ = model;
+  //iter_ = iter;
+  //tag_ = renderer_name_tag;
 
   name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));

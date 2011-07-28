@@ -27,11 +27,8 @@ namespace dash
 Result::Result(DeeModel* model,
                DeeModelIter* iter,
                DeeModelTag* renderer_tag)
+  : RowAdaptorBase(model, iter, renderer_tag)
 {
-  model_ = model;
-  iter_ = iter;
-  tag_ = renderer_tag;
-
   uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_uri));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::get_icon_hint));
   category_index.SetGetterFunction(sigc::mem_fun(this, &Result::get_category));

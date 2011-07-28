@@ -58,7 +58,15 @@ public:
     return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
   }
 
+  RowAdaptorBase
+
 protected:
+  RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0)
+    : model_(model)
+    , iter_(iter)
+    , tag_(tag)
+  {}
+
   DeeModel* model_;
   DeeModelIter* iter_;
   DeeModelTag* tag_;

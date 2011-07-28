@@ -101,7 +101,7 @@ TEST_F(TestRatingsFilter, TestClear)
   EXPECT_FLOAT_EQ(ratings->rating, 0.0f);
   EXPECT_FLOAT_EQ(ratings->rating, rating);
   EXPECT_FALSE(ratings->filtering);
-  EXPECT_FALSE(dee_model_get_bool(model_, iter_, FilterColumn::FILTERING != FALSE));
+  EXPECT_FALSE(dee_model_get_bool(model_, iter_, FilterColumn::FILTERING) != FALSE);
 
   g_variant_unref(row_value);
 }
