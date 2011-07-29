@@ -1,0 +1,10 @@
+# Should be [Lens]
+[Place]
+DBusName=com.canonical.tests.Lens.InvalidLensGroup
+DBusPath=/com/canonical/tests/lens/invalidlensgroup
+Name=InvalidLensGroup
+Icon=/usr/share/unity-lens-invalidlensgroup/invalidlensgroup.png
+Description=Search for invalidlensgroup
+SearchHint=Search InvalidLensGroup
+Visible=true
+Shortcut=a

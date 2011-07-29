@@ -12,12 +12,14 @@ find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS}")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
+set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
+
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
      "-g"
-     "-DTESTDATADIR=${TESTDATADIR}"
+     "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
@@ -313,6 +315,7 @@ find_package(GTest)
 if (${GTEST_FOUND} STREQUAL TRUE)
   include_directories(${GTEST_INCLUDE_DIRS})
   add_executable(test-gtest
+                 test_filesystem_lenses.cpp
                  test_glib_signals.cpp
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
