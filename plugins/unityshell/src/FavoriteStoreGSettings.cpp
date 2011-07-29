@@ -92,10 +92,9 @@ void FavoriteStoreGSettings::Init()
                               &error);
     if (error)
     {
-      // Do we have a defined logging subsystem?
-      std::cout << "WARNING: Unable to run the migrate favorites "
-                << "tools successfully: " << error
-                << ".\nThe output was:" << output << std::endl;
+      LOG_WARN(logger) << "WARNING: Unable to run the migrate favorites "
+                       << "tools successfully: " << error
+                       << ".\n\tThe output was:" << output;
     }
   }
 
