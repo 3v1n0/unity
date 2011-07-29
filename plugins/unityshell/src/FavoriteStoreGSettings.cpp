@@ -86,16 +86,16 @@ void FavoriteStoreGSettings::Init()
     glib::String output;
 
     g_spawn_command_line_sync(cmd.c_str(),
-                              output.AsOutParam(),
+                              &output,
                               NULL,
                               NULL,
-                              error.AsOutParam());
+                              &error);
     if (error)
     {
       // Do we have a defined logging subsystem?
       std::cout << "WARNING: Unable to run the migrate favorites "
-                << "tools successfully: " << error.Message()
-                << ".\nThe output was:" << output.Value() << std::endl;
+                << "tools successfully: " << error
+                << ".\nThe output was:" << output << std::endl;
     }
   }
 
