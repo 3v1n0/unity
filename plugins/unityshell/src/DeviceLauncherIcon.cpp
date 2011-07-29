@@ -24,6 +24,7 @@
 
 #include <glib/gi18n-lib.h>
 #include <libnotify/notify.h>
+#include <NuxCore/Logger.h>
 
 #include "DevicesSettings.h"
 #include "ubus-server.h"

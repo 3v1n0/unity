@@ -80,6 +80,7 @@ public:
   gchar** AsOutParam();
   gchar** operator&();
 
+  operator bool() const;
   gchar* Value();
   std::string Str() const;
 

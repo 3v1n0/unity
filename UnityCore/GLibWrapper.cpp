@@ -59,7 +59,8 @@ std::string Error::Message() const
 
 std::ostream& operator<<(std::ostream& o, Error const& e)
 {
-  o << e.Message();
+  if (e)
+    o << e.Message();
   return o;
 }
 
@@ -93,6 +94,11 @@ gchar* String::Value()
   return string_;
 }
 
+String::operator bool() const
+{
+  return bool(string_);
+}
+
 std::string String::Str() const
 {
   if (string_)
@@ -103,7 +109,10 @@ std::string String::Str() const
 
 std::ostream& operator<<(std::ostream& o, String const& s)
 {
-  o << s.Str();
+  if (s)
+    o << s.Str();
+  else
+    o << "<null>";
   return o;
 }
 
