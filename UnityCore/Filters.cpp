@@ -24,20 +24,6 @@ namespace unity
 namespace dash
 {
 
-class FilterAdaptor : public RowAdaptorBase
-{
-public:
-  FilterAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
-
-  FilterAdaptor(FilterAdaptor const& other);
-
-  nux::ROProperty<std::string> id;
-  nux::ROProperty<std::string> renderer_name;
-
-  std::string get_id() const;
-  std::string get_renderer_name() const;
-};
-
 FilterAdaptor::FilterAdaptor(DeeModel* model,
                              DeeModelIter* iter,
                              DeeModelTag* renderer_tag)
@@ -47,20 +33,14 @@ FilterAdaptor::FilterAdaptor(DeeModel* model,
 }
 
 FilterAdaptor::FilterAdaptor(FilterAdaptor const& other)
+  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
 {
-  model_ = other.model_;
-  iter_ = other.iter_;
-  tag_ = other.tag_;
+  renderer_name.SetGetterFunction(sigc::mem_fun(this, &FilterAdaptor::get_renderer_name));
 }
 
 std::string FilterAdaptor::get_renderer_name() const
 {
   return dee_model_get_string(model_, iter_, 3);
-}
-
-std::string FilterAdaptor::get_id() const
-{
-  return dee_model_get_string(model_, iter_, 0);
 }
 
 Filters::Filters()

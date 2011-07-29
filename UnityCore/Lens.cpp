@@ -185,8 +185,8 @@ void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
 void Lens::Impl::OnChanged(GVariant* parameters)
 {
   char* dbus_path = NULL;
-  gboolean search_in_global;
-  gboolean visible;
+  gboolean search_in_global = FALSE;
+  gboolean visible = FALSE;
   char* search_hint = NULL;
   char* private_connection_name = NULL;
   char* results_model_name = NULL;

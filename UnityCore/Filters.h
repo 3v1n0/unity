@@ -30,7 +30,16 @@ namespace unity
 namespace dash
 {
 
-class FilterAdaptor;
+class FilterAdaptor : public RowAdaptorBase
+{
+public:
+  FilterAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  FilterAdaptor(FilterAdaptor const&);
+
+  nux::ROProperty<std::string> renderer_name;
+  std::string get_renderer_name() const;
+};
+
 
 class Filters : public Model<FilterAdaptor>
 {
