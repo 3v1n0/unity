@@ -29,6 +29,17 @@ Result::Result(DeeModel* model,
                DeeModelTag* renderer_tag)
   : RowAdaptorBase(model, iter, renderer_tag)
 {
+  SetupGetters();
+}
+
+Result::Result(Result const& other)
+  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
+{
+  SetupGetters();
+}
+
+void Result::SetupGetters()
+{
   uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_uri));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::get_icon_hint));
   category_index.SetGetterFunction(sigc::mem_fun(this, &Result::get_category));
@@ -36,13 +47,6 @@ Result::Result(DeeModel* model,
   name.SetGetterFunction(sigc::mem_fun(this, &Result::get_name));
   comment.SetGetterFunction(sigc::mem_fun(this, &Result::get_comment));
   dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_dnd_uri));
-}
-
-Result::Result(Result const& other)
-{
-  model_ = other.model_;
-  iter_ = other.iter_;
-  tag_ = other.tag_;
 }
 
 std::string Result::get_uri() const

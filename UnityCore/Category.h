@@ -43,6 +43,7 @@ public:
   nux::ROProperty<std::string> renderer_name;
 
 private:
+  void SetupGetters();
   std::string get_name() const;
   std::string get_icon_hint() const;
   std::size_t get_index() const;

@@ -51,6 +51,7 @@ public:
   nux::ROProperty<std::string> dnd_uri;
 
 private:
+  void SetupGetters();
   std::string get_uri() const;
   std::string get_icon_hint() const;
   std::size_t get_category() const;

@@ -29,17 +29,21 @@ Category::Category(DeeModel* model,
                    DeeModelTag* renderer_name_tag)
   : RowAdaptorBase(model, iter, renderer_name_tag)
 {
+  SetupGetters();
+}
+
+Category::Category(Category const& other)
+  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
+{
+  SetupGetters();
+}
+
+void Category::SetupGetters()
+{
   name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));
   index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
   renderer_name.SetGetterFunction(sigc::mem_fun(this, &Category::get_renderer_name));
-}
-
-Category::Category(Category const& other)
-{
-  model_ = other.model_;
-  iter_ = other.iter_;
-  tag_ = other.tag_;
 }
 
 std::string Category::get_name() const
