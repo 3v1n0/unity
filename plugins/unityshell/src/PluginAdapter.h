@@ -101,6 +101,7 @@ public:
   void NotifyMoved(CompWindow* window, int x, int y);
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
+  void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
 
   void Decorate(guint32 xid);
   void Undecorate(guint32 xid);
@@ -119,6 +120,7 @@ public:
   void ShowDesktop();
 
   bool IsScreenGrabbed();
+  bool IsViewPortSwitchStarted();
 
   void MaximizeIfBigEnough(CompWindow* window);
 
@@ -139,6 +141,7 @@ private:
 
   bool _spread_state;
   bool _expo_state;
+  bool _vp_switch_started;
 
   CompAction* _grab_show_action;
   CompAction* _grab_hide_action;

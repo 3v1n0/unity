@@ -61,6 +61,7 @@ PluginAdapter::PluginAdapter(CompScreen* screen) :
 {
   _spread_state = false;
   _expo_state = false;
+  _vp_switch_started = false;
 
   _grab_show_action = 0;
   _grab_hide_action = 0;
@@ -184,6 +185,22 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
       break;
     default:
       break;
+  }
+}
+
+void
+PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option)
+{
+  g_debug("Event %s->%s",plugin,event);
+  if (g_strcmp0(event, "start_viewport_switch") == 0)
+  {
+    _vp_switch_started = true;
+    compiz_screen_viewport_switch_started.emit();
+  }
+  else if (g_strcmp0(event, "end_viewport_switch") == 0)
+  {
+    _vp_switch_started = false;
+    compiz_screen_viewport_switch_ended.emit();
   }
 }
 
@@ -587,6 +604,12 @@ bool
 PluginAdapter::IsScreenGrabbed()
 {
   return m_Screen->grabbed();
+}
+
+bool
+PluginAdapter::IsViewPortSwitchStarted()
+{
+  return _vp_switch_started;
 }
 
 void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
