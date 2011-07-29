@@ -20,6 +20,7 @@
 #ifndef UNITY_GLIB_WRAPPER_H
 #define UNITY_GLIB_WRAPPER_H
 
+#include <iosfwd>
 #include <string>
 
 #include <boost/utility.hpp>
@@ -60,6 +61,8 @@ public:
   ~Error();
 
   GError** AsOutParam();
+  GError** operator&();
+
   operator bool() const;
   std::string Message() const;
 
@@ -75,12 +78,17 @@ public:
   ~String();
 
   gchar** AsOutParam();
+  gchar** operator&();
+
   gchar* Value();
   std::string Str() const;
 
 private:
   gchar* string_;
 };
+
+std::ostream& operator<<(std::ostream& o, Error const& e);
+std::ostream& operator<<(std::ostream& o, String const& s);
 
 }
 }

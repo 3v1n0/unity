@@ -39,6 +39,11 @@ GError** Error::AsOutParam()
   return &error_;
 }
 
+GError** Error::operator&()
+{
+  return &error_;
+}
+
 Error::operator bool() const
 {
   return bool(error_);
@@ -50,6 +55,12 @@ std::string Error::Message() const
   if (error_)
     result = error_->message;
   return result;
+}
+
+std::ostream& operator<<(std::ostream& o, Error const& e)
+{
+  o << e.Message();
+  return o;
 }
 
 
@@ -72,6 +83,11 @@ gchar** String::AsOutParam()
   return &string_;
 }
 
+gchar** String::operator&()
+{
+  return &string_;
+}
+
 gchar* String::Value()
 {
   return string_;
@@ -85,6 +101,11 @@ std::string String::Str() const
     return std::string("");
 }
 
+std::ostream& operator<<(std::ostream& o, String const& s)
+{
+  o << s.Str();
+  return o;
+}
 
 }
 }
