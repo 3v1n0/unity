@@ -344,13 +344,11 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   }
 }
 
-static
-gboolean
-track_menu_pointer (gpointer data)
+static gboolean track_menu_pointer(gpointer data)
 {
   PanelView *self = (PanelView*)data;
   gint x, y;
-  gdk_display_get_pointer (gdk_display_get_default (), NULL, &x, &y, NULL);
+  gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
   self->OnMenuPointerMoved(x, y);
   return TRUE;
 }
@@ -379,7 +377,7 @@ void PanelView::OnEntryActivated(std::string const& entry_id)
       g_source_remove(_track_menu_pointer_id);
       _track_menu_pointer_id = 0;
     }
-    _menu_view->AllMenusClosed ();
+    _menu_view->AllMenusClosed();
   }
 }
 
