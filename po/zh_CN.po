@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-06-20 21:33+0100\n"
+"POT-Creation-Date: 2011-07-29 16:39+0200\n"
 "PO-Revision-Date: 2010-03-02 12:37-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Chinese (simplified)\n"
@@ -32,6 +32,9 @@ msgid "Drop To Add Application"
 msgstr ""
 
 msgid "Eject"
+msgstr ""
+
+msgid "Eject parent drive"
 msgstr ""
 
 msgid "Empty Trash"
@@ -78,7 +81,10 @@ msgstr ""
 msgid "Quit"
 msgstr "退出"
 
-msgid "Safely Remove"
+msgid "Safely remove"
+msgstr ""
+
+msgid "Safely remove parent drive"
 msgstr ""
 
 msgid "Search"
@@ -91,6 +97,9 @@ msgid "See fewer results"
 msgstr ""
 
 msgid "Shortcuts"
+msgstr ""
+
+msgid "The drive has been successfully ejected"
 msgstr ""
 
 msgid "Touches the top left corner of the screen"
