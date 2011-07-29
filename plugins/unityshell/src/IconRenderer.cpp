@@ -760,13 +760,12 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     std::vector<int> markers;
 
-    /*if (!arg.running_on_viewport)
+    if (!arg.running_on_viewport)
     {
       markers.push_back (markerCenter);
       texture = _arrow_empty_ltr;
     }
-    else*/
-    if (running == 1)
+    else if (running == 1)
     {
       markers.push_back(markerCenter);
       texture = _arrow_ltr;
