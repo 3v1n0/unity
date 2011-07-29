@@ -195,13 +195,13 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
                                              gpointer impl)
 {
   glib::Error error;
-  glib::Object<GDBusProxy> proxy(g_dbus_proxy_new_for_bus_finish(res, error.AsOutParam()));
+  glib::Object<GDBusProxy> proxy(g_dbus_proxy_new_for_bus_finish(res, &error));
 
   // If the async operation was cancelled, this callback will still be called and
   // therefore we should deal with the error before touching the impl pointer
   if (!proxy || error)
   {
-    LOG_WARNING(logger) << "Unable to connect to proxy: " << error.Message();
+    LOG_WARNING(logger) << "Unable to connect to proxy: " << error;
     return;
   }
 
@@ -261,12 +261,12 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 {
   glib::Error error;
   std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
-  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, error.AsOutParam());
+  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
 
   if (error)
   {
     // Do not touch the impl pointer as the operation may have been cancelled
-    LOG_WARNING(logger) << "Calling method failed: " << error.Message();
+    LOG_WARNING(logger) << "Calling method failed: " << error;
   }
   else
   {
