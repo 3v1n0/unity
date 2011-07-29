@@ -19,12 +19,14 @@
 
 #include "FilesystemLenses.h"
 
-#include <boost/lexical_cast.hpp>
-#include <gio/gio.h>
-#include <glib.h>
-#include <NuxCore/Logger.h>
 #include <stdexcept>
 #include <vector>
+
+#include <gio/gio.h>
+#include <glib.h>
+
+#include <boost/lexical_cast.hpp>
+#include <NuxCore/Logger.h>
 
 #include "config.h"
 #include "GLibWrapper.h"
@@ -39,7 +41,7 @@ namespace
 {
 
 nux::logging::Logger logger("unity.dash.filesystemlenses");
-static const char* GROUP = "Lens";
+const char* GROUP = "Lens";
 
 }
 
@@ -339,7 +341,10 @@ Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
   for (Lens::Ptr lens: lenses_)
   {
     if (lens->id == lens_id)
+    {
       p = lens;
+      break;
+    }
   }
 
   return p;
@@ -360,7 +365,7 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
 
 std::size_t FilesystemLenses::Impl::count() const
 {
-  return (std::size_t)lenses_.size();
+  return lenses_.size();
 }
 
 
