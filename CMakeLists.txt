@@ -16,9 +16,9 @@ set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
-set (CMAKE_CXX_FLAGS "-std=c++0x -fno-permissive")
-set (CMAKE_CXX_FLAGS_DEBUG "-std=c++0x -fno-permissive")
-set (CMAKE_CXX_FLAGS_RELEASE "-std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS_RELEASE "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 
 #
 # Niceties
@@ -121,7 +121,7 @@ endif (DISABLE_MAINTAINER_CFLAGS)
 #
 # Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "compiz;nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0;libnotify")
+set (UNITY_PLUGIN_DEPS "compiz;nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0;libnotify;gnome-desktop-3.0")
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)

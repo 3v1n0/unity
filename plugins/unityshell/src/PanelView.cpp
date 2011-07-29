@@ -35,6 +35,9 @@
 #include "PanelIndicatorObjectView.h"
 #include <UnityCore/Variant.h>
 
+#include "ubus-server.h"
+#include "UBusMessages.h"
+
 #include "PanelView.h"
 
 
@@ -48,7 +51,8 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
       _is_dirty(true),
       _opacity(1.0f),
       _is_primary(false),
-      _monitor(0)
+      _monitor(0),
+      _dash_is_open(false)
 {
   _needs_geo_sync = false;
   _style = new PanelStyle();
@@ -79,6 +83,22 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
   _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
+  
+   UBusServer *ubus = ubus_server_get_default();
+
+   _handle_bg_color_update = ubus_server_register_interest(ubus, UBUS_BACKGROUND_COLOR_CHANGED,
+                                                          (UBusCallback)&PanelView::OnBackgroundUpdate,
+                                                          this);
+
+   _handle_dash_hidden = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_HIDDEN,
+                                                      (UBusCallback)&PanelView::OnDashHidden,
+                                                      this);
+
+   _handle_dash_shown = ubus_server_register_interest(ubus, UBUS_PLACE_VIEW_SHOWN,
+                                                     (UBusCallback)&PanelView::OnDashShown,
+                                                     this);
+   // request the latest colour from bghash
+   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 
   _track_menu_pointer_id = 0;
 }
@@ -86,8 +106,32 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 PanelView::~PanelView()
 {
   _style->UnReference();
-
+  UBusServer *ubus = ubus_server_get_default();
+  ubus_server_unregister_interest(ubus, _handle_bg_color_update);
+  ubus_server_unregister_interest(ubus, _handle_dash_hidden);
+  ubus_server_unregister_interest(ubus, _handle_dash_shown);
+  
   delete _bg_layer;
+}
+
+void PanelView::OnBackgroundUpdate (GVariant *data, PanelView *self)
+{
+  gdouble red, green, blue, alpha;
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  self->_bg_color = nux::Color (red, green, blue, alpha);
+  self->ForceUpdateBackground();
+}
+
+void PanelView::OnDashHidden(GVariant* data, PanelView* self)
+{
+  self->_dash_is_open = false;
+  self->ForceUpdateBackground();
+}
+
+void PanelView::OnDashShown(GVariant* data, PanelView* self)
+{
+  self->_dash_is_open = true;
+  self->ForceUpdateBackground();
 }
 
 void PanelView::AddPanelView(PanelIndicatorObjectView* child,
@@ -183,31 +227,40 @@ PanelView::UpdateBackground()
   _last_width = geo.width;
   _last_height = geo.height;
   _is_dirty = false;
+  
+  if (_dash_is_open)
+  {
+    if (_bg_layer)
+      delete _bg_layer;
+    _bg_layer = new nux::ColorLayer (_bg_color, true);
+  }
+  else
+  {
+    nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height);
+    nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+    texture2D->Update(bitmap);
+    delete bitmap;
 
-  nux::NBitmapData* bitmap = _style->GetBackground(geo.width, geo.height);
-  nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture2D->Update(bitmap);
-  delete bitmap;
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    if (_bg_layer)
+      delete _bg_layer;
 
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-  if (_bg_layer)
-    delete _bg_layer;
+    nux::ROPConfig rop;
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    nux::Color col = nux::color::White;
+    col.alpha = _opacity;
 
-  nux::ROPConfig rop;
-  rop.Blend = true;
-  rop.SrcBlend = GL_ONE;
-  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  nux::Color col = nux::color::White;
-  col.alpha = _opacity;
-
-  _bg_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                    texxform,
-                                    col,
-                                    true,
-                                    rop);
-  texture2D->UnReference();
+    _bg_layer = new nux::TextureLayer(texture2D->GetDeviceTexture(),
+                                      texxform,
+                                      col,
+                                      true,
+                                      rop);
+    texture2D->UnReference();
+  }
 
   NeedRedraw();
 }

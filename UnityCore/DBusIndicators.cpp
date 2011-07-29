@@ -122,6 +122,8 @@ public:
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
+                                        unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;
@@ -224,6 +226,14 @@ void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
   data->button = button;
 
   g_timeout_add(0, (GSourceFunc)send_show_entry, data);
+}
+
+void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
+                                                    unsigned int timestamp)
+{
+  g_dbus_proxy_call(proxy_, "SecondaryActivateEntry",
+                    g_variant_new("(su)", entry_id.c_str(), timestamp),
+                    G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL, NULL);
 }
 
 void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
@@ -465,6 +475,12 @@ void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
                                      int x, int y, int timestamp, int button)
 {
   pimpl->OnEntryShowMenu(entry_id, x, y, timestamp, button);
+}
+
+void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id,
+                                              unsigned int timestamp)
+{
+  pimpl->OnEntrySecondaryActivate(entry_id, timestamp);
 }
 
 std::string DBusIndicators::name() const

@@ -223,7 +223,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       XIDeviceEvent *event = cookie->data;
             
-      if (event->evtype == XI_ButtonRelease &&
+      if (event && event->evtype == XI_ButtonRelease &&
           priv->last_menu_button != 0) //FocusChange
         {
           if (event->root_x < priv->last_left ||
@@ -1136,6 +1136,19 @@ panel_service_show_entry (PanelService *self,
 }
 
 void
+panel_service_secondary_activate_entry (PanelService *self,
+                                        const gchar  *entry_id,
+                                        guint32       timestamp)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
+                        timestamp);
+}
+
+void
 panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
@@ -1143,7 +1156,7 @@ panel_service_scroll_entry (PanelService   *self,
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
-  GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
                         abs(delta/120), direction);

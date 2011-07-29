@@ -165,9 +165,7 @@ public:
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvKeyPressed(
-    nux::GraphicsEngine& GfxContext ,   /*Graphics Context for text operation*/
-    unsigned long    eventType  ,   /*event type*/
+  virtual void RecvKeyPressed(unsigned long    eventType  ,   /*event type*/
     unsigned long    keysym     ,   /*event keysym*/
     unsigned long    state      ,   /*event state*/
     const char*      character  ,   /*character*/
@@ -334,6 +332,7 @@ private:
 
   static void OnBFBUpdate(GVariant* data, gpointer user_data);
   static void OnBFBDndEnter(GVariant* data, gpointer user_data);
+  static void OnBGColorChanged (GVariant *data, void *val);
 
   static void OnActionDone(GVariant* data, void* val);
 
@@ -482,6 +481,8 @@ private:
 
   guint _ubus_handles[5];
 
+  nux::Color _background_color;
+  bool _dash_is_open;
   AbstractIconRenderer::Ptr icon_renderer;
 };
 
