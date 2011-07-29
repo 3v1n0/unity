@@ -105,6 +105,8 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
 PanelView::~PanelView()
 {
+  if (_track_menu_pointer_id)
+    g_source_remove(_track_menu_pointer_id);
   _style->UnReference();
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
