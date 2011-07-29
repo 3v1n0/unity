@@ -106,6 +106,7 @@ private:
   bool        _needs_geo_sync;
   bool        _is_primary;
   int         _monitor;
+  guint       _track_menu_pointer_id;
 };
 
 }
