@@ -188,6 +188,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
 
+  plugin_adapter.compiz_screen_viewport_switch_started.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchStarted));
+  plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::OnViewPortSwitchEnded));
+
   GeisAdapter& adapter = *(GeisAdapter::Default(screen));
   adapter.drag_start.connect(sigc::mem_fun(this, &Launcher::OnDragStart));
   adapter.drag_update.connect(sigc::mem_fun(this, &Launcher::OnDragUpdate));
@@ -1748,6 +1751,28 @@ Launcher::OnPluginStateChanged()
 {
   _hide_machine->SetQuirk(LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default()->IsExpoActive());
   _hide_machine->SetQuirk(LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default()->IsScaleActive());
+}
+
+void
+Launcher::OnViewPortSwitchStarted()
+{
+  /*
+   *  don't take into account window over launcher state during
+   *  the viewport switch as we can get false positives
+   *  (like switching to an empty viewport while grabbing a fullscreen window)
+   */
+  _check_window_over_launcher = false;
+}
+
+void
+Launcher::OnViewPortSwitchEnded()
+{
+  /*
+   * compute again the list of all window on the new viewport
+   * to decide if we should or not hide the launcher
+   */
+  _check_window_over_launcher = true;
+  CheckWindowOverLauncher();
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()

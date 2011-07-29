@@ -243,6 +243,9 @@ private:
 
   void OnPluginStateChanged();
 
+  void OnViewPortSwitchStarted();
+  void OnViewPortSwitchEnded();
+
   static gboolean AnimationTimeout(gpointer data);
   static gboolean SuperShowLauncherTimeout(gpointer data);
   static gboolean SuperHideLauncherTimeout(gpointer data);
