@@ -366,18 +366,14 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 std::string DBusIndicators::Impl::name() const
 {
   glib::String name;
-  g_object_get(proxy_,
-               "g-name", name.AsOutParam(),
-               NULL);
+  g_object_get(proxy_, "g-name", &name, NULL);
   return name.Str();
 }
 
 std::string DBusIndicators::Impl::owner_name() const
 {
   glib::String owner_name;
-  g_object_get(proxy_,
-               "g-name-owner", owner_name.AsOutParam(),
-               NULL);
+  g_object_get(proxy_, "g-name-owner", &owner_name, NULL);
   return owner_name.Str();
 }
 

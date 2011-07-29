@@ -46,7 +46,7 @@ PlaceLauncherIcon::PlaceLauncherIcon(Launcher* launcher, PlaceEntry* entry)
 
   // We're interested in this as it's a great time to Connect () our PlaceEntry. The goal being
   // to have the PlaceEntry ready-and-connected by the time the user clicks on the icon
-  mouse_enter.connect(sigc::mem_fun(this, &PlaceLauncherIcon::RecvMouseEnter));
+  LauncherIcon::mouse_enter.connect(sigc::mem_fun(this, &PlaceLauncherIcon::RecvMouseEnter));
 }
 
 PlaceLauncherIcon::~PlaceLauncherIcon()
