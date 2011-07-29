@@ -19,6 +19,8 @@
 
 #include "Category.h"
 
+#include <sigc++/bind.h>
+
 namespace unity
 {
 namespace dash
@@ -40,30 +42,15 @@ Category::Category(Category const& other)
 
 void Category::SetupGetters()
 {
-  name.SetGetterFunction(sigc::mem_fun(this, &Category::get_name));
-  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Category::get_icon_hint));
+  name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 0));
+  icon_hint.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 1));
   index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
-  renderer_name.SetGetterFunction(sigc::mem_fun(this, &Category::get_renderer_name));
-}
-
-std::string Category::get_name() const
-{
-  return dee_model_get_string(model_, iter_, 0);
-}
-
-std::string Category::get_icon_hint() const
-{
-  return dee_model_get_string(model_, iter_, 1);
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 2));
 }
 
 std::size_t Category::get_index() const
 {
   return dee_model_get_position(model_, iter_);
-}
-
-std::string Category::get_renderer_name() const
-{
-  return dee_model_get_string(model_, iter_, 2);
 }
 
 }

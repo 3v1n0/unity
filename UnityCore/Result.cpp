@@ -18,6 +18,7 @@
  */
 
 #include "Result.h"
+#include <sigc++/bind.h>
 
 namespace unity
 {
@@ -40,48 +41,13 @@ Result::Result(Result const& other)
 
 void Result::SetupGetters()
 {
-  uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_uri));
-  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::get_icon_hint));
-  category_index.SetGetterFunction(sigc::mem_fun(this, &Result::get_category));
-  mimetype.SetGetterFunction(sigc::mem_fun(this, &Result::get_mimetype));
-  name.SetGetterFunction(sigc::mem_fun(this, &Result::get_name));
-  comment.SetGetterFunction(sigc::mem_fun(this, &Result::get_comment));
-  dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::get_dnd_uri));
-}
-
-std::string Result::get_uri() const
-{
-  return dee_model_get_string(model_, iter_, 0);
-}
-
-std::string Result::get_icon_hint() const
-{
-  return dee_model_get_string(model_, iter_, 1);
-}
-
-std::size_t Result::get_category() const
-{
-  return dee_model_get_uint32(model_, iter_, 2);
-}
-
-std::string Result::get_mimetype() const
-{
-  return dee_model_get_string(model_, iter_, 3);
-}
-
-std::string Result::get_name() const
-{
-  return dee_model_get_string(model_, iter_, 4);
-}
-
-std::string Result::get_comment() const
-{
-  return dee_model_get_string(model_, iter_, 5);
-}
-
-std::string Result::get_dnd_uri() const
-{
-  return dee_model_get_string(model_, iter_, 6);
+  uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 0));
+  icon_hint.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 1));
+  category_index.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetUIntAt), 2));
+  mimetype.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
+  name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 4));
+  comment.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 5));
+  dnd_uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 6));
 }
 
 }

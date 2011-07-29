@@ -52,13 +52,6 @@ public:
 
 private:
   void SetupGetters();
-  std::string get_uri() const;
-  std::string get_icon_hint() const;
-  std::size_t get_category() const;
-  std::string get_mimetype() const;
-  std::string get_name() const;
-  std::string get_comment() const;
-  std::string get_dnd_uri() const;
 };
 
 }

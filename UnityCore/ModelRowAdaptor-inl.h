@@ -17,35 +17,25 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_CATEGORY_H
-#define UNITY_CATEGORY_H
-
-#include <NuxCore/Property.h>
-
-#include "ModelRowAdaptor.h"
+#ifndef UNITY_MODEL_ROW_INL_H
+#define UNITY_MODEL_ROW_INL_H
 
 namespace unity
 {
 namespace dash
 {
 
-/* This class represents a DeeModelIter for a CategoriesModel  */
-class Category : public RowAdaptorBase
+template<typename T>
+void RowAdaptorBase::set_renderer(T renderer)
 {
-public:
-  Category(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  dee_model_set_tag(model_, iter_, tag_, renderer);
+}
 
-  Category(Category const& other);
-
-  nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<std::size_t> index;
-  nux::ROProperty<std::string> renderer_name;
-
-private:
-  void SetupGetters();
-  std::size_t get_index() const;
-};
+template<typename T>
+T RowAdaptorBase::renderer()
+{
+  return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
+}
 
 }
 }

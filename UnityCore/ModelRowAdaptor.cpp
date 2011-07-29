@@ -17,37 +17,32 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_CATEGORY_H
-#define UNITY_CATEGORY_H
-
-#include <NuxCore/Property.h>
-
 #include "ModelRowAdaptor.h"
 
 namespace unity
 {
 namespace dash
 {
+RowAdaptorBase::RowAdaptorBase(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+  : model_(model)
+  , iter_(iter)
+  , tag_(tag)
+{}
 
-/* This class represents a DeeModelIter for a CategoriesModel  */
-class Category : public RowAdaptorBase
+std::string RowAdaptorBase::GetStringAt(int position)
 {
-public:
-  Category(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
+  return dee_model_get_string(model_, iter_, position);
+}
 
-  Category(Category const& other);
+bool RowAdaptorBase::GetBoolAt(int position)
+{
+  return dee_model_get_bool(model_, iter_, position);
+}
 
-  nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<std::size_t> index;
-  nux::ROProperty<std::string> renderer_name;
-
-private:
-  void SetupGetters();
-  std::size_t get_index() const;
-};
+unsigned int RowAdaptorBase::GetUIntAt(int position)
+{
+  return dee_model_get_uint32(model_, iter_, position);
+}
 
 }
 }
-
-#endif

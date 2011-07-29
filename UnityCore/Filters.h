@@ -37,7 +37,6 @@ public:
   FilterAdaptor(FilterAdaptor const&);
 
   nux::ROProperty<std::string> renderer_name;
-  std::string get_renderer_name() const;
 };
 
 

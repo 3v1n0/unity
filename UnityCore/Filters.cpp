@@ -29,18 +29,13 @@ FilterAdaptor::FilterAdaptor(DeeModel* model,
                              DeeModelTag* renderer_tag)
   : RowAdaptorBase(model, iter, renderer_tag)
 {
-  renderer_name.SetGetterFunction(sigc::mem_fun(this, &FilterAdaptor::get_renderer_name));
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
 FilterAdaptor::FilterAdaptor(FilterAdaptor const& other)
   : RowAdaptorBase(other.model_, other.iter_, other.tag_)
 {
-  renderer_name.SetGetterFunction(sigc::mem_fun(this, &FilterAdaptor::get_renderer_name));
-}
-
-std::string FilterAdaptor::get_renderer_name() const
-{
-  return dee_model_get_string(model_, iter_, 3);
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
 Filters::Filters()
@@ -54,19 +49,13 @@ Filters::~Filters()
 {}
 
 void Filters::OnRowAdded(FilterAdaptor& filter)
-{
-  //filter_added.emit(filter);
-}
+{}
 
 void Filters::OnRowChanged(FilterAdaptor& filter)
-{
-  //filter_changed.emit(filter);
-}
+{}
 
 void Filters::OnRowRemoved(FilterAdaptor& filter)
-{
-  //filter_removed.emit(filter);
-}
+{}
 
 }
 }
