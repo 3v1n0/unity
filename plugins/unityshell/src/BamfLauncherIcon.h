@@ -102,6 +102,7 @@ private:
   void EnsureMenuItemsReady();
 
   void OnWindowMinimized(guint32 xid);
+  void OnViewPortSwitchEnded();
   bool OwnsWindow(Window w);
 
   static void OnClosed(BamfView* view, gpointer data);

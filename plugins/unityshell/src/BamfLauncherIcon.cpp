@@ -179,6 +179,8 @@ BamfLauncherIcon::BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, 
                                                          this);
 
   PluginAdapter::Default()->window_minimized.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnWindowMinimized));
+  PluginAdapter::Default()->compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
+  PluginAdapter::Default()->terminate_expo.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnViewPortSwitchEnded));
   IconManager->hidden_changed.connect(sigc::mem_fun(this, &BamfLauncherIcon::OnLauncherHiddenChanged));
 
   /* hack */
@@ -234,6 +236,33 @@ void BamfLauncherIcon::OnWindowMinimized(guint32 xid)
 
   Present(0.5f, 600);
   UpdateQuirkTimeDelayed(300, QUIRK_SHIMMER);
+}
+
+void BamfLauncherIcon::OnViewPortSwitchEnded()
+{
+  bool any_on_current = false;
+  GList *children = bamf_view_get_children(BAMF_VIEW(m_App));
+
+  for (GList *l = children; l; l = l->next)
+  {
+    BamfView *view = BAMF_VIEW(l->data);
+
+    if (BAMF_IS_WINDOW(view))
+    {
+      guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
+      CompWindow *win = m_Screen->findWindow((Window) xid);
+
+      if (win->defaultViewport() == m_Screen->vp())
+      {
+        any_on_current = true;
+        break;
+      }
+    }
+  }
+
+  SetHasWindowOnViewport(any_on_current);
+
+  g_list_free(children);
 }
 
 bool BamfLauncherIcon::IsSticky()
@@ -304,6 +333,8 @@ bool BamfLauncherIcon::OwnsWindow(Window w)
   GList* children, *l;
   BamfView* view;
   bool owns = false;
+
+  if (!w) return owns;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
