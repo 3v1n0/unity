@@ -48,6 +48,7 @@ public:
     , running_arrow(false)
     , running_colored(false)
     , running_on_viewport(false)
+    , draw_edge_only(false)
     , active_arrow(false)
     , active_colored(false)
     , skip(false)
@@ -75,6 +76,7 @@ public:
   bool          running_arrow;
   bool          running_colored;
   bool          running_on_viewport;
+  bool          draw_edge_only;
   bool          active_arrow;
   bool          active_colored;
   bool          skip;

@@ -407,7 +407,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 
   // draw tile
-  if (backlight_intensity > 0)
+  if (backlight_intensity > 0 && !arg.draw_edge_only)
   {
     RenderElement(GfxContext,
                   arg,

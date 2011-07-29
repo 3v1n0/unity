@@ -933,7 +933,8 @@ float Launcher::IconStartingBlinkValue(LauncherIcon* icon, struct timespec const
   struct timespec starting_time = icon->GetQuirkTime(LauncherIcon::QUIRK_STARTING);
   int starting_ms = TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
-  return 0.5f + (float)(std::cos(M_PI * (_backlight_mode != BACKLIGHT_NORMAL ? 4.0f : 3.0f) * starting_progress)) * 0.5f;
+  double val = IsBackLightModeToggles() ? 3.0f : 4.0f;
+  return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
 }
 
 float Launcher::IconStartingPulseValue(LauncherIcon* icon, struct timespec const& current)
@@ -969,7 +970,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
   float backlight_strength;
   if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
     backlight_strength = BACKLIGHT_STRENGTH;
-  else if (_backlight_mode == BACKLIGHT_NORMAL)
+  else if (IsBackLightModeToggles())
     backlight_strength = BACKLIGHT_STRENGTH * running_progress;
   else
     backlight_strength = 0.0f;
@@ -994,7 +995,7 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       result = backlight_strength;
       if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
         result *= CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
-      else if (_backlight_mode == BACKLIGHT_NORMAL)
+      else if (IsBackLightModeToggles())
         result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconStartingPulseValue(icon, current));
       else
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
@@ -1020,6 +1021,17 @@ float Launcher::IconProgressBias(LauncherIcon* icon, struct timespec const& curr
     return result;
 }
 
+bool Launcher::IconDrawEdgeOnly(LauncherIcon* icon)
+{
+  if (_backlight_mode == BACKLIGHT_EDGE_TOGGLE)
+    return true;
+
+  if (_backlight_mode == BACKLIGHT_NORMAL_EDGE_TOGGLE && !icon->HasWindowOnViewport())
+    return true;
+
+  return false;
+}
+
 void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current, RenderArg& arg)
 {
   arg.icon                = icon;
@@ -1029,6 +1041,7 @@ void Launcher::SetupRenderArg(LauncherIcon* icon, struct timespec const& current
   arg.active_arrow        = icon->GetQuirk(LauncherIcon::QUIRK_ACTIVE);
   arg.running_colored     = icon->GetQuirk(LauncherIcon::QUIRK_URGENT);
   arg.running_on_viewport = icon->HasWindowOnViewport();
+  arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
   arg.x_rotation          = 0.0f;
   arg.y_rotation          = 0.0f;
@@ -1849,6 +1862,18 @@ void Launcher::SetBacklightMode(BacklightMode mode)
 Launcher::BacklightMode Launcher::GetBacklightMode()
 {
   return _backlight_mode;
+}
+
+bool Launcher::IsBackLightModeToggles()
+{
+  switch (_backlight_mode) {
+    case BACKLIGHT_NORMAL:
+    case BACKLIGHT_EDGE_TOGGLE:
+    case BACKLIGHT_NORMAL_EDGE_TOGGLE:
+      return true;
+    default:
+      return false;
+  }
 }
 
 void

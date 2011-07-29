@@ -105,7 +105,7 @@
                     <_short>Backlight Mode</_short>
                     <_long>Change how the icons are backlit</_long>
                     <min>0</min>
-                    <max>2</max>
+                    <max>4</max>
                     <default>0</default>
                     <desc>
                         <value>0</value>
@@ -118,6 +118,14 @@
                     <desc>
                         <value>2</value>
                         <_name>Backlight Always Off</_name>
+                    </desc>
+                    <desc>
+                        <value>3</value>
+                        <_name>Edge Illumination Toggles</_name>
+                    </desc>
+                    <desc>
+                        <value>4</value>
+                        <_name>Backlight and Edge Illumination Toggles</_name>
                     </desc>
                 </option>
                 <option name="launch_animation" type="int">

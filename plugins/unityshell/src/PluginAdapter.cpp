@@ -191,7 +191,6 @@ PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
 void
 PluginAdapter::NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option)
 {
-  g_debug("Event %s->%s",plugin,event);
   if (g_strcmp0(event, "start_viewport_switch") == 0)
   {
     _vp_switch_started = true;
