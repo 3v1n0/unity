@@ -65,6 +65,8 @@ const int WIGGLE_CYCLES = 6;
 const int MAX_STARTING_BLINKS = 5;
 const int STARTING_BLINK_LAMBDA = 3;
 
+const int PULSE_BLINK_LAMBDA = 2;
+
 const float BACKLIGHT_STRENGTH = 0.9f;
 
 }
@@ -694,6 +696,10 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
   if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
+  
+  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
+    return true;  
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
   if (TimeDelta(&current, &time) < ANIM_DURATION)
@@ -927,6 +933,18 @@ float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& 
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
+float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
+{
+  struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  int pulse_ms = TimeDelta(&current, &pulse_time);
+  double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
+
+  if (pulse_progress == 1.0f)
+    icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, false);
+  
+  return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
+}
+
 float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const& current)
 {
   if (!icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
@@ -1007,6 +1025,16 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       else
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
       break;
+  }
+  
+  if (icon->GetQuirk(LauncherIcon::QUIRK_PULSE_ONCE))
+  {
+    if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+      result *= CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
+    else if (_backlight_mode == BACKLIGHT_NORMAL)
+      result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconPulseOnceValue(icon, current));
+    else
+      result = 1.0f - CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
   }
 
   // urgent serves to bring the total down only
@@ -2286,6 +2314,8 @@ void Launcher::EndIconDrag()
 
     if (hovered_icon && hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
     {
+      hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+      
       launcher_removerequest.emit(_drag_icon);
       _drag_window->ShowWindow(false);
       EnsureAnimation();
