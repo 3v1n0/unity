@@ -22,9 +22,16 @@
 #include <gtk/gtk.h>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 #include <NuxImage/CairoGraphics.h>
 
+#include <UnityCore/GLibWrapper.h>
 #include "PlacesStyle.h"
+
+namespace
+{
+nux::logging::Logger logger("unity.places");
+}
 
 static PlacesStyle* _style = NULL;
 
@@ -232,27 +239,23 @@ PlacesStyle::GetGroupExpandIcon()
   return _group_expand_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::TextureFromFilename(const char* filename)
+nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
 {
-  GdkPixbuf*        pixbuf;
-  GError*           error = NULL;
+  glib::Object<GdkPixbuf> pixbuf;
+  glib::Error error;
   nux::BaseTexture* texture = NULL;
 
   pixbuf = gdk_pixbuf_new_from_file(filename, &error);
   if (error)
   {
-    g_warning("Unable to texture %s: %s", filename, error->message);
-    g_error_free(error);
-    error = NULL;
+    LOG_WARN(logger) << "Unable to texture " << filename << ": " << error;
   }
   else
   {
     texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-    g_object_unref(pixbuf);
+    texture->Reference();  // stop it getting unreffed by IconTexture
   }
 
-  texture->Reference();  // stop it getting unreffed by IconTexture
   return texture;
 }
 
