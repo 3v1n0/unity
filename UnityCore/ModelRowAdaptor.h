@@ -20,6 +20,8 @@
 #ifndef UNITY_MODEL_ROW_H
 #define UNITY_MODEL_ROW_H
 
+#include <string>
+
 #include <dee.h>
 
 namespace unity
@@ -46,25 +48,21 @@ namespace dash
 class RowAdaptorBase
 {
 public:
-  template<typename T>
-  void set_renderer(T renderer)
-  {
-    dee_model_set_tag(model_, iter_, tag_, renderer);
-  }
+  RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0);
+  RowAdaptorBase(RowAdaptorBase const& other);
+  RowAdaptorBase& operator=(RowAdaptorBase const& other);
+
+  std::string GetStringAt(int position);
+  bool GetBoolAt(int position);
+  unsigned int GetUIntAt(int position);
 
   template<typename T>
-  T renderer()
-  {
-    return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
-  }
+  void set_renderer(T renderer);
+
+  template<typename T>
+  T renderer();
 
 protected:
-  RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0)
-    : model_(model)
-    , iter_(iter)
-    , tag_(tag)
-  {}
-
   DeeModel* model_;
   DeeModelIter* iter_;
   DeeModelTag* tag_;
@@ -72,4 +70,7 @@ protected:
 
 }
 }
+
+#include "ModelRowAdaptor-inl.h"
+
 #endif

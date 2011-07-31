@@ -44,6 +44,7 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     ModelRowAdaptor.cpp
      RatingsFilter.cpp
      Result.cpp
      Results.cpp

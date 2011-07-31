@@ -17,46 +17,48 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_FILTERS_H
-#define UNITY_FILTERS_H
-
-#include <boost/shared_ptr.hpp>
-
-#include "Model.h"
-#include "Filter.h"
+#include "ModelRowAdaptor.h"
 
 namespace unity
 {
 namespace dash
 {
+RowAdaptorBase::RowAdaptorBase(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+  : model_(model)
+  , iter_(iter)
+  , tag_(tag)
+{}
 
-class FilterAdaptor : public RowAdaptorBase
+RowAdaptorBase::RowAdaptorBase(RowAdaptorBase const& other)
 {
-public:
-  FilterAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
-  FilterAdaptor(FilterAdaptor const&);
+  model_ = other.model_;
+  iter_ = other.iter_;
+  tag_ = other.tag_;
+}
 
-  nux::ROProperty<std::string> renderer_name;
-};
-
-
-class Filters : public Model<FilterAdaptor>
+RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
 {
-public:
-  typedef boost::shared_ptr<Filters> Ptr;
+  model_ = other.model_;
+  iter_ = other.iter_;
+  tag_ = other.tag_;
+  
+  return *this;
+}
 
-  Filters();
-  ~Filters();
+std::string RowAdaptorBase::GetStringAt(int position)
+{
+  return dee_model_get_string(model_, iter_, position);
+}
 
-  /* There will be added/changed/removed signals here when we have that working */
-private:
-  void OnRowAdded(FilterAdaptor& filter);
-  void OnRowChanged(FilterAdaptor& filter);
-  void OnRowRemoved(FilterAdaptor& filter);
-};
+bool RowAdaptorBase::GetBoolAt(int position)
+{
+  return dee_model_get_bool(model_, iter_, position);
+}
 
+unsigned int RowAdaptorBase::GetUIntAt(int position)
+{
+  return dee_model_get_uint32(model_, iter_, position);
+}
 
 }
 }
-
-#endif

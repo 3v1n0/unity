@@ -42,7 +42,7 @@ public:
 
   Result(Result const& other);
   Result& operator=(Result const& other);
-
+  
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;
   nux::ROProperty<std::size_t> category_index;
@@ -52,13 +52,7 @@ public:
   nux::ROProperty<std::string> dnd_uri;
 
 private:
-  std::string get_uri() const;
-  std::string get_icon_hint() const;
-  std::size_t get_category() const;
-  std::string get_mimetype() const;
-  std::string get_name() const;
-  std::string get_comment() const;
-  std::string get_dnd_uri() const;
+  void SetupGetters();
 };
 
 }

@@ -24,43 +24,18 @@ namespace unity
 namespace dash
 {
 
-class FilterAdaptor : public RowAdaptorBase
-{
-public:
-  FilterAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
-
-  FilterAdaptor(FilterAdaptor const& other);
-
-  nux::ROProperty<std::string> id;
-  nux::ROProperty<std::string> renderer_name;
-
-  std::string get_id() const;
-  std::string get_renderer_name() const;
-};
-
 FilterAdaptor::FilterAdaptor(DeeModel* model,
                              DeeModelIter* iter,
                              DeeModelTag* renderer_tag)
   : RowAdaptorBase(model, iter, renderer_tag)
 {
-  renderer_name.SetGetterFunction(sigc::mem_fun(this, &FilterAdaptor::get_renderer_name));
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
 FilterAdaptor::FilterAdaptor(FilterAdaptor const& other)
+  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
 {
-  model_ = other.model_;
-  iter_ = other.iter_;
-  tag_ = other.tag_;
-}
-
-std::string FilterAdaptor::get_renderer_name() const
-{
-  return dee_model_get_string(model_, iter_, 3);
-}
-
-std::string FilterAdaptor::get_id() const
-{
-  return dee_model_get_string(model_, iter_, 0);
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
 Filters::Filters()
@@ -74,19 +49,13 @@ Filters::~Filters()
 {}
 
 void Filters::OnRowAdded(FilterAdaptor& filter)
-{
-  //filter_added.emit(filter);
-}
+{}
 
 void Filters::OnRowChanged(FilterAdaptor& filter)
-{
-  //filter_changed.emit(filter);
-}
+{}
 
 void Filters::OnRowRemoved(FilterAdaptor& filter)
-{
-  //filter_removed.emit(filter);
-}
+{}
 
 }
 }

@@ -168,35 +168,31 @@ void Lens::Impl::OnProxyDisconnected()
 
 void Lens::Impl::OnSearchFinished(GVariant* parameters)
 {
-  char* search_string;
+  glib::String search_string;
 
   g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->search_finished.emit(search_string);
-
-  g_free(search_string);
+  owner_->search_finished.emit(search_string.Str());
 }
 
 void Lens::Impl::OnGlobalSearchFinished(GVariant* parameters)
 {
-  char* search_string;
+  glib::String search_string;
 
   g_variant_get(parameters, "(sa{sv})", &search_string, NULL);
-  owner_->global_search_finished.emit(search_string);
-
-  g_free(search_string);
+  owner_->global_search_finished.emit(search_string.Str());
 }
 
 void Lens::Impl::OnChanged(GVariant* parameters)
 {
-  char* dbus_path = NULL;
-  gboolean search_in_global;
-  gboolean visible;
-  char* search_hint = NULL;
-  char* private_connection_name = NULL;
-  char* results_model_name = NULL;
-  char* global_results_model_name = NULL;
-  char* categories_model_name = NULL;
-  char* filters_model_name = NULL;
+  glib::String dbus_path;
+  gboolean search_in_global = FALSE;
+  gboolean visible = FALSE;
+  glib::String search_hint;
+  glib::String private_connection_name;
+  glib::String results_model_name;
+  glib::String global_results_model_name;
+  glib::String categories_model_name;
+  glib::String filters_model_name;
   GVariantIter* uri_patterns_iter = NULL;
   GVariantIter* mime_patterns_iter = NULL;
   GVariantIter* hints_iter = NULL;
@@ -224,19 +220,19 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                     << "  GlobalModel: " << global_results_model_name << "\n"
                     << "  Categories: " << categories_model_name << "\n"
                     << "  Filters: " << filters_model_name << "\n";
-  if (dbus_path == dbus_path_)
+  if (dbus_path.Str() == dbus_path_)
   {
     URIPatterns uri_patterns = URIPatternsFromIter(uri_patterns_iter);
     MIMEPatterns mime_patterns = MIMEPatternsFromIter(mime_patterns_iter);
     /* FIXME: We ignore hints for now */
     UpdateProperties(search_in_global,
                      visible,
-                     search_hint,
-                     private_connection_name,
-                     results_model_name,
-                     global_results_model_name,
-                     categories_model_name,
-                     filters_model_name,
+                     search_hint.Str(),
+                     private_connection_name.Str(),
+                     results_model_name.Str(),
+                     global_results_model_name.Str(),
+                     categories_model_name.Str(),
+                     filters_model_name.Str(),
                      uri_patterns,
                      mime_patterns);
   }
@@ -248,13 +244,6 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   connected_ = true;
   owner_->connected.EmitChanged(connected_);
 
-  g_free(dbus_path);
-  g_free(search_hint);
-  g_free(private_connection_name);
-  g_free(results_model_name);
-  g_free(global_results_model_name);
-  g_free(categories_model_name);
-  g_free(filters_model_name);
   g_variant_iter_free(uri_patterns_iter);
   g_variant_iter_free(mime_patterns_iter);
   g_variant_iter_free(hints_iter);

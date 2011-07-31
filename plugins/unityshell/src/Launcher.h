@@ -165,9 +165,7 @@ public:
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvKeyPressed(
-    nux::GraphicsEngine& GfxContext ,   /*Graphics Context for text operation*/
-    unsigned long    eventType  ,   /*event type*/
+  virtual void RecvKeyPressed(unsigned long    eventType  ,   /*event type*/
     unsigned long    keysym     ,   /*event keysym*/
     unsigned long    state      ,   /*event state*/
     const char*      character  ,   /*character*/

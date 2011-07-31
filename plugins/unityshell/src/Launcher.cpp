@@ -2579,8 +2579,7 @@ Launcher::EdgeRevealTriggered()
 }
 
 void
-Launcher::RecvKeyPressed(nux::GraphicsEngine& GfxContext,
-                         unsigned long    eventType,
+Launcher::RecvKeyPressed(unsigned long    eventType,
                          unsigned long    key_sym,
                          unsigned long    key_state,
                          const char*      character,

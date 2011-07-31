@@ -19,12 +19,14 @@
 
 #include "FilesystemLenses.h"
 
-#include <boost/lexical_cast.hpp>
-#include <gio/gio.h>
-#include <glib.h>
-#include <NuxCore/Logger.h>
 #include <stdexcept>
 #include <vector>
+
+#include <gio/gio.h>
+#include <glib.h>
+
+#include <boost/lexical_cast.hpp>
+#include <NuxCore/Logger.h>
 
 #include "config.h"
 #include "GLibWrapper.h"
@@ -39,7 +41,7 @@ namespace
 {
 
 nux::logging::Logger logger("unity.dash.filesystemlenses");
-static const char* GROUP = "Lens";
+const char* GROUP = "Lens";
 
 }
 
@@ -60,10 +62,10 @@ struct LensFileData
   static bool IsValid(GKeyFile* file, glib::Error& error)
   {
     return (g_key_file_has_group(file, GROUP) &&
-            g_key_file_has_key(file, GROUP, "DBusName", error.AsOutParam()) &&
-            g_key_file_has_key(file, GROUP, "DBusPath", error.AsOutParam()) &&
-            g_key_file_has_key(file, GROUP, "Name", error.AsOutParam()) &&
-            g_key_file_has_key(file, GROUP, "Icon", error.AsOutParam()));
+            g_key_file_has_key(file, GROUP, "DBusName", &error) &&
+            g_key_file_has_key(file, GROUP, "DBusPath", &error) &&
+            g_key_file_has_key(file, GROUP, "Name", &error) &&
+            g_key_file_has_key(file, GROUP, "Icon", &error));
   }
 
   glib::String dbus_name;
@@ -164,7 +166,7 @@ FilesystemLenses::Impl::~Impl()
 void FilesystemLenses::Impl::Init()
 {
   glib::String path(g_file_get_path(directory_));
-  LOG_DEBUG(logger) << "Searching for Lenses in: " << path.Str();
+  LOG_DEBUG(logger) << "Searching for Lenses in: " << path;
 
   glib::Object<GCancellable> cancellable(g_cancellable_new());
   g_file_enumerate_children_async(directory_,
@@ -193,8 +195,8 @@ void FilesystemLenses::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResult* 
   {
     glib::String path(g_file_get_path(source));
     LOG_WARN(logger) << "Unabled to enumerate children of directory "
-                     << path.Str() << " "
-                     << error.Message();
+                     << path << " "
+                     << error;
     return;
   }
   self->EnumerateLensesDirectoryChildren(enumerator);
@@ -222,7 +224,7 @@ void FilesystemLenses::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* e
     }
     else
     {
-      LOG_WARN(logger) << "Cannot enumerate over directory: " << error.Message();
+      LOG_WARN(logger) << "Cannot enumerate over directory: " << error;
       continue;
     }
   }
@@ -249,7 +251,7 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
 {
   Impl* self = static_cast<Impl*>(user_data);
   glib::Error error;
-  char* contents = NULL;
+  glib::String contents;
   gsize length = 0;
   GFile* file = G_FILE(source);
   glib::String path(g_file_get_path(file));
@@ -259,14 +261,13 @@ void FilesystemLenses::Impl::LoadFileContentCallback(GObject* source,
                                                 NULL, error.AsOutParam());
   if (result && !error)
   {
-    self->CreateLensFromKeyFileData(file, contents, length);
-    g_free(contents);
+    self->CreateLensFromKeyFileData(file, contents.Value(), length);
   }
   else
   {
     LOG_WARN(logger) << "Unable to read lens file "
                      << path.Str() << ": "
-                     << error.Message();
+                     << error;
   }
   
   self->DecrementAndCheckChildrenWaiting();
@@ -309,20 +310,20 @@ void FilesystemLenses::Impl::CreateLensFromKeyFileData(GFile* file,
       lenses_.push_back(lens);
       owner_->lens_added.emit(lens);
 
-      LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path.Str();
+      LOG_DEBUG(logger) << "Sucessfully loaded lens file " << path;
     }
     else
     {
       LOG_WARN(logger) << "Lens file  "
-                       << path.Str() << " is not valid: "
-                       << error.Message();
+                       << path << " is not valid: "
+                       << error;
     }
   }
   else
   {
     LOG_WARN(logger) << "Unable to load Lens file "
-                     << path.Str() << ": "
-                     << error.Message();
+                     << path << ": "
+                     << error;
   }
   g_key_file_free(key_file);
 }
@@ -339,7 +340,10 @@ Lens::Ptr FilesystemLenses::Impl::GetLens(std::string const& lens_id) const
   for (Lens::Ptr lens: lenses_)
   {
     if (lens->id == lens_id)
+    {
       p = lens;
+      break;
+    }
   }
 
   return p;
@@ -360,7 +364,7 @@ Lens::Ptr FilesystemLenses::Impl::GetLensAtIndex(std::size_t index) const
 
 std::size_t FilesystemLenses::Impl::count() const
 {
-  return (std::size_t)lenses_.size();
+  return lenses_.size();
 }
 
 

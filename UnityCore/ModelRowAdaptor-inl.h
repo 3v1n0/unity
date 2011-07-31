@@ -17,44 +17,25 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_FILTERS_H
-#define UNITY_FILTERS_H
-
-#include <boost/shared_ptr.hpp>
-
-#include "Model.h"
-#include "Filter.h"
+#ifndef UNITY_MODEL_ROW_INL_H
+#define UNITY_MODEL_ROW_INL_H
 
 namespace unity
 {
 namespace dash
 {
 
-class FilterAdaptor : public RowAdaptorBase
+template<typename T>
+void RowAdaptorBase::set_renderer(T renderer)
 {
-public:
-  FilterAdaptor(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
-  FilterAdaptor(FilterAdaptor const&);
+  dee_model_set_tag(model_, iter_, tag_, renderer);
+}
 
-  nux::ROProperty<std::string> renderer_name;
-};
-
-
-class Filters : public Model<FilterAdaptor>
+template<typename T>
+T RowAdaptorBase::renderer()
 {
-public:
-  typedef boost::shared_ptr<Filters> Ptr;
-
-  Filters();
-  ~Filters();
-
-  /* There will be added/changed/removed signals here when we have that working */
-private:
-  void OnRowAdded(FilterAdaptor& filter);
-  void OnRowChanged(FilterAdaptor& filter);
-  void OnRowRemoved(FilterAdaptor& filter);
-};
-
+  return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
+}
 
 }
 }
