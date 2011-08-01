@@ -64,20 +64,20 @@ PlacesHorizontalTile::PlacesHorizontalTile(const char* icon_name,
 
   vlayout->AddLayout(new nux::SpaceLayout(0, 0, 6, 6));
 
-  _cairotext = new nux::StaticCairoText(_label);
-  _cairotext->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _cairotext->SetMaximumWidth(w);
-  _cairotext->SetLines(-2);
-  vlayout->AddView(_cairotext, 0, nux::eLeft, nux::eFull);
-  lines = _cairotext->GetLineCount();
+  nux::StaticCairoText* static_text = new nux::StaticCairoText(_label);
+  static_text->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+  static_text->SetMaximumWidth(w);
+  static_text->SetLines(-2);
+  vlayout->AddView(static_text, 0, nux::eLeft, nux::eFull);
+  lines = static_text->GetLineCount();
 
-  _cairotext = new nux::StaticCairoText(_comment);
-  _cairotext->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _cairotext->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-  _cairotext->SetLines(-1 * (4 - lines));
-  _cairotext->SetMaximumWidth(w);
-  _cairotext->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.8f));
-  vlayout->AddView(_cairotext, 1, nux::eLeft, nux::eFull);
+  static_text = new nux::StaticCairoText(_comment);
+  static_text->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
+  static_text->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+  static_text->SetLines(-1 * (4 - lines));
+  static_text->SetMaximumWidth(w);
+  static_text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.8f));
+  vlayout->AddView(static_text, 1, nux::eLeft, nux::eFull);
 
   SetLayout(layout);
 
@@ -158,7 +158,6 @@ PlacesHorizontalTile::DndSourceGetDragImage()
   {
     nux::GdkGraphics graphics(pbuf);
     result = graphics.GetBitmap();
-    g_object_unref(pbuf);
   }
 
   return result;

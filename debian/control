@@ -35,7 +35,8 @@ Build-Depends: cmake,
                libnotify-dev,
                libstartup-notification0-dev,
                libatk1.0-dev,
-               libutouch-geis-dev (>= 2.0.10)
+               libutouch-geis-dev (>= 2.0.10),
+               libgnome-desktop-3-dev,
 Standards-Version: 3.9.2
 Homepage: https://launchpad.net/unity
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-desktop/unity/ubuntu

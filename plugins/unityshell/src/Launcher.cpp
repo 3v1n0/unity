@@ -65,6 +65,8 @@ const int WIGGLE_CYCLES = 6;
 const int MAX_STARTING_BLINKS = 5;
 const int STARTING_BLINK_LAMBDA = 3;
 
+const int PULSE_BLINK_LAMBDA = 2;
+
 const float BACKLIGHT_STRENGTH = 0.9f;
 
 }
@@ -138,6 +140,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ,   m_ContentOffsetY(0)
   ,   m_BackgroundLayer(0)
   ,   _model(0)
+  ,   _background_color (nux::color::DimGray)
+  ,   _dash_is_open (false)
 {
   _parent = parent;
   _screen = screen;
@@ -217,6 +221,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _icon_glow_size         = 62;
   _icon_image_size_delta  = 6;
   _icon_size              = _icon_image_size + _icon_image_size_delta;
+  _background_alpha       = 0.6667; // about 0xAA
 
   _enter_y                = 0;
   _launcher_drag_delta    = 0;
@@ -298,6 +303,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                                                    (UBusCallback) &Launcher::OnBFBDndEnter,
                                                    this);
 
+  _ubus_handles[5] = ubus_server_register_interest (ubus,
+                                                    UBUS_BACKGROUND_COLOR_CHANGED,
+                                                    (UBusCallback) &Launcher::OnBGColorChanged,
+                                                    this);
+
   _dbus_owner = g_bus_own_name(G_BUS_TYPE_SESSION,
                                S_DBUS_NAME,
                                (GBusNameOwnerFlags)(G_BUS_NAME_OWNER_FLAGS_REPLACE | G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT),
@@ -316,6 +326,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   icon_renderer = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
+  
+  // request the latest colour from bghash
+  ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+
   SetAcceptMouseWheelEvent(true);
 }
 
@@ -683,6 +697,10 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
   if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
+  
+  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
+    return true;  
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
   if (TimeDelta(&current, &time) < ANIM_DURATION)
@@ -916,6 +934,18 @@ float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& 
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
+float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
+{
+  struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  int pulse_ms = TimeDelta(&current, &pulse_time);
+  double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
+
+  if (pulse_progress == 1.0f)
+    icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, false);
+  
+  return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
+}
+
 float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const& current)
 {
   if (!icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
@@ -996,6 +1026,16 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       else
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
       break;
+  }
+  
+  if (icon->GetQuirk(LauncherIcon::QUIRK_PULSE_ONCE))
+  {
+    if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+      result *= CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
+    else if (_backlight_mode == BACKLIGHT_NORMAL)
+      result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconPulseOnceValue(icon, current));
+    else
+      result = 1.0f - CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
   }
 
   // urgent serves to bring the total down only
@@ -1450,11 +1490,22 @@ gboolean Launcher::SuperShowShortcutsTimeout(gpointer data)
   return false;
 }
 
+void Launcher::OnBGColorChanged(GVariant *data, void *val)
+{
+  Launcher *self = (Launcher*)val;
+  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+
+  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+  self->_background_color = nux::Color(red, green, blue, alpha);
+  self->NeedRedraw();
+}
+
 void Launcher::OnPlaceViewShown(GVariant* data, void* val)
 {
   Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
+  self->_dash_is_open = true;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
@@ -1474,6 +1525,7 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   Launcher* self = (Launcher*)val;
   LauncherModel::iterator it;
 
+  self->_dash_is_open = false;
   self->_hide_machine->SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
 
@@ -1746,8 +1798,16 @@ Launcher::CheckWindowOverLauncherSync(Launcher* self)
 void
 Launcher::OnPluginStateChanged()
 {
-  _hide_machine->SetQuirk(LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default()->IsExpoActive());
-  _hide_machine->SetQuirk(LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default()->IsScaleActive());
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
+  
+  if (_hidemode == LAUNCHER_HIDE_NEVER)
+    return;
+    
+  if (PluginAdapter::Default ()->IsScaleActive ())                   
+    _parent->InputWindowEnableStruts (true);
+  else
+    _parent->InputWindowEnableStruts (false);
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()
@@ -1980,6 +2040,15 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 }
 
+void Launcher::SetBackgroundAlpha(float background_alpha)
+{  
+  if (_background_alpha == background_alpha)
+    return;
+    
+  _background_alpha = background_alpha;
+  NeedRedraw();
+}
+
 void Launcher::OnIconAdded(LauncherIcon* icon)
 {
   EnsureAnimation();
@@ -2052,6 +2121,9 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 }
 
+
+
+
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry();
@@ -2085,9 +2157,17 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clip vertically but not horizontally
   GfxContext.PushClippingRectangle(nux::Geometry(base.x, bkg_box.y, base.width, bkg_box.height));
+  
+  if (_dash_is_open)
+  {
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+  }
+  else
+  {
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0, 0.0, 0.0, _background_alpha));
+  }
+  
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
-  gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0xAA000000));
 
   icon_renderer->PreprocessIcons(args, base);
   EventLogic();
@@ -2252,6 +2332,8 @@ void Launcher::EndIconDrag()
 
     if (hovered_icon && hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
     {
+      hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+      
       launcher_removerequest.emit(_drag_icon);
       _drag_window->ShowWindow(false);
       EnsureAnimation();
@@ -2545,8 +2627,7 @@ Launcher::EdgeRevealTriggered()
 }
 
 void
-Launcher::RecvKeyPressed(nux::GraphicsEngine& GfxContext,
-                         unsigned long    eventType,
+Launcher::RecvKeyPressed(unsigned long    eventType,
                          unsigned long    key_sym,
                          unsigned long    key_state,
                          const char*      character,
