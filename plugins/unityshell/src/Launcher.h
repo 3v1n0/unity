@@ -484,7 +484,7 @@ private:
   GSettings* _settings;
   guint32 _settings_changed_id;
 
-  guint _ubus_handles[5];
+  guint _ubus_handles[6];
 
   nux::Color _background_color;
   bool _dash_is_open;
