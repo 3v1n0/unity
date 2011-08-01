@@ -44,6 +44,8 @@ public:
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button);
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
+                                        unsigned int timestamp);
 
   std::string name() const;
   std::string owner_name() const;

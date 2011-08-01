@@ -1,0 +1,9 @@
+[Lens]
+DBusName=com.canonical.tests.Lens.Files
+DBusPath=/com/canonical/tests/lens/files
+Name=Files
+Icon=/usr/share/unity-lens-files/files.png
+Description=Search for Files & Folders
+SearchHint=Search Files & Folders
+Visible=true
+Shortcut=f

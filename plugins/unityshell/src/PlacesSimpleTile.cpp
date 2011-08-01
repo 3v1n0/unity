@@ -53,10 +53,8 @@ PlacesSimpleTile::PlacesSimpleTile(const char* icon_name,
   _icontex->SetMinMaxSize(style->GetTileWidth(), icon_size);
   AddChild(_icontex);
 
-
   _cairotext = new nux::StaticCairoText("");
   _cairotext->SetMaximumWidth(style->GetTileWidth());
-  _cairotext->SinkReference();
   _cairotext->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_START);
   _cairotext->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
   _cairotext->SetText(_label);
@@ -146,7 +144,6 @@ PlacesSimpleTile::DndSourceGetDragImage()
   {
     nux::GdkGraphics graphics(pbuf);
     result = graphics.GetBitmap();
-    g_object_unref(pbuf);
   }
 
   return result;

@@ -66,6 +66,8 @@ PanelIndicatorObjectEntryView::PanelIndicatorObjectEntryView(
 
   InputArea::OnMouseDown.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseDown));
   InputArea::OnMouseUp.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseUp));
+
+  InputArea::SetAcceptMouseWheelEvent(true);
   InputArea::OnMouseWheel.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::OnMouseWheel));
 
   on_panelstyle_changed_connection_ = PanelStyle::GetDefault()->changed.connect(sigc::mem_fun(this, &PanelIndicatorObjectEntryView::Refresh));
@@ -91,22 +93,41 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
   if (proxy_->active())
     return;
 
-  if ((proxy_->label_visible() && proxy_->label_sensitive()) ||
-      (proxy_->image_visible() && proxy_->image_sensitive()))
+  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+       (proxy_->image_visible() && proxy_->image_sensitive())) &&
+      nux::GetEventButton(button_flags) != 2)
   {
-    proxy_->ShowMenu(GetAbsoluteGeometry().x + 1, //cairo translation
-                     GetAbsoluteGeometry().y + PANEL_HEIGHT,
+    proxy_->ShowMenu(GetAbsoluteX() + 1, //cairo translation
+                     GetAbsoluteY() + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
+    proxy_->set_active(true);
+    //
+    // ^ Set active even before the menu appears. This allows the below
+    //   Refresh call to know it should draw_menu_bg() immediately
+    //   rather than waiting for slow inter-process communication with
+    //   unity-panel-service, which causes visible lag in many cases.
+    //
   }
-  else
-  {
-    Refresh();
-  }
+  Refresh();
 }
 
 void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
 {
+  if (proxy_->active())
+    return;
+
+  nux::Geometry geo = GetAbsoluteGeometry();
+  int px = geo.x + x;
+  int py = geo.y + y;
+
+  if (((proxy_->label_visible() && proxy_->label_sensitive()) ||
+       (proxy_->image_visible() && proxy_->image_sensitive())) &&
+      geo.IsPointInside(px, py) && nux::GetEventButton(button_flags) == 2)
+  {
+    proxy_->SecondaryActivate(time(NULL));
+  }
+
   Refresh();
 }
 
