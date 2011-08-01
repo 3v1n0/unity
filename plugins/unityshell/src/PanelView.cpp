@@ -79,7 +79,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
   _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
-  _remote->on_menu_pointer_moved.connect(sigc::mem_fun(this, &PanelView::OnMenuPointerMoved));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
   _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   _remote->on_synced.connect(sigc::mem_fun(this, &PanelView::OnSynced));
@@ -100,10 +99,14 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
                                                      this);
    // request the latest colour from bghash
    ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+
+  _track_menu_pointer_id = 0;
 }
 
 PanelView::~PanelView()
 {
+  if (_track_menu_pointer_id)
+    g_source_remove(_track_menu_pointer_id);
   _style->UnReference();
   UBusServer *ubus = ubus_server_get_default();
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
@@ -343,10 +346,41 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   }
 }
 
+static gboolean track_menu_pointer(gpointer data)
+{
+  PanelView *self = (PanelView*)data;
+  gint x, y;
+  gdk_display_get_pointer(gdk_display_get_default(), NULL, &x, &y, NULL);
+  self->OnMenuPointerMoved(x, y);
+  return TRUE;
+}
+
 void PanelView::OnEntryActivated(std::string const& entry_id)
 {
-  if (entry_id == "")
+  bool active = (entry_id.size() > 0);
+  if (active && !_track_menu_pointer_id)
+  {
+    //
+    // Track menus being scrubbed at 60Hz (about every 16 millisec)
+    // It might sound ugly, but it's far nicer (and more responsive) than the
+    // code it replaces which used to capture motion events in another process
+    // (unity-panel-service) and send them to us over dbus.
+    // NOTE: The reason why we have to use a timer instead of tracking motion
+    // events is because the motion events will never be delivered to this
+    // process. All the motion events will go to unity-panel-service while
+    // scrubbing because the active panel menu has (needs) the pointer grab.
+    //
+    _track_menu_pointer_id = g_timeout_add(16, track_menu_pointer, this);
+  }
+  else if (!active)
+  {
+    if (_track_menu_pointer_id)
+    {
+      g_source_remove(_track_menu_pointer_id);
+      _track_menu_pointer_id = 0;
+    }
     _menu_view->AllMenusClosed();
+  }
 }
 
 void PanelView::OnSynced()

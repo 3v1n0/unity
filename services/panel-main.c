@@ -85,11 +85,6 @@ static const gchar introspection_xml[] =
   "     <arg type='s' name='indicator_id' />"
   "    </signal>"
   ""
-  "    <signal name='ActiveMenuPointerMotion'>"
-  "     <arg type='i' name='x' />"
-  "     <arg type='i' name='y' />"
-  "    </signal>"
-  ""
   "    <signal name='EntryActivateRequest'>"
   "     <arg type='s' name='entry_id' />"
   "    </signal>"
@@ -254,30 +249,6 @@ on_service_entry_activated (PanelService    *service,
 }
 
 static void
-on_service_active_menu_pointer_motion (PanelService    *service,
-                                       GDBusConnection *connection)
-{
-  GError *error = NULL;
-  gint    x=0, y=0;
-
-  panel_service_get_last_xy (service, &x, &y);
-
-  g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
-                                 S_PATH,
-                                 S_IFACE,
-                                 "ActiveMenuPointerMotion",
-                                 g_variant_new ("(ii)", x, y),
-                                 &error);
-
-  if (error)
-    {
-      g_warning ("Unable to emit ActiveMenuPointerMotionsignal: %s", error->message);
-      g_error_free (error);
-    }
-}
-
-static void
 on_service_entry_activate_request (PanelService    *service,
                                    const gchar     *entry_id,
                                    GDBusConnection *connection)
@@ -339,8 +310,6 @@ on_bus_acquired (GDBusConnection *connection,
                     G_CALLBACK (on_service_resync), connection);
   g_signal_connect (service, "entry-activated",
                     G_CALLBACK (on_service_entry_activated), connection);
-  g_signal_connect (service, "active-menu-pointer-motion",
-                    G_CALLBACK (on_service_active_menu_pointer_motion), connection);
   g_signal_connect (service, "entry-activate-request",
                     G_CALLBACK (on_service_entry_activate_request), connection);
   g_signal_connect (service, "entry-show-now-changed",
@@ -370,7 +339,6 @@ on_name_lost (GDBusConnection *connection,
   {
     g_signal_handlers_disconnect_by_func (service, on_service_resync, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_activated, connection);
-    g_signal_handlers_disconnect_by_func (service, on_service_active_menu_pointer_motion, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_activate_request, connection);
     g_signal_handlers_disconnect_by_func (service, on_service_entry_show_now_changed, connection);
   }

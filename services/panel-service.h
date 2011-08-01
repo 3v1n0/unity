@@ -103,10 +103,6 @@ void              panel_service_scroll_entry   (PanelService *self,
 						const gchar  *entry_id,
 						gint32       delta);
 
-void              panel_service_get_last_xy   (PanelService  *self,
-					       gint          *x,
-					       gint          *y);
-
 G_END_DECLS
 
 #endif /* _PANEL_SERVICE_H_ */

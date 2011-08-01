@@ -434,13 +434,6 @@ void DBusIndicators::Impl::OnProxySignalReceived(GDBusProxy* proxy,
       RequestSyncAll();
     }
   }
-  else if (signal_name == "ActiveMenuPointerMotion")
-  {
-    int x = 0;
-    int y = 0;
-    g_variant_get(parameters, "(ii)", &x, &y);
-    owner_->on_menu_pointer_moved.emit(x, y);
-  }
   else if (signal_name == "EntryShowNowChanged")
   {
     gchar*    id = NULL;

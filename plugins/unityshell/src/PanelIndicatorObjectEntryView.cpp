@@ -101,11 +101,15 @@ void PanelIndicatorObjectEntryView::OnMouseDown(int x, int y,
                      GetAbsoluteY() + PANEL_HEIGHT,
                      time(NULL),
                      nux::GetEventButton(button_flags));
+    proxy_->set_active(true);
+    //
+    // ^ Set active even before the menu appears. This allows the below
+    //   Refresh call to know it should draw_menu_bg() immediately
+    //   rather than waiting for slow inter-process communication with
+    //   unity-panel-service, which causes visible lag in many cases.
+    //
   }
-  else
-  {
-    Refresh();
-  }
+  Refresh();
 }
 
 void PanelIndicatorObjectEntryView::OnMouseUp(int x, int y, long button_flags, long key_flags)
