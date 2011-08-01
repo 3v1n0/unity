@@ -252,7 +252,7 @@ void BamfLauncherIcon::OnViewPortSwitchEnded()
       guint32 xid = bamf_window_get_xid(BAMF_WINDOW(view));
       CompWindow *win = m_Screen->findWindow((Window) xid);
 
-      if (win->defaultViewport() == m_Screen->vp())
+      if (win && win->defaultViewport() == m_Screen->vp())
       {
         any_on_current = true;
         break;
