@@ -1,6 +1,31 @@
 unity (4.6.0-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - compiz crashed with SIGSEGV in __strlen_sse2() (LP: #814619)
+    - PlacesHomeView::PlacesHomeView leaks memory (LP: #818450)
+    - PluginAdapter::MaximizeIfBigEnough leaks memory (LP: #818477)
+    - Launcher - Make Launcher left of screen reveal more responsive and less
+      prone to false positives (LP: #765819)
+    - Launcher - clicking on a App launcher icon incorrectly un-minimizes
+      windows (LP: #783434)
+    - Unity doesn't get any mouse wheel scroll event in Indicators InputArea
+      (LP: #814574)
+    - Unity launcher gets cluttered when having multiple partitions and/or
+      external volumes attached (LP: #713423)
+    - Unity panel menus and indicators slow to respond. Too much lag.
+      (LP: #742664)
+    - In Unity the distinction between GVolume, GDrive and GMount is a bit
+      confusing. (LP: #799890)
+    - Launcher - When a item is deleted by dragging to Trash, the trash should
+      pulse once before the Launcher disappears (LP: #750311)
+    - ccsm needs an option to change launcher opacity (LP: #815032)
+    - add a ccsm option to hide volumes in launcher (LP: #794707)
+    - scale plugin doesn't work as desired when "Click Desktop To Show
+      Desktop" is true (LP: #810315)
+    - mute/unmute sound when user clicks on sound applet using scroll button
+      or middle mouse button (LP: #609860)
+    - Secondary activate (i.e. middle click) support for indicators advanced
+      usage (LP: #812933)
   * debian/control:
     - dep on latest libunity-misc
     - dep on latest nux
@@ -8,8 +33,12 @@ unity (4.6.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - bump libunity-core-4.0-4 shlib for ABI break
     - don't ship unity dialogs right now. Not ready for alpha quality
+  * distro-patch the grey to darker grey (until the blur is done in nux)
+  * Switch to dpkg-source 3.0 (quilt) format
+  * debian/patches/01_revert_removed_function_for_unity2d_to_build.patch:
+    - revert a removed API making unity-2d not building
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Aug 2011 17:51:37 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Aug 2011 18:40:51 +0200
 
 unity (4.4.0-0ubuntu1) oneiric; urgency=low
 
