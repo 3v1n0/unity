@@ -16,9 +16,9 @@ set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
-set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
-set (CMAKE_CXX_FLAGS_DEBUG "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
-set (CMAKE_CXX_FLAGS_RELEASE "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
+set (CMAKE_CXX_FLAGS_DEBUG "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
+set (CMAKE_CXX_FLAGS_RELEASE "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
 
 #
 # Niceties
