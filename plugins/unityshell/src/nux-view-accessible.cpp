@@ -240,11 +240,6 @@ on_layout_changed_cb(nux::View* view,
 
   atk_child = unity_a11y_get_accessible(layout);
 
-  g_debug("[a11y][view] Layout change (%p:%s)(%p:%s)(%i)",
-          accessible, atk_object_get_name(accessible),
-          atk_child, atk_object_get_name(atk_child),
-          is_add);
-
   if (is_add)
     signal_name = "children-changed::add";
   else
@@ -259,9 +254,6 @@ on_change_keyboard_receiver_cb (AtkObject *accessible,
                                 gboolean focus_in)
 {
   NuxViewAccessible *self = NULL;
-
-  g_debug ("[a11y][view] on_change_keyboard_receiver_cb: (%p:%s:%i)", accessible,
-           atk_object_get_name (accessible), focus_in);
 
   g_return_if_fail (NUX_IS_VIEW_ACCESSIBLE (accessible));
   self = NUX_VIEW_ACCESSIBLE (accessible);
@@ -310,9 +302,6 @@ nux_view_accessible_check_pending_notification (NuxAreaAccessible *area_accessib
   nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
   if (nux_object == NULL) /* defunct */
     return FALSE;
-
-  g_debug ("[a11y][view] check_pending_notification, focus notification : (%p:%s:%i)",
-           self, atk_object_get_name (ATK_OBJECT (self)), self->priv->key_focused);
 
   g_signal_emit_by_name (self, "focus_event", self->priv->key_focused);
   atk_focus_tracker_notify (ATK_OBJECT (self));

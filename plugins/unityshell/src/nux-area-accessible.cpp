@@ -403,9 +403,6 @@ nux_area_accessible_focus_handler(AtkObject* accessible,
 {
   g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(accessible));
 
-  g_debug("[a11y][area] focus_handler (%p:%s:%i)",
-          accessible, atk_object_get_name(accessible), focus_in);
-
   atk_object_notify_state_change(accessible, ATK_STATE_FOCUSED, focus_in);
 }
 
@@ -474,9 +471,6 @@ search_for_parent_window(AtkObject* object)
        (parent != NULL) && (atk_object_get_role(parent) != ATK_ROLE_WINDOW);
        parent = atk_object_get_parent(parent));
 
-  if (parent == NULL)
-    g_debug("[a11y][area] search_for_parent NO PARENT WINDOW");
-
   return parent;
 }
 
@@ -523,9 +517,6 @@ nux_area_accessible_real_check_pending_notification (NuxAreaAccessible *self)
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  g_debug ("[a11y][area] real_check_pending_notification, focus notification : (%p:%s:%i)",
-           self, atk_object_get_name (ATK_OBJECT (self)), self->priv->focused);
-
   g_signal_emit_by_name (self, "focus_event", self->priv->focused);
   atk_focus_tracker_notify (ATK_OBJECT (self));
   self->priv->pending_notification = FALSE;
@@ -566,9 +557,6 @@ check_focus (NuxAreaAccessible *self)
         }
       else
         {
-          g_debug ("[a11y][area] on_focus_change_cb (actual focus change) : (%p:%s:%i)",
-                   self, atk_object_get_name (ATK_OBJECT (self)), focus_in);
-
           g_signal_emit_by_name (self, "focus_event", focus_in);
           atk_focus_tracker_notify (ATK_OBJECT (self));
           self->priv->pending_notification = FALSE;

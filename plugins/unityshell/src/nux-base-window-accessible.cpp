@@ -237,9 +237,6 @@ check_active (NuxBaseWindowAccessible *self)
       else
         signal_id = DEACTIVATE;
 
-      g_debug ("[a11y][bwindow] check_active activate events (%p:%s:%i)",
-               self, atk_object_get_name (ATK_OBJECT (self)), is_active);
-
       atk_object_notify_state_change (ATK_OBJECT (self),
                                       ATK_STATE_ACTIVE, is_active);
       g_signal_emit (self, signals [signal_id], 0);

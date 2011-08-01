@@ -225,9 +225,6 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
   child = dynamic_cast<nux::Object*>(*it);
   child_accessible = unity_a11y_get_accessible(child);
 
-  g_debug("[a11y][launcher] ref_child (%p:%s)",
-          child_accessible, atk_object_get_name(child_accessible));
-
   g_object_ref(child_accessible);
 
   return child_accessible;
@@ -361,8 +358,6 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
 /* private */
 static void on_selection_change_cb(UnityLauncherAccessible* launcher_accessible)
 {
-  g_debug("[a11y][launcher] selection changed");
-
   g_signal_emit_by_name(ATK_OBJECT(launcher_accessible), "selection-changed");
 }
 
@@ -387,11 +382,6 @@ on_icon_added_cb(LauncherIcon* icon,
 
   index = atk_object_get_index_in_parent(icon_accessible);
 
-  g_debug("[a11y][launcher] icon (%p, %s) added on container (%p,%s) at index %i",
-          icon_accessible, atk_object_get_name(icon_accessible),
-          self, atk_object_get_name(ATK_OBJECT(self)),
-          index);
-
   g_signal_emit_by_name(self, "children-changed::add",
                         index, icon_accessible, NULL);
 }
@@ -413,11 +403,6 @@ on_icon_removed_cb(LauncherIcon* icon,
   icon_accessible = unity_a11y_get_accessible(icon);
 
   index = atk_object_get_index_in_parent(icon_accessible);
-
-  g_debug("[a11y][launcher] icon (%p, %s) removed on container (%p,%s) at index %i",
-          icon_accessible, atk_object_get_name(icon_accessible),
-          self, atk_object_get_name(ATK_OBJECT(self)),
-          index);
 
   g_signal_emit_by_name(self, "children-changed::remove",
                         index, icon_accessible, NULL);
