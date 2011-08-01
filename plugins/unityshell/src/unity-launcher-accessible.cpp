@@ -78,8 +78,6 @@ struct _UnityLauncherAccessiblePrivate
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-
-  gboolean focused;
 };
 
 
@@ -238,9 +236,8 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
 static AtkStateSet*
 unity_launcher_accessible_ref_state_set(AtkObject* obj)
 {
-  AtkStateSet* state_set = NULL;
-  nux::Object* nux_object = NULL;
-  UnityLauncherAccessible* self = NULL;
+  AtkStateSet *state_set = NULL;
+  nux::Object *nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(obj), NULL);
 
@@ -252,13 +249,8 @@ unity_launcher_accessible_ref_state_set(AtkObject* obj)
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  self = UNITY_LAUNCHER_ACCESSIBLE(obj);
-
   /* The Launcher is always focusable */
   atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
-
-  if (self->priv->focused)
-    atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
 
   return state_set;
 }
