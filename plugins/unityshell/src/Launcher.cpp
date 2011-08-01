@@ -1798,8 +1798,16 @@ Launcher::CheckWindowOverLauncherSync(Launcher* self)
 void
 Launcher::OnPluginStateChanged()
 {
-  _hide_machine->SetQuirk(LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default()->IsExpoActive());
-  _hide_machine->SetQuirk(LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default()->IsScaleActive());
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
+  
+  if (_hidemode == LAUNCHER_HIDE_NEVER)
+    return;
+    
+  if (PluginAdapter::Default ()->IsScaleActive ())                   
+    _parent->InputWindowEnableStruts (true);
+  else
+    _parent->InputWindowEnableStruts (false);
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()
