@@ -1,4 +1,4 @@
-unity (4.6.0-0ubuntu1) UNRELEASED; urgency=low
+unity (4.6.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
     - compiz crashed with SIGSEGV in __strlen_sse2() (LP: #814619)
@@ -38,7 +38,7 @@ unity (4.6.0-0ubuntu1) UNRELEASED; urgency=low
   * debian/patches/01_revert_removed_function_for_unity2d_to_build.patch:
     - revert a removed API making unity-2d not building
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Aug 2011 18:40:51 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Aug 2011 19:53:15 +0200
 
 unity (4.4.0-0ubuntu1) oneiric; urgency=low
 
