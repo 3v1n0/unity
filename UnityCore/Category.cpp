@@ -35,7 +35,7 @@ Category::Category(DeeModel* model,
 }
 
 Category::Category(Category const& other)
-  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
+  : RowAdaptorBase(other)
 {
   SetupGetters();
 }

@@ -34,7 +34,7 @@ Result::Result(DeeModel* model,
 }
 
 Result::Result(Result const& other)
-  : RowAdaptorBase(other.model_, other.iter_, other.tag_)
+  : RowAdaptorBase(other)
 {
   SetupGetters();
 }
