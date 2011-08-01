@@ -7,6 +7,7 @@ unity (4.6.0-0ubuntu1) UNRELEASED; urgency=low
     - add build-dep on libgnome-desktop-3-dev
   * debian/rules:
     - bump libunity-core-4.0-4 shlib for ABI break
+    - don't ship unity dialogs right now. Not ready for alpha quality
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 01 Aug 2011 17:51:37 +0200
 
