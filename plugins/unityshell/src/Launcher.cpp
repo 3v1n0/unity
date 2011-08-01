@@ -65,6 +65,8 @@ const int WIGGLE_CYCLES = 6;
 const int MAX_STARTING_BLINKS = 5;
 const int STARTING_BLINK_LAMBDA = 3;
 
+const int PULSE_BLINK_LAMBDA = 2;
+
 const float BACKLIGHT_STRENGTH = 0.9f;
 
 }
@@ -219,6 +221,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _icon_glow_size         = 62;
   _icon_image_size_delta  = 6;
   _icon_size              = _icon_image_size + _icon_image_size_delta;
+  _background_alpha       = 0.6667; // about 0xAA
 
   _enter_y                = 0;
   _launcher_drag_delta    = 0;
@@ -694,6 +697,10 @@ bool Launcher::IconNeedsAnimation(LauncherIcon* icon, struct timespec const& cur
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_URGENT);
   if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * URGENT_BLINKS * 2))
     return true;
+  
+  time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  if (TimeDelta(&current, &time) < (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2))
+    return true;  
 
   time = icon->GetQuirkTime(LauncherIcon::QUIRK_PRESENTED);
   if (TimeDelta(&current, &time) < ANIM_DURATION)
@@ -927,6 +934,18 @@ float Launcher::IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& 
   return 0.5f + (float)(std::cos(M_PI * (float)(URGENT_BLINKS * 2) * urgent_progress)) * 0.5f;
 }
 
+float Launcher::IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current)
+{
+  struct timespec pulse_time = icon->GetQuirkTime(LauncherIcon::QUIRK_PULSE_ONCE);
+  int pulse_ms = TimeDelta(&current, &pulse_time);
+  double pulse_progress = (double) CLAMP((float) pulse_ms / (ANIM_DURATION_LONG * PULSE_BLINK_LAMBDA * 2), 0.0f, 1.0f);
+
+  if (pulse_progress == 1.0f)
+    icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, false);
+  
+  return 0.5f + (float) (std::cos(M_PI * 2.0 * pulse_progress)) * 0.5f;
+}
+
 float Launcher::IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const& current)
 {
   if (!icon->GetQuirk(LauncherIcon::QUIRK_URGENT))
@@ -1007,6 +1026,16 @@ float Launcher::IconBackgroundIntensity(LauncherIcon* icon, struct timespec cons
       else
         result = 1.0f - CLAMP(running_progress + IconStartingPulseValue(icon, current), 0.0f, 1.0f);
       break;
+  }
+  
+  if (icon->GetQuirk(LauncherIcon::QUIRK_PULSE_ONCE))
+  {
+    if (_backlight_mode == BACKLIGHT_ALWAYS_ON)
+      result *= CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
+    else if (_backlight_mode == BACKLIGHT_NORMAL)
+      result += (BACKLIGHT_STRENGTH - result) * (1.0f - IconPulseOnceValue(icon, current));
+    else
+      result = 1.0f - CLAMP(running_progress + IconPulseOnceValue(icon, current), 0.0f, 1.0f);
   }
 
   // urgent serves to bring the total down only
@@ -1769,8 +1798,16 @@ Launcher::CheckWindowOverLauncherSync(Launcher* self)
 void
 Launcher::OnPluginStateChanged()
 {
-  _hide_machine->SetQuirk(LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default()->IsExpoActive());
-  _hide_machine->SetQuirk(LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default()->IsScaleActive());
+  _hide_machine->SetQuirk (LauncherHideMachine::EXPO_ACTIVE, PluginAdapter::Default ()->IsExpoActive ());
+  _hide_machine->SetQuirk (LauncherHideMachine::SCALE_ACTIVE, PluginAdapter::Default ()->IsScaleActive ());
+  
+  if (_hidemode == LAUNCHER_HIDE_NEVER)
+    return;
+    
+  if (PluginAdapter::Default ()->IsScaleActive ())                   
+    _parent->InputWindowEnableStruts (true);
+  else
+    _parent->InputWindowEnableStruts (false);
 }
 
 Launcher::LauncherHideMode Launcher::GetHideMode()
@@ -2003,6 +2040,15 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 }
 
+void Launcher::SetBackgroundAlpha(float background_alpha)
+{  
+  if (_background_alpha == background_alpha)
+    return;
+    
+  _background_alpha = background_alpha;
+  NeedRedraw();
+}
+
 void Launcher::OnIconAdded(LauncherIcon* icon)
 {
   EnsureAnimation();
@@ -2118,7 +2164,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0xAA000000));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0, 0.0, 0.0, _background_alpha));
   }
   
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
@@ -2286,6 +2332,8 @@ void Launcher::EndIconDrag()
 
     if (hovered_icon && hovered_icon->Type() == LauncherIcon::TYPE_TRASH)
     {
+      hovered_icon->SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
+      
       launcher_removerequest.emit(_drag_icon);
       _drag_window->ShowWindow(false);
       EnsureAnimation();

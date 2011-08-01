@@ -197,7 +197,9 @@ private:
   DebugDBusInterface*     debugger;
   bool                   needsRelayout;
   guint32                relayoutSourceId;
+  guint                  _edge_timeout;
   guint                  _edge_trigger_handle;
+  gint                   _edge_pointerY;
   guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */

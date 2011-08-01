@@ -297,10 +297,15 @@ namespace unity {
     ubus_server_send_message(ubus_server_get_default(),
                              UBUS_BACKGROUND_COLOR_CHANGED,
                              g_variant_new ("(dddd)",
-                                            _current_color.red,
-                                            _current_color.green,
-                                            _current_color.blue,
-                                            _current_color.alpha)
+                                            0.3,
+                                            0.3,
+                                            0.3,
+                                            0.9)
+                                            //FIXME - using default colours for now
+                                            //_current_color.red,
+                                            //_current_color.green,
+                                            //_current_color.blue,
+                                            //_current_color.alpha)
                             );
   }
 

@@ -116,6 +116,7 @@ private:
   guint       _handle_dash_hidden;
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
+  guint       _track_menu_pointer_id;
 };
 
 }

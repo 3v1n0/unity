@@ -39,17 +39,12 @@ include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_D
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
 add_executable (test-unit
-                unit/TestFavoriteStoreGSettings.cpp
                 unit/TestPlaceFactoryFile.cpp
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
                 ${UNITY_SRC}/ubus-server.cpp
                 ${UNITY_SRC}/ubus-server.h
-                ${UNITY_SRC}/FavoriteStore.cpp
-                ${UNITY_SRC}/FavoriteStore.h
-                ${UNITY_SRC}/FavoriteStoreGSettings.cpp
-                ${UNITY_SRC}/FavoriteStoreGSettings.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/PlaceEntryRemote.cpp
                 ${UNITY_SRC}/PlaceEntryRemote.h
@@ -332,6 +327,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_glib_signals_utils.cpp
                  test_glib_signals_utils.h
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_favorite_store_gsettings.cpp
                  test_indicator_entry.cpp
                  test_lens.cpp
                  test_main.cpp
@@ -340,12 +336,16 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  test_ratings_filter.cpp
                  test_results.cpp
                  test_timer.cpp
-                 ${UNITY_SRC}/Timer.h
-                 ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/FavoriteStore.cpp
+                 ${UNITY_SRC}/FavoriteStore.h
+                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
+                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
-                 ${UNITY_SRC}/MockLauncherIcon.h
+                 ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/Timer.h
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)

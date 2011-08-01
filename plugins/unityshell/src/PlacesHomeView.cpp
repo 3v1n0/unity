@@ -297,9 +297,10 @@ PlacesHomeView::Refresh()
   // Email
   markup = gconf_client_get_string(_client, MAIL_DIR"/command", NULL);
   // get the first word on key (the executable name itself)
-  markup = g_strsplit(markup, " ", 0)[0];
-  CreateShortcutFromExec(markup, _("Check Email"), _email_alternatives);
+  gchar** temp_array = g_strsplit(markup, " ", 0);
   g_free(markup);
+  CreateShortcutFromExec(temp_array[0], _("Check Email"), _email_alternatives);
+  g_strfreev(temp_array);
 
   // Music
   markup = gconf_client_get_string(_client, MEDIA_DIR"/exec", NULL);

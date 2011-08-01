@@ -64,14 +64,6 @@ public:
   sigc::signal<void, Indicator::Ptr const&> on_object_removed;
 
   /**
-   * This signal is emitted when an entry is activated and the user moves the
-   * mouse.
-   * @param x x coordinate
-   * @param y y coordinate
-   */
-  sigc::signal<void, int, int> on_menu_pointer_moved;
-
-  /**
    * Service wants the view to activate an entry.
    * Example use-case: user has activated an entry with the mouse and pressed
    * Left or Right key to activate previous or next entry.
