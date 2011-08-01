@@ -144,6 +144,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -964,6 +965,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::PanelOpacity:
       panelController->SetOpacity(optionGetPanelOpacity());
+      break;
+    case UnityshellOptions::LauncherOpacity:
+      launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
       break;
     case UnityshellOptions::IconSize:
       panelController->SetBFBSize(optionGetIconSize() + 18);

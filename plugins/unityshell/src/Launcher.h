@@ -112,6 +112,7 @@ public:
   LauncherIcon* GetSelectedMenuIcon();
 
   void SetIconSize(int tile_size, int icon_size);
+  void SetBackgroundAlpha(float background_alpha);
 
   bool Hidden()
   {
@@ -421,6 +422,7 @@ private:
   int _last_button_press;
   int _drag_out_id;
   float _drag_out_delta_x;
+  float _background_alpha;
 
   int _bfb_width;
   int _bfb_height;

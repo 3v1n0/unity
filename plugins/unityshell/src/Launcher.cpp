@@ -219,6 +219,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   _icon_glow_size         = 62;
   _icon_image_size_delta  = 6;
   _icon_size              = _icon_image_size + _icon_image_size_delta;
+  _background_alpha       = 0.6667; // about 0xAA
 
   _enter_y                = 0;
   _launcher_drag_delta    = 0;
@@ -2003,6 +2004,15 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 }
 
+void Launcher::SetBackgroundAlpha(float background_alpha)
+{  
+  if (_background_alpha == background_alpha)
+    return;
+    
+  _background_alpha = background_alpha;
+  NeedRedraw();
+}
+
 void Launcher::OnIconAdded(LauncherIcon* icon)
 {
   EnsureAnimation();
@@ -2118,7 +2128,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
   else
   {
-    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0xAA000000));
+    gPainter.Paint2DQuadColor(GfxContext, bkg_box, nux::Color(0.0, 0.0, 0.0, _background_alpha));
   }
   
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
