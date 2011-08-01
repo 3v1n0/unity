@@ -88,6 +88,7 @@ public:
     QUIRK_DROP_PRELIGHT,
     QUIRK_DROP_DIM,
     QUIRK_DESAT,
+    QUIRK_PULSE_ONCE,
 
     QUIRK_LAST,
   } Quirk;

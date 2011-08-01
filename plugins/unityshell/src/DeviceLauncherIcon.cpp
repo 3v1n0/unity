@@ -24,12 +24,18 @@
 
 #include <glib/gi18n-lib.h>
 #include <libnotify/notify.h>
+#include <NuxCore/Logger.h>
 
 #include "DevicesSettings.h"
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
-namespace unity {
+namespace unity
+{
+namespace
+{
+nux::logging::Logger logger("unity.launcher");
+}
 
 DeviceLauncherIcon::DeviceLauncherIcon(Launcher* launcher, GVolume* volume)
   : SimpleLauncherIcon(launcher)
@@ -114,11 +120,21 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   result.push_back(menu_item);
 
   // "Eject" item
-  if (g_volume_can_eject(volume_))
-  {
+  if (drive && g_drive_can_eject(drive))
+  {    
     menu_item = dbusmenu_menuitem_new();
-
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+    
+    GList *list = g_drive_get_volumes(drive);
+    if (list != NULL)
+    {
+      if (g_list_length (list) ==  1)
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+      else
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject parent drive"));
+        
+      g_list_free_full(list, g_object_unref);
+    }
+    
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -128,12 +144,22 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     result.push_back(menu_item);
   }
 
-  // "Safely Remove" item (FIXME: Should it be "Safely remove"?)
+  // "Safely remove" item
   if (drive && g_drive_can_stop(drive))
   {
     menu_item = dbusmenu_menuitem_new();
+    
+    GList *list = g_drive_get_volumes(drive);
+    if (list != NULL)
+    {
+      if (g_list_length (list) ==  1)
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove"));
+      else
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove parent drive"));
+        
+      g_list_free_full(list, g_object_unref);
+    }
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely Remove"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -169,7 +195,7 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
 void DeviceLauncherIcon::ShowMount(GMount* mount)
 {
   glib::String name(g_volume_get_name(volume_));
-  
+
   if (G_IS_MOUNT(mount))
   {
     glib::Object<GFile> root(g_mount_get_root(mount));
@@ -179,19 +205,25 @@ void DeviceLauncherIcon::ShowMount(GMount* mount)
       glib::String uri(g_file_get_uri(root));
       glib::Error error;
 
-      g_app_info_launch_default_for_uri(uri.Value(), NULL, error.AsOutParam());
+      g_app_info_launch_default_for_uri(uri.Value(), NULL, &error);
 
       if (error)
-        g_warning("Cannot open volume '%s': Unable to show %s: %s", name.Value(), uri.Value(), error.Message().c_str());
+      {
+        LOG_WARNING(logger) << "Cannot open volume '" << name
+                            << "': Unable to show " << uri
+                            << ": " << error;
+      }
     }
     else
     {
-      g_warning ("Cannot open volume '%s': Mount has no root", name.Value());
+      LOG_WARNING(logger) << "Cannot open volume '" << name
+                          << "': Mount has no root";
     }
   }
   else
   {
-    g_warning ("Cannot open volume '%s': Mount-point is invalid", name.Value());
+    LOG_WARNING(logger) << "Cannot open volume '" << name
+                        << "': Mount-point is invalid";
   }
 }
 
@@ -218,7 +250,7 @@ void DeviceLauncherIcon::OnMountReady(GObject* object,
 {
   glib::Error error;
 
-  if (g_volume_mount_finish(self->volume_, result, error.AsOutParam()))
+  if (g_volume_mount_finish(self->volume_, result, &error))
   {
     glib::Object<GMount> mount(g_volume_get_mount(self->volume_));
     self->ShowMount(mount);

@@ -634,6 +634,9 @@ void PluginAdapter::MaximizeIfBigEnough(CompWindow* window)
   {
     win_wmclass = classHint.res_class;
     XFree(classHint.res_class);
+    
+    if (classHint.res_name)
+      XFree(classHint.res_name);
   }
   else
     return;

@@ -139,11 +139,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
   debugger = new DebugDBusInterface(this);
 
+  _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetLaunchAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetUrgentAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetPanelOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+  optionSetLauncherOpacityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetIconSizeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutohideAnimationNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetDashBlurExperimentalNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -160,6 +163,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
   optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
   optionSetLauncherRevealEdgeInitiate(boost::bind(&UnityScreen::launcherRevealEdgeInitiate, this, _1, _2, _3));
+  optionSetLauncherRevealEdgeTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -511,7 +515,33 @@ gboolean UnityScreen::OnEdgeTriggerTimeout(gpointer data)
   UnityScreen* self = reinterpret_cast<UnityScreen*>(data);
 
   if (pointerX == 0)
-    self->launcher->EdgeRevealTriggered();
+  {
+    if (abs(pointerY-self->_edge_pointerY) <= 5)
+    {
+      self->launcher->EdgeRevealTriggered();
+    }
+    else
+    {
+      /* We are still in the edge, but moving in Y, maybe we need another chance */
+
+      if (abs(pointerY-self->_edge_pointerY) > 20)
+      {
+        /* We're quite far from the first hit spot, let's wait again */
+        self->_edge_pointerY = pointerY;
+        return true;
+      }
+      else
+      {
+        /* We're quite near to the first hit spot, so we can reduce our timeout */
+        self->_edge_pointerY = pointerY;
+        g_source_remove(self->_edge_trigger_handle);
+        self->_edge_trigger_handle = g_timeout_add(self->_edge_timeout/2,
+                                                   &UnityScreen::OnEdgeTriggerTimeout,
+                                                   self);
+        return false;
+      }
+    }
+  }
 
   self->_edge_trigger_handle = 0;
   return false;
@@ -527,7 +557,14 @@ bool UnityScreen::launcherRevealEdgeInitiate(CompAction* action,
   if (_edge_trigger_handle)
     g_source_remove(_edge_trigger_handle);
 
-  _edge_trigger_handle = g_timeout_add(500, &UnityScreen::OnEdgeTriggerTimeout, this);
+  if (pointerX == 0)
+  {
+    _edge_pointerY = pointerY;
+    _edge_trigger_handle = g_timeout_add(_edge_timeout,
+                                         &UnityScreen::OnEdgeTriggerTimeout,
+                                         this);
+  }
+
   return false;
 }
 
@@ -952,6 +989,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::PanelOpacity:
       panelController->SetOpacity(optionGetPanelOpacity());
       break;
+    case UnityshellOptions::LauncherOpacity:
+      launcher->SetBackgroundAlpha(optionGetLauncherOpacity());
+      break;
     case UnityshellOptions::IconSize:
       panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
@@ -968,6 +1008,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::DevicesOption:
       unity::DevicesSettings::GetDefault().SetDevicesOption((unity::DevicesSettings::DevicesOption) optionGetDevicesOption());
+      break;
+    case UnityshellOptions::LauncherRevealEdgeTimeout:
+      _edge_timeout = optionGetLauncherRevealEdgeTimeout();
       break;
     default:
       break;

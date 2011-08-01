@@ -56,18 +56,12 @@ public:
    */
   virtual void OnEntryShowMenu(std::string const& entry_id,
                                int x, int y, int timestamp, int button) = 0;
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
+                                        unsigned int timestamp) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
   sigc::signal<void, Indicator::Ptr const&> on_object_removed;
-
-  /**
-   * This signal is emitted when an entry is activated and the user moves the
-   * mouse.
-   * @param x x coordinate
-   * @param y y coordinate
-   */
-  sigc::signal<void, int, int> on_menu_pointer_moved;
 
   /**
    * Service wants the view to activate an entry.

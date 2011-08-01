@@ -420,6 +420,7 @@ void BamfLauncherIcon::Focus()
   BamfView* view;
   bool any_urgent = false;
   bool any_on_current = false;
+  bool any_mapped = false;
 
   children = bamf_view_get_children(BAMF_VIEW(m_App));
 
@@ -454,27 +455,33 @@ void BamfLauncherIcon::Focus()
 
   /* sort the list */
   CompWindowList tmp;
-  CompWindowList::iterator it;
-  for (it = m_Screen->windows().begin(); it != m_Screen->windows().end(); it++)
+  for (CompWindow* &win : m_Screen->windows())
   {
-    if (std::find(windows.begin(), windows.end(), *it) != windows.end())
-      tmp.push_back(*it);
+    if (std::find(windows.begin(), windows.end(), win) != windows.end())
+      tmp.push_back(win);
   }
   windows = tmp;
 
   /* filter based on workspace */
-  for (it = windows.begin(); it != windows.end(); it++)
+  for (CompWindow* &win : windows)
   {
-    if ((*it)->defaultViewport() == m_Screen->vp())
+    if (win->defaultViewport() == m_Screen->vp())
     {
       any_on_current = true;
-      break;
     }
+
+    if (!win->minimized())
+    {
+      any_mapped = true;
+    }
+
+    if (any_on_current && any_mapped)
+      break;
   }
 
   if (any_urgent)
   {
-    // we cant use the compiz tracking since it is currently broken
+    // FIXME we cant use the compiz tracking since it is currently broken
     /*for (it = windows.begin (); it != windows.end (); it++)
     {
       if ((*it)->state () & CompWindowStateDemandsAttentionMask)
@@ -503,11 +510,12 @@ void BamfLauncherIcon::Focus()
   }
   else if (any_on_current)
   {
-    for (it = windows.begin(); it != windows.end(); it++)
+    for (CompWindow* &win : windows)
     {
-      if ((*it)->defaultViewport() == m_Screen->vp())
+      if (win->defaultViewport() == m_Screen->vp() &&
+          ((any_mapped && !win->minimized()) || !any_mapped))
       {
-        (*it)->activate();
+        win->activate();
       }
     }
   }

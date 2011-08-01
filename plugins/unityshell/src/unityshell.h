@@ -41,6 +41,7 @@
 #include <Nux/WindowThread.h>
 #include <sigc++/sigc++.h>
 
+#include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
 using namespace unity::switcher;
@@ -196,7 +197,9 @@ private:
   DebugDBusInterface*     debugger;
   bool                   needsRelayout;
   guint32                relayoutSourceId;
+  guint                  _edge_timeout;
   guint                  _edge_trigger_handle;
+  gint                   _edge_pointerY;
   guint                  _ubus_handles[3];
 
   /* keyboard-nav mode */
@@ -216,6 +219,8 @@ private:
   DesktopLauncherIcon* switcher_desktop_icon;
 
   GdkRectangle _primary_monitor;
+
+  unity::BGHash _bghash;
 
   friend class UnityWindow;
 };
