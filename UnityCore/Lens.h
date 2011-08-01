@@ -33,10 +33,19 @@ namespace unity
 namespace dash
 {
 
+enum HandledType
+{
+  NOT_HANDLED=0,
+  SHOW_DASH,
+  HIDE_DASH,
+  GOTO_DASH_URI
+};
+
 class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Lens> Ptr;
+  typedef std::map<std::string, GVariant*> Hints;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -52,6 +61,7 @@ public:
 
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
+  void Activate(std::string const& uri);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -72,6 +82,7 @@ public:
 
   sigc::signal<void, std::string const&> search_finished;
   sigc::signal<void, std::string const&> global_search_finished;
+  sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
 
 private:
   class Impl;

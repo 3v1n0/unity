@@ -35,16 +35,35 @@ public:
     n_categories_++;
   }
 
+  static gboolean TimeoutCallback(gpointer data)
+  {
+    *(bool*)data = true;
+    return FALSE;
+  };
+
+  guint32 ScheduleTimeout(bool* timeout_reached)
+  {
+    return g_timeout_add_seconds(10, TimeoutCallback, timeout_reached);
+  }
+
+  void WaitUntil(bool& success)
+  {
+    bool timeout_reached = false;
+    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
+
+    while (!success && !timeout_reached)
+      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+
+    if (success)
+      g_source_remove(timeout_id);
+
+    EXPECT_TRUE(success);
+  }
+ 
   void WaitForConnected()
   {
     bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
+    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
 
     while (!lens_->connected && !timeout_reached)
     {
@@ -60,14 +79,8 @@ public:
   void WaitForModel(Model<Adaptor>* model, unsigned int n_rows)
   {
     bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-    guint32 timeout_id = g_timeout_add_seconds(10, timeout_cb, &timeout_reached);
-
+    guint32 timeout_id = ScheduleTimeout(&timeout_reached);
+    
     while (model->count != n_rows && !timeout_reached)
     {
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
@@ -110,19 +123,19 @@ TEST_F(TestLens, TestCategories)
   EXPECT_EQ(category.name, "Category1");
   EXPECT_EQ(category.icon_hint, "gtk-apply");
   EXPECT_EQ(category.index, (unsigned int)0);
-  EXPECT_EQ(category.renderer_name, "grid");
+  EXPECT_EQ(category.renderer_name, "tile-vertical");
 
   category = categories->RowAtIndex(1);
   EXPECT_EQ(category.name, "Category2");
   EXPECT_EQ(category.icon_hint, "gtk-cancel");
   EXPECT_EQ(category.index, (unsigned int)1);
-  EXPECT_EQ(category.renderer_name, "grid");
+  EXPECT_EQ(category.renderer_name, "tile-horizontal");
 
   category = categories->RowAtIndex(2);
   EXPECT_EQ(category.name, "Category3");
   EXPECT_EQ(category.icon_hint, "gtk-close");
   EXPECT_EQ(category.index, (unsigned int)2);
-  EXPECT_EQ(category.renderer_name, "grid");
+  EXPECT_EQ(category.renderer_name, "flow");
 }
 
 TEST_F(TestLens, TestSearch)
@@ -168,5 +181,45 @@ TEST_F(TestLens, TestGlobalSearch)
     EXPECT_EQ(result.dnd_uri, "file:///test");
   }
 }
+
+TEST_F(TestLens, TestActivation)
+{
+  bool activated = false;
+
+  auto activated_cb = [&activated] (std::string const& uri,
+                                    HandledType handled,
+                                    Lens::Hints const& hints)
+  {
+    EXPECT_EQ(uri, "file:///hide/dash");
+    EXPECT_EQ(handled, HandledType::HIDE_DASH);
+    EXPECT_EQ(hints.size(), 0);
+    activated = true;
+  };
+  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,Lens::Hints const&>(activated_cb));  
+  
+  lens_->Activate("file:///hide/dash");
+  WaitUntil(activated);
+}
+
+TEST_F(TestLens, TestActivationHints)
+{
+  bool activated = false;
+
+  auto activated_cb = [&activated] (std::string const& uri,
+                                    unsigned int handled,
+                                    Lens::Hints const& hints)
+  {
+    EXPECT_EQ(uri, "file:///add/hints");
+    EXPECT_EQ(handled, HandledType::SHOW_DASH);
+    EXPECT_EQ(hints.size(), 1);
+    activated = true;
+  };
+  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType, Lens::Hints const&>(activated_cb));  
+
+  lens_->Activate("file:///add/hints");
+  WaitUntil(activated);
+}
+
+
 
 }

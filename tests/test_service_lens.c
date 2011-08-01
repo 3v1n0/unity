@@ -7,6 +7,8 @@ G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
 static void add_categories(ServiceLens* self);
 static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
+static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
+
 
 struct _ServiceLensPrivate
 {
@@ -55,6 +57,8 @@ service_lens_init(ServiceLens* self)
                    G_CALLBACK(on_search_changed), self);
   g_signal_connect(priv->scope, "notify::active-global-search",
                    G_CALLBACK(on_global_search_changed), self);
+  g_signal_connect(priv->scope, "activate-uri",
+                   G_CALLBACK(on_activate_uri), self);
 
   /* Get ready to export and export */
   unity_lens_add_local_scope(priv->lens, priv->scope);
@@ -69,15 +73,15 @@ service_lens_init(ServiceLens* self)
 static void
 add_categories(ServiceLens* self)
 {
-  UnityGridCategory* categories[3];
+  UnityCategory* categories[3];
     
-  categories[0] = unity_grid_category_new("Category1", "gtk-apply", UNITY_GRID_CATEGORY_STYLE_ICONS);
+  categories[0] = unity_category_new("Category1", "gtk-apply", UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
   
-  categories[1] = unity_grid_category_new("Category2", "gtk-cancel", UNITY_GRID_CATEGORY_STYLE_HORIZONTAL_ICONS);
+  categories[1] = unity_category_new("Category2", "gtk-cancel", UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE);
 
-  categories[2] = unity_grid_category_new("Category3", "gtk-close", UNITY_GRID_CATEGORY_STYLE_LIST);
+  categories[2] = unity_category_new("Category3", "gtk-close", UNITY_CATEGORY_RENDERER_FLOW);
  
-  unity_lens_set_categories(self->priv->lens, (UnityCategory**)categories, 3);
+  unity_lens_set_categories(self->priv->lens, categories, 3);
 
   g_object_unref(categories[0]);
   g_object_unref(categories[1]);
@@ -130,6 +134,15 @@ on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self
                      "file:///test");
     g_free(name);
   }
+}
+
+static UnityActivationResponse*
+on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
+{
+  if (g_strcmp0(uri, "file:///hide/dash") == 0)
+    return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
+  else
+    return unity_activation_response_new(UNITY_HANDLED_TYPE_SHOW_DASH, "hello");
 }
 
 ServiceLens*

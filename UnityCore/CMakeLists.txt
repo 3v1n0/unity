@@ -25,6 +25,7 @@ set (CORE_HEADERS
      Model-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
+     Utils.h
      RatingsFilter.h
      Result.h
      Results.h

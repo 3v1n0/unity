@@ -26,6 +26,7 @@
 #include "config.h"
 #include "GLibDBusProxy.h"
 #include "GLibWrapper.h"
+#include "Utils.h"
 
 namespace unity
 {
@@ -77,8 +78,11 @@ public:
                         URIPatterns uri_patterns,
                         MIMEPatterns mime_patterns);
   void OnActiveChanged(bool is_active);
+
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
+  void Activate(std::string const& uri);
+  void ActivationReply(GVariant* parameters);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -335,6 +339,31 @@ void Lens::Impl::Search(std::string const& search_string)
   g_variant_builder_clear(&b);
 }
 
+void Lens::Impl::Activate(std::string const& uri)
+{
+  LOG_DEBUG(logger) << "Activating " << uri << " on  " << id_;
+
+  proxy_.Call("Activate",
+              g_variant_new("(su)", uri.c_str(), 0),
+              sigc::mem_fun(this, &Lens::Impl::ActivationReply));
+}
+
+void Lens::Impl::ActivationReply(GVariant* parameters)
+{
+  glib::String uri;
+  guint32 handled;
+  GVariantIter* hints_iter;
+  Hints hints;
+  
+  g_variant_get(parameters, "((sua{sv}))", &uri, &handled, &hints_iter);
+  
+  Utils::ASVToHints(hints, hints_iter);
+
+  owner_->activated.emit(uri.Str(), static_cast<HandledType>(handled), hints);
+
+  g_variant_iter_free(hints_iter);
+}
+
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -456,6 +485,11 @@ void Lens::GlobalSearch(std::string const& search_string)
 void Lens::Search(std::string const& search_string)
 {
   pimpl->Search(search_string);
+}
+
+void Lens::Activate(std::string const& uri)
+{
+  pimpl->Activate(uri);
 }
 
 }
