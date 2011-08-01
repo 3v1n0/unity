@@ -268,6 +268,8 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  glDisable(GL_SCISSOR_TEST);
 }
 
 void UnityScreen::OnLauncherHiddenChanged()
