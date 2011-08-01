@@ -120,11 +120,21 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
   result.push_back(menu_item);
 
   // "Eject" item
-  if (g_volume_can_eject(volume_))
-  {
+  if (drive && g_drive_can_eject(drive))
+  {    
     menu_item = dbusmenu_menuitem_new();
-
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+    
+    GList *list = g_drive_get_volumes(drive);
+    if (list != NULL)
+    {
+      if (g_list_length (list) ==  1)
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject"));
+      else
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Eject parent drive"));
+        
+      g_list_free_full(list, g_object_unref);
+    }
+    
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
@@ -134,12 +144,22 @@ std::list<DbusmenuMenuitem*> DeviceLauncherIcon::GetMenus()
     result.push_back(menu_item);
   }
 
-  // "Safely Remove" item (FIXME: Should it be "Safely remove"?)
+  // "Safely remove" item
   if (drive && g_drive_can_stop(drive))
   {
     menu_item = dbusmenu_menuitem_new();
+    
+    GList *list = g_drive_get_volumes(drive);
+    if (list != NULL)
+    {
+      if (g_list_length (list) ==  1)
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove"));
+      else
+        dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely remove parent drive"));
+        
+      g_list_free_full(list, g_object_unref);
+    }
 
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Safely Remove"));
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
