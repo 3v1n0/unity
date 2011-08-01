@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,20 +14,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef _UNITY_CORE_H_
-#define _UNITY_CORE_H_
+#ifndef DESKTOPLAUNCHERICON_H
+#define DESKTOPLAUNCHERICON_H
 
-// Single include for headers
+#include "SimpleLauncherIcon.h"
 
-#include <UnityCore/DBusIndicators.h>
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibWrapper-inl.h>
-#include <UnityCore/Indicator.h>
-#include <UnityCore/IndicatorEntry.h>
-#include <UnityCore/Indicators.h>
-#include <UnityCore/Variant.h>
+class DesktopLauncherIcon : public SimpleLauncherIcon
+{
 
-#endif // _UNITY_CORE_H_
+public:
+  DesktopLauncherIcon(Launcher* launcher);
+  ~DesktopLauncherIcon();
+
+  virtual nux::Color BackgroundColor();
+  virtual nux::Color GlowColor();
+
+  bool ShowInSwitcher()
+  {
+    return true;
+  }
+
+protected:
+  void ActivateLauncherIcon(ActionArg arg);
+};
+
+#endif // DESKTOPLAUNCHERICON_H

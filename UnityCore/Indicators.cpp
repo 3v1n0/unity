@@ -20,8 +20,10 @@
 #include "Indicators.h"
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 class Indicators::Impl
 {
@@ -31,7 +33,7 @@ public:
 
   Impl(Indicators* owner)
     : owner_(owner)
-    {}
+  {}
 
   void ActivateEntry(std::string const& entry_id);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
@@ -106,6 +108,7 @@ Indicator& Indicators::Impl::GetIndicator(std::string const& name)
   Indicator::Ptr indicator(new Indicator(name));
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
+  indicator->on_secondary_activate.connect(sigc::mem_fun(owner_, &Indicators::OnEntrySecondaryActivate));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
   indicators_[name] = indicator;
   owner_->on_object_added.emit(indicator);

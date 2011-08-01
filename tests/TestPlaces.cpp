@@ -31,6 +31,7 @@
 #include "Nux/TableCtrl.h"
 #include "PlacesView.h"
 #include "UBusMessages.h"
+#include "BGHash.h"
 
 #include "PlaceFactoryFile.h"
 #include "Place.h"
@@ -39,104 +40,104 @@
 class TestApp
 {
 public:
-  TestApp ()
+  TestApp()
   {
-    nux::VLayout *layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
+    nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-    _combo = new nux::ComboBoxSimple (NUX_TRACKER_LOCATION);
-    _combo->SetMinimumWidth (150);
-    _combo->sigTriggered.connect (sigc::mem_fun (this, &TestApp::OnComboChangedFoRealz));
-    _combo->SetCanFocus (false);
-    g_debug ("can we focus? %s", _combo->CanFocus () ? "yes :(" : "no! :D");
-    layout->AddView (_combo, 0, nux::eCenter, nux::eFix);
+    _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
+    _combo->SetMinimumWidth(150);
+    _combo->sigTriggered.connect(sigc::mem_fun(this, &TestApp::OnComboChangedFoRealz));
+    _combo->SetCanFocus(false);
+    g_debug("can we focus? %s", _combo->CanFocus() ? "yes :(" : "no! :D");
+    layout->AddView(_combo, 0, nux::eCenter, nux::eFix);
 
-    _factory = PlaceFactory::GetDefault ();
-    PopulateEntries ();
-    _factory->place_added.connect (sigc::mem_fun (this, &TestApp::OnPlaceAdded));
+    _factory = PlaceFactory::GetDefault();
+    PopulateEntries();
+    _factory->place_added.connect(sigc::mem_fun(this, &TestApp::OnPlaceAdded));
 
-    PlacesView *view = new PlacesView (_factory);
+    PlacesView* view = new PlacesView(_factory);
     view->SetMinMaxSize(1024, 768);
     layout->AddView(view, 1, nux::eCenter, nux::eFix);
-    view->SetSizeMode (PlacesView::SIZE_MODE_HOVER);
+    view->SetSizeMode(PlacesView::SIZE_MODE_HOVER);
 
     layout->SetContentDistribution(nux::eStackCenter);
-    layout->SetFocused (true);
-    nux::GetGraphicsThread()->SetLayout (layout);
+    layout->SetFocused(true);
+    nux::GetGraphicsThread()->SetLayout(layout);
   }
 
-  ~TestApp ()
+  ~TestApp()
   {
 
   }
 
-  void OnPlaceAdded (Place *place)
+  void OnPlaceAdded(Place* place)
   {
-    std::vector<PlaceEntry *> entries = place->GetEntries ();
-    std::vector<PlaceEntry *>::iterator i;
+    std::vector<PlaceEntry*> entries = place->GetEntries();
+    std::vector<PlaceEntry*>::iterator i;
 
-    place->Connect ();
-    
-    for (i = entries.begin (); i != entries.end (); ++i)
+    place->Connect();
+
+    for (i = entries.begin(); i != entries.end(); ++i)
     {
-      PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-      _combo->AddItem (entry->GetName ());
+      PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
+      _combo->AddItem(entry->GetName());
     }
   }
 
-  void PopulateEntries ()
+  void PopulateEntries()
   {
-    std::vector<Place *> places = _factory->GetPlaces ();
-    std::vector<Place *>::iterator it;
+    std::vector<Place*> places = _factory->GetPlaces();
+    std::vector<Place*>::iterator it;
 
-    for (it = places.begin (); it != places.end (); ++it)
+    for (it = places.begin(); it != places.end(); ++it)
     {
-      Place *place = static_cast<Place *> (*it);
-      std::vector<PlaceEntry *> entries = place->GetEntries ();
-      std::vector<PlaceEntry *>::iterator i;
+      Place* place = static_cast<Place*>(*it);
+      std::vector<PlaceEntry*> entries = place->GetEntries();
+      std::vector<PlaceEntry*>::iterator i;
 
-      place->Connect ();
+      place->Connect();
 
-      for (i = entries.begin (); i != entries.end (); ++i)
+      for (i = entries.begin(); i != entries.end(); ++i)
       {
-        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
-       _combo->AddItem (entry->GetName ());
+        PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
+        _combo->AddItem(entry->GetName());
       }
     }
   }
 
-  void OnComboChangedFoRealz (nux::ComboBoxSimple *simple)
+  void OnComboChangedFoRealz(nux::ComboBoxSimple* simple)
   {
-    std::vector<Place *> places = _factory->GetPlaces ();
-    std::vector<Place *>::iterator it;
-    const char *txt = _combo->GetSelectionLabel ();
+    std::vector<Place*> places = _factory->GetPlaces();
+    std::vector<Place*>::iterator it;
+    const char* txt = _combo->GetSelectionLabel();
 
     // Find entry
-    for (it = places.begin (); it != places.end (); ++it)
+    for (it = places.begin(); it != places.end(); ++it)
     {
-      Place *place = static_cast<Place *> (*it);
-      std::vector<PlaceEntry *> entries = place->GetEntries ();
-      std::vector<PlaceEntry *>::iterator i;
+      Place* place = static_cast<Place*>(*it);
+      std::vector<PlaceEntry*> entries = place->GetEntries();
+      std::vector<PlaceEntry*>::iterator i;
 
-      for (i = entries.begin (); i != entries.end (); ++i)
+      for (i = entries.begin(); i != entries.end(); ++i)
       {
-        PlaceEntry *entry = static_cast<PlaceEntry *> (*i);
+        PlaceEntry* entry = static_cast<PlaceEntry*>(*i);
 
-        if (g_strcmp0 (txt, entry->GetName ()) == 0)
+        if (g_strcmp0(txt, entry->GetName()) == 0)
         {
-          g_debug ("Activated: %s", entry->GetName ());
-          ubus_server_send_message (ubus_server_get_default (),
-                                    UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                    g_variant_new ("(sus)",
-                                                   entry->GetId (),
-                                                   0,
-                                                   ""));
+          g_debug("Activated: %s", entry->GetName());
+          ubus_server_send_message(ubus_server_get_default(),
+                                   UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                                   g_variant_new("(sus)",
+                                                 entry->GetId(),
+                                                 0,
+                                                 ""));
         }
       }
     }
   }
 
-  nux::ComboBoxSimple *_combo;
-  PlaceFactory *_factory;
+  nux::ComboBoxSimple* _combo;
+  PlaceFactory* _factory;
 };
 
 
@@ -145,17 +146,19 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-  g_type_init ();
-  g_thread_init (NULL);
-  gtk_init (&argc, &argv);
+  g_type_init();
+  g_thread_init(NULL);
+  gtk_init(&argc, &argv);
+
+  unity::BGHash bg_hash;
 
   nux::NuxInitialize(0);
 
   nux::WindowThread* wt = nux::CreateGUIThread("Unity Places",
-                                                1024, 768, 0, &ThreadWidgetInit, 0);
-  TestApp ();
+                                               1024, 768, 0, &ThreadWidgetInit, 0);
+  TestApp();
 
   wt->Run(NULL);
   delete wt;

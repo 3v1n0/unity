@@ -27,32 +27,32 @@
 #include "PlacesTile.h"
 #include "StaticCairoText.h"
 
-class PlacesHorizontalTile : public Introspectable, public PlacesTile
+class PlacesHorizontalTile : public unity::Introspectable, public PlacesTile
 {
 public:
 
-  PlacesHorizontalTile (const char *icon,
-                        const char *label,
-                        const char *comment,
-                        int         icon_size=64,
-                        bool        defer_icon_loading=false,
-                        const void *id=NULL);
-  ~PlacesHorizontalTile ();
+  PlacesHorizontalTile(const char* icon,
+                       const char* label,
+                       const char* comment,
+                       int         icon_size = 64,
+                       bool        defer_icon_loading = false,
+                       const void* id = NULL);
+  ~PlacesHorizontalTile();
 
-  void SetURI (const char *uri);
+  void SetURI(const char* uri);
 
 protected:
-  nux::Geometry GetHighlightGeometry ();
+  nux::Geometry GetHighlightGeometry();
 
-  const gchar * GetName ();
-  const gchar * GetChildsName ();
-  void          AddProperties (GVariantBuilder *builder);
-  
-  virtual void                    DndSourceDragBegin      ();
-  virtual nux::NBitmapData *      DndSourceGetDragImage   ();
-  virtual std::list<const char *> DndSourceGetDragTypes   ();
-  virtual const char *            DndSourceGetDataForType (const char *type, int *size, int *format);
-  virtual void                    DndSourceDragFinished   (nux::DndAction result);
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
+
+  virtual void                    DndSourceDragBegin();
+  virtual nux::NBitmapData*       DndSourceGetDragImage();
+  virtual std::list<const char*> DndSourceGetDragTypes();
+  virtual const char*             DndSourceGetDataForType(const char* type, int* size, int* format);
+  virtual void                    DndSourceDragFinished(nux::DndAction result);
 
 private:
   nux::Geometry _highlight_geometry;
@@ -60,8 +60,7 @@ private:
   char* _comment;
   char* _icon;
   char* _uri;
-  IconTexture *_icontex;
-  nux::StaticCairoText *_cairotext;
+  IconTexture* _icontex;
 };
 
 

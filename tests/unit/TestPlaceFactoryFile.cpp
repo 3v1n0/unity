@@ -23,28 +23,28 @@
 
 #include "PlaceFactoryFile.h"
 
-static void TestAllocation   (void);
+static void TestAllocation(void);
 
 void
-TestPlaceFactoryFileCreateSuite ()
+TestPlaceFactoryFileCreateSuite()
 {
 #define _DOMAIN "/Unit/PlaceFactoryFile"
 
   if (0)
-    g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
+    g_test_add_func(_DOMAIN"/Allocation", TestAllocation);
 }
 
 static void
-TestAllocation ()
+TestAllocation()
 {
-  PlaceFactoryFile *factory;
+  PlaceFactoryFile* factory;
 
-  factory = new PlaceFactoryFile ();
-  g_assert (factory);
+  factory = new PlaceFactoryFile();
+  g_assert(factory);
 
 //  while (!factory->read_directory)
   while (1)
-    g_main_context_iteration (NULL, TRUE);
+    g_main_context_iteration(NULL, TRUE);
 
   delete factory;
 }

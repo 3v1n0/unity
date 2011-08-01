@@ -24,8 +24,10 @@
 #include <string>
 #include <glib.h>
 
-namespace unity {
-namespace logger {
+namespace unity
+{
+namespace logger
+{
 
 class Timer
 {

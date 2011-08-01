@@ -41,7 +41,7 @@ struct _UnityLauncherIconAccessible
   NuxObjectAccessible parent;
 
   /*< private >*/
-  UnityLauncherIconAccessiblePrivate *priv;
+  UnityLauncherIconAccessiblePrivate* priv;
 };
 
 struct _UnityLauncherIconAccessibleClass
@@ -49,11 +49,11 @@ struct _UnityLauncherIconAccessibleClass
   NuxObjectAccessibleClass parent_class;
 };
 
-GType      unity_launcher_icon_accessible_get_type (void);
-AtkObject *unity_launcher_icon_accessible_new      (nux::Object *object);
+GType      unity_launcher_icon_accessible_get_type(void);
+AtkObject* unity_launcher_icon_accessible_new(nux::Object* object);
 
-void       unity_launcher_icon_accessible_set_index (UnityLauncherIconAccessible *self,
-                                                     gint index);
+void       unity_launcher_icon_accessible_set_index(UnityLauncherIconAccessible* self,
+                                                    gint index);
 
 G_END_DECLS
 

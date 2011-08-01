@@ -34,7 +34,8 @@
 #include "Nux/Area.h"
 #include "Nux/Layout.h"
 
-enum {
+enum
+{
   ACTIVATE,
   DEACTIVATE,
   LAST_SIGNAL
@@ -43,21 +44,21 @@ enum {
 static guint signals [LAST_SIGNAL] = { 0, };
 
 /* GObject */
-static void nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass);
-static void nux_base_window_accessible_init       (NuxBaseWindowAccessible *base_window_accessible);
+static void nux_base_window_accessible_class_init(NuxBaseWindowAccessibleClass* klass);
+static void nux_base_window_accessible_init(NuxBaseWindowAccessible* base_window_accessible);
 
 /* AtkObject.h */
-static void       nux_base_window_accessible_initialize     (AtkObject *accessible,
-                                                             gpointer   data);
-static AtkObject *nux_base_window_accessible_get_parent     (AtkObject *obj);
-static AtkStateSet *nux_base_window_accessible_ref_state_set (AtkObject *obj);
+static void       nux_base_window_accessible_initialize(AtkObject* accessible,
+                                                        gpointer   data);
+static AtkObject* nux_base_window_accessible_get_parent(AtkObject* obj);
+static AtkStateSet* nux_base_window_accessible_ref_state_set(AtkObject* obj);
 
 /* private */
-static void       on_focus_event_cb                         (AtkObject *object,
-                                                             gboolean in,
-                                                             gpointer data);
+static void       on_focus_event_cb(AtkObject* object,
+                                    gboolean in,
+                                    gpointer data);
 
-G_DEFINE_TYPE (NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+G_DEFINE_TYPE(NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
 struct _NuxBaseWindowAccessiblePrivate
 {
@@ -70,17 +71,17 @@ struct _NuxBaseWindowAccessiblePrivate
                                 NuxBaseWindowAccessiblePrivate))
 
 static void
-nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
+nux_base_window_accessible_class_init(NuxBaseWindowAccessibleClass* klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->initialize = nux_base_window_accessible_initialize;
   atk_class->get_parent = nux_base_window_accessible_get_parent;
   atk_class->ref_state_set = nux_base_window_accessible_ref_state_set;
 
-  g_type_class_add_private (gobject_class, sizeof (NuxBaseWindowAccessiblePrivate));
+  g_type_class_add_private(gobject_class, sizeof(NuxBaseWindowAccessiblePrivate));
 
   /**
    * BaseWindow::activate:
@@ -93,13 +94,13 @@ nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
    * event listener to "window:activate"
    */
   signals [ACTIVATE] =
-    g_signal_new ("activate",
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
-                  0, /* default signal handler */
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
+    g_signal_new("activate",
+                 G_TYPE_FROM_CLASS(klass),
+                 G_SIGNAL_RUN_LAST,
+                 0, /* default signal handler */
+                 NULL, NULL,
+                 g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
 
   /**
    * BaseWindow::deactivate:
@@ -112,115 +113,115 @@ nux_base_window_accessible_class_init (NuxBaseWindowAccessibleClass *klass)
    * event listener to "window:deactivate"
    */
   signals [DEACTIVATE] =
-    g_signal_new ("deactivate",
-                  G_TYPE_FROM_CLASS (klass),
-                  G_SIGNAL_RUN_LAST,
-                  0, /* default signal handler */
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
-                  G_TYPE_NONE, 0);
+    g_signal_new("deactivate",
+                 G_TYPE_FROM_CLASS(klass),
+                 G_SIGNAL_RUN_LAST,
+                 0, /* default signal handler */
+                 NULL, NULL,
+                 g_cclosure_marshal_VOID__VOID,
+                 G_TYPE_NONE, 0);
 
 }
 
 static void
-nux_base_window_accessible_init (NuxBaseWindowAccessible *base_window_accessible)
+nux_base_window_accessible_init(NuxBaseWindowAccessible* base_window_accessible)
 {
-  NuxBaseWindowAccessiblePrivate *priv =
-    NUX_BASE_WINDOW_ACCESSIBLE_GET_PRIVATE (base_window_accessible);
+  NuxBaseWindowAccessiblePrivate* priv =
+    NUX_BASE_WINDOW_ACCESSIBLE_GET_PRIVATE(base_window_accessible);
 
   base_window_accessible->priv = priv;
 }
 
 AtkObject*
-nux_base_window_accessible_new (nux::Object *object)
+nux_base_window_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible = NULL;
+  AtkObject* accessible = NULL;
 
-  g_return_val_if_fail (dynamic_cast<nux::BaseWindow*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<nux::BaseWindow*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (NUX_TYPE_BASE_WINDOW_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(NUX_TYPE_BASE_WINDOW_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
+  atk_object_initialize(accessible, object);
 
   return accessible;
 }
 
 /* AtkObject.h */
 static void
-nux_base_window_accessible_initialize (AtkObject *accessible,
-                                       gpointer data)
+nux_base_window_accessible_initialize(AtkObject* accessible,
+                                      gpointer data)
 {
-  ATK_OBJECT_CLASS (nux_base_window_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(nux_base_window_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_WINDOW;
 
-  g_signal_connect (accessible, "focus-event",
-                    G_CALLBACK (on_focus_event_cb), NULL);
+  g_signal_connect(accessible, "focus-event",
+                   G_CALLBACK(on_focus_event_cb), NULL);
 }
 
 static AtkObject*
-nux_base_window_accessible_get_parent (AtkObject *obj)
+nux_base_window_accessible_get_parent(AtkObject* obj)
 {
-  return atk_get_root ();
+  return atk_get_root();
 }
 
 static AtkStateSet*
-nux_base_window_accessible_ref_state_set (AtkObject *obj)
+nux_base_window_accessible_ref_state_set(AtkObject* obj)
 {
-  AtkStateSet *state_set = NULL;
-  NuxBaseWindowAccessible *self = NULL;
-  nux::Object *nux_object = NULL;
+  AtkStateSet* state_set = NULL;
+  NuxBaseWindowAccessible* self = NULL;
+  nux::Object* nux_object = NULL;
 
-  g_return_val_if_fail (NUX_IS_BASE_WINDOW_ACCESSIBLE (obj), NULL);
+  g_return_val_if_fail(NUX_IS_BASE_WINDOW_ACCESSIBLE(obj), NULL);
 
-  state_set = ATK_OBJECT_CLASS (nux_base_window_accessible_parent_class)->ref_state_set (obj);
+  state_set = ATK_OBJECT_CLASS(nux_base_window_accessible_parent_class)->ref_state_set(obj);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  self = NUX_BASE_WINDOW_ACCESSIBLE (obj);
+  self = NUX_BASE_WINDOW_ACCESSIBLE(obj);
 
-  atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
+  atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
 
   if (self->priv->active)
-    {
-      atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
-      atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
-    }
+  {
+    atk_state_set_add_state(state_set, ATK_STATE_ACTIVE);
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
+  }
 
   return state_set;
 }
 
 /* private */
 static void
-on_focus_event_cb (AtkObject *object,
-                   gboolean focus_in,
-                   gpointer data)
+on_focus_event_cb(AtkObject* object,
+                  gboolean focus_in,
+                  gpointer data)
 {
-  NuxBaseWindowAccessible *self = NULL;
+  NuxBaseWindowAccessible* self = NULL;
 
   /* On the base window, we suppose that the window is active if it
      has the focus*/
-  self = NUX_BASE_WINDOW_ACCESSIBLE (object);
+  self = NUX_BASE_WINDOW_ACCESSIBLE(object);
 
   if (self->priv->active != focus_in)
-    {
-      gint signal_id;
+  {
+    gint signal_id;
 
-      self->priv->active = focus_in;
+    self->priv->active = focus_in;
 
-      atk_object_notify_state_change (ATK_OBJECT (self),
-                                      ATK_STATE_ACTIVE, focus_in);
+    atk_object_notify_state_change(ATK_OBJECT(self),
+                                   ATK_STATE_ACTIVE, focus_in);
 
-      if (focus_in)
-        signal_id = ACTIVATE;
-      else
-        signal_id = DEACTIVATE;
+    if (focus_in)
+      signal_id = ACTIVATE;
+    else
+      signal_id = DEACTIVATE;
 
-      g_debug ("[a11y][bwindow] on_focus_event activate events (%p:%s:%i)",
-               object, atk_object_get_name (object), focus_in);
+    g_debug("[a11y][bwindow] on_focus_event activate events (%p:%s:%i)",
+            object, atk_object_get_name(object), focus_in);
 
-      g_signal_emit (self, signals [signal_id], 0);
-    }
+    g_signal_emit(self, signals [signal_id], 0);
+  }
 }

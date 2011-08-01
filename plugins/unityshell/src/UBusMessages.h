@@ -73,4 +73,8 @@
 // Signal sent when a tooltip is shown.
 #define UBUS_TOOLTIP_SHOWN "TOOLTIP_SHOWN"
 
+// Signal sent when the background changes, contains average colour in float RGB format
+#define UBUS_BACKGROUND_COLOR_CHANGED "BACKGROUND_COLOR_CHANGED"
+#define UBUS_BACKGROUND_REQUEST_COLOUR_EMIT "REQUEST_BACKGROUND_COLOUR_EMIT"
+
 #endif // UBUS_MESSAGES_H

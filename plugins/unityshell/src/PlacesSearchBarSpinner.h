@@ -34,35 +34,38 @@ enum SpinnerState
   STATE_CLEAR
 };
 
-class PlacesSearchBarSpinner : public Introspectable, public nux::View
+class PlacesSearchBarSpinner : public unity::Introspectable, public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE (PlacesSearchBarSpinner, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(PlacesSearchBarSpinner, nux::View);
 public:
-  PlacesSearchBarSpinner ();
-  ~PlacesSearchBarSpinner ();
+  PlacesSearchBarSpinner();
+  ~PlacesSearchBarSpinner();
 
-  long ProcessEvent (nux::IEvent &ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw (nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent (nux::GraphicsEngine &GfxContext, bool force_draw);
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void SetState (SpinnerState state);
+  void SetState(SpinnerState state);
 
 protected:
   // Introspectable methods
-  const gchar * GetName ();
-  void AddProperties (GVariantBuilder *builder);
-  static gboolean OnFrame (PlacesSearchBarSpinner *self);
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
+  static gboolean OnFrame(PlacesSearchBarSpinner* self);
+
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
 
 private:
 
 private:
   SpinnerState      _state;
 
-  nux::BaseTexture *_magnify;
-  nux::BaseTexture *_close;
-  nux::BaseTexture *_close_glow;
-  nux::BaseTexture *_spin;
-  nux::BaseTexture *_spin_glow;
+  nux::BaseTexture* _magnify;
+  nux::BaseTexture* _close;
+  nux::BaseTexture* _close_glow;
+  nux::BaseTexture* _spin;
+  nux::BaseTexture* _spin_glow;
 
   nux::Matrix4 _2d_rotate;
   float        _rotation;

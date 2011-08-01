@@ -33,43 +33,43 @@
 #include "unitya11y.h"
 
 /* GObject */
-static void nux_area_accessible_class_init (NuxAreaAccessibleClass *klass);
-static void nux_area_accessible_init       (NuxAreaAccessible *area_accessible);
+static void nux_area_accessible_class_init(NuxAreaAccessibleClass* klass);
+static void nux_area_accessible_init(NuxAreaAccessible* area_accessible);
 
 /* AtkObject.h */
-static void         nux_area_accessible_initialize     (AtkObject *accessible,
-                                                        gpointer   data);
-static AtkObject *  nux_area_accessible_get_parent     (AtkObject *obj);
-static AtkStateSet* nux_area_accessible_ref_state_set  (AtkObject *obj);
+static void         nux_area_accessible_initialize(AtkObject* accessible,
+                                                   gpointer   data);
+static AtkObject*   nux_area_accessible_get_parent(AtkObject* obj);
+static AtkStateSet* nux_area_accessible_ref_state_set(AtkObject* obj);
 
 /* AtkComponent.h */
-static void         atk_component_interface_init             (AtkComponentIface *iface);
-static void         nux_area_accessible_get_extents          (AtkComponent *component,
-                                                              gint         *x,
-                                                              gint         *y,
-                                                              gint         *width,
-                                                              gint         *height,
-                                                              AtkCoordType  coord_type);
-static gboolean     nux_area_accessible_grab_focus           (AtkComponent *component);
-static guint        nux_area_accessible_add_focus_handler    (AtkComponent *component,
-                                                              AtkFocusHandler handler);
-static void         nux_area_accessible_remove_focus_handler (AtkComponent *component,
-                                                              guint handler_id);
-static void         nux_area_accessible_focus_handler        (AtkObject *accessible,
-                                                              gboolean focus_in);
+static void         atk_component_interface_init(AtkComponentIface* iface);
+static void         nux_area_accessible_get_extents(AtkComponent* component,
+                                                    gint*         x,
+                                                    gint*         y,
+                                                    gint*         width,
+                                                    gint*         height,
+                                                    AtkCoordType  coord_type);
+static gboolean     nux_area_accessible_grab_focus(AtkComponent* component);
+static guint        nux_area_accessible_add_focus_handler(AtkComponent* component,
+                                                          AtkFocusHandler handler);
+static void         nux_area_accessible_remove_focus_handler(AtkComponent* component,
+                                                             guint handler_id);
+static void         nux_area_accessible_focus_handler(AtkObject* accessible,
+                                                      gboolean focus_in);
 /* private */
-static void on_focus_changed_cb               (nux::Area *area,
-                                               AtkObject *accessible);
-static void on_parent_window_activate_cb      (AtkObject *parent_window,
-                                               NuxAreaAccessible *self);
-static AtkObject   * search_for_parent_window (AtkObject *object);
+static void on_focus_changed_cb(nux::Area* area,
+                                AtkObject* accessible);
+static void on_parent_window_activate_cb(AtkObject* parent_window,
+                                         NuxAreaAccessible* self);
+static AtkObject*    search_for_parent_window(AtkObject* object);
 
 
-G_DEFINE_TYPE_WITH_CODE (NuxAreaAccessible,
-                         nux_area_accessible,
-                         NUX_TYPE_OBJECT_ACCESSIBLE,
-                         G_IMPLEMENT_INTERFACE (ATK_TYPE_COMPONENT,
-                                                atk_component_interface_init))
+G_DEFINE_TYPE_WITH_CODE(NuxAreaAccessible,
+                        nux_area_accessible,
+                        NUX_TYPE_OBJECT_ACCESSIBLE,
+                        G_IMPLEMENT_INTERFACE(ATK_TYPE_COMPONENT,
+                                              atk_component_interface_init))
 
 #define NUX_AREA_ACCESSIBLE_GET_PRIVATE(obj) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), NUX_TYPE_AREA_ACCESSIBLE,        \
@@ -82,91 +82,91 @@ struct _NuxAreaAccessiblePrivate
 
   /* Top level parent window, it is not required to be the direct
      parent */
-  AtkObject *parent_window;
+  AtkObject* parent_window;
 };
 
 
 static void
-nux_area_accessible_class_init (NuxAreaAccessibleClass *klass)
+nux_area_accessible_class_init(NuxAreaAccessibleClass* klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  GObjectClass* gobject_class = G_OBJECT_CLASS(klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->initialize = nux_area_accessible_initialize;
   atk_class->get_parent = nux_area_accessible_get_parent;
   atk_class->ref_state_set = nux_area_accessible_ref_state_set;
 
-  g_type_class_add_private (gobject_class, sizeof (NuxAreaAccessiblePrivate));
+  g_type_class_add_private(gobject_class, sizeof(NuxAreaAccessiblePrivate));
 }
 
 static void
-nux_area_accessible_init (NuxAreaAccessible *area_accessible)
+nux_area_accessible_init(NuxAreaAccessible* area_accessible)
 {
-  NuxAreaAccessiblePrivate *priv =
-    NUX_AREA_ACCESSIBLE_GET_PRIVATE (area_accessible);
+  NuxAreaAccessiblePrivate* priv =
+    NUX_AREA_ACCESSIBLE_GET_PRIVATE(area_accessible);
 
   area_accessible->priv = priv;
 }
 
 AtkObject*
-nux_area_accessible_new (nux::Object *object)
+nux_area_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible = NULL;
+  AtkObject* accessible = NULL;
 
-  g_return_val_if_fail (dynamic_cast<nux::Area*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<nux::Area*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (NUX_TYPE_AREA_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(NUX_TYPE_AREA_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
+  atk_object_initialize(accessible, object);
 
   return accessible;
 }
 
 /* AtkObject.h */
 static void
-nux_area_accessible_initialize (AtkObject *accessible,
-                                gpointer data)
+nux_area_accessible_initialize(AtkObject* accessible,
+                               gpointer data)
 {
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
 
-  ATK_OBJECT_CLASS (nux_area_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(nux_area_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_UNKNOWN;
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
-  area = dynamic_cast<nux::Area *>(nux_object);
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
+  area = dynamic_cast<nux::Area*>(nux_object);
 
   /* focus support based on Focusable, used on the Dash */
-  area->FocusChanged.connect (sigc::bind (sigc::ptr_fun (on_focus_changed_cb), accessible));
+  (static_cast<nux::InputArea*>(area))->OnKeyNavFocusChange.connect(sigc::bind(sigc::ptr_fun(on_focus_changed_cb), accessible));
 
-  atk_component_add_focus_handler (ATK_COMPONENT (accessible),
-                                   nux_area_accessible_focus_handler);
+  atk_component_add_focus_handler(ATK_COMPONENT(accessible),
+                                  nux_area_accessible_focus_handler);
 }
 
-static AtkObject *
-nux_area_accessible_get_parent (AtkObject *obj)
+static AtkObject*
+nux_area_accessible_get_parent(AtkObject* obj)
 {
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
-  nux::Area *parent = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
+  nux::Area* parent = NULL;
 
-  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (obj), NULL);
+  g_return_val_if_fail(NUX_IS_AREA_ACCESSIBLE(obj), NULL);
 
   if (obj->accessible_parent)
     return obj->accessible_parent;
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
 
   if (nux_object == NULL) /* defunct */
     return NULL;
 
-  area = dynamic_cast<nux::Area *>(nux_object);
+  area = dynamic_cast<nux::Area*>(nux_object);
 
-  parent = area->GetParentObject ();
+  parent = area->GetParentObject();
 
-  return unity_a11y_get_accessible (parent);
+  return unity_a11y_get_accessible(parent);
 }
 
 /*
@@ -174,70 +174,70 @@ nux_area_accessible_get_parent (AtkObject *obj)
  * Used to check the showing state
  */
 static gboolean
-_check_all_parents_visible (nux::Area *area)
+_check_all_parents_visible(nux::Area* area)
 {
-  nux::Area *iter_parent = NULL;
+  nux::Area* iter_parent = NULL;
   gboolean result = TRUE;
 
   for (iter_parent = area; iter_parent;
-       iter_parent = iter_parent->GetParentObject ())
+       iter_parent = iter_parent->GetParentObject())
+  {
+    if (!iter_parent->IsVisible())
     {
-      if (!iter_parent->IsVisible())
-        {
-          result = FALSE;
-          break;
-        }
+      result = FALSE;
+      break;
     }
+  }
 
   return result;
 }
 
 static AtkStateSet*
-nux_area_accessible_ref_state_set (AtkObject *obj)
+nux_area_accessible_ref_state_set(AtkObject* obj)
 {
-  AtkStateSet *state_set = NULL;
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
+  AtkStateSet* state_set = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
 
-  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (obj), NULL);
+  g_return_val_if_fail(NUX_IS_AREA_ACCESSIBLE(obj), NULL);
 
-  state_set = ATK_OBJECT_CLASS (nux_area_accessible_parent_class)->ref_state_set (obj);
+  state_set = ATK_OBJECT_CLASS(nux_area_accessible_parent_class)->ref_state_set(obj);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (obj));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj));
 
   if (nux_object == NULL) /* defunct */
     return state_set;
 
-  area = dynamic_cast<nux::Area *>(nux_object);
+  area = dynamic_cast<nux::Area*>(nux_object);
 
-  if (area->IsSensitive ())
-    {
-      atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
-      atk_state_set_add_state (state_set, ATK_STATE_ENABLED);
-    }
+  if (area->IsSensitive())
+  {
+    atk_state_set_add_state(state_set, ATK_STATE_SENSITIVE);
+    atk_state_set_add_state(state_set, ATK_STATE_ENABLED);
+  }
 
-  if (area->IsVisible ())
-    {
-      atk_state_set_add_state (state_set, ATK_STATE_VISIBLE);
+  if (area->IsVisible())
+  {
+    atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
 
-      if (_check_all_parents_visible (area))
-        atk_state_set_add_state (state_set, ATK_STATE_SHOWING);
-    }
+    if (_check_all_parents_visible(area))
+      atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
+  }
 
-  if (area->CanFocus ())
-    atk_state_set_add_state (state_set, ATK_STATE_FOCUSABLE);
+  if (area->CanFocus())
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSABLE);
 
-  if (area->GetFocused ())
-    atk_state_set_add_state (state_set, ATK_STATE_FOCUSED);
+  if (area->HasKeyFocus())
+    atk_state_set_add_state(state_set, ATK_STATE_FOCUSED);
 
   return state_set;
 }
 
 /* AtkComponent implementation */
 static void
-atk_component_interface_init (AtkComponentIface *iface)
+atk_component_interface_init(AtkComponentIface* iface)
 {
-  g_return_if_fail (iface != NULL);
+  g_return_if_fail(iface != NULL);
 
   /* placement */
   iface->get_extents    = nux_area_accessible_get_extents;
@@ -249,32 +249,32 @@ atk_component_interface_init (AtkComponentIface *iface)
 }
 
 static void
-nux_area_accessible_get_extents (AtkComponent *component,
-                                 gint         *x,
-                                 gint         *y,
-                                 gint         *width,
-                                 gint         *height,
-                                 AtkCoordType coord_type)
+nux_area_accessible_get_extents(AtkComponent* component,
+                                gint*         x,
+                                gint*         y,
+                                gint*         width,
+                                gint*         height,
+                                AtkCoordType coord_type)
 {
   gint top_level_x = 0;
   gint top_level_y = 0;
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
   nux::Geometry geometry;
 
-  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (component));
+  g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(component));
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (component));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(component));
 
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area *>(nux_object);
+  area = dynamic_cast<nux::Area*>(nux_object);
 
-  geometry = area->GetGeometry ();
+  geometry = area->GetGeometry();
 
-  *width = geometry.GetWidth ();
-  *height = geometry.GetWidth ();
+  *width = geometry.GetWidth();
+  *height = geometry.GetWidth();
   *x = geometry.x;
   *y = geometry.y;
 
@@ -284,31 +284,31 @@ nux_area_accessible_get_extents (AtkComponent *component,
    */
 
   if (coord_type == ATK_XY_SCREEN)
-    {
-      /* For the moment Unity is a full-screen app, so ATK_XY_SCREEN
-         and ATK_XY_WINDOW are the same */
-      *x += top_level_x;
-      *y += top_level_y;
-    }
+  {
+    /* For the moment Unity is a full-screen app, so ATK_XY_SCREEN
+       and ATK_XY_WINDOW are the same */
+    *x += top_level_x;
+    *y += top_level_y;
+  }
 
   return;
 }
 
 static gboolean
-nux_area_accessible_grab_focus (AtkComponent *component)
+nux_area_accessible_grab_focus(AtkComponent* component)
 {
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
 
-  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (component), FALSE);
+  g_return_val_if_fail(NUX_IS_AREA_ACCESSIBLE(component), FALSE);
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (component));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(component));
   if (nux_object == NULL) /* defunct */
     return FALSE;
 
-  area = dynamic_cast<nux::Area *>(nux_object);
+  area = dynamic_cast<nux::Area*>(nux_object);
 
-  area->SetFocused (TRUE);
+  area->SetFocused(TRUE);
 
   /* FIXME: SetFocused doesn't return if the force was succesful or
      not, we suppose that this is the case like in cally and gail */
@@ -325,97 +325,97 @@ nux_area_accessible_grab_focus (AtkComponent *component)
  */
 
 static guint
-nux_area_accessible_add_focus_handler (AtkComponent *component,
-                                       AtkFocusHandler handler)
+nux_area_accessible_add_focus_handler(AtkComponent* component,
+                                      AtkFocusHandler handler)
 {
   GSignalMatchType match_type;
   gulong ret;
   guint signal_id;
 
-  g_return_val_if_fail (NUX_IS_AREA_ACCESSIBLE (component), 0);
+  g_return_val_if_fail(NUX_IS_AREA_ACCESSIBLE(component), 0);
 
-  match_type = (GSignalMatchType) (G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC);
-  signal_id = g_signal_lookup ("focus-event", ATK_TYPE_OBJECT);
+  match_type = (GSignalMatchType)(G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC);
+  signal_id = g_signal_lookup("focus-event", ATK_TYPE_OBJECT);
 
-  ret = g_signal_handler_find (component, match_type, signal_id, 0, NULL,
-                               (gpointer) handler, NULL);
+  ret = g_signal_handler_find(component, match_type, signal_id, 0, NULL,
+                              (gpointer) handler, NULL);
   if (!ret)
-    {
-      return g_signal_connect_closure_by_id (component,
-                                             signal_id, 0,
-                                             g_cclosure_new (G_CALLBACK (handler), NULL,
-                                                             (GClosureNotify) NULL),
-                                             FALSE);
-    }
+  {
+    return g_signal_connect_closure_by_id(component,
+                                          signal_id, 0,
+                                          g_cclosure_new(G_CALLBACK(handler), NULL,
+                                                         (GClosureNotify) NULL),
+                                          FALSE);
+  }
   else
     return 0;
 }
 
 static void
-nux_area_accessible_remove_focus_handler (AtkComponent *component,
-                                          guint handler_id)
+nux_area_accessible_remove_focus_handler(AtkComponent* component,
+                                         guint handler_id)
 {
-  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (component));
+  g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(component));
 
-  g_signal_handler_disconnect (component, handler_id);
+  g_signal_handler_disconnect(component, handler_id);
 }
 
 static void
-nux_area_accessible_focus_handler (AtkObject *accessible,
-                                   gboolean focus_in)
+nux_area_accessible_focus_handler(AtkObject* accessible,
+                                  gboolean focus_in)
 {
-  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (accessible));
+  g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(accessible));
 
-  g_debug ("[a11y][area] focus_handler (%p:%s:%i)",
-           accessible, atk_object_get_name (accessible), focus_in);
+  g_debug("[a11y][area] focus_handler (%p:%s:%i)",
+          accessible, atk_object_get_name(accessible), focus_in);
 
-  atk_object_notify_state_change (accessible, ATK_STATE_FOCUSED, focus_in);
+  atk_object_notify_state_change(accessible, ATK_STATE_FOCUSED, focus_in);
 }
 
 /* private */
 static gboolean
-check_parent_window_active (NuxAreaAccessible *self)
+check_parent_window_active(NuxAreaAccessible* self)
 {
   gboolean active = FALSE;
-  AtkStateSet *state_set = NULL;
+  AtkStateSet* state_set = NULL;
 
   if (self->priv->parent_window == NULL)
-    {
-      self->priv->parent_window = search_for_parent_window (ATK_OBJECT (self));
+  {
+    self->priv->parent_window = search_for_parent_window(ATK_OBJECT(self));
 
-      g_signal_connect (self->priv->parent_window,
-                        "activate",
-                        G_CALLBACK (on_parent_window_activate_cb),
-                        self);
-    }
+    g_signal_connect(self->priv->parent_window,
+                     "activate",
+                     G_CALLBACK(on_parent_window_activate_cb),
+                     self);
+  }
 
-  state_set = atk_object_ref_state_set (ATK_OBJECT (self->priv->parent_window));
+  state_set = atk_object_ref_state_set(ATK_OBJECT(self->priv->parent_window));
 
-  active = atk_state_set_contains_state (state_set, ATK_STATE_ACTIVE);
+  active = atk_state_set_contains_state(state_set, ATK_STATE_ACTIVE);
 
-  g_debug ("[a11y][area] check_parent_window_active %i", active);
+  g_debug("[a11y][area] check_parent_window_active %i", active);
 
-  g_object_unref (state_set);
+  g_object_unref(state_set);
 
   return active;
 }
 
 static void
-check_focus_change (nux::Area *area,
-                    AtkObject *accessible)
+check_focus_change(nux::Area* area,
+                   AtkObject* accessible)
 {
   gboolean focus_in = FALSE;
-  NuxAreaAccessible *self = NULL;
+  NuxAreaAccessible* self = NULL;
   gboolean is_parent_window_active = FALSE;
 
-  g_return_if_fail (NUX_IS_AREA_ACCESSIBLE (accessible));
+  g_return_if_fail(NUX_IS_AREA_ACCESSIBLE(accessible));
 
-  self = NUX_AREA_ACCESSIBLE (accessible);
+  self = NUX_AREA_ACCESSIBLE(accessible);
 
-  if (area->GetFocused ())
+  if (area->HasKeyFocus())
     focus_in = TRUE;
 
-  is_parent_window_active = check_parent_window_active (self);
+  is_parent_window_active = check_parent_window_active(self);
 
   /* We don't emit focus_in=TRUE events until the top level window is
      active*/
@@ -423,51 +423,51 @@ check_focus_change (nux::Area *area,
     return;
 
   if (self->priv->focused != focus_in)
-    {
-      self->priv->focused = focus_in;
+  {
+    self->priv->focused = focus_in;
 
-      g_debug ("[a11y][area] on_focus_change_cb (actual focus change) : (%p:%s:%i)",
-               accessible, atk_object_get_name (accessible), focus_in);
+    g_debug("[a11y][area] on_focus_change_cb (actual focus change) : (%p:%s:%i)",
+            accessible, atk_object_get_name(accessible), focus_in);
 
-      g_signal_emit_by_name (accessible, "focus_event", focus_in);
-      atk_focus_tracker_notify (accessible);
-    }
+    g_signal_emit_by_name(accessible, "focus_event", focus_in);
+    atk_focus_tracker_notify(accessible);
+  }
 }
 
 static void
-on_focus_changed_cb (nux::Area *area,
-                     AtkObject *accessible)
+on_focus_changed_cb(nux::Area* area,
+                    AtkObject* accessible)
 {
-  check_focus_change (area, accessible);
+  check_focus_change(area, accessible);
 }
 
-static AtkObject *
-search_for_parent_window (AtkObject *object)
+static AtkObject*
+search_for_parent_window(AtkObject* object)
 {
-  AtkObject *parent = NULL;
+  AtkObject* parent = NULL;
 
-  for (parent = atk_object_get_parent (object);
-       (parent != NULL) && (atk_object_get_role (parent) != ATK_ROLE_WINDOW);
-       parent = atk_object_get_parent (parent));
+  for (parent = atk_object_get_parent(object);
+       (parent != NULL) && (atk_object_get_role(parent) != ATK_ROLE_WINDOW);
+       parent = atk_object_get_parent(parent));
 
   if (parent == NULL)
-    g_debug ("[a11y][area] search_for_parent NO PARENT WINDOW");
+    g_debug("[a11y][area] search_for_parent NO PARENT WINDOW");
 
   return parent;
 }
 
 static void
-on_parent_window_activate_cb (AtkObject *parent_window,
-                              NuxAreaAccessible *self)
+on_parent_window_activate_cb(AtkObject* parent_window,
+                             NuxAreaAccessible* self)
 {
-  nux::Object *nux_object = NULL;
-  nux::Area *area = NULL;
+  nux::Object* nux_object = NULL;
+  nux::Area* area = NULL;
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (self));
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
   if (nux_object == NULL) /* defunct */
     return;
 
-  area = dynamic_cast<nux::Area *>(nux_object);
+  area = dynamic_cast<nux::Area*>(nux_object);
 
-  check_focus_change (area, ATK_OBJECT (self));
+  check_focus_change(area, ATK_OBJECT(self));
 }

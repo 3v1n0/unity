@@ -41,7 +41,7 @@ struct _UnitySearchBarAccessible
   NuxViewAccessible parent;
 
   /*< private >*/
-  UnitySearchBarAccessiblePrivate *priv;
+  UnitySearchBarAccessiblePrivate* priv;
 };
 
 struct _UnitySearchBarAccessibleClass
@@ -49,8 +49,8 @@ struct _UnitySearchBarAccessibleClass
   NuxViewAccessibleClass parent_class;
 };
 
-GType      unity_search_bar_accessible_get_type (void);
-AtkObject *unity_search_bar_accessible_new      (nux::Object *object);
+GType      unity_search_bar_accessible_get_type(void);
+AtkObject* unity_search_bar_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

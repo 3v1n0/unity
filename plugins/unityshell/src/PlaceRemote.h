@@ -32,48 +32,48 @@
 class PlaceRemote : public Place
 {
 public:
-  PlaceRemote (const char *path);
-  ~PlaceRemote ();
+  PlaceRemote(const char* path);
+  ~PlaceRemote();
 
-  std::vector<PlaceEntry *>& GetEntries ();
-  guint32                    GetNEntries ();
+  std::vector<PlaceEntry*>& GetEntries();
+  guint32                    GetNEntries();
 
-  bool IsValid ();
+  bool IsValid();
 
   /* Callbacks */
-  void OnServiceProxyReady (GObject *source, GAsyncResult *result);
-  void OnEntriesReceived   (GVariant *args);
+  void OnServiceProxyReady(GObject* source, GAsyncResult* result);
+  void OnEntriesReceived(GVariant* args);
 
-  void OnEntryAdded   (GVariant    *args);
-  void OnEntryRemoved (const gchar *dbus_path);
+  void OnEntryAdded(GVariant*    args);
+  void OnEntryRemoved(const gchar* dbus_path);
 
-  const gchar * GetDBusPath ();
+  const gchar* GetDBusPath();
 
-  void ActivateResult (const char *uri, const char *mimetype);
-  void Connect ();
+  void ActivateResult(const char* uri, const char* mimetype);
+  void Connect();
 
 private:
-  void LoadKeyFileEntries (GKeyFile *key_file);
+  void LoadKeyFileEntries(GKeyFile* key_file);
 
-  static void OnActivationProxyReady (GObject      *source,
-                                      GAsyncResult *result,
-                                      PlaceRemote  *self);
-  static void OnActivationResultReceived (GObject      *source,
-                                         GAsyncResult *result,
-                                         PlaceRemote  *self);
-  static void OnProxyNameOwnerChanged (GDBusProxy  *proxy,
-                                       GParamSpec  *pspec,
-                                       PlaceRemote *self);
+  static void OnActivationProxyReady(GObject*      source,
+                                     GAsyncResult* result,
+                                     PlaceRemote*  self);
+  static void OnActivationResultReceived(GObject*      source,
+                                         GAsyncResult* result,
+                                         PlaceRemote*  self);
+  static void OnProxyNameOwnerChanged(GDBusProxy*  proxy,
+                                      GParamSpec*  pspec,
+                                      PlaceRemote* self);
 private:
-  char   *_path;
-  char   *_dbus_name;
-  char   *_dbus_path;
-  GRegex *_uri_regex;
-  GRegex *_mime_regex;
+  char*   _path;
+  char*   _dbus_name;
+  char*   _dbus_path;
+  GRegex* _uri_regex;
+  GRegex* _mime_regex;
   bool    _valid;
 
-  GDBusProxy *_service_proxy;
-  GDBusProxy *_activation_proxy;
+  GDBusProxy* _service_proxy;
+  GDBusProxy* _activation_proxy;
 
   std::string _active_uri;
 

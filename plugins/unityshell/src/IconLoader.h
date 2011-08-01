@@ -28,34 +28,34 @@
 class IconLoader
 {
 public:
-  typedef sigc::slot<void, const char *, guint, GdkPixbuf *> IconLoaderCallback;
+  typedef sigc::slot<void, const char*, guint, GdkPixbuf*> IconLoaderCallback;
 
-  IconLoader ();
-  ~IconLoader ();
+  IconLoader();
+  ~IconLoader();
 
- // DO NOT `delete` this...ever.
- static IconLoader * GetDefault ();
+// DO NOT `delete` this...ever.
+  static IconLoader* GetDefault();
 
- void LoadFromIconName    (const char        *icon_name,
+  void LoadFromIconName(const char*        icon_name,
+                        guint              size,
+                        IconLoaderCallback slot);
+
+  void LoadFromGIconString(const char*        gicon_string,
                            guint              size,
                            IconLoaderCallback slot);
 
- void LoadFromGIconString (const char        *gicon_string,
-                           guint              size,
-                           IconLoaderCallback slot);
+  void LoadFromFilename(const char*        filename,
+                        guint              size,
+                        IconLoaderCallback slot);
 
- void LoadFromFilename    (const char        *filename,
-                           guint              size,
-                           IconLoaderCallback slot);
-
- void LoadFromURI         (const char        *uri,
-                           guint              size,
-                           IconLoaderCallback slot);
+  void LoadFromURI(const char*        uri,
+                   guint              size,
+                   IconLoaderCallback slot);
 private:
 
   enum IconLoaderRequestType
   {
-    REQUEST_TYPE_ICON_NAME=0,
+    REQUEST_TYPE_ICON_NAME = 0,
     REQUEST_TYPE_GICON_STRING,
     REQUEST_TYPE_URI,
   };
@@ -63,42 +63,42 @@ private:
   struct IconLoaderTask
   {
     IconLoaderRequestType type;
-    char                 *data;
+    char*                 data;
     guint                 size;
-    char                 *key;
+    char*                 key;
     IconLoaderCallback    slot;
-    IconLoader           *self;
+    IconLoader*           self;
   };
 
 
-  void   QueueTask (const char           *key,
-                    const char           *data,
-                    guint                 size,
-                    IconLoaderCallback    slot,
-                    IconLoaderRequestType type);
-  char * Hash (const char *data, guint size);
-  bool   CacheLookup (const char *key,
-                      const char *data,
-                      guint       size,
-                      IconLoaderCallback slot);
-  bool   ProcessTask (IconLoaderTask *task);
-  bool   ProcessIconNameTask (IconLoaderTask *task);
-  bool   ProcessGIconTask (IconLoaderTask *task);
-  bool   ProcessURITask (IconLoaderTask *task);
-  void   ProcessURITaskReady (IconLoaderTask *task, char *contents, gsize length);
-  bool   Iteration ();
-  void   FreeTask (IconLoaderTask *task);
+  void   QueueTask(const char*           key,
+                   const char*           data,
+                   guint                 size,
+                   IconLoaderCallback    slot,
+                   IconLoaderRequestType type);
+  char* Hash(const char* data, guint size);
+  bool   CacheLookup(const char* key,
+                     const char* data,
+                     guint       size,
+                     IconLoaderCallback slot);
+  bool   ProcessTask(IconLoaderTask* task);
+  bool   ProcessIconNameTask(IconLoaderTask* task);
+  bool   ProcessGIconTask(IconLoaderTask* task);
+  bool   ProcessURITask(IconLoaderTask* task);
+  void   ProcessURITaskReady(IconLoaderTask* task, char* contents, gsize length);
+  bool   Iteration();
+  void   FreeTask(IconLoaderTask* task);
 
-  static bool Loop (IconLoader *self);
-  static void LoadContentsReady (GObject *object, GAsyncResult *res, IconLoaderTask *task);
- 
+  static bool Loop(IconLoader* self);
+  static void LoadContentsReady(GObject* object, GAsyncResult* res, IconLoaderTask* task);
+
 private:
   bool _no_load;
 
-  std::map<std::string, GdkPixbuf *> _cache;
-  GQueue       *_tasks;
+  std::map<std::string, GdkPixbuf*> _cache;
+  GQueue*       _tasks;
   guint         _idle_id;
-  GtkIconTheme *_theme;
+  GtkIconTheme* _theme;
   gint64        _idle_start_time;
 };
 

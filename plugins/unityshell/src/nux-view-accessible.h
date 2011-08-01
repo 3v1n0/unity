@@ -44,7 +44,7 @@ struct _NuxViewAccessible
   NuxAreaAccessible parent;
 
   /*< private >*/
-  NuxViewAccessiblePrivate *priv;
+  NuxViewAccessiblePrivate* priv;
 };
 
 struct _NuxViewAccessibleClass
@@ -52,8 +52,8 @@ struct _NuxViewAccessibleClass
   NuxAreaAccessibleClass parent_class;
 };
 
-GType      nux_view_accessible_get_type (void);
-AtkObject *nux_view_accessible_new      (nux::Object *object);
+GType      nux_view_accessible_get_type(void);
+AtkObject* nux_view_accessible_new(nux::Object* object);
 
 G_END_DECLS
 

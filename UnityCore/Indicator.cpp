@@ -22,8 +22,10 @@
 #include <iostream>
 
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 Indicator::Indicator(std::string const& name)
   : name_(name)
@@ -54,6 +56,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
       Entry::Ptr new_entry = new_entries[new_index];
       entries_.push_back(new_entry);
       new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
+      new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
       new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
       on_entry_added.emit(new_entry);
     }
@@ -69,7 +72,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
 {
   for (Entries::const_iterator i = entries_.begin(),
-         end = entries_.end(); i != end; ++i)
+       end = entries_.end(); i != end; ++i)
   {
     if ((*i)->id() == entry_id)
       return *i;
@@ -84,6 +87,12 @@ void Indicator::OnEntryShowMenu(std::string const& entry_id,
   on_show_menu.emit(entry_id, x, y, timestamp, button);
 }
 
+void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,
+                                         unsigned int timestamp)
+{
+  on_secondary_activate.emit(entry_id, timestamp);
+}
+
 void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
 {
   on_scroll.emit(entry_id, delta);
@@ -93,7 +102,7 @@ std::ostream& operator<<(std::ostream& out, Indicator const& i)
 {
   out << "<Indicator " << i.name() << std::endl;
   for (Indicator::Entries::const_iterator iter = i.entries_.begin(),
-         end = i.entries_.end(); iter != end; ++iter)
+       end = i.entries_.end(); iter != end; ++iter)
   {
     out << "\t" << **iter << std::endl;
   }

@@ -44,63 +44,57 @@ class LauncherController : public sigc::trackable
 {
 
 public:
-    LauncherController(Launcher* launcher, CompScreen *screen);
-    ~LauncherController();
+  LauncherController(Launcher* launcher, CompScreen* screen);
+  ~LauncherController();
 
-    void UpdateNumWorkspaces (int workspaces);
+  void UpdateNumWorkspaces(int workspaces);
 private:
-    BamfMatcher*           _matcher;
-    CompAction*            _expo_action;
-    CompScreen*            _screen;
-    Launcher*              _launcher;
-    LauncherModel*         _model;
-    int                    _sort_priority;
-    PlaceLauncherSection*  _place_section;
-    DeviceLauncherSection* _device_section;
-    LauncherEntryRemoteModel* _remote_model;
-    SimpleLauncherIcon*    _expoIcon;
-    int                    _num_workspaces;
+  BamfMatcher*           _matcher;
+  CompAction*            _expo_action;
+  CompScreen*            _screen;
+  Launcher*              _launcher;
+  LauncherModel*         _model;
+  int                    _sort_priority;
+  PlaceLauncherSection*  _place_section;
+  unity::DeviceLauncherSection* _device_section;
+  LauncherEntryRemoteModel* _remote_model;
+  SimpleLauncherIcon*    _expoIcon;
+  int                    _num_workspaces;
 
-    sigc::connection _on_launcher_add_request_connection;
-    sigc::connection _on_launcher_remove_request_connection;
-    sigc::connection _on_place_section_icon_added_connection;
-    sigc::connection _on_device_section_icon_added_connection;
-    guint            _bamf_timer_handler_id;
-    sigc::connection _on_remote_model_entry_added_connection;
-    sigc::connection _on_remote_model_entry_removed_connection;
+  guint            _bamf_timer_handler_id;
 
-    guint32 _on_view_opened_id;
+  guint32 _on_view_opened_id;
 
-    void SortAndUpdate ();
+  void SortAndUpdate();
 
-    void OnIconAdded (LauncherIcon *icon);
-    
-    void OnLauncherAddRequest (char *path, LauncherIcon *before);
-    void OnLauncherRemoveRequest (LauncherIcon *icon);
+  void OnIconAdded(LauncherIcon* icon);
 
-    void OnLauncherEntryRemoteAdded   (LauncherEntryRemote *entry);
-    void OnLauncherEntryRemoteRemoved (LauncherEntryRemote *entry);
+  void OnLauncherAddRequest(char* path, LauncherIcon* before);
+  void OnLauncherRemoveRequest(LauncherIcon* icon);
 
-    void InsertExpoAction ();
-    void RemoveExpoAction ();
-    
-    void InsertTrash ();
+  void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
+  void OnLauncherEntryRemoteRemoved(LauncherEntryRemote* entry);
 
-    void RegisterIcon (LauncherIcon *icon);
-    
-    LauncherIcon * CreateFavorite (const char *file_path);
+  void InsertExpoAction();
+  void RemoveExpoAction();
 
-    void SetupBamf ();
+  void InsertTrash();
 
-    void OnExpoActivated ();
-    
-    /* statics */
-    
-    static bool BamfTimerCallback (void *data);
+  void RegisterIcon(LauncherIcon* icon);
 
-    static void OnViewOpened (BamfMatcher *matcher, BamfView *view, gpointer data);
-    
-    sigc::connection _on_expoicon_activate_connection;
+  LauncherIcon* CreateFavorite(const char* file_path);
+
+  void SetupBamf();
+
+  void OnExpoActivated();
+
+  /* statics */
+
+  static bool BamfTimerCallback(void* data);
+
+  static void OnViewOpened(BamfMatcher* matcher, BamfView* view, gpointer data);
+
+  sigc::connection _on_expoicon_activate_connection;
 };
 
 #endif // LAUNCHERCONTROLLER_H

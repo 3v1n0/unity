@@ -29,8 +29,10 @@
 
 #include "NuxCore/Rect.h"
 
-namespace unity {
-namespace indicator {
+namespace unity
+{
+namespace indicator
+{
 
 // The EntryLocationMap is used to map the entry name to the
 // physical location on the screen.
@@ -78,6 +80,7 @@ public:
   bool IsUnused() const;
 
   void ShowMenu(int x, int y, int timestamp, int button);
+  void SecondaryActivate(unsigned int timestamp);
   void Scroll(int delta);
 
   // Signals
@@ -86,6 +89,7 @@ public:
   sigc::signal<void, bool> show_now_changed;
 
   sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
+  sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
 private:

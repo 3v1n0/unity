@@ -27,7 +27,8 @@
 #include <sigc++/signal.h>
 
 
-namespace unity {
+namespace unity
+{
 
 // An abstract object that facilitates getting and modifying the list of favorites
 // Use GetDefault () to get the correct store for the session

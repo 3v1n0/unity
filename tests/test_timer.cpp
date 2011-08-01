@@ -10,7 +10,8 @@
 
 using namespace std;
 
-namespace {
+namespace
+{
 
 pair<float, string> get_elapsed_time_and_message(string const& line)
 {
@@ -21,7 +22,8 @@ pair<float, string> get_elapsed_time_and_message(string const& line)
   return result;
 }
 
-TEST(TestBlockTimer, TestOutput) {
+TEST(TestBlockTimer, TestOutput)
+{
   stringstream sout;
   {
     unity::logger::BlockTimer t("My timer", sout);
@@ -37,7 +39,8 @@ TEST(TestBlockTimer, TestOutput) {
   EXPECT_EQ(finished.second, "s: FINISHED (My timer)");
 }
 
-TEST(TestBlockTimer, TestMultipleWithMessage) {
+TEST(TestBlockTimer, TestMultipleWithMessage)
+{
   stringstream sout;
   {
     unity::logger::BlockTimer first("first", sout);

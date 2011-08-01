@@ -20,13 +20,16 @@
 #ifndef UNITY_GLIB_WRAPPER_H
 #define UNITY_GLIB_WRAPPER_H
 
+#include <iosfwd>
 #include <string>
 
 #include <boost/utility.hpp>
 #include <glib.h>
 
-namespace unity {
-namespace glib {
+namespace unity
+{
+namespace glib
+{
 
 template <typename T>
 class Object
@@ -40,7 +43,7 @@ public:
   Object& operator=(T* val);
   Object& operator=(Object const& other);
 
-  operator T*();
+  operator T* ();
   operator bool();
   T* operator->();
   T* RawPtr();
@@ -58,6 +61,8 @@ public:
   ~Error();
 
   GError** AsOutParam();
+  GError** operator&();
+
   operator bool() const;
   std::string Message() const;
 
@@ -73,12 +78,18 @@ public:
   ~String();
 
   gchar** AsOutParam();
+  gchar** operator&();
+
+  operator bool() const;
   gchar* Value();
   std::string Str() const;
 
 private:
   gchar* string_;
 };
+
+std::ostream& operator<<(std::ostream& o, Error const& e);
+std::ostream& operator<<(std::ostream& o, String const& s);
 
 }
 }

@@ -36,92 +36,93 @@ class Launcher;
 class BamfLauncherIcon : public SimpleLauncherIcon
 {
 public:
-    BamfLauncherIcon(Launcher* IconManager, BamfApplication *app, CompScreen *screen);
-    virtual ~BamfLauncherIcon();
+  BamfLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen);
+  virtual ~BamfLauncherIcon();
 
-    const char* DesktopFile ();
-    bool IsSticky ();
-    void UnStick ();
+  const char* DesktopFile();
+  bool IsSticky();
+  void UnStick();
 
-    virtual void Activate ();
-    void ActivateLauncherIcon ();
+  virtual void Activate(ActionArg arg);
+  void ActivateLauncherIcon(ActionArg arg);
+
+  virtual bool ShowInSwitcher();
+  virtual unsigned int SwitcherPriority();
 
 protected:
-    std::list<DbusmenuMenuitem *> GetMenus ();
+  std::list<DbusmenuMenuitem*> GetMenus();
 
-    void UpdateIconGeometries (nux::Point3 center);
-    void OnCenterStabilized (nux::Point3 center);
-    
-    void OnLauncherHiddenChanged ();
+  void UpdateIconGeometries(nux::Point3 center);
+  void OnCenterStabilized(nux::Point3 center);
 
-    void AddProperties (GVariantBuilder *builder);
-    
-    const gchar * GetRemoteUri ();
-    
-    nux::DndAction OnQueryAcceptDrop (std::list<char *> uris);
-    void OnAcceptDrop (std::list<char *> uris);
-    void OnDndEnter ();
-    void OnDndLeave ();
-    
-    void OpenInstanceLauncherIcon ();
-    
-    std::list<char *> ValidateUrisForLaunch (std::list<char *> uris);
+  void OnLauncherHiddenChanged();
 
-    const char* BamfName ();
+  void AddProperties(GVariantBuilder* builder);
+
+  const gchar* GetRemoteUri();
+
+  nux::DndAction OnQueryAcceptDrop(std::list<char*> uris);
+  void OnAcceptDrop(std::list<char*> uris);
+  void OnDndEnter();
+  void OnDndLeave();
+
+  void OpenInstanceLauncherIcon();
+
+  std::list<char*> ValidateUrisForLaunch(std::list<char*> uris);
+
+  const char* BamfName();
 
 private:
-    BamfApplication *m_App;
-    CompScreen *m_Screen;
-    Launcher *_launcher;
-    std::map<std::string, DbusmenuClient *> _menu_clients;
-    std::map<std::string, DbusmenuMenuitem *> _menu_items;
-    std::map<std::string, gulong> _menu_callbacks;
-    DbusmenuMenuitem *_menu_desktop_shortcuts;
-    gchar *_remote_uri;
-    bool _dnd_hovered;
-    guint _dnd_hover_timer;
-    sigc::connection _on_window_minimized_connection;
-    sigc::connection _hidden_changed_connection;
+  BamfApplication* m_App;
+  CompScreen* m_Screen;
+  Launcher* _launcher;
+  std::map<std::string, DbusmenuClient*> _menu_clients;
+  std::map<std::string, DbusmenuMenuitem*> _menu_items;
+  std::map<std::string, gulong> _menu_callbacks;
+  DbusmenuMenuitem* _menu_desktop_shortcuts;
+  gchar* _remote_uri;
+  bool _dnd_hovered;
+  guint _dnd_hover_timer;
 
-    gchar *_cached_desktop_file;
-    gchar *_cached_name;
+  gchar* _cached_desktop_file;
+  gchar* _cached_name;
 
 
-    GFileMonitor *_desktop_file_monitor;
-    gulong _on_desktop_file_changed_handler_id;
+  GFileMonitor* _desktop_file_monitor;
+  gulong _on_desktop_file_changed_handler_id;
 
-    void EnsureWindowState ();
+  void EnsureWindowState();
 
-    void UpdateMenus ();
+  void UpdateMenus();
 
-    void OpenInstanceWithUris (std::list<char *> uris);
-    void Focus ();
-    bool Spread (int state, bool force);
+  void OpenInstanceWithUris(std::list<char*> uris);
+  void Focus();
+  bool Spread(int state, bool force);
 
-    void EnsureMenuItemsReady ();
-    
-    void OnWindowMinimized (guint32 xid);
-    bool OwnsWindow (Window w);
+  void EnsureMenuItemsReady();
 
-    static void OnClosed (BamfView *view, gpointer data);
-    static void OnUserVisibleChanged (BamfView *view, gboolean visible, gpointer data);
-    static void OnActiveChanged (BamfView *view, gboolean active, gpointer data);
-    static void OnRunningChanged (BamfView *view, gboolean running, gpointer data);
-    static void OnUrgentChanged (BamfView *view, gboolean urgent, gpointer data);
-    static void OnChildAdded (BamfView *view, BamfView *child, gpointer data);
-    static void OnChildRemoved (BamfView *view, BamfView *child, gpointer data);
+  void OnWindowMinimized(guint32 xid);
+  bool OwnsWindow(Window w);
 
-    static void OnQuit (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
-    static void OnLaunch (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
-    static void OnTogglePin (DbusmenuMenuitem *item, int time, BamfLauncherIcon *self);
+  static void OnClosed(BamfView* view, gpointer data);
+  static void OnUserVisibleChanged(BamfView* view, gboolean visible, gpointer data);
+  static void OnActiveChanged(BamfView* view, gboolean active, gpointer data);
+  static void OnRunningChanged(BamfView* view, gboolean running, gpointer data);
+  static void OnUrgentChanged(BamfView* view, gboolean urgent, gpointer data);
+  static void OnChildAdded(BamfView* view, BamfView* child, gpointer data);
+  static void OnChildRemoved(BamfView* view, BamfView* child, gpointer data);
 
-    static void OnDesktopFileChanged (GFileMonitor        *monitor,
-                                      GFile               *file,
-                                      GFile               *other_file,
-                                      GFileMonitorEvent    event_type,
-                                      gpointer             data);
+  static void OnQuit(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
+  static void OnLaunch(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
+  static void OnTogglePin(DbusmenuMenuitem* item, int time, BamfLauncherIcon* self);
 
-    static gboolean OnDndHoveredTimeout (gpointer data);
+  static void OnDesktopFileChanged(GFileMonitor*        monitor,
+                                   GFile*               file,
+                                   GFile*               other_file,
+                                   GFileMonitorEvent    event_type,
+                                   gpointer             data);
+
+  static gboolean OnDndHoveredTimeout(gpointer data);
 };
 
 #endif // BAMFLAUNCHERICON_H

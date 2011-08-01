@@ -23,34 +23,36 @@
 #include <glib.h>
 #include <list>
 
+namespace unity
+{
 class Introspectable
 {
 public:
-  GVariant *Introspect ();
-  void AddChild (Introspectable *child);
-  void RemoveChild (Introspectable *child);
+  GVariant* Introspect();
+  void AddChild(Introspectable* child);
+  void RemoveChild(Introspectable* child);
 
 protected:
-  virtual const gchar *GetName () = 0;
-  virtual const gchar *GetChildsName ();
-  virtual void AddProperties (GVariantBuilder *builder) = 0;
+  virtual const gchar* GetName() = 0;
+  virtual const gchar* GetChildsName();
+  virtual void AddProperties(GVariantBuilder* builder) = 0;
   /*
    * AddProperties should be implemented as such ...
    * void ClassFoo::AddProperties (GVariantBuilder *builder)
    * {
-   * 	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string ("_File") );
-   *	g_variant_builder_add (builder, "{sv}", "image", g_variant_new_string ("") );
-   *	g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (TRUE) );
-   *  	g_variant_builder_add (builder, "{sv}", "sensitive", g_variant_new_boolean (TRUE) );
-   *  	g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (FALSE) );
-   *  	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (34) );
-   *  	g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (24) );
+   *  g_variant_builder_add (builder, "{sv}", "label", g_variant_new_string ("_File") );
+   *  g_variant_builder_add (builder, "{sv}", "image", g_variant_new_string ("") );
+   *  g_variant_builder_add (builder, "{sv}", "visible", g_variant_new_boolean (TRUE) );
+   *    g_variant_builder_add (builder, "{sv}", "sensitive", g_variant_new_boolean (TRUE) );
+   *    g_variant_builder_add (builder, "{sv}", "active", g_variant_new_boolean (FALSE) );
+   *    g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (34) );
+   *    g_variant_builder_add (builder, "{sv}", "label", g_variant_new_int32 (24) );
    * }
    * That's all. Just add a bunch of key-value properties to the builder.
    */
 
 private:
-  std::list<Introspectable *> _children;
+  std::list<Introspectable*> _children;
 };
-
+}
 #endif

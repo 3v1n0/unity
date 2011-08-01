@@ -35,10 +35,13 @@
  * directories, the full path is saved in the settings.
  */
 
-namespace unity {
-namespace internal {
+namespace unity
+{
+namespace internal
+{
 
-namespace {
+namespace
+{
 
 nux::logging::Logger logger("unity.favorites");
 
@@ -51,7 +54,7 @@ void on_settings_updated(GSettings* settings,
 
 std::string get_basename_or_path(std::string const& desktop_path);
 
-char* exhaustive_desktopfile_lookup(char *desktop_file);
+char* exhaustive_desktopfile_lookup(char* desktop_file);
 
 }
 
@@ -62,7 +65,7 @@ FavoriteStoreGSettings::FavoriteStoreGSettings()
   Init();
 }
 
-FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend *backend)
+FavoriteStoreGSettings::FavoriteStoreGSettings(GSettingsBackend* backend)
   : settings_(g_settings_new_with_backend(SETTINGS_NAME, backend))
   , ignore_signals_(false)
 {
@@ -73,7 +76,7 @@ void FavoriteStoreGSettings::Init()
 {
   /* migrate the favorites if needed and ignore errors */
   glib::String latest_migration_update(g_settings_get_string(
-                                           settings_, "favorite-migration"));
+                                         settings_, "favorite-migration"));
   if (latest_migration_update.Str() < LATEST_SETTINGS_MIGRATION)
   {
     glib::Error error;
@@ -83,16 +86,15 @@ void FavoriteStoreGSettings::Init()
     glib::String output;
 
     g_spawn_command_line_sync(cmd.c_str(),
-                              output.AsOutParam(),
+                              &output,
                               NULL,
                               NULL,
-                              error.AsOutParam());
+                              &error);
     if (error)
     {
-      // Do we have a defined logging subsystem?
-      std::cout << "WARNING: Unable to run the migrate favorites "
-                << "tools successfully: " << error.Message()
-                << ".\nThe output was:" << output.Value() << std::endl;
+      LOG_WARN(logger) << "WARNING: Unable to run the migrate favorites "
+                       << "tools successfully: " << error
+                       << ".\n\tThe output was:" << output;
     }
   }
 
@@ -105,7 +107,7 @@ void FavoriteStoreGSettings::Refresh()
 {
   favorites_.clear();
 
-  gchar **favs = g_settings_get_strv (settings_, "favorites");
+  gchar** favs = g_settings_get_strv(settings_, "favorites");
 
   for (int i = 0; favs[i] != NULL; ++i)
   {
@@ -152,7 +154,7 @@ void FavoriteStoreGSettings::Refresh()
     }
   }
 
-  g_strfreev (favs);
+  g_strfreev(favs);
 }
 
 FavoriteList const&  FavoriteStoreGSettings::GetFavorites()
@@ -188,7 +190,8 @@ void FavoriteStoreGSettings::RemoveFavorite(std::string const& desktop_path)
     return;
 
   FavoriteList::iterator pos = std::find(favorites_.begin(), favorites_.end(), desktop_path);
-  if (pos == favorites_.end()) {
+  if (pos == favorites_.end())
+  {
     return;
   }
 
@@ -204,7 +207,8 @@ void FavoriteStoreGSettings::MoveFavorite(std::string const& desktop_path, int p
     return;
 
   FavoriteList::iterator pos = std::find(favorites_.begin(), favorites_.end(), desktop_path);
-  if (pos == favorites_.end()) {
+  if (pos == favorites_.end())
+  {
     return;
   }
 
@@ -269,13 +273,15 @@ void FavoriteStoreGSettings::Changed(std::string const& key)
   LOG_DEBUG(logger) << "Changed: " << key;
 }
 
-namespace {
+namespace
+{
 
 void on_settings_updated(GSettings* settings,
                          const gchar* key,
                          FavoriteStoreGSettings* self)
 {
-  if (settings and key) {
+  if (settings and key)
+  {
     self->Changed(key);
   }
 }
@@ -308,82 +314,82 @@ std::string get_basename_or_path(std::string const& desktop_path)
  * Most of this code copied from bamf - its nice to have this
  * agree with bamf at the very least
  */
-char *exhaustive_desktopfile_lookup (char *desktop_file)
+char* exhaustive_desktopfile_lookup(char* desktop_file)
 {
-  GFile *file;
-  GFileInfo *info;
-  GFileEnumerator *enumerator;
-  GList *dirs = NULL, *l;
-  const char *env;
-  char  *path;
-  char  *subpath;
-  char **data_dirs = NULL;
-  char **data;
+  GFile* file;
+  GFileInfo* info;
+  GFileEnumerator* enumerator;
+  GList* dirs = NULL, *l;
+  const char* env;
+  char*  path;
+  char*  subpath;
+  char** data_dirs = NULL;
+  char** data;
 
-  env = g_getenv ("XDG_DATA_DIRS");
+  env = g_getenv("XDG_DATA_DIRS");
 
   if (env)
   {
-    data_dirs = g_strsplit (env, ":", 0);
+    data_dirs = g_strsplit(env, ":", 0);
 
     for (data = data_dirs; *data; data++)
     {
-      path = g_build_filename (*data, "applications", NULL);
-      if (g_file_test (path, G_FILE_TEST_IS_DIR))
-        dirs = g_list_prepend (dirs, path);
+      path = g_build_filename(*data, "applications", NULL);
+      if (g_file_test(path, G_FILE_TEST_IS_DIR))
+        dirs = g_list_prepend(dirs, path);
       else
-        g_free (path);
+        g_free(path);
     }
   }
 
-  if (!g_list_find_custom (dirs, "/usr/share/applications", (GCompareFunc) g_strcmp0))
-    dirs = g_list_prepend (dirs, g_strdup ("/usr/share/applications"));
+  if (!g_list_find_custom(dirs, "/usr/share/applications", (GCompareFunc) g_strcmp0))
+    dirs = g_list_prepend(dirs, g_strdup("/usr/share/applications"));
 
-  if (!g_list_find_custom (dirs, "/usr/local/share/applications", (GCompareFunc) g_strcmp0))
-    dirs = g_list_prepend (dirs, g_strdup ("/usr/local/share/applications"));
+  if (!g_list_find_custom(dirs, "/usr/local/share/applications", (GCompareFunc) g_strcmp0))
+    dirs = g_list_prepend(dirs, g_strdup("/usr/local/share/applications"));
 
-  dirs = g_list_prepend (dirs, g_strdup (g_build_filename (g_get_home_dir (), ".share/applications", NULL)));
+  dirs = g_list_prepend(dirs, g_strdup(g_build_filename(g_get_home_dir(), ".share/applications", NULL)));
 
   if (data_dirs)
-    g_strfreev (data_dirs);
+    g_strfreev(data_dirs);
 
   /* include subdirs */
   for (l = dirs; l; l = l->next)
   {
-    path = (char *)l->data;
+    path = (char*)l->data;
 
-    file = g_file_new_for_path (path);
+    file = g_file_new_for_path(path);
 
-    if (!g_file_query_exists (file, NULL))
+    if (!g_file_query_exists(file, NULL))
     {
-      g_object_unref (file);
+      g_object_unref(file);
       continue;
     }
 
-    enumerator = g_file_enumerate_children (file,
-                                            "standard::*",
-                                            G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
-                                            NULL,
-                                            NULL);
+    enumerator = g_file_enumerate_children(file,
+                                           "standard::*",
+                                           G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS,
+                                           NULL,
+                                           NULL);
 
     if (!enumerator)
       continue;
 
-    info = g_file_enumerator_next_file (enumerator, NULL, NULL);
-    for (; info; info = g_file_enumerator_next_file (enumerator, NULL, NULL))
+    info = g_file_enumerator_next_file(enumerator, NULL, NULL);
+    for (; info; info = g_file_enumerator_next_file(enumerator, NULL, NULL))
     {
-      if (g_file_info_get_file_type (info) != G_FILE_TYPE_DIRECTORY)
+      if (g_file_info_get_file_type(info) != G_FILE_TYPE_DIRECTORY)
         continue;
 
-      subpath = g_build_filename (path, g_file_info_get_name (info), NULL);
+      subpath = g_build_filename(path, g_file_info_get_name(info), NULL);
       /* append for non-recursive recursion love */
-      dirs = g_list_append (dirs, subpath);
+      dirs = g_list_append(dirs, subpath);
 
-      g_object_unref (info);
+      g_object_unref(info);
     }
 
-    g_object_unref (enumerator);
-    g_object_unref (file);
+    g_object_unref(enumerator);
+    g_object_unref(file);
   }
 
   /* dirs now contains a list if lookup directories */
@@ -391,15 +397,15 @@ char *exhaustive_desktopfile_lookup (char *desktop_file)
   path = NULL;
   for (l = dirs; l; l = l->next)
   {
-    path = g_build_filename ((char *)l->data, desktop_file, NULL);
-    if (g_file_test (path, G_FILE_TEST_EXISTS))
+    path = g_build_filename((char*)l->data, desktop_file, NULL);
+    if (g_file_test(path, G_FILE_TEST_EXISTS))
       break;
 
-    g_free (path);
+    g_free(path);
     path = NULL;
   }
 
-  g_list_free (dirs);
+  g_list_free(dirs);
 
   return path;
 }

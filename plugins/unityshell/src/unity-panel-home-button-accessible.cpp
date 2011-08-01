@@ -35,47 +35,47 @@
 #include "unitya11y.h"
 
 /* GObject */
-static void unity_panel_home_button_accessible_class_init (UnityPanelHomeButtonAccessibleClass *klass);
-static void unity_panel_home_button_accessible_init       (UnityPanelHomeButtonAccessible *self);
+static void unity_panel_home_button_accessible_class_init(UnityPanelHomeButtonAccessibleClass* klass);
+static void unity_panel_home_button_accessible_init(UnityPanelHomeButtonAccessible* self);
 
 /* AtkObject */
-static void       unity_panel_home_button_accessible_initialize     (AtkObject *accessible, gpointer data);
+static void       unity_panel_home_button_accessible_initialize(AtkObject* accessible, gpointer data);
 
-G_DEFINE_TYPE (UnityPanelHomeButtonAccessible, unity_panel_home_button_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
+G_DEFINE_TYPE(UnityPanelHomeButtonAccessible, unity_panel_home_button_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
 static void
-unity_panel_home_button_accessible_class_init (UnityPanelHomeButtonAccessibleClass *klass)
+unity_panel_home_button_accessible_class_init(UnityPanelHomeButtonAccessibleClass* klass)
 {
-  AtkObjectClass *atk_class = ATK_OBJECT_CLASS (klass);
+  AtkObjectClass* atk_class = ATK_OBJECT_CLASS(klass);
 
   /* AtkObject */
   atk_class->initialize = unity_panel_home_button_accessible_initialize;
 }
 
 static void
-unity_panel_home_button_accessible_init (UnityPanelHomeButtonAccessible *self)
+unity_panel_home_button_accessible_init(UnityPanelHomeButtonAccessible* self)
 {
 }
 
-AtkObject *
-unity_panel_home_button_accessible_new (nux::Object *object)
+AtkObject*
+unity_panel_home_button_accessible_new(nux::Object* object)
 {
-  AtkObject *accessible;
+  AtkObject* accessible;
 
-  g_return_val_if_fail (dynamic_cast<PanelHomeButton *>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<PanelHomeButton*>(object), NULL);
 
-  accessible = ATK_OBJECT (g_object_new (UNITY_TYPE_PANEL_HOME_BUTTON_ACCESSIBLE, NULL));
+  accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PANEL_HOME_BUTTON_ACCESSIBLE, NULL));
 
-  atk_object_initialize (accessible, object);
+  atk_object_initialize(accessible, object);
 
   return accessible;
 }
 
 static void
-unity_panel_home_button_accessible_initialize (AtkObject *accessible, gpointer data)
+unity_panel_home_button_accessible_initialize(AtkObject* accessible, gpointer data)
 {
-  ATK_OBJECT_CLASS (unity_panel_home_button_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(unity_panel_home_button_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_PUSH_BUTTON;
-  atk_object_set_name (accessible, _("Home Button"));
+  atk_object_set_name(accessible, _("Home Button"));
 }

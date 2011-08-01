@@ -26,42 +26,42 @@
 
 class LauncherHoverMachine : public sigc::trackable
 {
-  public:
-  
-    typedef enum
-    {
-      DEFAULT                = 0,
-      LAUNCHER_HIDDEN        = 1 << 0, 
-      MOUSE_OVER_LAUNCHER    = 1 << 1, 
-      MOUSE_OVER_BFB         = 1 << 2, 
-      SHORTCUT_KEYS_VISIBLE  = 1 << 3, 
-      QUICKLIST_OPEN         = 1 << 4, 
-      KEY_NAV_ACTIVE         = 1 << 5, 
-      LAUNCHER_IN_ACTION     = 1 << 6, 
-      PLACES_VISIBLE         = 1 << 7,
-    } HoverQuirk;
-  
-    LauncherHoverMachine ();
-    virtual ~LauncherHoverMachine ();
-    
-    void SetQuirk (HoverQuirk quirk, bool active);
-    bool GetQuirk (HoverQuirk quirk, bool allow_partial = true);
-    
-    sigc::signal<void, bool> should_hover_changed;
-    
-    std::string DebugHoverQuirks ();
-    
-  private:
-    void EnsureHoverState ();
-    void SetShouldHover (bool value);
-    
-    static gboolean EmitShouldHoverChanged (gpointer data);
-  
-    bool       _should_hover;
-    bool       _latest_emit_should_hover;
-    HoverQuirk _quirks;
-    
-    guint _hover_changed_emit_handle;
+public:
+
+  typedef enum
+  {
+    DEFAULT                = 0,
+    LAUNCHER_HIDDEN        = 1 << 0,
+    MOUSE_OVER_LAUNCHER    = 1 << 1,
+    MOUSE_OVER_BFB         = 1 << 2,
+    SHORTCUT_KEYS_VISIBLE  = 1 << 3,
+    QUICKLIST_OPEN         = 1 << 4,
+    KEY_NAV_ACTIVE         = 1 << 5,
+    LAUNCHER_IN_ACTION     = 1 << 6,
+    PLACES_VISIBLE         = 1 << 7,
+  } HoverQuirk;
+
+  LauncherHoverMachine();
+  virtual ~LauncherHoverMachine();
+
+  void SetQuirk(HoverQuirk quirk, bool active);
+  bool GetQuirk(HoverQuirk quirk, bool allow_partial = true);
+
+  sigc::signal<void, bool> should_hover_changed;
+
+  std::string DebugHoverQuirks();
+
+private:
+  void EnsureHoverState();
+  void SetShouldHover(bool value);
+
+  static gboolean EmitShouldHoverChanged(gpointer data);
+
+  bool       _should_hover;
+  bool       _latest_emit_should_hover;
+  HoverQuirk _quirks;
+
+  guint _hover_changed_emit_handle;
 
 };
 

@@ -79,6 +79,16 @@
             		    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
             		    <default>&lt;Alt&gt;F1</default>
                   </option>
+                  <option name="alt_tab_forward" type="key">
+            		    <_short>Key to start the switcher</_short>
+            		    <_long>fixme</_long>
+            		    <default>&lt;Control&gt;Tab</default>
+                  </option>
+                  <option name="alt_tab_prev" type="key">
+                        <_short>Key to start the switcher in reverse</_short>
+                        <_long>fixme</_long>
+                        <default>&lt;Control&gt;&lt;Shift&gt;Tab</default>
+                  </option>
                   <option name="execute_command" type="key">
             		    <_short>Key to execute a command</_short>
             		    <_long>Key to open a folder or execute a command</_long>
@@ -203,6 +213,7 @@
                         <_name>Static Blur</_name>
                     </desc>
                 </option>
+
                 <option name="automaximize_value" type="int">
                     <_short>Automaximize value</_short>
                     <_long>The minimum value to trigger automaximize.</_long>
@@ -210,6 +221,27 @@
                     <max>100</max>
                     <default>75</default>
                 </option>
+                
+                <option name="devices_option" type="int">
+                    <_short>Show Devices</_short>
+                    <_long>Show devices in the launcher</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>1</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>Never</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Only Mounted</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Always</_name>
+                    </desc>
+                </option>
+
             </group>
         </options>
     </plugin>

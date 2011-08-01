@@ -57,6 +57,10 @@ struct _PanelServicePrivate
   guint32  last_menu_move_id;
   gint32   last_x;
   gint32   last_y;
+  gint     last_left;
+  gint     last_top;
+  gint     last_right;
+  gint     last_bottom;
   guint32  last_menu_button;
 
   gint     last_menu_x;
@@ -89,12 +93,12 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 static gchar * indicator_order[] = {
   "libappmenu.so",
   "libapplication.so",
-  "libsoundmenu.so",
+  "libmessaging.so",
+  "libpower.so",
   "libnetwork.so",
   "libnetworkmenu.so",
-  "libmessaging.so",
+  "libsoundmenu.so",
   "libdatetime.so",
-  "libme.so",
   "libsession.so",
   NULL
 };
@@ -213,6 +217,7 @@ panel_service_class_init (PanelServiceClass *klass)
 static GdkFilterReturn
 event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
+  PanelServicePrivate *priv = self->priv;
   XEvent *e = (XEvent *)ev;
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
@@ -231,94 +236,29 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       XIDeviceEvent *event = cookie->data;
             
-      if (event->evtype == XI_ButtonRelease &&
-          self->priv->last_menu_button != 0) //FocusChange
+      if (event && event->evtype == XI_ButtonRelease &&
+          priv->last_menu_button != 0) //FocusChange
         {
-          gint       x=0, y=0, width=0, height=0, x_root=0, y_root=0;
-          GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
-          if (window == NULL)
+          if (event->root_x < priv->last_left ||
+              event->root_x > priv->last_right ||
+              event->root_y < priv->last_top ||
+              event->root_y > priv->last_bottom)
           {
-            g_warning ("%s: gtk_widget_get_window  (self->priv->last_menu) == NULL", G_STRLOC);
-            return GDK_FILTER_CONTINUE;
-          }
-          
-          Window     xwindow = gdk_x11_window_get_xid (window);
-         
-          if (xwindow == 0)
-          {
-            g_warning ("%s: gdk_x11_window_get_xid (last_menu->window) == 0", G_STRLOC);
-            return GDK_FILTER_CONTINUE;
+            ret = GDK_FILTER_REMOVE;
           }
 
-          Window     root = 0, child = 0;
-          int        win_x=0, win_y = 0;
-          guint32    mask_return = 0;
-
-          XQueryPointer (gdk_x11_display_get_xdisplay (gdk_display_get_default ()),
-                         xwindow,
-                         &root,
-                         &child,
-                         &x_root,
-                         &y_root,
-                         &win_x,
-                         &win_y,
-                         &mask_return);
-
-          gdk_window_get_geometry (window, &x, &y, &width, &height);
-          gdk_window_get_origin (window, &x, &y);
-
-          if (x_root > x
-              && x_root < x + width
-              && y_root > y
-              && y_root < y + height)
-            {
-              ret = GDK_FILTER_CONTINUE;
-            }
-          else
-            {
-              ret = GDK_FILTER_REMOVE;
-            }
-
-          self->priv->last_menu_button = 0;
+          priv->last_menu_button = 0;
         }
-
-      // FIXME: THIS IS HORRIBLE AND WILL BE CHANGED BEFORE RELEASE
-      // ITS A WORKAROUND SO I CAN TEST THE PANEL SCRUBBING
-      // DONT HATE ME
-      // --------------------------------------------------------------------------
-      //FIXME-GTK3 - i'm not porting this, fix your code :P
-      
-      else if (event->evtype == XI_Motion)
+      else if (event && event->evtype == XI_Motion)
         {
-          int       x_root=0, y_root=0;
-          GdkWindow *window = gtk_widget_get_window (GTK_WIDGET (self->priv->last_menu));
-          Window     xwindow = gdk_x11_window_get_xid (window);
-          Window     root = 0, child = 0;
-          int        win_x=0, win_y = 0;
-          guint32    mask_return = 0;
+          priv->last_menu_x = event->root_x;
+          priv->last_menu_y = event->root_y;
 
-          XQueryPointer (gdk_x11_display_get_xdisplay (gdk_display_get_default ()),
-                         xwindow,
-                         &root,
-                         &child,
-                         &x_root,
-                         &y_root,
-                         &win_x,
-                         &win_y,
-                         &mask_return);
-
-          self->priv->last_menu_x = x_root;
-          self->priv->last_menu_y = y_root;
-
-          if (y_root <= self->priv->last_y)
+          if (priv->last_menu_y <= priv->last_y)
             {
               g_signal_emit (self, _service_signals[ACTIVE_MENU_POINTER_MOTION], 0);
             }
         }
-      // -> I HATE YOU
-      // /DONT HATE ME
-      // /FIXME
-      // --------------------------------------------------------------------------
     }
 
   return ret;
@@ -885,6 +825,10 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_menu_id = 0;
   priv->last_menu_move_id = 0;
   priv->last_entry = NULL;
+  priv->last_left = 0;
+  priv->last_right = 0;
+  priv->last_top = 0;
+  priv->last_bottom = 0;
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "");
 }
@@ -1182,6 +1126,26 @@ panel_service_show_entry (PanelService *self,
 
       indicator_object_entry_activate (object, entry, CurrentTime);
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
+      GdkWindow *gdkwin = gtk_widget_get_window (GTK_WIDGET (priv->last_menu));
+      if (gdkwin != NULL)
+      {
+        gint left=0, top=0, width=0, height=0;
+
+        gdk_window_get_geometry (gdkwin, NULL, NULL, &width, &height);
+        gdk_window_get_origin (gdkwin, &left, &top);
+
+        priv->last_left = left;
+        priv->last_right = left + width -1;
+        priv->last_top = top;
+        priv->last_bottom = top + height -1;
+      }
+      else
+      {
+        priv->last_left = 0;
+        priv->last_right = 0;
+        priv->last_top = 0;
+        priv->last_bottom = 0;
+      }
 
       g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, entry_id);
     }
@@ -1195,6 +1159,19 @@ panel_service_show_entry (PanelService *self,
 }
 
 void
+panel_service_secondary_activate_entry (PanelService *self,
+                                        const gchar  *entry_id,
+                                        guint32       timestamp)
+{
+  PanelServicePrivate  *priv = self->priv;
+  IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
+  IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
+
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
+                        timestamp);
+}
+
+void
 panel_service_scroll_entry (PanelService   *self,
                             const gchar    *entry_id,
                             gint32         delta)
@@ -1202,10 +1179,10 @@ panel_service_scroll_entry (PanelService   *self,
   PanelServicePrivate  *priv = self->priv;
   IndicatorObjectEntry *entry = g_hash_table_lookup (priv->id2entry_hash, entry_id);
   IndicatorObject *object = g_hash_table_lookup (priv->entry2indicator_hash, entry);
-  GdkScrollDirection direction = delta > 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
+  GdkScrollDirection direction = delta < 0 ? GDK_SCROLL_DOWN : GDK_SCROLL_UP;
 
-  g_signal_emit_by_name(object, "scroll", abs(delta/120), direction);
-  g_signal_emit_by_name(object, "scroll-entry", entry, abs(delta/120), direction);
+  g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_ENTRY_SCROLLED, entry,
+                        abs(delta/120), direction);
 }
 
 void

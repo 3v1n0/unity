@@ -12,14 +12,18 @@ find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS}")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
+set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
+
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
-     "-DTESTDATADIR=${TESTDATADIR}"
+     "-g"
+     "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
+     "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 add_definitions (${CFLAGS})
 
@@ -27,7 +31,7 @@ set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION}")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${LIB_PATHS} ${CMAKE_BINARY_DIR}/UnityCore)
+link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
@@ -110,6 +114,8 @@ add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
 set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
                           ${UNITY_SRC}/ubus-server.h
+                          ${UNITY_SRC}/BGHash.cpp
+                          ${UNITY_SRC}/BGHash.h
                           ${UNITY_SRC}/IconLoader.cpp
                           ${UNITY_SRC}/IconLoader.h
                           ${UNITY_SRC}/IconTexture.cpp
@@ -178,6 +184,23 @@ add_executable (test-places-tiles
                 )
 add_dependencies (test-places-tiles unity-core-${UNITY_API_VERSION})
 
+add_executable (test-switcher
+                TestSwitcher.cpp
+                ${UNITY_SRC}/AbstractLauncherIcon.h
+                ${UNITY_SRC}/AbstractIconRenderer.h
+                ${UNITY_SRC}/SwitcherController.cpp
+                ${UNITY_SRC}/SwitcherController.h
+                ${UNITY_SRC}/SwitcherModel.cpp
+                ${UNITY_SRC}/SwitcherModel.h
+                ${UNITY_SRC}/SwitcherView.cpp
+                ${UNITY_SRC}/SwitcherView.h
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/MockLauncherIcon.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                )
+add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-group
                 TestPlacesGroup.cpp
@@ -267,21 +290,45 @@ add_executable (test-places-backend
                 )
 add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
+add_executable (test-bg-hash
+                TestBGHash.cpp
+                ${UNITY_SRC}/BGHash.cpp
+                ${UNITY_SRC}/BGHash.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+               )
+add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
 #
 # GTest tests
 #
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
+  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS test_glib_signals_utils_marshal.list
+  COMMENT "Generating marshallers")
 
 enable_testing()
 find_package(GTest)
-
 if (${GTEST_FOUND} STREQUAL TRUE)
-
   include_directories(${GTEST_INCLUDE_DIRS})
   add_executable(test-gtest
-                 test_timer.cpp
+                 test_filesystem_lenses.cpp
+                 test_glib_signals.cpp
+                 test_glib_signals_utils.cpp
+                 test_glib_signals_utils.h
+                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_indicator_entry.cpp
+                 test_main.cpp
+                 test_timer.cpp
                  ${UNITY_SRC}/Timer.h
                  ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/SwitcherModel.cpp
+                 ${UNITY_SRC}/SwitcherModel.h
+                 ${UNITY_SRC}/MockLauncherIcon.h
                  )
   target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
   add_test(UnityGTests test-gtest)
