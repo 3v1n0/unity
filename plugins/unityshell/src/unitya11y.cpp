@@ -186,13 +186,11 @@ unity_a11y_preset_environment(void)
 void
 unity_a11y_init(nux::WindowThread* wt)
 {
-  gchar *bridge_path = NULL;
+  gchar* bridge_path = NULL;
 
-  g_debug ("Unity accessibility initialization");
+  unity_a11y_restore_environment();
 
-  unity_a11y_restore_environment ();
-
-  if (!should_enable_a11y ())
+  if (!should_enable_a11y())
     return;
 
   load_unity_atk_util(wt);

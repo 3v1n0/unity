@@ -60,14 +60,14 @@ static void nux_base_window_accessible_class_init(NuxBaseWindowAccessibleClass* 
 static void nux_base_window_accessible_init(NuxBaseWindowAccessible* base_window_accessible);
 
 /* AtkObject.h */
-static void       nux_base_window_accessible_initialize      (AtkObject *accessible,
-                                                              gpointer   data);
-static AtkObject *nux_base_window_accessible_get_parent      (AtkObject *obj);
-static AtkStateSet *nux_base_window_accessible_ref_state_set (AtkObject *obj);
+static void       nux_base_window_accessible_initialize(AtkObject* accessible,
+                                                        gpointer   data);
+static AtkObject* nux_base_window_accessible_get_parent(AtkObject* obj);
+static AtkStateSet* nux_base_window_accessible_ref_state_set(AtkObject* obj);
 
 /* private */
-static void         on_change_keyboard_receiver_cb            (AtkObject *accessible,
-                                                               gboolean focus_in);
+static void         on_change_keyboard_receiver_cb(AtkObject* accessible,
+                                                   gboolean focus_in);
 
 G_DEFINE_TYPE(NuxBaseWindowAccessible, nux_base_window_accessible,  NUX_TYPE_VIEW_ACCESSIBLE)
 
@@ -166,21 +166,21 @@ static void
 nux_base_window_accessible_initialize(AtkObject* accessible,
                                       gpointer data)
 {
-  nux::Object *nux_object = NULL;
-  nux::BaseWindow *bwindow = NULL;
+  nux::Object* nux_object = NULL;
+  nux::BaseWindow* bwindow = NULL;
 
-  ATK_OBJECT_CLASS (nux_base_window_accessible_parent_class)->initialize (accessible, data);
+  ATK_OBJECT_CLASS(nux_base_window_accessible_parent_class)->initialize(accessible, data);
 
   accessible->role = ATK_ROLE_WINDOW;
 
-  nux_object = nux_object_accessible_get_object (NUX_OBJECT_ACCESSIBLE (accessible));
-  bwindow = dynamic_cast<nux::BaseWindow *>(nux_object);
+  nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
+  bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
 
   /* This gives us if the window has the underlying key input */
-  bwindow->OnStartKeyboardReceiver.connect (sigc::bind (sigc::ptr_fun (on_change_keyboard_receiver_cb),
-                                                        accessible, TRUE));
-  bwindow->OnStopKeyboardReceiver.connect (sigc::bind (sigc::ptr_fun (on_change_keyboard_receiver_cb),
-                                                       accessible, FALSE));
+  bwindow->OnStartKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+                                                      accessible, TRUE));
+  bwindow->OnStopKeyboardReceiver.connect(sigc::bind(sigc::ptr_fun(on_change_keyboard_receiver_cb),
+                                                     accessible, FALSE));
 }
 
 static AtkObject*
@@ -221,7 +221,7 @@ nux_base_window_accessible_ref_state_set(AtkObject* obj)
 
 /* private */
 static void
-check_active (NuxBaseWindowAccessible *self)
+check_active(NuxBaseWindowAccessible* self)
 {
   gint signal_id;
   gboolean is_active;
@@ -229,48 +229,48 @@ check_active (NuxBaseWindowAccessible *self)
   is_active = (self->priv->key_focused || self->priv->child_key_focused);
 
   if (self->priv->active != is_active)
-    {
-      self->priv->active = is_active;
+  {
+    self->priv->active = is_active;
 
-      if (is_active)
-        signal_id = ACTIVATE;
-      else
-        signal_id = DEACTIVATE;
+    if (is_active)
+      signal_id = ACTIVATE;
+    else
+      signal_id = DEACTIVATE;
 
-      atk_object_notify_state_change (ATK_OBJECT (self),
-                                      ATK_STATE_ACTIVE, is_active);
-      g_signal_emit (self, signals [signal_id], 0);
-    }
+    atk_object_notify_state_change(ATK_OBJECT(self),
+                                   ATK_STATE_ACTIVE, is_active);
+    g_signal_emit(self, signals [signal_id], 0);
+  }
 }
 
 static void
-on_change_keyboard_receiver_cb (AtkObject *object,
-                                gboolean focus_in)
+on_change_keyboard_receiver_cb(AtkObject* object,
+                               gboolean focus_in)
 {
-  NuxBaseWindowAccessible *self = NULL;
+  NuxBaseWindowAccessible* self = NULL;
 
   /* On the base window, we suppose that the window is active if it
      has the key focus (see nux::InputArea) */
-  self = NUX_BASE_WINDOW_ACCESSIBLE (object);
+  self = NUX_BASE_WINDOW_ACCESSIBLE(object);
 
   if (self->priv->key_focused != focus_in)
-    {
-      self->priv->key_focused = focus_in;
+  {
+    self->priv->key_focused = focus_in;
 
-      check_active (self);
-    }
+    check_active(self);
+  }
 }
 
 /* public */
 void
-nux_base_window_set_child_key_focused (NuxBaseWindowAccessible *self,
-                                       gboolean value)
+nux_base_window_set_child_key_focused(NuxBaseWindowAccessible* self,
+                                      gboolean value)
 {
-  g_return_if_fail (NUX_IS_BASE_WINDOW_ACCESSIBLE (self));
+  g_return_if_fail(NUX_IS_BASE_WINDOW_ACCESSIBLE(self));
 
   if (self->priv->child_key_focused != value)
-    {
-      self->priv->child_key_focused = value;
-      check_active (self);
-    }
+  {
+    self->priv->child_key_focused = value;
+    check_active(self);
+  }
 }

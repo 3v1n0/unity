@@ -55,8 +55,8 @@ struct _NuxBaseWindowAccessibleClass
 GType      nux_base_window_accessible_get_type(void);
 AtkObject* nux_base_window_accessible_new(nux::Object* object);
 
-void       nux_base_window_set_child_key_focused (NuxBaseWindowAccessible *self,
-                                                  gboolean value);
+void       nux_base_window_set_child_key_focused(NuxBaseWindowAccessible* self,
+                                                 gboolean value);
 
 G_END_DECLS
 

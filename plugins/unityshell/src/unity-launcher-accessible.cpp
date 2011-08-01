@@ -233,8 +233,8 @@ unity_launcher_accessible_ref_child(AtkObject* obj,
 static AtkStateSet*
 unity_launcher_accessible_ref_state_set(AtkObject* obj)
 {
-  AtkStateSet *state_set = NULL;
-  nux::Object *nux_object = NULL;
+  AtkStateSet* state_set = NULL;
+  nux::Object* nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(obj), NULL);
 
