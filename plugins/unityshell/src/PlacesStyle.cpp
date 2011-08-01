@@ -88,8 +88,7 @@ PlacesStyle::~PlacesStyle()
     _style = NULL;
 }
 
-PlacesStyle*
-PlacesStyle::GetDefault()
+PlacesStyle* PlacesStyle::GetDefault()
 {
   if (G_UNLIKELY(!_style))
     _style = new PlacesStyle();
@@ -97,14 +96,12 @@ PlacesStyle::GetDefault()
   return _style;
 }
 
-int
-PlacesStyle::GetDefaultNColumns()
+int PlacesStyle::GetDefaultNColumns()
 {
   return _n_cols;
 }
 
-void
-PlacesStyle::SetDefaultNColumns(int n_cols)
+void PlacesStyle::SetDefaultNColumns(int n_cols)
 {
   if (_n_cols == n_cols)
     return;
@@ -114,125 +111,108 @@ PlacesStyle::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int
-PlacesStyle::GetTileIconSize()
+int PlacesStyle::GetTileIconSize()
 {
   return 48;
 }
 
-int
-PlacesStyle::GetTileWidth()
+int PlacesStyle::GetTileWidth()
 {
   return _text_width;
 }
 
-int
-PlacesStyle::GetTileHeight()
+int PlacesStyle::GetTileHeight()
 {
   return GetTileIconSize() + (_text_height * 4);
 }
 
-int
-PlacesStyle::GetHomeTileIconSize()
+int PlacesStyle::GetHomeTileIconSize()
 {
   return 104;
 }
 
-int
-PlacesStyle::GetHomeTileWidth()
+int PlacesStyle::GetHomeTileWidth()
 {
   return _text_width * 1.2;
 }
 
-int
-PlacesStyle::GetHomeTileHeight()
+int PlacesStyle::GetHomeTileHeight()
 {
   return GetHomeTileIconSize() + (_text_height * 4);
 }
 
 
-nux::BaseTexture*
-PlacesStyle::GetDashBottomTile()
+nux::BaseTexture* PlacesStyle::GetDashBottomTile()
 {
   if (!_dash_bottom_texture)
     _dash_bottom_texture = TextureFromFilename(PKGDATADIR"/dash_bottom_border_tile.png");
   return _dash_bottom_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetDashRightTile()
+nux::BaseTexture* PlacesStyle::GetDashRightTile()
 {
   if (!_dash_right_texture)
     _dash_right_texture =  TextureFromFilename(PKGDATADIR"/dash_right_border_tile.png");
   return _dash_right_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetDashCorner()
+nux::BaseTexture* PlacesStyle::GetDashCorner()
 {
   if (!_dash_corner_texture)
     _dash_corner_texture =  TextureFromFilename(PKGDATADIR"/dash_bottom_right_corner.png");
   return _dash_corner_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetDashFullscreenIcon()
+nux::BaseTexture* PlacesStyle::GetDashFullscreenIcon()
 {
   if (!_dash_fullscreen_icon)
     _dash_fullscreen_icon = TextureFromFilename(PKGDATADIR"/dash_fullscreen_icon.png");
   return _dash_fullscreen_icon;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetSearchMagnifyIcon()
+nux::BaseTexture* PlacesStyle::GetSearchMagnifyIcon()
 {
   if (!_search_magnify_texture)
     _search_magnify_texture = TextureFromFilename(PKGDATADIR"/search_magnify.png");
   return _search_magnify_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetSearchCloseIcon()
+nux::BaseTexture* PlacesStyle::GetSearchCloseIcon()
 {
   if (!_search_close_texture)
     _search_close_texture = TextureFromFilename(PKGDATADIR"/search_close.png");
   return _search_close_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetSearchCloseGlowIcon()
+nux::BaseTexture* PlacesStyle::GetSearchCloseGlowIcon()
 {
   if (!_search_close_glow_texture)
     _search_close_glow_texture = TextureFromFilename(PKGDATADIR"/search_close_glow.png");
   return _search_close_glow_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetSearchSpinIcon()
+nux::BaseTexture* PlacesStyle::GetSearchSpinIcon()
 {
   if (!_search_spin_texture)
     _search_spin_texture = TextureFromFilename(PKGDATADIR"/search_spin.png");
   return _search_spin_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetSearchSpinGlowIcon()
+nux::BaseTexture* PlacesStyle::GetSearchSpinGlowIcon()
 {
   if (!_search_spin_glow_texture)
     _search_spin_glow_texture = TextureFromFilename(PKGDATADIR"/search_spin_glow.png");
   return _search_spin_glow_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetGroupUnexpandIcon()
+nux::BaseTexture* PlacesStyle::GetGroupUnexpandIcon()
 {
   if (!_group_unexpand_texture)
     _group_unexpand_texture = TextureFromFilename(PKGDATADIR"/dash_group_unexpand.png");
   return _group_unexpand_texture;
 }
 
-nux::BaseTexture*
-PlacesStyle::GetGroupExpandIcon()
+nux::BaseTexture* PlacesStyle::GetGroupExpandIcon()
 {
   if (!_group_expand_texture)
     _group_expand_texture = TextureFromFilename(PKGDATADIR"/dash_group_expand.png");
@@ -259,8 +239,7 @@ nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
   return texture;
 }
 
-void
-PlacesStyle::Refresh()
+void PlacesStyle::Refresh()
 {
 #define _TEXT_ "Chromium Web Browser"
   PangoLayout*          layout = NULL;
@@ -302,14 +281,12 @@ PlacesStyle::Refresh()
   cairo_destroy(cr);
 }
 
-nux::Color&
-PlacesStyle::GetTextColor()
+nux::Color& PlacesStyle::GetTextColor()
 {
   return _text_color;
 }
 
-void
-PlacesStyle::OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self)
+void PlacesStyle::OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self)
 {
   self->Refresh();
 }
