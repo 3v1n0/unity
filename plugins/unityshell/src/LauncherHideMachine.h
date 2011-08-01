@@ -58,6 +58,7 @@ public:
     EXPO_ACTIVE            = 1 << 17,
     MT_DRAG_OUT            = 1 << 18,
     MOUSE_OVER_ACTIVE_EDGE = 1 << 19,
+    LAUNCHER_PULSE         = 1 << 20
   } HideQuirk;
 
   LauncherHideMachine();

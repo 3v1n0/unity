@@ -113,6 +113,8 @@ public:
 
   void SetIconSize(int tile_size, int icon_size);
   void SetBackgroundAlpha(float background_alpha);
+  
+  LauncherHideMachine* HideMachine() { return _hide_machine; }
 
   bool Hidden()
   {
@@ -293,6 +295,7 @@ private:
   float IconUrgentProgress(LauncherIcon* icon, struct timespec const& current);
   float IconShimmerProgress(LauncherIcon* icon, struct timespec const& current);
   float IconUrgentPulseValue(LauncherIcon* icon, struct timespec const& current);
+  float IconPulseOnceValue(LauncherIcon *icon, struct timespec const &current);
   float IconUrgentWiggleValue(LauncherIcon* icon, struct timespec const& current);
   float IconStartingBlinkValue(LauncherIcon* icon, struct timespec const& current);
   float IconStartingPulseValue(LauncherIcon* icon, struct timespec const& current);
