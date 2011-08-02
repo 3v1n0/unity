@@ -28,6 +28,8 @@
 #include <UnityCore/GLibWrapper.h>
 #include "PlacesStyle.h"
 
+using namespace unity;
+
 namespace
 {
 nux::logging::Logger logger("unity.places");
