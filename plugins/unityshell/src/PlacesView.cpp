@@ -484,7 +484,7 @@ PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
 
     nux::ROPConfig rop;
-    rop.Blend = true;
+    rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -629,7 +629,7 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
 
     nux::ROPConfig rop;
-    rop.Blend = true;
+    rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -655,6 +655,8 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(false);
 
   GfxContext.PopClippingRectangle();
+
+  _bg_blur_texture.Release();
 }
 
 //

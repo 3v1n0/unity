@@ -409,6 +409,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
+  placesController->GetWindow()->QueueDraw();
+
   cScreen->preparePaint(ms);
 
   if (damaged)
