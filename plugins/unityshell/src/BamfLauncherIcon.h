@@ -66,7 +66,7 @@ protected:
   void OnDndEnter();
   void OnDndLeave();
 
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(ActionArg arg);
 
   std::list<char*> ValidateUrisForLaunch(std::list<char*> uris);
 

@@ -89,7 +89,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
 
     SetQuirk(QUIRK_STARTING, true);
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(ActionArg ());
   }
   else // app is running
   {
@@ -376,7 +376,7 @@ void BamfLauncherIcon::OpenInstanceWithUris(std::list<char*> uris)
   UpdateQuirkTime(QUIRK_STARTING);
 }
 
-void BamfLauncherIcon::OpenInstanceLauncherIcon()
+void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::list<char*> empty;
   OpenInstanceWithUris(empty);
