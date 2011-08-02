@@ -43,6 +43,8 @@
 #include <gdk/gdk.h>
 #include <libnotify/notify.h>
 
+#include <sstream>
+
 #include <core/atoms.h>
 
 #include "unitya11y.h"
@@ -227,9 +229,11 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::EnsureKeybindings ()
 {
-  std::list<CompAction*>::iterator ait;
+  ShortcutActions::iterator ait;
   for (ait = _shortcut_actions.begin(); ait != _shortcut_actions.end(); ait++)
-    screen->removeAction (*ait);
+  {
+    screen->removeAction (ait->get ());
+  }
 
   _shortcut_actions.clear ();
 
@@ -240,16 +244,16 @@ void UnityScreen::EnsureKeybindings ()
     if (shortcut == 0)
       continue;
     
-    CompAction *action = new CompAction();
+    CompActionPtr action (new CompAction());
     
     CompAction::KeyBinding binding;
-    gchar *format = g_strdup_printf ("<Super>%c", shortcut);
-    binding.fromString (format);
-    g_free (format);
+    std::ostringstream sout;
+    sout << "<Super>" << static_cast<char>((*it)->GetShortcut());
+    binding.fromString(sout.str());
     
     action->setKey (binding);
 
-    screen->addAction (action);
+    screen->addAction (action.get ());
     _shortcut_actions.push_back (action);
   }
 }

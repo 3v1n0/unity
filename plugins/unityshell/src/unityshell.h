@@ -203,7 +203,10 @@ private:
   guint                   _edge_trigger_handle;
   gint                    _edge_pointerY;
   guint                   _ubus_handles[3];
-  std::list<CompAction*>  _shortcut_actions;
+
+  typedef std::shared_ptr<CompAction> CompActionPtr;
+  typedef std::vector<CompActionPtr> ShortcutActions;
+  ShortcutActions _shortcut_actions;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
