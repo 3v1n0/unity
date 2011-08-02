@@ -21,6 +21,7 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MusicPreviews.h
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
@@ -47,6 +48,7 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MusicPreviews.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
      RatingsFilter.cpp

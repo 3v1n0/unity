@@ -4,6 +4,7 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/MusicPreviews.h>
 
 #include "test_utils.h"
 
@@ -226,6 +227,21 @@ TEST_F(TestLens, TestPreview)
                                   Preview::Ptr preview)
   {
     EXPECT_EQ(uri, uri_);
+    EXPECT_EQ(preview->renderer_name, "preview-track");
+
+    TrackPreview::Ptr track_preview = std::static_pointer_cast<TrackPreview>(preview);
+    EXPECT_EQ(track_preview->number, (unsigned int)1);
+    EXPECT_EQ(track_preview->title, "Animus Vox");
+    EXPECT_EQ(track_preview->artist, "The Glitch Mob");
+    EXPECT_EQ(track_preview->album, "Drink The Sea");
+    EXPECT_EQ(track_preview->length, (unsigned int)404);
+    EXPECT_EQ(track_preview->album_cover, "file://music/the/track");
+    EXPECT_EQ(track_preview->primary_action_name, "Play");
+    EXPECT_EQ(track_preview->primary_action_icon_hint, "");
+    EXPECT_EQ(track_preview->primary_action_uri, "play://music/the/track");
+    EXPECT_EQ(track_preview->play_action_uri, "preview://music/the/track");
+    EXPECT_EQ(track_preview->pause_action_uri, "pause://music/the/track");
+
     previewed = true;
   };
   lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));

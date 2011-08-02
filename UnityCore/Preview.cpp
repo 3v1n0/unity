@@ -19,22 +19,41 @@
 
 #include "Preview.h"
 
+#include "MusicPreviews.h"
+
 namespace unity
 {
 namespace dash
 {
 
 Preview::Ptr Preview::PreviewForProperties(std::string const& renderer_name,
-                                            Properties& properties)
+                                           Properties& properties)
 {
-  Preview::Ptr preview(new NoPreview);
-  preview->renderer_name = renderer_name;
-
-  return preview;
+  if (renderer_name == "preview-track")
+  {
+    return Preview::Ptr(new TrackPreview(properties));
+  }
+  
+  return Preview::Ptr(new NoPreview());
 }
 
 Preview::~Preview()
 {}
+
+unsigned int Preview::PropertyToUnsignedInt (Properties& properties, const char* key)
+{
+  return g_variant_get_uint32(properties[key]);
+}
+
+std::string Preview::PropertyToString(Properties& properties, const char *key)
+{
+  return g_variant_get_string(properties[key], NULL);
+}
+
+NoPreview::NoPreview()
+{
+  renderer_name = "preview-none";
+}
 
 }
 }

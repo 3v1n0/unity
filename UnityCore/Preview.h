@@ -44,12 +44,16 @@ public:
   static Preview::Ptr PreviewForProperties(std::string const& renderer_name, Properties& properties);
 
   nux::Property<std::string> renderer_name;
+
+protected:
+  unsigned int PropertyToUnsignedInt (Properties& properties, const char* key);
+  std::string PropertyToString(Properties& properties, const char *key);
 };
 
 class NoPreview : public Preview
 {
 public:
-  NoPreview() {};
+  NoPreview();
 };
 
 }
