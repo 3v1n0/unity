@@ -31,6 +31,7 @@
 #include "Nux/TableCtrl.h"
 #include "PlacesView.h"
 #include "UBusMessages.h"
+#include "BGHash.h"
 
 #include "PlaceFactoryFile.h"
 #include "Place.h"
@@ -150,6 +151,8 @@ int main(int argc, char** argv)
   g_type_init();
   g_thread_init(NULL);
   gtk_init(&argc, &argv);
+
+  unity::BGHash bg_hash;
 
   nux::NuxInitialize(0);
 

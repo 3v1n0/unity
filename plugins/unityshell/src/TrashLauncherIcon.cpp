@@ -293,4 +293,6 @@ TrashLauncherIcon::OnAcceptDrop(std::list<char*> uris)
     g_file_trash(file, NULL, NULL);
     g_object_unref(file);
   }
+  
+  SetQuirk(LauncherIcon::QUIRK_PULSE_ONCE, true);
 }

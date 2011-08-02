@@ -1,0 +1,9 @@
+[Lens]
+DBusName=com.canonical.tests.Lens.Applications
+DBusPath=/com/canonical/tests/lens/applications
+Name=Applications
+Icon=/usr/share/unity-lens-applications/applications.png
+Description=Search for applications
+SearchHint=Search Applications
+Visible=true
+Shortcut=a
