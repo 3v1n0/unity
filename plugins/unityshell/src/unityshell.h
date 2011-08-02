@@ -162,6 +162,8 @@ protected:
 private:
   void SendExecuteCommand();
 
+  void EnsureKeybindings ();
+
   static gboolean initPluginActions(gpointer data);
   static void initLauncher(nux::NThread* thread, void* InitData);
   void damageNuxRegions();
@@ -195,12 +197,16 @@ private:
   nux::BaseWindow*        panelWindow;
   nux::Geometry           lastTooltipArea;
   DebugDBusInterface*     debugger;
-  bool                   needsRelayout;
-  guint32                relayoutSourceId;
-  guint                  _edge_timeout;
-  guint                  _edge_trigger_handle;
-  gint                   _edge_pointerY;
-  guint                  _ubus_handles[3];
+  bool                    needsRelayout;
+  guint32                 relayoutSourceId;
+  guint                   _edge_timeout;
+  guint                   _edge_trigger_handle;
+  gint                    _edge_pointerY;
+  guint                   _ubus_handles[3];
+
+  typedef std::shared_ptr<CompAction> CompActionPtr;
+  typedef std::vector<CompActionPtr> ShortcutActions;
+  ShortcutActions _shortcut_actions;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

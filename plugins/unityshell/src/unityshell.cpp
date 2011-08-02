@@ -43,6 +43,8 @@
 #include <gdk/gdk.h>
 #include <libnotify/notify.h>
 
+#include <sstream>
+
 #include <core/atoms.h>
 
 #include "unitya11y.h"
@@ -195,6 +197,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
+  EnsureKeybindings ();
+
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
 
@@ -221,6 +225,34 @@ UnityScreen::~UnityScreen()
     g_source_remove(relayoutSourceId);
 
   delete wt;
+}
+
+void UnityScreen::EnsureKeybindings ()
+{
+  for (auto action : _shortcut_actions)
+    screen->removeAction (action.get ());
+
+  _shortcut_actions.clear ();
+
+  LauncherModel::iterator it;
+  for (auto icon : *(launcher->GetModel ()))
+  {
+    char shortcut = icon->GetShortcut ();
+    if (shortcut == 0)
+      continue;
+    
+    CompActionPtr action (new CompAction());
+    
+    CompAction::KeyBinding binding;
+    std::ostringstream sout;
+    sout << "<Super>" << static_cast<char>(shortcut);
+    binding.fromString(sout.str());
+    
+    action->setKey (binding);
+
+    screen->addAction (action.get ());
+    _shortcut_actions.push_back (action);
+  }
 }
 
 void UnityScreen::nuxPrologue()
@@ -494,6 +526,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   launcher->StartKeyShowLauncher();
+  EnsureKeybindings ();
   return false;
 }
 
