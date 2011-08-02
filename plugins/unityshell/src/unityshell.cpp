@@ -195,6 +195,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
+  EnsureKeybindings ();
+
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
 
@@ -221,6 +223,35 @@ UnityScreen::~UnityScreen()
     g_source_remove(relayoutSourceId);
 
   delete wt;
+}
+
+void UnityScreen::EnsureKeybindings ()
+{
+  std::list<CompAction*>::iterator ait;
+  for (ait = _shortcut_actions.begin(); ait != _shortcut_actions.end(); ait++)
+    screen->removeAction (*ait);
+
+  _shortcut_actions.clear ();
+
+  LauncherModel::iterator it;
+  for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
+  {
+    char shortcut = (char) (*it)->GetShortcut ();
+    if (shortcut == 0)
+      continue;
+    
+    CompAction *action = new CompAction();
+    
+    CompAction::KeyBinding binding;
+    gchar *format = g_strdup_printf ("<Super>%c", shortcut);
+    binding.fromString (format);
+    g_free (format);
+    
+    action->setKey (binding);
+
+    screen->addAction (action);
+    _shortcut_actions.push_back (action);
+  }
 }
 
 void UnityScreen::nuxPrologue()
@@ -494,6 +525,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   launcher->StartKeyShowLauncher();
+  EnsureKeybindings ();
   return false;
 }
 
