@@ -12,6 +12,7 @@ set (CORE_HEADERS
      FilesystemLenses.h
      Filter.h
      Filters.h
+     GenericPreview.h
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
@@ -43,6 +44,7 @@ set (CORE_SOURCES
      FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp
+     GenericPreview.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp

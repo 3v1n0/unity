@@ -20,6 +20,7 @@
 #include "Preview.h"
 
 #include "ApplicationPreview.h"
+#include "GenericPreview.h"
 #include "MusicPreviews.h"
 
 namespace unity
@@ -34,12 +35,22 @@ Preview::Ptr Preview::PreviewForProperties(std::string const& renderer_name_,
   {
     return Preview::Ptr(new ApplicationPreview(properties));
   }
+  else if (renderer_name_ == "preview-generic")
+  {
+    return Preview::Ptr(new GenericPreview(properties));
+  }
   else if (renderer_name_ == "preview-track")
   {
     return Preview::Ptr(new TrackPreview(properties));
   }
-  
-  return Preview::Ptr(new NoPreview());
+  else if (renderer_name_ == "preview-album")
+  {
+    return Preview::Ptr(new AlbumPreview(properties));
+  }
+  else
+  {
+    return Preview::Ptr(new NoPreview());
+  }
 }
 
 Preview::~Preview()
