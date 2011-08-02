@@ -19,6 +19,7 @@
 
 #include "Preview.h"
 
+#include "ApplicationPreview.h"
 #include "MusicPreviews.h"
 
 namespace unity
@@ -26,10 +27,14 @@ namespace unity
 namespace dash
 {
 
-Preview::Ptr Preview::PreviewForProperties(std::string const& renderer_name,
+Preview::Ptr Preview::PreviewForProperties(std::string const& renderer_name_,
                                            Properties& properties)
 {
-  if (renderer_name == "preview-track")
+  if (renderer_name_ == "preview-application")
+  {
+    return Preview::Ptr(new ApplicationPreview(properties));
+  }
+  else if (renderer_name_ == "preview-track")
   {
     return Preview::Ptr(new TrackPreview(properties));
   }
@@ -66,6 +71,10 @@ std::vector<std::string> Preview::PropertyToStringVector(Properties& properties,
   return property;
 }
 
+float Preview::PropertyToFloat(Properties& properties, const char* key)
+{
+  return (float)g_variant_get_double(properties[key]);
+}
 
 NoPreview::NoPreview()
 {

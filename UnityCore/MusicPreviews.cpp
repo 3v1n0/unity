@@ -25,21 +25,59 @@ namespace dash
 {
 
 TrackPreview::TrackPreview(Preview::Properties& properties)
+  : number(PropertyToUnsignedInt(properties, "number"))
+  , title(PropertyToString(properties, "title"))
+  , artist(PropertyToString(properties, "artist"))
+  , album(PropertyToString(properties, "album"))
+  , length(PropertyToUnsignedInt(properties, "length"))
+  , genres(PropertyToStringVector(properties, "genres"))
+  , album_cover(PropertyToString(properties, "album-cover"))
+  , primary_action_name(PropertyToString(properties, "primary-action-name"))
+  , primary_action_icon_hint(PropertyToString(properties, "primary-action-icon-hint"))
+  , primary_action_uri(PropertyToString(properties, "primary-action-uri"))
+  , play_action_uri(PropertyToString(properties, "play-action-uri"))
+  , pause_action_uri(PropertyToString(properties, "pause-action-uri"))
 {
-  /* FIXME: We don't unpack genres yet */
-  renderer_name = "preview-track";
-  number = PropertyToUnsignedInt(properties, "number");
-  title = PropertyToString(properties, "title");
-  artist = PropertyToString(properties, "artist");
-  album = PropertyToString(properties, "album");
-  length = PropertyToUnsignedInt(properties, "length");
-  genres = PropertyToStringVector(properties, "genres");
-  album_cover = PropertyToString(properties, "album-cover");
-  primary_action_name = PropertyToString(properties, "primary-action-name");
-  primary_action_icon_hint = PropertyToString(properties, "primary-action-icon-hint");
-  primary_action_uri = PropertyToString(properties, "primary-action-uri");
-  play_action_uri = PropertyToString(properties, "play-action-uri");
-  pause_action_uri = PropertyToString(properties, "pause-action-uri");
+ renderer_name = "preview-track";
+}
+
+AlbumPreview::AlbumPreview(Preview::Properties& properties)
+  : name(PropertyToString(properties, "name"))
+  , artist(PropertyToString(properties, "artist"))
+  , year(PropertyToString(properties, "year"))
+  , genres(PropertyToStringVector(properties, "genres"))
+  , album_cover(PropertyToString(properties, "album-cover"))
+  , primary_action_name(PropertyToString(properties, "primary-action-name"))
+  , primary_action_icon_hint(PropertyToString(properties, "primary-action-icon-hint"))
+  , primary_action_uri(PropertyToString(properties, "primary-action-uri"))
+{
+  renderer_name = "preview-album";
+  LoadTracks(properties);
+}
+
+void AlbumPreview::LoadTracks(Properties& properties)
+{
+  GVariantIter *iter = NULL;
+  unsigned int track_number = 0;
+  char* track_title;
+  unsigned int track_length = 0;
+  char* track_play_uri;
+  char* track_pause_uri;
+ 
+  g_variant_get(properties["tracks"], "(ususs)", &iter);
+
+  while (g_variant_iter_loop(iter, "ususs",
+                             &track_number,
+                             &track_title,
+                             &track_length,
+                             &track_play_uri,
+                             &track_pause_uri))
+  {
+    Track track(track_number, track_title, track_length, track_play_uri, track_pause_uri);
+    tracks.push_back(track);
+    
+    length += track_length;
+  }
 }
 
 }

@@ -23,7 +23,6 @@
 #include <memory>
 
 #include <sigc++/trackable.h>
-#include <NuxCore/Property.h>
 
 #include "Preview.h"
 
@@ -40,22 +39,63 @@ public:
 
   TrackPreview(Preview::Properties& properties);
 
-
-  nux::Property<unsigned int> number;
-  nux::Property<std::string> title;
-  nux::Property<std::string> artist;
-  nux::Property<std::string> album;
-  nux::Property<unsigned int> length;
-  nux::Property<Genres> genres;
-  nux::Property<std::string> album_cover;
-  nux::Property<std::string> primary_action_name;
-  nux::Property<std::string> primary_action_icon_hint;
-  nux::Property<std::string> primary_action_uri;
-  nux::Property<std::string> play_action_uri;
-  nux::Property<std::string> pause_action_uri;
+  unsigned int number;
+  std::string title;
+  std::string artist;
+  std::string album;
+  unsigned int length;
+  Genres genres;
+  std::string album_cover;
+  std::string primary_action_name;
+  std::string primary_action_icon_hint;
+  std::string primary_action_uri;
+  std::string play_action_uri;
+  std::string pause_action_uri;
 };
 
+class AlbumPreview : public Preview
+{
+public:
+  typedef std::shared_ptr<AlbumPreview> Ptr;
+  typedef std::vector<std::string> Genres;
 
+  struct Track
+  {
+  public:
+
+    Track(unsigned int number_, std::string title_, unsigned int length_,
+          std::string play_action_uri_, std::string pause_action_uri_)
+      : number(number_)
+      , title(title_)
+      , length(length_)
+      , play_action_uri(play_action_uri_)
+      , pause_action_uri(pause_action_uri_)
+    {}
+
+    unsigned int number;
+    std::string title;
+    unsigned int length;
+    std::string play_action_uri;
+    std::string pause_action_uri;
+  };
+  
+  typedef std::vector<Track> Tracks;
+
+  AlbumPreview(Preview::Properties& properties);
+
+  void LoadTracks(Properties& properties);
+
+  std::string name;
+  std::string artist;
+  std::string year;
+  unsigned int length;
+  Genres genres;
+  Tracks tracks;
+  std::string album_cover;
+  std::string primary_action_name;
+  std::string primary_action_icon_hint;
+  std::string primary_action_uri;
+};
 }
 }
 

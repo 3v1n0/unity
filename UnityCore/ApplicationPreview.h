@@ -17,46 +17,40 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_PREVIEW_H
-#define UNITY_PREVIEW_H
+#ifndef UNITY_APPLICATION_PREVIEW_H
+#define UNITY_APPLICATION_PREVIEW_H
 
-#include <map>
 #include <memory>
-#include <string>
-#include <vector>
 
 #include <sigc++/trackable.h>
 
-#include <glib.h>
+#include "Preview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class Preview : public sigc::trackable
+class ApplicationPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<Preview> Ptr;
-  typedef std::map<std::string, GVariant*> Properties;
+  typedef std::shared_ptr<ApplicationPreview> Ptr;
+  
+  ApplicationPreview(Preview::Properties& properties);
 
-  virtual ~Preview();
-
-  static Preview::Ptr PreviewForProperties(std::string const& renderer_name, Properties& properties);
-
-  std::string renderer_name;
-
-protected:
-  unsigned int PropertyToUnsignedInt (Properties& properties, const char* key);
-  std::string PropertyToString(Properties& properties, const char *key);
-  std::vector<std::string> PropertyToStringVector(Properties& properties, const char *key);
-  float PropertyToFloat(Properties& properties, const char* key);
-};
-
-class NoPreview : public Preview
-{
-public:
-  NoPreview();
+  std::string name;
+  std::string version;
+  std::string size;
+  std::string license;
+  std::string last_updated;
+  float rating;
+  uint n_ratings;
+  std::string description;
+  std::string icon_hint;
+  std::string screenshot_icon_hint;
+  std::string primary_action_name;
+  std::string primary_action_icon_hint;
+  std::string primary_action_uri;
 };
 
 }

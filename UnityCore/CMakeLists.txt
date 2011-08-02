@@ -5,6 +5,7 @@ pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-co
 # Headers & Sources
 #
 set (CORE_HEADERS
+     ApplicationPreview.h
      Categories.h
      Category.h
      DBusIndicators.h
@@ -35,6 +36,7 @@ set (CORE_HEADERS
     )
 
 set (CORE_SOURCES
+     ApplicationPreview.cpp
      Categories.cpp
      Category.cpp
      DBusIndicators.cpp
