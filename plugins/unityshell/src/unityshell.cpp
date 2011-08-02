@@ -229,18 +229,15 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::EnsureKeybindings ()
 {
-  ShortcutActions::iterator ait;
-  for (ait = _shortcut_actions.begin(); ait != _shortcut_actions.end(); ait++)
-  {
-    screen->removeAction (ait->get ());
-  }
+  for (auto action : _shortcut_actions)
+    screen->removeAction (action.get ());
 
   _shortcut_actions.clear ();
 
   LauncherModel::iterator it;
-  for (it = launcher->GetModel()->begin(); it != launcher->GetModel()->end(); it++)
+  for (auto icon : *(launcher->GetModel ()))
   {
-    char shortcut = (char) (*it)->GetShortcut ();
+    char shortcut = icon->GetShortcut ();
     if (shortcut == 0)
       continue;
     
@@ -248,7 +245,7 @@ void UnityScreen::EnsureKeybindings ()
     
     CompAction::KeyBinding binding;
     std::ostringstream sout;
-    sout << "<Super>" << static_cast<char>((*it)->GetShortcut());
+    sout << "<Super>" << static_cast<char>(shortcut);
     binding.fromString(sout.str());
     
     action->setKey (binding);
