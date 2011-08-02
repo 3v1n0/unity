@@ -109,6 +109,9 @@ TEST_F(TestLens, TestSynchronization)
   EXPECT_EQ(lens_->search_hint, "Search Test Lens");
   EXPECT_TRUE(lens_->visible);
   EXPECT_TRUE(lens_->search_in_global);
+
+  const Lens::URISchemes schemes = lens_->uri_schemes;
+  EXPECT_EQ(schemes.size(), (unsigned int)1);
 }
 
 TEST_F(TestLens, TestCategories)

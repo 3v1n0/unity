@@ -53,6 +53,9 @@ service_lens_init(ServiceLens* self)
   /* Scope */
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
   unity_scope_set_search_in_global(priv->scope, TRUE);
+  char* schemes[] = { "file" };
+  unity_scope_set_uri_schemes(priv->scope, schemes, 1);
+
   g_signal_connect(priv->scope, "notify::active-search",
                    G_CALLBACK(on_search_changed), self);
   g_signal_connect(priv->scope, "notify::active-global-search",

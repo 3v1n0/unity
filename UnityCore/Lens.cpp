@@ -43,9 +43,6 @@ using std::string;
 class Lens::Impl
 {
 public:
-  typedef std::vector<string> URIPatterns;
-  typedef std::vector<string> MIMEPatterns;
-
   Impl(Lens* owner,
        string const& id,
        string const& dbus_name,
@@ -65,8 +62,7 @@ public:
   void OnSearchFinished(GVariant* parameters);
   void OnGlobalSearchFinished(GVariant* parameters);
   void OnChanged(GVariant* parameters);
-  URIPatterns URIPatternsFromIter(GVariantIter* iter);
-  MIMEPatterns MIMEPatternsFromIter(GVariantIter* iter);
+  void UpdateURISchemesFromIter(GVariantIter* iter);
   void UpdateProperties(bool search_in_global,
                         bool visible,
                         string const& search_hint,
@@ -74,9 +70,7 @@ public:
                         string const& results_model_name,
                         string const& global_results_model_name,
                         string const& categories_model_name,
-                        string const& filters_model_name,
-                        URIPatterns uri_patterns,
-                        MIMEPatterns mime_patterns);
+                        string const& filters_model_name);
   void OnActiveChanged(bool is_active);
 
   void GlobalSearch(std::string const& search_string);
@@ -98,6 +92,7 @@ public:
   Results::Ptr const& global_results() const;
   Categories::Ptr const& categories() const;
   bool connected() const;
+  URISchemes const& uri_schemes() const;
 
   Lens* owner_;
 
@@ -115,6 +110,7 @@ public:
   Results::Ptr global_results_;
   Categories::Ptr categories_;
   bool connected_;
+  URISchemes uri_schemes_;
 
   string private_connection_name_;
 
@@ -197,11 +193,10 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   glib::String global_results_model_name;
   glib::String categories_model_name;
   glib::String filters_model_name;
-  GVariantIter* uri_patterns_iter = NULL;
-  GVariantIter* mime_patterns_iter = NULL;
+  GVariantIter* uri_schemes_iter = NULL;
   GVariantIter* hints_iter = NULL;
 
-  g_variant_get(parameters, "((sbbssssssasasa{sv}))",
+  g_variant_get(parameters, "((sbbssssssasa{sv}))",
                 &dbus_path,
                 &search_in_global,
                 &visible,
@@ -211,8 +206,7 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                 &global_results_model_name,
                 &categories_model_name,
                 &filters_model_name,
-                &uri_patterns_iter,
-                &mime_patterns_iter,
+                &uri_schemes_iter,
                 &hints_iter);
 
   LOG_DEBUG(logger) << "Lens info changed for " << name_ << "\n"
@@ -226,9 +220,8 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                     << "  Filters: " << filters_model_name << "\n";
   if (dbus_path.Str() == dbus_path_)
   {
-    URIPatterns uri_patterns = URIPatternsFromIter(uri_patterns_iter);
-    MIMEPatterns mime_patterns = MIMEPatternsFromIter(mime_patterns_iter);
     /* FIXME: We ignore hints for now */
+    UpdateURISchemesFromIter(uri_schemes_iter);
     UpdateProperties(search_in_global,
                      visible,
                      search_hint.Str(),
@@ -236,9 +229,7 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                      results_model_name.Str(),
                      global_results_model_name.Str(),
                      categories_model_name.Str(),
-                     filters_model_name.Str(),
-                     uri_patterns,
-                     mime_patterns);
+                     filters_model_name.Str());
   }
   else
   {
@@ -248,21 +239,18 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   connected_ = true;
   owner_->connected.EmitChanged(connected_);
 
-  g_variant_iter_free(uri_patterns_iter);
-  g_variant_iter_free(mime_patterns_iter);
+  g_variant_iter_free(uri_schemes_iter);
   g_variant_iter_free(hints_iter);
 }
 
-Lens::Impl::URIPatterns Lens::Impl::URIPatternsFromIter(GVariantIter* iter)
+void Lens::Impl::UpdateURISchemesFromIter(GVariantIter* iter)
 {
-  URIPatterns pats;
-  return pats;
-}
+  char* scheme = NULL;
 
-Lens::Impl::MIMEPatterns Lens::Impl::MIMEPatternsFromIter(GVariantIter* iter)
-{
-  MIMEPatterns pats;
-  return pats;
+  uri_schemes_.clear();
+
+  while (g_variant_iter_loop(iter, "s", &scheme))
+    uri_schemes_.push_back(scheme);
 }
 
 void Lens::Impl::UpdateProperties(bool search_in_global,
@@ -272,9 +260,7 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
                                   string const& results_model_name,
                                   string const& global_results_model_name,
                                   string const& categories_model_name,
-                                  string const& filters_model_name,
-                                  URIPatterns uri_patterns,
-                                  MIMEPatterns mime_patterns)
+                                  string const& filters_model_name)
 {
   // Diff the properties received from those we have
   if (search_hint_ != search_hint)
@@ -434,6 +420,11 @@ bool Lens::Impl::connected() const
   return connected_;
 }
 
+Lens::URISchemes const& Lens::Impl::uri_schemes() const
+{
+  return uri_schemes_;
+}
+
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
@@ -469,6 +460,7 @@ Lens::Lens(string const& id_,
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
   connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
+  uri_schemes.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::uri_schemes));
   active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
 }
 

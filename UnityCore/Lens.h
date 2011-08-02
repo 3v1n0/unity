@@ -46,6 +46,7 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Lens> Ptr;
   typedef std::map<std::string, GVariant*> Hints;
+  typedef std::vector<std::string> URISchemes;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -77,6 +78,7 @@ public:
   nux::RWProperty<Results::Ptr> global_results;
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<bool> connected;
+  nux::RWProperty<URISchemes> uri_schemes;
 
   nux::Property<bool> active;
 
