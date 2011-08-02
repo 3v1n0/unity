@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+import sys
+import webbrowser
+
+curr_dir = os.path.abspath(os.path.dirname(__file__))
+branch_root_dir = os.path.dirname(curr_dir)
+guide_file = os.path.join(branch_root_dir, 'build', 'guides', 'cppguide.html')
+
+if not os.path.isfile(guide_file):
+    print "You need to build unity (or the docs) first."
+    sys.exit(1)
+
+webbrowser.open(guide_file)

@@ -25,63 +25,61 @@
 #include "Nux/Nux.h"
 #include "Nux/WindowThread.h"
 
-void TestFavoriteStoreGSettingsCreateSuite (void);
-void TestPanelServiceCreateSuite (void);
-void TestPlaceFactoryFileCreateSuite (void);
-void TestUBusCreateSuite (void);
-void TestQuicklistMenuitemsCreateSuite (void);
+//void TestPanelServiceCreateSuite (void);
+void TestPlaceFactoryFileCreateSuite(void);
+void TestUBusCreateSuite(void);
+void TestQuicklistMenuitemsCreateSuite(void);
 
 nux::WindowThread*
-createThread ()
+createThread()
 {
   nux::WindowThread* thread = NULL;
 
-  nux::NuxInitialize (0);
-  thread = nux::CreateGUIThread (TEXT ("Unit-Test Dummy Window"),
-                                 320,
-                                 240,
-                                 0,
-                                 NULL,
-                                 0);
+  nux::NuxInitialize(0);
+  thread = nux::CreateGUIThread(TEXT("Unit-Test Dummy Window"),
+                                320,
+                                240,
+                                0,
+                                NULL,
+                                0);
   return thread;
 }
 
 void
-runThread (nux::WindowThread* thread)
+runThread(nux::WindowThread* thread)
 {
-  thread->Run (NULL);
+  thread->Run(NULL);
 }
 
 void
-stopThread (nux::WindowThread* thread)
+stopThread(nux::WindowThread* thread)
 {
-  thread->TerminateThread ();
+  thread->TerminateThread();
   delete thread;
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char** argv)
 {
-  g_setenv ("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
+  g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
 
-  g_type_init ();
-  g_thread_init (NULL);
-  gtk_init (&argc, &argv);
+  g_type_init();
+  g_thread_init(NULL);
+  gtk_init(&argc, &argv);
 
-  g_test_init (&argc, &argv, NULL);
+  g_test_init(&argc, &argv, NULL);
 
   //Keep alphabetical please
-  TestFavoriteStoreGSettingsCreateSuite ();
-  TestPanelServiceCreateSuite ();
-  TestPlaceFactoryFileCreateSuite ();
-  TestQuicklistMenuitemsCreateSuite ();
-  TestUBusCreateSuite ();
+  //TestPanelServiceCreateSuite ();
+  TestPlaceFactoryFileCreateSuite();
+  TestQuicklistMenuitemsCreateSuite();
+  TestUBusCreateSuite();
 
-  nux::WindowThread* thread = createThread ();
+  nux::WindowThread* thread = createThread();
 
-  int ret = g_test_run ();
+  int ret = g_test_run();
 
-  stopThread (thread);
+  stopThread(thread);
 
   return ret;
 }

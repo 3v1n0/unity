@@ -443,7 +443,7 @@ WARN_LOGFILE           = doxygen-warnings.log
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = @TOP_SRCDIR@/src @TOP_SRCDIR@/tests @TOP_SRCDIR@/services 
+INPUT                  = @TOP_SRCDIR@/plugins/unityshell/src @TOP_SRCDIR@/tests @TOP_SRCDIR@/services @TOP_SRCDIR@/UnityCore
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

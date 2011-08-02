@@ -1,0 +1,4 @@
+[Lens]
+DBusName=com.canonical.tests.Lens.InvalidLensFile
+DbusPath=/com/canonical/tests/lens/invalidlensfile
+#Name=We have commented this out so it should fail to load

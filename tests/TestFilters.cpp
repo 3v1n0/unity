@@ -55,6 +55,7 @@ void TestRunner::Init ()
 {
   unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
   unity::FilterRatings *ratings = new unity::FilterRatings (NUX_TRACKER_LOCATION);
+  ratings->rating = 3;
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
@@ -78,10 +79,6 @@ ControlThread (nux::NThread* thread,
   // sleep for 3 seconds
   nux::SleepForMilliseconds (3000);
   printf ("ControlThread successfully started\n");
-
-  nux::WindowThread* mainWindowThread;
-
-  mainWindowThread = NUX_STATIC_CAST (nux::WindowThread*, data);
 }
 
 

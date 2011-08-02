@@ -1,3 +1,5 @@
+set(UNITY_SRC ../plugins/unityshell/src)
+
 #
 # Data
 #
@@ -7,319 +9,348 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};indicator3")
-pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS} indicator3)
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS}")
+pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
+
+set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
      ${MAINTAINER_CFLAGS}
-     "-DTESTDATADIR=${TESTDATADIR}"
+     "-g"
+     "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
+     "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES})
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION}")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${LIB_PATHS})
+link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
-include_directories (. .. ../services ${CMAKE_BINARY_DIR})
-
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ${CMAKE_SOURCE_DIR}/services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_SOURCE_DIR}/services/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../services/panel-marshal.list
-  COMMENT "Generating marshallers")
+include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
-# from ../../src or ../../services in alphabetically after that
+# from ../${UNITY_SRC} or ../../services in alphabetically after that
 add_executable (test-unit
-                unit/TestFavoriteStoreGSettings.cpp
-                unit/TestPanelService.cpp
                 unit/TestPlaceFactoryFile.cpp
                 unit/TestQuicklistMenuitems.cpp
                 unit/TestMain.cpp
                 unit/TestUBus.cpp
-                ../src/ubus-server.cpp
-                ../src/ubus-server.h
-                ../services/panel-service.c
-                ../services/panel-service.h
-                ${CMAKE_SOURCE_DIR}/services/panel-marshal.c
-                ../src/FavoriteStore.cpp
-                ../src/FavoriteStore.h
-                ../src/FavoriteStoreGSettings.cpp
-                ../src/FavoriteStoreGSettings.h
-                ../src/GLibWrapper.h
-                ../src/GLibWrapper-inl.h
-                ../src/GLibWrapper.cpp
-                ../src/Introspectable.cpp
-                ../src/PlaceEntryRemote.cpp
-                ../src/PlaceEntryRemote.h
-                ../src/PlaceEntry.h
-                ../src/PlaceFactoryFile.cpp
-                ../src/PlaceFactoryFile.h
-                ../src/PlaceFactory.cpp
-                ../src/PlaceFactory.h
-                ../src/PlaceRemote.cpp
-                ../src/PlaceRemote.h
-                ../src/Place.h
-                ../src/QuicklistMenuItem.cpp
-                ../src/QuicklistMenuItem.h
-                ../src/QuicklistMenuItemCheckmark.cpp
-                ../src/QuicklistMenuItemCheckmark.h
-                ../src/QuicklistMenuItemLabel.cpp
-                ../src/QuicklistMenuItemLabel.h
-                ../src/QuicklistMenuItemRadio.cpp
-                ../src/QuicklistMenuItemRadio.h
-                ../src/QuicklistMenuItemSeparator.cpp
-                ../src/QuicklistMenuItemSeparator.h
-                ../src/QuicklistView.cpp
-                ../src/QuicklistView.h
-                ../src/Variant.cpp
-                ../src/Variant.h
-                ../src/
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/PlaceEntryRemote.cpp
+                ${UNITY_SRC}/PlaceEntryRemote.h
+                ${UNITY_SRC}/PlaceEntry.h
+                ${UNITY_SRC}/PlaceFactoryFile.cpp
+                ${UNITY_SRC}/PlaceFactoryFile.h
+                ${UNITY_SRC}/PlaceFactory.cpp
+                ${UNITY_SRC}/PlaceFactory.h
+                ${UNITY_SRC}/PlaceRemote.cpp
+                ${UNITY_SRC}/PlaceRemote.h
+                ${UNITY_SRC}/Place.h
+                ${UNITY_SRC}/QuicklistMenuItem.cpp
+                ${UNITY_SRC}/QuicklistMenuItem.h
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
+                ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
+                ${UNITY_SRC}/QuicklistMenuItemLabel.h
+                ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
+                ${UNITY_SRC}/QuicklistMenuItemRadio.h
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
+                ${UNITY_SRC}/QuicklistView.cpp
+                ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/
                 )
+add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 
 add_executable (test-panel
                 TestPanel.cpp
-                ../src/DBusIndicators.cpp
-                ../src/DBusIndicators.h
-                ../src/GLibWrapper.h
-                ../src/GLibWrapper-inl.h
-                ../src/GLibWrapper.cpp
-                ../src/PanelStyle.cpp
-                ../src/PanelStyle.h
-                ../src/PanelView.cpp
-                ../src/PanelView.h
-                ../src/PanelIndicatorObjectView.cpp
-                ../src/PanelIndicatorObjectView.h
-                ../src/PanelIndicatorObjectEntryView.cpp
-                ../src/PanelIndicatorObjectEntryView.h
-            	../src/PanelTitlebarGrabAreaView.h
-            	../src/PanelTitlebarGrabAreaView.cpp
-                ../src/PanelTray.cpp
-                ../src/PanelTray.h
-                ../src/Indicators.cpp
-                ../src/Indicators.h
-                ../src/Indicator.cpp
-                ../src/Indicator.h
-                ../src/IndicatorEntry.cpp
-                ../src/IndicatorEntry.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
-                ../src/PanelHomeButton.cpp
-                ../src/PanelHomeButton.h
-                ../src/PanelMenuView.cpp
-                ../src/PanelMenuView.h
-                ../src/Timer.cpp
-                ../src/Timer.h
-                ../src/StaticCairoText.cpp
-                ../src/StaticCairoText.h
-                ../src/WindowButtons.cpp
-                ../src/WindowButtons.h
-                ../src/WindowManager.cpp
-                ../src/WindowManager.h
-                ../src/UScreen.cpp
-                ../src/UScreen.h
-                ../src/ubus-server.cpp
-                ../src/ubus-server.h
-                ../src/Variant.cpp
-                ../src/Variant.h
+                ${UNITY_SRC}/PanelStyle.cpp
+                ${UNITY_SRC}/PanelStyle.h
+                ${UNITY_SRC}/PanelView.cpp
+                ${UNITY_SRC}/PanelView.h
+                ${UNITY_SRC}/PanelIndicatorObjectView.cpp
+                ${UNITY_SRC}/PanelIndicatorObjectView.h
+                ${UNITY_SRC}/PanelIndicatorObjectEntryView.cpp
+                ${UNITY_SRC}/PanelIndicatorObjectEntryView.h
+                ${UNITY_SRC}/PanelTitlebarGrabAreaView.h
+                ${UNITY_SRC}/PanelTitlebarGrabAreaView.cpp
+                ${UNITY_SRC}/PanelTray.cpp
+                ${UNITY_SRC}/PanelTray.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/PanelHomeButton.cpp
+                ${UNITY_SRC}/PanelHomeButton.h
+                ${UNITY_SRC}/PanelMenuView.cpp
+                ${UNITY_SRC}/PanelMenuView.h
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/Timer.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/WindowButtons.cpp
+                ${UNITY_SRC}/WindowButtons.h
+                ${UNITY_SRC}/WindowManager.cpp
+                ${UNITY_SRC}/WindowManager.h
+                ${UNITY_SRC}/UScreen.cpp
+                ${UNITY_SRC}/UScreen.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
-set (PLACES_COMMON_SOURCE ../src/ubus-server.cpp
-                          ../src/ubus-server.h
-                          ../src/IconLoader.cpp
-                          ../src/IconLoader.h
-                          ../src/IconTexture.cpp
-                          ../src/IconTexture.h
-                          ../src/Introspectable.cpp
-                          ../src/Introspectable.h
-                          ../src/PlacesSettings.cpp
-                          ../src/PlacesSettings.h
-                          ../src/PlacesStyle.cpp
-                          ../src/PlacesStyle.h
-                          ../src/PlacesTile.cpp
-                          ../src/PlacesTile.h
-                          ../src/PlacesHorizontalTile.cpp
-                          ../src/PlacesHorizontalTile.h
-                          ../src/PlacesSimpleTile.cpp
-                          ../src/PlacesSimpleTile.h
-                          ../src/TextureCache.h
-                          ../src/TextureCache.cpp
-                          ../src/Timer.cpp
-                          ../src/Timer.h
-                          ../src/StaticCairoText.cpp
-                          ../src/StaticCairoText.h
-                          ../src/UBusMessages.h
-                          ../src/Variant.cpp
-                          ../src/Variant.h
+set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
+                          ${UNITY_SRC}/ubus-server.h
+                          ${UNITY_SRC}/BGHash.cpp
+                          ${UNITY_SRC}/BGHash.h
+                          ${UNITY_SRC}/IconLoader.cpp
+                          ${UNITY_SRC}/IconLoader.h
+                          ${UNITY_SRC}/IconTexture.cpp
+                          ${UNITY_SRC}/IconTexture.h
+                          ${UNITY_SRC}/Introspectable.cpp
+                          ${UNITY_SRC}/Introspectable.h
+                          ${UNITY_SRC}/PlacesSettings.cpp
+                          ${UNITY_SRC}/PlacesSettings.h
+                          ${UNITY_SRC}/PlacesStyle.cpp
+                          ${UNITY_SRC}/PlacesStyle.h
+                          ${UNITY_SRC}/PlacesTile.cpp
+                          ${UNITY_SRC}/PlacesTile.h
+                          ${UNITY_SRC}/PlacesHorizontalTile.cpp
+                          ${UNITY_SRC}/PlacesHorizontalTile.h
+                          ${UNITY_SRC}/PlacesSimpleTile.cpp
+                          ${UNITY_SRC}/PlacesSimpleTile.h
+                          ${UNITY_SRC}/TextureCache.h
+                          ${UNITY_SRC}/TextureCache.cpp
+                          ${UNITY_SRC}/Timer.cpp
+                          ${UNITY_SRC}/Timer.h
+                          ${UNITY_SRC}/StaticCairoText.cpp
+                          ${UNITY_SRC}/StaticCairoText.h
+                          ${UNITY_SRC}/UBusMessages.h
                           )
 add_executable (test-places
                 TestPlaces.cpp
                 ${PLACES_COMMON_SOURCE}
-                ../src/PlacesEmptyView.cpp
-                ../src/PlacesEmptyView.h
-                ../src/PlacesHomeView.cpp
-                ../src/PlacesHomeView.h
-                ../src/PlacesSearchBar.cpp
-                ../src/PlacesSearchBar.h
-                ../src/PlacesSearchBarSpinner.cpp
-                ../src/PlacesSearchBarSpinner.h
-                ../src/PlacesResultsController.cpp
-                ../src/PlacesResultsController.h
-                ../src/PlacesResultsView.h
-                ../src/PlacesResultsView.cpp
-                ../src/PlacesGroupController.cpp
-                ../src/PlacesResultsController.h
-                ../src/PlacesGroup.cpp
-                ../src/PlacesGroup.h
-                ../src/PlacesView.cpp
-                ../src/PlacesView.h
-                ../src/PlacesVScrollBar.cpp
-                ../src/PlacesVScrollBar.h
-                ../src/PlaceEntryHome.cpp
-                ../src/PlaceEntryRemote.h
-                ../src/PlaceEntryRemote.cpp
-                ../src/PlaceEntryRemote.h
-                ../src/PlaceEntry.h
-                ../src/PlaceFactoryFile.cpp
-                ../src/PlaceFactoryFile.h
-                ../src/PlaceFactory.cpp
-                ../src/PlaceFactory.h
-                ../src/PlaceRemote.cpp
-                ../src/PlaceRemote.h
-                ../src/Place.h
+                ${UNITY_SRC}/PlacesEmptyView.cpp
+                ${UNITY_SRC}/PlacesEmptyView.h
+                ${UNITY_SRC}/PlacesHomeView.cpp
+                ${UNITY_SRC}/PlacesHomeView.h
+                ${UNITY_SRC}/PlacesSearchBar.cpp
+                ${UNITY_SRC}/PlacesSearchBar.h
+                ${UNITY_SRC}/PlacesSearchBarSpinner.cpp
+                ${UNITY_SRC}/PlacesSearchBarSpinner.h
+                ${UNITY_SRC}/PlacesResultsController.cpp
+                ${UNITY_SRC}/PlacesResultsController.h
+                ${UNITY_SRC}/PlacesResultsView.h
+                ${UNITY_SRC}/PlacesResultsView.cpp
+                ${UNITY_SRC}/PlacesGroupController.cpp
+                ${UNITY_SRC}/PlacesResultsController.h
+                ${UNITY_SRC}/PlacesGroup.cpp
+                ${UNITY_SRC}/PlacesGroup.h
+                ${UNITY_SRC}/PlacesView.cpp
+                ${UNITY_SRC}/PlacesView.h
+                ${UNITY_SRC}/PlacesVScrollBar.cpp
+                ${UNITY_SRC}/PlacesVScrollBar.h
+                ${UNITY_SRC}/PlaceEntryHome.cpp
+                ${UNITY_SRC}/PlaceEntryRemote.h
+                ${UNITY_SRC}/PlaceEntryRemote.cpp
+                ${UNITY_SRC}/PlaceEntryRemote.h
+                ${UNITY_SRC}/PlaceEntry.h
+                ${UNITY_SRC}/PlaceFactoryFile.cpp
+                ${UNITY_SRC}/PlaceFactoryFile.h
+                ${UNITY_SRC}/PlaceFactory.cpp
+                ${UNITY_SRC}/PlaceFactory.h
+                ${UNITY_SRC}/PlaceRemote.cpp
+                ${UNITY_SRC}/PlaceRemote.h
+                ${UNITY_SRC}/Place.h
                 )
+add_dependencies (test-places unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-tiles
                 TestPlacesTiles.cpp
                 ${PLACES_COMMON_SOURCE}
                 )
+add_dependencies (test-places-tiles unity-core-${UNITY_API_VERSION})
 
+add_executable (test-switcher
+                TestSwitcher.cpp
+                ${UNITY_SRC}/AbstractLauncherIcon.h
+                ${UNITY_SRC}/AbstractIconRenderer.h
+                ${UNITY_SRC}/SwitcherController.cpp
+                ${UNITY_SRC}/SwitcherController.h
+                ${UNITY_SRC}/SwitcherModel.cpp
+                ${UNITY_SRC}/SwitcherModel.h
+                ${UNITY_SRC}/SwitcherView.cpp
+                ${UNITY_SRC}/SwitcherView.h
+                ${UNITY_SRC}/IconRenderer.cpp
+                ${UNITY_SRC}/IconRenderer.h
+                ${UNITY_SRC}/MockLauncherIcon.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                )
+add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-group
                 TestPlacesGroup.cpp
                 ${PLACES_COMMON_SOURCE}
-                ../src/PlacesGroup.cpp
-                ../src/PlacesGroup.h
+                ${UNITY_SRC}/PlacesGroup.cpp
+                ${UNITY_SRC}/PlacesGroup.h
                 )
+add_dependencies (test-places-group unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-results
                 TestPlacesResults.cpp
                 ${PLACES_COMMON_SOURCE}
-                ../src/PlacesResultsController.cpp
-                ../src/PlacesResultsController.h
-                ../src/PlacesResultsView.h
-                ../src/PlacesResultsView.cpp
-                ../src/PlacesGroupController.cpp
-                ../src/PlacesGroupController.h
-                ../src/PlacesGroup.cpp
-                ../src/PlacesGroup.h
-                ../src/PlacesVScrollBar.cpp
-                ../src/PlacesVScrollBar.h
+                ${UNITY_SRC}/PlacesResultsController.cpp
+                ${UNITY_SRC}/PlacesResultsController.h
+                ${UNITY_SRC}/PlacesResultsView.h
+                ${UNITY_SRC}/PlacesResultsView.cpp
+                ${UNITY_SRC}/PlacesGroupController.cpp
+                ${UNITY_SRC}/PlacesGroupController.h
+                ${UNITY_SRC}/PlacesGroup.cpp
+                ${UNITY_SRC}/PlacesGroup.h
+                ${UNITY_SRC}/PlacesVScrollBar.cpp
+                ${UNITY_SRC}/PlacesVScrollBar.h
                 )
+add_dependencies (test-places-results unity-core-${UNITY_API_VERSION})
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
-                ../src/QuicklistMenuItem.cpp
-                ../src/QuicklistMenuItem.h
-                ../src/QuicklistMenuItemCheckmark.cpp
-                ../src/QuicklistMenuItemCheckmark.h
-                ../src/QuicklistMenuItemLabel.cpp
-                ../src/QuicklistMenuItemLabel.h
-                ../src/QuicklistMenuItemRadio.cpp
-                ../src/QuicklistMenuItemRadio.h
-                ../src/QuicklistMenuItemSeparator.cpp
-                ../src/QuicklistMenuItemSeparator.h
-                ../src/QuicklistView.cpp
-                ../src/QuicklistView.h
-                ../src/ubus-server.cpp
-                ../src/ubus-server.h
-                ../src/Variant.cpp
-                ../src/Variant.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/QuicklistMenuItem.cpp
+                ${UNITY_SRC}/QuicklistMenuItem.h
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
+                ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
+                ${UNITY_SRC}/QuicklistMenuItemLabel.h
+                ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
+                ${UNITY_SRC}/QuicklistMenuItemRadio.h
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
+                ${UNITY_SRC}/QuicklistView.cpp
+                ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-quicklist unity-core-${UNITY_API_VERSION})
 
 add_executable (test-quicklist-visuals
                 ui/TestQuicklistVisuals.cpp
                 ui/EventFaker.cpp
                 ui/EventFaker.h
-                ../src/Introspectable.cpp
-                ../src/Introspectable.h
-                ../src/QuicklistMenuItem.cpp
-                ../src/QuicklistMenuItem.h
-                ../src/QuicklistMenuItemCheckmark.cpp
-                ../src/QuicklistMenuItemCheckmark.h
-                ../src/QuicklistMenuItemLabel.cpp
-                ../src/QuicklistMenuItemLabel.h
-                ../src/QuicklistMenuItemRadio.cpp
-                ../src/QuicklistMenuItemRadio.h
-                ../src/QuicklistMenuItemSeparator.cpp
-                ../src/QuicklistMenuItemSeparator.h
-                ../src/QuicklistView.cpp
-                ../src/QuicklistView.h
-                ../src/ubus-server.cpp
-                ../src/ubus-server.h
-                ../src/Variant.cpp
-                ../src/Variant.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/QuicklistMenuItem.cpp
+                ${UNITY_SRC}/QuicklistMenuItem.h
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
+                ${UNITY_SRC}/QuicklistMenuItemCheckmark.h
+                ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
+                ${UNITY_SRC}/QuicklistMenuItemLabel.h
+                ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
+                ${UNITY_SRC}/QuicklistMenuItemRadio.h
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
+                ${UNITY_SRC}/QuicklistMenuItemSeparator.h
+                ${UNITY_SRC}/QuicklistView.cpp
+                ${UNITY_SRC}/QuicklistView.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
                 )
+add_dependencies (test-quicklist-visuals unity-core-${UNITY_API_VERSION})
 
 add_executable (test-places-backend
                 TestPlacesBackend.cpp
-                ../src/PlaceEntryRemote.cpp
-                ../src/PlaceEntryRemote.h
-                ../src/PlaceEntry.h
-                ../src/PlaceFactoryFile.cpp
-                ../src/PlaceFactoryFile.h
-                ../src/PlaceFactory.h
-                ../src/PlaceFactory.cpp
-                ../src/PlaceRemote.cpp
-                ../src/PlaceRemote.h
-                ../src/Place.h
-                ../src/Variant.cpp
-                ../src/Variant.h
+                ${UNITY_SRC}/PlaceEntryRemote.cpp
+                ${UNITY_SRC}/PlaceEntryRemote.h
+                ${UNITY_SRC}/PlaceEntry.h
+                ${UNITY_SRC}/PlaceFactoryFile.cpp
+                ${UNITY_SRC}/PlaceFactoryFile.h
+                ${UNITY_SRC}/PlaceFactory.h
+                ${UNITY_SRC}/PlaceFactory.cpp
+                ${UNITY_SRC}/PlaceRemote.cpp
+                ${UNITY_SRC}/PlaceRemote.h
+                ${UNITY_SRC}/Place.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                ${UNITY_SRC}/UBusMessages.h
                 )
+add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
 add_executable (test-filters
                 TestFilters.cpp
-                ../src/FilterBasicButton.cpp
-                ../src/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterBasicButton.cpp
+                ${UNITY_SRC}/FilterRatingsWidget.cpp
                 )
+add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
 add_executable (test-filter-bar
                 TestFilterBar.cpp
-                ../src/FilterFactory.cpp
-                ../src/FilterBasicButton.cpp
-                ../src/FilterRatingsWidget.cpp
-                ../src/FilterBar.cpp
+                ${UNITY_SRC}/FilterFactory.cpp
+                ${UNITY_SRC}/FilterBasicButton.cpp
+                ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterBar.cpp
                 )
+add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
+
+add_executable (test-bg-hash
+                TestBGHash.cpp
+                ${UNITY_SRC}/BGHash.cpp
+                ${UNITY_SRC}/BGHash.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+               )
+add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
 #
 # GTest tests
 #
+find_program(GLIB_GENMARSHAL glib-genmarshal)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
+  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  DEPENDS test_glib_signals_utils_marshal.list
+  COMMENT "Generating marshallers")
+
 enable_testing()
-find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-add_executable(test-gtest
-               test_timer.cpp
-               test_indicator_entry.cpp
-               ../src/IndicatorEntry.h
-               ../src/IndicatorEntry.cpp
-               ../src/Timer.h
-               ../src/Timer.cpp
-               )
-target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
-add_test(UnityGTests test-gtest)
+find_package(GTest)
+if (${GTEST_FOUND} STREQUAL TRUE)
+  include_directories(${GTEST_INCLUDE_DIRS})
+  add_executable(test-gtest
+                 test_filesystem_lenses.cpp
+                 test_glib_signals.cpp
+                 test_glib_signals_utils.cpp
+                 test_glib_signals_utils.h
+                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+                 test_favorite_store_gsettings.cpp
+                 test_indicator_entry.cpp
+                 test_main.cpp
+                 test_timer.cpp
+                 ${UNITY_SRC}/AbstractLauncherIcon.h
+                 ${UNITY_SRC}/FavoriteStore.cpp
+                 ${UNITY_SRC}/FavoriteStore.h
+                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
+                 ${UNITY_SRC}/FavoriteStoreGSettings.h
+                 ${UNITY_SRC}/MockLauncherIcon.h
+                 ${UNITY_SRC}/SwitcherModel.cpp
+                 ${UNITY_SRC}/SwitcherModel.h
+                 ${UNITY_SRC}/Timer.cpp
+                 ${UNITY_SRC}/Timer.h
+                 )
+  target_link_libraries(test-gtest ${GTEST_BOTH_LIBRARIES})
+  add_test(UnityGTests test-gtest)
+  add_dependencies (test-gtest unity-core-${UNITY_API_VERSION})
+  add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
+endif (${GTEST_FOUND} STREQUAL TRUE)
 
 #
 # check target
@@ -329,6 +360,5 @@ set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 set (TEST_COMMAND gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit && ./test-gtest)
 add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest)
-add_custom_target (gcheck COMMAND  ./test-gtest DEPENDS test-gtest)
 add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
 
