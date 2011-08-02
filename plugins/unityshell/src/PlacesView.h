@@ -43,6 +43,7 @@
 #include "PlacesResultsView.h"
 
 #include "IconLoader.h"
+#include "BackgroundEffectHelper.h"
 
 class PlacesView : public nux::View, public unity::Introspectable
 {
@@ -161,15 +162,13 @@ private:
   nux::SpaceLayout* _h_spacer;
   nux::SpaceLayout* _v_spacer;
 
-  nux::BaseTexture*                       noise_texture_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture0_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> temp_device_texture1_;
-
   SizeMode   _size_mode;
   ShrinkMode _shrink_mode;
 
   nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_blur_texture;
   nux::Geometry _bg_blur_geo;
+
+  BackgroundEffectHelper background_effect_helper_;
 
   gint   _target_height;
   gint   _actual_height;
@@ -189,5 +188,5 @@ private:
   guint _ubus_handles[4];
 };
 
-#endif // PANEL_HOME_BUTTON_H
+#endif // PLACES_VIEW_H
 
