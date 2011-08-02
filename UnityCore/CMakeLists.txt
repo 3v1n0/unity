@@ -25,6 +25,7 @@ set (CORE_HEADERS
      Model-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
+     Preview.h
      Utils.h
      RatingsFilter.h
      Result.h
@@ -47,6 +48,7 @@ set (CORE_SOURCES
      Indicators.cpp
      Lens.cpp
      ModelRowAdaptor.cpp
+     Preview.cpp
      RatingsFilter.cpp
      Result.cpp
      Results.cpp

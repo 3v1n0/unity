@@ -62,7 +62,6 @@ public:
   void OnSearchFinished(GVariant* parameters);
   void OnGlobalSearchFinished(GVariant* parameters);
   void OnChanged(GVariant* parameters);
-  void UpdateURISchemesFromIter(GVariantIter* iter);
   void UpdateProperties(bool search_in_global,
                         bool visible,
                         string const& search_hint,
@@ -77,6 +76,8 @@ public:
   void Search(std::string const& search_string);
   void Activate(std::string const& uri);
   void ActivationReply(GVariant* parameters);
+  void Preview(std::string const& uri);
+  void PreviewReply(GVariant* parameters);
 
   string const& id() const;
   string const& dbus_name() const;
@@ -92,7 +93,6 @@ public:
   Results::Ptr const& global_results() const;
   Categories::Ptr const& categories() const;
   bool connected() const;
-  URISchemes const& uri_schemes() const;
 
   Lens* owner_;
 
@@ -110,7 +110,6 @@ public:
   Results::Ptr global_results_;
   Categories::Ptr categories_;
   bool connected_;
-  URISchemes uri_schemes_;
 
   string private_connection_name_;
 
@@ -193,10 +192,9 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   glib::String global_results_model_name;
   glib::String categories_model_name;
   glib::String filters_model_name;
-  GVariantIter* uri_schemes_iter = NULL;
   GVariantIter* hints_iter = NULL;
 
-  g_variant_get(parameters, "((sbbssssssasa{sv}))",
+  g_variant_get(parameters, "((sbbssssssa{sv}))",
                 &dbus_path,
                 &search_in_global,
                 &visible,
@@ -206,7 +204,6 @@ void Lens::Impl::OnChanged(GVariant* parameters)
                 &global_results_model_name,
                 &categories_model_name,
                 &filters_model_name,
-                &uri_schemes_iter,
                 &hints_iter);
 
   LOG_DEBUG(logger) << "Lens info changed for " << name_ << "\n"
@@ -221,7 +218,6 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   if (dbus_path.Str() == dbus_path_)
   {
     /* FIXME: We ignore hints for now */
-    UpdateURISchemesFromIter(uri_schemes_iter);
     UpdateProperties(search_in_global,
                      visible,
                      search_hint.Str(),
@@ -239,18 +235,7 @@ void Lens::Impl::OnChanged(GVariant* parameters)
   connected_ = true;
   owner_->connected.EmitChanged(connected_);
 
-  g_variant_iter_free(uri_schemes_iter);
   g_variant_iter_free(hints_iter);
-}
-
-void Lens::Impl::UpdateURISchemesFromIter(GVariantIter* iter)
-{
-  char* scheme = NULL;
-
-  uri_schemes_.clear();
-
-  while (g_variant_iter_loop(iter, "s", &scheme))
-    uri_schemes_.push_back(scheme);
 }
 
 void Lens::Impl::UpdateProperties(bool search_in_global,
@@ -350,6 +335,30 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
   g_variant_iter_free(hints_iter);
 }
 
+void Lens::Impl::Preview(std::string const& uri)
+{
+  LOG_DEBUG(logger) << "Previewing " << uri << " on  " << id_;
+
+  proxy_.Call("Preview",
+              g_variant_new("(s)", uri.c_str()),
+              sigc::mem_fun(this, &Lens::Impl::PreviewReply));
+}
+
+void Lens::Impl::PreviewReply(GVariant* parameters)
+{
+  glib::String uri;
+  glib::String renderer_name;
+  GVariantIter* hints_iter;
+  Hints hints;
+  
+  g_variant_get(parameters, "((ssa{sv}))", &uri, &renderer_name, &hints_iter);
+  Utils::ASVToHints(hints, hints_iter);
+
+  Preview::Ptr preview = Preview::PreviewForProperties(renderer_name.Str(), hints);
+  owner_->preview_ready.emit(uri.Str(), preview);
+
+  g_variant_iter_free(hints_iter);
+}
 string const& Lens::Impl::id() const
 {
   return id_;
@@ -420,11 +429,6 @@ bool Lens::Impl::connected() const
   return connected_;
 }
 
-Lens::URISchemes const& Lens::Impl::uri_schemes() const
-{
-  return uri_schemes_;
-}
-
 Lens::Lens(string const& id_,
            string const& dbus_name_,
            string const& dbus_path_,
@@ -460,7 +464,6 @@ Lens::Lens(string const& id_,
   global_results.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::global_results));
   categories.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::categories));
   connected.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::connected));
-  uri_schemes.SetGetterFunction(sigc::mem_fun(pimpl, &Lens::Impl::uri_schemes));
   active.changed.connect(sigc::mem_fun(pimpl, &Lens::Impl::OnActiveChanged));
 }
 
@@ -482,6 +485,11 @@ void Lens::Search(std::string const& search_string)
 void Lens::Activate(std::string const& uri)
 {
   pimpl->Activate(uri);
+}
+
+void Lens::Preview(std::string const& uri)
+{
+  pimpl->Preview(uri);
 }
 
 }

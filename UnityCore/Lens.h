@@ -27,6 +27,7 @@
 
 #include "Categories.h"
 #include "Results.h"
+#include "Preview.h"
 
 namespace unity
 {
@@ -46,7 +47,6 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Lens> Ptr;
   typedef std::map<std::string, GVariant*> Hints;
-  typedef std::vector<std::string> URISchemes;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -63,6 +63,7 @@ public:
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
   void Activate(std::string const& uri);
+  void Preview(std::string const& uri);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -78,13 +79,13 @@ public:
   nux::RWProperty<Results::Ptr> global_results;
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<bool> connected;
-  nux::RWProperty<URISchemes> uri_schemes;
 
   nux::Property<bool> active;
 
   sigc::signal<void, std::string const&> search_finished;
   sigc::signal<void, std::string const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
+  sigc::signal<void, std::string const&, Preview::Ptr> preview_ready;
 
 private:
   class Impl;

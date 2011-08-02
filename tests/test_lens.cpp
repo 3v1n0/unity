@@ -91,6 +91,17 @@ public:
     EXPECT_FALSE(timeout_reached);
   }
 
+  std::string PopulateAndGetFirstResultURI()
+  {
+    Results::Ptr results = lens_->results;
+
+    lens_->Search("Test Search String");
+    WaitForModel<Result>(results.get(), 5);
+    
+    Result result = results->RowAtIndex(0);
+    return result.uri;
+  }
+
   Lens::Ptr lens_;
   unsigned int n_categories_;
 };
@@ -109,9 +120,6 @@ TEST_F(TestLens, TestSynchronization)
   EXPECT_EQ(lens_->search_hint, "Search Test Lens");
   EXPECT_TRUE(lens_->visible);
   EXPECT_TRUE(lens_->search_in_global);
-
-  const Lens::URISchemes schemes = lens_->uri_schemes;
-  EXPECT_EQ(schemes.size(), (unsigned int)1);
 }
 
 TEST_F(TestLens, TestCategories)
@@ -153,7 +161,9 @@ TEST_F(TestLens, TestSearch)
     std::string name("Test Search String" + boost::lexical_cast<std::string>(i));
 
     Result result = results->RowAtIndex(i);
-    EXPECT_EQ(result.uri, "file:///test");
+    
+    std::string uri = result.uri;
+    EXPECT_TRUE(uri.find("file:///test"));
     EXPECT_EQ(result.icon_hint, "gtk-apply");
     EXPECT_EQ(result.category_index, i);
     EXPECT_EQ(result.mimetype, "text/html");
@@ -175,7 +185,9 @@ TEST_F(TestLens, TestGlobalSearch)
     std::string name("Test Global Search String" + boost::lexical_cast<std::string>(i));
 
     Result result = results->RowAtIndex(i);
-    EXPECT_EQ(result.uri, "file:///test");
+
+    std::string uri = result.uri;
+    EXPECT_TRUE(uri.find("file:///test"));
     EXPECT_EQ(result.icon_hint, "gtk-apply");
     EXPECT_EQ(result.category_index, i);
     EXPECT_EQ(result.mimetype, "text/html");
@@ -187,42 +199,39 @@ TEST_F(TestLens, TestGlobalSearch)
 
 TEST_F(TestLens, TestActivation)
 {
+  std::string uri = PopulateAndGetFirstResultURI();
+  
   bool activated = false;
-
-  auto activated_cb = [&activated] (std::string const& uri,
-                                    HandledType handled,
-                                    Lens::Hints const& hints)
+  auto activated_cb = [&activated, &uri] (std::string const& uri_,
+                                          HandledType handled,
+                                          Lens::Hints const& hints)
   {
-    EXPECT_EQ(uri, "file:///hide/dash");
+    EXPECT_EQ(uri, uri_);
     EXPECT_EQ(handled, HandledType::HIDE_DASH);
     EXPECT_EQ(hints.size(), 0);
     activated = true;
   };
   lens_->activated.connect(sigc::slot<void, std::string const&, HandledType,Lens::Hints const&>(activated_cb));  
   
-  lens_->Activate("file:///hide/dash");
+  lens_->Activate(uri);
   WaitUntil(activated);
 }
 
-TEST_F(TestLens, TestActivationHints)
+TEST_F(TestLens, TestPreview)
 {
-  bool activated = false;
+  std::string uri = PopulateAndGetFirstResultURI();
+  bool previewed = false;
 
-  auto activated_cb = [&activated] (std::string const& uri,
-                                    unsigned int handled,
-                                    Lens::Hints const& hints)
+  auto preview_cb = [&previewed, &uri] (std::string const& uri_,
+                                  Preview::Ptr preview)
   {
-    EXPECT_EQ(uri, "file:///add/hints");
-    EXPECT_EQ(handled, HandledType::SHOW_DASH);
-    EXPECT_EQ(hints.size(), 1);
-    activated = true;
+    EXPECT_EQ(uri, uri_);
+    previewed = true;
   };
-  lens_->activated.connect(sigc::slot<void, std::string const&, HandledType, Lens::Hints const&>(activated_cb));  
+  lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
 
-  lens_->Activate("file:///add/hints");
-  WaitUntil(activated);
+  lens_->Preview(uri);
+  WaitUntil(previewed);
 }
-
-
 
 }

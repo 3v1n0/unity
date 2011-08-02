@@ -8,7 +8,7 @@ static void add_categories(ServiceLens* self);
 static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
-
+static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self);
 
 struct _ServiceLensPrivate
 {
@@ -53,8 +53,6 @@ service_lens_init(ServiceLens* self)
   /* Scope */
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
   unity_scope_set_search_in_global(priv->scope, TRUE);
-  char* schemes[] = { "file" };
-  unity_scope_set_uri_schemes(priv->scope, schemes, 1);
 
   g_signal_connect(priv->scope, "notify::active-search",
                    G_CALLBACK(on_search_changed), self);
@@ -62,6 +60,8 @@ service_lens_init(ServiceLens* self)
                    G_CALLBACK(on_global_search_changed), self);
   g_signal_connect(priv->scope, "activate-uri",
                    G_CALLBACK(on_activate_uri), self);
+  g_signal_connect(priv->scope, "preview-uri",
+                   G_CALLBACK(on_preview_uri), self);
 
   /* Get ready to export and export */
   unity_lens_add_local_scope(priv->lens, priv->scope);
@@ -142,10 +142,13 @@ on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self
 static UnityActivationResponse*
 on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
 {
-  if (g_strcmp0(uri, "file:///hide/dash") == 0)
-    return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
-  else
-    return unity_activation_response_new(UNITY_HANDLED_TYPE_SHOW_DASH, "hello");
+  return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
+}
+
+static UnityPreview*
+on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
+{
+  return (UnityPreview*)unity_no_preview_new();
 }
 
 ServiceLens*
