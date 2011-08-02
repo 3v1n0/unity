@@ -50,6 +50,23 @@ std::string Preview::PropertyToString(Properties& properties, const char *key)
   return g_variant_get_string(properties[key], NULL);
 }
 
+std::vector<std::string> Preview::PropertyToStringVector(Properties& properties, const char *key)
+{
+  GVariantIter* iter = NULL;
+  char* value = NULL;
+
+  g_variant_get(properties[key], "as", &iter);
+
+  std::vector<std::string> property;
+  while (g_variant_iter_loop(iter, "s", &value))
+    property.push_back(value);    
+
+  g_variant_iter_free(iter);
+
+  return property;
+}
+
+
 NoPreview::NoPreview()
 {
   renderer_name = "preview-none";

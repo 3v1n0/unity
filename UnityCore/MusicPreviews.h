@@ -36,14 +36,17 @@ class TrackPreview : public Preview
 {
 public:
   typedef std::shared_ptr<TrackPreview> Ptr;
+  typedef std::vector<std::string> Genres;
 
   TrackPreview(Preview::Properties& properties);
+
 
   nux::Property<unsigned int> number;
   nux::Property<std::string> title;
   nux::Property<std::string> artist;
   nux::Property<std::string> album;
   nux::Property<unsigned int> length;
+  nux::Property<Genres> genres;
   nux::Property<std::string> album_cover;
   nux::Property<std::string> primary_action_name;
   nux::Property<std::string> primary_action_icon_hint;

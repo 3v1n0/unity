@@ -22,6 +22,7 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
 #include <sigc++/trackable.h>
 #include <NuxCore/Property.h>
@@ -48,6 +49,7 @@ public:
 protected:
   unsigned int PropertyToUnsignedInt (Properties& properties, const char* key);
   std::string PropertyToString(Properties& properties, const char *key);
+  std::vector<std::string> PropertyToStringVector(Properties& properties, const char *key);
 };
 
 class NoPreview : public Preview

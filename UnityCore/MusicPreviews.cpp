@@ -33,6 +33,7 @@ TrackPreview::TrackPreview(Preview::Properties& properties)
   artist = PropertyToString(properties, "artist");
   album = PropertyToString(properties, "album");
   length = PropertyToUnsignedInt(properties, "length");
+  genres = PropertyToStringVector(properties, "genres");
   album_cover = PropertyToString(properties, "album-cover");
   primary_action_name = PropertyToString(properties, "primary-action-name");
   primary_action_icon_hint = PropertyToString(properties, "primary-action-icon-hint");

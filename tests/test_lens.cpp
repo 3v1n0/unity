@@ -242,6 +242,9 @@ TEST_F(TestLens, TestPreview)
     EXPECT_EQ(track_preview->play_action_uri, "preview://music/the/track");
     EXPECT_EQ(track_preview->pause_action_uri, "pause://music/the/track");
 
+    TrackPreview::Genres genres = track_preview->genres;
+    EXPECT_EQ(genres.size(), (unsigned int)1);
+
     previewed = true;
   };
   lens_->preview_ready.connect(sigc::slot<void, std::string const&, Preview::Ptr>(preview_cb));
