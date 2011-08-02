@@ -1335,16 +1335,16 @@ nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
 {
   // For some weird reason, ERROR is more critical than CRITICAL in gnome.
   if (log_level & G_LOG_LEVEL_ERROR)
-    return nux::logging::CRITICAL;
+    return nux::logging::Critical;
   if (log_level & G_LOG_LEVEL_CRITICAL)
-    return nux::logging::ERROR;
+    return nux::logging::Error;
   if (log_level & G_LOG_LEVEL_WARNING)
-    return nux::logging::WARNING;
+    return nux::logging::Warning;
   if (log_level & G_LOG_LEVEL_MESSAGE ||
       log_level & G_LOG_LEVEL_INFO)
-    return nux::logging::INFO;
+    return nux::logging::Info;
   // default to debug.
-  return nux::logging::DEBUG;
+  return nux::logging::Debug;
 }
 
 void capture_g_log_calls(const gchar* log_domain,
