@@ -8,6 +8,7 @@ set (CORE_HEADERS
      ApplicationPreview.h
      Categories.h
      Category.h
+     CheckButtonFilter.h
      DBusIndicators.h
      FilesystemLenses.h
      Filter.h
@@ -23,6 +24,7 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MultiRangeFilter.h
      MusicPreviews.h
      Model.h
      Model-inl.h
@@ -30,6 +32,7 @@ set (CORE_HEADERS
      ModelRowAdaptor-inl.h
      Preview.h
      Utils.h
+     RadioButtonFilter.h
      RatingsFilter.h
      Result.h
      Results.h
@@ -40,6 +43,7 @@ set (CORE_SOURCES
      ApplicationPreview.cpp
      Categories.cpp
      Category.cpp
+     CheckButtonFilter.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
      Filter.cpp
@@ -52,10 +56,12 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MultiRangeFilter.cpp
      MusicPreviews.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
      RatingsFilter.cpp
+     RadioButtonFilter.cpp
      Result.cpp
      Results.cpp
      Variant.cpp

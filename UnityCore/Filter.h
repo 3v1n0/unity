@@ -45,6 +45,23 @@ enum FilterColumn
   FILTERING
 };
 
+class FilterButton : public sigc::trackable
+{
+public:
+  typedef std::shared_ptr<FilterButton> Ptr;
+
+  FilterButton(std::string id_, std::string name_, std::string icon_hint_, bool active_)
+    : id(id_)
+    , name(name_)
+    , icon_hint(icon_hint_)
+    , active(active_)
+  {}
+  nux::Property<std::string> id;
+  nux::Property<std::string> name;
+  nux::Property<std::string> icon_hint;
+  nux::Property<bool> active;
+};
+
 class Filter : public sigc::trackable
 {
 public:
