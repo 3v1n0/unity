@@ -191,11 +191,11 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
     const char* var;
     char*       themes_dir = NULL;
 
-    var = g_getenv ("GTK_DATA_PREFIX");
+    var = g_getenv("GTK_DATA_PREFIX");
     if (var)
-      themes_dir = g_build_filename (var, "share", "themes", NULL);
+      themes_dir = g_build_filename(var, "share", "themes", NULL);
     else
-      themes_dir = g_build_filename ("/usr", "share", "themes", NULL);
+      themes_dir = g_build_filename("/usr", "share", "themes", NULL);
 
     filename = g_build_filename(themes_dir, _theme_name, subpath, NULL);
 
