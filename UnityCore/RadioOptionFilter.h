@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_RADIO_BUTTON_FILTER_H
-#define UNITY_RADIO_BUTTON_FILTER_H
+#ifndef UNITY_RADIO_OPTION_FILTER_H
+#define UNITY_RADIO_OPTION_FILTER_H
 
 #include "Filter.h"
 
@@ -27,37 +27,37 @@ namespace unity
 namespace dash
 {
 
-class RadioButtonFilter : public Filter
+class RadioOptionFilter : public Filter
 {
 public:
-  typedef std::shared_ptr<RadioButtonFilter> Ptr;
-  typedef std::vector<FilterButton::Ptr> RadioButtons;
+  typedef std::shared_ptr<RadioOptionFilter> Ptr;
+  typedef std::vector<FilterOption::Ptr> RadioOptions;
 
-  RadioButtonFilter(DeeModel* model, DeeModelIter* iter);
+  RadioOptionFilter(DeeModel* model, DeeModelIter* iter);
 
   void Clear();
 
-  /* When a button is clicked. Don't worry about state, we'll handle that internally.
-   * From this you'll get a changed event on the buttons effected,
-   * which you can then re-render your view. The logic of the radio button is handled
+  /* When a option is clicked. Don't worry about state, we'll handle that internally.
+   * From this you'll get a changed event on the options effected,
+   * which you can then re-render your view. The logic of the radio option is handled
    * internally
    */
   void Toggle(std::string id);
 
-  nux::ROProperty<RadioButtons> buttons;
+  nux::ROProperty<RadioOptions> options;
 
-  sigc::signal<void, FilterButton::Ptr> button_added;
-  sigc::signal<void, FilterButton::Ptr> button_removed;
+  sigc::signal<void, FilterOption::Ptr> option_added;
+  sigc::signal<void, FilterOption::Ptr> option_removed;
 
 protected:
   void Update(Filter::Hints& hints);
 
 private:
   void UpdateState(bool raw_filtering);
-  RadioButtons const& get_buttons() const;
+  RadioOptions const& get_options() const;
 
 private:
-  RadioButtons buttons_;
+  RadioOptions options_;
 };
 
 }

@@ -31,33 +31,33 @@ class MultiRangeFilter : public Filter
 {
 public:
   typedef std::shared_ptr<MultiRangeFilter> Ptr;
-  typedef std::vector<FilterButton::Ptr> Buttons;
+  typedef std::vector<FilterOption::Ptr> Options;
 
   MultiRangeFilter(DeeModel* model, DeeModelIter* iter);
 
   void Clear();
 
-  /* When a button is clicked. Don't worry about state, we'll handle that internally.
-   * From this you'll get a changed event on "buttons", which you can then re-render
+  /* When a option is clicked. Don't worry about state, we'll handle that internally.
+   * From this you'll get a changed event on "options", which you can then re-render
    * your view. The logic of the multi-range is handled internally.
    */
   void Toggle(std::string const& id);
 
-  nux::ROProperty<Buttons> buttons;
+  nux::ROProperty<Options> options;
 
-  sigc::signal<void, FilterButton::Ptr> button_added;
-  sigc::signal<void, FilterButton::Ptr> button_removed;
+  sigc::signal<void, FilterOption::Ptr> option_added;
+  sigc::signal<void, FilterOption::Ptr> option_removed;
 
 protected:
   void Update(Filter::Hints& hints);
 
 private:
   void UpdateState(bool raw_filtering);
-  Buttons const& get_buttons() const;
+  Options const& get_options() const;
   int PositionOfId(std::string const& id);
 
 private:
-  Buttons buttons_;
+  Options options_;
   int left_pos_;
   int right_pos_;
 };

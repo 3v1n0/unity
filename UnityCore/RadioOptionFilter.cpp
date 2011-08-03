@@ -17,7 +17,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "MultiRangeFilter.h"
+#include "RadioOptionFilter.h"
 
 #include <NuxCore/Logger.h>
 
@@ -28,23 +28,18 @@ namespace dash
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.multirangefilter");
+nux::logging::Logger logger("unity.dash.radiooptionfilter");
 }
 
-MultiRangeFilter::MultiRangeFilter(DeeModel* model, DeeModelIter* iter)
+RadioOptionFilter::RadioOptionFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)
-  , left_pos_(-1)
-  , right_pos_(-1)
 {
-  options.SetGetterFunction(sigc::mem_fun(this, &MultiRangeFilter::get_options));
+  options.SetGetterFunction(sigc::mem_fun(this, &RadioOptionFilter::get_options));
   Refresh();
 }
 
-void MultiRangeFilter::Clear()
+void RadioOptionFilter::Clear()
 {
-  left_pos_ = -1;
-  right_pos_ = -1;
-
   for(auto option: options_)
   {
     option->active = false;
@@ -54,42 +49,21 @@ void MultiRangeFilter::Clear()
   options.EmitChanged(options_);
 }
 
-void MultiRangeFilter::Toggle(std::string const& id)
+void RadioOptionFilter::Toggle(std::string id)
 {
-  int position = PositionOfId(id);
-
-  if (left_pos_ == -1 && right_pos_ == -1)
-  {
-    left_pos_ = position;
-    right_pos_ = position;
-  }
-  else if (left_pos_ > position)
-  {
-    left_pos_ = position;
-  }
-  else if (right_pos_ < position)
-  {
-    right_pos_ = position;
-  }
-
-  int i = 0;
   for(auto option: options_)
   {
-    if (i < left_pos_)
-      option->active = false;
-    else if (i <= right_pos_)
+    if (option->id == id)
       option->active = true;
     else
       option->active = false;
-
-    i++;
   }
   UpdateState(true);
 
   options.EmitChanged(options_);
 }
 
-void MultiRangeFilter::Update(Filter::Hints& hints)
+void RadioOptionFilter::Update(Filter::Hints& hints)
 {
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
@@ -115,12 +89,12 @@ void MultiRangeFilter::Update(Filter::Hints& hints)
   options.EmitChanged(options_);
 }
 
-MultiRangeFilter::Options const& MultiRangeFilter::get_options() const
+RadioOptionFilter::RadioOptions const& RadioOptionFilter::get_options() const
 {
   return options_;
 }
 
-void MultiRangeFilter::UpdateState(bool raw_filtering)
+void RadioOptionFilter::UpdateState(bool raw_filtering)
 {
   if (!IsValid())
     return;
@@ -151,19 +125,6 @@ void MultiRangeFilter::UpdateState(bool raw_filtering)
                       FilterColumn::FILTERING,
                       g_variant_new("b", raw_filtering ? TRUE : FALSE));
 }
-
-int MultiRangeFilter::PositionOfId(std::string const& id)
-{
-  int i = 0;
-  for (auto option: options_)
-  {
-    if (option->id == id)
-      return i;
-    i++;
-  }
-  return -1;
-}
-
 
 }
 }

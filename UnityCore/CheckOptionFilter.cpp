@@ -17,7 +17,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "CheckButtonFilter.h"
+#include "CheckOptionFilter.h"
 
 #include <NuxCore/Logger.h>
 
@@ -28,94 +28,94 @@ namespace dash
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.checkbuttonfilter");
+nux::logging::Logger logger("unity.dash.checkoptionfilter");
 }
 
-CheckButtonFilter::CheckButtonFilter(DeeModel* model, DeeModelIter* iter)
+CheckOptionFilter::CheckOptionFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)
 {
-  buttons.SetGetterFunction(sigc::mem_fun(this, &CheckButtonFilter::get_buttons));
+  options.SetGetterFunction(sigc::mem_fun(this, &CheckOptionFilter::get_options));
   Refresh();
 }
 
-void CheckButtonFilter::Clear()
+void CheckOptionFilter::Clear()
 {
-  for(auto button: buttons_)
+  for(auto option: options_)
   {
-    button->active = false;
+    option->active = false;
   }
   UpdateState(false);
 
-  buttons.EmitChanged(buttons_);
+  options.EmitChanged(options_);
 }
 
-void CheckButtonFilter::Toggle(std::string id)
+void CheckOptionFilter::Toggle(std::string id)
 {
-  for(auto button: buttons_)
+  for(auto option: options_)
   {
-    if (button->id == id)
-      button->active = true;
+    if (option->id == id)
+      option->active = true;
   }
   UpdateState(true);
 
-  buttons.EmitChanged(buttons_);
+  options.EmitChanged(options_);
 }
 
-void CheckButtonFilter::Update(Filter::Hints& hints)
+void CheckOptionFilter::Update(Filter::Hints& hints)
 {
-  GVariant* buttons_variant = hints["buttons"];
-  GVariantIter* buttons_iter;
+  GVariant* options_variant = hints["options"];
+  GVariantIter* options_iter;
 
-  g_variant_get(buttons_variant, "(sssb)", &buttons_iter);
+  g_variant_get(options_variant, "(sssb)", &options_iter);
 
   char *id = NULL;
   char *name = NULL;
   char *icon_hint = NULL;
   gboolean active = false;
 
-  for (auto button: buttons_)
-    button_removed.emit(button);
+  for (auto option: options_)
+    option_removed.emit(option);
 
-  buttons_.clear();
+  options_.clear();
 
-  while (g_variant_iter_loop(buttons_iter, "sssb", &id, &name, &icon_hint, &active))
+  while (g_variant_iter_loop(options_iter, "sssb", &id, &name, &icon_hint, &active))
   {
-    FilterButton::Ptr button(new FilterButton(id, name, icon_hint, active));
-    buttons_.push_back(button);
-    button_added.emit(button);
+    FilterOption::Ptr option(new FilterOption(id, name, icon_hint, active));
+    options_.push_back(option);
+    option_added.emit(option);
   }
 
-  buttons.EmitChanged(buttons_);
+  options.EmitChanged(options_);
 }
 
-CheckButtonFilter::CheckButtons const& CheckButtonFilter::get_buttons() const
+CheckOptionFilter::CheckOptions const& CheckOptionFilter::get_options() const
 {
-  return buttons_;
+  return options_;
 }
 
-void CheckButtonFilter::UpdateState(bool raw_filtering)
+void CheckOptionFilter::UpdateState(bool raw_filtering)
 {
   if (!IsValid())
     return;
 
-  GVariantBuilder buttons;
-  g_variant_builder_init(&buttons, G_VARIANT_TYPE("a(sssb)"));
+  GVariantBuilder options;
+  g_variant_builder_init(&options, G_VARIANT_TYPE("a(sssb)"));
 
-  for(auto button: buttons_)
+  for(auto option: options_)
   {
-    std::string id = button->id;
-    std::string name = button->name;
-    std::string icon_hint = button->icon_hint;
-    bool active = button->active;
+    std::string id = option->id;
+    std::string name = option->name;
+    std::string icon_hint = option->icon_hint;
+    bool active = option->active;
 
-    g_variant_builder_add(&buttons, "sssb",
+    g_variant_builder_add(&options, "sssb",
                           id.c_str(), name.c_str(),
                           icon_hint.c_str(), active ? TRUE : FALSE);
   }
   
   GVariantBuilder hints;
   g_variant_builder_init(&hints, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&hints, "{sv}", "buttons", g_variant_builder_end(&buttons));
+  g_variant_builder_add(&hints, "{sv}", "options", g_variant_builder_end(&options));
 
   dee_model_set_value(model_,iter_,
                       FilterColumn::RENDERER_STATE,
