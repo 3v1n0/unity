@@ -99,6 +99,7 @@ Tooltip::~Tooltip()
 
 Area* Tooltip::FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type)
 {
+  // No area under mouse to allow click through to entities below
   return 0;
 }
 
