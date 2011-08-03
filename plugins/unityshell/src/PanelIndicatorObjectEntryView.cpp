@@ -405,9 +405,10 @@ void draw_menu_bg(cairo_t* cr, int width, int height)
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
   gtk_style_context_set_state(style_context, GTK_STATE_FLAG_PRELIGHT);
 
-  // FIXME(Cimi) probably some padding is needed here.
-  gtk_render_background(style_context, cr, 0, 0, width, height);
-  gtk_render_frame(style_context, cr, 0, 0, width, height);
+  // FIXME(Cimi) 1px of padding because the dropdown menu was not aligned,
+  // maybe a better fix somewhere else?
+  gtk_render_background(style_context, cr, 1, 0, width - 2, height);
+  gtk_render_frame(style_context, cr, 1, 0, width - 2, height);
 
   gtk_widget_path_free(widget_path);
 
