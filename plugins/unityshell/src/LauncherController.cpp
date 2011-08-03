@@ -328,6 +328,9 @@ void LauncherController::SetupBamf()
   GList* apps, *l;
   BamfApplication* app;
   BamfLauncherIcon* icon;
+
+  // Sufficiently large number such that we ensure proper sorting 
+  // (avoids case where first item gets tacked onto end rather than start)
   int priority = 100;
 
   _matcher = bamf_matcher_get_default();
