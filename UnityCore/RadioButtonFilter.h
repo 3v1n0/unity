@@ -38,8 +38,9 @@ public:
   void Clear();
 
   /* When a button is clicked. Don't worry about state, we'll handle that internally.
-   * From this you'll get a changed event on "buttons", which you can then re-render
-   * your view. The logic of the radio button is handled internally
+   * From this you'll get a changed event on the buttons effected,
+   * which you can then re-render your view. The logic of the radio button is handled
+   * internally
    */
   void Toggle(std::string id);
 

@@ -99,7 +99,7 @@ void CheckButtonFilter::UpdateState(bool raw_filtering)
     return;
 
   GVariantBuilder buttons;
-  g_variant_builder_init(&buttons, G_VARIANT_TYPE("(sssb)"));
+  g_variant_builder_init(&buttons, G_VARIANT_TYPE("a(sssb)"));
 
   for(auto button: buttons_)
   {

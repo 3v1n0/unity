@@ -126,7 +126,7 @@ void MultiRangeFilter::UpdateState(bool raw_filtering)
     return;
 
   GVariantBuilder segments;
-  g_variant_builder_init(&segments, G_VARIANT_TYPE("(sssb)"));
+  g_variant_builder_init(&segments, G_VARIANT_TYPE("a(sssb)"));
 
   for(auto segment: segments_)
   {
