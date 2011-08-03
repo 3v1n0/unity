@@ -142,47 +142,90 @@ PanelStyle::GetBackground(int width, int height)
 nux::BaseTexture*
 PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
 {
-#define ICON_LOCATION "/usr/share/themes/%s/metacity-1/%s%s.png"
   nux::BaseTexture* texture = NULL;
   const char* names[] = { "close", "minimize", "unmaximize" };
   const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
+  const char* home_dir;
+  char*       filename = NULL;
+  char*       subpath = NULL;
+  GdkPixbuf* pixbuf;
+  GError*    error = NULL;
 
-  // I wish there was a magic bullet here, but not all themes actually set the panel to be
-  // the same style as the window titlebars (e.g. Clearlooks) so we can just grab the
-  // metacity window buttons as that would look horrible
-  if (IsAmbianceOrRadiance())
+  // Set subpath to append to the theme directory
+  subpath = g_strdup_printf("unity/%s%s.png", names[type], states[state]);
+
+  // Look in home directory
+  home_dir = g_get_home_dir();
+  if (home_dir)
   {
-    char*      filename;
-    GdkPixbuf* pixbuf;
-    GError*    error = NULL;
+    filename = g_build_filename(home_dir, ".themes", _theme_name, subpath, NULL);
 
-    filename = g_strdup_printf(ICON_LOCATION, _theme_name, names[type], states[state]);
-
-    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
-    if (error)
+    if (!g_file_test(filename, G_FILE_TEST_EXISTS))
     {
-      g_warning("Unable to load window button %s: %s", filename, error->message);
-      g_error_free(error);
-      error = NULL;
+      g_free(filename);
+      filename = NULL;
     }
     else
-      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    {
+      // Found a file, try loading the pixbuf
+      pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+      if (error)
+      {
+        g_warning("Unable to load window button %s: %s", filename, error->message);
+        g_error_free(error);
+        error = NULL;
+
+        g_free(filename);
+        filename = NULL;
+      }
+      else
+        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+
+      g_object_unref(pixbuf);
+    }
+  }
+
+  // filename is NULL if the pixbuf is not loaded
+  if (!filename)
+  {
+    const char* var;
+    char*       themes_dir = NULL;
+
+    var = g_getenv ("GTK_DATA_PREFIX");
+    if (var)
+      themes_dir = g_build_filename (var, "share", "themes", NULL);
+    else
+      themes_dir = g_build_filename ("/usr", "share", "themes", NULL);
+
+    filename = g_build_filename(themes_dir, _theme_name, subpath, NULL);
+
+    g_free(themes_dir);
+
+    if (g_file_test(filename, G_FILE_TEST_EXISTS))
+    {
+      // Found a file, try loading the pixbuf
+      pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+      if (error)
+      {
+        g_warning("Unable to load window button %s: %s", filename, error->message);
+        g_error_free(error);
+        error = NULL;
+      }
+      else
+        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+
+      g_object_unref(pixbuf);
+    }
 
     g_free(filename);
-    g_object_unref(pixbuf);
   }
-  else
-  {
+
+  g_free(subpath);
+
+  if (!texture)
     texture = GetWindowButtonForTheme(type, state);
-  }
 
   return texture;
-}
-
-bool
-PanelStyle::IsAmbianceOrRadiance()
-{
-  return g_strcmp0(_theme_name, "Ambiance") == 0 || g_strcmp0(_theme_name, "Radiance") == 0;
 }
 
 nux::BaseTexture*
