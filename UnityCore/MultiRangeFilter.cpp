@@ -36,7 +36,7 @@ MultiRangeFilter::MultiRangeFilter(DeeModel* model, DeeModelIter* iter)
   , left_pos_(-1)
   , right_pos_(-1)
 {
-  segments.SetGetterFunction(sigc::mem_fun(this, &MultiRangeFilter::get_segments));
+  buttons.SetGetterFunction(sigc::mem_fun(this, &MultiRangeFilter::get_buttons));
   Refresh();
 }
 
@@ -45,13 +45,13 @@ void MultiRangeFilter::Clear()
   left_pos_ = -1;
   right_pos_ = -1;
 
-  for(auto segment: segments_)
+  for(auto button: buttons_)
   {
-    segment->active = false;
+    button->active = false;
   }
   UpdateState(false);
 
-  segments.EmitChanged(segments_);
+  buttons.EmitChanged(buttons_);
 }
 
 void MultiRangeFilter::Toggle(std::string const& id)
@@ -73,51 +73,51 @@ void MultiRangeFilter::Toggle(std::string const& id)
   }
 
   int i = 0;
-  for(auto segment: segments_)
+  for(auto button: buttons_)
   {
     if (i < left_pos_)
-      segment->active = false;
+      button->active = false;
     else if (i <= right_pos_)
-      segment->active = true;
+      button->active = true;
     else
-      segment->active = false;
+      button->active = false;
 
     i++;
   }
   UpdateState(true);
 
-  segments.EmitChanged(segments_);
+  buttons.EmitChanged(buttons_);
 }
 
 void MultiRangeFilter::Update(Filter::Hints& hints)
 {
-  GVariant* segments_variant = hints["segments"];
-  GVariantIter* segments_iter;
+  GVariant* buttons_variant = hints["buttons"];
+  GVariantIter* buttons_iter;
 
-  g_variant_get(segments_variant, "(sssb)", &segments_iter);
+  g_variant_get(buttons_variant, "(sssb)", &buttons_iter);
 
   char *id = NULL;
   char *name = NULL;
   char *icon_hint = NULL;
   gboolean active = false;
 
-  for (auto segment: segments_)
-    segment_removed.emit(segment);
-  segments_.clear();
+  for (auto button: buttons_)
+    button_removed.emit(button);
+  buttons_.clear();
 
-  while (g_variant_iter_loop(segments_iter, "sssb", &id, &name, &icon_hint, &active))
+  while (g_variant_iter_loop(buttons_iter, "sssb", &id, &name, &icon_hint, &active))
   {
-    FilterButton::Ptr segment(new FilterButton(id, name, icon_hint, active));
-    segments_.push_back(segment);
-    segment_added.emit(segment);
+    FilterButton::Ptr button(new FilterButton(id, name, icon_hint, active));
+    buttons_.push_back(button);
+    button_added.emit(button);
   }
 
-  segments.EmitChanged(segments_);
+  buttons.EmitChanged(buttons_);
 }
 
-MultiRangeFilter::Segments const& MultiRangeFilter::get_segments() const
+MultiRangeFilter::Buttons const& MultiRangeFilter::get_buttons() const
 {
-  return segments_;
+  return buttons_;
 }
 
 void MultiRangeFilter::UpdateState(bool raw_filtering)
@@ -125,24 +125,24 @@ void MultiRangeFilter::UpdateState(bool raw_filtering)
   if (!IsValid())
     return;
 
-  GVariantBuilder segments;
-  g_variant_builder_init(&segments, G_VARIANT_TYPE("a(sssb)"));
+  GVariantBuilder buttons;
+  g_variant_builder_init(&buttons, G_VARIANT_TYPE("a(sssb)"));
 
-  for(auto segment: segments_)
+  for(auto button: buttons_)
   {
-    std::string id = segment->id;
-    std::string name = segment->name;
-    std::string icon_hint = segment->icon_hint;
-    bool active = segment->active;
+    std::string id = button->id;
+    std::string name = button->name;
+    std::string icon_hint = button->icon_hint;
+    bool active = button->active;
 
-    g_variant_builder_add(&segments, "sssb",
+    g_variant_builder_add(&buttons, "sssb",
                           id.c_str(), name.c_str(),
                           icon_hint.c_str(), active ? TRUE : FALSE);
   }
   
   GVariantBuilder hints;
   g_variant_builder_init(&hints, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&hints, "{sv}", "segments", g_variant_builder_end(&segments));
+  g_variant_builder_add(&hints, "{sv}", "buttons", g_variant_builder_end(&buttons));
 
   dee_model_set_value(model_,iter_,
                       FilterColumn::RENDERER_STATE,
@@ -155,9 +155,9 @@ void MultiRangeFilter::UpdateState(bool raw_filtering)
 int MultiRangeFilter::PositionOfId(std::string const& id)
 {
   int i = 0;
-  for (auto segment: segments_)
+  for (auto button: buttons_)
   {
-    if (segment->id == id)
+    if (button->id == id)
       return i;
     i++;
   }
