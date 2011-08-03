@@ -97,6 +97,11 @@ Tooltip::~Tooltip()
   _tooltip_text->UnReference();
 }
 
+Area* Tooltip::FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type)
+{
+  return 0;
+}
+
 long Tooltip::ProcessEvent(IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
   long ret = TraverseInfo;
