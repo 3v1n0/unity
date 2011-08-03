@@ -26,7 +26,7 @@
 #include "UBusMessages.h"
 
 BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
-  :   SimpleLauncherIcon(IconManager)
+ : SimpleLauncherIcon(IconManager)
 {
   tooltip_text = _("Ubuntu Start");
   SetIconName("distributor-logo");
@@ -35,24 +35,17 @@ BFBLauncherIcon::BFBLauncherIcon(Launcher* IconManager)
   SetIconType(TYPE_HOME);
 }
 
-BFBLauncherIcon::~BFBLauncherIcon()
-{
-}
-
-nux::Color
-BFBLauncherIcon::BackgroundColor()
+nux::Color BFBLauncherIcon::BackgroundColor()
 {
   return nux::Color(0xFF333333);
 }
 
-nux::Color
-BFBLauncherIcon::GlowColor()
+nux::Color BFBLauncherIcon::GlowColor()
 {
   return nux::Color(0xFF333333);
 }
 
-void
-BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   if (arg.button == 1)
   {

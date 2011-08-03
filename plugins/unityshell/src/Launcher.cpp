@@ -1510,11 +1510,11 @@ void Launcher::OnPlaceViewShown(GVariant* data, void* val)
   self->_hover_machine->SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
   // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (it = self->_model->begin(); it != self->_model->end(); it++)
+  for (auto icon : *(self->_model))
   {
-    if ((*it)->Type () != LauncherIcon::TYPE_HOME)
-      (*it)->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
-    (*it)->HideTooltip();
+    if (icon->Type () != LauncherIcon::TYPE_HOME)
+      icon->SetQuirk(LauncherIcon::QUIRK_DESAT, true);
+    icon->HideTooltip();
   }
 
   // hack around issue in nux where leave events dont always come after a grab
@@ -1538,9 +1538,9 @@ void Launcher::OnPlaceViewHidden(GVariant* data, void* val)
   self->SetStateMouseOverBFB(false);
 
   // TODO: add in a timeout for seeing the animation (and make it smoother)
-  for (it = self->_model->begin(); it != self->_model->end(); it++)
+  for (auto icon : *(self->_model))
   {
-    (*it)->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
+    icon->SetQuirk(LauncherIcon::QUIRK_DESAT, false);
   }
 }
 

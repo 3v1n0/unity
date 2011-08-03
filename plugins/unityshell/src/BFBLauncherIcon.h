@@ -17,8 +17,8 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef BFBLAUNCHERICON_H
-#define BFBLAUNCHERICON_H
+#ifndef UNITYSHELL_BFBLAUNCHERICON_H
+#define UNITYSHELL_BFBLAUNCHERICON_H
 
 #include "SimpleLauncherIcon.h"
 
@@ -27,7 +27,6 @@ class BFBLauncherIcon : public SimpleLauncherIcon
 
 public:
   BFBLauncherIcon(Launcher* launcher);
-  ~BFBLauncherIcon();
 
   virtual nux::Color BackgroundColor();
   virtual nux::Color GlowColor();
@@ -35,4 +34,4 @@ public:
   void ActivateLauncherIcon(ActionArg arg);
 };
 
-#endif // BFBLAUNCHERICON_H
+#endif // UNITYSHELL_BFBLAUNCHERICON_H
