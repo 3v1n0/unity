@@ -27,7 +27,9 @@
 #include <gtk/gtk.h>
 
 #include "FilterBasicButton.h"
-#include <FilterRatingsWidget.h>
+#include "FilterRatingsWidget.h"
+#include "FilterGenreWidget.h"
+#include "FilterGenreButton.h"
 
 class TestRunner
 {
@@ -57,10 +59,18 @@ void TestRunner::Init ()
   unity::FilterRatings *ratings = new unity::FilterRatings (NUX_TRACKER_LOCATION);
   ratings->rating = 3;
 
+  unity::FilterGenreButton *genre_button = new unity::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
+
+  unity::FilterGenre *genre = new unity::FilterGenre(NUX_TRACKER_LOCATION);
+
+
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
   layout->AddView (ratings, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout->AddView(genre_button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout->AddView(genre, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+
   layout->SetFocused (true);
 
   nux::GetGraphicsThread()->SetLayout (layout);

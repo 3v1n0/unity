@@ -289,6 +289,8 @@ add_executable (test-filters
                 TestFilters.cpp
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterGenreButton.cpp
+                ${UNITY_SRC}/FilterGenreWidget.cpp
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -297,6 +299,8 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterFactory.cpp
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterGenreButton.cpp
+                ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
                 )
 add_dependencies(test-filter-bar unity-core-${UNITY_API_VERSION})
