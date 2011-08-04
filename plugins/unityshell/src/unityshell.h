@@ -261,6 +261,13 @@ public:
               const CompRegion& region,
               unsigned intmask);
 
+  void updateIconPos (int   &wx,
+                      int   &wy,
+                      int   x,
+                      int   y,
+                      float width,
+                      float height);
+
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
   void resizeNotify(int x, int y, int w, int h);

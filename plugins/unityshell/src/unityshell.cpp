@@ -372,6 +372,18 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   nuxEpilogue();
 }
 
+void
+UnityWindow::updateIconPos (int   &wx,
+                            int   &wy,
+                            int   x,
+                            int   y,
+                            float width,
+                            float height)
+{
+  wx = x;
+  wy = y;
+}
+
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
 {
   nuxPrologue();
