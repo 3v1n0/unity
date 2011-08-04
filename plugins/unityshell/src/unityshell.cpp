@@ -82,15 +82,16 @@ gfloat get_opengl_version_f32(const gchar* version_string);
 
 }
 
-UnityScreen::UnityScreen(CompScreen* screen)
-  : PluginClassHandler <UnityScreen, CompScreen> (screen)
-  , screen(screen)
-  , cScreen(CompositeScreen::get(screen))
-  , gScreen(GLScreen::get(screen))
-  , relayoutSourceId(0)
-  , _edge_trigger_handle(0)
-  , doShellRepaint(false)
-  , switcher_desktop_icon(0)
+UnityScreen::UnityScreen(CompScreen *screen)
+ : PluginClassHandler <UnityScreen, CompScreen> (screen)
+ , screen(screen)
+ , cScreen(CompositeScreen::get(screen))
+ , gScreen(GLScreen::get(screen))
+ , relayoutSourceId(0)
+ , _edge_trigger_handle(0)
+ , doShellRepaint(false)
+ , switcher_desktop_icon (0)
+ , mActiveFbo (0)
 {
   Timer timer;
   configure_logging();
@@ -142,6 +143,14 @@ UnityScreen::UnityScreen(CompScreen* screen)
   debugger = new DebugDBusInterface(this);
 
   _edge_timeout = optionGetLauncherRevealEdgeTimeout ();
+
+  if (GL::fbo)
+  {
+    foreach (CompOutput &o, screen->outputDevs ())
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
+    
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
+  }
 
   optionSetLauncherHideModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
   optionSetBacklightModeNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -278,7 +287,7 @@ void UnityScreen::nuxPrologue()
 
 void UnityScreen::nuxEpilogue()
 {
-  (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, 0);
+  (*GL::bindFramebuffer)(GL_FRAMEBUFFER_EXT, mActiveFbo);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -371,11 +380,23 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
 
 void UnityScreen::paintDisplay(const CompRegion& region)
 {
-  nuxPrologue();
-  CompOutput* output = _last_output;
-  nux::Geometry geo = nux::Geometry(output->x(), output->y(), output->width(), output->height());
+  CompOutput *output = _last_output;
 
-  wt->RenderInterfaceFromForeignCmd(&geo);
+  mFbos[output]->unbind ();
+
+  /* Draw the bit of the relevant framebuffer for each output */
+  mFbos[output]->paint ();
+
+  nuxPrologue();
+  nux::ObjectPtr<nux::IOpenGLTexture2D> device_texture = 
+  nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(mFbos[output]->texture(), 
+  output->width(), output->height(), 1, nux::BITFMT_R8G8B8A8);
+
+  nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = device_texture;
+
+  nux::Geometry geo = nux::Geometry (output->x (), output->y (), output->width (), output->height ());
+
+  wt->RenderInterfaceFromForeignCmd (&geo);
   nuxEpilogue();
 
   doShellRepaint = false;
@@ -390,6 +411,9 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 unsigned int mask)
 {
   bool ret;
+
+  /* bind the framebuffer here */
+  mFbos[output]->bind ();
 
   doShellRepaint = true;
   allowWindowPaint = true;
@@ -413,12 +437,18 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            CompOutput* output,
                                            unsigned int mask)
 {
+  /* bind the framebuffer here */
+  mFbos[output]->bind ();
   allowWindowPaint = false;
+  /* urgh */
   gScreen->glPaintOutput(attrib, transform, region, output, mask);
 }
 
 void UnityScreen::preparePaint(int ms)
 {
+  // Marker 0 for real-time blur
+  placesController->GetWindow()->QueueDraw();
+
   cScreen->preparePaint(ms);
 
   if (damaged)
@@ -1086,9 +1116,17 @@ void UnityScreen::Relayout()
   if (!needsRelayout)
     return;
 
-  scr = gdk_screen_get_default();
-  primary_monitor = gdk_screen_get_primary_monitor(scr);
-  gdk_screen_get_monitor_geometry(scr, primary_monitor, &rect);
+  if (GL::fbo)
+  {
+    foreach (CompOutput &o, screen->outputDevs ())
+      uScreen->mFbos[&o] = UnityFBO::Ptr (new UnityFBO (&o));
+    
+    uScreen->mFbos[&(screen->fullscreenOutput ())] = UnityFBO::Ptr (new UnityFBO (&(screen->fullscreenOutput ())));
+  }
+
+  scr = gdk_screen_get_default ();
+  primary_monitor = gdk_screen_get_primary_monitor (scr);
+  gdk_screen_get_monitor_geometry (scr, primary_monitor, &rect);
   _primary_monitor = rect;
 
   wt->SetWindowSize(rect.width, rect.height);
@@ -1117,7 +1155,9 @@ gboolean UnityScreen::RelayoutTimeout(gpointer data)
 {
   UnityScreen* uScr = reinterpret_cast<UnityScreen*>(data);
 
-  uScr->NeedsRelayout();
+  uScreen->mFbos.clear ();
+
+  uScr->NeedsRelayout ();
   uScr->Relayout();
   uScr->relayoutSourceId = 0;
 
@@ -1145,6 +1185,185 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
 void UnityScreen::outputChangeNotify()
 {
   ScheduleRelayout(500);
+}
+
+void UnityFBO::paint ()
+{
+  //CompositeScreen *cScreen = CompositeScreen::get (screen);
+  //unsigned int    mask = cScreen->damageMask ();
+  float texx, texy, texwidth, texheight;
+
+  /* Draw the bit of the relevant framebuffer for each output */
+  GLMatrix transform;
+
+  glViewport (output->x (), screen->height () - output->y2 (), output->width (), output->height ());
+
+  transform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
+  glPushMatrix ();
+  glLoadMatrixf (transform.getMatrix ());
+
+  /* Note that texcoords here are normalized, so it's just (0,0)-(1,1) */
+  texx = 0.0;
+  texy = 0.0;
+  texwidth = 1.0f;
+  texheight = 1.0f;
+
+  if (mFBTexture)
+  {
+    glEnable (GL_TEXTURE_2D);
+    GL::activeTexture (GL_TEXTURE0_ARB);
+    glBindTexture (GL_TEXTURE_2D, mFBTexture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    glPushAttrib (GL_SCISSOR_BIT);
+    glEnable (GL_SCISSOR_TEST);
+
+    glScissor (output->x1 (), screen->height () - output->y2 (),
+		output->width (), output->height ());
+    
+    /* FIXME: This needs to be GL_TRIANGLE_STRIP */
+    glBegin (GL_QUADS);
+    glTexCoord2f (texx, texy + texheight);
+    glVertex2i   (output->x1 (), output->y1 ());
+    glTexCoord2f (texx, texy);
+    glVertex2i   (output->x1 (),	output->y2 ());
+    glTexCoord2f (texx + texwidth, texy);
+    glVertex2i   (output->x2 (), output->y2 ());
+    glTexCoord2f (texx + texwidth, texy + texheight);
+    glVertex2i   (output->x2 (), 	output->y1 ());
+    glEnd ();
+    
+    GL::activeTexture (GL_TEXTURE0_ARB);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture (GL_TEXTURE_2D, 0);
+    glEnable (GL_TEXTURE_2D);
+    
+    glDisable (GL_SCISSOR_TEST);
+    glPopAttrib ();
+  }
+
+  glPopMatrix();
+}
+
+void UnityFBO::unbind ()
+{
+  uScreen->setActiveFbo (0);
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, 0);
+
+  glDrawBuffer (GL_BACK);
+  glReadBuffer (GL_BACK);
+
+}
+
+bool UnityFBO::status ()
+{
+  return mFboStatus;
+}
+
+void UnityFBO::bind ()
+{
+  if (!mFBTexture)
+  {
+    glGenTextures (1, &mFBTexture);
+
+    glBindTexture (GL_TEXTURE_2D, mFBTexture);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, output->width (), output->height (), 0, GL_BGRA,
+#if IMAGE_BYTE_ORDER == MSBFirst
+		  GL_UNSIGNED_INT_8_8_8_8_REV,
+#else
+		  GL_UNSIGNED_BYTE,
+#endif
+		  NULL);
+
+    glBindTexture (GL_TEXTURE_2D, 0);
+  }
+
+  glGetError ();
+
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER_EXT, mFboHandle);
+
+  (*GL::framebufferTexture2D) (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+                               GL_TEXTURE_2D, mFBTexture, 0);
+
+  /* Ensure that a framebuffer is actually available */
+  if (!mFboStatus)
+  {
+    GLint status = (*GL::checkFramebufferStatus) (GL_DRAW_FRAMEBUFFER);
+
+    if (status != GL_FRAMEBUFFER_COMPLETE)
+    {
+       switch (status)
+       {
+          case GL_FRAMEBUFFER_UNDEFINED:
+            compLogMessage ("unity", CompLogLevelWarn, "no window"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+            compLogMessage ("unity", CompLogLevelWarn, "attachment incomplete"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+            compLogMessage ("unity", CompLogLevelWarn, "no buffers attached to fbo"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glDrawBuffers doesn't exist in FBO"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+            compLogMessage ("unity", CompLogLevelWarn, "some attachment in glReadBuffers doesn't exist in FBO"); break;
+          case GL_FRAMEBUFFER_UNSUPPORTED:
+            compLogMessage ("unity", CompLogLevelWarn, "unsupported internal format"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+            compLogMessage ("unity", CompLogLevelWarn, "different levels of sampling for each attachment"); break;
+          case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+            compLogMessage ("unity", CompLogLevelWarn, "number of layers is different"); break;
+          default:
+            compLogMessage ("unity", CompLogLevelWarn, "unable to bind the framebuffer for an unknown reason"); break;
+       }
+
+       GL::bindFramebuffer (GL_FRAMEBUFFER_EXT, 0);
+       GL::deleteFramebuffers (1, &mFboHandle);
+
+       glDrawBuffer (GL_BACK);
+       glReadBuffer (GL_BACK);
+
+       mFboHandle = 0;
+
+       mFboStatus = false;
+       uScreen->setActiveFbo (0);
+     }
+     else
+       mFboStatus = true;
+   }
+
+  if (mFboStatus)
+  {
+    uScreen->setActiveFbo (mFboHandle);
+
+    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+
+    glViewport (0,
+		0,
+		output->width (),
+		output->height ());
+
+  }
+}
+
+UnityFBO::UnityFBO (CompOutput *o)
+ : mFboStatus (false)
+ , mFBTexture (0)
+ , output (o)
+{
+  (*GL::genFramebuffers) (1, &mFboHandle);
+}
+
+UnityFBO::~UnityFBO ()
+{
+  (*GL::deleteFramebuffers) (1, &mFboHandle);
+
+  if (mFBTexture)
+    glDeleteTextures (1, &mFBTexture);
 }
 
 /* Start up the launcher */

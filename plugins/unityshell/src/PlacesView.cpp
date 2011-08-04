@@ -35,6 +35,7 @@
 #include "PlacesSettings.h"
 #include "PlacesView.h"
 #include <UnityCore/Variant.h>
+#include "BackgroundEffectHelper.h"
 
 static void place_entry_activate_request(GVariant* payload, PlacesView* self);
 
@@ -114,7 +115,7 @@ PlacesView::PlacesView(PlaceFactory* factory)
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    _bg_layer = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9f), true, rop);
+    _bg_layer = new nux::ColorLayer (nux::Color (0.0f, 0.0f, 0.0f, 0.2f), true, rop);
   }
 
   for (unsigned int i = 0; i < G_N_ELEMENTS(_ubus_handles); i++)
@@ -147,9 +148,11 @@ PlacesView::PlacesView(PlaceFactory* factory)
   _icon_loader = IconLoader::GetDefault();
 
   SetActiveEntry(_home_entry, 0, "");
-  
+ 
   // do a request for the latest colour from bghash
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
+
+  //noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
 }
 
 PlacesView::~PlacesView()
@@ -251,39 +254,27 @@ PlacesView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!_bg_blur_texture.IsValid() && paint_blur)
   {
-    nux::ObjectPtr<nux::IOpenGLFrameBufferObject> current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
-    nux::GetGraphicsDisplay()->GetGpuDevice()->DeactivateFrameBuffer();
-
-    GfxContext.SetViewport(0, 0, GfxContext.GetWindowWidth(), GfxContext.GetWindowHeight());
-    GfxContext.SetScissor(0, 0, GfxContext.GetWindowWidth(), GfxContext.GetWindowHeight());
-    GfxContext.GetRenderStates().EnableScissor(false);
-
-    nux::ObjectPtr <nux::IOpenGLBaseTexture> _bg_texture = GfxContext.CreateTextureFromBackBuffer(
-                                                             geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height);
-
-    nux::TexCoordXForm texxform__bg;
-    _bg_blur_texture = GfxContext.QRP_GetBlurTexture(0, 0, _bg_blur_geo.width, _bg_blur_geo.height, _bg_texture, texxform__bg, nux::color::White, 1.0f, 2);
-
-    if (current_fbo.IsValid())
-    {
-      current_fbo->Activate(true);
-      GfxContext.Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    }
-    else
-    {
-      GfxContext.SetViewport(0, 0, GfxContext.GetWindowWidth(), GfxContext.GetWindowHeight());
-      GfxContext.Push2DWindow(GfxContext.GetWindowWidth(), GfxContext.GetWindowHeight());
-      GfxContext.ApplyClippingRectangle();
-    }
+   
+   _bg_blur_texture = background_effect_helper_.GetBlurRegion(
+   nux::Geometry(geo_absolute.x, geo_absolute.y, _bg_blur_geo.width, _bg_blur_geo.height),
+   true);
 
     g_timeout_add(0, (GSourceFunc)OnQueueDrawDrawDraw, this);
   }
 
+  _bg_layer->SetColor(nux::Color (0.0f, 0.0f, 0.0f, 0.9f));
+
   if (_bg_blur_texture.IsValid()  && paint_blur)
   {
+    _bg_layer->SetColor(nux::Color (0.0f, 0.0f, 0.0f, 0.2f));
     nux::TexCoordXForm texxform_blur__bg;
+    texxform_blur__bg.flip_v_coord = true;
+    texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
+    texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
+
     nux::ROPConfig rop;
-    rop.Blend = true;
+    rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -414,11 +405,21 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
+  _bg_layer->SetColor(nux::Color (0.0f, 0.0f, 0.0f, 0.9f));
+
   if (_bg_blur_texture.IsValid() && paint_blur)
   {
+    _bg_layer->SetColor(nux::Color (0.0f, 0.0f, 0.0f, 0.2f));
+
+    nux::Geometry geo_absolute = GetAbsoluteGeometry ();
     nux::TexCoordXForm texxform_blur__bg;
+    texxform_blur__bg.flip_v_coord = true;
+    texxform_blur__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform_blur__bg.uoffset = ((float) _bg_blur_geo.x) / geo_absolute.width;
+    texxform_blur__bg.voffset = ((float) _bg_blur_geo.y) / geo_absolute.height;
+
     nux::ROPConfig rop;
-    rop.Blend = true;
+    rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
@@ -444,6 +445,9 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(false);
 
   GfxContext.PopClippingRectangle();
+
+  // Marker 1 for real-time blur
+  _bg_blur_texture.Release();
 }
 
 //
