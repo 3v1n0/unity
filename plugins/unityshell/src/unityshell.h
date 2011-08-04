@@ -133,6 +133,14 @@ public:
   bool altTabForwardTerminate(CompAction* action,
                               CompAction::State state,
                               CompOption::Vector& options);
+  
+  bool altTabDetailInitiate(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+
+  bool altTabDetailTerminate(CompAction* action,
+                             CompAction::State state,
+                             CompOption::Vector& options);
 
   bool altTabPrevInitiate(CompAction* action,
                           CompAction::State state,

@@ -161,6 +161,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  optionSetAltTabDetailInitiate(boost::bind(&UnityScreen::altTabDetailInitiate, this, _1, _2, _3));
+  optionSetAltTabDetailTerminate(boost::bind(&UnityScreen::altTabDetailTerminate, this, _1, _2, _3));
   optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
@@ -398,6 +400,9 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask)
 {
+  GLMatrix matrix = transform;
+  matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, 0.0f);
+  
   paintThumb (gWindow->lastPaintAttrib (),
               transform,
               mask,
@@ -757,6 +762,25 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action,
 }
 
 bool UnityScreen::altTabPrevTerminate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
+{
+  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
+bool UnityScreen::altTabDetailInitiate(CompAction* action,
+                                     CompAction::State state,
+                                     CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->DetailCurrent();
+
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabDetailTerminate(CompAction* action,
                                       CompAction::State state,
                                       CompOption::Vector& options)
 {

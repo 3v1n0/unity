@@ -29,7 +29,8 @@ namespace switcher
 {
 
 SwitcherController::SwitcherController()
-  :  view_window_(0)
+  :  view_(0)
+  ,  view_window_(0)
   ,  visible_(false)
   ,  show_timer_(0)
 {
@@ -112,6 +113,8 @@ void SwitcherController::Hide()
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
+
+  view_ = 0;
 }
 
 bool SwitcherController::Visible()
