@@ -83,7 +83,8 @@ gfloat get_opengl_version_f32(const gchar* version_string);
 }
 
 UnityScreen::UnityScreen(CompScreen* screen)
-  : PluginClassHandler <UnityScreen, CompScreen> (screen)
+  : BaseSwitchScreen (screen)
+  , PluginClassHandler <UnityScreen, CompScreen> (screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
@@ -369,7 +370,7 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   nuxEpilogue();
 }
 
-void UnityScreen::paintDisplay(const CompRegion& region)
+void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
 {
   nuxPrologue();
   CompOutput* output = _last_output;
@@ -378,8 +379,34 @@ void UnityScreen::paintDisplay(const CompRegion& region)
   wt->RenderInterfaceFromForeignCmd(&geo);
   nuxEpilogue();
 
+  if (switcherController->Visible ())
+  {
+    WindowRenderTargetList targets = switcherController->ExternalRenderTargets ();
+
+    for (auto target : targets)
+    {
+      CompWindow* window = screen->findWindow(target.window);
+      UnityWindow *unity_window = UnityWindow::get (window);
+
+      unity_window->paintThumbnail (target.bounding, transform, mask);
+    }
+  }
+
   doShellRepaint = false;
   damaged = false;
+}
+
+void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask)
+{
+  paintThumb (gWindow->lastPaintAttrib (),
+              transform,
+              mask,
+              bounding.x,
+              bounding.y,
+              bounding.width,
+              bounding.height,
+              bounding.width,
+              bounding.height);
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -399,7 +426,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
   if (doShellRepaint)
-    paintDisplay(region);
+    paintDisplay(region, transform, mask);
 
   return ret;
 }
@@ -913,7 +940,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (xwns[i] == id)
         {
-          uScreen->paintDisplay(region);
+          uScreen->paintDisplay(region, matrix, mask);
           break;
         }
       }
@@ -1225,7 +1252,8 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
 /* Window init */
 UnityWindow::UnityWindow(CompWindow* window)
-  : PluginClassHandler<UnityWindow, CompWindow>(window)
+  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
+  , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
 {

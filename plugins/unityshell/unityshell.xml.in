@@ -33,6 +33,7 @@
             </relation>
             <requirement>
                 <plugin>opengl</plugin>
+                <plugin>compiztoolbox</plugin>
                 <feature>largedesktop</feature>
             </requirement>
         </deps>

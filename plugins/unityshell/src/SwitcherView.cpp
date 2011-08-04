@@ -53,6 +53,8 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
+  render_targets_.clear ();
+
   background_texture_ = nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_background.png", -1, true);
 
   text_view_ = new nux::StaticCairoText("Testing");
@@ -67,6 +69,12 @@ SwitcherView::~SwitcherView()
   text_view_->UnReference();
   if (redraw_handle_ > 0)
     g_source_remove(redraw_handle_);
+}
+
+WindowRenderTargetList SwitcherView::ExternalTargets ()
+{
+  WindowRenderTargetList result = render_targets_;
+  return result;
 }
 
 static int
@@ -174,12 +182,41 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
+void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
+{
+  std::vector<Window> xids = selection_arg.icon->RelatedXids ();
+
+  int width = 1;
+  int height = 1;
+
+  while (width * height < (int) xids.size ())
+  {
+    if (height < width)
+      height++;
+    else
+      width++;
+  }
+
+  int block_width = (tile_size * spread_size) / width;
+  int block_height = (tile_size * spread_size) / height;
+
+  int x = 0;
+  int y = 0;
+  for (Window window : xids)
+  {
+    RenderTargetData element;
+    element.window = window;
+    element.bounding = nux::Geometry (x * block_width, y * block_height, block_width, block_height);
+    render_targets_.push_back (element);
+  }
+}
+
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
 {
   std::list<RenderArg> results;
   nux::Geometry base = GetGeometry();
 
-  
+  render_targets_.clear ();
 
   bool detail_selection = model_->detail_selection;
 
@@ -314,8 +351,14 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       }
 
       arg.render_center.z = abs(80.0f * arg.y_rotation);
-
       arg.logical_center = arg.render_center;
+
+      if (i == selection && detail_selection)
+      {
+        arg.skip = true;
+        UpdateRenderTargets (arg);
+      }
+
       results.push_back(arg);
       ++i;
     }

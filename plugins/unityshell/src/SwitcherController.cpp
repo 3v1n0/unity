@@ -138,6 +138,16 @@ void SwitcherController::DetailCurrent()
   model_->detail_selection = true;
 }
 
+WindowRenderTargetList SwitcherController::ExternalRenderTargets ()
+{
+  if (!view_)
+  {
+    WindowRenderTargetList result;
+    return result;
+  }
+  return view_->ExternalTargets ();
+}
+
 bool SwitcherController::CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
 {
   if (first->Type() == second->Type())

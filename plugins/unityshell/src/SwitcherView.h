@@ -37,12 +37,24 @@ namespace unity
 namespace switcher
 {
 
+class RenderTargetData
+{
+public:
+  nux::Geometry bounding;
+  Window window;
+};
+
+typedef std::vector<RenderTargetData> WindowRenderTargetList;
+
 class SwitcherView : public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(SwitcherView, nux::View);
 public:
+
   SwitcherView(NUX_FILE_LINE_PROTO);
   virtual ~SwitcherView();
+
+  WindowRenderTargetList ExternalTargets ();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
@@ -72,6 +84,8 @@ private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
 
+  void UpdateRenderTargets (RenderArg const& selection_arg);
+
   static gboolean OnDrawTimeout(gpointer data);
 
   void SaveLast ();
@@ -91,6 +105,8 @@ private:
 
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
+
+  WindowRenderTargetList render_targets_;
 
   timespec save_time_;
 };

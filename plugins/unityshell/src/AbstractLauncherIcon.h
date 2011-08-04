@@ -27,6 +27,8 @@
 
 #include <sigc++/sigc++.h>
 
+#include <X11/Xlib.h>
+
 #include <libdbusmenu-glib/menuitem.h>
 
 class ActionArg
@@ -121,6 +123,8 @@ public:
   virtual int SortPriority() = 0;
 
   virtual int RelatedWindows() = 0;
+
+  virtual std::vector<Window> RelatedXids () = 0;
 
   virtual bool HasWindowOnViewport() = 0;
 

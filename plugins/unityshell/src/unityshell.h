@@ -44,6 +44,8 @@
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
+#include <compiztoolbox/compiztoolbox.h>
+
 using namespace unity::switcher;
 
 /* base screen class */
@@ -53,6 +55,7 @@ class UnityScreen :
   public ScreenInterface,
   public CompositeScreenInterface,
   public GLScreenInterface,
+  public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
   public UnityshellOptions
 {
@@ -71,7 +74,7 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-  void paintDisplay(const CompRegion& region);
+  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
   void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint(int ms);
@@ -234,6 +237,7 @@ private:
 class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
+  public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
 public:
@@ -256,6 +260,8 @@ public:
 
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
+
+  void paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask);
 };
 
 
