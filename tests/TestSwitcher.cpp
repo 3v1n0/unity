@@ -34,16 +34,16 @@ using namespace unity::ui;
 
 static gboolean on_timeout(gpointer data)
 {
-  static bool foo = false;
+  static int foo = 0;
 
   SwitcherController* self = (SwitcherController*) data;
 
-  if (foo)
+  if (foo % 3 != 0)
     self->MoveNext();
   else
     self->DetailCurrent ();
   
-  foo = !foo;
+  foo++;
 
   return TRUE;
 }
@@ -54,7 +54,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   SwitcherController* view = new SwitcherController();
   view->SetWorkspace(nux::Geometry(0, 0, 900, 700));
 
-  //view->SetMinMaxSize(1024, 24);
   layout->SetContentDistribution(nux::eStackCenter);
 
   nux::GetGraphicsThread()->SetLayout(layout);
