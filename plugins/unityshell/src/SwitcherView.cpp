@@ -202,11 +202,15 @@ void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
 
   int x = 0;
   int y = 0;
+
+  nux::Geometry absolute = GetAbsoluteGeometry ();
+  int start_x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
+  int start_y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
   for (Window window : xids)
   {
     RenderTargetData element;
     element.window = window;
-    element.bounding = nux::Geometry (x * block_width, y * block_height, block_width, block_height);
+    element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
     render_targets_.push_back (element);
   }
 }
