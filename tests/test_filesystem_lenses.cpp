@@ -57,7 +57,7 @@ TEST(TestFilesystemLenses, TestFileLoading)
 TEST(TestFilesystemLenses, TestLensesAdded)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  int  n_lenses = 0;
+  unsigned int n_lenses = 0;
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
   {
@@ -81,7 +81,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->dbus_name, "com.canonical.tests.Lens.Applications");
   EXPECT_EQ(lens->dbus_path, "/com/canonical/tests/lens/applications");
   EXPECT_EQ(lens->name, "Applications");
-  EXPECT_EQ(lens->icon, "/usr/share/unity-lens-applications/applications.png");
+  EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-applications/applications.png");
   EXPECT_EQ(lens->description, "Search for applications");
   EXPECT_EQ(lens->search_hint, "Search Applications");
   EXPECT_EQ(lens->visible, true);
@@ -92,7 +92,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->dbus_name, "com.canonical.tests.Lens.Files");
   EXPECT_EQ(lens->dbus_path, "/com/canonical/tests/lens/files");
   EXPECT_EQ(lens->name, "Files");
-  EXPECT_EQ(lens->icon, "/usr/share/unity-lens-files/files.png");
+  EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-files/files.png");
   EXPECT_EQ(lens->description, "Search for Files & Folders");
   EXPECT_EQ(lens->search_hint, "Search Files & Folders");
   EXPECT_EQ(lens->visible, true);
@@ -103,7 +103,7 @@ TEST(TestFilesystemLenses, TestLensContent)
   EXPECT_EQ(lens->dbus_name, "com.canonical.tests.Lens.Social");
   EXPECT_EQ(lens->dbus_path, "/com/canonical/tests/lens/social");
   EXPECT_EQ(lens->name, "Social");
-  EXPECT_EQ(lens->icon, "/usr/share/unity-lens-social/social.png");
+  EXPECT_EQ(lens->icon_hint, "/usr/share/unity-lens-social/social.png");
   EXPECT_EQ(lens->description, "");
   EXPECT_EQ(lens->search_hint, "");
   EXPECT_EQ(lens->visible, false);
