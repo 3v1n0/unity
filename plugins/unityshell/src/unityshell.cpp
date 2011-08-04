@@ -406,7 +406,7 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix&
   printf ("Bounding %i,%i %ix%i\n", bounding.x, bounding.y, bounding.width, bounding.height);
   
   paintThumb (gWindow->paintAttrib (),
-              transform,
+              matrix,
               mask,
               bounding.x,
               bounding.y,
