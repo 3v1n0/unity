@@ -135,7 +135,7 @@ void SwitcherController::MovePrev()
 
 void SwitcherController::DetailCurrent()
 {
-
+  model_->detail_selection = true;
 }
 
 bool SwitcherController::CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second)

@@ -43,6 +43,8 @@ public:
   typedef Base::iterator iterator;
   typedef Base::reverse_iterator reverse_iterator;
 
+  nux::Property<bool> detail_selection;
+
   // Icons are owned externally and assumed valid for life of switcher.
   // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
   // will no longer be a worry.
@@ -69,15 +71,12 @@ public:
   void Select(AbstractLauncherIcon* selection);
   void Select(int index);
 
-  timespec SelectionChangeTime();
-
   sigc::signal<void, AbstractLauncherIcon*> selection_changed;
 
 private:
   Base             _inner;
   unsigned int     _index;
   unsigned int     _last_index;
-  timespec         _change_time;
 };
 
 }

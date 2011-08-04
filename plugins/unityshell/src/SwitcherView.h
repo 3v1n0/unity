@@ -55,6 +55,7 @@ public:
   nux::Property<int> vertical_size;
   nux::Property<int> text_size;
   nux::Property<int> animation_length;
+  nux::Property<double> spread_size;
 
 protected:
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
@@ -62,16 +63,18 @@ protected:
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   RenderArg InterpolateRenderArgs(RenderArg const& start, RenderArg const& end, float progress);
-
-  std::list<RenderArg> RenderArgsMechanical(nux::Geometry& background_geo, AbstractLauncherIcon* selection, timespec const& current);
+  nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
 
   std::list<RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
 
   RenderArg CreateBaseArgForIcon(AbstractLauncherIcon* icon);
 private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
+  void OnDetailSelectionChanged (bool detail);
 
   static gboolean OnDrawTimeout(gpointer data);
+
+  void SaveLast ();
 
   AbstractIconRenderer::Ptr icon_renderer_;
   SwitcherModel::Ptr model_;
@@ -82,6 +85,14 @@ private:
   nux::BaseTexture* background_texture_;
 
   nux::StaticCairoText* text_view_;
+
+  std::list<RenderArg> last_args_;
+  std::list<RenderArg> saved_args_;
+
+  nux::Geometry last_background_;
+  nux::Geometry saved_background_;
+
+  timespec save_time_;
 };
 
 }

@@ -30,8 +30,6 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
   , _index(0)
   , _last_index(0)
 {
-  _change_time.tv_sec = 0;
-  _change_time.tv_nsec = 0;
 }
 
 SwitcherModel::~SwitcherModel()
@@ -102,7 +100,7 @@ SwitcherModel::Next()
   if (_index >= _inner.size())
     _index = 0;
 
-  clock_gettime(CLOCK_MONOTONIC, &_change_time);
+  detail_selection = false;
   selection_changed.emit(Selection());
 }
 
@@ -116,14 +114,8 @@ SwitcherModel::Prev()
   else
     _index = _inner.size() - 1;
 
-  clock_gettime(CLOCK_MONOTONIC, &_change_time);
+  detail_selection = false;
   selection_changed.emit(Selection());
-}
-
-timespec
-SwitcherModel::SelectionChangeTime()
-{
-  return _change_time;
 }
 
 void
@@ -139,7 +131,7 @@ SwitcherModel::Select(AbstractLauncherIcon* selection)
         _last_index = _index;
         _index = i;
 
-        clock_gettime(CLOCK_MONOTONIC, &_change_time);
+        detail_selection = false;
         selection_changed.emit(Selection());
       }
       break;
@@ -157,6 +149,9 @@ SwitcherModel::Select(int index)
   {
     _last_index = _index;
     _index = target;
+
+    detail_selection = false;
+    selection_changed.emit(Selection());
   }
 }
 
