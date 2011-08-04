@@ -1,3 +1,11 @@
+unity (4.6.0-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/rules:
+    - remove networkarea and unitydialogs .so files are they are not in use for
+      now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Aug 2011 11:08:14 +0200
+
 unity (4.6.0-0ubuntu1) oneiric; urgency=low
 
   * New upstream release.
