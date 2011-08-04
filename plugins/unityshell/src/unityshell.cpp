@@ -446,6 +446,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::preparePaint(int ms)
 {
+  // Marker 0 for real-time blur
   placesController->GetWindow()->QueueDraw();
 
   cScreen->preparePaint(ms);

@@ -446,6 +446,7 @@ PlacesView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PopClippingRectangle();
 
+  // Marker 1 for real-time blur
   _bg_blur_texture.Release();
 }
 
