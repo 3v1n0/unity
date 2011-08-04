@@ -48,7 +48,7 @@ SwitcherView::SwitcherView(NUX_FILE_LINE_DECL)
   vertical_size = tile_size + 80;
   text_size = 15;
   animation_length = 250;
-  spread_size = 2.2;
+  spread_size = 3.5f;
 
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
@@ -234,8 +234,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
   if (detail_selection)
   {
-    background_geo.y = base.y + base.height / 2 - (vertical_size / 2) * spread_size;
-    background_geo.height = vertical_size * spread_size + text_size;
+    background_geo.y = base.y + base.height / 2 - (vertical_size / 2) * (spread_size * 0.75f);
+    background_geo.height = vertical_size * (spread_size * 0.75f) + text_size;
   }
   else
   {

@@ -380,8 +380,8 @@ UnityWindow::updateIconPos (int   &wx,
                             float width,
                             float height)
 {
-  wx = x;
-  wy = y;
+  wx = x + (last_bound.width - width) / 2;
+  wy = y + (last_bound.height - height) / 2;
 }
 
 void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
@@ -415,15 +415,24 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix&
   GLMatrix matrix;
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
+  nux::Geometry geo = bounding;
+  geo.x += 3;
+  geo.width -= 6;
+
+  geo.y += 3;
+  geo.height -= 6;
+
+  last_bound = geo;
+
   paintThumb (gWindow->lastPaintAttrib (),
               matrix,
               0,
-              bounding.x,
-              bounding.y,
-              bounding.width,
-              bounding.height,
-              bounding.width,
-              bounding.height);
+              geo.x,
+              geo.y,
+              geo.width,
+              geo.height,
+              geo.width,
+              geo.height);
 }
 
 /* called whenever we need to repaint parts of the screen */

@@ -255,6 +255,8 @@ public:
   CompWindow* window;
   GLWindow* gWindow;
 
+  nux::Geometry last_bound;
+
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
               GLFragment::Attrib& attrib,

@@ -138,7 +138,8 @@ void SwitcherController::MovePrev()
 
 void SwitcherController::DetailCurrent()
 {
-  model_->detail_selection = true;
+  if (model_->Selection ()->RelatedWindows () > 0)
+    model_->detail_selection = true;
 }
 
 WindowRenderTargetList SwitcherController::ExternalRenderTargets ()
