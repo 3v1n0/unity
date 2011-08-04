@@ -25,6 +25,8 @@
 #define FILTERRATINGSBUTTONWIDGET_H
 
 #include <Nux/Nux.h>
+#include <UnityCore/RatingsFilter.h>
+
 #include "Nux/Button.h"
 #include "FilterWidget.h"
 
@@ -35,10 +37,9 @@ namespace unity {
     FilterRatingsButton (NUX_FILE_LINE_PROTO);
     virtual ~FilterRatingsButton();
 
-    void SetFilter (void *);
+    void SetFilter (dash::Filter::Ptr filter);
+    dash::RatingsFilter::Ptr GetFilter ();
     std::string GetFilterType ();
-
-    nux::Property<int> rating; // maximum of 10
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -60,7 +61,7 @@ namespace unity {
     nux::AbstractPaintLayer *_half_prelight;
     nux::AbstractPaintLayer *_half_normal;
 
-    void *_filter;
+    dash::RatingsFilter::Ptr filter_;
 
   };
 

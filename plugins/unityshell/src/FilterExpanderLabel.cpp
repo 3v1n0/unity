@@ -37,6 +37,7 @@ namespace unity {
       , expander_graphic_ (NULL)
       , label_(label)
   {
+    expanded.changed.connect (sigc::mem_fun(this, &FilterExpanderLabel::DoExpandChange));
     BuildLayout ();
   }
 
@@ -100,11 +101,12 @@ namespace unity {
     //FIXME - fake any button because nux is being crap
     top_bar_layout_->AddView(new FilterBasicButton("Any", NUX_TRACKER_LOCATION), 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_MATCHCONTENT);
 
-    top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+    if (right_hand_contents_)
+      top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
 
     layout->AddLayout (top_bar_layout_, 1);
 
-    if (expanded)
+    if (expanded && contents_)
       layout->AddLayout (contents_, 1);
 
 

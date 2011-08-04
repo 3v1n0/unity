@@ -53,11 +53,46 @@ namespace unity {
     all_button_->UnReference();
   }
 
-  void FilterGenre::SetFilter(void *filter)
+  void FilterGenre::SetFilter(dash::Filter::Ptr filter)
   {
-    _filter = filter;
-    //FIXME - we need to get detail from the filter,
-    //such as name and link to its signals
+    filter_ = std::static_pointer_cast<dash::CheckOptionFilter>(filter);
+
+    filter_->option_added.connect (sigc::mem_fun (this, &FilterGenre::OnOptionAdded));
+    filter_->option_removed.connect(sigc::mem_fun (this, &FilterGenre::OnOptionRemoved));
+
+    // finally - make sure we are up-todate with our filter list
+    dash::CheckOptionFilter::CheckOptions::iterator it;
+    dash::CheckOptionFilter::CheckOptions options = filter_->options;
+    for (it = options.begin(); it < options.end(); it++)
+      OnOptionAdded(*it);
+  }
+
+  void FilterGenre::OnOptionAdded(dash::FilterOption::Ptr new_filter)
+  {
+    FilterGenreButton* button = new FilterGenreButton (NUX_TRACKER_LOCATION);
+    button->SetFilter (new_filter);
+    genre_layout_->AddView (button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    buttons_.push_back (button);
+  }
+
+  void FilterGenre::OnOptionRemoved(dash::FilterOption::Ptr removed_filter)
+  {
+    std::vector<FilterGenreButton*>::iterator it;
+    FilterGenreButton* found_filter = NULL;
+    for ( it=buttons_.begin() ; it < buttons_.end(); it++ )
+    {
+      if ((*it)->GetFilter() == removed_filter)
+      {
+        found_filter = *it;
+        break;
+      }
+    }
+
+    if (found_filter)
+    {
+      genre_layout_->RemoveChildObject(*it);
+      buttons_.erase (it);
+    }
   }
 
   std::string FilterGenre::GetFilterType ()

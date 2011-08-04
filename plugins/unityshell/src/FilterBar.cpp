@@ -45,35 +45,41 @@ namespace unity
     SetLayout (layout);
   }
 
-  void FilterBar::AddFilter (void *filter) {
-    if (filter_map.count (filter) > 0) {
+  void SetFilters (dash::Filters::Ptr filters)
+  {
+    filters_ = filters;
+
+  }
+
+  void FilterBar::AddFilter (dash::Filter::Ptr filter) {
+    if (filter_map_.count (filter) > 0) {
       g_warning ("Attempting to add a filter that has already been added");
       return;
     }
 
-    nux::View *filter_view = factory.WidgetForFilter (filter);
-    filter_map[filter] = filter_view;
+    nux::View *filter_view = factory_.WidgetForFilter (filter);
+    filter_map_[filter] = filter_view;
     GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
   }
 
-  void FilterBar::RemoveFilter (void *filter) {
-    if (filter_map.count (filter) > 0) {
+  void FilterBar::RemoveFilter (dash::Filter::Ptr filter) {
+    if (filter_map_.count (filter) > 0) {
       g_warning ("Attempting to remove filter not in the map");
       return;
     }
 
-    nux::View *filter_view = filter_map[filter];
-    filter_map.erase (filter);
+    nux::View *filter_view = filter_map_[filter];
+    filter_map_.erase (filter);
 
     GetLayout()->RemoveChildObject (filter_view);
   }
 
   void FilterBar::ClearFilters () {
     std::map<void *, nux::View *>::iterator it;
-    for (it=filter_map.begin() ; it != filter_map.end(); it++)
+    for (it=filter_map_.begin() ; it != filter_map_.end(); it++)
       GetLayout()->RemoveChildObject ((*it).second);
 
-    filter_map.clear();
+    filter_map_.clear();
   }
 
 

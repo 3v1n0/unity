@@ -28,11 +28,10 @@ namespace unity {
 
   FilterRatingsButton::FilterRatingsButton (NUX_FILE_LINE_DECL)
       : nux::Button (NUX_FILE_LINE_PARAM)
-      , rating (0) {
+  {
     InitTheme();
 
     OnMouseDown.connect (sigc::mem_fun (this, &FilterRatingsButton::RecvMouseDown) );
-    rating.changed.connect (sigc::mem_fun (this, &FilterRatingsButton::OnRatingsChanged) );
   }
 
   FilterRatingsButton::~FilterRatingsButton() {
@@ -44,19 +43,17 @@ namespace unity {
     delete _empty_prelight;
   }
 
-  void FilterRatingsButton::SetFilter(void *filter)
+  void FilterRatingsButton::SetFilter(dash::Filter::Ptr filter)
   {
-    _filter = filter;
-    //FIXME - we need to get detail from the filter,
-    //such as name and link to its signals
-    rating = 5;
+    filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
+    filter_->rating.changed.connect (sigc::mem_fun (this, &FilterRatingsButton::OnRatingsChanged));
+    NeedRedraw();
   }
 
   std::string FilterRatingsButton::GetFilterType ()
   {
     return "FilterRatingsButton";
   }
-
 
   void FilterRatingsButton::InitTheme()
   {
@@ -80,6 +77,7 @@ namespace unity {
   }
 
   void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    int rating = filter_->rating * 10;
     int total_full_stars = rating / 2;
     int total_half_stars = rating % 2;
 
@@ -115,12 +113,11 @@ namespace unity {
 
   void FilterRatingsButton::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
     int width = GetGeometry().width;
-    rating = ceil(x / (width / 10.0));
+    filter_->rating = ceil(x / (width / 10.0));
   }
 
   void FilterRatingsButton::OnRatingsChanged (int rating) {
-    QueueDraw(); // make sure the view reflects whatever the latest rating is
-    // FIXME - once we have shared library objects, update those too
+    NeedRedraw();
   }
 
 };

@@ -25,20 +25,27 @@
 #define FILTERRATINGSWIDGET_H
 
 #include <Nux/Nux.h>
-#include "Nux/Button.h"
+#include <Nux/GridHLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
+#include <UnityCore/RatingsFilter.h>
+
 #include "FilterWidget.h"
+#include "FilterExpanderLabel.h"
 
 namespace unity {
+  class FilterBasicButton;
+  class FilterRatingsButton;
 
-  class FilterRatings : public nux::Button, public unity::FilterWidget {
+  class FilterRatingsWidget : public FilterExpanderLabel, public unity::FilterWidget {
   public:
-    FilterRatings (NUX_FILE_LINE_PROTO);
-    virtual ~FilterRatings();
+    FilterRatingsWidget (NUX_FILE_LINE_PROTO);
+    virtual ~FilterRatingsWidget();
 
-    void SetFilter (void *);
+    void SetFilter (dash::Filter::Ptr filter);
     std::string GetFilterType ();
 
-    nux::Property<int> rating; // maximum of 10
+    nux::Property<int> rating;
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -46,22 +53,15 @@ namespace unity {
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
+    void OnRatingsRatingChanged(const int& new_rating);
+    void OnFilterRatingChanged(const int& new_rating);
+    void OnAnyButtonActivated(nux::View *view);
 
-    void RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags);
-    void OnRatingsChanged (int rating);
+    FilterBasicButton *any_button_;
+    FilterRatingsButton *ratings_;
+    dash::RatingsFilter::Ptr filter_;
 
-    nux::AbstractPaintLayer *_full_prelight;
-    nux::AbstractPaintLayer *_full_normal;
-
-    nux::AbstractPaintLayer *_empty_prelight;
-    nux::AbstractPaintLayer *_empty_normal;
-
-    nux::AbstractPaintLayer *_half_prelight;
-    nux::AbstractPaintLayer *_half_normal;
-
-    void *_filter;
-
+  private:
   };
 
 }

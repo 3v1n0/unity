@@ -26,27 +26,34 @@ namespace unity {
   FilterGenreButton::FilterGenreButton (const std::string label, NUX_FILE_LINE_DECL)
       : FilterBasicButton(label, NUX_FILE_LINE_PARAM) {
     InitTheme();
+    active.changed.connect ([&] (bool is_active) {
+      bool tmp_active = active;
+      filter_->active = tmp_active;
+    });
   }
 
   FilterGenreButton::FilterGenreButton (NUX_FILE_LINE_DECL)
       : FilterBasicButton(NUX_FILE_LINE_PARAM) {
     InitTheme();
+    active.changed.connect ([&] (bool is_active) {
+      bool tmp_active = active;
+      filter_->active = tmp_active;
+    });
   }
 
-  void FilterGenreButton::SetFilter(void *filter)
+
+  void FilterGenreButton::SetFilter (dash::FilterOption::Ptr filter)
   {
-    // we got a new filter
-    _filter = filter;
-
-    //FIXME - we need to get detail from the filter,
-    //such as name and link to its signals
-
-
+    filter_ = filter;
+    std::string tmp_label = filter->name;
+    bool tmp_active = filter_->active;
+    label = tmp_label;
+    active = tmp_active;
   }
 
-  std::string FilterGenreButton::GetFilterType ()
+  dash::FilterOption::Ptr FilterGenreButton::GetFilter()
   {
-    return "FilterGenreButton";
+    return filter_;
   }
 
   long int FilterGenreButton::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {

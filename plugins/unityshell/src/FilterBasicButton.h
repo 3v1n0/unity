@@ -30,16 +30,13 @@
 
 namespace unity {
 
-  class FilterBasicButton : public nux::ToggleButton, public unity::FilterWidget {
+  class FilterBasicButton : public nux::ToggleButton {
   public:
     FilterBasicButton (nux::TextureArea *image, NUX_FILE_LINE_PROTO);
     FilterBasicButton (const std::string label, NUX_FILE_LINE_PROTO);
     FilterBasicButton (const std::string label, nux::TextureArea *image, NUX_FILE_LINE_PROTO);
     FilterBasicButton (NUX_FILE_LINE_PROTO);
     virtual ~FilterBasicButton();
-
-    void SetFilter (void *);
-    std::string GetFilterType ();
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -48,7 +45,6 @@ namespace unity {
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     void InitTheme ();
-    void *_filter;
 
   };
 

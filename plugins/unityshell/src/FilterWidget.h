@@ -20,6 +20,7 @@
  */
 
 #include <Nux/View.h>
+#include <UnityCore/Filter.h>
 
 #ifndef FILTERWIDGET_H
 #define FILTERWIDGET_H
@@ -29,7 +30,7 @@ namespace unity {
   {
   public:
     virtual ~FilterWidget () {}
-    virtual void SetFilter (void *) = 0; // FIXME - a void pointer for now, we don't have filters
+    virtual void SetFilter (dash::Filter::Ptr filter) = 0;
     virtual std::string GetFilterType () = 0;
   };
 }

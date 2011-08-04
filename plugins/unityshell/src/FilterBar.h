@@ -24,6 +24,7 @@
 #ifndef FILTERBAR_H
 #define FILTERBAR_H
 
+#include <UnityCore/Filters.h>
 #include "FilterFactory.h"
 
 namespace unity {
@@ -34,8 +35,10 @@ namespace unity {
     FilterBar(NUX_FILE_LINE_PROTO);
     ~FilterBar();
 
-    void AddFilter (void *filter);
-    void RemoveFilter (void *filter);
+    void SetFilters (dash::Filters::Ptr filters);
+
+    void AddFilter (dash::Filter::Ptr filter);
+    void RemoveFilter (dash::Filter::Ptr filter);
     void ClearFilters ();
 
   protected:
@@ -47,8 +50,9 @@ namespace unity {
   private:
     void Init ();
 
-    FilterFactory factory;
-    std::map <void *, nux::View *> filter_map;
+    FilterFactory factory_;
+    dash::Filters::Ptr filters_;
+    std::map <dash::Filter::Ptr, nux::View *> filter_map_;
   };
 }
 

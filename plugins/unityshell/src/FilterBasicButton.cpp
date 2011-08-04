@@ -48,20 +48,6 @@ namespace unity {
 
   }
 
-  void FilterBasicButton::SetFilter(void *filter)
-  {
-    // we got a new filter
-    _filter = filter;
-
-    //FIXME - we need to get detail from the filter,
-    //such as name and link to its signals
-  }
-
-  std::string FilterBasicButton::GetFilterType ()
-  {
-    return "FilterBasicButton";
-  }
-
   void FilterBasicButton::InitTheme()
   {
     //FIXME - build theme here - store images, cache them, fun fun fun

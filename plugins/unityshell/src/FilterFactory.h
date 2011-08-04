@@ -31,7 +31,7 @@ namespace unity {
     FilterFactory();
     virtual ~FilterFactory();
 
-    nux::View *WidgetForFilter (void *filter);
+    nux::View *WidgetForFilter (dash::Filter::Ptr filter);
   };
 };
 #endif // FILTERFACTORY_H

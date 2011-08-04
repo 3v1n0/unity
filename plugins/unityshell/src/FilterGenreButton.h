@@ -35,8 +35,9 @@ namespace unity {
   public:
     FilterGenreButton (const std::string label, NUX_FILE_LINE_PROTO);
     FilterGenreButton (NUX_FILE_LINE_PROTO);
-    void SetFilter (void *);
-    std::string GetFilterType ();
+
+    void SetFilter (dash::FilterOption::Ptr filter);
+    dash::FilterOption::Ptr GetFilter();
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -44,8 +45,8 @@ namespace unity {
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void *_filter;
-
+  private:
+    dash::FilterOption::Ptr filter_;
   };
 
 }

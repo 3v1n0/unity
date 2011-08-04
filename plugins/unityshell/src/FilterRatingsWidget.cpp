@@ -22,105 +22,71 @@
 #include "config.h"
 #include "Nux/Nux.h"
 
+#include "FilterGenreWidget.h"
+#include "FilterGenreButton.h"
+#include "FilterBasicButton.h"
+#include "FilterRatingsButton.h"
 #include "FilterRatingsWidget.h"
+
 
 namespace unity {
 
-  FilterRatings::FilterRatings (NUX_FILE_LINE_DECL)
-      : nux::Button (NUX_FILE_LINE_PARAM)
-      , rating (0) {
-    InitTheme();
-
-    OnMouseDown.connect (sigc::mem_fun (this, &FilterRatings::RecvMouseDown) );
-    rating.changed.connect (sigc::mem_fun (this, &FilterRatings::OnRatingsChanged) );
-  }
-
-  FilterRatings::~FilterRatings() {
-    delete _full_normal;
-    delete _full_prelight;
-    delete _half_normal;
-    delete _half_prelight;
-    delete _empty_normal;
-    delete _empty_prelight;
-  }
-
-  void FilterRatings::SetFilter(void *filter)
+  FilterRatingsWidget::FilterRatingsWidget (NUX_FILE_LINE_DECL)
+      : FilterExpanderLabel ("Rating", NUX_FILE_LINE_PARAM)
   {
-    _filter = filter;
-    //FIXME - we need to get detail from the filter,
-    //such as name and link to its signals
-    rating = 5;
+    any_button_ = new FilterBasicButton("Any", NUX_TRACKER_LOCATION);
+    any_button_->Activated.connect(sigc::mem_fun(this, &FilterRatingsWidget::OnAnyButtonActivated));
+
+    SetRightHandView(any_button_);
+
+    nux::VLayout* layout = new nux::VLayout (NUX_TRACKER_LOCATION);
+    ratings_ = new FilterRatingsButton (NUX_TRACKER_LOCATION);
+
+    layout->AddView(ratings_);
+
+    SetContents(layout);
   }
 
-  std::string FilterRatings::GetFilterType ()
+  FilterRatingsWidget::~FilterRatingsWidget() {
+  }
+
+  void FilterRatingsWidget::OnAnyButtonActivated(nux::View *view)
   {
-    return "FilterBasicButton";
+    filter_->Clear();
   }
 
-
-  void FilterRatings::InitTheme()
+  void FilterRatingsWidget::SetFilter (dash::Filter::Ptr filter)
   {
-    //FIXME - build theme here - store images, cache them, fun fun fun
-    // ratings bar requires us to store/create three states for stares, half open, selected/unselected
+    filter_ = std::static_pointer_cast<dash::RatingsFilter>(filter);
+    ratings_->SetFilter(filter);
+    NeedRedraw();
+  }
 
-    //these should be cached and shared between widgets if at all possible
-    _full_prelight = new nux::ColorLayer (nux::Color (1.0, 1.0, 1.0, 1.0));
-    _full_normal = new nux::ColorLayer (nux::Color (0.8, 0.8, 0.8, 1.0));
-
-    _empty_prelight = new nux::ColorLayer (nux::Color (0.7, 0.0, 0.0, 1.0));
-    _empty_normal = new nux::ColorLayer (nux::Color (0.5, 0.0, 0.0, 1.0));
-
-    _half_prelight = new nux::ColorLayer (nux::Color (0.0, 0.0, 0.7, 1.0));
-    _half_normal = new nux::ColorLayer (nux::Color (0.0, 0.0, 0.5, 1.0));
+  std::string FilterRatingsWidget::GetFilterType ()
+  {
+    return "FilterRatingsWidget";
   }
 
 
-  long int FilterRatings::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
-    return nux::Button::ProcessEvent(ievent, TraverseInfo, ProcessEventInfo);
+  long int FilterRatingsWidget::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
+    return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
   }
 
-  void FilterRatings::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    int total_full_stars = rating / 2;
-    int total_half_stars = rating % 2;
-
-    nux::Geometry geometry = GetGeometry ();
-    geometry.width = geometry.width / 5;
-    for (int index = 0; index < 5; index++) {
-      geometry.x = index * geometry.width;
-
-      nux::AbstractPaintLayer *render_layer;
-      if (index < total_full_stars) {
-        render_layer = _full_normal;
-      }
-      else if (index < total_full_stars + total_half_stars) {
-        render_layer = _half_normal;
-      }
-      else {
-        render_layer = _empty_normal;
-      }
-      
-      render_layer->SetGeometry(geometry);
-      render_layer->Renderlayer(GfxContext);
-
-    }
+  void FilterRatingsWidget::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
   }
 
-  void FilterRatings::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Button::DrawContent(GfxContext, force_draw);
+  void FilterRatingsWidget::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    nux::Geometry base = GetGeometry ();
+    GfxContext.PushClippingRectangle (base);
+
+    if (GetCompositionLayout ())
+      GetCompositionLayout ()->ProcessDraw (GfxContext, force_draw);
+
+    GfxContext.PopClippingRectangle();
   }
 
-  void FilterRatings::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    nux::Button::PostDraw(GfxContext, force_draw);
-  }
-
-  void FilterRatings::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
-    int width = GetGeometry().width;
-    rating = ceil(x / (width / 10.0));
-  }
-
-  void FilterRatings::OnRatingsChanged (int rating) {
-    QueueDraw(); // make sure the view reflects whatever the latest rating is
-    // FIXME - once we have shared library objects, update those too
+  void FilterRatingsWidget::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    nux::View::PostDraw(GfxContext, force_draw);
   }
 
 };

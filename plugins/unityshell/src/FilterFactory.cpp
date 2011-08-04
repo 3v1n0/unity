@@ -26,6 +26,12 @@
 #include "FilterRatingsWidget.h"
 
 #include "FilterFactory.h"
+namespace { // FIXME - fill with actual renderer type strings
+  const std::string renderer_type_ratings = "ratings";
+  const std::string renderer_type_multirange = "multi-range";
+  const std::string renderer_type_check_options = "check-options";
+}
+
 namespace unity {
 
   FilterFactory::FilterFactory() {
@@ -43,58 +49,25 @@ namespace unity {
     FILTER_TOGGLE = 3,
   };
 
-  nux::View *FilterFactory::WidgetForFilter (void *filter)
+  nux::View *FilterFactory::WidgetForFilter (dash::Filter::Ptr filter)
   {
-    /*
-     * Pseudo code:
-     * UnityFilter *filter = filter;
-     * nux::View *view = NULL:
-     * switch (filter.type) {
-     *   case (UNITY_FILTER_GENRE):
-     *    unity::FilterGenre *genre = new unity::FilterGenre ();
-     *    genre->SetFilter (filter);
-     *    view = genre;
-     *    break;
-     *
-     *   case (UNITY_FILTER_RATING):
-     *    unity::FilterRating *rating = new unity::FilterRating ();
-     *    rating->SetFilter (filter);
-     *    view = rating;
-     *    break;
-     * ...
-     * ...
-     * ...
-     *
-     * }
-     * return view;
-     */
-
     //TODO - needs to be hooked up to filters
-    uint filter_type = FILTER_TOGGLE;
+    std::string filter_type = filter->renderer_name;
     nux::View *view = NULL;
 
-
-
-    //TODO this does not conform to GCS i assume - I'll format it later
     switch (filter_type) {
-      case (FILTER_GENRE): {
-        //FIXME - removed the old code here, re-add it for the new widget
+      case (renderer_type_check_options): {
+        view = static_cast<nux::View *> (new FilterGenre(NUX_TRACKER_LOCATION));
         break;
       }
-
-      case (FILTER_RATING): {
-        view = static_cast<nux::View *> (new FilterRatings ());
+      case (renderer_type_ratings): {
+        view = static_cast<nux::View *> (new FilterRatingsWidget (NUX_TRACKER_LOCATION));
         break;
       };
-      case (FILTER_DATERANGE): {
+      case (renderer_type_multirange): {
         //TODO - date range widget
         break;
       }
-
-      case (FILTER_TOGGLE): {
-        view = static_cast<nux::View *> (new FilterBasicButton ());
-        break;
-      };
     }
 
     dynamic_cast<FilterWidget *>(view)->SetFilter (filter);

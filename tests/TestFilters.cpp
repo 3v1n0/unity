@@ -56,8 +56,7 @@ TestRunner::~TestRunner ()
 void TestRunner::Init ()
 {
   unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
-  unity::FilterRatings *ratings = new unity::FilterRatings (NUX_TRACKER_LOCATION);
-  ratings->rating = 3;
+  unity::FilterRatingsWidget *ratings = new unity::FilterRatingsWidget (NUX_TRACKER_LOCATION);
 
   unity::FilterGenreButton *genre_button = new unity::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
 
@@ -110,7 +109,7 @@ int main(int argc, char **argv)
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Places Tile Test"),
-                            1024, 600,
+                            300 , 600,
                             0,
                             &TestRunner::InitWindowThread,
                             test_runner);

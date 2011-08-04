@@ -28,18 +28,20 @@
 #include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/CheckOptionFilter.h>
 #include "FilterWidget.h"
 #include "FilterExpanderLabel.h"
 
 namespace unity {
   class FilterBasicButton;
+  class FilterGenreButton;
 
   class FilterGenre : public FilterExpanderLabel, public unity::FilterWidget {
   public:
     FilterGenre (NUX_FILE_LINE_PROTO);
     virtual ~FilterGenre();
 
-    void SetFilter (void *);
+    void SetFilter (dash::Filter::Ptr filter);
     std::string GetFilterType ();
 
     nux::Property<bool> all_selected;
@@ -51,14 +53,19 @@ namespace unity {
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
     void InitTheme ();
-    void *_filter;
 
   private:
     void OnAllActivated(nux::View* view);
     void OnGenreActivated(nux::View* view);
     void BuildGenreLayout();
+    void OnOptionAdded(dash::FilterOption::Ptr new_filter);
+    void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
+
     nux::GridHLayout* genre_layout_;
     FilterBasicButton* all_button_;
+
+    std::vector<FilterGenreButton*> buttons_;
+    dash::CheckOptionFilter::Ptr filter_;
   };
 
 }
