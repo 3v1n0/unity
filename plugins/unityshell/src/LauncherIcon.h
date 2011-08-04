@@ -260,8 +260,6 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  //! the window this icon belong too.
-  nux::BaseWindow* m_Window;
   Launcher* _launcher;
 
   nux::Tooltip* _tooltip;
