@@ -412,14 +412,12 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
 void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask)
 {
-  GLMatrix matrix = transform;
+  GLMatrix matrix;
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
-  printf ("Bounding %i,%i %ix%i\n", bounding.x, bounding.y, bounding.width, bounding.height);
-  
-  paintThumb (gWindow->paintAttrib (),
+  paintThumb (gWindow->lastPaintAttrib (),
               matrix,
-              mask,
+              0,
               bounding.x,
               bounding.y,
               bounding.width,
