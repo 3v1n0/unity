@@ -25,11 +25,18 @@
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <NuxImage/CairoGraphics.h>
+#include "NuxCore/Logger.h"
 
 #include "PanelStyle.h"
 
+#include <UnityCore/GLibWrapper.h>
+
+using namespace unity;
+
 namespace
 {
+
+nux::logging::Logger logger("unity.panel");
 
 PanelStyle* _style = NULL;
 
@@ -145,39 +152,25 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
   nux::BaseTexture* texture = NULL;
   const char* names[] = { "close", "minimize", "unmaximize" };
   const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
-  const char* home_dir;
-  char*       filename = NULL;
-  char*       subpath = NULL;
   GdkPixbuf* pixbuf;
-  GError*    error = NULL;
 
-  // Set subpath to append to the theme directory
-  subpath = g_strdup_printf("unity/%s%s.png", names[type], states[state]);
+  std::ostringstream subpath;
+  subpath << "unity/" << names[type] << states[state] << ".png";
 
   // Look in home directory
-  home_dir = g_get_home_dir();
+  const char* home_dir = g_get_home_dir();
   if (home_dir)
   {
-    filename = g_build_filename(home_dir, ".themes", _theme_name, subpath, NULL);
+    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name, subpath.str().c_str(), NULL));
 
-    if (!g_file_test(filename, G_FILE_TEST_EXISTS))
+    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
-      g_free(filename);
-      filename = NULL;
-    }
-    else
-    {
+      glib::Error error;
+
       // Found a file, try loading the pixbuf
-      pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+      pixbuf = gdk_pixbuf_new_from_file(filename.Value(), &error);
       if (error)
-      {
-        g_warning("Unable to load window button %s: %s", filename, error->message);
-        g_error_free(error);
-        error = NULL;
-
-        g_free(filename);
-        filename = NULL;
-      }
+        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
       else
         texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
 
@@ -185,42 +178,29 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
     }
   }
 
-  // filename is NULL if the pixbuf is not loaded
-  if (!filename)
+  // texture is NULL if the pixbuf is not loaded
+  if (!texture)
   {
-    const char* var;
-    char*       themes_dir = NULL;
+    const char* var = g_getenv("GTK_DATA_PREFIX");
+    if (!var)
+      var = "/usr";
 
-    var = g_getenv("GTK_DATA_PREFIX");
-    if (var)
-      themes_dir = g_build_filename(var, "share", "themes", NULL);
-    else
-      themes_dir = g_build_filename("/usr", "share", "themes", NULL);
+    glib::String filename(g_build_filename(var, _theme_name, subpath.str().c_str(), NULL));
 
-    filename = g_build_filename(themes_dir, _theme_name, subpath, NULL);
-
-    g_free(themes_dir);
-
-    if (g_file_test(filename, G_FILE_TEST_EXISTS))
+    if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     {
+      glib::Error error;
+
       // Found a file, try loading the pixbuf
-      pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+      pixbuf = gdk_pixbuf_new_from_file(filename.Value(), &error);
       if (error)
-      {
-        g_warning("Unable to load window button %s: %s", filename, error->message);
-        g_error_free(error);
-        error = NULL;
-      }
+        LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
       else
         texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
 
       g_object_unref(pixbuf);
     }
-
-    g_free(filename);
   }
-
-  g_free(subpath);
 
   if (!texture)
     texture = GetWindowButtonForTheme(type, state);
