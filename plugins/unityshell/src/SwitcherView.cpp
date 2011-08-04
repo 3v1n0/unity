@@ -212,6 +212,14 @@ void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
     element.window = window;
     element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
     render_targets_.push_back (element);
+
+    x++;
+
+    if (x >= width)
+    {
+      x = 0;
+      y++;
+    }
   }
 }
 
