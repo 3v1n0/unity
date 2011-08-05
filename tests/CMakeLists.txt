@@ -322,6 +322,19 @@ add_executable (test-preview-applicaiton
                 )
 add_dependencies(test-preview-applicaiton unity-core-${UNITY_API_VERSION})
 
+add_executable (test-preview-generic
+                TestPreviewGeneric.cpp
+                ${UNITY_SRC}/PreviewGeneric.cpp
+                ${UNITY_SRC}/PreviewBase.cpp
+                ${UNITY_SRC}/PreviewBasicButton.cpp
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/TextureCache.cpp
+                )
+add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
+
 add_executable (test-bg-hash
                 TestBGHash.cpp
                 ${UNITY_SRC}/BGHash.cpp
