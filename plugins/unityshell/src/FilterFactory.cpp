@@ -24,6 +24,7 @@
 
 #include "FilterBasicButton.h"
 #include "FilterRatingsWidget.h"
+#include "FilterGenreWidget.h"
 
 #include "FilterFactory.h"
 namespace { // FIXME - fill with actual renderer type strings
@@ -42,32 +43,22 @@ namespace unity {
 
   }
 
-  enum TMP_FILTER_TYPE {
-    FILTER_GENRE = 0,
-    FILTER_RATING = 1,
-    FILTER_DATERANGE = 2,
-    FILTER_TOGGLE = 3,
-  };
-
   nux::View *FilterFactory::WidgetForFilter (dash::Filter::Ptr filter)
   {
     //TODO - needs to be hooked up to filters
     std::string filter_type = filter->renderer_name;
     nux::View *view = NULL;
-
-    switch (filter_type) {
-      case (renderer_type_check_options): {
-        view = static_cast<nux::View *> (new FilterGenre(NUX_TRACKER_LOCATION));
-        break;
-      }
-      case (renderer_type_ratings): {
-        view = static_cast<nux::View *> (new FilterRatingsWidget (NUX_TRACKER_LOCATION));
-        break;
-      };
-      case (renderer_type_multirange): {
-        //TODO - date range widget
-        break;
-      }
+    if (filter_type == renderer_type_check_options)
+    {
+      view = static_cast<nux::View *> (new FilterGenre(NUX_TRACKER_LOCATION));
+    }
+    else if (filter_type == renderer_type_ratings)
+    {
+      view = static_cast<nux::View *> (new FilterRatingsWidget (NUX_TRACKER_LOCATION));
+    }
+    else if (filter_type == renderer_type_multirange)
+    {
+      //TODO - date range widget
     }
 
     dynamic_cast<FilterWidget *>(view)->SetFilter (filter);
