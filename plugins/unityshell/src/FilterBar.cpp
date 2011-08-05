@@ -45,7 +45,7 @@ namespace unity
     SetLayout (layout);
   }
 
-  void SetFilters (dash::Filters::Ptr filters)
+  void FilterBar::SetFilters (dash::Filters::Ptr filters)
   {
     filters_ = filters;
 
@@ -75,7 +75,7 @@ namespace unity
   }
 
   void FilterBar::ClearFilters () {
-    std::map<void *, nux::View *>::iterator it;
+    std::map<dash::Filter::Ptr, nux::View *>::iterator it;
     for (it=filter_map_.begin() ; it != filter_map_.end(); it++)
       GetLayout()->RemoveChildObject ((*it).second);
 
