@@ -4,11 +4,6 @@
     <value nick="Desktop" value="1" />
     <value nick="Netbook" value="2" />
   </enum>
-  <enum id="devices-option-enum">
-    <value nick="Never" value="0" />
-    <value nick="OnlyMounted" value="1" />
-    <value nick="Always" value="2" />
-  </enum>
   <enum id="home-expanded-enum">
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
@@ -45,16 +40,23 @@
   </schema>
 	<schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
     <key type="as" name="systray-whitelist">
-      <default>[ 'JavaEmbeddedFrame', 'Mumble', 'Wine', 'Skype', 'hp-systray', 'scp-dbus-service' ]</default>
+      <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service' ]</default>
       <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
       <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
     </key>
   </schema>
   <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
-    <key enum="devices-option-enum" name="devices-option">
-        <default>"OnlyMounted"</default>
-        <summary>The devices that will be shown on launcher</summary>
-        <description>Key for setting the devices that will be shown on launcher. </description>
+    <key type="as" name="favorites">
+        <default>[]</default>
+        <summary>List of device uuid for favorites on the launcher.</summary>
+        <description>These devices are shown in the Launcher by default.</description>
     </key>
     </schema>
+  <schema path="/desktop/unity/runner/" id="com.canonical.Unity.Runner" gettext-domain="unity">
+    <key type="as" name="history">
+        <default>[]</default>
+        <summary>History of Alt + F2 command</summary>
+        <description>Key for storing the history of the Alt + F2 command.  </description>
+    </key>
+  </schema>
 </schemalist>

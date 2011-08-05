@@ -20,137 +20,137 @@
 
 
 #include "config.h"
-#include "src/ubus-server.h"
+#include "ubus-server.h"
 
 #define MESSAGE1 "TEST MESSAGE ONE"
 #define MESSAGE2 "ՄᕅᏆⲤꙨႧΈ Ϊટ ಗשׁຣ໐ɱË‼‼❢"
 
-static void TestAllocation    (void);
-static void TestMainLoop      (void);
-static void TestPropagation   (void);
+static void TestAllocation(void);
+static void TestMainLoop(void);
+static void TestPropagation(void);
 
 void
-TestUBusCreateSuite ()
+TestUBusCreateSuite()
 {
 #define _DOMAIN "/Unit/UBus"
-  g_test_add_func (_DOMAIN"/Allocation", TestAllocation);
-  g_test_add_func (_DOMAIN"/Propagation", TestPropagation);
-  g_test_add_func (_DOMAIN"/MainLoop", TestMainLoop);
+  g_test_add_func(_DOMAIN"/Allocation", TestAllocation);
+  g_test_add_func(_DOMAIN"/Propagation", TestPropagation);
+  g_test_add_func(_DOMAIN"/MainLoop", TestMainLoop);
 }
 
 static void
-TestAllocation ()
+TestAllocation()
 {
-  UBusServer *serv_1 = ubus_server_get_default ();
-  UBusServer *serv_2 = ubus_server_get_default ();
+  UBusServer* serv_1 = ubus_server_get_default();
+  UBusServer* serv_2 = ubus_server_get_default();
 
-  g_assert (serv_1 != NULL);
-  g_assert (serv_2 != NULL);
+  g_assert(serv_1 != NULL);
+  g_assert(serv_2 != NULL);
 
   // i used a different way of making a singleton than i am used to
   // so i'm not 100% confident in it yet
-  g_assert (serv_1 == serv_2);
+  g_assert(serv_1 == serv_2);
 }
 
 void
-test_handler_inc_counter (GVariant *data, gpointer val)
+test_handler_inc_counter(GVariant* data, gpointer val)
 {
   // inc a counter when we get called
-  gint *counter = (gint*)val;
+  gint* counter = (gint*)val;
   *counter = *counter + 1;
 }
 
 void
-test_handler_inc_counter_2 (GVariant *data, gpointer val)
+test_handler_inc_counter_2(GVariant* data, gpointer val)
 {
   // inc a counter by two when called
-  gint *counter = (gint*)val;
+  gint* counter = (gint*)val;
   *counter = *counter + 2;
 }
 
 static void
-TestPropagation ()
+TestPropagation()
 {
-  UBusServer *ubus;
+  UBusServer* ubus;
   gint        counter, i;
   guint       handler1, handler2;
-  
-  ubus = ubus_server_get_default ();
-  handler1 = ubus_server_register_interest (ubus, MESSAGE1,
-                                            test_handler_inc_counter,
-                                            &counter);
 
-  handler2 = ubus_server_register_interest (ubus, MESSAGE2, // tests UNICODE
-                                            test_handler_inc_counter_2,
-                                            &counter);
+  ubus = ubus_server_get_default();
+  handler1 = ubus_server_register_interest(ubus, MESSAGE1,
+                                           test_handler_inc_counter,
+                                           &counter);
+
+  handler2 = ubus_server_register_interest(ubus, MESSAGE2,  // tests UNICODE
+                                           test_handler_inc_counter_2,
+                                           &counter);
 
   counter = 0;
-  for (i=0; i<1000; i++)
+  for (i = 0; i < 1000; i++)
   {
-    ubus_server_send_message (ubus, MESSAGE1, NULL);
+    ubus_server_send_message(ubus, MESSAGE1, NULL);
   }
 
-  ubus_server_force_message_pump (ubus);
+  ubus_server_force_message_pump(ubus);
 
   counter = 0;
-  for (i=0; i<1000; i++)
+  for (i = 0; i < 1000; i++)
   {
-    ubus_server_send_message (ubus, MESSAGE1, NULL);
-    ubus_server_send_message (ubus, MESSAGE2, NULL);
+    ubus_server_send_message(ubus, MESSAGE1, NULL);
+    ubus_server_send_message(ubus, MESSAGE2, NULL);
   }
-  ubus_server_force_message_pump (ubus);
+  ubus_server_force_message_pump(ubus);
 
-  g_assert (counter == 3000);
+  g_assert(counter == 3000);
 
-  ubus_server_unregister_interest (ubus, handler1);
-  ubus_server_unregister_interest (ubus, handler2);
+  ubus_server_unregister_interest(ubus, handler1);
+  ubus_server_unregister_interest(ubus, handler2);
 
   counter = 0;
-  ubus_server_send_message (ubus, MESSAGE1, NULL);
-  ubus_server_send_message (ubus, MESSAGE2, NULL);
+  ubus_server_send_message(ubus, MESSAGE1, NULL);
+  ubus_server_send_message(ubus, MESSAGE2, NULL);
 
-  ubus_server_force_message_pump (ubus);
+  ubus_server_force_message_pump(ubus);
 
-  g_assert (counter == 0);
+  g_assert(counter == 0);
 }
 
 gboolean
-main_loop_bailout (gpointer data)
+main_loop_bailout(gpointer data)
 {
-  GMainLoop *mainloop = (GMainLoop*)data;
-  g_main_quit (mainloop);
+  GMainLoop* mainloop = (GMainLoop*)data;
+  g_main_quit(mainloop);
   return FALSE;
 }
 
 void
-test_handler_mainloop (GVariant *data, gpointer val)
+test_handler_mainloop(GVariant* data, gpointer val)
 {
   // inc a counter when we get called
-  gint *counter = (gint*)val;
+  gint* counter = (gint*)val;
   *counter = *counter + 1;
 
 }
 
 static void
-TestMainLoop ()
+TestMainLoop()
 {
-  GMainLoop  *mainloop;
-  UBusServer *ubus;
+  GMainLoop*  mainloop;
+  UBusServer* ubus;
   gint        counter = 0;
-  
-  ubus = ubus_server_get_default ();  
-  mainloop = g_main_loop_new (NULL, TRUE);
 
-  g_timeout_add_seconds (1, main_loop_bailout, mainloop);
+  ubus = ubus_server_get_default();
+  mainloop = g_main_loop_new(NULL, TRUE);
 
-  ubus_server_register_interest (ubus, MESSAGE1,
-                                 test_handler_mainloop,
-                                 &counter);
+  g_timeout_add_seconds(1, main_loop_bailout, mainloop);
 
-  ubus_server_send_message (ubus, MESSAGE1, NULL);
-  g_main_loop_run (mainloop);
+  ubus_server_register_interest(ubus, MESSAGE1,
+                                test_handler_mainloop,
+                                &counter);
 
-  g_assert (counter == 1);
+  ubus_server_send_message(ubus, MESSAGE1, NULL);
+  g_main_loop_run(mainloop);
+
+  g_assert(counter == 1);
 
 }
 

@@ -1,0 +1,7 @@
+# Bare minimum to be a Lens
+
+[Lens]
+DBusName=com.canonical.tests.Lens.Social
+DBusPath=/com/canonical/tests/lens/social
+Name=Social
+Icon=/usr/share/unity-lens-social/social.png

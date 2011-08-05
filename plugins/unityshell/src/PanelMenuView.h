@@ -1,0 +1,158 @@
+/*
+ * Copyright (C) 2010 Canonical Ltd
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ */
+
+#ifndef PANEL_MENU_VIEW_H
+#define PANEL_MENU_VIEW_H
+
+#include <Nux/View.h>
+#include <map>
+#include <set>
+
+#include "Introspectable.h"
+#include "PanelIndicatorObjectView.h"
+#include "StaticCairoText.h"
+#include "WindowButtons.h"
+#include "PanelTitlebarGrabAreaView.h"
+#include "PluginAdapter.h"
+
+#include <libbamf/libbamf.h>
+
+namespace unity
+{
+
+class PanelMenuView : public PanelIndicatorObjectView
+{
+public:
+  // This contains all the menubar logic for the Panel. Mainly it contains
+  // the following states:
+  // 1. Unmaximized window + no mouse hover
+  // 2. Unmaximized window + mouse hover
+  // 3. Unmaximized window + active menu (Alt+F/arrow key nav)
+  // 4. Maximized window + no mouse hover
+  // 5. Maximized window + mouse hover
+  // 6. Maximized window + active menu
+  //
+  // It also deals with undecorating maximized windows (and redecorating them
+  // on unmaximize)
+
+  PanelMenuView(int padding = 6);
+  ~PanelMenuView();
+
+  void FullRedraw();
+
+  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  virtual long PostLayoutManagement(long LayoutResult);
+
+  void SetProxy(indicator::Indicator::Ptr const& proxy);
+
+  virtual void OnEntryAdded(unity::indicator::Entry::Ptr const& proxy);
+  void OnEntryRefreshed(PanelIndicatorObjectEntryView* view);
+  void OnActiveChanged(PanelIndicatorObjectEntryView* view, bool is_active);
+  void OnActiveWindowChanged(BamfView* old_view, BamfView* new_view);
+  void OnNameChanged(gchar* new_name, gchar* old_name);
+
+  void OnSpreadInitiate();
+  void OnSpreadTerminate();
+  void OnWindowMinimized(guint32 xid);
+  void OnWindowUnminimized(guint32 xid);
+  void OnWindowUnmapped(guint32 xid);
+  void OnWindowMaximized(guint32 xid);
+  void OnWindowRestored(guint32 xid);
+  void OnWindowMoved(guint32 xid);
+
+  guint32 GetMaximizedWindow();
+
+  void OnMaximizedGrab(int x, int y);
+  void OnMouseDoubleClicked();
+  void OnMouseMiddleClicked();
+
+  void Refresh();
+  void AllMenusClosed();
+
+  void OnCloseClicked();
+  void OnMinimizeClicked();
+  void OnRestoreClicked();
+  void OnWindowButtonsRedraw();
+  void SetMonitor(int monitor);
+  bool GetControlsActive();
+
+  bool HasOurWindowFocused();
+
+protected:
+  const gchar* GetName();
+  const gchar* GetChildsName();
+  void          AddProperties(GVariantBuilder* builder);
+
+  virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+  void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
+
+private:
+  gchar* GetActiveViewName();
+  static void OnPlaceViewShown(GVariant* data, PanelMenuView* self);
+  static void OnPlaceViewHidden(GVariant* data, PanelMenuView* self);
+  void UpdateShowNow(bool ignore);
+  static gboolean UpdateActiveWindowPosition(PanelMenuView* self);
+
+private:
+  BamfMatcher* _matcher;
+
+  nux::AbstractPaintLayer* _title_layer;
+  nux::HLayout*            _menu_layout;
+  nux::CairoGraphics       _util_cg;
+  nux::IntrusiveSP<nux::IOpenGLBaseTexture> _gradient_texture;
+  nux::BaseTexture*        _title_tex;
+
+  bool _is_inside;
+  bool _is_grabbed;
+  bool _is_maximized;
+  bool _is_own_window;
+  PanelIndicatorObjectEntryView* _last_active_view;
+
+  WindowButtons* _window_buttons;
+  PanelTitlebarGrabArea* _panel_titlebar_grab_area;
+
+  std::map<guint32, bool> _decor_map;
+  std::set<guint32> _maximized_set;
+  int _padding;
+  gpointer _name_changed_callback_instance;
+  gulong _name_changed_callback_id;
+
+  int _last_width;
+  int _last_height;
+
+  bool _places_showing;
+  bool _show_now_activated;
+
+  bool _we_control_active;
+  int  _monitor;
+  guint32 _active_xid;
+  guint32 _active_moved_id;
+  nux::Geometry _monitor_geo;
+
+  gulong _activate_window_changed_id;
+
+  guint32 _place_shown_interest;
+  guint32 _place_hidden_interest;
+};
+
+}
+
+#endif

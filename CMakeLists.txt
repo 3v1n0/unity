@@ -4,30 +4,47 @@ cmake_minimum_required(VERSION 2.8)
 
 include (cmake/Documentation.cmake)
 
-subdirs (shared services tests tools doc)
+subdirs (doc services tests tools UnityCore guides)
 
 #
 # Base bits
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 4)
-set (UNITY_MINOR 0)
-set (UNITY_MICRO 1)
+set (UNITY_MINOR 6)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
-set (CMAKE_CXX_FLAGS "-fno-permissive")
-set (CMAKE_CXX_FLAGS_DEBUG "-fno-permissive")
-set (CMAKE_CXX_FLAGS_RELEASE "-fno-permissive")
+set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
+set (CMAKE_CXX_FLAGS_DEBUG "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
+set (CMAKE_CXX_FLAGS_RELEASE "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
 
 #
 # Niceties
 #
 set (ARCHIVE_NAME unity-${UNITY_VERSION})
+
+add_custom_target (pre-distcheck
+  COMMAND echo ""
+       && echo "• Releasing Unity ${UNITY_VERSION}"
+       && cd ${CMAKE_SOURCE_DIR}
+       && echo "• Generating ChangeLog"
+       && bzr log --gnu-changelog > ChangeLog
+       && echo "• Generating AUTHORS"
+       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
+       && echo "• Committing Release"
+       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
+       && echo "• Tagging Release"
+       && bzr tag ${UNITY_VERSION}
+       && echo "• Running Distcheck"
+  )
+  
 add_custom_target (dist
   COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
+add_dependencies(dist pre-distcheck)
 
 add_custom_target (distcheck
   COMMAND cd ${CMAKE_BINARY_DIR}
@@ -42,34 +59,20 @@ add_custom_target (distcheck
   )
 add_dependencies(distcheck dist)
 
-add_custom_target (pre-distcheck
-  COMMAND echo ""
-       && echo "• Releasing Unity ${UNITY_VERSION}"
-       && cd ${CMAKE_SOURCE_DIR}
-       && echo "• Generating ChangeLog"
-       && bzr log --gnu-changelog > ChangeLog
-       && echo "• Generating AUTHORS"
-       && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
-       && echo "• Committing Release"
-       && bzr commit -m"Release ${UNITY_VERSION}"
-       && echo "• Tagging Release"
-       && bzr tag ${UNITY_VERSION}
-       && echo "• Running Distcheck"
-  )
-
 add_custom_target (post-distcheck
   COMMAND echo "• Signing Tarball"
        && gpg --armor --sign --detach-sig ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
        && echo "• Pushing Branch"
        && bzr push
        && echo "• Publishing Tarball"
-       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/{ARCHIVE_NAME}.tar.bz2
+       && lp-project-upload unity ${UNITY_VERSION} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
        && echo ""
        && echo "• Unity ${UNITY_VERSION} Released."
   )
+add_dependencies(post-distcheck distcheck)
 
 add_custom_target (release)
-add_dependencies (release pre-distcheck distcheck post-discheck)
+add_dependencies (release post-distcheck)
 
 #
 # config.h
@@ -83,14 +86,6 @@ set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-
-#
-# Data
-#
-file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
-install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
-
-install (FILES plugin-unityshell.png DESTINATION ${DATADIR}/ccsm/icons/hicolor/64x64/apps)
 
 #
 # i18n
@@ -124,32 +119,15 @@ if (DISABLE_MAINTAINER_CFLAGS)
 endif (DISABLE_MAINTAINER_CFLAGS)
 
 #
-# src (Compiz Plugin)
+# Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3;atk;unity-misc;gconf-2.0;json-glib-1.0;libutouch-geis;gtk+-3.0")
+set (UNITY_PLUGIN_DEPS "compiz;nux-1.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4;atk;unity-misc >= 0.4.0;gconf-2.0;libutouch-geis;gtk+-3.0;sigc++-2.0;json-glib-1.0;libnotify;gnome-desktop-3.0")
+
 
 find_package (Compiz REQUIRED)
 include (CompizPlugin)
-compiz_plugin (unityshell
-               PKGDEPS ${UNITY_PLUGIN_DEPS}
-               PLUGINDEPS composite opengl
-               CFLAGSADD "-DINSTALLPREFIX='\"${CMAKE_INSTALL_PREFIX}\"' -DPKGDATADIR='\"${PKGDATADIR}\"' -I${CMAKE_BINARY_DIR} -I${CMAKE_SOURCE_DIR}/shared ${BOOT_LOGGER_FLAG} -DGETTEXT_PACKAGE='\"unity\"' ${MAINTAINER_CFLAGS}"
-               LIBRARIES "-lunity-shared-${UNITY_API_VERSION}"
-               LIBDIRS "${CMAKE_BINARY_DIR}/shared"
-               )
-add_dependencies(unityshell unity-shared-${UNITY_API_VERSION})
 
-#
-# UTouch things
-#
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/utouch")
-
-#
-# Dialog things
-#
-
-compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/dialog")
+compiz_add_plugins_in_folder ("${CMAKE_SOURCE_DIR}/plugins/")
 
 #
 # GSettings Schema
