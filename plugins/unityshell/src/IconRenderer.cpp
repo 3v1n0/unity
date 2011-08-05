@@ -348,7 +348,7 @@ void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::M
 void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& geo, nux::Geometry const& owner_geo)
 {
   // This check avoids a crash when the icon is not available on the system.
-  if (arg.icon->TextureForSize(image_size) == 0)
+  if (arg.icon->TextureForSize(image_size) == 0 || arg.skip)
     return;
 
   IconSize size = icon_size > 100 ? IconRenderer::BIG : IconRenderer::SMALL;
