@@ -78,6 +78,8 @@ void AlbumPreview::LoadTracks(Properties& properties)
     
     length += track_length;
   }
+
+  g_variant_iter_free(iter);
 }
 
 }

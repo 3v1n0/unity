@@ -71,6 +71,8 @@ void RadioOptionFilter::Update(Filter::Hints& hints)
     option_added.emit(option);
   }
 
+  g_variant_iter_free(options_iter);
+
   options.EmitChanged(options_);
 }
 

@@ -82,6 +82,8 @@ void MultiRangeFilter::Update(Filter::Hints& hints)
     options_.push_back(option);
     option_added.emit(option);
   }
+
+  g_variant_iter_free(options_iter);
 }
 
 void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
