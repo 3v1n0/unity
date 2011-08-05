@@ -185,8 +185,6 @@ private:
 
   bool _compute_blur_bkg;          //!< If true, compute the blurred background
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bkg_blur_texture;  // Texture holding a blurred copy of the background behind the QuicklistView
-  // Introspection
-  gchar* _name;
 
   // used by keyboard/a11y-navigation
   int _current_item_index;
