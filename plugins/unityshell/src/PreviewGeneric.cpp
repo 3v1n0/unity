@@ -64,14 +64,14 @@ namespace unity {
       g_date_strftime(string_buff, 256, "%d %b %Y %H:%M", date);
       g_free (date);
 
-      nux::StaticCairoText *date_modified = new nux::StaticCairoText(string_buff, NUX_TRACKER_LOCATION);
+      //nux::StaticCairoText *date_modified = new nux::StaticCairoText(string_buff, NUX_TRACKER_LOCATION);
 
       // format the bytes
       gchar *formatted_size = g_format_size(preview_->size);
       std::ostringstream size_and_type_str;
       size_and_type_str << formatted_size << ", " << preview_->type;
 
-      nux::StaticCairoText *size_and_type = new nux::StaticCairoText(size_and_type_str.str().c_str(), NUX_TRACKER_LOCATION);
+      //nux::StaticCairoText *size_and_type = new nux::StaticCairoText(size_and_type_str.str().c_str(), NUX_TRACKER_LOCATION);
       g_free (formatted_size);
 
       nux::StaticCairoText *description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
@@ -83,7 +83,7 @@ namespace unity {
       nux::HLayout *large_container = new nux::HLayout(NUX_TRACKER_LOCATION);
       nux::VLayout *screenshot_container = new nux::VLayout(NUX_TRACKER_LOCATION);
       nux::VLayout *content_container = new nux::VLayout(NUX_TRACKER_LOCATION);
-      nux::VLayout *title_container = new nux::VLayout(NUX_TRACKER_LOCATION);
+      //nux::VLayout *title_container = new nux::VLayout(NUX_TRACKER_LOCATION);
       nux::HLayout *button_container = new nux::HLayout(NUX_TRACKER_LOCATION);
 
       // create the action buttons
@@ -120,15 +120,20 @@ namespace unity {
       description_scroller->SetLayout(description_container);
 
       // create the title containers
-      title_container->AddView (name, 0, nux::MINOR_POSITION_LEFT);
-      title_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
-      title_container->AddView (date_modified, 0, nux::MINOR_POSITION_LEFT);
-      title_container->AddLayout(new nux::SpaceLayout(12, 12, 12,12), 0);
-      title_container->AddView (size_and_type, 0, nux::MINOR_POSITION_LEFT);
+      //title_container->AddView (name, 0, nux::MINOR_POSITION_LEFT);
+      //title_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
+      //title_container->AddView (date_modified, 0, nux::MINOR_POSITION_LEFT);
+      //title_container->AddLayout(new nux::SpaceLayout(12, 12, 12,12), 0);
+      //title_container->AddView (size_and_type, 0, nux::MINOR_POSITION_LEFT);
 
-      content_container->AddLayout (title_container, 0);
+
+      //FIXME -- enable this and the preview won't work
+      /*nux::VLayout *wtflayout = new nux::VLayout(NUX_TRACKER_LOCATION);
+      wtflayout->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
+
+      content_container->AddLayout (wtflayout, 0);*/
       content_container->AddView (description_scroller, 1);
-      content_container->AddView (button_container, 0);
+      content_container->AddLayout (button_container, 0);
 
       // build the overall container
       screenshot_container->AddView (icon, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
