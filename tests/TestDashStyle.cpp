@@ -113,7 +113,7 @@ int main (int    argc,
   wipe (cr);
 
   // render some elements from different styles to PNG-images
-  pDashStyle->Button (cr, nux::NUX_STATE_NORMAL);
+  pDashStyle->Button (cr, nux::NUX_STATE_NORMAL, "Play");
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-p.png");
   wipe (cr);
 

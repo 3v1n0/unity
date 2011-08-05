@@ -78,7 +78,7 @@ namespace unity
       DashStyle ();
       ~DashStyle ();
 
-    virtual bool Button (cairo_t* cr, nux::State state);
+    virtual bool Button (cairo_t* cr, nux::State state, std::string label);
 
     void Blur (cairo_t* cr, int size);
 
@@ -153,17 +153,16 @@ namespace unity
                               double   h);
 
     private:
-      double    _buttonIconColor[STATES][CHANNELS];
-      double    _buttonIconOpacity[STATES];
-      double    _buttonIconOverlayOpacity[STATES];
-      BlendMode _buttonIconOverlayMode[STATES];
-      int       _buttonIconBlurSize[STATES];
-
-      double    _iconOnlyColor[CHANNELS];
-      double    _iconOnlyOpacity;
-      double    _iconOnlyOverlayOpacity;
-      BlendMode _iconOnlyOverlayMode;
-      int       _iconOnlyBlurSize;
+      double    _buttonLabelBorderColor[STATES][CHANNELS];
+      double    _buttonLabelBorderOpacity[STATES];
+      double    _buttonLabelTextSize;
+      double    _buttonLabelTextColor[STATES][CHANNELS];
+      double    _buttonLabelTextOpacity[STATES];
+      double    _buttonLabelFillColor[STATES][CHANNELS];
+      double    _buttonLabelFillOpacity[STATES];
+      double    _buttonLabelOverlayOpacity[STATES];
+      BlendMode _buttonLabelOverlayMode[STATES];
+      int       _buttonLabelBlurSize[STATES];
   };
 }
 

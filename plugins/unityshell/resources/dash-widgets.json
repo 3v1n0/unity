@@ -51,19 +51,6 @@
     "overlay-mode"   : [ "normal",  "normal",  "normal",  "normal",  "normal"],
     "blur-size"      : [        0,         5,         0,         0,         0]},
 
-  "button-label-icon": {
-    "border-opacity" : [      0.5,       0.5,       0.5,       0.5,       0.5],
-    "border-color"   : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
-    "border-size"    : 1,
-    "border-mode"    : "normal",
-    "text-size"      : 17.0,
-    "text-color"     : ["#ffffff", "#ffffff", "#ffffff", "#ffffff", "#ffffff"],
-    "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0],
-    "text-mode"      : [ "normal",  "normal",  "normal",  "normal",  "normal"],
-    "text-style"     : [   "bold",    "bold",    "bold",    "bold",    "bold"],
-    "height"         : 40}, 
-
-
   "track-view"       : {
     "line-gap"         : 26.0,
     "heading-list-gap" : 30,

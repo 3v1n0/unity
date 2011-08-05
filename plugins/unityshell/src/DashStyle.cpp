@@ -244,7 +244,6 @@ namespace unity
     GError*      error  = NULL;
     gboolean     result = FALSE;
     JsonNode*    root   = NULL;
-    unsigned int i      = 0;
 
 	g_type_init ();
 
@@ -270,38 +269,55 @@ namespace unity
       return;
     }
 
-    ReadColorSingle (root, "icon-only", "color", _iconOnlyColor);
-    g_print ("icon-only color = %1.2f/%1.2f/%1.2f\n",
-             _iconOnlyColor[R],
-             _iconOnlyColor[G],
-             _iconOnlyColor[B]);
+    ReadDoubleArray (root,
+                     "button-label",
+                     "border-opacity",
+                     _buttonLabelBorderOpacity);
 
-    ReadColorArray (root, "button-icon", "color", _buttonIconColor);
-    for (i = 0; i < 5; i++)
-    {
-      g_print ("button-icon color = %1.2f/%1.2f/%1.2f\n",
-               _buttonIconColor[i][R],
-               _buttonIconColor[i][G],
-               _buttonIconColor[i][B]);
-    }
+    ReadColorArray (root,
+                    "button-label",
+                    "border-color",
+                    _buttonLabelBorderColor);
 
-    ReadDoubleSingle (root, "icon-only", "opacity", &_iconOnlyOpacity);
-    g_print ("icon-only opacity = %1.2f\n", _iconOnlyOpacity);
+    ReadDoubleSingle (root,
+                      "button-label",
+                      "text-size",
+                      &_buttonLabelTextSize);
 
-    ReadDoubleArray (root, "button-icon", "opacity", _buttonIconOpacity);
-    for (i = 0; i < 5; i++)
-      g_print ("button-icon opacity = %1.2f\n", _buttonIconOpacity[i]);
+    ReadColorArray (root,
+                    "button-label",
+                    "text-color",
+                    _buttonLabelTextColor);
 
-    ReadDoubleArray (root, "button-icon", "overlay-opacity", _buttonIconOverlayOpacity);
-    for (i = 0; i < 5; i++)
-      g_print ("button-icon overlay-opacity = %1.2f\n", _buttonIconOverlayOpacity[i]);
+    ReadDoubleArray (root,
+                     "button-label",
+                     "text-opacity",
+                     _buttonLabelTextOpacity);
 
-    ReadIntArray (root, "button-icon", "blur-size", _buttonIconBlurSize);
-    for (i = 0; i < 5; i++)
-      g_print ("button-icon blur-size = %d\n", _buttonIconBlurSize[i]);
+    ReadColorArray (root,
+                    "button-label",
+                    "fill-color",
+                    _buttonLabelFillColor);
 
-    ReadModeSingle (root, "icon-only", "overlay-mode", &_iconOnlyOverlayMode);
-    g_print ("icon-only overlay-mode = %d\n", _iconOnlyOverlayMode);
+    ReadDoubleArray (root,
+                     "button-label",
+                     "fill-opacity",
+                     _buttonLabelFillOpacity);
+
+    ReadDoubleArray (root,
+                     "button-label",
+                     "overlay-opacity",
+                     _buttonLabelOverlayOpacity);
+
+    ReadModeArray (root,
+                   "button-label",
+                   "overlay-mode",
+                   _buttonLabelOverlayMode);
+
+    ReadIntArray (root,
+                  "button-label",
+                  "blur-size",
+                  _buttonLabelBlurSize);
 
     g_object_unref (parser);
   }
@@ -694,41 +710,91 @@ namespace unity
 
   void DashStyle::UseDefaultValues ()
   {
-    _buttonIconColor[nux::NUX_STATE_NORMAL][R]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_NORMAL][G]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_NORMAL][B]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_ACTIVE][R]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_ACTIVE][G]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_ACTIVE][B]      = 1.0;
-    _buttonIconColor[nux::NUX_STATE_PRELIGHT][R]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_PRELIGHT][G]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_PRELIGHT][B]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_SELECTED][R]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_SELECTED][G]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_SELECTED][B]    = 1.0;
-    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][R] = 1.0;
-    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][G] = 1.0;
-    _buttonIconColor[nux::NUX_STATE_INSENSITIVE][B] = 1.0;
-    _buttonIconOpacity[nux::NUX_STATE_NORMAL]       = 1.0;
-    _buttonIconOpacity[nux::NUX_STATE_ACTIVE]       = 1.0;
-    _buttonIconOpacity[nux::NUX_STATE_PRELIGHT]     = 1.0;
-    _buttonIconOpacity[nux::NUX_STATE_SELECTED]     = 1.0;
-    _buttonIconOpacity[nux::NUX_STATE_INSENSITIVE]  = 1.0;
-    _buttonIconOverlayOpacity[nux::NUX_STATE_NORMAL]      = 0.0;
-	_buttonIconOverlayOpacity[nux::NUX_STATE_ACTIVE]      = 0.0;
-    _buttonIconOverlayOpacity[nux::NUX_STATE_PRELIGHT]    = 0.0;
-	_buttonIconOverlayOpacity[nux::NUX_STATE_SELECTED]    = 0.0;
-	_buttonIconOverlayOpacity[nux::NUX_STATE_INSENSITIVE] = 0.0;
-    _buttonIconOverlayMode[nux::NUX_STATE_NORMAL]      = BLEND_MODE_NORMAL;
-    _buttonIconOverlayMode[nux::NUX_STATE_ACTIVE]      = BLEND_MODE_NORMAL;
-    _buttonIconOverlayMode[nux::NUX_STATE_PRELIGHT]    = BLEND_MODE_NORMAL;
-    _buttonIconOverlayMode[nux::NUX_STATE_SELECTED]    = BLEND_MODE_NORMAL;
-    _buttonIconOverlayMode[nux::NUX_STATE_INSENSITIVE] = BLEND_MODE_NORMAL;
-    _buttonIconBlurSize[nux::NUX_STATE_NORMAL]      = 0;
-    _buttonIconBlurSize[nux::NUX_STATE_ACTIVE]      = 0;
-    _buttonIconBlurSize[nux::NUX_STATE_PRELIGHT]    = 0;
-    _buttonIconBlurSize[nux::NUX_STATE_SELECTED]    = 0;
-    _buttonIconBlurSize[nux::NUX_STATE_INSENSITIVE] = 0;
+    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][R]      = 0.53;
+    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][G]      = 1.0;
+    _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][B]      = 0.66;
+    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][R]      = 1.0;
+    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][G]      = 1.0;
+    _buttonLabelBorderColor[nux::NUX_STATE_ACTIVE][B]      = 1.0;
+    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][R]    = 0.06;
+    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][G]    = 0.13;
+    _buttonLabelBorderColor[nux::NUX_STATE_PRELIGHT][B]    = 1.0;
+    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][R]    = 0.07;
+    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][G]    = 0.2;
+    _buttonLabelBorderColor[nux::NUX_STATE_SELECTED][B]    = 0.33;
+    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][R] = 0.39;
+    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][G] = 0.26;
+    _buttonLabelBorderColor[nux::NUX_STATE_INSENSITIVE][B] = 0.12;
+
+    _buttonLabelBorderOpacity[nux::NUX_STATE_NORMAL]       = 0.5;
+    _buttonLabelBorderOpacity[nux::NUX_STATE_ACTIVE]       = 0.8;
+    _buttonLabelBorderOpacity[nux::NUX_STATE_PRELIGHT]     = 0.5;
+    _buttonLabelBorderOpacity[nux::NUX_STATE_SELECTED]     = 0.5;
+    _buttonLabelBorderOpacity[nux::NUX_STATE_INSENSITIVE]  = 0.5;
+
+    _buttonLabelTextSize                                   = 1.0;
+
+    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][R]        = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][G]        = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_NORMAL][B]        = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][R]        = 0.0;
+    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][G]        = 0.0;
+    _buttonLabelTextColor[nux::NUX_STATE_ACTIVE][B]        = 0.0;
+    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][R]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][G]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_PRELIGHT][B]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][R]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][G]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_SELECTED][B]      = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][R]   = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][G]   = 1.0;
+    _buttonLabelTextColor[nux::NUX_STATE_INSENSITIVE][B]   = 1.0;
+
+    _buttonLabelTextOpacity[nux::NUX_STATE_NORMAL]         = 1.0;
+    _buttonLabelTextOpacity[nux::NUX_STATE_ACTIVE]         = 1.0;
+    _buttonLabelTextOpacity[nux::NUX_STATE_PRELIGHT]       = 1.0;
+    _buttonLabelTextOpacity[nux::NUX_STATE_SELECTED]       = 1.0;
+    _buttonLabelTextOpacity[nux::NUX_STATE_INSENSITIVE]    = 1.0;
+
+    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][R]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][G]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_NORMAL][B]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][R]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][G]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_ACTIVE][B]        = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][R]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][G]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_PRELIGHT][B]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][R]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][G]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_SELECTED][B]      = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][R]   = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][G]   = 0.0;
+    _buttonLabelFillColor[nux::NUX_STATE_INSENSITIVE][B]   = 0.0;
+
+    _buttonLabelFillOpacity[nux::NUX_STATE_NORMAL]         = 0.0;
+    _buttonLabelFillOpacity[nux::NUX_STATE_ACTIVE]         = 0.0;
+    _buttonLabelFillOpacity[nux::NUX_STATE_PRELIGHT]       = 0.0;
+    _buttonLabelFillOpacity[nux::NUX_STATE_SELECTED]       = 0.0;
+    _buttonLabelFillOpacity[nux::NUX_STATE_INSENSITIVE]    = 0.0;
+
+    _buttonLabelOverlayOpacity[nux::NUX_STATE_NORMAL]      = 0.0;
+    _buttonLabelOverlayOpacity[nux::NUX_STATE_ACTIVE]      = 0.3;
+    _buttonLabelOverlayOpacity[nux::NUX_STATE_PRELIGHT]    = 0.0;
+    _buttonLabelOverlayOpacity[nux::NUX_STATE_SELECTED]    = 0.0;
+    _buttonLabelOverlayOpacity[nux::NUX_STATE_INSENSITIVE] = 0.0;
+
+    _buttonLabelOverlayMode[nux::NUX_STATE_NORMAL]         = BLEND_MODE_NORMAL;
+    _buttonLabelOverlayMode[nux::NUX_STATE_ACTIVE]         = BLEND_MODE_NORMAL;
+    _buttonLabelOverlayMode[nux::NUX_STATE_PRELIGHT]       = BLEND_MODE_NORMAL;
+    _buttonLabelOverlayMode[nux::NUX_STATE_SELECTED]       = BLEND_MODE_NORMAL;
+    _buttonLabelOverlayMode[nux::NUX_STATE_INSENSITIVE]    = BLEND_MODE_NORMAL;
+
+    _buttonLabelBlurSize[nux::NUX_STATE_NORMAL]            = 0;
+    _buttonLabelBlurSize[nux::NUX_STATE_ACTIVE]            = 5;
+    _buttonLabelBlurSize[nux::NUX_STATE_PRELIGHT]          = 0;
+    _buttonLabelBlurSize[nux::NUX_STATE_SELECTED]          = 0;
+    _buttonLabelBlurSize[nux::NUX_STATE_INSENSITIVE]       = 0;
   }
 
   void DashStyle::ButtonOutlinePath (cairo_t* cr,
@@ -737,27 +803,33 @@ namespace unity
                                      double   w,
                                      double   h)
   {
+	// these absolute values are the "cost" of getting only a SVG from design
+	// and not a generic formular how to approximate the curve-shape, thus
+	// the smallest possible button-size is 22.18x24.0
+	double width  = w - 22.18;
+	double height = h - 24.0;
+
 	// top right
-    cairo_move_to (cr, x, y);
+    cairo_move_to (cr, x + width + 22.18, y + 12.0);
     cairo_rel_curve_to (cr, -0.103, -4.355, -1.037, -7.444, -2.811, -9.267);
     cairo_rel_curve_to (cr, -1.722, -1.823, -4.531, -2.735, -8.28, -2.735);
 
 	// top
-    cairo_rel_line_to (cr, -w, 0.0);
+    cairo_rel_line_to (cr, -width, 0.0);
 
 	// top left
     cairo_rel_curve_to (cr, -3.748, 0.0, -6.507, 0.912, -8.279, 2.735);
     cairo_rel_curve_to (cr, -1.773, 1.822, -2.708, 4.911, -2.811, 9.267);
 
 	// left
-    cairo_rel_line_to (cr, 0.0, h);
+    cairo_rel_line_to (cr, 0.0, height);
 
 	// bottom left
     cairo_rel_curve_to (cr, 0.103, 4.355, 1.037, 7.444, 2.811, 9.267);
     cairo_rel_curve_to (cr, 1.772, 1.823, 4.531, 2.735, 8.28, 2.735);
 
 	// bottom
-    cairo_rel_line_to (cr, w, 0.0);
+    cairo_rel_line_to (cr, width, 0.0);
 
 	// bottom right
     cairo_rel_curve_to (cr, 3.748, 0.0, 6.507, -0.912, 8.279, -2.735);
@@ -767,7 +839,7 @@ namespace unity
     cairo_close_path (cr);
   }
 
-  bool DashStyle::Button (cairo_t* cr, nux::State state)
+  bool DashStyle::Button (cairo_t* cr, nux::State state, std::string label)
   {
 	// sanity checks
     if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
@@ -781,15 +853,12 @@ namespace unity
     switch (state)
     {
       case nux::NUX_STATE_NORMAL :
-        cairo_set_source_rgba (cr,1.0, 0.0, 0.0, 1.0);
-        RoundedRect (cr, 1.0, 100.0, 0.0, 10.0, 80.0, 20.0, false);
-		cairo_stroke (cr);
-        ButtonOutlinePath (cr, 100.0, 0.0, 80.0, 20.0);
+        ButtonOutlinePath (cr, 10.0, 10.0, 75.0, 30.0);
         cairo_set_source_rgba (cr,
-                               _buttonIconColor[state][R],
-                               _buttonIconColor[state][G],
-                               _buttonIconColor[state][B],
-                               _buttonIconOpacity[state]);
+                               _buttonLabelBorderColor[state][R],
+                               _buttonLabelBorderColor[state][G],
+                               _buttonLabelBorderColor[state][B],
+                               _buttonLabelBorderOpacity[state]);
         cairo_stroke (cr);
       break;
 
