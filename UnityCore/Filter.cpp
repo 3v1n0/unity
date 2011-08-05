@@ -41,6 +41,7 @@ using unity::glib::Signal;
 Filter::Filter(DeeModel* model, DeeModelIter* iter)
   : model_(model)
   , iter_(iter)
+  , ignore_changes_(false)
 {
   typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
@@ -105,6 +106,11 @@ void Filter::Refresh()
     OnRowChanged(model_, iter_);
 }
 
+void Filter::IgnoreChanges(bool ignore)
+{
+  ignore_changes_ = ignore;
+}
+
 void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
 {
   self->OnRowRemoved(self->model_, self->iter_);
@@ -112,7 +118,7 @@ void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
 
 void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  if (iter_ != iter)
+  if (iter_ != iter || ignore_changes_)
     return;
 
   // Ask our sub-classes to update their state

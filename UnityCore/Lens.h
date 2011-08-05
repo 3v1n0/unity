@@ -26,8 +26,9 @@
 #include <sigc++/trackable.h>
 
 #include "Categories.h"
-#include "Results.h"
+#include "Filters.h"
 #include "Preview.h"
+#include "Results.h"
 
 namespace unity
 {
@@ -78,6 +79,7 @@ public:
   nux::RWProperty<Results::Ptr> results;
   nux::RWProperty<Results::Ptr> global_results;
   nux::RWProperty<Categories::Ptr> categories;
+  nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
 
   nux::Property<bool> active;

@@ -66,7 +66,7 @@ void CheckOptionFilter::Update(Filter::Hints& hints)
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
 
-  g_variant_get(options_variant, "(sssb)", &options_iter);
+  g_variant_get(options_variant, "a(sssb)", &options_iter);
 
   char *id = NULL;
   char *name = NULL;
@@ -78,7 +78,7 @@ void CheckOptionFilter::Update(Filter::Hints& hints)
 
   options_.clear();
 
-  while (g_variant_iter_loop(options_iter, "sssb", &id, &name, &icon_hint, &active))
+  while (g_variant_iter_loop(options_iter, "(sssb)", &id, &name, &icon_hint, &active))
   {
     FilterOption::Ptr option(new FilterOption(id, name, icon_hint, active));
     options_.push_back(option);

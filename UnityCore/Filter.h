@@ -89,6 +89,7 @@ public:
 protected:
   virtual void Update(Hints& hints) = 0;
   void Refresh();
+  void IgnoreChanges(bool ignore);
 
 private:
   void SetupGetters();
@@ -109,6 +110,7 @@ protected:
   DeeModel* model_;
   DeeModelIter* iter_;
   glib::SignalManager signal_manager_;
+  bool ignore_changes_;
 };
 
 }

@@ -2,9 +2,13 @@
 #include <gtest/gtest.h>
 #include <glib-object.h>
 
+#include <UnityCore/CheckOptionFilter.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/MultiRangeFilter.h>
 #include <UnityCore/MusicPreviews.h>
+#include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/RatingsFilter.h>
 
 #include "test_utils.h"
 
@@ -24,16 +28,25 @@ public:
     : lens_(new Lens("testlens", lens_name, lens_path,
                      "Test Lens", "gtk-apply")),
       n_categories_(0)
+    , n_filters_(0)
   {
     WaitForConnected();
 
     Categories::Ptr categories = lens_->categories;
     categories->category_added.connect(sigc::mem_fun(this, &TestLens::OnCategoryAdded));
+
+    Filters::Ptr filters = lens_->filters;
+    filters->filter_added.connect(sigc::mem_fun(this, &TestLens::OnFilterAdded));
   }
 
   void OnCategoryAdded(Category const& category)
   {
     n_categories_++;
+  }
+
+  void OnFilterAdded(Filter::Ptr filter)
+  {
+    n_filters_++;
   }
 
   static gboolean TimeoutCallback(gpointer data)
@@ -105,6 +118,7 @@ public:
 
   Lens::Ptr lens_;
   unsigned int n_categories_;
+  unsigned int n_filters_;
 };
 
 TEST_F(TestLens, TestConnection)
@@ -249,6 +263,129 @@ TEST_F(TestLens, TestPreview)
 
   lens_->Preview(uri);
   WaitUntil(previewed);
+}
+
+TEST_F(TestLens, TestFilterSync)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  EXPECT_EQ(filters->count, (unsigned int)4);
+  EXPECT_EQ(n_filters_, 4);
+
+}
+
+TEST_F(TestLens, TestFilterRadioOption)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(0));
+  EXPECT_EQ(filter->id, "when");
+  EXPECT_EQ(filter->name, "When");
+  EXPECT_EQ(filter->icon_hint, "");
+  EXPECT_EQ(filter->renderer_name, "filter-radiooption");
+  EXPECT_TRUE(filter->visible);
+  EXPECT_FALSE(filter->collapsed);
+  EXPECT_FALSE(filter->filtering);
+
+  RadioOptionFilter::RadioOptions options = filter->options;
+  EXPECT_EQ(options.size(), (unsigned int)3);
+  
+  EXPECT_EQ(options[0]->id, "today");
+  EXPECT_EQ(options[0]->name, "Today");
+  EXPECT_EQ(options[0]->icon_hint, "");
+  EXPECT_FALSE(options[0]->active);
+
+  EXPECT_EQ(options[1]->id, "yesterday");
+  EXPECT_EQ(options[1]->name, "Yesterday");
+  EXPECT_EQ(options[1]->icon_hint, "");
+  EXPECT_FALSE(options[1]->active);
+
+  EXPECT_EQ(options[2]->id, "lastweek");
+  EXPECT_EQ(options[2]->name, "Last Week");
+  EXPECT_EQ(options[2]->icon_hint, "");
+  EXPECT_FALSE(options[2]->active);
+}
+
+TEST_F(TestLens, TestFilterRadioOptionLogic)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(0));
+  RadioOptionFilter::RadioOptions options = filter->options;
+
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[0]->active = true;
+  options[0]->active = false;
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[0]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[1]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[2]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_TRUE (options[2]->active);
+
+  filter->Clear();
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+}
+
+TEST_F(TestLens, TestFilterCheckOption)
+{
+#if 0
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(0));
+  EXPECT_EQ(filter->id, "when");
+  EXPECT_EQ(filter->name, "When");
+  EXPECT_EQ(filter->icon_hint, "");
+  EXPECT_EQ(filter->renderer_name, "filter-radiooption");
+  EXPECT_TRUE(filter->visible);
+  EXPECT_FALSE(filter->collapsed);
+  EXPECT_FALSE(filter->filtering);
+
+  RadioOptionFilter::RadioOptions options = filter->options;
+  EXPECT_EQ(options.size(), (unsigned int)4);
+  
+  EXPECT_EQ(options[0]->id, "today");
+  EXPECT_EQ(options[0]->name, "Today");
+  EXPECT_EQ(options[0]->icon_hint, "");
+  EXPECT_FALSE(options[0]->active);
+
+  EXPECT_EQ(options[1]->id, "yesterday");
+  EXPECT_EQ(options[1]->name, "Yesterday");
+  EXPECT_EQ(options[1]->icon_hint, "");
+  EXPECT_FALSE(options[1]->active);
+
+  EXPECT_EQ(options[2]->id, "lastweek");
+  EXPECT_EQ(options[2]->name, "Last Week");
+  EXPECT_EQ(options[2]->icon_hint, "");
+  EXPECT_FALSE(options[2]->active);
+#endif
 }
 
 }
