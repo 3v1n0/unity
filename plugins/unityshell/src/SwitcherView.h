@@ -86,7 +86,7 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (int index);
 
-  void UpdateRenderTargets (RenderArg const& selection_arg);
+  void UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current);
 
   static gboolean OnDrawTimeout(gpointer data);
 

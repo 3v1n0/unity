@@ -188,7 +188,7 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
+void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg, timespec const& current)
 {
   std::vector<Window> xids = model_->DetailXids ();
 
@@ -213,6 +213,9 @@ void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
   int start_x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
   int start_y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
 
+  int ms_since_change = DeltaTTime(&current, &save_time_);
+  float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
+
   int i = 0;
   for (Window window : xids)
   {
@@ -220,9 +223,9 @@ void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
     element.window = window;
     element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
 
-    element.alpha = 0.75f;
+    element.alpha = 0.75f * progress;
     if (i == model_->detail_selection_index)
-      element.alpha = 1.0f;
+      element.alpha = 1.0f * progress;
 
     render_targets_.push_back (element);
 
@@ -383,7 +386,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        UpdateRenderTargets (arg);
+        UpdateRenderTargets (arg, current);
       }
 
       results.push_back(arg);
