@@ -431,4 +431,83 @@ TEST_F(TestLens, TestFilterCheckOptionLogic)
   EXPECT_FALSE (options[2]->active);
 }
 
+TEST_F(TestLens, TestFilterMultiRange)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  MultiRangeFilter::Ptr filter = static_pointer_cast<MultiRangeFilter>(filters->FilterAtIndex(3));
+  EXPECT_EQ(filter->id, "size");
+  EXPECT_EQ(filter->name, "Size");
+  EXPECT_EQ(filter->icon_hint, "");
+  std::string tmp = filter->renderer_name;
+  EXPECT_EQ(filter->renderer_name, "filter-multirange");
+  EXPECT_TRUE(filter->visible);
+  EXPECT_TRUE(filter->collapsed);
+  EXPECT_FALSE(filter->filtering);
+
+  MultiRangeFilter::Options options = filter->options;
+  EXPECT_EQ(options.size(), (unsigned int)4);
+  
+  EXPECT_EQ(options[0]->id, "1MB");
+  EXPECT_EQ(options[0]->name, "1MB");
+  EXPECT_EQ(options[0]->icon_hint, "");
+  EXPECT_FALSE(options[0]->active);
+
+  EXPECT_EQ(options[1]->id, "10MB");
+  EXPECT_EQ(options[1]->name, "10MB");
+  EXPECT_EQ(options[1]->icon_hint, "");
+  EXPECT_FALSE(options[1]->active);
+
+  EXPECT_EQ(options[2]->id, "100MB");
+  EXPECT_EQ(options[2]->name, "100MB");
+  EXPECT_EQ(options[2]->icon_hint, "");
+  EXPECT_FALSE(options[2]->active);
+}
+
+TEST_F(TestLens, TestFilterMultiRangeLogic)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  MultiRangeFilter::Ptr filter = static_pointer_cast<MultiRangeFilter>(filters->FilterAtIndex(3));
+  MultiRangeFilter::Options options = filter->options;
+
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+  EXPECT_FALSE (options[3]->active);
+
+  options[0]->active = true;
+  options[3]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_TRUE (options[2]->active);
+  EXPECT_TRUE (options[3]->active);
+
+  options[0]->active = true;
+  options[2]->active = false;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+  EXPECT_FALSE (options[3]->active);
+
+  options[0]->active = false;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+  EXPECT_FALSE (options[3]->active);
+
+  filter->Clear();
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+  EXPECT_FALSE (options[3]->active);
+}
+
 }

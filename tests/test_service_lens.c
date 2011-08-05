@@ -114,6 +114,7 @@ add_filters(ServiceLens *self)
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1MB", "1MB", "");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "10MB", "10MB", "");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "100MB", "100MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1000MB", "1000MB", "");
  
   unity_lens_set_filters(self->priv->lens, filters, 4);
 }
