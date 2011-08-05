@@ -1540,7 +1540,7 @@ void QuicklistView::TestMenuItems(DbusmenuMenuitem* root)
 
 const gchar* QuicklistView::GetName()
 {
-  return "Quicklist"
+  return "Quicklist";
 }
 
 void QuicklistView::AddProperties(GVariantBuilder* builder)
