@@ -112,15 +112,12 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
     // It's in the middle of the range. See which side to shorten.
     if (position < (right_pos_/2.0f))
     {
-      g_debug ("%d is closer to %d", position, left_pos_);
       left_pos_ = position + 1;
     }
     else
     {
-      g_debug ("%d is closer to %d", position, right_pos_);
       right_pos_ = position - 1;
     }
-    g_debug("%d %d ~ %d", left_pos_, right_pos_, position);
   }
 
   ignore_changes_ = true;

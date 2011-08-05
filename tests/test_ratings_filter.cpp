@@ -75,34 +75,5 @@ TEST_F(TestRatingsFilter, TestSetting)
   g_variant_unref(row_value);
 }
 
-TEST_F(TestRatingsFilter, TestClear)
-{
-  RatingsFilter::Ptr ratings(new RatingsFilter(model_, iter_));
-  ratings->Clear();
-
-  GVariant* row_value = dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE);
-
-  GVariantIter iter;
-  g_variant_iter_init(&iter, row_value);
-
-  char* key = NULL;
-  GVariant* value = NULL;
-  float rating = 1.0f;
-  while (g_variant_iter_loop(&iter, "{sv}", &key, &value))
-  {
-    if (g_strcmp0(key, "rating") == 0)
-    {
-      rating = g_variant_get_double(value);
-      break;
-    }
-  }
-
-  EXPECT_FLOAT_EQ(ratings->rating, 0.0f);
-  EXPECT_FLOAT_EQ(ratings->rating, rating);
-  EXPECT_FALSE(ratings->filtering);
-  EXPECT_FALSE(dee_model_get_bool(model_, iter_, FilterColumn::FILTERING));
-
-  g_variant_unref(row_value);
-}
 
 }

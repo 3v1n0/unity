@@ -431,6 +431,26 @@ TEST_F(TestLens, TestFilterCheckOptionLogic)
   EXPECT_FALSE (options[2]->active);
 }
 
+TEST_F(TestLens, TestFilterRatings)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  RatingsFilter::Ptr filter = static_pointer_cast<RatingsFilter>(filters->FilterAtIndex(2));
+  EXPECT_EQ(filter->id, "ratings");
+  EXPECT_EQ(filter->name, "Ratings");
+  EXPECT_EQ(filter->icon_hint, "");
+  std::string tmp = filter->renderer_name;
+  EXPECT_EQ(filter->renderer_name, "filter-ratings");
+  EXPECT_TRUE(filter->visible);
+  EXPECT_FALSE(filter->collapsed);
+  EXPECT_FALSE(filter->filtering);
+
+  EXPECT_FLOAT_EQ(filter->rating, 0.0f);
+  filter->rating = 0.5f;
+  EXPECT_FLOAT_EQ(filter->rating, 0.5f);
+}
+
 TEST_F(TestLens, TestFilterMultiRange)
 {
   Filters::Ptr filters = lens_->filters;
@@ -509,5 +529,6 @@ TEST_F(TestLens, TestFilterMultiRangeLogic)
   EXPECT_FALSE (options[2]->active);
   EXPECT_FALSE (options[3]->active);
 }
+
 
 }
