@@ -30,6 +30,8 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon*> icons)
   , _index(0)
   , _last_index(0)
 {
+  detail_selection = false;
+  detail_selection_index = 0;
 }
 
 SwitcherModel::~SwitcherModel()
@@ -91,31 +93,66 @@ SwitcherModel::LastSelectionIndex()
   return _last_index;
 }
 
+std::vector<Window>
+SwitcherModel::DetailXids()
+{
+  std::vector<Window> results;
+  if (detail_selection)
+    results = Selection()->RelatedXids ();
+
+  return results;
+}
+
+Window
+SwitcherModel::DetailSelectionWindow ()
+{
+  if (!detail_selection)
+    return 0;
+  
+  return DetailXids()[detail_selection_index];
+}
+
 void
 SwitcherModel::Next()
 {
-  _last_index = _index;
+  if (detail_selection && detail_selection_index < Selection()->RelatedWindows () - 1)
+  {
+    detail_selection_index = detail_selection_index + 1;
+  }
+  else
+  {
+    _last_index = _index;
 
-  _index++;
-  if (_index >= _inner.size())
-    _index = 0;
+    _index++;
+    if (_index >= _inner.size())
+      _index = 0;
 
-  detail_selection = false;
-  selection_changed.emit(Selection());
+    detail_selection = false;
+    detail_selection_index = 0;
+    selection_changed.emit(Selection());
+  }
 }
 
 void
 SwitcherModel::Prev()
 {
-  _last_index = _index;
-
-  if (_index > 0)
-    _index--;
+  if (detail_selection && detail_selection_index > 0)
+  {
+    detail_selection_index = detail_selection_index - 1;  
+  }
   else
-    _index = _inner.size() - 1;
+  {
+    _last_index = _index;
 
-  detail_selection = false;
-  selection_changed.emit(Selection());
+    if (_index > 0)
+      _index--;
+    else
+      _index = _inner.size() - 1;
+
+    detail_selection = false;
+    detail_selection_index = 0;
+    selection_changed.emit(Selection());
+  }
 }
 
 void
@@ -132,6 +169,7 @@ SwitcherModel::Select(AbstractLauncherIcon* selection)
         _index = i;
 
         detail_selection = false;
+        detail_selection_index = 0;
         selection_changed.emit(Selection());
       }
       break;
@@ -151,6 +189,7 @@ SwitcherModel::Select(int index)
     _index = target;
 
     detail_selection = false;
+    detail_selection_index = 0;
     selection_changed.emit(Selection());
   }
 }

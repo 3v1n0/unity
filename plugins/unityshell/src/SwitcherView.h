@@ -42,6 +42,7 @@ class RenderTargetData
 public:
   nux::Geometry bounding;
   Window window;
+  float alpha;
 };
 
 typedef std::vector<RenderTargetData> WindowRenderTargetList;
@@ -83,6 +84,7 @@ protected:
 private:
   void OnSelectionChanged(AbstractLauncherIcon* selection);
   void OnDetailSelectionChanged (bool detail);
+  void OnDetailSelectionIndexChanged (int index);
 
   void UpdateRenderTargets (RenderArg const& selection_arg);
 

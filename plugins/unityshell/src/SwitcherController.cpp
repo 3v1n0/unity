@@ -98,7 +98,12 @@ void SwitcherController::Hide()
 
   AbstractLauncherIcon* selection = model_->Selection();
   if (selection)
-    selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+  {
+    if (model_->detail_selection)
+      selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+    else
+      selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+  }
 
   model_.reset();
   visible_ = false;

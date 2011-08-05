@@ -70,6 +70,13 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   active = bamf_view_is_active(BAMF_VIEW(m_App));
   running = bamf_view_is_running(BAMF_VIEW(m_App));
 
+  if (arg.target && OwnsWindow (arg.target))
+  {
+    CompWindow* window = m_Screen->findWindow(arg.target);
+    window->activate ();
+    return;
+  }
+
   /* Behaviour:
    * 1) Nothing running -> launch application
    * 2) Running and active -> spread application

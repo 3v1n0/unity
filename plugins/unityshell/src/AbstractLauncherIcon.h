@@ -44,17 +44,20 @@ public:
   ActionArg()
     : source(OTHER)
     , button(0)
+    , target(0)
   {
   }
 
-  ActionArg(Source source, int button)
+  ActionArg(Source source, int button, Window target = 0)
     : source(source)
     , button(button)
+    , target(target)
   {
   }
 
   Source source;
   int button;
+  Window target;
 };
 
 class AbstractLauncherIcon

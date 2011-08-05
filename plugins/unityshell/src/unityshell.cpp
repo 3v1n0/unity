@@ -402,7 +402,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
       CompWindow* window = screen->findWindow(target.window);
       UnityWindow *unity_window = UnityWindow::get (window);
 
-      unity_window->paintThumbnail (target.bounding, transform, mask);
+      unity_window->paintThumbnail (target.bounding, target.alpha);
     }
   }
 
@@ -410,7 +410,7 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
   damaged = false;
 }
 
-void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask)
+void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
 {
   GLMatrix matrix;
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
@@ -424,7 +424,10 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, const GLMatrix&
 
   last_bound = geo;
 
-  paintThumb (gWindow->lastPaintAttrib (),
+  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
+  attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
+
+  paintThumb (attrib,
               matrix,
               0,
               geo.x,

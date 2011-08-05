@@ -88,6 +88,7 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model_ = model;
   model->selection_changed.connect(sigc::mem_fun(this, &SwitcherView::OnSelectionChanged));
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
+  model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
   if (model->Selection())
     text_view_->SetText(model->Selection()->tooltip_text().c_str());
@@ -98,6 +99,11 @@ void SwitcherView::SaveLast ()
   saved_args_ = last_args_;
   saved_background_ = last_background_;
   clock_gettime(CLOCK_MONOTONIC, &save_time_);
+}
+
+void SwitcherView::OnDetailSelectionIndexChanged (int index)
+{
+  QueueDraw ();
 }
 
 void SwitcherView::OnDetailSelectionChanged (bool detail)
@@ -184,7 +190,7 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
 
 void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
 {
-  std::vector<Window> xids = selection_arg.icon->RelatedXids ();
+  std::vector<Window> xids = model_->DetailXids ();
 
   int width = 1;
   int height = 1;
@@ -206,20 +212,29 @@ void SwitcherView::UpdateRenderTargets (RenderArg const& selection_arg)
   nux::Geometry absolute = GetAbsoluteGeometry ();
   int start_x = absolute.x + selection_arg.render_center.x - (tile_size * spread_size) / 2;
   int start_y = absolute.y + selection_arg.render_center.y - (tile_size * spread_size) / 2;
+
+  int i = 0;
   for (Window window : xids)
   {
     RenderTargetData element;
     element.window = window;
     element.bounding = nux::Geometry (start_x + x * block_width, start_y + y * block_height, block_width, block_height);
+
+    element.alpha = 0.75f;
+    if (i == model_->detail_selection_index)
+      element.alpha = 1.0f;
+
     render_targets_.push_back (element);
 
-    x++;
+    ++x;
 
     if (x >= width)
     {
       x = 0;
-      y++;
+      ++y;
     }
+
+    ++i;
   }
 }
 

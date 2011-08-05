@@ -278,7 +278,7 @@ public:
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
 
-  void paintThumbnail (nux::Geometry const& bounding, const GLMatrix& transform, unsigned int mask);
+  void paintThumbnail (nux::Geometry const& bounding, float alpha);
 };
 
 
