@@ -21,6 +21,9 @@
 
 #include <NuxCore/Logger.h>
 
+#include "CheckOptionFilter.h"
+#include "MultiRangeFilter.h"
+#include "RadioOptionFilter.h"
 #include "RatingsFilter.h"
 
 namespace unity
@@ -79,10 +82,16 @@ Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
 {
   std::string renderer = dee_model_get_string(model, iter, 3);
 
-  if (renderer == "ratings")
+  if (renderer == "filter-ratings")
     return Filter::Ptr(new RatingsFilter(model, iter));
-
-  return Filter::Ptr(new RatingsFilter(model, iter));
+  else if (renderer == "filter-radiooption")
+    return Filter::Ptr(new RadioOptionFilter(model, iter));
+  else if (renderer == "filter-checkoption")
+    return Filter::Ptr(new CheckOptionFilter(model, iter));
+  else if (renderer == "filter-multirange")
+    return Filter::Ptr(new MultiRangeFilter(model, iter));
+  else
+    return Filter::Ptr(new RatingsFilter(model, iter));
 }
 
 bool Filter::IsValid() const
