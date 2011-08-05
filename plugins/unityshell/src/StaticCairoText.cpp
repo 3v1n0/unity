@@ -470,7 +470,6 @@ void StaticCairoText::UpdateTexture()
                                      GetBaseHeight());
   cairo_t* cr = cairo_reference(_cairoGraphics->GetContext());
 
-  g_debug ("drawing at size, %i, %i", GetBaseWidth (), GetBaseHeight());
   DrawText(cr, GetBaseWidth(), GetBaseHeight(), _textColor);
 
   cairo_destroy(cr);

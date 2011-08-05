@@ -57,8 +57,14 @@ namespace unity {
       IconTexture *screenshot = new IconTexture (preview_->screenshot_icon_hint.c_str(), 420);
       IconTexture *icon = new IconTexture (preview_->icon_hint.c_str(), 80);
       nux::StaticCairoText *name = new nux::StaticCairoText (preview_->name.c_str(), NUX_TRACKER_LOCATION);
+      name->SetFont("Ubuntu 25");
+
       nux::StaticCairoText *version = new nux::StaticCairoText (preview_->version.c_str(), NUX_TRACKER_LOCATION);
+      version->SetFont("Ubuntu 15");
+
       nux::StaticCairoText *size = new nux::StaticCairoText (preview_->size.c_str(), NUX_TRACKER_LOCATION);
+      size->SetFont("Ubuntu 15");
+
       nux::StaticCairoText *licence = new nux::StaticCairoText (preview_->license.c_str(), NUX_TRACKER_LOCATION);
       nux::StaticCairoText *last_updated = new nux::StaticCairoText (preview_->last_updated.c_str(), NUX_TRACKER_LOCATION);
       nux::StaticCairoText *description = new nux::StaticCairoText ("", NUX_TRACKER_LOCATION);
@@ -69,7 +75,7 @@ namespace unity {
       description->SetText(preview_->description.c_str());
 
       std::ostringstream number_of_reviews;
-      number_of_reviews << preview_->n_ratings << "Reviews";
+      number_of_reviews << preview_->n_ratings << " Reviews";
       nux::StaticCairoText *review_total = new nux::StaticCairoText (number_of_reviews.str().c_str(), NUX_TRACKER_LOCATION);
 
       nux::HLayout *large_container = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -84,7 +90,9 @@ namespace unity {
       PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
       primary_button->Activated.connect ([&] (nux::View *view) { UriActivated.emit (preview_->primary_action_uri); });
+      button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
       button_container->AddView (primary_button, 1);
+      button_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
       // create the description
       nux::VLayout *description_container = new nux::VLayout (NUX_TRACKER_LOCATION);
@@ -102,7 +110,7 @@ namespace unity {
       version_size_container->AddView(size, 1, nux::MINOR_POSITION_LEFT);
 
       title_container->AddLayout (version_size_container, 0, nux::MINOR_POSITION_LEFT);
-      title_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
+      title_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
       title_container->AddView (licence, 0, nux::MINOR_POSITION_LEFT);
       title_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
       title_container->AddView (last_updated, 0, nux::MINOR_POSITION_LEFT);
@@ -114,7 +122,7 @@ namespace unity {
       icon_container->AddView (review_total, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_MATCHCONTENT);
 
       // build the content container
-      title_icon_container->AddLayout (icon_container, 0, nux::MINOR_POSITION_BOTTOM, nux::MINOR_SIZE_MATCHCONTENT);
+      title_icon_container->AddLayout (icon_container, 0, nux::MINOR_POSITION_BOTTOM, nux::MINOR_SIZE_FULL);
       title_icon_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
       title_icon_container->AddLayout (title_container, 0, nux::MINOR_POSITION_BOTTOM, nux::MINOR_SIZE_FULL);
 
@@ -125,7 +133,9 @@ namespace unity {
       // build the overall container
       screenshot_container->AddView (screenshot, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
       large_container->AddLayout(screenshot_container, 1);
+      large_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
       large_container->AddLayout(content_container, 1);
+      large_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
       SetLayout(large_container);
     }
