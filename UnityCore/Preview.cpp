@@ -63,6 +63,8 @@ unsigned int Preview::PropertyToUnsignedInt (Properties& properties, const char*
 
 std::string Preview::PropertyToString(Properties& properties, const char *key)
 {
+  if (properties.find(key) == properties.end())
+   return "";
   return g_variant_get_string(properties[key], NULL);
 }
 
@@ -75,7 +77,7 @@ std::vector<std::string> Preview::PropertyToStringVector(Properties& properties,
 
   std::vector<std::string> property;
   while (g_variant_iter_loop(iter, "s", &value))
-    property.push_back(value);    
+    property.push_back(value);
 
   g_variant_iter_free(iter);
 
