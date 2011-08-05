@@ -268,6 +268,8 @@ void UnityScreen::nuxEpilogue()
   glReadBuffer(GL_BACK);
 
   glPopAttrib();
+
+  glDisable(GL_SCISSOR_TEST);
 }
 
 void UnityScreen::OnLauncherHiddenChanged()
@@ -1147,8 +1149,14 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   self->switcherController = new SwitcherController();
   /* FIXME: this should not be manual, should be managed with a
      show/hide callback like in GAIL*/
-  if (unity_a11y_initialized() == TRUE)
-    unity_util_accessible_add_window(self->launcherWindow);
+  if (unity_a11y_initialized () == TRUE)
+    {
+      AtkObject *atk_obj = NULL;
+
+      atk_obj = unity_util_accessible_add_window (self->launcherWindow);
+
+      atk_object_set_name (atk_obj, _("Launcher"));
+    }
 
   self->launcher->SetIconSize(54, 48);
   self->launcher->SetBacklightMode(Launcher::BACKLIGHT_ALWAYS_ON);
