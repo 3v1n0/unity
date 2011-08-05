@@ -133,8 +133,8 @@ namespace unity {
       // build the overall container
       screenshot_container->AddView (icon, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
       large_container->AddLayout(screenshot_container, 1);
-      //large_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
-      //large_container->AddLayout(content_container, 1);
+      large_container->AddLayout (new nux::SpaceLayout(12,12,12,12), 0);
+      large_container->AddLayout(content_container, 1);
       large_container->AddLayout (new nux::SpaceLayout(6,6,6,6), 0);
 
       SetLayout(large_container);
