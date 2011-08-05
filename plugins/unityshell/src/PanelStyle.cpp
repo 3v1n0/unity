@@ -25,7 +25,7 @@
 #include <Nux/Nux.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <NuxImage/CairoGraphics.h>
-#include "NuxCore/Logger.h"
+#include <NuxCore/Logger.h>
 
 #include "PanelStyle.h"
 
@@ -152,7 +152,6 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
   nux::BaseTexture* texture = NULL;
   const char* names[] = { "close", "minimize", "unmaximize" };
   const char* states[] = { "", "_focused_prelight", "_focused_pressed" };
-  GdkPixbuf* pixbuf;
 
   std::ostringstream subpath;
   subpath << "unity/" << names[type] << states[state] << ".png";
@@ -168,13 +167,11 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
       glib::Error error;
 
       // Found a file, try loading the pixbuf
-      pixbuf = gdk_pixbuf_new_from_file(filename.Value(), &error);
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
       if (error)
         LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
       else
         texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-
-      g_object_unref(pixbuf);
     }
   }
 
@@ -192,13 +189,11 @@ PanelStyle::GetWindowButton(WindowButtonType type, WindowState state)
       glib::Error error;
 
       // Found a file, try loading the pixbuf
-      pixbuf = gdk_pixbuf_new_from_file(filename.Value(), &error);
+      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename.Value(), &error));
       if (error)
         LOG_WARNING(logger) << "Unable to load window button " << filename.Value() << ": " << error.Message();
       else
         texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-
-      g_object_unref(pixbuf);
     }
   }
 
