@@ -104,10 +104,9 @@ add_filters(ServiceLens *self)
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "lastweek", "Last Week", "");
 
   filters[1] = (UnityFilter*) unity_check_option_filter_new("type", "Type", "", FALSE);
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "apps", "Apps", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "files", "Files", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "music", "Music", "");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "videos", "Videos", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "apps", "Apps", "gtk-apps");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "files", "Files", "gtk-files");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "music", "Music", "gtk-music");
 
   filters[2] = (UnityFilter*) unity_ratings_filter_new("ratings", "Ratings", "", FALSE);
 

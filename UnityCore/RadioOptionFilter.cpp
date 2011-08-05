@@ -42,12 +42,7 @@ RadioOptionFilter::RadioOptionFilter(DeeModel* model, DeeModelIter* iter)
 void RadioOptionFilter::Clear()
 {
   for(auto option: options_)
-  {
     option->active = false;
-  }
-  UpdateState(false);
-
-  options.EmitChanged(options_);
 }
 
 void RadioOptionFilter::Update(Filter::Hints& hints)
@@ -84,8 +79,6 @@ void RadioOptionFilter::OptionChanged(bool is_active, std::string const& id)
   if (ignore_changes_)
     return;
 
-  bool filtering_ = is_active;
-  
   ignore_changes_ = true;
   if (is_active)
   {
@@ -94,12 +87,10 @@ void RadioOptionFilter::OptionChanged(bool is_active, std::string const& id)
       if (option->id != id)
         option->active = false;
     }
-    filtering_ = true;
   }
   ignore_changes_ = false;
 
-  UpdateState(filtering_);
-  options.EmitChanged(options_);
+  UpdateState();
 }
 
 RadioOptionFilter::RadioOptions const& RadioOptionFilter::get_options() const
@@ -107,10 +98,11 @@ RadioOptionFilter::RadioOptions const& RadioOptionFilter::get_options() const
   return options_;
 }
 
-void RadioOptionFilter::UpdateState(bool raw_filtering)
+void RadioOptionFilter::UpdateState()
 {
   if (!IsValid())
     return;
+  gboolean raw_filtering = FALSE;
 
   GVariantBuilder options;
   g_variant_builder_init(&options, G_VARIANT_TYPE("a(sssb)"));
@@ -121,6 +113,8 @@ void RadioOptionFilter::UpdateState(bool raw_filtering)
     std::string name = option->name;
     std::string icon_hint = option->icon_hint;
     bool active = option->active;
+
+    raw_filtering = raw_filtering ? TRUE : active;
 
     g_variant_builder_add(&options, "(sssb)",
                           id.c_str(), name.c_str(),
@@ -137,8 +131,10 @@ void RadioOptionFilter::UpdateState(bool raw_filtering)
                       g_variant_builder_end(&hints));
   dee_model_set_value(model_, iter_,
                       FilterColumn::FILTERING,
-                      g_variant_new("b", raw_filtering ? TRUE : FALSE));
+                      g_variant_new("b", raw_filtering));
   IgnoreChanges(false);
+
+  filtering.EmitChanged(filtering);
 }
 
 }

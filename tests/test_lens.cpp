@@ -355,37 +355,80 @@ TEST_F(TestLens, TestFilterRadioOptionLogic)
 
 TEST_F(TestLens, TestFilterCheckOption)
 {
-#if 0
   Filters::Ptr filters = lens_->filters;
   WaitForModel<FilterAdaptor>(filters.get(), 4);
 
-  RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(0));
-  EXPECT_EQ(filter->id, "when");
-  EXPECT_EQ(filter->name, "When");
+  CheckOptionFilter::Ptr filter = static_pointer_cast<CheckOptionFilter>(filters->FilterAtIndex(1));
+  EXPECT_EQ(filter->id, "type");
+  EXPECT_EQ(filter->name, "Type");
   EXPECT_EQ(filter->icon_hint, "");
-  EXPECT_EQ(filter->renderer_name, "filter-radiooption");
+  EXPECT_EQ(filter->renderer_name, "filter-checkoption");
   EXPECT_TRUE(filter->visible);
   EXPECT_FALSE(filter->collapsed);
   EXPECT_FALSE(filter->filtering);
 
-  RadioOptionFilter::RadioOptions options = filter->options;
-  EXPECT_EQ(options.size(), (unsigned int)4);
+  CheckOptionFilter::CheckOptions options = filter->options;
+  EXPECT_EQ(options.size(), (unsigned int)3);
   
-  EXPECT_EQ(options[0]->id, "today");
-  EXPECT_EQ(options[0]->name, "Today");
-  EXPECT_EQ(options[0]->icon_hint, "");
+  EXPECT_EQ(options[0]->id, "apps");
+  EXPECT_EQ(options[0]->name, "Apps");
+  EXPECT_EQ(options[0]->icon_hint, "gtk-apps");
   EXPECT_FALSE(options[0]->active);
 
-  EXPECT_EQ(options[1]->id, "yesterday");
-  EXPECT_EQ(options[1]->name, "Yesterday");
-  EXPECT_EQ(options[1]->icon_hint, "");
+  EXPECT_EQ(options[1]->id, "files");
+  EXPECT_EQ(options[1]->name, "Files");
+  EXPECT_EQ(options[1]->icon_hint, "gtk-files");
   EXPECT_FALSE(options[1]->active);
 
-  EXPECT_EQ(options[2]->id, "lastweek");
-  EXPECT_EQ(options[2]->name, "Last Week");
-  EXPECT_EQ(options[2]->icon_hint, "");
+  EXPECT_EQ(options[2]->id, "music");
+  EXPECT_EQ(options[2]->name, "Music");
+  EXPECT_EQ(options[2]->icon_hint, "gtk-music");
   EXPECT_FALSE(options[2]->active);
-#endif
+}
+
+TEST_F(TestLens, TestFilterCheckOptionLogic)
+{
+  Filters::Ptr filters = lens_->filters;
+  WaitForModel<FilterAdaptor>(filters.get(), 4);
+
+  CheckOptionFilter::Ptr filter = static_pointer_cast<CheckOptionFilter>(filters->FilterAtIndex(1));
+  CheckOptionFilter::CheckOptions options = filter->options;
+
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[0]->active = true;
+  options[0]->active = false;
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[0]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[1]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
+
+  options[2]->active = true;
+  EXPECT_TRUE (filter->filtering);
+  EXPECT_TRUE (options[0]->active);
+  EXPECT_TRUE (options[1]->active);
+  EXPECT_TRUE (options[2]->active);
+
+  filter->Clear();
+  EXPECT_FALSE (filter->filtering);
+  EXPECT_FALSE (options[0]->active);
+  EXPECT_FALSE (options[1]->active);
+  EXPECT_FALSE (options[2]->active);
 }
 
 }

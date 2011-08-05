@@ -46,7 +46,7 @@ protected:
   void Update(Filter::Hints& hints);
 
 private:
-  void UpdateState(bool raw_filtering);
+  void UpdateState();
   RadioOptions const& get_options() const;
   void OptionChanged(bool is_active, std::string const& id);
 
