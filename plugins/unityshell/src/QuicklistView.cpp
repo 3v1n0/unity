@@ -1346,14 +1346,14 @@ void ql_compute_full_mask(
 
 void QuicklistView::UpdateTexture()
 {
-  if (_cairo_text_has_changed == false)
+  if (!_cairo_text_has_changed)
     return;
 
   int size_above_anchor = -1; // equal to size below
 
   if (!_enable_quicklist_for_testing)
   {
-    if ((_item_list.size() != 0) || (_default_item_list.size() != 0))
+    if (!_item_list.empty() || !_default_item_list.empty())
     {
       int offscreen_size = GetBaseY() +
                            GetBaseHeight() -
