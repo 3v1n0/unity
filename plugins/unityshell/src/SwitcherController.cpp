@@ -46,6 +46,7 @@ void SwitcherController::Show(SwitcherController::ShowMode show, SwitcherControl
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
 
   model_ = SwitcherModel::Ptr(new SwitcherModel(results));
+  model_->detail_inline = false;
   SelectFirstItem();
 
   visible_ = true;
@@ -143,8 +144,14 @@ void SwitcherController::MovePrev()
 
 void SwitcherController::DetailCurrent()
 {
-  if (model_->Selection ()->RelatedWindows () > 0)
+  if (model_->detail_selection)
+  {
+    model_->NextDetail ();
+  }
+  else if (model_->Selection ()->RelatedWindows () > 0)
+  {
     model_->detail_selection = true;
+  }
 }
 
 LayoutWindowList SwitcherController::ExternalRenderTargets ()
