@@ -47,8 +47,10 @@ SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
 
 SimpleLauncherIcon::~SimpleLauncherIcon()
 {
-  if (icon_)
-    icon_->UnReference();
+  for (auto element : texture_map)
+    element.second->UnReference();
+
+  texture_map.clear ();
 
   if (theme_changed_id_)
     g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
