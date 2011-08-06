@@ -132,10 +132,13 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
   int block_x = start_x;
   int block_y = start_y;
-  int vertical_savings = 0;
+  int vertical_offset = 0;
+
+  LayoutWindowList row_accum;
   for (auto window : windows)
   {
     window->result = ScaleBoxIntoBox (nux::Geometry (block_x, block_y, block_width, block_height), window->geo);
+    row_accum.push_back (window);
 
     x1 = MIN (window->result.x, x1);
     y1 = MIN (window->result.y, y1);
@@ -144,7 +147,7 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
     ++x;
     block_x += block_width;
-    if (x >= width)
+    if (x >= width || x + y * width == (int) windows.size ())
     {
       x = 0;
 	    block_x = start_x;
@@ -152,28 +155,42 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
       if (y == height - 1)
       {
-      	block_x += (width * height - windows.size ()) * block_width / 2; 
+      	block_width += (width * height - windows.size ()) * block_width / (windows.size () - width * (height - 1)); 
       }	
 	    	
 
       if (y2 >= block_y + block_height)
       {
-      	block_y += block_height;
+        block_y += block_height;
       }
       else
       {
         int this_savings = ((block_y + block_height) - y2) * 2;
         block_y = block_y + block_height - this_savings;
 
-        if (y != height)
- 	        vertical_savings += this_savings;
+        for (auto w : row_accum)
+        	w->result.y -= this_savings / 2;
+        
+        vertical_offset += this_savings / 2;
       }
+
+      row_accum.clear ();
     }
   }
 
+  x1 = G_MAXINT;
+  y1 = G_MAXINT;
+  x2 = 0;
+  y2 = 0;
+
   for (auto window : windows)
   {
-  	window->result.y += vertical_savings / 2;
+  	window->result.y += vertical_offset;
+
+  	x1 = MIN (window->result.x, x1);
+    y1 = MIN (window->result.y, y1);
+    x2 = MAX (window->result.x + window->result.width, x2);
+    y2 = MAX (window->result.y + window->result.height, y2);
   }
 
   final_bounds = nux::Geometry (x1, y1, x2 - x1, y2 - y1);
