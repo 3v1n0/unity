@@ -1,3 +1,11 @@
+unity (4.6.0-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    - remove the recommends on ubuntuone-control-panel-gtk now that
+      ubuntu-desktop recommends it.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Sat, 06 Aug 2011 20:18:59 +0200
+
 unity (4.6.0-0ubuntu2) oneiric; urgency=low
 
   * debian/rules:

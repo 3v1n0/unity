@@ -67,7 +67,6 @@ Recommends: unity-place-applications,
             indicator-messages,
             indicator-power,
             indicator-session,
-            ubuntuone-control-panel-gtk,
 Breaks: compiz-core (<< 1:0.9.4+bzr20110606-0ubuntu5),
         bamf (<< 0.2.76),
 Description: Interface designed for efficiency of space and interaction.
