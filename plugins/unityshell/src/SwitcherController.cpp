@@ -147,11 +147,11 @@ void SwitcherController::DetailCurrent()
     model_->detail_selection = true;
 }
 
-WindowRenderTargetList SwitcherController::ExternalRenderTargets ()
+LayoutWindowList SwitcherController::ExternalRenderTargets ()
 {
   if (!view_)
   {
-    WindowRenderTargetList result;
+    LayoutWindowList result;
     return result;
   }
   return view_->ExternalTargets ();

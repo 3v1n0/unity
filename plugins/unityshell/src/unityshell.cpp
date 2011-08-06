@@ -395,14 +395,14 @@ void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transfo
 
   if (switcherController->Visible ())
   {
-    WindowRenderTargetList targets = switcherController->ExternalRenderTargets ();
+    LayoutWindowList targets = switcherController->ExternalRenderTargets ();
 
     for (auto target : targets)
     {
-      CompWindow* window = screen->findWindow(target.window);
+      CompWindow* window = screen->findWindow(target->xid);
       UnityWindow *unity_window = UnityWindow::get (window);
 
-      unity_window->paintThumbnail (target.bounding, target.alpha);
+      unity_window->paintThumbnail (target->result, target->alpha);
     }
   }
 

@@ -68,7 +68,7 @@ public:
 
   void SetWorkspace(nux::Geometry geo);
 
-  WindowRenderTargetList ExternalRenderTargets ();
+  LayoutWindowList ExternalRenderTargets ();
 
 private:
   void ConstructView();

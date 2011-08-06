@@ -189,6 +189,10 @@ add_executable (test-switcher
                 ${UNITY_SRC}/SwitcherModel.h
                 ${UNITY_SRC}/SwitcherView.cpp
                 ${UNITY_SRC}/SwitcherView.h
+                ${UNITY_SRC}/LayoutSystem.h
+                ${UNITY_SRC}/LayoutSystem.cpp
+                ${UNITY_SRC}/WindowManager.h
+                ${UNITY_SRC}/WindowManager.cpp
                 ${UNITY_SRC}/IconRenderer.cpp
                 ${UNITY_SRC}/IconRenderer.h
                 ${UNITY_SRC}/MockLauncherIcon.h
