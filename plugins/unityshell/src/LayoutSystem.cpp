@@ -122,8 +122,8 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
   int x = 0;
   int y = 0;
 
-  int start_x = final_bounds.x;
-  int start_y = final_bounds.y;
+  int start_x = final_bounds.x + final_bounds.width;
+  int start_y = final_bounds.y + final_bounds.height;
 
   int x1 = G_MAXINT;
   int y1 = G_MAXINT;
@@ -135,9 +135,12 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
   int vertical_offset = 0;
 
   LayoutWindowList row_accum;
-  for (auto window : windows)
+
+  LayoutWindowList::reverse_iterator it;
+  for (it = windows.rbegin (); it != windows.rend (); it++)
   {
-    window->result = ScaleBoxIntoBox (nux::Geometry (block_x, block_y, block_width, block_height), window->geo);
+  	auto window = *it;
+    window->result = ScaleBoxIntoBox (nux::Geometry (block_x - block_width, block_y - block_height, block_width, block_height), window->geo);
     row_accum.push_back (window);
 
     x1 = MIN (window->result.x, x1);
@@ -146,7 +149,7 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
     y2 = MAX (window->result.y + window->result.height, y2);
 
     ++x;
-    block_x += block_width;
+    block_x -= block_width;
     if (x >= width || x + y * width == (int) windows.size ())
     {
       x = 0;
@@ -161,15 +164,15 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
       if (y2 >= block_y + block_height)
       {
-        block_y += block_height;
+        block_y -= block_height;
       }
       else
       {
-        int this_savings = ((block_y + block_height) - y2) * 2;
-        block_y = block_y + block_height - this_savings;
+        int this_savings = (y1 - (block_y - block_height)) * 2;
+        block_y = block_y - (block_height - this_savings);
 
         for (auto w : row_accum)
-        	w->result.y -= this_savings / 2;
+        	w->result.y += this_savings / 2;
         
         vertical_offset += this_savings / 2;
       }
@@ -185,7 +188,7 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList windows, nux::Geometry co
 
   for (auto window : windows)
   {
-  	window->result.y += vertical_offset;
+  	window->result.y -= vertical_offset;
 
   	x1 = MIN (window->result.x, x1);
     y1 = MIN (window->result.y, y1);
