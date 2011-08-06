@@ -101,9 +101,20 @@ void SwitcherController::Hide()
   if (selection)
   {
     if (model_->detail_selection)
+    {
       selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+    }
     else
-      selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+    {
+      if (selection->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE))
+      {
+        selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
+      } 
+      else
+      {
+        selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+      }     
+    }
   }
 
   model_.reset();
@@ -176,8 +187,48 @@ void SwitcherController::SelectFirstItem()
   if (!model_)
     return;
 
-  // Hack
-  model_->Select(2);
+  AbstractLauncherIcon *first  = model_->at (1);
+  AbstractLauncherIcon *second = model_->at (2);
+
+  if (!first)
+  {
+    model_->Select (0);
+    return;
+  }
+  else if (!second)
+  {
+    model_->Select (1);
+    return;
+  }
+
+  unsigned int first_highest = 0;
+  unsigned int first_second = 0; // first icons second highest active
+  unsigned int second_first = 0; // second icons first highest active
+
+  for (guint32 xid : first->RelatedXids ())
+  {
+    unsigned int num = WindowManager::Default ()->GetWindowActiveNumber (xid);
+
+    if (num > first_highest)
+    {
+      first_second = first_highest;
+      first_highest = num;
+    }
+    else if (num > first_second)
+    {
+      first_second = num;
+    }
+  }
+
+  for (guint32 xid : second->RelatedXids ())
+  {
+    second_first = MAX (WindowManager::Default ()->GetWindowActiveNumber (xid), second_first);
+  }
+
+  if (first_second > second_first)
+    model_->Select (first);
+  else
+    model_->Select (second);
 }
 
 }

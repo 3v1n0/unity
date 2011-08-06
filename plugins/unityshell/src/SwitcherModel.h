@@ -59,6 +59,8 @@ public:
   reverse_iterator rbegin();
   reverse_iterator rend();
 
+  AbstractLauncherIcon* at(unsigned int index);
+
   int Size();
 
   AbstractLauncherIcon* Selection();
@@ -82,6 +84,9 @@ public:
   sigc::signal<void, AbstractLauncherIcon*> selection_changed;
 
 private:
+
+  static bool CompareWindowsByActive (guint32 first, guint32 second);
+
   Base             _inner;
   unsigned int     _index;
   unsigned int     _last_index;

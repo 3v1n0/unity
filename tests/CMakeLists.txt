@@ -331,6 +331,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${UNITY_SRC}/MockLauncherIcon.h
                  ${UNITY_SRC}/SwitcherModel.cpp
                  ${UNITY_SRC}/SwitcherModel.h
+                 ${UNITY_SRC}/WindowManager.cpp
+                 ${UNITY_SRC}/WindowManager.h
                  ${UNITY_SRC}/Timer.cpp
                  ${UNITY_SRC}/Timer.h
                  )

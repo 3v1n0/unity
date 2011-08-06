@@ -19,6 +19,7 @@
 #include <math.h>
 
 #include "SwitcherModel.h"
+#include "WindowManager.h"
 
 namespace unity
 {
@@ -64,6 +65,14 @@ SwitcherModel::rend()
   return _inner.rend();
 }
 
+AbstractLauncherIcon*
+SwitcherModel::at(unsigned int index)
+{
+  if ((int) index >= Size ())
+    return 0;
+  return _inner[index];
+}
+
 int
 SwitcherModel::Size()
 {
@@ -94,12 +103,27 @@ SwitcherModel::LastSelectionIndex()
   return _last_index;
 }
 
+bool
+SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
+{
+  return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
+}
+
 std::vector<Window>
 SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
-  if (detail_selection)
-    results = Selection()->RelatedXids ();
+  results = Selection()->RelatedXids ();
+
+  std::sort (results.begin (), results.end (), &CompareWindowsByActive);
+
+  // swap so we focus the last focused window first
+  if (Selection()->GetQuirk (AbstractLauncherIcon::QUIRK_ACTIVE) && results.size () > 1)
+  {
+    Window tmp = results[0];
+    results[0] = results[1];
+    results[1] = tmp;
+  }
 
   return results;
 }
