@@ -49,6 +49,8 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned int SwitcherPriority();
 
+  std::vector<Window> RelatedXids ();
+
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
 

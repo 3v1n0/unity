@@ -94,6 +94,8 @@ public:
 
   int RelatedWindows();
 
+  virtual std::vector<Window> RelatedXids () { return std::vector<Window> (); }
+
   bool HasWindowOnViewport();
 
   virtual bool IsSpacer()
