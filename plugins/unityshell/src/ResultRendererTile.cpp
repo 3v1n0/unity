@@ -62,6 +62,37 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
 
+
+  if (1)
+  {
+    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    nux::Color col = nux::color::Black;
+
+    if (state == ResultRendererState::RESULT_RENDERER_PRELIGHT)
+    {
+      col = nux::color::Orange;
+      col.alpha = 0.7;
+    }
+    else if (state == ResultRendererState::RESULT_RENDERER_ACTIVE)
+    {
+      col = nux::color::Red;
+      col.alpha = 1.0;
+    }
+    else
+    {
+      col.alpha = 0.0;
+    }
+
+    GfxContext.QRP_Color(geometry.x,
+                         geometry.y,
+                         geometry.width,
+                         geometry.height,
+                         col);
+  }
+
   std::map<std::string, nux::BaseTexture *>::iterator it;
   it = text_cache_.find(row_text);
 

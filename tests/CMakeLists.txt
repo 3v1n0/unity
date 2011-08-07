@@ -337,6 +337,9 @@ add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
 
 add_executable (test-result-view
                 TestResultView.cpp
+                ${UNITY_SRC}/PreviewApplications.cpp
+                ${UNITY_SRC}/PreviewBase.cpp
+                ${UNITY_SRC}/PreviewBasicButton.cpp
                 ${UNITY_SRC}/ResultView.cpp
                 ${UNITY_SRC}/ResultViewGrid.cpp
                 ${UNITY_SRC}/ResultRenderer.cpp

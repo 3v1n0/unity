@@ -44,16 +44,27 @@ public:
     void AddResult(Result& result);
     void RemoveResult(Result& result);
 
+  void SetPreview (PreviewBase *preview, Result& related_result);
+
     nux::Property<int> horizontal_spacing;
     nux::Property<int> vertical_spacing;
     nux::Property<int> padding;
 
 protected:
+    void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+    void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
+    virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
 private:
   void SizeReallocate ();
+  uint GetIndexAtPosition (int x, int y);
+
+  int mouse_over_index_;
+  int active_index_;
+  int selected_index_;
 };
 
 }

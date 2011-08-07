@@ -29,6 +29,7 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
 
+#include "PreviewBase.h"
 #include "ResultRenderer.h"
 
 namespace unity
@@ -49,14 +50,18 @@ public:
   void AddResult(Result& result);
   void RemoveResult(Result& result);
 
+  void SetPreview (PreviewBase *preview, Result& related_result);
+
   nux::Property<bool> expanded;
+  sigc::signal<void, std::string> UriActivated;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
+  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   // properties
-
+  Result* preview_result_;
   ResultRenderer *renderer_;
   ResultList results_;
 };

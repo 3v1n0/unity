@@ -19,8 +19,10 @@
  *
  */
 
+
 #include "ResultView.h"
 
+#include <Nux/VLayout.h>
 namespace unity
 {
 namespace dash
@@ -29,6 +31,7 @@ namespace dash
 ResultView::ResultView(NUX_FILE_LINE_DECL)
     : View(NUX_FILE_LINE_PARAM)
     , expanded (NULL)
+    , preview_result_ (NULL)
     , renderer_ (NULL)
 {
 
@@ -88,6 +91,32 @@ void ResultView::RemoveResult (Result& result)
   renderer_->Unload(result);
 
   NeedRedraw ();
+}
+
+void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
+{
+  if (preview == NULL)
+  {
+    preview_result_ = NULL;
+    SetLayout(NULL);
+  }
+  else
+  {
+    nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+    layout->AddView(preview, 1);
+    SetLayout (layout);
+    preview_result_ = &related_result;
+  }
+}
+
+void ResultView::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
+  nux::Geometry base = GetGeometry ();
+  GfxContent.PushClippingRectangle (base);
+
+  if (GetCompositionLayout ())
+    GetCompositionLayout ()->ProcessDraw (GfxContent, force_draw);
+
+  GfxContent.PopClippingRectangle();
 }
 
 }
