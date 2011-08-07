@@ -20,11 +20,13 @@
 #ifndef UNITY_LENS_H
 #define UNITY_LENS_H
 
-#include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include <memory>
 #include <NuxCore/Property.h>
 #include <sigc++/trackable.h>
+
+#include "Categories.h"
+#include "Results.h"
 
 namespace unity
 {
@@ -48,15 +50,27 @@ public:
 
   ~Lens();
 
-  nux::ROProperty<std::string> id;
-  nux::ROProperty<std::string> dbus_name;
-  nux::ROProperty<std::string> dbus_path;
-  nux::ROProperty<std::string> name;
-  nux::ROProperty<std::string> icon;
-  nux::ROProperty<std::string> description;
-  nux::ROProperty<std::string> search_hint;
-  nux::ROProperty<bool> visible;
-  nux::ROProperty<std::string> shortcut;
+  void GlobalSearch(std::string const& search_string);
+  void Search(std::string const& search_string);
+
+  nux::RWProperty<std::string> id;
+  nux::RWProperty<std::string> dbus_name;
+  nux::RWProperty<std::string> dbus_path;
+  nux::RWProperty<std::string> name;
+  nux::RWProperty<std::string> icon;
+  nux::RWProperty<std::string> description;
+  nux::RWProperty<std::string> search_hint;
+  nux::RWProperty<bool> visible;
+  nux::RWProperty<bool> search_in_global;
+  nux::RWProperty<std::string> shortcut;
+  nux::RWProperty<Results::Ptr> results;
+  nux::RWProperty<Results::Ptr> global_results;
+  nux::RWProperty<Categories::Ptr> categories;
+
+  nux::Property<bool> active;
+
+  sigc::signal<void, std::string const&> search_finished;
+  sigc::signal<void, std::string const&> global_search_finished;
 
 private:
   class Impl;

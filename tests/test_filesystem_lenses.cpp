@@ -57,7 +57,7 @@ TEST(TestFilesystemLenses, TestFileLoading)
 TEST(TestFilesystemLenses, TestLensesAdded)
 {
   FilesystemLenses lenses(TESTDATADIR"/lenses");
-  int  n_lenses = 0;
+  unsigned int n_lenses = 0;
 
   auto lens_added_cb = [&n_lenses](Lens::Ptr & p)
   {
