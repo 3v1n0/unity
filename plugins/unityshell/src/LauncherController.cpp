@@ -42,6 +42,7 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
 
   _launcher->SetModel(_model);
   _launcher->launcher_addrequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequest));
+  _launcher->launcher_addrequest_special.connect(sigc::mem_fun(this, &LauncherController::OnLauncherAddRequestSpecial));
   _launcher->launcher_removerequest.connect(sigc::mem_fun(this, &LauncherController::OnLauncherRemoveRequest));
 
   _place_section = new PlaceLauncherSection(_launcher);
@@ -96,6 +97,28 @@ LauncherController::OnLauncherAddRequest(char* path, LauncherIcon* before)
   if (result)
   {
     RegisterIcon(result);
+    if (before)
+      _model->ReorderBefore(result, before, false);
+  }
+}
+
+void
+LauncherController::OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id)
+{
+  std::list<BamfLauncherIcon*> launchers;
+  std::list<BamfLauncherIcon*>::iterator it;
+
+  launchers = _model->GetSublist<BamfLauncherIcon> ();
+  for (it = launchers.begin(); it != launchers.end(); it++)
+  {
+    if (!g_strcmp0(path, (*it)->DesktopFile()))
+      return;
+  }
+
+  SoftwareCenterLauncherIcon* result = CreateSCLauncherIcon(path, aptdaemon_trans_id);
+  if (result)
+  {
+    RegisterIcon((LauncherIcon*)result);
     if (before)
       _model->ReorderBefore(result, before, false);
   }
@@ -316,6 +339,32 @@ LauncherController::CreateFavorite(const char* file_path)
 
   bamf_view_set_sticky(BAMF_VIEW(app), true);
   icon = new BamfLauncherIcon(_launcher, app, _screen);
+  icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
+  icon->SetSortPriority(_sort_priority++);
+
+  return icon;
+}
+
+SoftwareCenterLauncherIcon*
+LauncherController::CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id)
+{
+  BamfApplication* app;
+  SoftwareCenterLauncherIcon* icon;
+
+  app = bamf_matcher_get_application_for_desktop_file(_matcher, file_path, true);
+  if (!app)
+    return NULL;
+
+  if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+  {
+    bamf_view_set_sticky(BAMF_VIEW(app), true);
+    return 0;
+  }
+
+  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"), GINT_TO_POINTER(1));
+
+  bamf_view_set_sticky(BAMF_VIEW(app), true);
+  icon = new SoftwareCenterLauncherIcon(_launcher, app, _screen, (char*)aptdaemon_trans_id);
   icon->SetIconType(LauncherIcon::TYPE_APPLICATION);
   icon->SetSortPriority(_sort_priority++);
 

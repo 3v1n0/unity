@@ -3235,7 +3235,7 @@ Launcher::handle_dbus_method_call(GDBusConnection*       connection,
     g_variant_get(parameters, "(ssiiiss)", &icon, &title, &icon_x, &icon_y, &icon_size, &desktop_file, &aptdaemon_task, NULL);
 
     Launcher* self = (Launcher*)user_data;
-    self->launcher_addrequest.emit(desktop_file, NULL);
+    self->launcher_addrequest_special.emit(desktop_file, NULL, aptdaemon_task);
 
     g_dbus_method_invocation_return_value(invocation, NULL);
     g_free(icon);

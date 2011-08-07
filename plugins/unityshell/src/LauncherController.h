@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 
 #include "BamfLauncherIcon.h"
+#include "SoftwareCenterLauncherIcon.h"
 #include "LauncherModel.h"
 
 #include "DeviceLauncherSection.h"
@@ -70,6 +71,7 @@ private:
   void OnIconAdded(LauncherIcon* icon);
 
   void OnLauncherAddRequest(char* path, LauncherIcon* before);
+  void OnLauncherAddRequestSpecial(char* path, LauncherIcon* before, char* aptdaemon_trans_id);
   void OnLauncherRemoveRequest(LauncherIcon* icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote* entry);
@@ -83,6 +85,8 @@ private:
   void RegisterIcon(LauncherIcon* icon);
 
   LauncherIcon* CreateFavorite(const char* file_path);
+
+  SoftwareCenterLauncherIcon* CreateSCLauncherIcon(const char* file_path, const char* aptdaemon_trans_id);
 
   void SetupBamf();
 
