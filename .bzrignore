@@ -1,1 +1,3 @@
 build
+services/panel-marshal.c
+services/panel-marshal.h

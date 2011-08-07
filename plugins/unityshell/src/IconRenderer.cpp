@@ -305,47 +305,16 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 void IconRenderer::UpdateIconTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                                        float x, float y, float w, float h, float z, std::string name)
 {
-  nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
-  nux::Vector4 v1 = nux::Vector4(x,   y + h,  z, 1.0f);
-  nux::Vector4 v2 = nux::Vector4(x + w, y + h,  z, 1.0f);
-  nux::Vector4 v3 = nux::Vector4(x + w, y,    z, 1.0f);
-
-  v0 = ViewProjectionMatrix * v0;
-  v1 = ViewProjectionMatrix * v1;
-  v2 = ViewProjectionMatrix * v2;
-  v3 = ViewProjectionMatrix * v3;
-
-  v0.divide_xyz_by_w();
-  v1.divide_xyz_by_w();
-  v2.divide_xyz_by_w();
-  v3.divide_xyz_by_w();
-
-  // normalize to the viewport coordinates and translate to the correct location
-  v0.x =  geo.width * (v0.x + 1.0f) / 2.0f - geo.width / 2.0f + x + w / 2.0f;
-  v0.y = -geo.height * (v0.y - 1.0f) / 2.0f - geo.height / 2.0f + y + h / 2.0f;
-  v1.x =  geo.width * (v1.x + 1.0f) / 2.0f - geo.width / 2.0f + x + w / 2.0f;;
-  v1.y = -geo.height * (v1.y - 1.0f) / 2.0f - geo.height / 2.0f + y + h / 2.0f;
-  v2.x =  geo.width * (v2.x + 1.0f) / 2.0f - geo.width / 2.0f + x + w / 2.0f;
-  v2.y = -geo.height * (v2.y - 1.0f) / 2.0f - geo.height / 2.0f + y + h / 2.0f;
-  v3.x =  geo.width * (v3.x + 1.0f) / 2.0f - geo.width / 2.0f + x + w / 2.0f;
-  v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + y + h / 2.0f;
-
-
-  std::vector<nux::Vector4>& vectors = icon->GetTransform(name);
-
-  vectors[0] = v0;
-  vectors[1] = v1;
-  vectors[2] = v2;
-  vectors[3] = v3;
+  UpdateIconSectionTransform (icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, name);
 }
 
 void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
                                               float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, std::string name)
 {
-  nux::Vector4 v0 = nux::Vector4(x,   y,    z, 1.0f);
-  nux::Vector4 v1 = nux::Vector4(x,   y + h,  z, 1.0f);
-  nux::Vector4 v2 = nux::Vector4(x + w, y + h,  z, 1.0f);
-  nux::Vector4 v3 = nux::Vector4(x + w, y,    z, 1.0f);
+  nux::Vector4 v0 = nux::Vector4(x,     y,     z, 1.0f);
+  nux::Vector4 v1 = nux::Vector4(x,     y + h, z, 1.0f);
+  nux::Vector4 v2 = nux::Vector4(x + w, y + h, z, 1.0f);
+  nux::Vector4 v3 = nux::Vector4(x + w, y,     z, 1.0f);
 
   v0 = ViewProjectionMatrix * v0;
   v1 = ViewProjectionMatrix * v1;
@@ -358,13 +327,13 @@ void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::M
   v3.divide_xyz_by_w();
 
   // normalize to the viewport coordinates and translate to the correct location
-  v0.x =  geo.width * (v0.x + 1.0f) / 2.0f - geo.width / 2.0f + xx + ww / 2.0f;
+  v0.x =  geo.width  * (v0.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;
   v0.y = -geo.height * (v0.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
-  v1.x =  geo.width * (v1.x + 1.0f) / 2.0f - geo.width / 2.0f + xx + ww / 2.0f;;
+  v1.x =  geo.width  * (v1.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;;
   v1.y = -geo.height * (v1.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
-  v2.x =  geo.width * (v2.x + 1.0f) / 2.0f - geo.width / 2.0f + xx + ww / 2.0f;
+  v2.x =  geo.width  * (v2.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;
   v2.y = -geo.height * (v2.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
-  v3.x =  geo.width * (v3.x + 1.0f) / 2.0f - geo.width / 2.0f + xx + ww / 2.0f;
+  v3.x =  geo.width  * (v3.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;
   v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
 
 
@@ -379,7 +348,7 @@ void IconRenderer::UpdateIconSectionTransform(AbstractLauncherIcon* icon, nux::M
 void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& geo, nux::Geometry const& owner_geo)
 {
   // This check avoids a crash when the icon is not available on the system.
-  if (arg.icon->TextureForSize(image_size) == 0)
+  if (arg.icon->TextureForSize(image_size) == 0 || arg.skip)
     return;
 
   IconSize size = icon_size > 100 ? IconRenderer::BIG : IconRenderer::SMALL;

@@ -70,6 +70,13 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   active = bamf_view_is_active(BAMF_VIEW(m_App));
   running = bamf_view_is_running(BAMF_VIEW(m_App));
 
+  if (arg.target && OwnsWindow (arg.target))
+  {
+    CompWindow* window = m_Screen->findWindow(arg.target);
+    window->activate ();
+    return;
+  }
+
   /* Behaviour:
    * 1) Nothing running -> launch application
    * 2) Running and active -> spread application
@@ -89,7 +96,7 @@ void BamfLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
 
     SetQuirk(QUIRK_STARTING, true);
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(ActionArg ());
   }
   else // app is running
   {
@@ -220,6 +227,24 @@ BamfLauncherIcon::~BamfLauncherIcon()
 
   g_free(_cached_desktop_file);
   g_free(_cached_name);
+}
+
+std::vector<Window> BamfLauncherIcon::RelatedXids ()
+{
+  std::vector<Window> results;
+  GList* children, *l;
+  BamfView* view;
+
+  children = bamf_view_get_children(BAMF_VIEW(m_App));
+  for (l = children; l; l = l->next)
+  {
+    view = (BamfView*) l->data;
+    if (BAMF_IS_WINDOW(view))
+      results.push_back ((Window) bamf_window_get_xid(BAMF_WINDOW(view)));
+  }
+
+  g_list_free(children);
+  return results;
 }
 
 void BamfLauncherIcon::OnLauncherHiddenChanged()
@@ -376,7 +401,7 @@ void BamfLauncherIcon::OpenInstanceWithUris(std::list<char*> uris)
   UpdateQuirkTime(QUIRK_STARTING);
 }
 
-void BamfLauncherIcon::OpenInstanceLauncherIcon()
+void BamfLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
 {
   std::list<char*> empty;
   OpenInstanceWithUris(empty);

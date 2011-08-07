@@ -24,6 +24,7 @@
 #include "Launcher.h"
 #include "PluginAdapter.h"
 #include "TrashLauncherIcon.h"
+#include "BFBLauncherIcon.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -61,6 +62,8 @@ LauncherController::LauncherController(Launcher* launcher, CompScreen* screen)
   _remote_model = LauncherEntryRemoteModel::GetDefault();
   _remote_model->entry_added.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteAdded));
   _remote_model->entry_removed.connect(sigc::mem_fun(this, &LauncherController::OnLauncherEntryRemoteRemoved));
+
+  RegisterIcon (new BFBLauncherIcon (launcher));
 }
 
 LauncherController::~LauncherController()
@@ -325,7 +328,10 @@ void LauncherController::SetupBamf()
   GList* apps, *l;
   BamfApplication* app;
   BamfLauncherIcon* icon;
-  int priority = 0;
+
+  // Sufficiently large number such that we ensure proper sorting 
+  // (avoids case where first item gets tacked onto end rather than start)
+  int priority = 100;
 
   _matcher = bamf_matcher_get_default();
 

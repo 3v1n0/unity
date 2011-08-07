@@ -84,6 +84,8 @@ public:
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
+  virtual Area* FindAreaUnderMouse(const Point& mouse_position, NuxEventType event_type);
+
 private:
   void RecvCairoTextChanged(StaticCairoText* cairo_text);
 

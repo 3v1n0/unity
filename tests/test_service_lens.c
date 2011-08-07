@@ -69,15 +69,15 @@ service_lens_init(ServiceLens* self)
 static void
 add_categories(ServiceLens* self)
 {
-  UnityGridCategory* categories[3];
+  UnityCategory* categories[3];
     
-  categories[0] = unity_grid_category_new("Category1", "gtk-apply", UNITY_GRID_CATEGORY_STYLE_ICONS);
+  categories[0] = unity_category_new("Category1", "gtk-apply", UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
   
-  categories[1] = unity_grid_category_new("Category2", "gtk-cancel", UNITY_GRID_CATEGORY_STYLE_HORIZONTAL_ICONS);
+  categories[1] = unity_category_new("Category2", "gtk-cancel", UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE);
 
-  categories[2] = unity_grid_category_new("Category3", "gtk-close", UNITY_GRID_CATEGORY_STYLE_LIST);
+  categories[2] = unity_category_new("Category3", "gtk-close", UNITY_CATEGORY_RENDERER_FLOW);
  
-  unity_lens_set_categories(self->priv->lens, (UnityCategory**)categories, 3);
+  unity_lens_set_categories(self->priv->lens, categories, 3);
 
   g_object_unref(categories[0]);
   g_object_unref(categories[1]);
