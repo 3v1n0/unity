@@ -49,6 +49,8 @@ public:
   virtual bool ShowInSwitcher();
   virtual unsigned int SwitcherPriority();
 
+  std::vector<Window> RelatedXids ();
+
 protected:
   std::list<DbusmenuMenuitem*> GetMenus();
 
@@ -66,7 +68,7 @@ protected:
   void OnDndEnter();
   void OnDndLeave();
 
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(ActionArg arg);
 
   std::list<char*> ValidateUrisForLaunch(std::list<char*> uris);
 
