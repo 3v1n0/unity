@@ -27,7 +27,7 @@ public:
 
   unsigned int index()
   {
-    return dee_model_get_int32(model_, iter_, 0);
+    return dee_model_get_uint32(model_, iter_, 0);
   }
 
   string name()
@@ -69,7 +69,7 @@ TEST(TestModel, TestRowsValid)
     TestAdaptor adaptor = model.RowAtIndex(i);
 
     EXPECT_EQ(adaptor.index(), i);
-    unity::glib::String tmp(g_strdup_printf("Test%d", i));
+    unity::glib::String tmp(g_strdup_printf("Test%u", i));
     EXPECT_EQ(adaptor.name(), tmp.Str());
   }
 }

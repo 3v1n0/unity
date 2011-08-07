@@ -26,6 +26,8 @@
 #include <sigc++/trackable.h>
 
 #include "Categories.h"
+#include "Filters.h"
+#include "Preview.h"
 #include "Results.h"
 
 namespace unity
@@ -33,10 +35,19 @@ namespace unity
 namespace dash
 {
 
+enum HandledType
+{
+  NOT_HANDLED=0,
+  SHOW_DASH,
+  HIDE_DASH,
+  GOTO_DASH_URI
+};
+
 class Lens : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<Lens> Ptr;
+  typedef std::map<std::string, GVariant*> Hints;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -52,6 +63,8 @@ public:
 
   void GlobalSearch(std::string const& search_string);
   void Search(std::string const& search_string);
+  void Activate(std::string const& uri);
+  void Preview(std::string const& uri);
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -66,12 +79,15 @@ public:
   nux::RWProperty<Results::Ptr> results;
   nux::RWProperty<Results::Ptr> global_results;
   nux::RWProperty<Categories::Ptr> categories;
+  nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
 
   nux::Property<bool> active;
 
   sigc::signal<void, std::string const&> search_finished;
   sigc::signal<void, std::string const&> global_search_finished;
+  sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
+  sigc::signal<void, std::string const&, Preview::Ptr> preview_ready;
 
 private:
   class Impl;

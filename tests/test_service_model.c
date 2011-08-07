@@ -34,9 +34,9 @@ static void
 service_model_create_model(ServiceModel* self)
 {
   self->model_ = dee_shared_model_new("com.canonical.test.model");
-  dee_model_set_schema(self->model_, "i", "s", NULL);
+  dee_model_set_schema(self->model_, "u", "s", NULL);
 
-  int i;
+  guint i;
   for (i = 0; i < 100; i++)
   {
     gchar* name = g_strdup_printf("Test%d", i);

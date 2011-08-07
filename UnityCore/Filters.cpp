@@ -38,6 +38,17 @@ FilterAdaptor::FilterAdaptor(FilterAdaptor const& other)
   renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
+DeeModel* FilterAdaptor::model() const
+{
+  return model_;
+}
+
+DeeModelIter* FilterAdaptor::iter() const
+{
+  return iter_;
+}
+
+
 Filters::Filters()
 {
   row_added.connect(sigc::mem_fun(this, &Filters::OnRowAdded));
@@ -48,14 +59,30 @@ Filters::Filters()
 Filters::~Filters()
 {}
 
+Filter::Ptr Filters::FilterAtIndex(std::size_t index)
+{
+  FilterAdaptor adaptor = RowAtIndex(index);
+  return filter_map_[adaptor.iter()];
+}
+
 void Filters::OnRowAdded(FilterAdaptor& filter)
-{}
+{
+  Filter::Ptr ret = Filter::FilterFromIter(filter.model(), filter.iter());
+
+  filter_map_[filter.iter()] = ret;
+  filter_added(ret);
+}
 
 void Filters::OnRowChanged(FilterAdaptor& filter)
-{}
+{
+  filter_changed(filter_map_[filter.iter()]);
+}
 
 void Filters::OnRowRemoved(FilterAdaptor& filter)
-{}
+{
+  filter_removed(filter_map_[filter.iter()]);
+  filter_map_.erase(filter.iter());
+}
 
 }
 }

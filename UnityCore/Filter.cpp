@@ -21,6 +21,9 @@
 
 #include <NuxCore/Logger.h>
 
+#include "CheckOptionFilter.h"
+#include "MultiRangeFilter.h"
+#include "RadioOptionFilter.h"
 #include "RatingsFilter.h"
 
 namespace unity
@@ -38,6 +41,7 @@ using unity::glib::Signal;
 Filter::Filter(DeeModel* model, DeeModelIter* iter)
   : model_(model)
   , iter_(iter)
+  , ignore_changes_(false)
 {
   typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
@@ -79,10 +83,16 @@ Filter::Ptr Filter::FilterFromIter(DeeModel* model, DeeModelIter* iter)
 {
   std::string renderer = dee_model_get_string(model, iter, 3);
 
-  if (renderer == "ratings")
+  if (renderer == "filter-ratings")
     return Filter::Ptr(new RatingsFilter(model, iter));
-
-  return Filter::Ptr(new RatingsFilter(model, iter));
+  else if (renderer == "filter-radiooption")
+    return Filter::Ptr(new RadioOptionFilter(model, iter));
+  else if (renderer == "filter-checkoption")
+    return Filter::Ptr(new CheckOptionFilter(model, iter));
+  else if (renderer == "filter-multirange")
+    return Filter::Ptr(new MultiRangeFilter(model, iter));
+  else
+    return Filter::Ptr(new RatingsFilter(model, iter));
 }
 
 bool Filter::IsValid() const
@@ -96,6 +106,11 @@ void Filter::Refresh()
     OnRowChanged(model_, iter_);
 }
 
+void Filter::IgnoreChanges(bool ignore)
+{
+  ignore_changes_ = ignore;
+}
+
 void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
 {
   self->OnRowRemoved(self->model_, self->iter_);
@@ -103,7 +118,7 @@ void Filter::OnModelDestroyed(Filter* self, DeeModel* old_location)
 
 void Filter::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  if (iter_ != iter)
+  if (iter_ != iter || ignore_changes_)
     return;
 
   // Ask our sub-classes to update their state

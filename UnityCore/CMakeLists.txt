@@ -7,12 +7,15 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 # Headers & Sources
 #
 set (CORE_HEADERS
+     ApplicationPreview.h
      Categories.h
      Category.h
+     CheckOptionFilter.h
      DBusIndicators.h
      FilesystemLenses.h
      Filter.h
      Filters.h
+     GenericPreview.h
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
@@ -23,10 +26,15 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MultiRangeFilter.h
+     MusicPreviews.h
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
+     Preview.h
+     Utils.h
+     RadioOptionFilter.h
      RatingsFilter.h
      Result.h
      Results.h
@@ -34,12 +42,15 @@ set (CORE_HEADERS
     )
 
 set (CORE_SOURCES
+     ApplicationPreview.cpp
      Categories.cpp
      Category.cpp
+     CheckOptionFilter.cpp
      DBusIndicators.cpp
      FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp
+     GenericPreview.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
      GLibWrapper.cpp
@@ -47,8 +58,12 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MultiRangeFilter.cpp
+     MusicPreviews.cpp
      ModelRowAdaptor.cpp
+     Preview.cpp
      RatingsFilter.cpp
+     RadioOptionFilter.cpp
      Result.cpp
      Results.cpp
      Variant.cpp

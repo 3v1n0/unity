@@ -5,8 +5,11 @@
 G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
 
 static void add_categories(ServiceLens* self);
+static void add_filters(ServiceLens *self);
 static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
+static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
+static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self);
 
 struct _ServiceLensPrivate
 {
@@ -47,14 +50,20 @@ service_lens_init(ServiceLens* self)
                "search-in-global", TRUE,
                NULL);
   add_categories(self);
+  add_filters(self);
 
   /* Scope */
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
   unity_scope_set_search_in_global(priv->scope, TRUE);
+
   g_signal_connect(priv->scope, "notify::active-search",
                    G_CALLBACK(on_search_changed), self);
   g_signal_connect(priv->scope, "notify::active-global-search",
                    G_CALLBACK(on_global_search_changed), self);
+  g_signal_connect(priv->scope, "activate-uri",
+                   G_CALLBACK(on_activate_uri), self);
+  g_signal_connect(priv->scope, "preview-uri",
+                   G_CALLBACK(on_preview_uri), self);
 
   /* Get ready to export and export */
   unity_lens_add_local_scope(priv->lens, priv->scope);
@@ -82,6 +91,32 @@ add_categories(ServiceLens* self)
   g_object_unref(categories[0]);
   g_object_unref(categories[1]);
   g_object_unref(categories[2]);
+}
+
+static void
+add_filters(ServiceLens *self)
+{
+  UnityFilter* filters[4];
+
+  filters[0] = (UnityFilter*) unity_radio_option_filter_new("when", "When", "", FALSE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "today", "Today", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "yesterday", "Yesterday", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "lastweek", "Last Week", "");
+
+  filters[1] = (UnityFilter*) unity_check_option_filter_new("type", "Type", "", FALSE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "apps", "Apps", "gtk-apps");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "files", "Files", "gtk-files");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "music", "Music", "gtk-music");
+
+  filters[2] = (UnityFilter*) unity_ratings_filter_new("ratings", "Ratings", "", FALSE);
+
+  filters[3] = (UnityFilter*) unity_multi_range_filter_new("size", "Size", "", TRUE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1MB", "1MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "10MB", "10MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "100MB", "100MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1000MB", "1000MB", "");
+ 
+  unity_lens_set_filters(self->priv->lens, filters, 4);
 }
 
 static void
@@ -130,6 +165,24 @@ on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self
                      "file:///test");
     g_free(name);
   }
+}
+
+static UnityActivationResponse*
+on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
+{
+  return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
+}
+
+static UnityPreview*
+on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
+{
+  gchar *genres[] = {"awesome"};
+  return (UnityPreview*)unity_track_preview_new(1, "Animus Vox",
+                                                "The Glitch Mob", "Drink The Sea", 
+                                                404, genres, 1,
+                                                "file://music/the/track", "Play",
+                                                "", "play://music/the/track",
+                                                "preview://music/the/track", "pause://music/the/track");
 }
 
 ServiceLens*

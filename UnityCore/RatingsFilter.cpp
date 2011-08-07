@@ -33,6 +33,7 @@ nux::logging::Logger logger("unity.dash.ratingsfilter");
 
 RatingsFilter::RatingsFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)
+  , rating(0.0f)
 {
   rating.changed.connect(sigc::mem_fun(this, &RatingsFilter::OnRatingChanged));
   Refresh();
@@ -72,12 +73,16 @@ void RatingsFilter::UpdateState(float raw_rating, bool raw_filtering)
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&b, "{sv}", "rating", g_variant_new("d", raw_rating));
 
+  IgnoreChanges(true);
   dee_model_set_value(model_,iter_,
                       FilterColumn::RENDERER_STATE,
                       g_variant_builder_end(&b));
   dee_model_set_value(model_, iter_,
                       FilterColumn::FILTERING,
                       g_variant_new("b", raw_filtering ? TRUE : FALSE));
+  IgnoreChanges(false);
+
+  filtering.EmitChanged(filtering);
 }
 
 }

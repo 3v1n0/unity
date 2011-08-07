@@ -45,6 +45,23 @@ enum FilterColumn
   FILTERING
 };
 
+class FilterOption : public sigc::trackable
+{
+public:
+  typedef std::shared_ptr<FilterOption> Ptr;
+
+  FilterOption(std::string id_, std::string name_, std::string icon_hint_, bool active_)
+    : id(id_)
+    , name(name_)
+    , icon_hint(icon_hint_)
+    , active(active_)
+  {}
+  nux::Property<std::string> id;
+  nux::Property<std::string> name;
+  nux::Property<std::string> icon_hint;
+  nux::Property<bool> active;
+};
+
 class Filter : public sigc::trackable
 {
 public:
@@ -72,6 +89,7 @@ public:
 protected:
   virtual void Update(Hints& hints) = 0;
   void Refresh();
+  void IgnoreChanges(bool ignore);
 
 private:
   void SetupGetters();
@@ -92,6 +110,7 @@ protected:
   DeeModel* model_;
   DeeModelIter* iter_;
   glib::SignalManager signal_manager_;
+  bool ignore_changes_;
 };
 
 }
