@@ -32,7 +32,6 @@ namespace
 
 SimpleLauncherIcon::SimpleLauncherIcon(Launcher* IconManager)
   : LauncherIcon(IconManager)
-  , icon_(0)
   , theme_changed_id_(0)
 {
   LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
