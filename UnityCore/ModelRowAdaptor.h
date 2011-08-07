@@ -49,6 +49,8 @@ class RowAdaptorBase
 {
 public:
   RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0);
+  RowAdaptorBase(RowAdaptorBase const& other);
+  RowAdaptorBase& operator=(RowAdaptorBase const& other);
 
   std::string GetStringAt(int position);
   bool GetBoolAt(int position);

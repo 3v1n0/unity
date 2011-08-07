@@ -9,7 +9,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
 # Unit tests
 #
 find_package (PkgConfig)
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS}")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.0.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
@@ -312,6 +312,8 @@ if (${GTEST_FOUND} STREQUAL TRUE)
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 test_service_lens.c
+                 test_service_lens.h
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h)
@@ -327,6 +329,7 @@ if (${GTEST_FOUND} STREQUAL TRUE)
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  test_favorite_store_gsettings.cpp
                  test_indicator_entry.cpp
+                 test_lens.cpp
                  test_main.cpp
                  test_model.cpp
                  test_utils.h

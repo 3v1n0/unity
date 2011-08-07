@@ -29,6 +29,22 @@ RowAdaptorBase::RowAdaptorBase(DeeModel* model, DeeModelIter* iter, DeeModelTag*
   , tag_(tag)
 {}
 
+RowAdaptorBase::RowAdaptorBase(RowAdaptorBase const& other)
+{
+  model_ = other.model_;
+  iter_ = other.iter_;
+  tag_ = other.tag_;
+}
+
+RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
+{
+  model_ = other.model_;
+  iter_ = other.iter_;
+  tag_ = other.tag_;
+  
+  return *this;
+}
+
 std::string RowAdaptorBase::GetStringAt(int position)
 {
   return dee_model_get_string(model_, iter_, position);
