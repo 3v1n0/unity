@@ -88,7 +88,7 @@ void TestRunner::Init ()
   g_debug ("took %f seconds to init the views", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
 
-  for (int i = 0; i < 200000; i++)
+  for (int i = 0; i < 20000; i++)
   {
     result_view->AddResult (*result);
   }

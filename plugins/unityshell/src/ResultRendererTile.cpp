@@ -66,28 +66,48 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
 {
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
+  LocalTextureCache::iterator it;
 
+  // set up our texture mode
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+
+  // clear what is behind us
+  nux::t_u32 alpha = 0, src = 0, dest = 0;
+
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  nux::Color col = nux::color::Black;
+  col.alpha = 0;
+  GfxContext.QRP_Color(geometry.x,
+                       geometry.y,
+                       geometry.width,
+                       geometry.height,
+                       col);
+
+  it = blurred_icon_cache_.find(row_iconhint);
+  if (it != blurred_icon_cache_.end())
+  {
+    nux::BaseTexture* icon_texture = it->second;
+
+    //FIXME - figure out the actual offset
+    int x_offset = 5;
+    int y_offset = 5;
+    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) + y_offset,
+                        geometry.y + 1 + x_offset,
+                        58,
+                        58,
+                        icon_texture->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(0.5f, 0.5f, 0.5f, 0.5f));
+  }
 
   // render highlight if its needed
   if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    nux::Color col = nux::color::Black;
-    col.alpha = 0.0;
-
-    GfxContext.QRP_Color(geometry.x,
-                         geometry.y,
-                         geometry.width,
-                         geometry.height,
-                         col);
-
     GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 56) / 2),
                         geometry.y + 2,
                         56,
@@ -95,32 +115,13 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
                         prelight_cache_->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
   }
 
-  std::map<std::string, nux::BaseTexture *>::iterator it;
   it = text_cache_.find(row_text);
 
   if (it != text_cache_.end())
   {
     nux::BaseTexture* text_texture = it->second;
-
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
-
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    nux::Color col = nux::color::Black;
-    col.alpha = 0;
-    GfxContext.QRP_Color(geometry.x,
-                         geometry.y,
-                         geometry.width,
-                         geometry.height,
-                         col);
 
     GfxContext.QRP_1Tex(geometry.x,
                         geometry.y + geometry.height - 25,
@@ -130,7 +131,7 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
-    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
   }
 
   // draw the icon
@@ -139,23 +140,6 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   {
     nux::BaseTexture* icon_texture = it->second;
 
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
-    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    nux::t_u32 alpha = 0, src = 0, dest = 0;
-
-    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    nux::Color col = nux::color::Black;
-    col.alpha = 0;
-    GfxContext.QRP_Color(geometry.x,
-                         geometry.y,
-                         geometry.width,
-                         geometry.height,
-                         col);
-
     GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 48) / 2),
                         geometry.y + 6,
                         48,
@@ -163,9 +147,9 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
                         icon_texture->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
-    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
+
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
 }
 
@@ -256,6 +240,7 @@ void ResultRendererTile::Unload (Result& row)
   std::string icon = row.icon_hint;
   std::string text = row.name;
 
+
   if (icon_cache_.find(icon) != icon_cache_.end())
   {
     nux::BaseTexture *texture = icon_cache_.find(icon)->second;
@@ -275,6 +260,18 @@ void ResultRendererTile::Unload (Result& row)
   {
     //~ LOG_WARNING(logger) << "Tried to unload " << icon << " but was not loaded";
   }
+
+
+  if (blurred_icon_cache_.find(icon) != blurred_icon_cache_.end())
+  {
+    nux::BaseTexture *texture = blurred_icon_cache_.find(icon)->second;
+    texture->UnReference ();
+  }
+  else
+  {
+    //~ LOG_WARNING(logger) << "Tried to unload " << icon << " but was not loaded";
+  }
+
 }
 
 void ResultRendererTile::LoadIcon (std::string& icon_hint)
@@ -332,6 +329,36 @@ ResultRendererTile::CreateTextureCallback(const char* texid,
   *texture = texture2D;
 }
 
+void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
+                                                      int width,
+                                                      int height,
+                                                      nux::BaseTexture** texture,
+                                                      GdkPixbuf *pixbuf)
+{
+  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width + 10, height + 10);
+  cairo_t* cr = cairo_graphics->GetContext();
+
+  cairo_scale(cr, 1.0f, 1.0f);
+
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_translate(cr, 5, 5);
+  cairo_paint(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  gdk_cairo_set_source_pixbuf(cr, pixbuf, 0, 0);
+  cairo_translate (cr, 5, 5);
+  cairo_paint(cr);
+
+  cairo_graphics->BlurSurface(4);
+
+  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  tex->Update(bitmap);
+  *texture = tex;
+}
+
+
 void
 ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name)
 {
@@ -341,15 +368,24 @@ ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf,
     nux::BaseTexture *texture = cache->FindTexture(texid, 48, 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf));
     icon_cache_[icon_name] = texture;
+
+    std::string blur_texid = std::string(texid) + "_blurred";
+
+    nux::BaseTexture *texture_blurred = cache->FindTexture(blur_texid.c_str(), 48, 48,
+                                                           sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateBlurredTextureCallback), pixbuf));
+    blurred_icon_cache_[icon_name] = texture_blurred;
+
     for (uint i = 0; i < currently_loading_icons_[icon_name]; i++)
     {
       texture->Reference();
+      texture_blurred->Reference();
     }
     currently_loading_icons_.erase (icon_name);
 
     NeedsRedraw.emit();
   }
 }
+
 
 void ResultRendererTile::LoadText (std::string& text)
 {
