@@ -28,8 +28,9 @@
 #include "ubus-server.h"
 #include "UBusMessages.h"
 
+#include <glib.h>
 #include <glib/gi18n-lib.h>
-#include <gio/gdesktopappinfo.h>
+#include <gio/gio.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
 #include <core/core.h>
 #include <core/atoms.h>
@@ -39,5 +40,39 @@
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, BamfApplication* app, CompScreen* screen, char* aptdaemon_trans_id)
 : BamfLauncherIcon(IconManager, app, screen)
 {
-   _aptdaemon_trans_id = aptdaemon_trans_id; 
+    char* object_path;
+    GVariant* finished_or_not;
+    GVariant* parameters;
+
+    _aptdaemon_trans_id = aptdaemon_trans_id; 
+    g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
+    
+    _aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                                    NULL,
+                                                    "org.debian.apt.transaction",
+                                                    object_path,
+                                                    "org.debian.apt.transaction",
+                                                    NULL,
+                                                    NULL);
+
+    _aptdaemon_trans_properties = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                                                    NULL,
+                                                    "org.debian.apt.transaction",
+                                                    object_path,
+                                                    "org.freedesktop.DBus.Properties",
+                                                    NULL,
+                                                    NULL);
+
+    parameters = g_variant_new("(ss)", "org.debian.apt.transaction", "Progress");
+
+    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_properties,
+                                            "Get",
+                                            parameters,
+                                            G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                                            -1,
+                                            NULL,
+                                            NULL);
+    g_debug("HERE IS THE SHIT: %s",g_variant_print(finished_or_not, TRUE));
 }
