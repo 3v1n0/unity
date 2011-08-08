@@ -233,7 +233,7 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   uint index = GetIndexAtPosition (x, y);
-  if (index >= 0)
+  if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
     Result* result = results_[index];

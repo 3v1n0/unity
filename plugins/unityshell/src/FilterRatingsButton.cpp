@@ -77,7 +77,9 @@ namespace unity {
   }
 
   void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    int rating = filter_->rating * 10;
+    int rating = 0;
+    if (filter_ != NULL)
+      rating = filter_->rating * 10;
     int total_full_stars = rating / 2;
     int total_half_stars = rating % 2;
 
@@ -113,7 +115,8 @@ namespace unity {
 
   void FilterRatingsButton::RecvMouseDown (int x, int y, unsigned long button_flags, unsigned long key_flags) {
     int width = GetGeometry().width;
-    filter_->rating = ceil(x / (width / 10.0));
+    if (filter_ != NULL)
+      filter_->rating = ceil(x / (width / 10.0));
   }
 
   void FilterRatingsButton::OnRatingsChanged (int rating) {

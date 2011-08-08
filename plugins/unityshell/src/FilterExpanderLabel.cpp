@@ -99,7 +99,7 @@ namespace unity {
     top_bar_layout_->AddSpace(1, 1);
 
     //FIXME - fake any button because nux is being crap
-    top_bar_layout_->AddView(new FilterBasicButton("Any", NUX_TRACKER_LOCATION), 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_MATCHCONTENT);
+    //top_bar_layout_->AddView(new FilterBasicButton("Any", NUX_TRACKER_LOCATION), 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_MATCHCONTENT);
 
     if (right_hand_contents_)
       top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
@@ -111,6 +111,9 @@ namespace unity {
 
 
     SetLayout(layout);
+
+    QueueRelayout();
+    NeedRedraw();
   }
 
   void FilterExpanderLabel::DoExpandChange (bool change)

@@ -43,11 +43,16 @@ namespace dash
 
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
-  , testing_texture_(NULL)
-  , testing_text_(NULL)
 {
   width = 150;
   height = 48 + 25 + 6;
+
+  // pre-load the highlight texture
+  // try and get a texture from the texture cache
+  TextureCache* cache = TextureCache::GetDefault();
+  prelight_cache_ = cache->FindTexture("ResultRendererTile.PreLightTexture",
+                                       56, 56,
+                                       sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
 ResultRendererTile::~ResultRendererTile()
@@ -63,34 +68,34 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   std::string row_iconhint = row.icon_hint;
 
 
-  if (1)
+  // render highlight if its needed
+  if (state != ResultRendererState::RESULT_RENDERER_NORMAL)
   {
+    nux::TexCoordXForm texxform;
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
     nux::t_u32 alpha = 0, src = 0, dest = 0;
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
     GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     nux::Color col = nux::color::Black;
-
-    if (state == ResultRendererState::RESULT_RENDERER_PRELIGHT)
-    {
-      col = nux::color::Orange;
-      col.alpha = 0.7;
-    }
-    else if (state == ResultRendererState::RESULT_RENDERER_ACTIVE)
-    {
-      col = nux::color::Red;
-      col.alpha = 1.0;
-    }
-    else
-    {
-      col.alpha = 0.0;
-    }
+    col.alpha = 0.0;
 
     GfxContext.QRP_Color(geometry.x,
                          geometry.y,
                          geometry.width,
                          geometry.height,
                          col);
+
+    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 56) / 2),
+                        geometry.y + 2,
+                        56,
+                        56,
+                        prelight_cache_->GetDeviceTexture(),
+                        texxform,
+                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+
   }
 
   std::map<std::string, nux::BaseTexture *>::iterator it;
@@ -162,6 +167,78 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
     GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
+}
+
+void ResultRendererTile::DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture)
+{
+  nux::CairoGraphics* cairo_graphics = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t* cr = cairo_graphics->GetContext();
+
+  cairo_scale(cr, 1.0f, 1.0f);
+
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 0.0);
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+
+  int PADDING = 4;
+  int BLUR_SIZE = 5;
+
+  int bg_width = width - PADDING - BLUR_SIZE;
+  int bg_height = height - PADDING - BLUR_SIZE;
+  int bg_x = BLUR_SIZE - 1;
+  int bg_y = BLUR_SIZE - 1;
+
+  // draw the glow
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  cairo_set_line_width(cr, 1.0f);
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 0.75f);
+  cairo_graphics->DrawRoundedRectangle(cr,
+                                       1.0f,
+                                       bg_x,
+                                       bg_y,
+                                       5.0,
+                                       bg_width,
+                                       bg_height,
+                                       true);
+  cairo_fill(cr);
+
+  cairo_graphics->BlurSurface(BLUR_SIZE - 2);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_graphics->DrawRoundedRectangle(cr,
+                                       1.0,
+                                       bg_x,
+                                       bg_y,
+                                       5.0,
+                                       bg_width,
+                                       bg_height,
+                                       true);
+  cairo_clip(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+  cairo_graphics->DrawRoundedRectangle(cr,
+                                       1.0,
+                                       bg_x,
+                                       bg_y,
+                                       5.0,
+                                       bg_width,
+                                       bg_height,
+                                       true);
+  cairo_set_source_rgba(cr, 240 / 255.0f, 240 / 255.0f, 240 / 255.0f, 1.0f);
+  cairo_fill_preserve(cr);
+
+  cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0);
+  cairo_stroke(cr);
+
+  cairo_destroy(cr);
+
+  nux::NBitmapData* bitmap =  cairo_graphics->GetBitmap();
+  nux::BaseTexture* tex = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
+  tex->Update(bitmap);
+  *texture = tex;
+
+  delete bitmap;
+  delete cairo_graphics;
 }
 
 void ResultRendererTile::Preload (Result& row)

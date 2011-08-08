@@ -55,14 +55,13 @@ private:
   //icon loading callbacks
   void IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name);
   void CreateTextureCallback(const char* texid, int width, int height, nux::BaseTexture** texture, GdkPixbuf *pixbuf);
+  void DrawHighlight(const char* texid, int width, int height, nux::BaseTexture** texture);
 
   std::map<std::string, nux::BaseTexture *> icon_cache_;
   std::map<std::string, nux::BaseTexture *> text_cache_;
-
+  nux::BaseTexture *prelight_cache_;
   std::map<std::string, uint> currently_loading_icons_;
 
-  nux::BaseTexture *testing_texture_;
-  nux::BaseTexture *testing_text_;
 };
 
 }

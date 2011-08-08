@@ -28,7 +28,8 @@ namespace unity {
     InitTheme();
     active.changed.connect ([&] (bool is_active) {
       bool tmp_active = active;
-      filter_->active = tmp_active;
+      if (filter_ != NULL)
+        filter_->active = tmp_active;
     });
   }
 
@@ -37,7 +38,8 @@ namespace unity {
     InitTheme();
     active.changed.connect ([&] (bool is_active) {
       bool tmp_active = active;
-      filter_->active = tmp_active;
+      if (filter_ != NULL)
+        filter_->active = tmp_active;
     });
   }
 
