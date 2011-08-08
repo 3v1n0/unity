@@ -30,11 +30,11 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
+#include "DashController.h"
 #include "Launcher.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "UScreen.h"
-#include "PlacesController.h"
 #include "GestureEngine.h"
 #include "DebugDBusInterface.h"
 #include "SwitcherController.h"
@@ -47,6 +47,7 @@
 #include <compiztoolbox/compiztoolbox.h>
 
 using namespace unity::switcher;
+using namespace unity::dash;
 
 /* base screen class */
 class UnityScreen :
@@ -199,9 +200,9 @@ private:
 
   Launcher*               launcher;
   LauncherController*     controller;
+  DashController::Ptr     dashController;
   PanelController*        panelController;
   SwitcherController*     switcherController;
-  PlacesController*       placesController;
   GestureEngine*          gestureEngine;
   nux::WindowThread*      wt;
   nux::BaseWindow*        launcherWindow;

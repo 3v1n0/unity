@@ -42,9 +42,6 @@ public:
   PlacesController();
   ~PlacesController();
 
-  void Show();
-  void Hide();
-  void ToggleShowHide();
   static void SetLauncherSize(int launcher_size);
 
   nux::BaseWindow* GetWindow()
@@ -71,6 +68,9 @@ private:
   void StartShowHideTimeline();
   static gboolean OnViewShowHideFrame(PlacesController* self);
   static void Relayout(GdkScreen* screen, PlacesController* self);
+  void Show();
+  void Hide();
+  void ToggleShowHide();
 
 private:
 

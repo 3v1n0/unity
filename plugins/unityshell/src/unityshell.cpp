@@ -207,7 +207,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
 UnityScreen::~UnityScreen()
 {
-  delete placesController;
   panelController->UnReference();
   delete controller;
   launcher->UnReference();
@@ -676,7 +675,7 @@ void UnityScreen::SendExecuteCommand()
   ubus_server_send_message(ubus_server_get_default(),
                            UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
                            g_variant_new("(sus)",
-                                         "/com/canonical/unity/applicationsplace/runner",
+                                         "/com/canonical/unity/lens/commands",
                                          0,
                                          ""));
 }
@@ -1117,7 +1116,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::IconSize:
       panelController->SetBFBSize(optionGetIconSize() + 18);
       launcher->SetIconSize(optionGetIconSize() + 6, optionGetIconSize());
-      PlacesController::SetLauncherSize(optionGetIconSize() + 18);
+      dashController->launcher_width = optionGetIconSize() + 18;
       break;
     case UnityshellOptions::AutohideAnimation:
       launcher->SetAutoHideAnimation((Launcher::AutoHideAnimation) optionGetAutohideAnimation());
@@ -1277,10 +1276,10 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "initLauncher-Panel " << timer.ElapsedSeconds() << "s";
 
   /* Setup Places */
-  self->placesController = new PlacesController();
+  self->dashController = DashController::Ptr(new DashController());
 
   /* FIXME: this should not be manual, should be managed with a
-     show/hide callback like in GAIL*/
+     show/hide callback like in GAIL
   if (unity_a11y_initialized() == TRUE)
   {
     AtkObject* atk_obj = NULL;
@@ -1289,6 +1288,7 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
     atk_object_set_name(atk_obj, _("Places"));
   }
+  */
 
   self->launcher->SetHideMode(Launcher::LAUNCHER_HIDE_DODGE_WINDOWS);
   self->launcher->SetLaunchAnimation(Launcher::LAUNCH_ANIMATION_PULSE);
