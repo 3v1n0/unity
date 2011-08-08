@@ -1,3 +1,5 @@
+#if 0
+
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -510,3 +512,4 @@ PlacesSearchBar::AcceptKeyNavFocus()
   return false;
 }
 
+#endif

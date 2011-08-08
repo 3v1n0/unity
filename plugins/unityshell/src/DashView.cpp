@@ -32,6 +32,8 @@ namespace
 nux::logging::Logger logger("unity.dash.view");
 }
 
+NUX_IMPLEMENT_OBJECT_TYPE(DashView);
+
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
 {

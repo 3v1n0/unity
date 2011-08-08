@@ -22,6 +22,7 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
 
 #include "Introspectable.h"
@@ -34,6 +35,8 @@ namespace dash
 
 class DashView : public nux::View, public unity::Introspectable
 {
+  NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
+
 public:
   DashView();
   ~DashView();

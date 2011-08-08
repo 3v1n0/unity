@@ -1,3 +1,4 @@
+#if 0
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -446,3 +447,5 @@ struct timespec PlacesHomeView::time_diff(struct timespec start, struct timespec
   }
   return temp;
 }
+
+#endif
