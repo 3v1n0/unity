@@ -21,6 +21,7 @@
 
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
+#include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
@@ -41,19 +42,31 @@ public:
   DashView();
   ~DashView();
 
-protected:
-  const gchar* GetName();
-  void AddProperties(GVariantBuilder* builder);
-
 private:
+  void SetupBackground();
+  void SetupViews();
+  void SetupUBusConnections();
+
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+
+  void OnActivateRequest(GVariant* args);
+  void OnBackgroundColorChanged(GVariant* args);
+  
+  bool AcceptKeyNavFocus();
+  bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
+  const gchar* GetName();
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
 
+  // Background related
+  nux::ColorLayer* bg_layer_;
+
+  // View related
   nux::VLayout* layout_;
 };
 
