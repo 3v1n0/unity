@@ -44,7 +44,7 @@ public:
     void AddResult(Result& result);
     void RemoveResult(Result& result);
 
-  void SetPreview (PreviewBase *preview, Result& related_result);
+    void SetPreview (PreviewBase *preview, Result& related_result);
 
     nux::Property<int> horizontal_spacing;
     nux::Property<int> vertical_spacing;

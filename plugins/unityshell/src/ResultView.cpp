@@ -30,7 +30,7 @@ namespace dash
 
 ResultView::ResultView(NUX_FILE_LINE_DECL)
     : View(NUX_FILE_LINE_PARAM)
-    , expanded (NULL)
+    , expanded (true)
     , preview_result_ (NULL)
     , renderer_ (NULL)
 {

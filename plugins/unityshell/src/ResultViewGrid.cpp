@@ -89,6 +89,8 @@ void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
   preview_layout->SetBaseY(160);
   preview_layout->SetMaximumHeight(600);
 
+  SizeReallocate();
+
 }
 
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
@@ -116,9 +118,22 @@ void ResultViewGrid::SizeReallocate ()
   items_per_row = (items_per_row) ? items_per_row : 1;
 
   int total_rows = ceil ((float)results_.size () / items_per_row);
-  int total_height = (total_rows * renderer_->height) + (total_rows * vertical_spacing);
+  int total_height = 0;
 
-  SetMinimumHeight (total_height);
+  if (expanded)
+  {
+    total_height = (total_rows * renderer_->height) + (total_rows * vertical_spacing);
+
+    if (preview_result_ != NULL)
+    {
+      total_height += 600 + vertical_spacing;
+    }
+  }
+  else
+  {
+    total_height = renderer_->height;
+  }
+  SetMinimumHeight (total_height + (padding * 2));
 
 }
 
@@ -142,12 +157,15 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int absolute_y = abs(std::min(GetAbsoluteY(), 0)) ;
   uint row_size = renderer_->height + vertical_spacing;
   uint absolute_row = (absolute_y + padding) / row_size;
+
+  //FIXME - replace 1000 with the hight of the displayed viewport
   uint displayed_rows = 1000 / (renderer_->height + vertical_spacing);
 
   int y_position = padding + (absolute_row * renderer_->height) + (absolute_row * vertical_spacing);
   for (uint row_index = absolute_row; row_index <= absolute_row + displayed_rows; row_index++)
   {
     int x_position = padding;
+
     for (uint column_index = 0; column_index < items_per_row; column_index++)
     {
       uint index = (row_index * items_per_row) + column_index;

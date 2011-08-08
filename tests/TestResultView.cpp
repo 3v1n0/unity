@@ -108,6 +108,8 @@ void TestRunner::Init ()
   layout->SetFocused (true);
 
   // make our preview
+  // disabled for now
+  /*
   unity::dash::Preview::Properties properties;
   unity::dash::ApplicationPreview* application_preview = new unity::dash::ApplicationPreview (properties);
 
@@ -129,6 +131,7 @@ void TestRunner::Init ()
   unity::PreviewApplications* preview_view = new unity::PreviewApplications (preview, NUX_TRACKER_LOCATION);
 
   result_view->SetPreview (preview_view, *result);
+  */
   g_debug ("took %f seconds to layout", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
 
