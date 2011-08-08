@@ -753,13 +753,8 @@ namespace unity
     cairo_surface_mark_dirty (surface);
   }
 
-  void DashStyle::Star (cairo_t* cr, nux::State state)
+  void DashStyle::Star (cairo_t* cr, double size)
   {
-    // sanity check
-    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS &&
-        cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
-      return;
-
     double outter[5][2] = {{0.0, 0.0},
                            {0.0, 0.0},
                            {0.0, 0.0},
@@ -771,8 +766,8 @@ namespace unity
                            {0.0, 0.0},
                            {0.0, 0.0}};
     double angle[5]     = {-90.0, -18.0, 54.0, 126.0, 198.0};
-    double outterRadius = 1.0;
-    double innerRadius  = 0.5;
+    double outterRadius = size;
+    double innerRadius  = size/2.0;
 
     for (int i = 0; i < 5; i++)
     {
@@ -782,22 +777,6 @@ namespace unity
       inner[i][1]  = innerRadius * sin ((angle[i] + 36.0) * M_PI / 180.0);
     }
 
-    cairo_pattern_t* pattern = cairo_pattern_create_linear (0.0, 0.0, 10.0, 0.0);
-    cairo_pattern_add_color_stop_rgba (pattern, 0.0,   1.0, 1.0, 1.0, 1.0);
-    cairo_pattern_add_color_stop_rgba (pattern, 0.25,  1.0, 1.0, 1.0, 1.0);
-    cairo_pattern_add_color_stop_rgba (pattern, 0.251, 1.0, 1.0, 1.0, 0.5);
-    cairo_pattern_add_color_stop_rgba (pattern, 1.0,   1.0, 1.0, 1.0, 0.5);
-    cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-    cairo_set_source (cr, pattern);
-    cairo_matrix_t matrix; // will die with the end of this scope
-    cairo_matrix_init_rotate (&matrix, 45.0 * M_PI / 180.0);
-    cairo_pattern_set_matrix (pattern, &matrix);
-    //cairo_rectangle (cr, 100.0, 200.0, 75.0, 150.0);
-    //cairo_fill (cr);
-
-    cairo_translate (cr, 50.0, 50.0);
-    cairo_save (cr);
-    cairo_scale (cr, 25.0, 25.0);
     cairo_move_to (cr, outter[0][0], outter[0][1]);
     cairo_line_to (cr, inner[0][0], inner[0][1]);
     cairo_line_to (cr, outter[1][0], outter[1][1]);
@@ -808,24 +787,7 @@ namespace unity
     cairo_line_to (cr, inner[3][0], inner[3][1]);
     cairo_line_to (cr, outter[4][0], outter[4][1]);
     cairo_line_to (cr, inner[4][0], inner[4][1]);
-    cairo_close_path (cr);
-    cairo_restore (cr);
-
-    //cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.75);
-    //cairo_rectangle (cr, -(4.0 * 50.0 + 4.0 * 7.0), -30.0, 4.0 * 50.0 + 4.0 * 7.0, 55.0);
-    //cairo_clip (cr);
-    cairo_fill_preserve (cr);
-    cairo_pattern_destroy (pattern);
-    pattern = cairo_pattern_create_rgba (1.0, 1.0, 1.0, 1.0);
-    cairo_set_source (cr, pattern);
-    //cairo_reset_clip (cr);
-    cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-    cairo_stroke (cr);
-
-    cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 0.5);
-    cairo_rectangle (cr, -(4.0 * 50.0 + 4.0 * 7.0), -30.0, 4.0 * 50.0 + 4.0 * 7.0, 55.0);
-    cairo_fill (cr);
-
+	cairo_close_path (cr);
   }
 
   void DashStyle::UseDefaultValues ()
@@ -1179,4 +1141,52 @@ namespace unity
 
     return true;
   }
+
+  bool DashStyle::Rating (cairo_t* cr, double rating)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+	if (rating < 0.0 || rating > 1.0)
+      return false;
+
+    double w = cairo_image_surface_get_width (cairo_get_target (cr));
+    double h = cairo_image_surface_get_height (cairo_get_target (cr));
+    double size = w / 5;
+    double radius = .85 * size / 2.0;
+
+	cairo_save (cr);
+
+	cairo_pattern_t* pattern = NULL;
+    pattern = cairo_pattern_create_linear (0.0, 0.0, w, 0.0);
+	cairo_pattern_add_color_stop_rgba (pattern, 0.0, 1.0, 1.0, 1.0, 1.0);
+    cairo_pattern_add_color_stop_rgba (pattern, rating, 1.0, 1.0, 1.0, 1.0);
+    cairo_pattern_add_color_stop_rgba (pattern, rating + 0.01, 1.0, 1.0, 1.0, 0.2);
+    cairo_pattern_add_color_stop_rgba (pattern, 1.0, 1.0, 1.0, 1.0, 0.2);
+	cairo_set_source (cr, pattern);
+
+    cairo_translate (cr, size / 2.0, h / 2.0);
+    Star (cr, radius);
+    cairo_translate (cr, size, 0.0);
+    Star (cr, radius);
+    cairo_translate (cr, size, 0.0);
+    Star (cr, radius);
+    cairo_translate (cr, size, 0.0);
+    Star (cr, radius);
+    cairo_translate (cr, size, 0.0);
+    Star (cr, radius);
+
+	cairo_fill_preserve (cr);
+    cairo_pattern_destroy (pattern);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_stroke (cr);
+    cairo_restore (cr);
+
+    return true;
+  }
+
 }

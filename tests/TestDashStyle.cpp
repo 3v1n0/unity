@@ -133,6 +133,26 @@ int main (int    argc,
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-insensitive.png");
   wipe (cr);
 
+  pDashStyle->Rating (cr, .0);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-0.png");
+  wipe (cr);
+
+  pDashStyle->Rating (cr, .25);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-25.png");
+  wipe (cr);
+
+  pDashStyle->Rating (cr, .5);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-50.png");
+  wipe (cr);
+
+  pDashStyle->Rating (cr, .75);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-75.png");
+  wipe (cr);
+
+  pDashStyle->Rating (cr, 1.0);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-100.png");
+  wipe (cr);
+
   // clean up
   cairo_destroy (cr);
   delete pDashStyle;

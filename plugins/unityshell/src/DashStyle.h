@@ -79,6 +79,7 @@ namespace unity
       ~DashStyle ();
 
     virtual bool Button (cairo_t* cr, nux::State state, std::string label);
+    virtual bool Rating (cairo_t* cr, double rating);
 
     void Blur (cairo_t* cr, int size);
 
@@ -90,8 +91,6 @@ namespace unity
                       double   width,
                       double   height,
                       bool     align);
-
-    void Star (cairo_t* cr, nux::State state);
 
     private:
       void UseDefaultValues ();
@@ -145,6 +144,8 @@ namespace unity
                             const gchar* nodeName,
                             const gchar* memberName,
                             FontWeight*  weights);
+
+      void Star (cairo_t* cr, double size);
 
       void GetTextExtents (int& width,
                            int& height,
