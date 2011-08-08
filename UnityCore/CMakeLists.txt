@@ -79,7 +79,6 @@ set (CFLAGS
      "-I${CMAKE_BINARY_DIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DLENSES_DIR=\"${_lensesdir}\""
-     "-Werror -Wall"
      )
 add_definitions (${CFLAGS})
 

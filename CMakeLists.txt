@@ -16,9 +16,9 @@ set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "4.0")
 
-set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
-set (CMAKE_CXX_FLAGS_DEBUG "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
-set (CMAKE_CXX_FLAGS_RELEASE "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive -Werror=array-bounds")
+set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS_DEBUG "-g3")
+set (CMAKE_CXX_FLAGS_RELEASE "")
 
 #
 # Niceties
@@ -112,7 +112,7 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
-SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self")
+SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
 option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
 if (DISABLE_MAINTAINER_CFLAGS)
   SET (MAINTAINER_CFLAGS "")
