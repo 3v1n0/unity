@@ -34,7 +34,7 @@ nux::logging::Logger logger("unity.dash.controller");
 }
 
 DashController::DashController()
-  : launcher_width(60)
+  : launcher_width(66)
   , panel_height(24)
   , window_(0)
   , visible_(false)
@@ -176,7 +176,7 @@ void DashController::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
 }
 
 void DashController::HideDash()

@@ -20,6 +20,8 @@
 #define UNITY_UBUS_WRAPPER_H
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <sigc++/slot.h>
 

@@ -53,7 +53,7 @@ void UBusManager::OnCallback(GVariant* args, gpointer user_data)
   connection->slot(args);
 }
 
-void UBusManager::SendMessage(std::string const& message_name, GVariant* args = NULL)
+void UBusManager::SendMessage(std::string const& message_name, GVariant* args)
 {
   ubus_server_send_message(server_, message_name.c_str(), args);
 }
