@@ -117,7 +117,7 @@ public:
   std::size_t count() const;
 
   void Init();
-  glib::Object<GFile> BuildLensPathFileWithSuffix(std::string const& directory);
+  glib::Object<GFile> BuildLensPathFile(std::string const& directory);
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
   void LoadLensFile(std::string const& lensfile_path);
   void CreateLensFromKeyFileData(GFile* path, const char* data, gsize length);
@@ -137,9 +137,9 @@ FilesystemLenses::Impl::Impl(FilesystemLenses* owner)
   : owner_(owner)
   , children_waiting_to_load_(0)
 {
-  LOG_DEBUG(logger) << "Initialising in standard lens directory mode";
+  LOG_DEBUG(logger) << "Initialising in standard lens directory mode: " << LENSES_DIR;
 
-  directory_ = BuildLensPathFileWithSuffix(DATADIR);
+  directory_ = BuildLensPathFile(LENSES_DIR);
 
   Init();
 }
@@ -179,10 +179,9 @@ void FilesystemLenses::Impl::Init()
   cancel_map_[directory_] = cancellable;
 }
 
-glib::Object<GFile> FilesystemLenses::Impl::BuildLensPathFileWithSuffix(std::string const& directory)
+glib::Object<GFile> FilesystemLenses::Impl::BuildLensPathFile(std::string const& directory)
 {
-  glib::String ret(g_build_filename(directory.c_str(), "unity", "lenses", NULL));
-  glib::Object<GFile> file(g_file_new_for_path(ret.Value()));
+  glib::Object<GFile> file(g_file_new_for_path(directory.c_str()));
   return file;
 }
 

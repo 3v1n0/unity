@@ -41,24 +41,7 @@ CheckOptionFilter::CheckOptionFilter(DeeModel* model, DeeModelIter* iter)
 void CheckOptionFilter::Clear()
 {
   for(auto option: options_)
-  {
     option->active = false;
-  }
-  UpdateState(false);
-
-  options.EmitChanged(options_);
-}
-
-void CheckOptionFilter::Toggle(std::string id)
-{
-  for(auto option: options_)
-  {
-    if (option->id == id)
-      option->active = true;
-  }
-  UpdateState(true);
-
-  options.EmitChanged(options_);
 }
 
 void CheckOptionFilter::Update(Filter::Hints& hints)
@@ -66,7 +49,7 @@ void CheckOptionFilter::Update(Filter::Hints& hints)
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
 
-  g_variant_get(options_variant, "(sssb)", &options_iter);
+  g_variant_get(options_variant, "a(sssb)", &options_iter);
 
   char *id = NULL;
   char *name = NULL;
@@ -78,14 +61,22 @@ void CheckOptionFilter::Update(Filter::Hints& hints)
 
   options_.clear();
 
-  while (g_variant_iter_loop(options_iter, "sssb", &id, &name, &icon_hint, &active))
+  while (g_variant_iter_loop(options_iter, "(sssb)", &id, &name, &icon_hint, &active))
   {
     FilterOption::Ptr option(new FilterOption(id, name, icon_hint, active));
+
+    std::string data(id);
+    option->active.changed.connect(sigc::bind(sigc::mem_fun(this, &CheckOptionFilter::OptionChanged), data));
     options_.push_back(option);
     option_added.emit(option);
   }
 
-  options.EmitChanged(options_);
+  g_variant_iter_free(options_iter);
+}
+
+void CheckOptionFilter::OptionChanged(bool is_active, std::string const& id)
+{
+  UpdateState();
 }
 
 CheckOptionFilter::CheckOptions const& CheckOptionFilter::get_options() const
@@ -93,10 +84,11 @@ CheckOptionFilter::CheckOptions const& CheckOptionFilter::get_options() const
   return options_;
 }
 
-void CheckOptionFilter::UpdateState(bool raw_filtering)
+void CheckOptionFilter::UpdateState()
 {
   if (!IsValid())
     return;
+  gboolean raw_filtering = FALSE;
 
   GVariantBuilder options;
   g_variant_builder_init(&options, G_VARIANT_TYPE("a(sssb)"));
@@ -108,7 +100,9 @@ void CheckOptionFilter::UpdateState(bool raw_filtering)
     std::string icon_hint = option->icon_hint;
     bool active = option->active;
 
-    g_variant_builder_add(&options, "sssb",
+    raw_filtering = raw_filtering ? TRUE : active;
+
+    g_variant_builder_add(&options, "(sssb)",
                           id.c_str(), name.c_str(),
                           icon_hint.c_str(), active ? TRUE : FALSE);
   }
@@ -117,13 +111,18 @@ void CheckOptionFilter::UpdateState(bool raw_filtering)
   g_variant_builder_init(&hints, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&hints, "{sv}", "options", g_variant_builder_end(&options));
 
+  IgnoreChanges(true);
   dee_model_set_value(model_,iter_,
                       FilterColumn::RENDERER_STATE,
                       g_variant_builder_end(&hints));
   dee_model_set_value(model_, iter_,
                       FilterColumn::FILTERING,
-                      g_variant_new("b", raw_filtering ? TRUE : FALSE));
+                      g_variant_new("b", raw_filtering));
+  IgnoreChanges(false);
+
+  filtering.EmitChanged(filtering);
 }
+
 
 }
 }

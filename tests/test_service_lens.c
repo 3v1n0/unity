@@ -5,6 +5,7 @@
 G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
 
 static void add_categories(ServiceLens* self);
+static void add_filters(ServiceLens *self);
 static void on_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static void on_global_search_changed(UnityScope* scope, GParamSpec* pspec, ServiceLens* self);
 static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
@@ -49,6 +50,7 @@ service_lens_init(ServiceLens* self)
                "search-in-global", TRUE,
                NULL);
   add_categories(self);
+  add_filters(self);
 
   /* Scope */
   priv->scope = unity_scope_new("/com/canonical/unity/testscope");
@@ -89,6 +91,32 @@ add_categories(ServiceLens* self)
   g_object_unref(categories[0]);
   g_object_unref(categories[1]);
   g_object_unref(categories[2]);
+}
+
+static void
+add_filters(ServiceLens *self)
+{
+  UnityFilter* filters[4];
+
+  filters[0] = (UnityFilter*) unity_radio_option_filter_new("when", "When", "", FALSE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "today", "Today", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "yesterday", "Yesterday", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[0]), "lastweek", "Last Week", "");
+
+  filters[1] = (UnityFilter*) unity_check_option_filter_new("type", "Type", "", FALSE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "apps", "Apps", "gtk-apps");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "files", "Files", "gtk-files");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[1]), "music", "Music", "gtk-music");
+
+  filters[2] = (UnityFilter*) unity_ratings_filter_new("ratings", "Ratings", "", FALSE);
+
+  filters[3] = (UnityFilter*) unity_multi_range_filter_new("size", "Size", "", TRUE);
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1MB", "1MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "10MB", "10MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "100MB", "100MB", "");
+  unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filters[3]), "1000MB", "1000MB", "");
+ 
+  unity_lens_set_filters(self->priv->lens, filters, 4);
 }
 
 static void

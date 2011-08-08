@@ -37,13 +37,6 @@ public:
 
   void Clear();
 
-  /* When a option is clicked. Don't worry about state, we'll handle that internally.
-   * From this you'll get a changed event on the options effected,
-   * which you can then re-render your view. The logic of the radio option is handled
-   * internally
-   */
-  void Toggle(std::string id);
-
   nux::ROProperty<RadioOptions> options;
 
   sigc::signal<void, FilterOption::Ptr> option_added;
@@ -53,11 +46,13 @@ protected:
   void Update(Filter::Hints& hints);
 
 private:
-  void UpdateState(bool raw_filtering);
+  void UpdateState();
   RadioOptions const& get_options() const;
+  void OptionChanged(bool is_active, std::string const& id);
 
 private:
   RadioOptions options_;
+  bool ignore_changes_;
 };
 
 }

@@ -38,12 +38,6 @@ public:
 
   void Clear();
 
-  /* When a option is clicked. Don't worry about state, we'll handle that internally.
-   * From this you'll get a changed event on "options", which you can then re-render
-   * your view
-   */
-  void Toggle(std::string id);
-
   nux::ROProperty<CheckOptions> options;
 
   sigc::signal<void, FilterOption::Ptr> option_added;
@@ -53,11 +47,13 @@ protected:
   void Update(Filter::Hints& hints);
 
 private:
-  void UpdateState(bool raw_filtering);
+  void UpdateState();
   CheckOptions const& get_options() const;
+  void OptionChanged(bool is_active, std::string const& id);
 
 private:
   CheckOptions options_;
+
 };
 
 }

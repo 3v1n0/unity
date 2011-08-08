@@ -43,6 +43,8 @@
 #include <gdk/gdk.h>
 #include <libnotify/notify.h>
 
+#include <sstream>
+
 #include <core/atoms.h>
 
 #include "unitya11y.h"
@@ -81,7 +83,8 @@ gfloat get_opengl_version_f32(const gchar* version_string);
 }
 
 UnityScreen::UnityScreen(CompScreen* screen)
-  : PluginClassHandler <UnityScreen, CompScreen> (screen)
+  : BaseSwitchScreen (screen)
+  , PluginClassHandler <UnityScreen, CompScreen> (screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
@@ -158,6 +161,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
   optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
   optionSetAltTabForwardTerminate(boost::bind(&UnityScreen::altTabForwardTerminate, this, _1, _2, _3));
+  optionSetAltTabDetailInitiate(boost::bind(&UnityScreen::altTabDetailInitiate, this, _1, _2, _3));
+  optionSetAltTabDetailTerminate(boost::bind(&UnityScreen::altTabDetailTerminate, this, _1, _2, _3));
   optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
   optionSetAltTabPrevTerminate(boost::bind(&UnityScreen::altTabPrevTerminate, this, _1, _2, _3));
   optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
@@ -195,6 +200,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   CompSize size(1, 20);
   _shadow_texture = GLTexture::readImageToTexture(name, pname, size);
 
+  EnsureKeybindings ();
+
   LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 }
 
@@ -221,6 +228,33 @@ UnityScreen::~UnityScreen()
     g_source_remove(relayoutSourceId);
 
   delete wt;
+}
+
+void UnityScreen::EnsureKeybindings ()
+{
+  for (auto action : _shortcut_actions)
+    screen->removeAction(action.get());
+
+  _shortcut_actions.clear ();
+
+  for (auto icon : *(launcher->GetModel()))
+  {
+    guint64 shortcut = icon->GetShortcut();
+    if (shortcut == 0)
+      continue;
+
+    CompActionPtr action(new CompAction());
+
+    CompAction::KeyBinding binding;
+    std::ostringstream sout;
+    sout << "<Super>" << static_cast<char>(shortcut);
+    binding.fromString(sout.str());
+
+    action->setKey(binding);
+
+    screen->addAction(action.get());
+    _shortcut_actions.push_back(action);
+  }
 }
 
 void UnityScreen::nuxPrologue()
@@ -338,7 +372,19 @@ void UnityScreen::paintPanelShadow(const GLMatrix& matrix)
   nuxEpilogue();
 }
 
-void UnityScreen::paintDisplay(const CompRegion& region)
+void
+UnityWindow::updateIconPos (int   &wx,
+                            int   &wy,
+                            int   x,
+                            int   y,
+                            float width,
+                            float height)
+{
+  wx = x + (last_bound.width - width) / 2;
+  wy = y + (last_bound.height - height) / 2;
+}
+
+void UnityScreen::paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask)
 {
   nuxPrologue();
   CompOutput* output = _last_output;
@@ -347,8 +393,49 @@ void UnityScreen::paintDisplay(const CompRegion& region)
   wt->RenderInterfaceFromForeignCmd(&geo);
   nuxEpilogue();
 
+  if (switcherController->Visible ())
+  {
+    WindowRenderTargetList targets = switcherController->ExternalRenderTargets ();
+
+    for (auto target : targets)
+    {
+      CompWindow* window = screen->findWindow(target.window);
+      UnityWindow *unity_window = UnityWindow::get (window);
+
+      unity_window->paintThumbnail (target.bounding, target.alpha);
+    }
+  }
+
   doShellRepaint = false;
   damaged = false;
+}
+
+void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
+{
+  GLMatrix matrix;
+  matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
+
+  nux::Geometry geo = bounding;
+  geo.x += 3;
+  geo.width -= 6;
+
+  geo.y += 3;
+  geo.height -= 6;
+
+  last_bound = geo;
+
+  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
+  attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
+
+  paintThumb (attrib,
+              matrix,
+              0,
+              geo.x,
+              geo.y,
+              geo.width,
+              geo.height,
+              geo.width,
+              geo.height);
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -368,7 +455,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
   if (doShellRepaint)
-    paintDisplay(region);
+    paintDisplay(region, transform, mask);
 
   return ret;
 }
@@ -494,6 +581,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
     action->setState(action->state() | CompAction::StateTermKey);
 
   launcher->StartKeyShowLauncher();
+  EnsureKeybindings ();
   return false;
 }
 
@@ -705,6 +793,25 @@ bool UnityScreen::altTabPrevTerminate(CompAction* action,
   return false;
 }
 
+bool UnityScreen::altTabDetailInitiate(CompAction* action,
+                                     CompAction::State state,
+                                     CompOption::Vector& options)
+{
+  if (switcherController->Visible())
+    switcherController->DetailCurrent();
+
+  action->setState(action->state() | CompAction::StateTermKey);
+  return false;
+}
+
+bool UnityScreen::altTabDetailTerminate(CompAction* action,
+                                      CompAction::State state,
+                                      CompOption::Vector& options)
+{
+  action->setState(action->state() & (unsigned)~(CompAction::StateTermKey));
+  return false;
+}
+
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data, void* value)
 {
   UnityScreen* self = reinterpret_cast<UnityScreen*>(value);
@@ -881,7 +988,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (xwns[i] == id)
         {
-          uScreen->paintDisplay(region);
+          uScreen->paintDisplay(region, matrix, mask);
           break;
         }
       }
@@ -1193,7 +1300,8 @@ void UnityScreen::initLauncher(nux::NThread* thread, void* InitData)
 
 /* Window init */
 UnityWindow::UnityWindow(CompWindow* window)
-  : PluginClassHandler<UnityWindow, CompWindow>(window)
+  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
+  , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
 {
@@ -1335,16 +1443,16 @@ nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
 {
   // For some weird reason, ERROR is more critical than CRITICAL in gnome.
   if (log_level & G_LOG_LEVEL_ERROR)
-    return nux::logging::CRITICAL;
+    return nux::logging::Critical;
   if (log_level & G_LOG_LEVEL_CRITICAL)
-    return nux::logging::ERROR;
+    return nux::logging::Error;
   if (log_level & G_LOG_LEVEL_WARNING)
-    return nux::logging::WARNING;
+    return nux::logging::Warning;
   if (log_level & G_LOG_LEVEL_MESSAGE ||
       log_level & G_LOG_LEVEL_INFO)
-    return nux::logging::INFO;
+    return nux::logging::Info;
   // default to debug.
-  return nux::logging::DEBUG;
+  return nux::logging::Debug;
 }
 
 void capture_g_log_calls(const gchar* log_domain,
