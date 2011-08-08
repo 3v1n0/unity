@@ -107,14 +107,30 @@ int main (int    argc,
   // setup
   unity::DashStyleP* pDashStyle = new unity::DashStyleP ();
   cairo_surface_t* surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-                                                         400,
-                                                         400);
+                                                         100,
+                                                         30);
   cairo_t* cr = cairo_create (surface);
   wipe (cr);
 
   // render some elements from different styles to PNG-images
   pDashStyle->Button (cr, nux::NUX_STATE_NORMAL, "Play");
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-p.png");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-normal.png");
+  wipe (cr);
+
+  pDashStyle->Button (cr, nux::NUX_STATE_ACTIVE, "Pause");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-active.png");
+  wipe (cr);
+
+  pDashStyle->Button (cr, nux::NUX_STATE_PRELIGHT, "Record");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-prelight.png");
+  wipe (cr);
+
+  pDashStyle->Button (cr, nux::NUX_STATE_SELECTED, "Rewind");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-selected.png");
+  wipe (cr);
+
+  pDashStyle->Button (cr, nux::NUX_STATE_INSENSITIVE, "Forward");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/button-insensitive.png");
   wipe (cr);
 
   // clean up

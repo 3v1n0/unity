@@ -70,10 +70,10 @@ namespace unity
 	  } BlendMode;
 
       typedef enum {
-        FONT_STYLE_REGULAR = 0,
-        FONT_STYLE_LIGHT,
-        FONT_STYLE_BOLD
-	  } FontStyle;
+        FONT_WEIGHT_REGULAR = 0,
+        FONT_WEIGHT_LIGHT,
+        FONT_WEIGHT_BOLD
+	  } FontWeight;
 
       DashStyle ();
       ~DashStyle ();
@@ -136,33 +136,50 @@ namespace unity
                           const gchar* memberName,
                           BlendMode*   modes);
 
-      bool ReadStyleSingle (JsonNode*    root,
+      bool ReadWeightSingle (JsonNode*    root,
+                             const gchar* nodeName,
+                             const gchar* memberName,
+                             FontWeight*  weight);
+
+      bool ReadWeightArray (JsonNode*    root,
                             const gchar* nodeName,
                             const gchar* memberName,
-                            FontStyle*   style);
+                            FontWeight*  weights);
 
-      bool ReadStyleArray (JsonNode*    root,
-                           const gchar* nodeName,
-                           const gchar* memberName,
-                           FontStyle*   styles);
+      void GetTextExtents (int& width,
+                           int& height,
+                           int  maxWidth,
+                           int  maxHeight,
+                           const std::string text);
 
-      void ButtonOutlinePath (cairo_t* cr,
-                              double   x,
-                              double   y,
-                              double   w,
-                              double   h);
+      void Text (cairo_t*    cr,
+                 double      size,
+                 double*     color,
+                 double      opacity,
+                 std::string label);
+
+      void ButtonOutlinePath (cairo_t* cr);
 
     private:
-      double    _buttonLabelBorderColor[STATES][CHANNELS];
-      double    _buttonLabelBorderOpacity[STATES];
-      double    _buttonLabelTextSize;
-      double    _buttonLabelTextColor[STATES][CHANNELS];
-      double    _buttonLabelTextOpacity[STATES];
-      double    _buttonLabelFillColor[STATES][CHANNELS];
-      double    _buttonLabelFillOpacity[STATES];
-      double    _buttonLabelOverlayOpacity[STATES];
-      BlendMode _buttonLabelOverlayMode[STATES];
-      int       _buttonLabelBlurSize[STATES];
+      cairo_font_options_t* _defaultFontOptions;
+
+      double                _buttonLabelBorderColor[STATES][CHANNELS];
+      double                _buttonLabelBorderOpacity[STATES];
+      double                _buttonLabelBorderSize;
+      double                _buttonLabelTextSize;
+      double                _buttonLabelTextColor[STATES][CHANNELS];
+      double                _buttonLabelTextOpacity[STATES];
+      double                _buttonLabelFillColor[STATES][CHANNELS];
+      double                _buttonLabelFillOpacity[STATES];
+      double                _buttonLabelOverlayOpacity[STATES];
+      BlendMode             _buttonLabelOverlayMode[STATES];
+      int                   _buttonLabelBlurSize[STATES];
+
+      double                _regularTextColor[CHANNELS];
+      double                _regularTextOpacity;
+      double                _regularTextSize;
+      BlendMode             _regularTextMode;
+      FontWeight            _regularTextWeight;
   };
 }
 

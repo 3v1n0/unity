@@ -19,6 +19,7 @@
 #include <math.h>
 #include <glib.h>
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <json-glib/json-glib.h>
 
@@ -213,27 +214,49 @@ namespace unity
     if (!root || !nodeName || !memberName || !modes)
       return false;
 
+	g_warning ("DashStyle::ReadModeArray() not implemented yet!");
+
     return true;
   }
 
-  bool DashStyle::ReadStyleSingle (JsonNode*    root,
+  bool DashStyle::ReadWeightSingle (JsonNode*    root,
+                                    const gchar* nodeName,
+                                    const gchar* memberName,
+                                    FontWeight*  weight)
+  {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    const gchar* string = NULL;
+
+    if (!root || !nodeName || !memberName || !weight)
+      return false;
+
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+
+    string = json_object_get_string_member (object, memberName);
+    if (!g_strcmp0 (string, "light"))
+      *weight = FONT_WEIGHT_LIGHT;
+
+    if (!g_strcmp0 (string, "regular"))
+      *weight = FONT_WEIGHT_REGULAR;
+
+    if (!g_strcmp0 (string, "bold"))
+      *weight = FONT_WEIGHT_BOLD;
+
+    return true;
+  }
+
+  bool DashStyle::ReadWeightArray (JsonNode*    root,
                                    const gchar* nodeName,
                                    const gchar* memberName,
-                                   FontStyle*   style)
+                                   FontWeight*  weights)
   {
-    if (!root || !nodeName || !memberName || !style)
+    if (!root || !nodeName || !memberName || !weights)
       return false;
 
-    return true;
-  }
-
-  bool DashStyle::ReadStyleArray (JsonNode*    root,
-                                  const gchar* nodeName,
-                                  const gchar* memberName,
-                                  FontStyle*   styles)
-  {
-    if (!root || !nodeName || !memberName || !styles)
-      return false;
+	g_warning ("DashStyle::ReadWeightArray() not implemented yet!");
 
     return true;
   }
@@ -255,6 +278,7 @@ namespace unity
       g_warning ("Failure: %s", error->message);
       g_error_free (error);
       UseDefaultValues ();
+
 	  return;
     }
 
@@ -269,6 +293,7 @@ namespace unity
       return;
     }
 
+    // button-label
     ReadDoubleArray (root,
                      "button-label",
                      "border-opacity",
@@ -278,6 +303,11 @@ namespace unity
                     "button-label",
                     "border-color",
                     _buttonLabelBorderColor);
+
+    ReadDoubleSingle (root,
+                      "button-label",
+                      "border-size",
+                      &_buttonLabelBorderSize);
 
     ReadDoubleSingle (root,
                       "button-label",
@@ -319,11 +349,54 @@ namespace unity
                   "blur-size",
                   _buttonLabelBlurSize);
 
+    // regular-text
+    ReadColorSingle (root,
+                     "regular-text",
+                     "text-color",
+                     _regularTextColor);
+
+    ReadDoubleSingle (root,
+                      "regular-text",
+                      "text-opacity",
+                      &_regularTextOpacity);
+
+    ReadDoubleSingle (root,
+                      "regular-text",
+                      "text-size",
+                      &_regularTextSize);
+
+    ReadModeSingle (root,
+                    "regular-text",
+                    "text-mode",
+                    &_regularTextMode);
+
+    ReadWeightSingle (root,
+                      "regular-text",
+                      "text-weight",
+                      &_regularTextWeight);
+
     g_object_unref (parser);
+
+    // create fallback font-options
+	_defaultFontOptions = NULL;
+    _defaultFontOptions = cairo_font_options_create ();
+    if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
+    {
+      cairo_font_options_set_antialias (_defaultFontOptions,
+                                        CAIRO_ANTIALIAS_SUBPIXEL);
+      cairo_font_options_set_subpixel_order (_defaultFontOptions,
+                                             CAIRO_SUBPIXEL_ORDER_RGB);
+      cairo_font_options_set_hint_style (_defaultFontOptions,
+                                         CAIRO_HINT_STYLE_SLIGHT);
+      cairo_font_options_set_hint_metrics (_defaultFontOptions,
+                                           CAIRO_HINT_METRICS_ON);
+	}
   }
 
   DashStyle::~DashStyle ()
   {
+	if (cairo_font_options_status (_defaultFontOptions) == CAIRO_STATUS_SUCCESS)
+      cairo_font_options_destroy (_defaultFontOptions);
   }
 
   static inline double
@@ -710,6 +783,7 @@ namespace unity
 
   void DashStyle::UseDefaultValues ()
   {
+    // button-label
     _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][R]      = 0.53;
     _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][G]      = 1.0;
     _buttonLabelBorderColor[nux::NUX_STATE_NORMAL][B]      = 0.66;
@@ -731,6 +805,8 @@ namespace unity
     _buttonLabelBorderOpacity[nux::NUX_STATE_PRELIGHT]     = 0.5;
     _buttonLabelBorderOpacity[nux::NUX_STATE_SELECTED]     = 0.5;
     _buttonLabelBorderOpacity[nux::NUX_STATE_INSENSITIVE]  = 0.5;
+
+    _buttonLabelBorderSize                                 = 1.0;
 
     _buttonLabelTextSize                                   = 1.0;
 
@@ -795,17 +871,29 @@ namespace unity
     _buttonLabelBlurSize[nux::NUX_STATE_PRELIGHT]          = 0;
     _buttonLabelBlurSize[nux::NUX_STATE_SELECTED]          = 0;
     _buttonLabelBlurSize[nux::NUX_STATE_INSENSITIVE]       = 0;
+
+    // regular-text
+    _regularTextColor[R]   = 1.0;
+    _regularTextColor[G]   = 1.0;
+    _regularTextColor[B]   = 1.0;
+    _regularTextOpacity    = 1.0;
+    _regularTextSize       = 13.0;
+    _regularTextMode       = BLEND_MODE_NORMAL;
+    _regularTextWeight     = FONT_WEIGHT_LIGHT;
   }
 
-  void DashStyle::ButtonOutlinePath (cairo_t* cr,
-                                     double   x,
-                                     double   y,
-                                     double   w,
-                                     double   h)
+  void DashStyle::ButtonOutlinePath (cairo_t* cr)
   {
-	// these absolute values are the "cost" of getting only a SVG from design
+    double   x = 2.0;
+    double   y = 2.0;
+    double   w = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
+    double   h = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+
+	// - these absolute values are the "cost" of getting only a SVG from design
 	// and not a generic formular how to approximate the curve-shape, thus
 	// the smallest possible button-size is 22.18x24.0
+	// - also making this align to the pixel-grid with the relative coordinates
+	// is impossible
 	double width  = w - 22.18;
 	double height = h - 24.0;
 
@@ -839,6 +927,177 @@ namespace unity
     cairo_close_path (cr);
   }
 
+  void DashStyle::GetTextExtents (int& width,
+                                  int& height,
+                                  int  maxWidth,
+                                  int  maxHeight,
+                                  const std::string text)
+  {
+    cairo_surface_t*      surface  = NULL;
+    cairo_t*              cr       = NULL;
+    PangoLayout*          layout   = NULL;
+    PangoFontDescription* desc     = NULL;
+    PangoContext*         pangoCtx = NULL;
+    PangoRectangle        logRect  = {0, 0, 0, 0};
+    int                   dpi      = 0;
+	char*                 fontName = NULL;
+    GdkScreen*            screen   = gdk_screen_get_default();  // is not ref'ed
+    GtkSettings*          settings = gtk_settings_get_default();// is not ref'ed
+
+    surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
+    cr = cairo_create(surface);
+    if (!screen)
+      cairo_set_font_options(cr, _defaultFontOptions);
+    else
+      cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+    layout = pango_cairo_create_layout(cr);
+
+    g_object_get(settings, "gtk-font-name", &fontName, NULL);
+    if (!fontName)
+      desc = pango_font_description_from_string("Sans 10");
+    else
+    {
+      desc = pango_font_description_from_string(fontName);
+	  g_free (fontName);
+    }
+
+    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+    pango_layout_set_markup(layout, text.c_str(), -1);
+    pango_layout_set_height(layout, maxHeight);
+    pango_layout_set_width(layout, maxWidth * PANGO_SCALE);
+
+    pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
+
+    if (!screen)
+      pango_cairo_context_set_font_options(pangoCtx, _defaultFontOptions);
+	else
+      pango_cairo_context_set_font_options(pangoCtx,
+                                           gdk_screen_get_font_options(screen));
+
+    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
+    if (dpi == -1)
+    {
+      // use some default DPI-value
+      pango_cairo_context_set_resolution(pangoCtx, 96.0f);
+    }
+    else
+    {
+      pango_cairo_context_set_resolution(pangoCtx,
+                                         (float) dpi / (float) PANGO_SCALE);
+    }
+    pango_layout_context_changed(layout);
+    pango_layout_get_extents(layout, NULL, &logRect);
+
+    width  = (logRect.x + logRect.width) / PANGO_SCALE;
+    height = (logRect.y + logRect.height) / PANGO_SCALE;
+
+    // clean up
+    pango_font_description_free(desc);
+    g_object_unref(layout);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+  }
+
+  void DashStyle::Text (cairo_t*    cr,
+                        double      size,
+                        double*     color,
+                        double      opacity,
+                        std::string label)
+  {
+	double                x          = 0.0;
+    double                y          = 0.0;
+    int                   w          = 0;
+    int                   h          = 0;
+    int                   textWidth  = 0;
+	int                   textHeight = 0;
+    PangoLayout*          layout     = NULL;
+    PangoFontDescription* desc       = NULL;
+    PangoContext*         pangoCtx   = NULL;
+    int                   dpi        = 0;
+    GdkScreen*            screen     = gdk_screen_get_default();   // not ref'ed
+    GtkSettings*          settings   = gtk_settings_get_default(); // not ref'ed
+    gchar*                fontName   = NULL;
+
+    w = cairo_image_surface_get_width (cairo_get_target (cr));
+    h = cairo_image_surface_get_height (cairo_get_target (cr));
+    GetTextExtents (textWidth, textHeight, w, h, label);
+	x = (w - textWidth) / 2.0;
+    y = (h - textHeight) / 2.0;
+
+    if (!screen)
+      cairo_set_font_options(cr, _defaultFontOptions);
+    else
+      cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+    layout = pango_cairo_create_layout(cr);
+
+    g_object_get(settings, "gtk-font-name", &fontName, NULL);
+    if (!fontName)
+      desc = pango_font_description_from_string("Sans 10");
+    else
+      desc = pango_font_description_from_string(fontName);
+
+    PangoWeight weight;
+	switch (_regularTextWeight)
+    {
+      case FONT_WEIGHT_REGULAR:
+        weight = PANGO_WEIGHT_NORMAL;
+      break;
+
+      case FONT_WEIGHT_LIGHT:
+        weight = PANGO_WEIGHT_LIGHT;
+      break;
+
+      case FONT_WEIGHT_BOLD:
+        weight = PANGO_WEIGHT_BOLD;
+      break;
+	}
+    pango_font_description_set_weight(desc, weight);
+
+    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+    pango_layout_set_markup(layout, label.c_str(), -1);
+    pango_layout_set_width(layout, w * PANGO_SCALE);
+
+    pango_layout_set_height(layout, h);
+    pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
+
+    if (!screen)
+      pango_cairo_context_set_font_options(pangoCtx, _defaultFontOptions);
+	else
+      pango_cairo_context_set_font_options(pangoCtx,
+                                           gdk_screen_get_font_options(screen));
+
+    g_object_get(settings, "gtk-xft-dpi", &dpi, NULL);
+    if (dpi == -1)
+    {
+      // use some default DPI-value
+      pango_cairo_context_set_resolution(pangoCtx, 96.0f);
+    }
+    else
+    {
+      pango_cairo_context_set_resolution(pangoCtx,
+                                         (float) dpi / (float) PANGO_SCALE);
+    }
+
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba (cr, color[R], color[G], color[B], opacity);
+    pango_layout_context_changed(layout);
+    cairo_move_to (cr, x, y);
+    pango_cairo_show_layout(cr, layout);
+
+    // clean up
+    pango_font_description_free(desc);
+    g_object_unref(layout);
+    g_free(fontName);
+  }
+
   bool DashStyle::Button (cairo_t* cr, nux::State state, std::string label)
   {
 	// sanity checks
@@ -848,32 +1107,28 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0);
-
-    switch (state)
+    ButtonOutlinePath (cr);
+    if (_buttonLabelFillOpacity[state] != 0.0)
     {
-      case nux::NUX_STATE_NORMAL :
-        ButtonOutlinePath (cr, 10.0, 10.0, 75.0, 30.0);
-        cairo_set_source_rgba (cr,
-                               _buttonLabelBorderColor[state][R],
-                               _buttonLabelBorderColor[state][G],
-                               _buttonLabelBorderColor[state][B],
-                               _buttonLabelBorderOpacity[state]);
-        cairo_stroke (cr);
-      break;
-
-      case nux::NUX_STATE_ACTIVE :
-      break;
-
-      case nux::NUX_STATE_PRELIGHT :
-      break;
-
-      case nux::NUX_STATE_SELECTED :
-      break;
-
-      case nux::NUX_STATE_INSENSITIVE :
-      break;
-	}
+      cairo_set_source_rgba (cr,
+                             _buttonLabelFillColor[state][R],
+                             _buttonLabelFillColor[state][G],
+                             _buttonLabelFillColor[state][B],
+                             _buttonLabelFillOpacity[state]);
+      cairo_fill_preserve (cr);
+    }
+    cairo_set_source_rgba (cr,
+                           _buttonLabelBorderColor[state][R],
+                           _buttonLabelBorderColor[state][G],
+                           _buttonLabelBorderColor[state][B],
+                           _buttonLabelBorderOpacity[state]);
+    cairo_set_line_width (cr, _buttonLabelBorderSize);
+    cairo_stroke (cr);
+	Text (cr,
+	      _buttonLabelTextSize,
+	      _buttonLabelTextColor[state],
+	      _buttonLabelTextOpacity[state],
+	      label);
 
     return true;
   }

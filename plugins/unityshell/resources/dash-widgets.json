@@ -16,7 +16,7 @@
     "text-opacity"   : 1.0, 
     "text-size"      : 13.0,
     "text-mode"      : "normal",
-    "text-style"     : "light"},
+    "text-weight"    : "light"},
 
   "comments": {
     "states"         : ["NORMAL", "ACTIVE", "PRELIGHT", "SELECTED", "INSENSITIVE"]},
@@ -42,6 +42,7 @@
   "button-label": {
     "border-opacity" : [      0.5,       0.8,       0.5,       0.5,       0.5],
     "border-color"   : ["#88ffaa", "#ffffff", "#1122ff", "#123456", "#654321"],
+    "border-size"    : 1.0,
     "text-size"      : 1.0,
     "text-color"     : ["#ffffff", "#000000", "#ffffff", "#ffffff", "#ffffff"],
     "text-opacity"   : [      1.0,       1.0,       1.0,       1.0,       1.0], 
@@ -60,11 +61,11 @@
     "main-text-color"   : "#ffffff",
     "main-text-opacity" : 1.0,
     "main-text-size"    : 17.0,
-    "main-text-style"   : "regular",
+    "main-text-weight"  : "regular",
     "sub-text-color"    : "#ffffff",
     "sub-text-opacity"  : 0.5,
     "sub-text-size"     : 13.0,
-    "sub-text-style"    : "regular",
+    "sub-text-weight"   : "regular",
     "icon-main-gap"     : 10,
     "main-sub-gap"      : 15,
     "sub-arrow-gap"     : 10},
@@ -74,12 +75,12 @@
     "main-title-color"   : "#ffffff",
     "main-title-opacity" : 1.0,
     "main-title-mode"    : "normal",
-    "main-title-style"   : "regular",
+    "main-title-weight"  : "regular",
     "sub-title-size"     : 17.0,
     "sub-title-color"    : "#ffffff",
     "sub-title-opacity"  : 1.0,
     "sub-title-mode"     : "normal",
-    "sub-title-style"    : "regular",
+    "sub-title-weight"   : "regular",
     "main-sub-gap"       : 15,
     "padding"            : 10},
 
@@ -88,12 +89,12 @@
     "main-title-color"   : "#ffffff",
     "main-title-opacity" : 1.0,
     "main-title-mode"    : "normal",
-    "main-title-style"   : "regular",
+    "main-title-weight"  : "regular",
     "sub-title-size"     : 17.0,
     "sub-title-color"    : "#ffffff",
     "sub-title-opacity"  : 1.0,
     "sub-title-mode"     : "normal",
-    "sub-title-style"    : "regular",
+    "sub-title-weight"   : "regular",
     "main-sub-gap"       : 15,
     "padding"            : 10},
 
@@ -130,7 +131,7 @@
     "text-color"     : "#ffffff",
     "text-opacity"   : 1.0,
     "text-mode"      : "normal",
-    "text-style"     : "bold",
+    "text-weight"    : "bold",
     "text-arrow-gap" : 10}
 
 }
