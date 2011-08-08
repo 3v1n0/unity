@@ -74,6 +74,8 @@ private:
 #include "BGHash.h"
 #include "DesktopLauncherIcon.h"
 
+#include <compiztoolbox/compiztoolbox.h>
+
 using namespace unity::switcher;
 
 /* base screen class */
@@ -83,6 +85,7 @@ class UnityScreen :
   public ScreenInterface,
   public CompositeScreenInterface,
   public GLScreenInterface,
+  public BaseSwitchScreen,
   public PluginClassHandler <UnityScreen, CompScreen>,
   public UnityshellOptions
 {
@@ -95,21 +98,21 @@ public:
   CompositeScreen* cScreen;
   GLScreen* gScreen;
 
-	/* prepares nux for drawing */
-	void nuxPrologue ();
-	/* pops nux draw stack */
-	void nuxEpilogue ();
+  /* prepares nux for drawing */
+  void nuxPrologue();
+  /* pops nux draw stack */
+  void nuxEpilogue();
 
-	/* nux draw wrapper */
-	void paintDisplay(const CompRegion& region);
-	void paintPanelShadow(const GLMatrix& matrix);
+  /* nux draw wrapper */
+  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
+  void paintPanelShadow(const GLMatrix& matrix);
 
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
 
-	/* paint on top of all windows if we could not find a window
-	 * to paint underneath */
-	bool glPaintOutput(const GLScreenPaintAttrib&,
+  /* paint on top of all windows if we could not find a window
+   * to paint underneath */
+  bool glPaintOutput(const GLScreenPaintAttrib&,
                      const GLMatrix&,
                      const CompRegion&,
                      CompOutput*,
@@ -161,6 +164,14 @@ public:
   bool altTabForwardTerminate(CompAction* action,
                               CompAction::State state,
                               CompOption::Vector& options);
+  
+  bool altTabDetailInitiate(CompAction* action,
+                            CompAction::State state,
+                            CompOption::Vector& options);
+
+  bool altTabDetailTerminate(CompAction* action,
+                             CompAction::State state,
+                             CompOption::Vector& options);
 
   bool altTabPrevInitiate(CompAction* action,
                           CompAction::State state,
@@ -272,6 +283,7 @@ private:
 class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
+  public BaseSwitchWindow,
   public PluginClassHandler <UnityWindow, CompWindow>
 {
 public:
@@ -281,11 +293,20 @@ public:
   CompWindow* window;
   GLWindow* gWindow;
 
+  nux::Geometry last_bound;
+
   /* basic window draw function */
   bool glDraw(const GLMatrix& matrix,
               GLFragment::Attrib& attrib,
               const CompRegion& region,
               unsigned intmask);
+
+  void updateIconPos (int   &wx,
+                      int   &wy,
+                      int   x,
+                      int   y,
+                      float width,
+                      float height);
 
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
@@ -294,6 +315,8 @@ public:
 
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectLauncher(CompPoint& pos);
+
+  void paintThumbnail (nux::Geometry const& bounding, float alpha);
 };
 
 

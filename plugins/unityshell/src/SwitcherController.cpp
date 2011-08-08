@@ -29,7 +29,8 @@ namespace switcher
 {
 
 SwitcherController::SwitcherController()
-  :  view_window_(0)
+  :  view_(0)
+  ,  view_window_(0)
   ,  visible_(false)
   ,  show_timer_(0)
 {
@@ -97,7 +98,12 @@ void SwitcherController::Hide()
 
   AbstractLauncherIcon* selection = model_->Selection();
   if (selection)
-    selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+  {
+    if (model_->detail_selection)
+      selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+    else
+      selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
+  }
 
   model_.reset();
   visible_ = false;
@@ -112,6 +118,8 @@ void SwitcherController::Hide()
   if (show_timer_)
     g_source_remove(show_timer_);
   show_timer_ = 0;
+
+  view_ = 0;
 }
 
 bool SwitcherController::Visible()
@@ -135,7 +143,18 @@ void SwitcherController::MovePrev()
 
 void SwitcherController::DetailCurrent()
 {
+  if (model_->Selection ()->RelatedWindows () > 0)
+    model_->detail_selection = true;
+}
 
+WindowRenderTargetList SwitcherController::ExternalRenderTargets ()
+{
+  if (!view_)
+  {
+    WindowRenderTargetList result;
+    return result;
+  }
+  return view_->ExternalTargets ();
 }
 
 bool SwitcherController::CompareSwitcherItemsPriority(AbstractLauncherIcon* first, AbstractLauncherIcon* second)
