@@ -26,7 +26,6 @@
 #include "DashStyle.h"
 
 #define DASH_WIDGETS_FILE "/usr/share/unity/themes/dash-widgets.json"
-//#define DASH_WIDGETS_FILE "/home/mirco/src/avantika-team/unity.style/resources/dash-widgets.json"
 
 namespace unity
 {
@@ -211,10 +210,34 @@ namespace unity
                                  const gchar* memberName,
                                  BlendMode*   modes)
   {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+	unsigned int i      = 0;
+
     if (!root || !nodeName || !memberName || !modes)
       return false;
 
-	g_warning ("DashStyle::ReadModeArray() not implemented yet!");
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+
+      string = json_array_get_string_element (array, i);
+
+      if (!g_strcmp0 (string, "normal"))
+        modes[i] = BLEND_MODE_NORMAL;
+
+      if (!g_strcmp0 (string, "multiply"))
+        modes[i] = BLEND_MODE_MULTIPLY;
+
+      if (!g_strcmp0 (string, "screen"))
+        modes[i] = BLEND_MODE_SCREEN;
+	}
 
     return true;
   }
@@ -253,10 +276,34 @@ namespace unity
                                    const gchar* memberName,
                                    FontWeight*  weights)
   {
+	JsonObject*  object = NULL;
+	JsonNode*    node   = NULL;
+    JsonArray*   array  = NULL;
+	unsigned int i      = 0;
+
     if (!root || !nodeName || !memberName || !weights)
       return false;
 
-	g_warning ("DashStyle::ReadWeightArray() not implemented yet!");
+    object = json_node_get_object (root);
+    node   = json_object_get_member (object, nodeName);
+    object = json_node_get_object (node);
+    array  = json_object_get_array_member (object, memberName);
+
+    for (i = 0; i < json_array_get_length (array); i++)
+    {
+      const gchar* string = NULL;
+
+      string = json_array_get_string_element (array, i);
+
+      if (!g_strcmp0 (string, "light"))
+        weights[i] = FONT_WEIGHT_LIGHT;
+
+      if (!g_strcmp0 (string, "regular"))
+        weights[i] = FONT_WEIGHT_REGULAR;
+
+      if (!g_strcmp0 (string, "bold"))
+        weights[i] = FONT_WEIGHT_BOLD;
+	}
 
     return true;
   }
@@ -1060,7 +1107,7 @@ namespace unity
     pango_layout_set_font_description(layout, desc);
     pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
 
     pango_layout_set_markup(layout, label.c_str(), -1);
     pango_layout_set_width(layout, w * PANGO_SCALE);

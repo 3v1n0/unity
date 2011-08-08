@@ -70,8 +70,8 @@ namespace unity
 	  } BlendMode;
 
       typedef enum {
-        FONT_WEIGHT_REGULAR = 0,
-        FONT_WEIGHT_LIGHT,
+        FONT_WEIGHT_LIGHT = 0,
+        FONT_WEIGHT_REGULAR,
         FONT_WEIGHT_BOLD
 	  } FontWeight;
 
