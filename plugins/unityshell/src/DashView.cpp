@@ -46,6 +46,9 @@ DashView::DashView()
 DashView::~DashView()
 {}
 
+void DashView::AboutToShow()
+{}
+
 void DashView::SetupBackground()
 {
   nux::ROPConfig rop;

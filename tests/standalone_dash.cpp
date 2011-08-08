@@ -58,8 +58,9 @@ void TestRunner::Init ()
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   DashView* view = new DashView();
-  view->SetMinMaxSize(1024, 768);
-  layout->AddView (view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  view->SetMinMaxSize(1024, 600);
+
+  layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
   layout->SetFocused (true);
 
   nux::GetGraphicsThread()->SetLayout (layout);

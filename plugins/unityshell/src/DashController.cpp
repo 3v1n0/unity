@@ -64,7 +64,7 @@ void DashController::SetupWindow()
 {
   window_ = new nux::BaseWindow("Dash");
   window_->SinkReference();
-  window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.4f));
+  window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
   window_->EnableInputWindow(true, "Dash", false, false);
   window_->EnableInputWindow(false);
@@ -179,7 +179,7 @@ void DashController::ShowDash()
     return;
   }
 
-  //view_->AboutToShow();
+  view_->AboutToShow();
 
   window_->ShowWindow(true, true);
   window_->PushToFront();

@@ -42,6 +42,8 @@ public:
   DashView();
   ~DashView();
 
+  void AboutToShow();
+
 private:
   void SetupBackground();
   void SetupViews();
