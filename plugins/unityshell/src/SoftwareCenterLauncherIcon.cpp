@@ -42,7 +42,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
 {
     char* object_path;
     GVariant* finished_or_not;
-    GVariant* parameters;
 
     _aptdaemon_trans_id = aptdaemon_trans_id; 
     g_strdup_printf(object_path, "/org/debian/apt/transaction/%s", _aptdaemon_trans_id);
@@ -50,29 +49,16 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
     _aptdaemon_trans = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
                                                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
                                                     NULL,
-                                                    "org.debian.apt.transaction",
+                                                    "org.debian.apt",
                                                     object_path,
                                                     "org.debian.apt.transaction",
                                                     NULL,
                                                     NULL);
 
-    _aptdaemon_trans_properties = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
-                                                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-                                                    NULL,
-                                                    "org.debian.apt.transaction",
-                                                    object_path,
-                                                    "org.freedesktop.DBus.Properties",
-                                                    NULL,
-                                                    NULL);
+    finished_or_not = g_dbus_proxy_get_cached_property(_aptdaemon_trans,
+                                    "Progress");
 
-    parameters = g_variant_new("(ss)", "org.debian.apt.transaction", "Progress");
-
-    finished_or_not = g_dbus_proxy_call_sync (_aptdaemon_trans_properties,
-                                            "Get",
-                                            parameters,
-                                            G_DBUS_CALL_FLAGS_NO_AUTO_START,
-                                            -1,
-                                            NULL,
-                                            NULL);
     g_debug("HERE IS THE SHIT: %s",g_variant_print(finished_or_not, TRUE));
+
+    g_variant_unref(finished_or_not);
 }
