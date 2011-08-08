@@ -16,45 +16,55 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_DASH_VIEW_H_
-#define UNITY_DASH_VIEW_H_
+#include "DashView.h"
 
-#include <NuxGraphics/GraphicsEngine.h>
-#include <Nux/Nux.h>
-#include <Nux/View.h>
-#include <UnityCore/FilesystemLenses.h>
+#include "NuxCore/Logger.h"
 
-#include "Introspectable.h"
-#include "UBusWrapper.h"
+#include "UBusMessages.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class DashView : public nux::View, public unity::Introspectable
+namespace
 {
-public:
-  DashView();
-  ~DashView();
+nux::logging::Logger logger("unity.dash.view");
+}
 
-protected:
-  const gchar* GetName();
-  void AddProperties(GVariantBuilder* builder);
+DashView::DashView()
+  : nux::View(NUX_TRACKER_LOCATION)
+{
 
-private:
-  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
-  void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+}
 
-private:
-  UBusManager ubus_manager_;
-  FilesystemLenses lenses_;
+DashView::~DashView()
+{}
 
-  nux::VLayout* layout_;
-};
+long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
+{
+  return traverse_info;
+}
+
+void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+{
+
+}
+
+void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
+{
+
+}
+
+// Introspectable
+const gchar* DashView::GetName()
+{
+  return "DashView";
+}
+
+void DashView::AddProperties(GVariantBuilder* builder)
+{}
 
 
 }
 }
-#endif

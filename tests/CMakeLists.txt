@@ -72,6 +72,39 @@ add_executable (test-unit
                 )
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 
+#
+# Standalone tests
+#
+add_executable (standalone-dash
+                standalone_dash.cpp
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
+                ${UNITY_SRC}/BGHash.cpp
+                ${UNITY_SRC}/BGHash.h
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/IconLoader.h
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconTexture.h
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/TextureCache.h
+                ${UNITY_SRC}/TextureCache.cpp
+                ${UNITY_SRC}/Timer.cpp
+                ${UNITY_SRC}/Timer.h
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/StaticCairoText.h
+                ${UNITY_SRC}/UBusMessages.h
+                ${UNITY_SRC}/UBusWrapper.cpp
+                ${UNITY_SRC}/UBusWrapper.h
+                ${UNITY_SRC}/ubus-server.cpp
+                ${UNITY_SRC}/ubus-server.h
+                )
+add_dependencies (standalone-dash unity-core-${UNITY_API_VERSION})
+
+
+#
+# Please use "standalone-$foo" naming convention for standalone tests
+# 
 add_executable (test-panel
                 TestPanel.cpp
                 ${UNITY_SRC}/PanelStyle.cpp
@@ -107,78 +140,6 @@ add_executable (test-panel
                 )
 add_dependencies (test-panel unity-core-${UNITY_API_VERSION})
 
-set (PLACES_COMMON_SOURCE ${UNITY_SRC}/ubus-server.cpp
-                          ${UNITY_SRC}/ubus-server.h
-                          ${UNITY_SRC}/BGHash.cpp
-                          ${UNITY_SRC}/BGHash.h
-                          ${UNITY_SRC}/IconLoader.cpp
-                          ${UNITY_SRC}/IconLoader.h
-                          ${UNITY_SRC}/IconTexture.cpp
-                          ${UNITY_SRC}/IconTexture.h
-                          ${UNITY_SRC}/Introspectable.cpp
-                          ${UNITY_SRC}/Introspectable.h
-                          ${UNITY_SRC}/PlacesSettings.cpp
-                          ${UNITY_SRC}/PlacesSettings.h
-                          ${UNITY_SRC}/PlacesStyle.cpp
-                          ${UNITY_SRC}/PlacesStyle.h
-                          ${UNITY_SRC}/PlacesTile.cpp
-                          ${UNITY_SRC}/PlacesTile.h
-                          ${UNITY_SRC}/PlacesHorizontalTile.cpp
-                          ${UNITY_SRC}/PlacesHorizontalTile.h
-                          ${UNITY_SRC}/PlacesSimpleTile.cpp
-                          ${UNITY_SRC}/PlacesSimpleTile.h
-                          ${UNITY_SRC}/TextureCache.h
-                          ${UNITY_SRC}/TextureCache.cpp
-                          ${UNITY_SRC}/Timer.cpp
-                          ${UNITY_SRC}/Timer.h
-                          ${UNITY_SRC}/StaticCairoText.cpp
-                          ${UNITY_SRC}/StaticCairoText.h
-                          ${UNITY_SRC}/UBusMessages.h
-                          )
-add_executable (test-places
-                TestPlaces.cpp
-                ${PLACES_COMMON_SOURCE}
-                ${UNITY_SRC}/PlacesEmptyView.cpp
-                ${UNITY_SRC}/PlacesEmptyView.h
-                ${UNITY_SRC}/PlacesHomeView.cpp
-                ${UNITY_SRC}/PlacesHomeView.h
-                ${UNITY_SRC}/PlacesSearchBar.cpp
-                ${UNITY_SRC}/PlacesSearchBar.h
-                ${UNITY_SRC}/PlacesSearchBarSpinner.cpp
-                ${UNITY_SRC}/PlacesSearchBarSpinner.h
-                ${UNITY_SRC}/PlacesResultsController.cpp
-                ${UNITY_SRC}/PlacesResultsController.h
-                ${UNITY_SRC}/PlacesResultsView.h
-                ${UNITY_SRC}/PlacesResultsView.cpp
-                ${UNITY_SRC}/PlacesGroupController.cpp
-                ${UNITY_SRC}/PlacesResultsController.h
-                ${UNITY_SRC}/PlacesGroup.cpp
-                ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/PlacesView.cpp
-                ${UNITY_SRC}/PlacesView.h
-                ${UNITY_SRC}/PlacesVScrollBar.cpp
-                ${UNITY_SRC}/PlacesVScrollBar.h
-                ${UNITY_SRC}/PlaceEntryHome.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.h
-                ${UNITY_SRC}/PlaceEntryRemote.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.h
-                ${UNITY_SRC}/PlaceEntry.h
-                ${UNITY_SRC}/PlaceFactoryFile.cpp
-                ${UNITY_SRC}/PlaceFactoryFile.h
-                ${UNITY_SRC}/PlaceFactory.cpp
-                ${UNITY_SRC}/PlaceFactory.h
-                ${UNITY_SRC}/PlaceRemote.cpp
-                ${UNITY_SRC}/PlaceRemote.h
-                ${UNITY_SRC}/Place.h
-                )
-add_dependencies (test-places unity-core-${UNITY_API_VERSION})
-
-add_executable (test-places-tiles
-                TestPlacesTiles.cpp
-                ${PLACES_COMMON_SOURCE}
-                )
-add_dependencies (test-places-tiles unity-core-${UNITY_API_VERSION})
-
 add_executable (test-switcher
                 TestSwitcher.cpp
                 ${UNITY_SRC}/AbstractLauncherIcon.h
@@ -196,30 +157,6 @@ add_executable (test-switcher
                 ${UNITY_SRC}/StaticCairoText.h
                 )
 add_dependencies (test-switcher unity-core-${UNITY_API_VERSION})
-
-add_executable (test-places-group
-                TestPlacesGroup.cpp
-                ${PLACES_COMMON_SOURCE}
-                ${UNITY_SRC}/PlacesGroup.cpp
-                ${UNITY_SRC}/PlacesGroup.h
-                )
-add_dependencies (test-places-group unity-core-${UNITY_API_VERSION})
-
-add_executable (test-places-results
-                TestPlacesResults.cpp
-                ${PLACES_COMMON_SOURCE}
-                ${UNITY_SRC}/PlacesResultsController.cpp
-                ${UNITY_SRC}/PlacesResultsController.h
-                ${UNITY_SRC}/PlacesResultsView.h
-                ${UNITY_SRC}/PlacesResultsView.cpp
-                ${UNITY_SRC}/PlacesGroupController.cpp
-                ${UNITY_SRC}/PlacesGroupController.h
-                ${UNITY_SRC}/PlacesGroup.cpp
-                ${UNITY_SRC}/PlacesGroup.h
-                ${UNITY_SRC}/PlacesVScrollBar.cpp
-                ${UNITY_SRC}/PlacesVScrollBar.h
-                )
-add_dependencies (test-places-results unity-core-${UNITY_API_VERSION})
 
 add_executable (test-quicklist
                 ui/TestQuicklist.cpp
@@ -266,24 +203,6 @@ add_executable (test-quicklist-visuals
                 ${UNITY_SRC}/ubus-server.h
                 )
 add_dependencies (test-quicklist-visuals unity-core-${UNITY_API_VERSION})
-
-add_executable (test-places-backend
-                TestPlacesBackend.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.cpp
-                ${UNITY_SRC}/PlaceEntryRemote.h
-                ${UNITY_SRC}/PlaceEntry.h
-                ${UNITY_SRC}/PlaceFactoryFile.cpp
-                ${UNITY_SRC}/PlaceFactoryFile.h
-                ${UNITY_SRC}/PlaceFactory.h
-                ${UNITY_SRC}/PlaceFactory.cpp
-                ${UNITY_SRC}/PlaceRemote.cpp
-                ${UNITY_SRC}/PlaceRemote.h
-                ${UNITY_SRC}/Place.h
-                ${UNITY_SRC}/ubus-server.cpp
-                ${UNITY_SRC}/ubus-server.h
-                ${UNITY_SRC}/UBusMessages.h
-                )
-add_dependencies (test-places-backend unity-core-${UNITY_API_VERSION})
 
 add_executable (test-filters
                 TestFilters.cpp
@@ -360,6 +279,7 @@ add_executable (test-bg-hash
                 ${UNITY_SRC}/ubus-server.h
                )
 add_dependencies (test-bg-hash unity-core-${UNITY_API_VERSION})
+
 #
 # GTest tests
 #

@@ -19,6 +19,7 @@
 #include "DashController.h"
 
 #include "NuxCore/Logger.h"
+#include "Nux/HLayout.h"
 
 #include "PluginAdapter.h"
 #include "UBusMessages.h"
@@ -44,6 +45,7 @@ DashController::DashController()
   , start_time_(0)
 {
   SetupWindow();
+  SetupDashView();
   SetupRelayoutCallbacks();
   RegisterUBusInterests();
 
@@ -64,10 +66,25 @@ void DashController::SetupWindow()
   window_->SinkReference();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.4f));
   window_->SetConfigureNotifyCallback(&DashController::OnWindowConfigure, this);
+  window_->EnableInputWindow(true, "Dash", false, false);
+  window_->EnableInputWindow(false);
   window_->ShowWindow(false);
   window_->SetOpacity(0.0f);
   window_->SetFocused(true);
   window_->OnMouseDownOutsideArea.connect(sigc::mem_fun(this, &DashController::OnMouseDownOutsideWindow));
+}
+
+void DashController::SetupDashView()
+{
+  view_ = new DashView();
+
+  nux::HLayout* layout = new nux::HLayout();
+  layout->AddView(view_, 1);
+  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetVerticalExternalMargin(0);
+  layout->SetHorizontalExternalMargin(0);
+
+  window_->SetLayout(layout);
 }
 
 void DashController::SetupRelayoutCallbacks()
@@ -166,9 +183,10 @@ void DashController::ShowDash()
 
   window_->ShowWindow(true, true);
   window_->PushToFront();
-  window_->QueueDraw();
+  window_->EnableInputWindow(true);
   window_->CaptureMouseDownAnyWhereElse(true);
-
+  window_->QueueDraw();
+ 
   //nux::GetWindowCompositor().SetKeyFocusArea(_view->GetDefaultFocus());
 
   need_show_ = false;
@@ -176,7 +194,7 @@ void DashController::ShowDash()
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
 }
 
 void DashController::HideDash()
@@ -186,11 +204,12 @@ void DashController::HideDash()
 
   window_->CaptureMouseDownAnyWhereElse(false);
   window_->ForceStopFocus(1, 1);
+  window_->EnableInputWindow(false);
   visible_ = false;
 
   StartShowHideTimeline();
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_SHOWN);
+  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_HIDDEN);
 }
 
 void DashController::StartShowHideTimeline()

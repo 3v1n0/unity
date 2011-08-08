@@ -25,11 +25,11 @@
 #include <UnityCore/GLibSignal.h>
 
 #include <NuxCore/Property.h>
-#include <Nux/Nux.h>
-#include <Nux/View.h>
 #include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
+#include "DashView.h"
 #include "Introspectable.h"
 #include "UBusWrapper.h"
 
@@ -57,6 +57,7 @@ protected:
 
 private:
   void SetupWindow();
+  void SetupDashView();
   void SetupRelayoutCallbacks();
   void RegisterUBusInterests();
 
@@ -87,6 +88,8 @@ private:
   guint timeline_id_;
   float last_opacity_;
   gint64 start_time_;
+
+  DashView* view_;
 };
 
 
