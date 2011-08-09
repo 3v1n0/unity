@@ -95,7 +95,7 @@ private:
   nux::VLayout* layout_;
   nux::VLayout* content_layout_;
   SearchBar* search_bar_;
-  nux::LayeredLayout* lenses_layout_;
+  nux::HLayout* lenses_layout_;
 
   // Drawing related
   nux::Geometry content_geo_;

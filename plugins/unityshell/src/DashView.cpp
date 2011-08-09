@@ -79,10 +79,7 @@ void DashView::SetupViews()
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
-  lenses_layout_ = new nux::LayeredLayout();
-  lenses_layout_->SetPaintAll(false);
-  lenses_layout_->SetInputMode(nux::LayeredLayout::InputMode::INPUT_MODE_ACTIVE);
-  lenses_layout_->AddLayer(new nux::SpaceLayout(1, 1, 1, 1), true);
+  lenses_layout_ = new nux::HLayout();
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 }
 
@@ -235,10 +232,12 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   LensView* view = new LensView(lens);
-  //lenses_layout_->AddLayer(view, true);
-  layout_->AddView(view, 1);
+  view->SetVisible(false);
+  lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
-  lenses_layout_->SetActiveLayer(view);
+
+  if (lens_views_["files.lens"])
+    lens_views_["files.lens"]->SetVisible(true);
 }
 
 // Keyboard navigation

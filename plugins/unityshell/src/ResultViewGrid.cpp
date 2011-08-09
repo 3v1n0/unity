@@ -263,9 +263,6 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     y_position += row_size;
   }
 
-  if (0) g_debug ("took %f seconds to draw the view", (g_get_monotonic_time () - time_start) / 1000000.0f);
-  time_start = g_get_monotonic_time();
-
   GfxContext.PopClippingRectangle();
 }
 
@@ -276,7 +273,6 @@ void ResultViewGrid::DrawContent (nux::GraphicsEngine &GfxContent, bool force_dr
   if (GetCompositionLayout ())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();
-    if (0) g_debug ("size %i,%i => %ix%i", geo.x, geo.y, geo.width, geo.height);
     GetCompositionLayout ()->ProcessDraw (GfxContent, force_draw);
   }
 
@@ -288,8 +284,6 @@ void ResultViewGrid::MouseMove(int x, int y, int dx, int dy, unsigned long butto
 {
   uint index = GetIndexAtPosition (x, y);
   mouse_over_index_ = index;
-  if (0)
-    g_debug ("set mouse over index to %i", index);
   NeedRedraw();
 }
 

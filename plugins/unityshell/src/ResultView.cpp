@@ -82,11 +82,8 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult (Result& result)
 {
-  results_.push_back (&result);
-
-  auto queue_redraw_lambda = [&] (std::string value) { NeedRedraw(); };
-  result.icon_hint.changed.connect (queue_redraw_lambda);
-  result.name.changed.connect (queue_redraw_lambda);
+  Result* r = new Result(result);
+  results_.push_back (r);
 
   renderer_->Preload(result);
 
@@ -100,9 +97,10 @@ void ResultView::RemoveResult (Result& result)
 
   for (it = results_.begin (); it != results_.end(); it++)
   {
-    std::string u = (*it)->uri;
-    if (u == uri)
+    Result* result = *it;
+    if (result->uri == uri)
     {
+      delete result;
       results_.erase (it);
       break;
     }

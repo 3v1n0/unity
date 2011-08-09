@@ -121,8 +121,6 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
 
-  g_debug ("%d %d", geo.width, geo.height);
-
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
