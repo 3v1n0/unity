@@ -19,6 +19,8 @@
 #ifndef UNITY_DASH_VIEW_H_
 #define UNITY_DASH_VIEW_H_
 
+#include <string>
+
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 #include <Nux/PaintLayer.h>
@@ -35,6 +37,14 @@ namespace unity
 namespace dash
 {
 
+enum SizeMode
+{
+  SIZE_MODE_MAXIMISED,
+  SIZE_MODE_NORMAL,
+  SIZE_MODE_VERTICAL_MAXIMISED,
+  SIZE_MODE_HORIZONATAL_MAXIMISED
+};
+
 class DashView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
@@ -44,11 +54,15 @@ public:
   ~DashView();
 
   void AboutToShow();
+  void Relayout();
+
 
 private:
   void SetupBackground();
   void SetupViews();
   void SetupUBusConnections();
+
+  nux::Geometry GetBestFitGeometry();
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -56,6 +70,8 @@ private:
 
   void OnActivateRequest(GVariant* args);
   void OnBackgroundColorChanged(GVariant* args);
+  void OnSearchChanged(std::string const& search_string);
+  void OnLiveSearchReached(std::string const& search_string);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -65,6 +81,7 @@ private:
 private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
+  SizeMode size_mode_;
 
   // Background related
   nux::ColorLayer* bg_layer_;
@@ -72,6 +89,9 @@ private:
   // View related
   nux::VLayout* layout_;
   SearchBar* search_bar_;
+
+  // Drawing related
+  nux::Geometry content_geo_;
 };
 
 

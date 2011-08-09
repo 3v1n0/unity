@@ -20,26 +20,28 @@
 #ifndef DASH_SEARCH_BAR_H
 #define DASH_SEARCH_BAR_H
 
+#include <gtk/gtk.h>
+
+#include <NuxCore/Property.h>
 #include <Nux/LayeredLayout.h>
 #include <Nux/TextureArea.h>
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
-
-#include "Introspectable.h"
-
-#include "Nux/EditTextBox.h"
-#include "Nux/TextEntry.h"
+#include <Nux/EditTextBox.h>
+#include <Nux/TextEntry.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "DashSearchBarSpinner.h"
-#include <gtk/gtk.h>
-
+#include "Introspectable.h"
 #include "StaticCairoText.h"
 
 namespace unity
 {
 namespace dash
 {
+
+using namespace unity::glib;
 
 class SearchBar : public unity::Introspectable, public nux::View
 {
@@ -48,59 +50,57 @@ public:
   SearchBar(NUX_FILE_LINE_PROTO);
   ~SearchBar();
 
-  virtual long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void SearchFinished();
+  nux::TextEntry* text_entry() const;
 
-  /*
-  void SetActiveEntry(PlaceEntry* entry,
-                      guint       section_id,
-                      const char* search_string);
-                      */
-  void OnSearchFinished();
+  nux::RWProperty<std::string> search_string;
+  nux::Property<std::string> search_hint;
 
-  sigc::signal<void, const char*> search_changed;
   sigc::signal<void> activated;
+  sigc::signal<void, std::string const&> search_changed;
+  sigc::signal<void, std::string const&> live_search_reached;
 
-  nux::TextEntry* GetTextEntry()
-  {
-    return _pango_entry;
-  }
+private:
+
+  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void OnSearchHintChanged();
+
+  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void RecvMouseDownFromWindow(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
-private:
-  // Introspectable methods
+  void UpdateBackground();
+  void OnSearchChanged(nux::TextEntry* text_entry);
+  void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void OnEntryActivated();
+
+  std::string get_search_string() const;
+  bool set_search_string(std::string const& string);
+
+  static gboolean OnLiveSearchTimeout(SearchBar* self);
+
   const gchar* GetName();
   const gchar* GetChildsName();
   void AddProperties(GVariantBuilder* builder);
-
-  // Key navigation
   bool AcceptKeyNavFocus();
 
-  void UpdateBackground();
-  void OnSearchChanged(nux::TextEntry* text_entry);
-  void EmitLiveSearch();
-  void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnEntryActivated();
-  void OnLayeredLayoutQueueDraw(int i);
-
-  static bool OnLiveSearchTimeout(SearchBar* self);
-  static void OnFontChanged(GObject* object, GParamSpec* pspec, SearchBar* self);
-  static void OnDashClosed(GVariant* variant, SearchBar* self);
-
 private:
-  nux::AbstractPaintLayer* _bg_layer;
-  nux::HLayout*            _layout;
-  nux::LayeredLayout*      _layered_layout;
-  nux::StaticCairoText*    _hint;
-  nux::TextEntry*          _pango_entry;
-  int _last_width;
-  int _last_height;
-  guint                    _live_search_timeout;
-  guint32                  _font_changed_id;
+  glib::SignalManager sig_manager_;
+  
+  nux::AbstractPaintLayer* bg_layer_;
+  nux::HLayout* layout_;
+  nux::LayeredLayout* layered_layout_;
+  nux::StaticCairoText* hint_;
+  nux::TextEntry* pango_entry_;
+  
+  int last_width_;
+  int last_height_;
+  
+  guint live_search_timeout_;
 
-  SearchBarSpinner*  _spinner;
+  SearchBarSpinner* spinner_;
 };
 
 }

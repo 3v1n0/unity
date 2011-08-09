@@ -21,6 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "PlacesSettings.h"
 #include "UBusMessages.h"
 
 namespace unity
@@ -49,6 +50,30 @@ DashView::~DashView()
 void DashView::AboutToShow()
 {}
 
+void DashView::Relayout()
+{
+//  nux::Geometry geo = GetGeometry();
+  //nux::Geometry best_geo = GetBestFitGeometry();
+  
+  if (size_mode_ == SIZE_MODE_MAXIMISED
+      || size_mode_ == SIZE_MODE_HORIZONATAL_MAXIMISED)
+  {
+
+  }
+  
+}
+
+// Gives us the width and height of the contents that will give us the best "fit",
+// which means that the icons/views will not have uneccessary padding, everything will
+// look tight
+nux::Geometry DashView::GetBestFitGeometry()
+{
+//  PlacesSettings* settings = PlacesSettings::GetDefault();
+  nux::Geometry ret (0, 0, 1, 1);
+
+  return ret;
+}
+
 void DashView::SetupBackground()
 {
   nux::ROPConfig rop;
@@ -66,6 +91,8 @@ void DashView::SetupViews()
   SetLayout(layout_);
 
   search_bar_ = new SearchBar();
+  search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
+  search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
@@ -133,6 +160,16 @@ void DashView::OnBackgroundColorChanged(GVariant* args)
   QueueDraw();
 }
 
+void DashView::OnSearchChanged(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Search changed: " << search_string;
+}
+
+void DashView::OnLiveSearchReached(std::string const& search_string)
+{
+  LOG_DEBUG(logger) << "Live search reached: " << search_string;
+}
+
 // Keyboard navigation
 bool DashView::AcceptKeyNavFocus()
 {
@@ -145,7 +182,10 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
 {
   if ((eventType == nux::NUX_KEYDOWN) && (key_sym == NUX_VK_ESCAPE))
   {
-    //FIXME:SetActiveEntry(NULL, 0, "");
+    if (search_bar_->search_string == "")
+      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    else
+      search_bar_->search_string = "";
     return true;
   }
   return false;
