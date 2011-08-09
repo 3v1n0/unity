@@ -342,7 +342,7 @@ PlacesGroup::SetExpanded(bool is_expanded)
 
   _expand_icon->SetTexture(_is_expanded ? style->GetGroupUnexpandIcon()
                            : style->GetGroupExpandIcon());
-  expanded.emit();
+  expanded.emit(this);
 }
 
 void

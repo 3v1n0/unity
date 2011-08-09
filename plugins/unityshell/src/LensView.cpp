@@ -83,6 +83,7 @@ void LensView::OnCategoryAdded(Category const& category)
   group->SetName(name.c_str());
   group->SetIcon(icon_hint.c_str());
   group->SetExpanded(false);
+  group->expanded.connect(sigc::mem_fun(this, &LensView::OnGroupExpanded));
   categories_.push_back(group);
   
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
@@ -111,6 +112,12 @@ void LensView::OnResultRemoved(Result const& result)
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
   grid->RemoveResult(const_cast<Result&>(result));
+}
+
+void LensView::OnGroupExpanded(PlacesGroup* group)
+{
+  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+  grid->expanded = group->GetExpanded();
 }
 
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)

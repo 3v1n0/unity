@@ -52,6 +52,7 @@ private:
   void OnCategoryAdded(Category const& category);
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
+  void OnGroupExpanded(PlacesGroup* group);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);

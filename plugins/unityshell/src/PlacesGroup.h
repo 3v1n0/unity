@@ -55,7 +55,7 @@ public:
 
   void SetDrawSeparator(bool draw_it);
 
-  sigc::signal<void> expanded;
+  sigc::signal<void, PlacesGroup*> expanded;
 
 protected:
   // Key navigation
