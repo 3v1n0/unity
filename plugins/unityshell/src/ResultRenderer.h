@@ -51,7 +51,7 @@ public:
 
   ResultRenderer(NUX_FILE_LINE_PROTO);
   virtual ~ResultRenderer();
-  virtual void Render (nux::GraphicsEngine& GfxContext, Result& row, ResultRendererState state, nux::Geometry& geometry);
+  virtual void Render (nux::GraphicsEngine& GfxContext, Result& row, ResultRendererState state, nux::Geometry& geometry, int x_offset, int y_offset);
   virtual void Preload (Result& row); // this is just to start preloading images and text that the renderer might need - can be ignored
   virtual void Unload (Result& row); // unload any previous grabbed images
 

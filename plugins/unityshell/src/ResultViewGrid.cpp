@@ -149,60 +149,68 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   uint items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
   items_per_row = (items_per_row) ? items_per_row : 1;
+  uint total_rows = (results_.size() / items_per_row) + 1;
 
   gint64 time_start = g_get_monotonic_time ();
   ResultView::ResultList::iterator it;
 
   //find the row we start at
-  int absolute_y = abs(std::min(GetAbsoluteY(), 0)) ;
+  int absolute_y = GetAbsoluteY();
   uint row_size = renderer_->height + vertical_spacing;
-  uint absolute_row = (absolute_y + padding) / row_size;
 
-  //FIXME - replace 1000 with the hight of the displayed viewport
-  uint displayed_rows = 1000 / (renderer_->height + vertical_spacing);
-
-  int y_position = padding + (absolute_row * renderer_->height) + (absolute_row * vertical_spacing);
-  for (uint row_index = absolute_row; row_index <= absolute_row + displayed_rows; row_index++)
+  int y_position = padding;
+  for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
-    int x_position = padding;
-
-    for (uint column_index = 0; column_index < items_per_row; column_index++)
+    // check if the row is displayed on the screen,
+    // FIXME - optimisation - replace 2048 with the height of the displayed viewport
+    if ((y_position + renderer_->height) + absolute_y >= 0
+        && (y_position - renderer_->height) + absolute_y <= 2048)
     {
-      uint index = (row_index * items_per_row) + column_index;
-      if (index >= results_.size())
-        return;
-
-      ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-      if ((int)(index) == mouse_over_index_)
+      int x_position = padding;
+      for (uint column_index = 0; column_index < items_per_row; column_index++)
       {
-        state = ResultRenderer::RESULT_RENDERER_PRELIGHT;
-      }
-      else if ((int)(index) == active_index_)
-      {
-        state = ResultRenderer::RESULT_RENDERER_ACTIVE;
-      }
-      else if ((int)(index) == selected_index_)
-      {
-        state = ResultRenderer::RESULT_RENDERER_SELECTED;
-      }
+        uint index = (row_index * items_per_row) + column_index;
+        if (index >= results_.size())
+          return;
 
-      nux::Geometry render_geo (x_position, y_position, renderer_->width, renderer_->height);
-      renderer_->Render(GfxContext, *results_[index], state, render_geo);
+        ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
+        if ((int)(index) == mouse_over_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_PRELIGHT;
+        }
+        else if ((int)(index) == active_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_ACTIVE;
+        }
+        else if ((int)(index) == selected_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_SELECTED;
+        }
 
-      // we also need to set the preview if we have to
-      if (results_[index] == preview_result_)
-      {
-        render_geo.y += renderer_->height + vertical_spacing;
-        render_geo.width = GetGeometry().width;
-        render_geo.height = 600;
-        //int preview_height = y_position + renderer_->height + vertical_spacing;
-        //GetCompositionLayout()->SetGeometry (render_geo);
+        int half_width = GetGeometry().width / 2;
+        // FIXME - we assume the height of the viewport is 600
+        int half_height = 600 / 2;
+
+        int offset_x = (x_position - half_width) / (half_width / 10);
+        int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
+        nux::Geometry render_geo (x_position, y_position, renderer_->width, renderer_->height);
+        renderer_->Render(GfxContext, *results_[index], state, render_geo, offset_x, offset_y);
+
+        // we also need to set the preview if we have to
+        if (results_[index] == preview_result_)
+        {
+          render_geo.y += renderer_->height + vertical_spacing;
+          render_geo.width = GetGeometry().width;
+          render_geo.height = 600;
+          //int preview_height = y_position + renderer_->height + vertical_spacing;
+          //GetCompositionLayout()->SetGeometry (render_geo);
+        }
+
+        x_position += renderer_->width + horizontal_spacing;
       }
-
-      x_position += renderer_->width + horizontal_spacing;
     }
 
-    y_position += renderer_->height + vertical_spacing;
+    y_position += row_size;
   }
 
   g_debug ("took %f seconds to draw the view", (g_get_monotonic_time () - time_start) / 1000000.0f);

@@ -42,7 +42,7 @@ ResultRenderer::~ResultRenderer()
 void ResultRenderer::Render (nux::GraphicsEngine& GfxContext,
                              Result& row,
                              ResultRendererState state,
-                             nux::Geometry& geometry)
+                             nux::Geometry& geometry, int x_offset, int y_offset)
 {
   nux::GetPainter().PushDrawSliceScaledTextureLayer (GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }

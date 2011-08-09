@@ -62,7 +62,8 @@ ResultRendererTile::~ResultRendererTile()
 void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
                              Result& row,
                              ResultRendererState state,
-                             nux::Geometry& geometry)
+                             nux::Geometry& geometry,
+                             int x_offset, int y_offset)
 {
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
@@ -93,11 +94,8 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   {
     nux::BaseTexture* icon_texture = it->second;
 
-    //FIXME - figure out the actual offset
-    int x_offset = 5;
-    int y_offset = 5;
-    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) + y_offset,
-                        geometry.y + 1 + x_offset,
+    GfxContext.QRP_1Tex(geometry.x + ((geometry.width - 58) / 2) - x_offset,
+                        geometry.y + 1 - y_offset,
                         58,
                         58,
                         icon_texture->GetDeviceTexture(),
