@@ -62,7 +62,7 @@ private:
   void SetupViews();
   void SetupUBusConnections();
 
-  nux::Geometry GetBestFitGeometry();
+  nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -88,6 +88,7 @@ private:
 
   // View related
   nux::VLayout* layout_;
+  nux::VLayout* content_layout_;
   SearchBar* search_bar_;
 
   // Drawing related

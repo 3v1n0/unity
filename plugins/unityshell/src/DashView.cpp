@@ -21,6 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "DashStyle.h"
 #include "PlacesSettings.h"
 #include "UBusMessages.h"
 
@@ -38,10 +39,13 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
+  , size_mode_(SIZE_MODE_NORMAL)
 {
   SetupBackground();
   SetupViews();
   SetupUBusConnections();
+
+  Relayout();
 }
 
 DashView::~DashView()
@@ -49,30 +53,6 @@ DashView::~DashView()
 
 void DashView::AboutToShow()
 {}
-
-void DashView::Relayout()
-{
-//  nux::Geometry geo = GetGeometry();
-  //nux::Geometry best_geo = GetBestFitGeometry();
-  
-  if (size_mode_ == SIZE_MODE_MAXIMISED
-      || size_mode_ == SIZE_MODE_HORIZONATAL_MAXIMISED)
-  {
-
-  }
-  
-}
-
-// Gives us the width and height of the contents that will give us the best "fit",
-// which means that the icons/views will not have uneccessary padding, everything will
-// look tight
-nux::Geometry DashView::GetBestFitGeometry()
-{
-//  PlacesSettings* settings = PlacesSettings::GetDefault();
-  nux::Geometry ret (0, 0, 1, 1);
-
-  return ret;
-}
 
 void DashView::SetupBackground()
 {
@@ -90,10 +70,12 @@ void DashView::SetupViews()
   layout_ = new nux::VLayout();
   SetLayout(layout_);
 
+  content_layout_ = new nux::VLayout();
+  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX); 
   search_bar_ = new SearchBar();
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_CENTER);
+  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -106,6 +88,56 @@ void DashView::SetupUBusConnections()
       sigc::mem_fun(this, &DashView::OnBackgroundColorChanged));
 }
 
+void DashView::Relayout()
+{
+  nux::Geometry geo = GetGeometry();
+  nux::Geometry best_geo = GetBestFitGeometry(geo);
+    
+  if (size_mode_ == SIZE_MODE_MAXIMISED)
+  {
+    content_geo_ = geo;
+  }
+  else if (size_mode_ == SIZE_MODE_NORMAL)
+  {
+    content_geo_ = best_geo;
+  }
+  else if (size_mode_ == SIZE_MODE_VERTICAL_MAXIMISED)
+  {
+    content_geo_ = geo;
+    content_geo_.width = best_geo.width;
+  }
+  else //size_mode_ == SIZE_MODE_HORIZONATAL_MAXIMISED
+  {
+    content_geo_ = geo;
+    content_geo_.height = best_geo.height;
+  }
+ 
+  // FIXME: Remove edges
+  content_layout_->SetGeometry(content_geo_);
+}
+
+// Gives us the width and height of the contents that will give us the best "fit",
+// which means that the icons/views will not have uneccessary padding, everything will
+// look tight
+nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
+{
+  DashStyle* style = DashStyle::GetDefault();
+
+  int width = 0, height = 0;
+  int tile_width = style->GetTileWidth();
+  int tile_height = style->GetTileHeight();
+  int half = for_geo.width / 2;
+  
+  while ((width += tile_width) < half)
+    ;
+
+  width = MAX(width, tile_width * 7);
+  // FIXME: Add lens bar, search bar etc etc
+  height = tile_height * 4;;
+
+  return nux::Geometry(0, 0, width, height);
+}
+
 long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
 {
   return traverse_info;
@@ -113,8 +145,8 @@ long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
-  bg_layer_->SetGeometry(GetGeometry());
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, GetGeometry(), bg_layer_);
+  bg_layer_->SetGeometry(content_geo_);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, content_geo_, bg_layer_);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)

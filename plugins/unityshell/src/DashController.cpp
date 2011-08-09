@@ -138,6 +138,7 @@ void DashController::Relayout(GdkScreen*screen)
 {
   nux::Geometry geo = GetIdealWindowGeometry();
   window_->SetGeometry(geo);
+  view_->Relayout();
 }
 
 void DashController::OnMouseDownOutsideWindow(int x, int y,
