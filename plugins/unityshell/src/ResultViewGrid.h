@@ -41,8 +41,8 @@ public:
     ~ResultViewGrid();
 
     void SetModelRenderer(ResultRenderer* renderer);
-    void AddResult(Result& result);
-    void RemoveResult(Result& result);
+    void AddResult(Result & result);
+    void RemoveResult(Result & result);
 
     void SetPreview (PreviewBase *preview, Result& related_result);
 

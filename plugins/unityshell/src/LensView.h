@@ -30,6 +30,7 @@
 
 #include "Introspectable.h"
 #include "ResultViewGrid.h"
+#include "PlacesGroup.h"
 
 namespace unity
 {
@@ -39,6 +40,7 @@ namespace dash
 class LensView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
+  typedef std::vector<PlacesGroup*> CategoryGroups;
 
 public:
   LensView(Lens::Ptr lens);
@@ -46,6 +48,10 @@ public:
 
 private:
   void SetupViews();
+
+  void OnCategoryAdded(Category const& category);
+  void OnResultAdded(Result const& result);
+  void OnResultRemoved(Result const& result);
 
   long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -57,11 +63,11 @@ private:
 
 private:
   Lens::Ptr lens_;
+  CategoryGroups categories_;
 
   nux::HLayout* layout_;
   nux::ScrollView* scroll_view_;
   nux::VLayout* scroll_layout_;
-  ResultViewGrid* result_view_;
 };
 
 

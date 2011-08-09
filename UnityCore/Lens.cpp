@@ -274,11 +274,10 @@ void Lens::Impl::UpdateProperties(bool search_in_global,
     // FIXME: Update all the models as they are no longer valid when we use this
     private_connection_name_ = private_connection_name;
   }
-
-  results_->swarm_name = results_model_name;
-  global_results_->swarm_name = global_results_model_name;
   categories_->swarm_name = categories_model_name;
   filters_->swarm_name = filters_model_name;
+  global_results_->swarm_name = global_results_model_name;
+  results_->swarm_name = results_model_name;
 }
 
 void Lens::Impl::OnActiveChanged(bool is_active)

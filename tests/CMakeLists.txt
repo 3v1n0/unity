@@ -83,6 +83,8 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/DashSearchBar.h
                 ${UNITY_SRC}/DashSearchBarSpinner.cpp
                 ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/PlacesGroup.cpp
+                ${UNITY_SRC}/PlacesGroup.h
                 ${UNITY_SRC}/PlacesStyle.cpp
                 ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/DashView.cpp

@@ -18,6 +18,8 @@
 
 #include "LensView.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <NuxCore/Logger.h>
 
 #include "ResultRendererTile.h"
@@ -39,6 +41,13 @@ LensView::LensView(Lens::Ptr lens)
   , lens_(lens)
 {
   SetupViews();
+
+  Categories::Ptr categories = lens_->categories;
+  categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
+
+  Results::Ptr results = lens_->results;
+  results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
+  results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
 }
 
 LensView::~LensView()
@@ -46,11 +55,7 @@ LensView::~LensView()
 
 void LensView::SetupViews()
 {
-  result_view_ = new ResultViewGrid(NUX_TRACKER_LOCATION);
-  result_view_->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
-
   scroll_layout_ = new nux::VLayout();
-  scroll_layout_->AddView(result_view_);
 
   scroll_view_ = new nux::ScrollView();
   scroll_view_->EnableVerticalScrollBar(true);
@@ -62,6 +67,47 @@ void LensView::SetupViews()
   SetLayout(layout_);
 }
 
+void LensView::OnCategoryAdded(Category const& category)
+{
+  std::string name = category.name;
+  std::string icon_hint = category.icon_hint;
+  std::string renderer_name = category.renderer_name;
+  int index = category.index;
+
+  LOG_DEBUG(logger) << "Category added: " << name
+                    << "(" << icon_hint
+                    << ", " << renderer_name
+                    << ", " << boost::lexical_cast<int>(index) << ")";
+
+  PlacesGroup* group = new PlacesGroup();
+  group->SetName(name.c_str());
+  group->SetIcon(icon_hint.c_str());
+  group->SetExpanded(false);
+  categories_.push_back(group);
+  
+  ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+  grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+  group->SetChildView(grid);
+
+  scroll_layout_->AddView(group, 1);
+}
+
+void LensView::OnResultAdded(Result const& result)
+{
+  PlacesGroup* group = categories_[result.category_index];
+  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+
+  grid->AddResult(const_cast<Result&>(result));
+}
+
+void LensView::OnResultRemoved(Result const& result)
+{
+  PlacesGroup* group = categories_[result.category_index];
+  ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+
+  grid->RemoveResult(const_cast<Result&>(result));
+}
+
 long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
 {
   return traverse_info;
@@ -70,6 +116,8 @@ long LensView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
+
+  g_debug ("%d %d", geo.width, geo.height);
 
   gfx_context.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(gfx_context, geo);
@@ -80,7 +128,7 @@ void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
 
-  //layout_->ProcessDraw(gfx_context, force_draw);
+  layout_->ProcessDraw(gfx_context, force_draw);
 
   gfx_context.PopClippingRectangle();
 }
