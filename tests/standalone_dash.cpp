@@ -24,6 +24,7 @@
 #include "Nux/VLayout.h"
 #include "Nux/WindowThread.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include <NuxCore/Logger.h>
 
 #include "BGHash.h"
 
@@ -95,7 +96,7 @@ int main(int argc, char **argv)
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
-
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

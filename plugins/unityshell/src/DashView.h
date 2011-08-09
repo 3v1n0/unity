@@ -30,6 +30,7 @@
 
 #include "DashSearchBar.h"
 #include "Introspectable.h"
+#include "LensView.h"
 #include "UBusWrapper.h"
 
 namespace unity
@@ -48,6 +49,7 @@ enum SizeMode
 class DashView : public nux::View, public unity::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
+  typedef std::map<std::string, LensView*> LensViews;
 
 public:
   DashView();
@@ -56,6 +58,7 @@ public:
   void AboutToShow();
   void Relayout();
 
+  nux::View* default_focus() const;
 
 private:
   void SetupBackground();
@@ -72,6 +75,7 @@ private:
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
   void OnLiveSearchReached(std::string const& search_string);
+  void OnLensAdded(Lens::Ptr& lens);
   
   bool AcceptKeyNavFocus();
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
@@ -82,6 +86,7 @@ private:
   UBusManager ubus_manager_;
   FilesystemLenses lenses_;
   SizeMode size_mode_;
+  LensViews lens_views_;
 
   // Background related
   nux::ColorLayer* bg_layer_;
@@ -90,6 +95,7 @@ private:
   nux::VLayout* layout_;
   nux::VLayout* content_layout_;
   SearchBar* search_bar_;
+  nux::LayeredLayout* lenses_layout_;
 
   // Drawing related
   nux::Geometry content_geo_;

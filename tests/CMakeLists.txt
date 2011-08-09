@@ -93,6 +93,15 @@ add_executable (standalone-dash
                 ${UNITY_SRC}/IconTexture.h
                 ${UNITY_SRC}/Introspectable.cpp
                 ${UNITY_SRC}/Introspectable.h
+                ${UNITY_SRC}/LensView.cpp
+                ${UNITY_SRC}/LensView.h
+                ${UNITY_SRC}/PreviewApplications.cpp
+                ${UNITY_SRC}/PreviewBase.cpp
+                ${UNITY_SRC}/PreviewBasicButton.cpp
+                ${UNITY_SRC}/ResultView.cpp
+                ${UNITY_SRC}/ResultViewGrid.cpp
+                ${UNITY_SRC}/ResultRenderer.cpp
+                ${UNITY_SRC}/ResultRendererTile.cpp
                 ${UNITY_SRC}/TextureCache.h
                 ${UNITY_SRC}/TextureCache.cpp
                 ${UNITY_SRC}/Timer.cpp

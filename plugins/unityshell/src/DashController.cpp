@@ -188,7 +188,7 @@ void DashController::ShowDash()
   window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
  
-  //nux::GetWindowCompositor().SetKeyFocusArea(_view->GetDefaultFocus());
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 
   need_show_ = false;
   visible_ = true;

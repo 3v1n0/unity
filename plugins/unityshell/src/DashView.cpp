@@ -45,6 +45,8 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
+  lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
+
   Relayout();
 }
 
@@ -75,7 +77,13 @@ void DashView::SetupViews()
   search_bar_ = new SearchBar();
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_CENTER);
+  content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
+
+  lenses_layout_ = new nux::LayeredLayout();
+  lenses_layout_->SetPaintAll(false);
+  lenses_layout_->SetInputMode(nux::LayeredLayout::InputMode::INPUT_MODE_ACTIVE);
+  lenses_layout_->AddLayer(new nux::SpaceLayout(1, 1, 1, 1), true);
+  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 }
 
 void DashView::SetupUBusConnections()
@@ -140,7 +148,29 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 
 long DashView::ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info)
 {
-  return traverse_info;
+  long ret = traverse_info;
+
+  if ((ievent.e_event == nux::NUX_KEYDOWN) &&
+      (ievent.GetKeySym() == NUX_VK_ESCAPE))
+  {
+    if (search_bar_->search_string == "")
+      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    else
+      search_bar_->search_string = "";
+    return ret;
+  }
+
+  if (ievent.e_event == nux::NUX_MOUSE_PRESSED)
+  {
+    if (!content_geo_.IsPointInside(ievent.e_x, ievent.e_y))
+    {
+      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      return ret |= nux::eMouseEventSolved;
+    }
+  }
+
+  ret = layout_->ProcessEvent(ievent, traverse_info, event_info);
+  return ret;
 }
 
 void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
@@ -202,6 +232,13 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
 }
 
+void DashView::OnLensAdded(Lens::Ptr& lens)
+{
+  LensView* view = new LensView(lens);
+  lenses_layout_->AddLayer(view);
+  lens_views_[lens->id] = view;
+}
+
 // Keyboard navigation
 bool DashView::AcceptKeyNavFocus()
 {
@@ -221,6 +258,11 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
     return true;
   }
   return false;
+}
+
+nux::View* DashView::default_focus() const
+{
+  return search_bar_->text_entry();
 }
 
 // Introspectable
