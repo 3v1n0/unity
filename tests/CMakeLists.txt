@@ -305,6 +305,8 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp

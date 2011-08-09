@@ -25,12 +25,13 @@
 #include "FilterBasicButton.h"
 #include "FilterRatingsWidget.h"
 #include "FilterGenreWidget.h"
+#include "FilterMultiRangeWidget.h"
 
 #include "FilterFactory.h"
 namespace { // FIXME - fill with actual renderer type strings
-  const std::string renderer_type_ratings = "ratings";
-  const std::string renderer_type_multirange = "multi-range";
-  const std::string renderer_type_check_options = "check-options";
+  const std::string renderer_type_ratings = "filter-ratings";
+  const std::string renderer_type_multirange = "filter-multirange";
+  const std::string renderer_type_check_options = "filter-checkoption";
 }
 
 namespace unity {
@@ -58,7 +59,7 @@ namespace unity {
     }
     else if (filter_type == renderer_type_multirange)
     {
-      //TODO - date range widget
+      view = static_cast<nux::View *> (new FilterMultiRange (NUX_TRACKER_LOCATION));
     }
 
     dynamic_cast<FilterWidget *>(view)->SetFilter (filter);
