@@ -47,12 +47,12 @@ static const gchar introspection_xml[] =
   "  <interface name='com.canonical.Unity.Panel.Service'>"
   ""
   "    <method name='Sync'>"
-  "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
+  "      <arg type='a(sssbbusbbi)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncOne'>"
   "      <arg type='s' name='indicator_id' direction='in'/>"
-  "      <arg type='a(sssbbusbb)' name='state' direction='out'/>"
+  "      <arg type='a(sssbbusbbi)' name='state' direction='out'/>"
   "    </method>"
   ""
   "    <method name='SyncGeometries'>"
@@ -156,7 +156,7 @@ handle_method_call (GDBusConnection       *connection,
       gint x, y, width, height;
 
       g_variant_get (parameters, "(a(ssiiii))", &iter);
-      while (g_variant_iter_loop (iter, "(ssiiii)",
+      while (iter && g_variant_iter_loop (iter, "(ssiiii)",
                                   &indicator_id,
                                   &entry_id,
                                   &x,
@@ -168,7 +168,7 @@ handle_method_call (GDBusConnection       *connection,
                                        entry_id, x, y, width, height);
         }
 
-      g_variant_iter_free (iter);
+      if (iter) g_variant_iter_free (iter);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
     }
@@ -219,7 +219,6 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
                                  "ReSync",
                                  g_variant_new ("(s)", indicator_id),
                                  &error);
-
   if (error)
     {
       g_warning ("Unable to emit ReSync signal: %s", error->message);

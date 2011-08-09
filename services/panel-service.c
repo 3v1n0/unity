@@ -1,4 +1,5 @@
-  /*
+// -*- Mode: C; indent-tabs-mode: nil; tab-width: 2 -*-
+/*
  * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -39,6 +40,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
+#define MAX_INDICATOR_ENTRIES 50
 
 static PanelService *static_service = NULL;
 
@@ -86,17 +88,20 @@ enum
 
 static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
-static gchar * indicator_order[] = {
-  "libappmenu.so",
-  "libapplication.so",
-  "libmessaging.so",
-  "libpower.so",
-  "libnetwork.so",
-  "libnetworkmenu.so",
-  "libsoundmenu.so",
-  "libdatetime.so",
-  "libsession.so",
-  NULL
+static const gchar * indicator_order[][13] = {
+  {"libappmenu.so", NULL},                    /* indicator-appmenu" */
+  {"libapplication.so", NULL},                /* indicator-application" */
+  {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
+  {"libmessaging.so", NULL},                  /* indicator-messages */
+  {"libpower.so", NULL},                      /* indicator-power */
+  {"libapplication.so", "bluetooth-manager"}, /* bluetooth manager */
+  {"libnetwork.so", NULL},                    /* indicator-network */
+  {"libnetworkmenu.so", NULL},                /* indicator-network */
+  {"libapplication.so", "nm-applet"},         /* network manager */
+  {"libsoundmenu.so", NULL},                  /* indicator-sound */
+  {"libdatetime.so", NULL},                   /* indicator-datetime */
+  {"libsession.so", NULL},                    /* indicator-session */
+  {NULL, NULL}
 };
 
 /* Forwards */
@@ -605,18 +610,29 @@ load_indicators (PanelService *self)
 }
 
 static gint
-name2order (const gchar * name)
+name2order (const gchar * name, const gchar * hint)
 {
   int i;
 
-  for (i = 0; indicator_order[i] != NULL; i++)
+  for (i = 0; indicator_order[i][0] != NULL; i++)
     {
-      if (g_strcmp0(name, indicator_order[i]) == 0)
+      if (g_strcmp0(name, indicator_order[i][0]) == 0 &&
+          g_strcmp0(hint, indicator_order[i][1]) == 0)
         {
           return i;
         }
     }
   return -1;
+}
+
+static gint
+name2priority (const gchar * name, const gchar * hint)
+{
+  gint order = name2order (name, hint);
+  if (order > -1)
+    return order * MAX_INDICATOR_ENTRIES;
+
+  return order;
 }
 
 static int
@@ -630,8 +646,8 @@ indicator_compare_func (IndicatorObject *o1, IndicatorObject *o2)
   s1 = g_object_get_data (G_OBJECT (o1), "id");
   s2 = g_object_get_data (G_OBJECT (o2), "id");
 
-  i1 = name2order (s1);
-  i2 = name2order (s2);
+  i1 = name2order (s1, NULL);
+  i2 = name2order (s2, NULL);
 
   return i1 - i2;
 }
@@ -641,12 +657,16 @@ sort_indicators (PanelService *self)
 {
   GSList *i;
   int     k = 0;
+  int     prio = 0;
 
   self->priv->indicators = g_slist_sort (self->priv->indicators,
                                          (GCompareFunc)indicator_compare_func);
 
   for (i = self->priv->indicators; i; i = i->next)
     {
+      prio = name2priority(g_object_get_data (G_OBJECT (i->data), "id"), NULL);
+      if (prio < 0) continue;
+      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (prio));
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
       self->priv->timeouts[k] = SYNC_NEUTRAL;
       k++;
@@ -712,13 +732,14 @@ static void
 indicator_entry_to_variant (IndicatorObjectEntry *entry,
                             const gchar          *id,
                             const gchar          *indicator_id,
-                            GVariantBuilder      *b)
+                            GVariantBuilder      *b,
+                            gint                  prio)
 {
   gboolean is_label = GTK_IS_LABEL (entry->label);
   gboolean is_image = GTK_IS_IMAGE (entry->image);
   gchar *image_data = NULL;
 
-  g_variant_builder_add (b, "(sssbbusbb)",
+  g_variant_builder_add (b, "(sssbbusbbi)",
                          indicator_id,
                          id,
                          is_label ? gtk_label_get_label (entry->label) : "",
@@ -727,16 +748,17 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
                          is_image ? (guint32)gtk_image_get_storage_type (entry->image) : (guint32) 0,
                          is_image ? (image_data = gtk_image_to_data (entry->image)) : "",
                          is_image ? gtk_widget_get_sensitive (GTK_WIDGET (entry->image)) : FALSE,
-                         is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE);
+                         is_image ? gtk_widget_get_visible (GTK_WIDGET (entry->image)) : FALSE,
+                         prio);
 
   g_free (image_data);
 }
 
 static void
 indicator_entry_null_to_variant (const gchar     *indicator_id,
-                                 GVariantBuilder *b)
+                                 GVariantBuilder *b, int prio)
 {
-  g_variant_builder_add (b, "(sssbbusbb)",
+  g_variant_builder_add (b, "(sssbbusbbi)",
                          indicator_id,
                          "",
                          "",
@@ -745,29 +767,45 @@ indicator_entry_null_to_variant (const gchar     *indicator_id,
                          (guint32) 0,
                          "",
                          FALSE,
-                         FALSE);
+                         FALSE,
+                         prio);
 }
 
 static void
 indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
-
+  gint parent_prio = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
   entries = indicator_object_get_entries (object);
+  gint index = 0;
+
   if (entries)
     {
       for (e = entries; e; e = e->next)
         {
+          gint prio = -1;
           IndicatorObjectEntry *entry = e->data;
           gchar *id = g_strdup_printf ("%p", entry);
-          indicator_entry_to_variant (entry, id, indicator_id, b);
+
+          if (entry->name_hint)
+            {
+              prio = name2priority(indicator_id, entry->name_hint);
+            }
+
+          if (prio == -1)
+            {
+              prio = parent_prio + index;
+              index++;
+            }
+
+          indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
         }
     }
   else
     {
       /* Add a null entry to indicate that there is an indicator here, it's just empty */
-      indicator_entry_null_to_variant (indicator_id, b);
+      indicator_entry_null_to_variant (indicator_id, b, parent_prio);
     }
   g_list_free (entries);
 }
@@ -819,8 +857,8 @@ panel_service_sync (PanelService *self)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbb))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbb)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbbi))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbbi)"));
 
   for (i = self->priv->indicators; i; i = i->next)
     {
@@ -830,7 +868,6 @@ panel_service_sync (PanelService *self)
       /* Set the sync back to neutral */
       position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
       self->priv->timeouts[position] = SYNC_NEUTRAL;
-
       indicator_object_to_variant (i->data, indicator_id, &b);
     }
 
@@ -844,8 +881,8 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbb))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbb)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbbi))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbbi)"));
 
   for (i = self->priv->indicators; i; i = i->next)
     {

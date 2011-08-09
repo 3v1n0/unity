@@ -223,9 +223,10 @@ get_n_entries_in_result(GVariant* result)
   gchar*        image_data;
   gboolean      image_sensitive;
   gboolean      image_visible;
+  gboolean      priority;
 
-  g_variant_get(result, "(a(sssbbusbb))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbb)",
+  g_variant_get(result, "(a(sssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(sssbbusbbi)",
                              &indicator_id,
                              &entry_id,
                              &label,
@@ -234,7 +235,8 @@ get_n_entries_in_result(GVariant* result)
                              &image_type,
                              &image_data,
                              &image_sensitive,
-                             &image_visible))
+                             &image_visible,
+                             &priority))
   {
     if (g_strcmp0(entry_id, "") != 0)
       ret++;
