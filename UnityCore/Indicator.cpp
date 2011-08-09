@@ -42,11 +42,18 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 {
   Entries to_rm;
 
-  for (auto entry : entries_)
+  if (entries_.size() == 0)
   {
-    if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
+    to_rm = entries_;
+  }
+  else
+  {
+    for (auto entry : entries_)
     {
-      to_rm.push_back(entry);
+      if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
+      {
+        to_rm.push_back(entry);
+      }
     }
   }
 
