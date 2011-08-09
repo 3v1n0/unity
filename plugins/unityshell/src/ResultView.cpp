@@ -81,9 +81,12 @@ void ResultView::AddResult (Result& result)
 void ResultView::RemoveResult (Result& result)
 {
   ResultList::iterator it;
+  std::string uri = result.uri;
+
   for (it = results_.begin (); it != results_.end(); it++)
   {
-    if (&result == (*it))
+    std::string u = (*it)->uri;
+    if (u == uri)
     {
       results_.erase (it);
       break;

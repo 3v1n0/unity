@@ -97,6 +97,10 @@ void LensView::OnResultAdded(Result const& result)
   PlacesGroup* group = categories_[result.category_index];
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
+  std::string name = result.name;
+  LOG_DEBUG(logger) << "Result added: "
+                    << name;
+
   grid->AddResult(const_cast<Result&>(result));
 }
 

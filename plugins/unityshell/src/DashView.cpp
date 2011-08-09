@@ -235,7 +235,8 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
   LensView* view = new LensView(lens);
-  lenses_layout_->AddLayer(view, true);
+  //lenses_layout_->AddLayer(view, true);
+  layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
   lenses_layout_->SetActiveLayer(view);
 }
