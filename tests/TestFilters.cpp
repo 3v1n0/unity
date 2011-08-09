@@ -30,7 +30,7 @@
 #include "FilterRatingsWidget.h"
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
-
+#include "FilterMultiRangeWidget.h"
 class TestRunner
 {
 public:
@@ -57,18 +57,19 @@ void TestRunner::Init ()
 {
   unity::FilterBasicButton *button = new unity::FilterBasicButton ("hello world", NUX_TRACKER_LOCATION);
   unity::FilterRatingsWidget *ratings = new unity::FilterRatingsWidget (NUX_TRACKER_LOCATION);
-
   unity::FilterGenreButton *genre_button = new unity::FilterGenreButton ("genre button", NUX_TRACKER_LOCATION);
 
   unity::FilterGenre *genre = new unity::FilterGenre(NUX_TRACKER_LOCATION);
 
+  unity::FilterMultiRange *multi_range = new unity::FilterMultiRange (NUX_TRACKER_LOCATION);
 
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
-  layout->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-  layout->AddView (ratings, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  layout->AddView(genre_button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  layout->AddView(genre, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout->AddView (button, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+  layout->AddView (ratings, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout->AddView(genre_button, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout->AddView(genre, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout->AddView(multi_range, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
   layout->SetFocused (true);
 

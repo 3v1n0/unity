@@ -293,6 +293,8 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeButton.cpp
+                ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
