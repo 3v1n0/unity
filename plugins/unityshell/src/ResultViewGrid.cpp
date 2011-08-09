@@ -72,8 +72,7 @@ void ResultViewGrid::SetPreview (PreviewBase *preview, Result& related_result)
   ResultList::iterator it;
   for (it = results_.begin(); it != results_.end(); it++)
   {
-    Result* result = *it;
-    if (result == &related_result)
+    if ((*it).uri == preview_result_uri_)
     {
       break;
     }
@@ -125,7 +124,7 @@ void ResultViewGrid::SizeReallocate ()
   {
     total_height = (total_rows * renderer_->height) + (total_rows * vertical_spacing);
 
-    if (preview_result_ != NULL)
+    if (!preview_result_uri_.empty())
     {
       total_height += preview_layout_->GetGeometry().height + vertical_spacing;
     }
@@ -163,7 +162,7 @@ void ResultViewGrid::PositionPreview ()
       if (index >= results_.size())
         break;
 
-      if (results_[index] == preview_result_)
+      if (results_[index].uri == preview_result_uri_)
         preview_in_this_row = true;
     }
 
@@ -248,7 +247,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         int offset_x = (x_position - half_width) / (half_width / 10);
         int offset_y = ((y_position + absolute_y) - half_height) / (half_height / 10);
         nux::Geometry render_geo (x_position, y_position, renderer_->width, renderer_->height);
-        renderer_->Render(GfxContext, *results_[index], state, render_geo, offset_x, offset_y);
+        renderer_->Render(GfxContext, results_[index], state, render_geo, offset_x, offset_y);
 
         x_position += renderer_->width + horizontal_spacing;
       }
@@ -293,8 +292,8 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   if (index >= 0 && index < results_.size())
   {
     // we got a click on a button so activate it
-    Result* result = results_[index];
-    UriActivated.emit (result->uri);
+    Result result = results_[index];
+    UriActivated.emit (result.uri);
   }
 }
 

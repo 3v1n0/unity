@@ -112,7 +112,7 @@ void TestRunner::Init ()
 
   // make our preview
 
-  if (0)
+  if (1)
   {
   unity::dash::Preview::Properties properties;
   unity::dash::ApplicationPreview* application_preview = new unity::dash::ApplicationPreview (properties);
