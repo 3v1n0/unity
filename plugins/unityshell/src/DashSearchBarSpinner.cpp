@@ -21,7 +21,7 @@
 
 #include <Nux/VLayout.h>
 
-#include "DashStyle.h"
+#include "PlacesStyle.h"
 
 namespace unity
 {
@@ -36,7 +36,7 @@ SearchBarSpinner::SearchBarSpinner()
     _rotation(0.0f),
     _spinner_timeout(0)
 {
-  DashStyle* style = DashStyle::GetDefault();
+  PlacesStyle* style = PlacesStyle::GetDefault();
 
   _magnify = style->GetSearchMagnifyIcon();
   _close = style->GetSearchCloseIcon();

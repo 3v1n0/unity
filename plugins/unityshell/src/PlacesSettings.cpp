@@ -20,7 +20,7 @@
 #include "gdk/gdk.h"
 
 #include "PlacesSettings.h"
-#include "DashStyle.h"
+#include "PlacesStyle.h"
 
 #define HOME_EXPANDED "home-expanded"
 
@@ -92,7 +92,7 @@ PlacesSettings::GetFormFactor()
 int
 PlacesSettings::GetDefaultTileWidth()
 {
-  return DashStyle::GetDefault()->GetTileWidth();
+  return PlacesStyle::GetDefault()->GetTileWidth();
 }
 
 PlacesSettings::DashBlurType

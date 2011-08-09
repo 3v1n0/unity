@@ -21,7 +21,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include "DashStyle.h"
+#include "PlacesStyle.h"
 #include "PlacesSettings.h"
 #include "UBusMessages.h"
 
@@ -129,7 +129,7 @@ void DashView::Relayout()
 // look tight
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
-  DashStyle* style = DashStyle::GetDefault();
+  PlacesStyle* style = PlacesStyle::GetDefault();
 
   int width = 0, height = 0;
   int tile_width = style->GetTileWidth();

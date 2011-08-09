@@ -38,7 +38,7 @@
 #include "DashSearchBar.h"
 #include <UnityCore/Variant.h>
 
-#include "DashStyle.h"
+#include "PlacesStyle.h"
 
 #define LIVE_SEARCH_TIMEOUT 250
 
@@ -53,7 +53,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , live_search_timeout_(0)
 {
-  DashStyle* style = DashStyle::GetDefault();
+  PlacesStyle* style = PlacesStyle::GetDefault();
   nux::BaseTexture* icon = style->GetSearchMagnifyIcon();
 
   bg_layer_ = new nux::ColorLayer(nux::Color(0xff595853), true);
