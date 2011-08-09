@@ -75,11 +75,28 @@ namespace unity
         FONT_WEIGHT_BOLD
 	  } FontWeight;
 
+      typedef enum {
+        SEGMENT_LEFT = 0,
+		SEGMENT_MIDDLE,
+		SEGMENT_RIGHT
+	  } Segment;
+
+      typedef enum {
+        ARROW_LEFT = 0,
+		ARROW_RIGHT,
+		ARROW_BOTH
+	  } Arrow;
+
       DashStyle ();
       ~DashStyle ();
 
     virtual bool Button (cairo_t* cr, nux::State state, std::string label);
     virtual bool Rating (cairo_t* cr, double rating);
+    virtual bool MultiRangeSegment (cairo_t*    cr,
+                                    nux::State  state,
+                                    std::string label,
+                                    Arrow       arrow,
+                                    Segment     segment);
 
     void Blur (cairo_t* cr, int size);
 
@@ -159,7 +176,9 @@ namespace unity
                  double      opacity,
                  std::string label);
 
-      void ButtonOutlinePath (cairo_t* cr);
+      void ButtonOutlinePath (cairo_t* cr, bool align);
+
+      void ButtonOutlinePathSegment (cairo_t* cr, Segment segment);
 
     private:
       cairo_font_options_t* _defaultFontOptions;

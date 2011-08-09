@@ -153,6 +153,14 @@ int main (int    argc,
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-100.png");
   wipe (cr);
 
+  /*pDashStyle->MultiRangeSegment (cr,
+                                 nux::NUX_STATE_NORMAL,
+                                 "100KB",
+                                 unity::DashStyle::ARROW_LEFT,
+                                 unity::DashStyle::SEGMENT_LEFT);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange.png");*/
+  wipe (cr);
+
   // clean up
   cairo_destroy (cr);
   delete pDashStyle;

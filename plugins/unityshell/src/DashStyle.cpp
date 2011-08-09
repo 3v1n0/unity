@@ -891,7 +891,143 @@ namespace unity
     _regularTextWeight     = FONT_WEIGHT_LIGHT;
   }
 
-  void DashStyle::ButtonOutlinePath (cairo_t* cr)
+  void DashStyle::ButtonOutlinePath (cairo_t* cr, bool align)
+  {
+    double   x = 2.0;
+    double   y = 2.0;
+    double   w = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
+    double   h = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+    double   xt = 0.0;
+    double   yt = 0.0;
+
+	// - these absolute values are the "cost" of getting only a SVG from design
+	// and not a generic formular how to approximate the curve-shape, thus
+	// the smallest possible button-size is 22.18x24.0
+	double width  = w - 22.18;
+	double height = h - 24.0;
+
+    xt = x + width + 22.18;
+	yt = y + 12.0;
+
+    if (align)
+    {
+	  // top right
+      cairo_move_to (cr, _align(xt), _align(yt));
+      cairo_curve_to (cr, _align(xt - 0.103),
+                          _align(yt - 4.355),
+                          _align(xt - 1.037),
+                          _align(yt - 7.444),
+                          _align(xt - 2.811),
+                          _align(yt - 9.267));
+      xt -= 2.811;
+      yt -= 9.267;
+      cairo_curve_to (cr, _align (xt - 1.722),
+                          _align (yt - 1.823),
+                          _align (xt - 4.531),
+                          _align (yt - 2.735),
+                          _align (xt - 8.28),
+                          _align (yt - 2.735));
+      xt -= 8.28;
+      yt -= 2.735;
+
+	  // top
+      cairo_line_to (cr, _align (xt - width), _align (yt));
+      xt -= width;
+
+	  // top left
+      cairo_curve_to (cr, _align (xt - 3.748),
+                          _align (yt),
+                          _align (xt - 6.507),
+                          _align (yt + 0.912),
+                          _align (xt - 8.279),
+                          _align (yt + 2.735));
+      xt -= 8.279;
+      yt += 2.735;
+      cairo_curve_to (cr, _align (xt - 1.773),
+                          _align (yt + 1.822),
+                          _align (xt - 2.708),
+                          _align (yt + 4.911),
+                          _align (xt - 2.811),
+                          _align (yt + 9.267));
+      xt -= 2.811;
+      yt += 9.267;
+
+	  // left
+      cairo_line_to (cr, _align (xt), _align (yt + height));
+      yt += height;
+
+	  // bottom left
+      cairo_curve_to (cr, _align (xt + 0.103),
+                          _align (yt + 4.355),
+                          _align (xt + 1.037),
+                          _align (yt + 7.444),
+                          _align (xt + 2.811),
+                          _align (yt + 9.267));
+      xt += 2.811;
+      yt += 9.267;
+      cairo_curve_to (cr, _align (xt + 1.772),
+                          _align (yt + 1.823),
+                          _align (xt + 4.531),
+                          _align (yt + 2.735),
+                          _align (xt + 8.28),
+                          _align (yt + 2.735));
+      xt += 8.28;
+      yt += 2.735;
+
+	  // bottom
+      cairo_line_to (cr, _align (xt + width), _align (yt));
+      xt += width;
+
+	  // bottom right
+      cairo_curve_to (cr, _align (xt + 3.748),
+                          _align (yt),
+                          _align (xt + 6.507),
+                          _align (yt - 0.912),
+                          _align (xt + 8.279),
+                          _align (yt - 2.735));
+      xt += 8.279;
+      yt -= 2.735;
+      cairo_curve_to (cr, _align (xt + 1.773),
+                          _align (yt - 1.822),
+                          _align (xt + 2.708),
+                          _align (yt - 4.911),
+                          _align (xt + 2.811),
+                          _align (yt - 9.267));
+    }
+    else
+    {
+      // top right
+      cairo_move_to (cr, x + width + 22.18, y + 12.0);
+      cairo_rel_curve_to (cr, -0.103, -4.355, -1.037, -7.444, -2.811, -9.267);
+      cairo_rel_curve_to (cr, -1.722, -1.823, -4.531, -2.735, -8.28, -2.735);
+
+      // top
+      cairo_rel_line_to (cr, -width, 0.0);
+
+      // top left
+      cairo_rel_curve_to (cr, -3.748, 0.0, -6.507, 0.912, -8.279, 2.735);
+      cairo_rel_curve_to (cr, -1.773, 1.822, -2.708, 4.911, -2.811, 9.267);
+
+      // left
+      cairo_rel_line_to (cr, 0.0, height);
+
+      // bottom left
+      cairo_rel_curve_to (cr, 0.103, 4.355, 1.037, 7.444, 2.811, 9.267);
+      cairo_rel_curve_to (cr, 1.772, 1.823, 4.531, 2.735, 8.28, 2.735);
+
+      // bottom
+      cairo_rel_line_to (cr, width, 0.0);
+
+      // bottom right
+      cairo_rel_curve_to (cr, 3.748, 0.0, 6.507, -0.912, 8.279, -2.735);
+      cairo_rel_curve_to (cr, 1.773, -1.822, 2.708, -4.911, 2.811, -9.267);
+    }
+
+	// right
+    cairo_close_path (cr);
+  }
+
+  void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
     double   x = 2.0;
     double   y = 2.0;
@@ -906,34 +1042,22 @@ namespace unity
 	double width  = w - 22.18;
 	double height = h - 24.0;
 
-	// top right
-    cairo_move_to (cr, x + width + 22.18, y + 12.0);
-    cairo_rel_curve_to (cr, -0.103, -4.355, -1.037, -7.444, -2.811, -9.267);
-    cairo_rel_curve_to (cr, -1.722, -1.823, -4.531, -2.735, -8.28, -2.735);
+    switch (segment)
+    {
+      case SEGMENT_LEFT:
+        cairo_close_path (cr);
+      break;
 
-	// top
-    cairo_rel_line_to (cr, -width, 0.0);
+      case SEGMENT_MIDDLE:
+        cairo_move_to (cr, x, y);
+        cairo_close_path (cr);
+      break;
 
-	// top left
-    cairo_rel_curve_to (cr, -3.748, 0.0, -6.507, 0.912, -8.279, 2.735);
-    cairo_rel_curve_to (cr, -1.773, 1.822, -2.708, 4.911, -2.811, 9.267);
+      case SEGMENT_RIGHT:
+        cairo_close_path (cr);
+      break;
+	}
 
-	// left
-    cairo_rel_line_to (cr, 0.0, height);
-
-	// bottom left
-    cairo_rel_curve_to (cr, 0.103, 4.355, 1.037, 7.444, 2.811, 9.267);
-    cairo_rel_curve_to (cr, 1.772, 1.823, 4.531, 2.735, 8.28, 2.735);
-
-	// bottom
-    cairo_rel_line_to (cr, width, 0.0);
-
-	// bottom right
-    cairo_rel_curve_to (cr, 3.748, 0.0, 6.507, -0.912, 8.279, -2.735);
-    cairo_rel_curve_to (cr, 1.773, -1.822, 2.708, -4.911, 2.811, -9.267);
-
-	// right
-    cairo_close_path (cr);
   }
 
   void DashStyle::GetTextExtents (int& width,
@@ -1116,7 +1240,7 @@ namespace unity
     if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
       return false;
 
-    ButtonOutlinePath (cr);
+    ButtonOutlinePath (cr, true);
     if (_buttonLabelFillOpacity[state] != 0.0)
     {
       cairo_set_source_rgba (cr,
@@ -1189,4 +1313,43 @@ namespace unity
     return true;
   }
 
+  bool DashStyle::MultiRangeSegment (cairo_t*    cr,
+                                     nux::State  state,
+                                     std::string label,
+                                     Arrow       arrow,
+                                     Segment     segment)
+  {
+	// sanity checks
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+      return false;
+
+    if (cairo_surface_get_type (cairo_get_target (cr)) != CAIRO_SURFACE_TYPE_IMAGE)
+      return false;
+
+    ButtonOutlinePathSegment (cr, segment);
+
+    if (_buttonLabelFillOpacity[state] != 0.0)
+    {
+      cairo_set_source_rgba (cr,
+                             _buttonLabelFillColor[state][R],
+                             _buttonLabelFillColor[state][G],
+                             _buttonLabelFillColor[state][B],
+                             _buttonLabelFillOpacity[state]);
+      cairo_fill_preserve (cr);
+    }
+    cairo_set_source_rgba (cr,
+                           _buttonLabelBorderColor[state][R],
+                           _buttonLabelBorderColor[state][G],
+                           _buttonLabelBorderColor[state][B],
+                           _buttonLabelBorderOpacity[state]);
+    cairo_set_line_width (cr, _buttonLabelBorderSize);
+    cairo_stroke (cr);
+	Text (cr,
+	      _buttonLabelTextSize,
+	      _buttonLabelTextColor[state],
+	      _buttonLabelTextOpacity[state],
+	      label);
+
+    return true;
+  }
 }
