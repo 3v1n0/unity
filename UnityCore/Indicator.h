@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2011 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
 #ifndef UNITY_INDICATOR_H
@@ -35,7 +36,7 @@ class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef boost::shared_ptr<Indicator> Ptr;
-  typedef std::vector<Entry::Ptr> Entries;
+  typedef std::list<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
 
@@ -50,12 +51,14 @@ public:
 
   // Signals
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
+  sigc::signal<void, std::string const&> on_entry_removed;
   sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
   sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
 private:
   Entries entries_;
+//  std::map<std::string, Entry::Ptr> entries_;
   std::string name_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
@@ -65,4 +68,4 @@ private:
 }
 }
 
-#endif // INDICATOR_OBJECT_PROXY_REMOTE_H
+#endif // UNITY_INDICATOR_H

@@ -256,17 +256,16 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
   gchar*        image_data      = NULL;
   gboolean      image_sensitive = false;
   gboolean      image_visible   = false;
+  gint32        priority        = -1;
 
   // sanity check
   if (!args)
     return;
 
   std::map<std::string, Indicator::Entries> indicators;
-  // We need to make sure they are added in the order they arrive.
-  std::vector<std::string> indicator_order;
 
-  g_variant_get(args, "(a(sssbbusbb))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbb)",
+  g_variant_get(args, "(a(sssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(sssbbusbbi)",
                              &indicator_id,
                              &entry_id,
                              &label,
@@ -275,41 +274,44 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
                              &image_type,
                              &image_data,
                              &image_sensitive,
-                             &image_visible))
+                             &image_visible,
+                             &priority))
   {
     // NULL entries (entry_id == "") are just padding.
     std::string entry(entry_id);
-    // The reason for the padding is to provide the ordering for the
-    // indicators... so we must record the order of the indicators provided
-    // even if they only have padding entries.
-    indicator_order.push_back(indicator_id);
     if (entry != "")
     {
+      Indicator& indicator = owner_->GetIndicator(std::string(indicator_id));
+      Entry::Ptr e = indicator.GetEntry(entry_id);
       Indicator::Entries& entries = indicators[indicator_id];
-      Entry::Ptr e(new Entry(entry,
-                             label,
-                             label_sensitive,
-                             label_visible,
-                             image_type,
-                             image_data,
-                             image_sensitive,
-                             image_visible));
+
+      if (!e)
+      {
+        e = Entry::Ptr(new Entry(entry,
+                                 label,
+                                 label_sensitive,
+                                 label_visible,
+                                 image_type,
+                                 image_data,
+                                 image_sensitive,
+                                 image_visible,
+                                 priority));
+      }
+      else
+      {
+        e->setLabel(label, label_sensitive, label_visible);
+        e->setImage(image_type, image_data, image_sensitive, image_visible);
+        e->setPriority(priority);
+      }
+
       entries.push_back(e);
     }
   }
   g_variant_iter_free(iter);
 
-  // Now update each of the entries.
-  std::string curr_indicator;
-  for (std::vector<std::string>::iterator i = indicator_order.begin(), end = indicator_order.end();
-       i != end; ++i)
+  for (auto i = indicators.begin(), end = indicators.end(); i != end; ++i)
   {
-    std::string const& indicator_name = *i;
-    if (curr_indicator != indicator_name)
-    {
-      curr_indicator = indicator_name;
-      owner_->GetIndicator(curr_indicator).Sync(indicators[curr_indicator]);
-    }
+    owner_->GetIndicator(i->first).Sync(indicators[i->first]);
   }
 
   // Clean up the SyncData.  NOTE: don't use find when passing in a raw

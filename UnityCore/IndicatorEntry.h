@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
-* Copyright (C) 2010 Canonical Ltd
+* Copyright (C) 2010-2011 Canonical Ltd
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+*              Marco Trevisan (Treviño) <mail@3v1n0.net>
 */
 
 #ifndef UNITY_INDICATOR_ENTRY_H
@@ -51,7 +52,8 @@ public:
         int  image_type,
         std::string const& image_data,
         bool image_sensitive,
-        bool image_visible);
+        bool image_visible,
+        int  priority);
 
   // Assignment emits updated event.
   Entry& operator=(Entry const& rhs);
@@ -68,6 +70,8 @@ public:
   void set_active(bool active);
   bool active() const;
 
+  int priority() const;
+
   /**
    * Whether this entry should be shown to the user.
    * Example uses: Application menubar items are only shown when the user
@@ -82,6 +86,10 @@ public:
   void ShowMenu(int x, int y, int timestamp, int button);
   void SecondaryActivate(unsigned int timestamp);
   void Scroll(int delta);
+
+  void setLabel(std::string const& label, bool sensitive, bool visible);
+  void setImage(int type, std::string const& data, bool sensitive, bool visible);
+  void setPriority(int priority);
 
   // Signals
   sigc::signal<void> updated;
@@ -103,6 +111,7 @@ private:
   std::string image_data_;
   bool image_visible_;
   bool image_sensitive_;
+  int priority_;
 
   bool show_now_;
   bool active_;
