@@ -2998,11 +2998,7 @@ Launcher::ProcessDndEnter()
 void
 Launcher::DndLeave()
 {
-  SetStateMouseOverLauncher(false);
-  _drag_edge_touching = false;
-
-  SetActionState(ACTION_NONE);
-
+  
   _dnd_data.Reset();
 
   for (auto it : *_model)
@@ -3010,6 +3006,17 @@ Launcher::DndLeave()
     it->SetQuirk(LauncherIcon::QUIRK_DROP_PRELIGHT, false);
     it->SetQuirk(LauncherIcon::QUIRK_DROP_DIM, false);
   }
+  
+  ProcessDndLeave();
+}
+
+void
+Launcher::ProcessDndLeave()
+{
+  SetStateMouseOverLauncher(false);
+  _drag_edge_touching = false;
+
+  SetActionState(ACTION_NONE);
   
   if (_steal_drag && _dnd_hovered_icon)
   {
