@@ -118,7 +118,47 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
     preview_layout_->Reference();
     //FIXME - replace with nicer button subclass widgets
     nux::Button *left_arrow = new nux::Button("previous", NUX_TRACKER_LOCATION);
+    left_arrow->Activated.connect ([&] (nux::View *view) {
+      ResultList::reverse_iterator it;
+      std::string next_uri;
+      for (it = results_.rbegin(); it != results_.rend(); it++)
+      {
+        if (preview_result_ == (*it))
+        {
+          it++;
+          if (it == results_.rend())
+            next_uri = results_.front()->uri;
+          else
+            next_uri = (*it)->uri;
+
+          break;
+        }
+      }
+
+      ChangePreview.emit (next_uri);
+    });
+
     nux::Button *right_arrow = new nux::Button("next", NUX_TRACKER_LOCATION);
+    right_arrow->Activated.connect ([&] (nux::View *view) {
+      ResultList::iterator it;
+      std::string next_uri;
+      for (it = results_.begin(); it != results_.end(); it++)
+      {
+        if (preview_result_ == (*it))
+        {
+          it++;
+          if (it == results_.end())
+            next_uri = results_.front()->uri;
+          else
+            next_uri = (*it)->uri;
+
+          break;
+        }
+      }
+
+      ChangePreview.emit (next_uri);
+    });
+
 
     preview_layout_->AddView(left_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_layout_->AddView(preview, 1, nux::MINOR_POSITION_CENTER, nux::eFix);

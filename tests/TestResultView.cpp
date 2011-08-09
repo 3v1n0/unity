@@ -131,6 +131,8 @@ void TestRunner::Init ()
 
   result_view->SetPreview (preview_view, *result);
 
+  result_view->ChangePreview.connect ([] (std::string uri) { g_debug ("preview change requested to %s", uri.c_str()); });
+
   //g_debug ("took %f seconds to layout", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
 

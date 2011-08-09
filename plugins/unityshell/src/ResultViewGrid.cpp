@@ -127,7 +127,7 @@ void ResultViewGrid::SizeReallocate ()
 
     if (preview_result_ != NULL)
     {
-      total_height += 600 + vertical_spacing;
+      total_height += preview_layout_->GetGeometry().height + vertical_spacing;
     }
   }
   else
