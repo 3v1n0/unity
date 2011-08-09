@@ -62,3 +62,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(Launcher* IconManager, Ba
 
     g_variant_unref(finished_or_not);
 }
+
+SoftwareCenterLauncherIcon::~SoftwareCenterLauncherIcon() {
+
+}

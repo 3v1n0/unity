@@ -21,6 +21,7 @@
 #include "FavoriteStore.h"
 #include "LauncherController.h"
 #include "LauncherIcon.h"
+#include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PluginAdapter.h"
 #include "TrashLauncherIcon.h"
