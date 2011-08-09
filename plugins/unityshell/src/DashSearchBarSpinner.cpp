@@ -17,21 +17,26 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "PlacesSearchBarSpinner.h"
+#include "DashSearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
-NUX_IMPLEMENT_OBJECT_TYPE(PlacesSearchBarSpinner);
+namespace unity
+{
+namespace dash
+{
 
-PlacesSearchBarSpinner::PlacesSearchBarSpinner()
+NUX_IMPLEMENT_OBJECT_TYPE(SearchBarSpinner);
+
+SearchBarSpinner::SearchBarSpinner()
   : nux::View(NUX_TRACKER_LOCATION),
     _state(STATE_READY),
     _rotation(0.0f),
     _spinner_timeout(0)
 {
-  PlacesStyle* style = PlacesStyle::GetDefault();
+  DashStyle* style = DashStyle::GetDefault();
 
   _magnify = style->GetSearchMagnifyIcon();
   _close = style->GetSearchCloseIcon();
@@ -43,20 +48,20 @@ PlacesSearchBarSpinner::PlacesSearchBarSpinner()
   _2d_rotate.Rotate_z(0.0);
 }
 
-PlacesSearchBarSpinner::~PlacesSearchBarSpinner()
+SearchBarSpinner::~SearchBarSpinner()
 {
   if (_spinner_timeout)
     g_source_remove(_spinner_timeout);
 }
 
 long
-PlacesSearchBarSpinner::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
+SearchBarSpinner::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
   return PostProcessEvent2(ievent, TraverseInfo, ProcessEventInfo);
 }
 
 void
-PlacesSearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
   nux::TexCoordXForm texxform;
@@ -157,12 +162,12 @@ PlacesSearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 }
 
 void
-PlacesSearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+SearchBarSpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
 }
 
 gboolean
-PlacesSearchBarSpinner::OnFrame(PlacesSearchBarSpinner* self)
+SearchBarSpinner::OnFrame(SearchBarSpinner* self)
 {
   self->_rotation += 0.1f;
 
@@ -177,7 +182,7 @@ PlacesSearchBarSpinner::OnFrame(PlacesSearchBarSpinner* self)
 }
 
 void
-PlacesSearchBarSpinner::SetState(SpinnerState state)
+SearchBarSpinner::SetState(SpinnerState state)
 {
   if (_state == state)
     return;
@@ -192,19 +197,19 @@ PlacesSearchBarSpinner::SetState(SpinnerState state)
 
   if (_state == STATE_SEARCHING)
   {
-    _spinner_timeout = g_timeout_add(15, (GSourceFunc)PlacesSearchBarSpinner::OnFrame, this);
+    _spinner_timeout = g_timeout_add(15, (GSourceFunc)SearchBarSpinner::OnFrame, this);
   }
 
   QueueDraw();
 }
 
 const gchar*
-PlacesSearchBarSpinner::GetName()
+SearchBarSpinner::GetName()
 {
-  return "PlacesSearchBarSpinner";
+  return "SearchBarSpinner";
 }
 
-void PlacesSearchBarSpinner::AddProperties(GVariantBuilder* builder)
+void SearchBarSpinner::AddProperties(GVariantBuilder* builder)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -218,7 +223,10 @@ void PlacesSearchBarSpinner::AddProperties(GVariantBuilder* builder)
 // Key navigation
 //
 bool
-PlacesSearchBarSpinner::AcceptKeyNavFocus()
+SearchBarSpinner::AcceptKeyNavFocus()
 {
   return false;
+}
+
+}
 }

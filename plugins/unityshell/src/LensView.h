@@ -16,40 +16,55 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACES_EMPTY_VIEW_H
-#define PLACES_EMPTY_VIEW_H
+#ifndef UNITY_LENS_VIEW_H_
+#define UNITY_LENS_VIEW_H_
 
-#include <Nux/Nux.h>
-#include <Nux/View.h>
+#include <string>
+
 #include <NuxGraphics/GraphicsEngine.h>
+#include <Nux/Nux.h>
 #include <Nux/HLayout.h>
+#include <Nux/View.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/Lens.h>
+
 #include "Introspectable.h"
-#include "StaticCairoText.h"
+#include "ResultViewGrid.h"
 
-class PlacesEmptyView : public nux::View, public unity::Introspectable
+namespace unity
 {
-  NUX_DECLARE_OBJECT_TYPE(PlacesEmptyView, nux::View);
+namespace dash
+{
+
+class LensView : public nux::View, public unity::Introspectable
+{
+  NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
+
 public:
+  LensView(Lens::Ptr lens);
+  ~LensView();
 
-  PlacesEmptyView();
-  ~PlacesEmptyView();
+private:
+  void SetupViews();
 
-  // nux::View overrides
-  long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
-  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-
-  void SetText(const char* text);
-
-protected:
-
+  long ProcessEvent(nux::IEvent& ievent, long traverse_info, long event_info);
+  void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+  
+  bool AcceptKeyNavFocus();
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  Lens::Ptr lens_;
 
-  nux::StaticCairoText* _text;
+  nux::HLayout* layout_;
+  nux::ScrollView* scroll_view_;
+  nux::VLayout* scroll_layout_;
+  ResultViewGrid* result_view_;
 };
 
-#endif // PLACES_EMPTY_VIEW_H
+
+}
+}
+#endif

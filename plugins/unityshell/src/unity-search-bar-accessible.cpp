@@ -1,3 +1,4 @@
+#if 0
 /*
  * Copyright (C) 2011 Canonical Ltd
  *
@@ -130,3 +131,4 @@ unity_search_bar_accessible_initialize(AtkObject* accessible,
   }
 }
 
+#endif

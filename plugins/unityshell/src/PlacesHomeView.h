@@ -1,3 +1,4 @@
+#if 0
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -77,5 +78,7 @@ private:
   guint _media_gconf_notify;
 };
 
+
+#endif
 
 #endif
