@@ -893,12 +893,12 @@ namespace unity
 
   void DashStyle::ButtonOutlinePath (cairo_t* cr, bool align)
   {
-    double   x = 2.0;
-    double   y = 2.0;
-    double   w = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
-    double   h = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
-    double   xt = 0.0;
-    double   yt = 0.0;
+    double x  = 2.0;
+    double y  = 2.0;
+    double w  = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
+    double h  = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+    double xt = 0.0;
+    double yt = 0.0;
 
 	// - these absolute values are the "cost" of getting only a SVG from design
 	// and not a generic formular how to approximate the curve-shape, thus
@@ -1029,35 +1029,159 @@ namespace unity
 
   void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
-    double   x = 2.0;
-    double   y = 2.0;
-    double   w = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
-    double   h = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+    double   x  = 2.0;
+    double   y  = 2.0;
+    double   w  = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
+    double   h  = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
+    double   xt = 0.0;
+    double   yt = 0.0;
 
 	// - these absolute values are the "cost" of getting only a SVG from design
 	// and not a generic formular how to approximate the curve-shape, thus
 	// the smallest possible button-size is 22.18x24.0
-	// - also making this align to the pixel-grid with the relative coordinates
-	// is impossible
 	double width  = w - 22.18;
 	double height = h - 24.0;
+
+    xt = x + width + 22.18;
+	yt = y + 12.0;
 
     switch (segment)
     {
       case SEGMENT_LEFT:
+        yt -= (9.267 + 2.735);		
+        cairo_move_to (cr, _align (xt), _align (yt));
+        xt -= (2.811 + 8.28);
+
+	    // top
+        cairo_line_to (cr, _align (xt - width), _align (yt));
+        xt -= width;
+
+	    // top left
+        cairo_curve_to (cr, _align (xt - 3.748),
+                            _align (yt),
+                            _align (xt - 6.507),
+                            _align (yt + 0.912),
+                            _align (xt - 8.279),
+                            _align (yt + 2.735));
+        xt -= 8.279;
+        yt += 2.735;
+        cairo_curve_to (cr, _align (xt - 1.773),
+                            _align (yt + 1.822),
+                            _align (xt - 2.708),
+                            _align (yt + 4.911),
+                            _align (xt - 2.811),
+                            _align (yt + 9.267));
+        xt -= 2.811;
+        yt += 9.267;
+
+	    // left
+        cairo_line_to (cr, _align (xt), _align (yt + height));
+        yt += height;
+
+	    // bottom left
+        cairo_curve_to (cr, _align (xt + 0.103),
+                            _align (yt + 4.355),
+                            _align (xt + 1.037),
+                            _align (yt + 7.444),
+                            _align (xt + 2.811),
+                            _align (yt + 9.267));
+        xt += 2.811;
+        yt += 9.267;
+        cairo_curve_to (cr, _align (xt + 1.772),
+                            _align (yt + 1.823),
+                            _align (xt + 4.531),
+                            _align (yt + 2.735),
+                            _align (xt + 8.28),
+                            _align (yt + 2.735));
+        xt += 8.28 + width + 8.279 + 2.811;
+        yt += 2.735;
+
+	    // bottom
+        cairo_line_to (cr, _align (xt), _align (yt));
+
         cairo_close_path (cr);
       break;
 
       case SEGMENT_MIDDLE:
-        cairo_move_to (cr, x, y);
+        yt -= (9.267 + 2.735);		
+        cairo_move_to (cr, _align (xt), _align (yt));
+        xt -= (2.811 + 8.28);
+
+	    // top
+        cairo_line_to (cr, _align (xt - width - 8.279 - 2.811), _align (yt));
+        xt -= width;
+
+	    // top left
+        xt -= 8.279;
+        yt += 2.735;
+        xt -= 2.811;
+        yt += 9.267 + height + 2.735 + 9.267;
+
+		// left
+        cairo_line_to (cr, _align (xt), _align (yt));
+
+	    // bottom left
+        xt += 2.811;
+        xt += 8.28 + width + 8.279 + 2.811;
+       // bottom
+        cairo_line_to (cr, _align (xt), _align (yt));
+
         cairo_close_path (cr);
       break;
 
       case SEGMENT_RIGHT:
+        // top right
+        cairo_move_to (cr, _align(xt), _align(yt));
+        cairo_curve_to (cr, _align(xt - 0.103),
+                            _align(yt - 4.355),
+                            _align(xt - 1.037),
+                            _align(yt - 7.444),
+                            _align(xt - 2.811),
+                            _align(yt - 9.267));
+        xt -= 2.811;
+        yt -= 9.267;
+        cairo_curve_to (cr, _align (xt - 1.722),
+                            _align (yt - 1.823),
+                            _align (xt - 4.531),
+                            _align (yt - 2.735),
+                            _align (xt - 8.28),
+                            _align (yt - 2.735));
+        xt -= (8.28 + width + 8.279 + 2.811);
+        yt -= 2.735;
+
+        // top
+        cairo_line_to (cr, _align (xt), _align (yt));
+
+        // left
+        yt += 9.267 + 2.735 + height + 2.735 + 9.267;
+        cairo_line_to (cr, _align (xt), _align (yt));
+
+        // bottom left
+        xt += 2.811 + 8.28;
+
+        // bottom
+        cairo_line_to (cr, _align (xt + width), _align (yt));
+        xt += width;
+
+        // bottom right
+        cairo_curve_to (cr, _align (xt + 3.748),
+                            _align (yt),
+                            _align (xt + 6.507),
+                            _align (yt - 0.912),
+                            _align (xt + 8.279),
+                            _align (yt - 2.735));
+        xt += 8.279;
+        yt -= 2.735;
+        cairo_curve_to (cr, _align (xt + 1.773),
+                            _align (yt - 1.822),
+                            _align (xt + 2.708),
+                            _align (yt - 4.911),
+                            _align (xt + 2.811),
+                            _align (yt - 9.267));
+
         cairo_close_path (cr);
       break;
 	}
-
   }
 
   void DashStyle::GetTextExtents (int& width,

@@ -95,10 +95,10 @@ void wipe (cairo_t* cr)
   if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
     return;
 
-  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-  cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0);
+  cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint (cr);
   cairo_scale (cr, 1.0, 1.0);
+  cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 }
 
 int main (int    argc,
@@ -111,6 +111,7 @@ int main (int    argc,
                                                          30);
   cairo_t* cr = cairo_create (surface);
   wipe (cr);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/empty.png");
 
   // render some elements from different styles to PNG-images
   pDashStyle->Button (cr, nux::NUX_STATE_NORMAL, "Play");
@@ -153,12 +154,28 @@ int main (int    argc,
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/rating-100.png");
   wipe (cr);
 
-  /*pDashStyle->MultiRangeSegment (cr,
-                                 nux::NUX_STATE_NORMAL,
+  pDashStyle->MultiRangeSegment (cr,
+                                 nux::NUX_STATE_ACTIVE,
                                  "100KB",
                                  unity::DashStyle::ARROW_LEFT,
                                  unity::DashStyle::SEGMENT_LEFT);
-  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange.png");*/
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-left.png");
+  wipe (cr);
+
+  pDashStyle->MultiRangeSegment (cr,
+                                 nux::NUX_STATE_ACTIVE,
+                                 "100KB",
+                                 unity::DashStyle::ARROW_LEFT,
+                                 unity::DashStyle::SEGMENT_MIDDLE);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-middle.png");
+  wipe (cr);
+
+  pDashStyle->MultiRangeSegment (cr,
+                                 nux::NUX_STATE_ACTIVE,
+                                 "100KB",
+                                 unity::DashStyle::ARROW_LEFT,
+                                 unity::DashStyle::SEGMENT_RIGHT);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-right.png");
   wipe (cr);
 
   // clean up
