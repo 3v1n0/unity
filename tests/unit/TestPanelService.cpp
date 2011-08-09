@@ -215,6 +215,7 @@ get_n_entries_in_result(GVariant* result)
   guint  ret = 0;
   GVariantIter* iter;
   gchar*        indicator_id;
+  gchar*        name_hint;
   gchar*        entry_id;
   gchar*        label;
   gboolean      label_sensitive;
@@ -225,9 +226,10 @@ get_n_entries_in_result(GVariant* result)
   gboolean      image_visible;
   gboolean      priority;
 
-  g_variant_get(result, "(a(sssbbusbbi))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbbi)",
+  g_variant_get(result, "(a(ssssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
                              &indicator_id,
+                             &name_hint,
                              &entry_id,
                              &label,
                              &label_sensitive,

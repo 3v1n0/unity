@@ -739,9 +739,10 @@ indicator_entry_to_variant (IndicatorObjectEntry *entry,
   gboolean is_image = GTK_IS_IMAGE (entry->image);
   gchar *image_data = NULL;
 
-  g_variant_builder_add (b, "(sssbbusbbi)",
+  g_variant_builder_add (b, "(ssssbbusbbi)",
                          indicator_id,
                          id,
+                         entry->name_hint ? entry->name_hint : "",
                          is_label ? gtk_label_get_label (entry->label) : "",
                          is_label ? gtk_widget_get_sensitive (GTK_WIDGET (entry->label)) : FALSE,
                          is_label ? gtk_widget_get_visible (GTK_WIDGET (entry->label)) : FALSE,
@@ -758,8 +759,9 @@ static void
 indicator_entry_null_to_variant (const gchar     *indicator_id,
                                  GVariantBuilder *b, int prio)
 {
-  g_variant_builder_add (b, "(sssbbusbbi)",
+  g_variant_builder_add (b, "(ssssbbusbbi)",
                          indicator_id,
+                         "",
                          "",
                          "",
                          FALSE,
@@ -857,8 +859,8 @@ panel_service_sync (PanelService *self)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
 
   for (i = self->priv->indicators; i; i = i->next)
     {
@@ -881,8 +883,8 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
   GVariantBuilder b;
   GSList *i;
 
-  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(sssbbusbbi))"));
-  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(sssbbusbbi)"));
+  g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
+  g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
 
   for (i = self->priv->indicators; i; i = i->next)
     {

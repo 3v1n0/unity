@@ -46,6 +46,7 @@ public:
   static std::string const UNUSED_ID;
 
   Entry(std::string const& id,
+        std::string const& name_hint,
         std::string const& label,
         bool label_sensitive,
         bool label_visible,
@@ -59,6 +60,7 @@ public:
   Entry& operator=(Entry const& rhs);
 
   std::string const& id() const;
+  std::string const& name_hint() const;
   std::string const& label() const;
   int image_type() const;
   std::string const& image_data() const;
@@ -102,6 +104,7 @@ public:
 
 private:
   std::string id_;
+  std::string name_hint_;
 
   std::string label_;
   bool label_visible_;

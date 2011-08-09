@@ -12,11 +12,12 @@ namespace
 TEST(TestIndicatorEntry, TestConstruction)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          1, "some icon", false, true, -1);
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.label(), "label");
+  EXPECT_EQ(entry.name_hint(), "name_hint");
   EXPECT_TRUE(entry.label_sensitive());
   EXPECT_TRUE(entry.label_visible());
   EXPECT_FALSE(entry.image_sensitive());
@@ -26,6 +27,7 @@ TEST(TestIndicatorEntry, TestConstruction)
   EXPECT_FALSE(entry.IsUnused());
   EXPECT_EQ(entry.image_type(), 1);
   EXPECT_EQ(entry.image_data(), "some icon");
+  EXPECT_EQ(entry.priority(), -1);
 }
 
 struct Counter : sigc::trackable
@@ -52,10 +54,10 @@ struct ChangeRecorder : sigc::trackable
 TEST(TestIndicatorEntry, TestAssignment)
 {
 
-  indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true, -1);
-  indicator::Entry other_entry("other_id", "other_label", false, false,
-                               2, "other icon", true, false, -1);
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, true, 10);
+  indicator::Entry other_entry("other_id", "other_name_hint", "other_label",
+                               false, false, 2, "other icon", true, false, 5);
 
   Counter counter;
   entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
@@ -63,6 +65,7 @@ TEST(TestIndicatorEntry, TestAssignment)
   entry = other_entry;
 
   EXPECT_EQ(entry.id(), "other_id");
+  EXPECT_EQ(entry.name_hint(), "name_hint");
   EXPECT_EQ(entry.label(), "other_label");
   EXPECT_FALSE(entry.label_sensitive());
   EXPECT_FALSE(entry.label_visible());
@@ -71,12 +74,13 @@ TEST(TestIndicatorEntry, TestAssignment)
   EXPECT_TRUE(entry.image_sensitive());
   EXPECT_FALSE(entry.image_visible());
   EXPECT_EQ(counter.count, 1);
+  EXPECT_EQ(entry.priority(), 5);
 }
 
 TEST(TestIndicatorEntry, TestUnused)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
   Counter counter;
@@ -91,7 +95,7 @@ TEST(TestIndicatorEntry, TestUnused)
 TEST(TestIndicatorEntry, TestShowNowEvents)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
   ChangeRecorder<bool> recorder;
@@ -116,7 +120,7 @@ TEST(TestIndicatorEntry, TestShowNowEvents)
 TEST(TestIndicatorEntry, TestActiveEvents)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
   ChangeRecorder<bool> recorder;
@@ -154,7 +158,7 @@ struct ScrollRecorder : public ChangeRecorder<int>
 TEST(TestIndicatorEntry, TestOnScroll)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
   ScrollRecorder recorder("id");
@@ -185,7 +189,7 @@ struct ShowMenuRecorder
 TEST(TestIndicatorEntry, TestOnShowMenu)
 {
 
-  indicator::Entry entry("id", "label", true, true,
+  indicator::Entry entry("id", "name_hint", "label", true, true,
                          0, "some icon", false, true, -1);
 
   ShowMenuRecorder recorder;

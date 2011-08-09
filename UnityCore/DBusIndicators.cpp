@@ -247,6 +247,7 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
 void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
 {
   GVariantIter* iter            = NULL;
+  gchar*        name_hint       = NULL;
   gchar*        indicator_id    = NULL;
   gchar*        entry_id        = NULL;
   gchar*        label           = NULL;
@@ -264,10 +265,11 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
 
   std::map<std::string, Indicator::Entries> indicators;
 
-  g_variant_get(args, "(a(sssbbusbbi))", &iter);
-  while (g_variant_iter_loop(iter, "(sssbbusbbi)",
+  g_variant_get(args, "(a(ssssbbusbbi))", &iter);
+  while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
                              &indicator_id,
                              &entry_id,
+                             &name_hint,
                              &label,
                              &label_sensitive,
                              &label_visible,
@@ -288,6 +290,7 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
       if (!e)
       {
         e = Entry::Ptr(new Entry(entry,
+                                 name_hint,
                                  label,
                                  label_sensitive,
                                  label_visible,

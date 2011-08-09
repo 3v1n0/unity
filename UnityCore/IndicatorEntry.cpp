@@ -30,6 +30,7 @@ namespace indicator
 std::string const Entry::UNUSED_ID("|");
 
 Entry::Entry(std::string const& id,
+             std::string const &name_hint,
              std::string const& label,
              bool label_sensitive,
              bool label_visible,
@@ -39,6 +40,7 @@ Entry::Entry(std::string const& id,
              bool image_visible,
              int priority)
   : id_(id)
+  , name_hint_(name_hint)
   , label_(label)
   , label_visible_(label_visible)
   , label_sensitive_(label_sensitive)
@@ -50,6 +52,11 @@ Entry::Entry(std::string const& id,
   , show_now_(false)
   , active_(false)
 {
+}
+
+std::string const& Entry::name_hint() const
+{
+  return name_hint_;
 }
 
 std::string const& Entry::id() const
@@ -150,6 +157,7 @@ bool Entry::active() const
 Entry& Entry::operator=(Entry const& rhs)
 {
   id_ = rhs.id_;
+  name_hint_ = rhs.name_hint_;
   label_ = rhs.label_;
   label_sensitive_ = rhs.label_sensitive_;
   label_visible_ = rhs.label_visible_;
@@ -181,6 +189,7 @@ void Entry::set_show_now(bool show_now)
 void Entry::MarkUnused()
 {
   id_ = UNUSED_ID;
+  name_hint_ = "";
   label_ = "";
   label_sensitive_ = false;
   label_visible_ = false;
@@ -213,7 +222,7 @@ void Entry::Scroll(int delta)
 
 std::ostream& operator<<(std::ostream& out, Entry const& e)
 {
-  out << "<indicator::Entry " << e.id()
+  out << "<indicator::Entry " << e.id() << " hint: '" << e.name_hint() << "' "
       << std::boolalpha
       << " \"" << e.label() << "\" ("
       << e.label_sensitive() << ", " << e.label_visible() << ") image ("
