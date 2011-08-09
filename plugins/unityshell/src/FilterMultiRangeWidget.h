@@ -21,25 +21,24 @@
 
 
 
-#ifndef FILTERGENREWIDGET_H
-#define FILTERGENREWIDGET_H
+#ifndef FILTERMULTIRANGE_H
+#define FILTERMULTIRANGE_H
 
 #include <Nux/Nux.h>
-#include <Nux/GridHLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/CheckOptionFilter.h>
+#include <UnityCore/MultiRangeFilter.h>
 #include "FilterWidget.h"
+#include "FilterBasicButton.h"
 #include "FilterExpanderLabel.h"
 
 namespace unity {
-  class FilterBasicButton;
-  class FilterGenreButton;
+  class FilterMultiRangeButton;
 
-  class FilterGenre : public FilterExpanderLabel, public unity::FilterWidget {
+  class FilterMultiRange : public FilterExpanderLabel, public unity::FilterWidget {
   public:
-    FilterGenre (NUX_FILE_LINE_PROTO);
-    virtual ~FilterGenre();
+    FilterMultiRange (NUX_FILE_LINE_PROTO);
+    virtual ~FilterMultiRange();
 
     void SetFilter (dash::Filter::Ptr filter);
     std::string GetFilterType ();
@@ -56,17 +55,16 @@ namespace unity {
 
   private:
     void OnAllActivated(nux::View* view);
-    void OnGenreActivated(nux::View* view);
     void OnOptionAdded(dash::FilterOption::Ptr new_filter);
     void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
 
-    nux::GridHLayout* genre_layout_;
+    nux::HLayout *layout_;
     FilterBasicButton* all_button_;
 
-    std::vector<FilterGenreButton*> buttons_;
-    dash::CheckOptionFilter::Ptr filter_;
+    std::vector<FilterMultiRangeButton*> buttons_;
+    dash::MultiRangeFilter::Ptr filter_;
   };
 
 }
 
-#endif // FILTERGENRESWIDGET_H
+#endif // FILTERMULTIRANGE_H

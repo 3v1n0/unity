@@ -43,7 +43,6 @@ namespace unity {
     genre_layout_->EnablePartialVisibility (false);
     genre_layout_->SetChildrenSize (140, 30);
     genre_layout_->Reference();
-    BuildGenreLayout();
 
     SetRightHandView(all_button_);
     SetContents(genre_layout_);
@@ -107,40 +106,8 @@ namespace unity {
 
   void FilterGenre::OnAllActivated(nux::View *view)
   {
-    all_selected = true;
-  }
-
-  void FilterGenre::BuildGenreLayout()
-  {
-    //FIXME
-    // blah blah dont have filters integrated so faking it for now
-    FilterGenreButton *button = new FilterGenreButton ("Genre 1", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 2", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 3", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 4", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 5", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 6", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 7", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 8", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    button = new FilterGenreButton ("Genre 9", NUX_TRACKER_LOCATION);
-    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
+    if (filter_)
+      filter_->Clear();
   }
 
   void FilterGenre::OnGenreActivated(nux::View *view)

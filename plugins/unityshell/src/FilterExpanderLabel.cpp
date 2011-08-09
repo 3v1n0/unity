@@ -119,6 +119,7 @@ namespace unity {
   void FilterExpanderLabel::DoExpandChange (bool change)
   {
     BuildLayout();
+    QueueRelayout();
   }
 
   long int FilterExpanderLabel::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {
@@ -126,6 +127,7 @@ namespace unity {
   }
 
   void FilterExpanderLabel::Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+    gPainter.PaintBackground(GfxContext, GetGeometry());
   }
 
   void FilterExpanderLabel::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {

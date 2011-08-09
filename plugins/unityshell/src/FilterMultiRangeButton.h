@@ -21,30 +21,23 @@
 
 
 
-#ifndef FILTERGENREWIDGET_H
-#define FILTERGENREWIDGET_H
+#ifndef FILTERMULTIRANGEBUTTON_H
+#define FILTERMULTIRANGEBUTTON_H
 
 #include <Nux/Nux.h>
-#include <Nux/GridHLayout.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <UnityCore/CheckOptionFilter.h>
+#include <Nux/View.h>
+#include "Nux/ToggleButton.h"
 #include "FilterWidget.h"
-#include "FilterExpanderLabel.h"
 
 namespace unity {
-  class FilterBasicButton;
-  class FilterGenreButton;
 
-  class FilterGenre : public FilterExpanderLabel, public unity::FilterWidget {
+  class FilterMultiRangeButton : public nux::ToggleButton {
   public:
-    FilterGenre (NUX_FILE_LINE_PROTO);
-    virtual ~FilterGenre();
+    FilterMultiRangeButton (const std::string label, NUX_FILE_LINE_PROTO);
+    FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
 
-    void SetFilter (dash::Filter::Ptr filter);
-    std::string GetFilterType ();
-
-    nux::Property<bool> all_selected;
+    void SetFilter (dash::FilterOption::Ptr filter);
+    dash::FilterOption::Ptr GetFilter();
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
@@ -52,21 +45,9 @@ namespace unity {
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-    void InitTheme ();
-
   private:
-    void OnAllActivated(nux::View* view);
-    void OnGenreActivated(nux::View* view);
-    void OnOptionAdded(dash::FilterOption::Ptr new_filter);
-    void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
-
-    nux::GridHLayout* genre_layout_;
-    FilterBasicButton* all_button_;
-
-    std::vector<FilterGenreButton*> buttons_;
-    dash::CheckOptionFilter::Ptr filter_;
+    dash::FilterOption::Ptr filter_;
   };
 
 }
-
-#endif // FILTERGENRESWIDGET_H
+#endif // FILTERMULTIRANGEBUTTON_H

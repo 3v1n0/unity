@@ -54,6 +54,7 @@ public:
 
   nux::Property<bool> expanded;
   sigc::signal<void, std::string> UriActivated;
+  sigc::signal<void, std::string> ChangePreview; // request a new preview, string is the uri
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -63,6 +64,7 @@ protected:
 
   // properties
   nux::Layout *preview_layout_;
+  nux::Layout* preview_spacer_;
   Result* preview_result_;
   ResultRenderer *renderer_;
   ResultList results_;

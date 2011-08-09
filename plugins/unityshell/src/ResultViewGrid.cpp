@@ -115,10 +115,10 @@ void ResultViewGrid::RemoveResult (Result & result)
 void ResultViewGrid::SizeReallocate ()
 {
   //FIXME - needs to use the geometry assigned to it, but only after a layout
-  int items_per_row = (800 - (padding * 2)) / (renderer_->width + horizontal_spacing);
+  int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
   items_per_row = (items_per_row) ? items_per_row : 1;
 
-  int total_rows = ceil ((float)results_.size () / items_per_row);
+  int total_rows = (results_.size() / items_per_row);
   int total_height = 0;
 
   if (expanded)
@@ -127,7 +127,7 @@ void ResultViewGrid::SizeReallocate ()
 
     if (preview_result_ != NULL)
     {
-      total_height += 600 + vertical_spacing;
+      total_height += preview_layout_->GetGeometry().height + vertical_spacing;
     }
   }
   else
@@ -141,6 +141,9 @@ void ResultViewGrid::SizeReallocate ()
 void ResultViewGrid::PositionPreview ()
 {
   if (preview_layout_ == NULL)
+    return;
+
+  if (expanded == false)
     return;
 
   int items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
@@ -168,21 +171,10 @@ void ResultViewGrid::PositionPreview ()
 
     if (preview_in_this_row)
     {
-      g_debug ("found preview in this row, %i", y_position);
       // the preview is in this row, so we want to position it below here
-      //~ nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-      //~ layout->AddLayout (new nux::SpaceLayout(0,y_position,0,y_position), 0);
-      //~ layout->AddLayout (preview_layout_, 0);
-      //~ layout->AddSpace (0, 1);
-//~
-      //~ SetLayout(layout);
+      preview_spacer_->SetMinimumHeight(y_position);
+      preview_spacer_->SetMaximumHeight(y_position);
       preview_row_ = row_index;
-
-      PositionChildLayout (0, y_position);
-      nux::Geometry geo = GetCompositionLayout()->GetGeometry();
-      geo.y = y_position;
-      GetCompositionLayout()->SetGeometry (geo);
-      GetCompositionLayout()->SetBaseY(y_position);
       break;
     }
   }
@@ -196,9 +188,6 @@ long ResultViewGrid::ComputeLayout2()
 {
   SizeReallocate();
   long ret = ResultView::ComputeLayout2();
-
-  if (GetCompositionLayout())
-    GetCompositionLayout()->SetBaseY(200);
   return ret;
 
 }
@@ -211,16 +200,17 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   uint items_per_row = (GetGeometry().width - (padding * 2)) / (renderer_->width + horizontal_spacing);
   items_per_row = (items_per_row) ? items_per_row : 1;
-  uint total_rows = (results_.size() / items_per_row) + 1;
 
-  gint64 time_start = g_get_monotonic_time ();
+  uint total_rows = (!expanded) ? 0 : (results_.size() / items_per_row) + 1;
+
   ResultView::ResultList::iterator it;
 
   //find the row we start at
   int absolute_y = GetAbsoluteY();
   uint row_size = renderer_->height + vertical_spacing;
 
-  int y_position = padding;
+  int y_position = padding + GetGeometry().y;
+
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     // check if the row is displayed on the screen,
@@ -230,7 +220,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       //  && (y_position - renderer_->height) + absolute_y <= 2048)
     if (1)
     {
-      int x_position = padding;
+      int x_position = padding + GetGeometry().x;
       for (uint column_index = 0; column_index < items_per_row; column_index++)
       {
         uint index = (row_index * items_per_row) + column_index;
@@ -312,7 +302,6 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result* result = results_[index];
     UriActivated.emit (result->uri);
   }
-  g_debug ("got click at %i - %i", x, y);
 }
 
 uint ResultViewGrid::GetIndexAtPosition (int x, int y)

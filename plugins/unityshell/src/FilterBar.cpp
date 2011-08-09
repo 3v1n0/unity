@@ -48,7 +48,6 @@ namespace unity
   void FilterBar::SetFilters (dash::Filters::Ptr filters)
   {
     filters_ = filters;
-
   }
 
   void FilterBar::AddFilter (dash::Filter::Ptr filter) {
@@ -91,7 +90,6 @@ namespace unity
   }
 
   void FilterBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {
-    //FIXME - i swear i didn't change anything, but suddenly nux stopped drawing the contents of the button
     nux::View::DrawContent(GfxContext, force_draw);
   }
 

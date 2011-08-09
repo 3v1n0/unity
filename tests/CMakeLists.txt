@@ -229,6 +229,8 @@ add_executable (test-filters
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeButton.cpp
+                ${UNITY_SRC}/FilterMultiRangeWidget.cpp
                 )
 add_dependencies(test-filters unity-core-${UNITY_API_VERSION})
 
@@ -239,6 +241,8 @@ add_executable (test-filter-bar
                 ${UNITY_SRC}/FilterBasicButton.cpp
                 ${UNITY_SRC}/FilterRatingsButton.cpp
                 ${UNITY_SRC}/FilterRatingsWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeWidget.cpp
+                ${UNITY_SRC}/FilterMultiRangeButton.cpp
                 ${UNITY_SRC}/FilterGenreButton.cpp
                 ${UNITY_SRC}/FilterGenreWidget.cpp
                 ${UNITY_SRC}/FilterBar.cpp
@@ -282,7 +286,7 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 )
-add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
+add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
 add_executable (test-result-view
                 TestResultView.cpp

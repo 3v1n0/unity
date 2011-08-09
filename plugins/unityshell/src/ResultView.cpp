@@ -23,6 +23,7 @@
 #include "ResultView.h"
 
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 #include <Nux/Button.h>
 namespace unity
 {
@@ -36,7 +37,21 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
     , preview_result_ (NULL)
     , renderer_ (NULL)
 {
+  expanded.changed.connect ([&] (bool value) {
+    if (!value && preview_layout_)
+    {
+      RemoveLayout();
+    }
+    else if (value && preview_layout_)
+    {
+      nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+      preview_spacer_ = new nux::SpaceLayout(200, 200, 200, 200);
+      layout->AddLayout(preview_spacer_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+      SetLayout(layout);
+    }
+    QueueRelayout(); NeedRedraw();});
 }
 
 ResultView::~ResultView()
@@ -104,7 +119,7 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
   {
     preview_result_ = NULL;
     preview_layout_ = NULL;
-    SetLayout(NULL);
+    RemoveLayout();
   }
   else
   {
@@ -113,17 +128,67 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
       preview_layout_->UnReference();
     }
 
+    nux::VLayout *other_layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+
+    preview->SetMinimumHeight(600);
     preview_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
     preview_layout_->Reference();
     //FIXME - replace with nicer button subclass widgets
     nux::Button *left_arrow = new nux::Button("previous", NUX_TRACKER_LOCATION);
+    left_arrow->Activated.connect ([&] (nux::View *view) {
+      ResultList::reverse_iterator it;
+      std::string next_uri;
+      for (it = results_.rbegin(); it != results_.rend(); it++)
+      {
+        if (preview_result_ == (*it))
+        {
+          it++;
+          if (it == results_.rend())
+            next_uri = results_.front()->uri;
+          else
+            next_uri = (*it)->uri;
+
+          break;
+        }
+      }
+
+      ChangePreview.emit (next_uri);
+    });
+
     nux::Button *right_arrow = new nux::Button("next", NUX_TRACKER_LOCATION);
+    right_arrow->Activated.connect ([&] (nux::View *view) {
+      ResultList::iterator it;
+      std::string next_uri;
+      for (it = results_.begin(); it != results_.end(); it++)
+      {
+        if (preview_result_ == (*it))
+        {
+          it++;
+          if (it == results_.end())
+            next_uri = results_.front()->uri;
+          else
+            next_uri = (*it)->uri;
+
+          break;
+        }
+      }
+
+      ChangePreview.emit (next_uri);
+    });
+
 
     preview_layout_->AddView(left_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-    preview_layout_->AddView(preview, 1);
+    preview_layout_->AddView(preview, 1, nux::MINOR_POSITION_CENTER, nux::eFix);
     preview_layout_->AddView(right_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_result_ = &related_result;
-    SetLayout(preview_layout_);
+
+    if (expanded)
+    {
+      preview_spacer_ = new nux::SpaceLayout(200, 200, 200, 200);
+      other_layout->AddLayout(preview_spacer_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      other_layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+      SetLayout(other_layout);
+    }
   }
 }
 
