@@ -76,7 +76,7 @@ void TestRunner::Init ()
 
   unity::dash::Preview::Ptr preview = unity::dash::Preview::Ptr(album_preview);
   unity::PreviewMusicAlbum* preview_view = new unity::PreviewMusicAlbum (preview, NUX_TRACKER_LOCATION);
-
+  preview_view->UriActivated.connect ([] (std::string uri) { g_debug ("Uri Activated: %s", uri.c_str()); });
   layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
   layout->AddView (preview_view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);

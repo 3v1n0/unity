@@ -97,6 +97,7 @@ namespace unity {
         std::stringstream number;
         number << (*track_it).number;
         nux::Button *track_play_button = new nux::Button(number.str());
+        //FIXME - hook up pressing button to activation URI
 
         nux::StaticCairoText *track_title = new nux::StaticCairoText((*track_it).title.c_str(), NUX_TRACKER_LOCATION);
 
