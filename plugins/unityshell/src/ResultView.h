@@ -40,7 +40,7 @@ namespace dash
 class ResultView : public nux::View
 {
 public:
-  typedef std::vector<Result*> ResultList;
+  typedef std::vector<Result> ResultList;
 
   ResultView(NUX_FILE_LINE_DECL);
   virtual ~ResultView();
@@ -65,7 +65,7 @@ protected:
   // properties
   nux::Layout *preview_layout_;
   nux::Layout* preview_spacer_;
-  Result* preview_result_;
+  std::string preview_result_uri_;
   ResultRenderer *renderer_;
   ResultList results_;
 };

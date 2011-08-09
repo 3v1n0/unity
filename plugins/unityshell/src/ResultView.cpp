@@ -34,7 +34,6 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
     : View(NUX_FILE_LINE_PARAM)
     , expanded (true)
     , preview_layout_ (NULL)
-    , preview_result_ (NULL)
     , renderer_ (NULL)
 {
   expanded.changed.connect ([&] (bool value) {
@@ -82,7 +81,7 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultView::AddResult (Result& result)
 {
-  results_.push_back (&result);
+  results_.push_back (result);
 
   auto queue_redraw_lambda = [&] (std::string value) { NeedRedraw(); };
   result.icon_hint.changed.connect (queue_redraw_lambda);
@@ -98,7 +97,7 @@ void ResultView::RemoveResult (Result& result)
   ResultList::iterator it;
   for (it = results_.begin (); it != results_.end(); it++)
   {
-    if (&result == (*it))
+    if (result.uri == (*it).uri)
     {
       results_.erase (it);
       break;
@@ -114,7 +113,7 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
 {
   if (preview == NULL)
   {
-    preview_result_ = NULL;
+    preview_result_uri_ = "";
     preview_layout_ = NULL;
     RemoveLayout();
   }
@@ -137,13 +136,13 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
       std::string next_uri;
       for (it = results_.rbegin(); it != results_.rend(); it++)
       {
-        if (preview_result_ == (*it))
+        if (preview_result_uri_ == (*it).uri)
         {
           it++;
           if (it == results_.rend())
-            next_uri = results_.front()->uri;
+            next_uri = results_.front().uri;
           else
-            next_uri = (*it)->uri;
+            next_uri = (*it).uri;
 
           break;
         }
@@ -158,13 +157,13 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
       std::string next_uri;
       for (it = results_.begin(); it != results_.end(); it++)
       {
-        if (preview_result_ == (*it))
+        if (preview_result_uri_ == (*it).uri)
         {
           it++;
           if (it == results_.end())
-            next_uri = results_.front()->uri;
+            next_uri = results_.front().uri;
           else
-            next_uri = (*it)->uri;
+            next_uri = (*it).uri;
 
           break;
         }
@@ -177,7 +176,7 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
     preview_layout_->AddView(left_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_layout_->AddView(preview, 1, nux::MINOR_POSITION_CENTER, nux::eFix);
     preview_layout_->AddView(right_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-    preview_result_ = &related_result;
+    preview_result_uri_ = related_result.uri;
 
     if (expanded)
     {
