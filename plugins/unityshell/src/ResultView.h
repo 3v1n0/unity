@@ -61,6 +61,7 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   // properties
+  nux::Layout *preview_layout_;
   Result* preview_result_;
   ResultRenderer *renderer_;
   ResultList results_;

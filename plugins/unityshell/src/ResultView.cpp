@@ -22,7 +22,8 @@
 
 #include "ResultView.h"
 
-#include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
+#include <Nux/Button.h>
 namespace unity
 {
 namespace dash
@@ -31,6 +32,7 @@ namespace dash
 ResultView::ResultView(NUX_FILE_LINE_DECL)
     : View(NUX_FILE_LINE_PARAM)
     , expanded (true)
+    , preview_layout_ (NULL)
     , preview_result_ (NULL)
     , renderer_ (NULL)
 {
@@ -98,13 +100,25 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
   if (preview == NULL)
   {
     preview_result_ = NULL;
+    preview_layout_ = NULL;
     SetLayout(NULL);
   }
   else
   {
-    nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-    layout->AddView(preview, 1);
-    SetLayout (layout);
+    if (preview_layout_ != NULL)
+    {
+      preview_layout_->UnReference();
+    }
+
+    preview_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+    preview_layout_->Reference();
+    //FIXME - replace with nicer button subclass widgets
+    nux::Button *left_arrow = new nux::Button("previous", NUX_TRACKER_LOCATION);
+    nux::Button *right_arrow = new nux::Button("next", NUX_TRACKER_LOCATION);
+
+    preview_layout_->AddView(left_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    preview_layout_->AddView(preview, 1);
+    preview_layout_->AddView(right_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_result_ = &related_result;
   }
 }
