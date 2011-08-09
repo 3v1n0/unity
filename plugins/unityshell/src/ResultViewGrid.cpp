@@ -163,6 +163,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     // check if the row is displayed on the screen,
     // FIXME - optimisation - replace 2048 with the height of the displayed viewport
+    // or at the very least, with the largest monitor resolution
     if ((y_position + renderer_->height) + absolute_y >= 0
         && (y_position - renderer_->height) + absolute_y <= 2048)
     {

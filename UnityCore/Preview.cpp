@@ -72,10 +72,13 @@ std::vector<std::string> Preview::PropertyToStringVector(Properties& properties,
 {
   GVariantIter* iter = NULL;
   char* value = NULL;
+  std::vector<std::string> property;
+
+  if (properties.find(key) == properties.end())
+    return property;
 
   g_variant_get(properties[key], "as", &iter);
 
-  std::vector<std::string> property;
   while (g_variant_iter_loop(iter, "s", &value))
     property.push_back(value);
 
@@ -86,6 +89,9 @@ std::vector<std::string> Preview::PropertyToStringVector(Properties& properties,
 
 float Preview::PropertyToFloat(Properties& properties, const char* key)
 {
+  if (properties.find(key) == properties.end())
+    return 0.0f;
+
   return (float)g_variant_get_double(properties[key]);
 }
 

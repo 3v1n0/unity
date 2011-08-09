@@ -335,6 +335,19 @@ add_executable (test-preview-generic
                 )
 add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
 
+add_executable (test-preview-music
+                TestPreviewMusic.cpp
+                ${UNITY_SRC}/PreviewBase.cpp
+                ${UNITY_SRC}/PreviewBasicButton.cpp
+                ${UNITY_SRC}/PreviewMusic.cpp
+                ${UNITY_SRC}/IconTexture.cpp
+                ${UNITY_SRC}/IconLoader.cpp
+                ${UNITY_SRC}/Introspectable.cpp
+                ${UNITY_SRC}/StaticCairoText.cpp
+                ${UNITY_SRC}/TextureCache.cpp
+                )
+add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
+
 add_executable (test-result-view
                 TestResultView.cpp
                 ${UNITY_SRC}/PreviewApplications.cpp

@@ -26,6 +26,7 @@
 namespace unity {
   PreviewBase::PreviewBase (dash::Preview::Ptr preview, NUX_FILE_LINE_DECL)
     : View (NUX_FILE_LINE_PARAM)
+    , content_layout_ (NULL)
   {
   }
   PreviewBase::PreviewBase (NUX_FILE_LINE_DECL)
@@ -37,7 +38,9 @@ namespace unity {
   {
   }
 
-  void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw) {
+  void PreviewBase::Draw (nux::GraphicsEngine &GfxContext, bool force_draw)
+  {
+    gPainter.PaintBackground(GfxContext, GetGeometry());
   }
 
   void PreviewBase::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
@@ -54,7 +57,30 @@ namespace unity {
     return PostProcessEvent2 (ievent, TraverseInfo, ProcessEventInfo);
   }
 
-  void PreviewBase::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {
+  void PreviewBase::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
+  {
     nux::View::PostDraw(GfxContext, force_draw);
+    //FIXME - disabled for now because nux blending is screwed
+    if (content_layout_ && 0)
+    {
+      // draw a box around the content layout
+      nux::Geometry geometry = content_layout_->GetGeometry();
+      nux::t_u32 alpha = 0, src = 0, dest = 0;
+
+      GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+      GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+      nux::Color col = nux::color::White;
+      col.alpha = 0.25;
+      GfxContext.QRP_Color(geometry.x,
+                           geometry.y,
+                           geometry.width,
+                           geometry.height,
+                           col);
+
+      GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
+      g_debug ("done draw");
+    }
   }
 }

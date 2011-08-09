@@ -21,33 +21,36 @@
 
 
 
-#ifndef PREVIEWBASE_H
-#define PREVIEWBASE_H
+#ifndef PREVIEWMUSIC_H
+#define PREVIEWMUSIC_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <UnityCore/Preview.h>
+#include <UnityCore/MusicPreviews.h>
 
-#include "FilterWidget.h"
+#include "PreviewBase.h"
 
 namespace unity {
 
-  class PreviewBase : public nux::View
+  class PreviewMusicAlbum : public PreviewBase
   {
   public:
-    PreviewBase (dash::Preview::Ptr preview, NUX_FILE_LINE_PROTO);
-    PreviewBase (NUX_FILE_LINE_PROTO);
-    virtual ~PreviewBase ();
-    virtual void SetPreview(dash::Preview::Ptr preview) = 0;
-    sigc::signal<void, std::string> UriActivated;
+    PreviewMusicAlbum (dash::Preview::Ptr preview, NUX_FILE_LINE_PROTO);
+    virtual ~PreviewMusicAlbum ();
+
+    virtual void SetPreview(dash::Preview::Ptr preview);
 
   protected:
     virtual long int ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo);
     virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
     virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
-    nux::Layout* content_layout_;
+
+  private:
+    void BuildLayout();
+    dash::AlbumPreview::Ptr preview_;
+
   };
 
 }
-#endif // PREVIEWBASE_H
+#endif // PREVIEWMUSIC_H
