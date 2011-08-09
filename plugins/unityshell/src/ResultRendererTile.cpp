@@ -238,38 +238,25 @@ void ResultRendererTile::Unload (Result& row)
   std::string icon = row.icon_hint;
   std::string text = row.name;
 
+  LocalTextureCache::iterator iterator;
 
-  if (icon_cache_.find(icon) != icon_cache_.end())
+  if ((iterator = icon_cache_.find(icon)) != icon_cache_.end())
   {
-    nux::BaseTexture *texture = icon_cache_.find(icon)->second;
-    texture->UnReference ();
-  }
-  else
-  {
-    //~ LOG_WARNING(logger) << "Tried to unload " << icon << " but was not loaded";
+    iterator->second->UnReference ();
+    icon_cache_.erase(iterator);
   }
 
-  if (text_cache_.find(text) != text_cache_.end())
+  if ((iterator = text_cache_.find(text)) != text_cache_.end())
   {
-    nux::BaseTexture *texture = text_cache_.find(text)->second;
-    texture->UnReference ();
-  }
-  else
-  {
-    //~ LOG_WARNING(logger) << "Tried to unload " << icon << " but was not loaded";
+    iterator->second->UnReference();
+    text_cache_.erase(iterator);
   }
 
-
-  if (blurred_icon_cache_.find(icon) != blurred_icon_cache_.end())
+  if ((iterator = blurred_icon_cache_.find(icon)) != blurred_icon_cache_.end())
   {
-    nux::BaseTexture *texture = blurred_icon_cache_.find(icon)->second;
-    texture->UnReference ();
+    iterator->second->UnReference();
+    blurred_icon_cache_.erase(iterator);
   }
-  else
-  {
-    //~ LOG_WARNING(logger) << "Tried to unload " << icon << " but was not loaded";
-  }
-
 }
 
 void ResultRendererTile::LoadIcon (std::string& icon_hint)

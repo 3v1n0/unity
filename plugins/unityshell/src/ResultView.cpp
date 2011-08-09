@@ -91,20 +91,17 @@ void ResultView::RemoveResult (Result& result)
 {
   ResultList::iterator it;
   std::string uri = result.uri;
-  g_debug("hello");
+
   for (it = results_.begin (); it != results_.end(); it++)
   {
     if (result.uri == (*it).uri)
     {
-      delete result;
       results_.erase (it);
       break;
     }
   }
-
   renderer_->Unload(result);
-
-  NeedRedraw ();
+  g_debug ("REMOVED SIZE: %u", (unsigned int)results_.size());
 }
 
 void ResultView::SetPreview (PreviewBase *preview, Result& related_result)

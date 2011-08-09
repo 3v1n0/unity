@@ -99,9 +99,8 @@ void LensView::OnResultAdded(Result const& result)
   PlacesGroup* group = categories_[result.category_index];
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
 
-  std::string name = result.name;
-  LOG_DEBUG(logger) << "Result added: "
-                    << name;
+  std::string uri = result.uri;
+  LOG_DEBUG(logger) << "Result added: " << uri;
 
   grid->AddResult(const_cast<Result&>(result));
 }
@@ -110,6 +109,9 @@ void LensView::OnResultRemoved(Result const& result)
 {
   PlacesGroup* group = categories_[result.category_index];
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
+
+  std::string uri = result.uri;
+  LOG_DEBUG(logger) << "Result removed: " << uri;
 
   grid->RemoveResult(const_cast<Result&>(result));
 }
