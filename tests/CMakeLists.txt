@@ -348,7 +348,7 @@ add_executable (test-preview-music
                 ${UNITY_SRC}/StaticCairoText.cpp
                 ${UNITY_SRC}/TextureCache.cpp
                 )
-add_dependencies(test-preview-generic unity-core-${UNITY_API_VERSION})
+add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
 add_executable (test-result-view
                 TestResultView.cpp

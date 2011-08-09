@@ -57,7 +57,6 @@ namespace unity {
   private:
     void OnAllActivated(nux::View* view);
     void OnGenreActivated(nux::View* view);
-    void BuildGenreLayout();
     void OnOptionAdded(dash::FilterOption::Ptr new_filter);
     void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
 

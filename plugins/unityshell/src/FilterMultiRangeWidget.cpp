@@ -121,7 +121,8 @@ namespace unity {
 
   void FilterMultiRange::OnAllActivated(nux::View *view)
   {
-    filter_->Clear();
+    if (filter_)
+      filter_->Clear();
   }
 
   long int FilterMultiRange::ProcessEvent(nux::IEvent& ievent, long int TraverseInfo, long int ProcessEventInfo) {

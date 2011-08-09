@@ -295,20 +295,17 @@ void ResultRendererTile::LoadIcon (std::string& icon_hint)
 
       if (g_str_has_prefix(icon_name.c_str(), "http://"))
       {
-        g_debug ("loading from URI");
         IconLoader::GetDefault()->LoadFromURI(icon_name.c_str(), 48,
                                               sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint));
       }
       else if (G_IS_ICON(icon))
       {
-        g_debug ("loadign from gicon");
         IconLoader::GetDefault()->LoadFromGIconString(icon_name.c_str(), 48,
                                                       sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
         g_object_unref(icon);
       }
       else
       {
-        g_debug ("loading from icon name");
         IconLoader::GetDefault()->LoadFromIconName(icon_name.c_str(), 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_name));
       }
@@ -367,10 +364,8 @@ void ResultRendererTile::CreateBlurredTextureCallback(const char* texid,
 void
 ResultRendererTile::IconLoaded(const char* texid, guint size, GdkPixbuf* pixbuf, std::string icon_name)
 {
-  g_debug ("icon loaded yaaaaay");
   if (pixbuf)
   {
-    g_debug ("and the pixbuf wasn't empty too!");
     TextureCache* cache = TextureCache::GetDefault();
     nux::BaseTexture *texture = cache->FindTexture(icon_name.c_str(), 48, 48,
                                                    sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf));

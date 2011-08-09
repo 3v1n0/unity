@@ -88,7 +88,7 @@ void TestRunner::Init ()
   g_debug ("took %f seconds to init the views", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
 
-  for (int i = 0; i < 200; i++)
+  for (int i = 0; i < 20; i++)
   {
     result_view->AddResult (*result);
   }
@@ -135,6 +135,9 @@ void TestRunner::Init ()
 
   //g_debug ("took %f seconds to layout", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
+
+  result_view->expanded = false;
+  result_view->expanded = true;
 
   nux::GetGraphicsThread()->SetLayout (layout);
 }

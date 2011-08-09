@@ -37,7 +37,23 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
     , preview_result_ (NULL)
     , renderer_ (NULL)
 {
+  expanded.changed.connect ([&] (bool value) {
+    if (!value && preview_layout_)
+    {
+      g_debug ("unset layout");
+      RemoveLayout();
+      g_debug ("composite layout %p", GetCompositionLayout());
+    }
+    else if (value && preview_layout_)
+    {
+      nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
+      preview_spacer_ = new nux::SpaceLayout(200, 200, 200, 200);
+      layout->AddLayout(preview_spacer_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
+      SetLayout(layout);
+    }
+    QueueRelayout(); NeedRedraw();});
 }
 
 ResultView::~ResultView()
@@ -102,7 +118,7 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
   {
     preview_result_ = NULL;
     preview_layout_ = NULL;
-    SetLayout(NULL);
+    RemoveLayout();
   }
   else
   {
@@ -163,13 +179,15 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
     preview_layout_->AddView(left_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_layout_->AddView(preview, 1, nux::MINOR_POSITION_CENTER, nux::eFix);
     preview_layout_->AddView(right_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
-
-    preview_spacer_ = new nux::SpaceLayout(200, 200, 200, 200);
-    other_layout->AddLayout(preview_spacer_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
-    other_layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-
     preview_result_ = &related_result;
-    SetLayout(other_layout);
+
+    if (expanded)
+    {
+      preview_spacer_ = new nux::SpaceLayout(200, 200, 200, 200);
+      other_layout->AddLayout(preview_spacer_, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      other_layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+      SetLayout(other_layout);
+    }
   }
 }
 
