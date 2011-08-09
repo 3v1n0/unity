@@ -104,11 +104,16 @@ void TestRunner::Init ()
   scroll_layout->AddView (result_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   scroller->SetLayout(scroll_layout);
 
+
+
+  layout->AddLayout(new nux::SpaceLayout(200, 200, 200, 200), 0);
   layout->AddView (scroller, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   layout->SetFocused (true);
 
   // make our preview
 
+  if (0)
+  {
   unity::dash::Preview::Properties properties;
   unity::dash::ApplicationPreview* application_preview = new unity::dash::ApplicationPreview (properties);
 
@@ -130,7 +135,7 @@ void TestRunner::Init ()
   unity::PreviewApplications* preview_view = new unity::PreviewApplications (preview, NUX_TRACKER_LOCATION);
 
   result_view->SetPreview (preview_view, *result);
-
+}
   result_view->ChangePreview.connect ([] (std::string uri) { g_debug ("preview change requested to %s", uri.c_str()); });
 
   //g_debug ("took %f seconds to layout", (g_get_monotonic_time () - time_start) / 1000000.0f);

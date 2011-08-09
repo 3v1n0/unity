@@ -209,7 +209,8 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   int absolute_y = GetAbsoluteY();
   uint row_size = renderer_->height + vertical_spacing;
 
-  int y_position = padding;
+  int y_position = padding + GetGeometry().y;
+
   for (uint row_index = 0; row_index <= total_rows; row_index++)
   {
     // check if the row is displayed on the screen,
@@ -218,7 +219,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if ((y_position + renderer_->height) + absolute_y >= 0
         && (y_position - renderer_->height) + absolute_y <= 2048)
     {
-      int x_position = padding;
+      int x_position = padding + GetGeometry().x;
       for (uint column_index = 0; column_index < items_per_row; column_index++)
       {
         uint index = (row_index * items_per_row) + column_index;
