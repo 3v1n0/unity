@@ -279,13 +279,14 @@ void DBusIndicators::Impl::Sync(GVariant* args, SyncData* data)
                              &image_visible,
                              &priority))
   {
-    // NULL entries (entry_id == "") are just padding.
+    // NULL entries (entry_id == "") are empty indicators.
     std::string entry(entry_id);
+    Indicator& indicator = owner_->GetIndicator(std::string(indicator_id));
+    Indicator::Entries& entries = indicators[indicator_id];
+
     if (entry != "")
     {
-      Indicator& indicator = owner_->GetIndicator(std::string(indicator_id));
       Entry::Ptr e = indicator.GetEntry(entry_id);
-      Indicator::Entries& entries = indicators[indicator_id];
 
       if (!e)
       {
@@ -589,7 +590,6 @@ void on_sync_ready_cb(GObject* source, GAsyncResult* res, gpointer data)
 {
   SyncData* sync_data = reinterpret_cast<SyncData*>(data);
   GError* error = NULL;
-
   GVariant* args = g_dbus_proxy_call_finish((GDBusProxy*)source, res, &error);
 
   if (args == NULL)
