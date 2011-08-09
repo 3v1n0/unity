@@ -29,6 +29,7 @@
 
 #include "IconLoader.h"
 #include "IconTexture.h"
+#include "PlacesStyle.h"
 #include "TextureCache.h"
 
 //~ namespace
@@ -44,8 +45,9 @@ namespace dash
 ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   : ResultRenderer(NUX_FILE_LINE_PARAM)
 {
-  width = 150;
-  height = 48 + 25 + 6;
+  PlacesStyle* style = PlacesStyle::GetDefault();
+  width = style->GetTileWidth();
+  height = style->GetTileHeight();;
 
   // pre-load the highlight texture
   // try and get a texture from the texture cache
@@ -68,6 +70,7 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   std::string row_text = row.name;
   std::string row_iconhint = row.icon_hint;
   LocalTextureCache::iterator it;
+  PlacesStyle* style = PlacesStyle::GetDefault();
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -121,10 +124,10 @@ void ResultRendererTile::Render (nux::GraphicsEngine& GfxContext,
   {
     nux::BaseTexture* text_texture = it->second;
 
-    GfxContext.QRP_1Tex(geometry.x,
-                        geometry.y + geometry.height - 25,
-                        150,
-                        25,
+    GfxContext.QRP_1Tex(geometry.x + 6,
+                        geometry.y + style->GetTileIconSize() + 12,
+                        style->GetTileWidth() - 12,
+                        style->GetTileHeight() - style->GetTileIconSize() - 12,
                         text_texture->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
@@ -380,9 +383,10 @@ void ResultRendererTile::LoadText (std::string& text)
 {
   if (text_cache_.find(text) == text_cache_.end())
   {
+    PlacesStyle*          style      = PlacesStyle::GetDefault();
     nux::CairoGraphics _cairoGraphics (CAIRO_FORMAT_ARGB32,
-                                       150,
-                                       25);
+                                       style->GetTileWidth(),
+                                       style->GetTileHeight() - style->GetTileIconSize() - 12);
 
     cairo_t* cr = cairo_reference(_cairoGraphics.GetContext());
 
@@ -400,7 +404,7 @@ void ResultRendererTile::LoadText (std::string& text)
 
     pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
     pango_layout_set_markup(layout, text.c_str(), -1);
-    pango_layout_set_width(layout, 150 * PANGO_SCALE);
+    pango_layout_set_width(layout, (style->GetTileWidth() - 12)* PANGO_SCALE);
 
     pango_layout_set_height(layout, 2);
     pangoCtx = pango_layout_get_context(layout);  // is not ref'ed

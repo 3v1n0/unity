@@ -290,6 +290,8 @@ add_dependencies(test-preview-music unity-core-${UNITY_API_VERSION})
 
 add_executable (test-result-view
                 TestResultView.cpp
+                ${UNITY_SRC}/PlacesStyle.cpp
+                ${UNITY_SRC}/PlacesStyle.h
                 ${UNITY_SRC}/PreviewApplications.cpp
                 ${UNITY_SRC}/PreviewBase.cpp
                 ${UNITY_SRC}/PreviewBasicButton.cpp
