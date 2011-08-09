@@ -718,27 +718,7 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
   view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
   proxy->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
 
-  int indicator_pos = nux::NUX_LAYOUT_END;
-
-  if (proxy->priority() > -1)
-  {
-    for (nux::Area* &area : _menu_layout->GetChildren())
-    {
-      auto en = dynamic_cast<PanelIndicatorEntryView*>(area);
-
-      if (en)
-      {
-        if (proxy->priority() > en->GetEntryPriority())
-          break;
-
-        indicator_pos++;
-      }
-    }
-  }
-
-  nux::LayoutPosition pos = (nux::LayoutPosition) indicator_pos;
-
-  _menu_layout->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, pos);
+  _menu_layout->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, nux::NUX_LAYOUT_END);
   _menu_layout->SetContentDistribution(nux::eStackLeft);
 
   entries_[proxy->id()] = view;
