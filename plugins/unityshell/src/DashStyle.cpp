@@ -1029,9 +1029,9 @@ namespace unity
 
   void DashStyle::ButtonOutlinePathSegment (cairo_t* cr, Segment segment)
   {
-    double   x  = 2.0;
+    double   x  = 0.0;
     double   y  = 2.0;
-    double   w  = cairo_image_surface_get_width (cairo_get_target (cr)) - 4.0;
+    double   w  = cairo_image_surface_get_width (cairo_get_target (cr));
     double   h  = cairo_image_surface_get_height (cairo_get_target (cr)) - 4.0;
     double   xt = 0.0;
     double   yt = 0.0;
@@ -1109,9 +1109,9 @@ namespace unity
 
 	    // top
         cairo_line_to (cr, _align (xt - width - 8.279 - 2.811), _align (yt));
-        xt -= width;
 
 	    // top left
+        xt -= width;
         xt -= 8.279;
         yt += 2.735;
         xt -= 2.811;
