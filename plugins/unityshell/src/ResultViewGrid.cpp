@@ -171,18 +171,14 @@ void ResultViewGrid::PositionPreview ()
       g_debug ("found preview in this row, %i", y_position);
       // the preview is in this row, so we want to position it below here
       //~ nux::VLayout *layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-      //~ layout->AddLayout (new nux::SpaceLayout(0,y_position,0,y_position), 0);
-      //~ layout->AddLayout (preview_layout_, 0);
-      //~ layout->AddSpace (0, 1);
+      //~ //layout->AddLayout(new nux::SpaceLayout(y_position, y_position, y_position, y_position), 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+      //~ layout->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 //~
-      //~ SetLayout(layout);
-      preview_row_ = row_index;
+      //~ SetLayout(preview_layout_);
 
-      PositionChildLayout (0, y_position);
-      nux::Geometry geo = GetCompositionLayout()->GetGeometry();
-      geo.y = y_position;
-      GetCompositionLayout()->SetGeometry (geo);
-      GetCompositionLayout()->SetBaseY(y_position);
+      preview_spacer_->SetMinimumHeight(y_position);
+      preview_spacer_->SetMaximumHeight(y_position);
+      preview_row_ = row_index;
       break;
     }
   }
@@ -196,9 +192,6 @@ long ResultViewGrid::ComputeLayout2()
 {
   SizeReallocate();
   long ret = ResultView::ComputeLayout2();
-
-  if (GetCompositionLayout())
-    GetCompositionLayout()->SetBaseY(200);
   return ret;
 
 }

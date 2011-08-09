@@ -101,14 +101,14 @@ void TestRunner::Init ()
   nux::ScrollView* scroller = new nux::ScrollView (NUX_TRACKER_LOCATION);
   scroller->EnableVerticalScrollBar(true);
   nux::VLayout* scroll_layout = new nux::VLayout(NUX_TRACKER_LOCATION);
-  scroll_layout->AddView (result_view, 0);
+  scroll_layout->AddView (result_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   scroller->SetLayout(scroll_layout);
 
   layout->AddView (scroller, 1, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
   layout->SetFocused (true);
 
   // make our preview
-  /*
+
   unity::dash::Preview::Properties properties;
   unity::dash::ApplicationPreview* application_preview = new unity::dash::ApplicationPreview (properties);
 
@@ -130,7 +130,7 @@ void TestRunner::Init ()
   unity::PreviewApplications* preview_view = new unity::PreviewApplications (preview, NUX_TRACKER_LOCATION);
 
   result_view->SetPreview (preview_view, *result);
-  */
+
   //g_debug ("took %f seconds to layout", (g_get_monotonic_time () - time_start) / 1000000.0f);
   time_start = g_get_monotonic_time();
 

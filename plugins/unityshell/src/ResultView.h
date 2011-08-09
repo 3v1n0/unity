@@ -63,6 +63,7 @@ protected:
 
   // properties
   nux::Layout *preview_layout_;
+  nux::Layout* preview_spacer_;
   Result* preview_result_;
   ResultRenderer *renderer_;
   ResultList results_;
