@@ -1,5 +1,3 @@
-#if 0
-
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
@@ -30,7 +28,6 @@
 #include <NuxImage/CairoGraphics.h>
 #include <NuxImage/ImageSurface.h>
 #include <Nux/StaticText.h>
-#include <Nux/MenuPage.h>
 
 #include <NuxGraphics/GLThread.h>
 #include <NuxGraphics/RenderingPipe.h>
@@ -38,25 +35,25 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 
-#include "ubus-server.h"
-#include "UBusMessages.h"
-
-#include "PlacesSearchBar.h"
+#include "DashSearchBar.h"
 #include <UnityCore/Variant.h>
 
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 #define LIVE_SEARCH_TIMEOUT 250
 
-NUX_IMPLEMENT_OBJECT_TYPE(PlacesSearchBar);
-
-PlacesSearchBar::PlacesSearchBar(NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM),
-      _entry(NULL),
-      _live_search_timeout(0),
-      _ubus_handle(0)
+namespace unity
 {
-  PlacesStyle*      style = PlacesStyle::GetDefault();
+namespace dash
+{
+
+NUX_IMPLEMENT_OBJECT_TYPE(SearchBar);
+
+SearchBar::SearchBar(NUX_FILE_LINE_DECL)
+  :   View(NUX_FILE_LINE_PARAM),
+      _live_search_timeout(0)
+{
+  DashStyle*      style = DashStyle::GetDefault();
   nux::BaseTexture* icon = style->GetSearchMagnifyIcon();
 
   _bg_layer = new nux::ColorLayer(nux::Color(0xff595853), true);
@@ -64,11 +61,11 @@ PlacesSearchBar::PlacesSearchBar(NUX_FILE_LINE_DECL)
   _layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _layout->SetHorizontalInternalMargin(12);
 
-  _spinner = new PlacesSearchBarSpinner();
+  _spinner = new SearchBarSpinner();
   _spinner->SetMinMaxSize(icon->GetWidth(), icon->GetHeight());
   //_spinner->SetMaximumWidth (icon->GetWidth ());
   _layout->AddView(_spinner, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  _spinner->OnMouseClick.connect(sigc::mem_fun(this, &PlacesSearchBar::OnClearClicked));
+  _spinner->OnMouseClick.connect(sigc::mem_fun(this, &SearchBar::OnClearClicked));
   _spinner->SetCanFocus(false);
 
   _layered_layout = new nux::LayeredLayout();
@@ -79,22 +76,15 @@ PlacesSearchBar::PlacesSearchBar(NUX_FILE_LINE_DECL)
   _layered_layout->AddLayer(_hint);
 
   _pango_entry = new nux::TextEntry("", NUX_TRACKER_LOCATION);
-  _pango_entry->sigTextChanged.connect(sigc::mem_fun(this, &PlacesSearchBar::OnSearchChanged));
+  _pango_entry->sigTextChanged.connect(sigc::mem_fun(this, &SearchBar::OnSearchChanged));
   _pango_entry->SetCanFocus(true);
-  _pango_entry->activated.connect(sigc::mem_fun(this, &PlacesSearchBar::OnEntryActivated));
+  _pango_entry->activated.connect(sigc::mem_fun(this, &SearchBar::OnEntryActivated));
   _layered_layout->AddLayer(_pango_entry);
 
   _layered_layout->SetPaintAll(true);
   _layered_layout->SetActiveLayerN(1);
 
   _layout->AddView(_layered_layout, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
-
-  _combo = new nux::ComboBoxSimple(NUX_TRACKER_LOCATION);
-  _combo->SetMaximumWidth(style->GetTileWidth());
-  _combo->SetVisible(false);
-  _combo->sigTriggered.connect(sigc::mem_fun(this, &PlacesSearchBar::OnComboChanged));
-  _combo->GetMenuPage()->sigMouseDownOutsideMenuCascade.connect(sigc::mem_fun(this, &PlacesSearchBar::OnMenuClosing));
-  _layout->AddView(_combo, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _layout->SetVerticalExternalMargin(18);
   _layout->SetHorizontalExternalMargin(18);
@@ -105,15 +95,10 @@ PlacesSearchBar::PlacesSearchBar(NUX_FILE_LINE_DECL)
                                       G_CALLBACK(OnFontChanged), this);
   OnFontChanged(NULL, NULL, this);
 
-  _pango_entry->cursor_moved.connect(sigc::mem_fun(this, &PlacesSearchBar::OnLayeredLayoutQueueDraw));
-
-  _ubus_handle = ubus_server_register_interest(ubus_server_get_default(),
-                                               UBUS_PLACE_VIEW_HIDDEN,
-                                               (UBusCallback) PlacesSearchBar::OnPlacesClosed,
-                                               this);
+  _pango_entry->cursor_moved.connect(sigc::mem_fun(this, &SearchBar::OnLayeredLayoutQueueDraw));
 }
 
-PlacesSearchBar::~PlacesSearchBar()
+SearchBar::~SearchBar()
 {
   if (_bg_layer)
     delete _bg_layer;
@@ -123,27 +108,24 @@ PlacesSearchBar::~PlacesSearchBar()
 
   if (_live_search_timeout)
     g_source_remove(_live_search_timeout);
-
-  if (_ubus_handle != 0)
-    ubus_server_unregister_interest(ubus_server_get_default(), _ubus_handle);
 }
 
-const gchar* PlacesSearchBar::GetName()
+const gchar* SearchBar::GetName()
 {
-  return "PlacesSearchBar";
+  return "SearchBar";
 }
 
-const gchar* PlacesSearchBar::GetChildsName()
+const gchar* SearchBar::GetChildsName()
 {
   return "";
 }
 
-void PlacesSearchBar::AddProperties(GVariantBuilder* builder)
+void SearchBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder).add(GetGeometry());
 }
 
-long PlacesSearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
+long SearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
                                    long ProcessEventInfo)
 {
   long ret = TraverseInfo;
@@ -152,7 +134,7 @@ long PlacesSearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
   return ret;
 }
 
-void PlacesSearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -170,7 +152,7 @@ void PlacesSearchBar::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void PlacesSearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void SearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry geo = GetGeometry();
 
@@ -184,7 +166,8 @@ void PlacesSearchBar::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   GfxContext.PopClippingRectangle();
 }
 
-void PlacesSearchBar::SetActiveEntry(PlaceEntry* entry,
+#if 0
+void SearchBar::SetActiveEntry(PlaceEntry* entry,
                                      guint       section_id,
                                      const char* search_string)
 {
@@ -209,7 +192,7 @@ void PlacesSearchBar::SetActiveEntry(PlaceEntry* entry,
     _entry->SetActiveSection(section_id);
     _entry->SetSearch(search_string ? search_string : "", hints);
 
-    _entry->ForeachSection(sigc::mem_fun(this, &PlacesSearchBar::OnSectionAdded));
+    _entry->ForeachSection(sigc::mem_fun(this, &SearchBar::OnSectionAdded));
     if (_combo->IsVisible())
       _combo->SetSelectionIndex(section_id);
 
@@ -222,30 +205,9 @@ void PlacesSearchBar::SetActiveEntry(PlaceEntry* entry,
   }
 }
 
-void PlacesSearchBar::OnSectionAdded(PlaceEntry* entry, PlaceEntrySection& section)
-{
-  char* tmp = g_markup_escape_text(section.GetName(), -1);
+#endif
 
-  _combo->AddItem(tmp);
-  _combo->SetVisible(true);
-
-  g_free(tmp);
-}
-
-void PlacesSearchBar::OnComboChanged(nux::ComboBoxSimple* simple)
-{
-  _entry->SetActiveSection(_combo->GetSelectionIndex());
-  OnMenuClosing(NULL, 0, 0);
-}
-
-void PlacesSearchBar::OnMenuClosing(nux::MenuPage* menu, int x, int y)
-{
-  ubus_server_send_message(ubus_server_get_default(),
-                           UBUS_PLACE_VIEW_QUEUE_DRAW,
-                           NULL);
-}
-
-void PlacesSearchBar::OnSearchChanged(nux::TextEntry* text_entry)
+void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
 {
   bool is_empty;
 
@@ -269,7 +231,7 @@ void PlacesSearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   QueueDraw();
 }
 
-bool PlacesSearchBar::OnLiveSearchTimeout(PlacesSearchBar* self)
+bool SearchBar::OnLiveSearchTimeout(SearchBar* self)
 {
   self->EmitLiveSearch();
   self->_live_search_timeout = 0;
@@ -277,24 +239,27 @@ bool PlacesSearchBar::OnLiveSearchTimeout(PlacesSearchBar* self)
   return FALSE;
 }
 
-void PlacesSearchBar::EmitLiveSearch()
+void SearchBar::EmitLiveSearch()
 {
+  /* FIXME
   if (_entry)
   {
     std::map<gchar*, gchar*> hints;
 
     _entry->SetSearch(_pango_entry->GetText().c_str(), hints);
   }
+  */
 }
 
-void PlacesSearchBar::OnClearClicked(int x, int y, unsigned long button_flags,
+void SearchBar::OnClearClicked(int x, int y, unsigned long button_flags,
                                      unsigned long key_flags)
 {
   gchar*                   markup;
   gchar*                   tmp;
   std::map<gchar*, gchar*> hints;
 
-  tmp = g_markup_escape_text(_entry->GetSearchHint(), -1);
+  //tmp = g_markup_escape_text(_entry->GetSearchHint(), -1);
+  tmp = g_strdup("Test Search Hint");
   markup  = g_strdup_printf("<span font_size='x-small' font_style='italic'> %s </span>", tmp);
 
   _hint->SetText(markup);
@@ -306,24 +271,24 @@ void PlacesSearchBar::OnClearClicked(int x, int y, unsigned long button_flags,
   }
 }
 
-void PlacesSearchBar::OnEntryActivated()
+void SearchBar::OnEntryActivated()
 {
   activated.emit();
 }
 
-void PlacesSearchBar::OnLayeredLayoutQueueDraw(int i)
+void SearchBar::OnLayeredLayoutQueueDraw(int i)
 {
   QueueDraw();
 }
 
 void
-PlacesSearchBar::OnSearchFinished()
+SearchBar::OnSearchFinished()
 {
   _spinner->SetState(STATE_CLEAR);
 }
 
-void PlacesSearchBar::OnFontChanged(GObject* object, GParamSpec* pspec,
-                                    PlacesSearchBar* self)
+void SearchBar::OnFontChanged(GObject* object, GParamSpec* pspec,
+                                    SearchBar* self)
 {
 #define HOW_LARGE 8
   GtkSettings*          settings;
@@ -334,14 +299,6 @@ void PlacesSearchBar::OnFontChanged(GObject* object, GParamSpec* pspec,
 
   settings = gtk_settings_get_default();
   g_object_get(settings, "gtk-font-name", &font_name, NULL);
-
-  self->_combo->GetStaticText()->SetFontName(font_name);
-  self->_combo->GetMenuPage()->SetFontName(font_name);
-  PlacesStyle* style = PlacesStyle::GetDefault();
-  int text_height, text_width;
-  self->_combo->GetStaticText()->GetTextSize(text_width, text_height);
-  self->_combo->SetMaximumSize(style->GetTileWidth(), text_height);
-  self->_combo->SetBaseHeight(text_height);
 
   desc = pango_font_description_from_string(font_name);
   self->_pango_entry->SetFontFamily(pango_font_description_get_family(desc));
@@ -358,11 +315,6 @@ void PlacesSearchBar::OnFontChanged(GObject* object, GParamSpec* pspec,
   pango_font_description_free(desc);
   g_free(font_name);
   g_free(font_desc);
-}
-
-void PlacesSearchBar::OnPlacesClosed(GVariant* variant, PlacesSearchBar* self)
-{
-  self->_combo->GetMenuPage()->StopMenu();
 }
 
 static void draw_rounded_rect(cairo_t* cr,
@@ -421,7 +373,7 @@ static void draw_rounded_rect(cairo_t* cr,
   cairo_close_path(cr);
 }
 
-void PlacesSearchBar::UpdateBackground()
+void SearchBar::UpdateBackground()
 {
 #define PADDING 14
 #define RADIUS  6
@@ -493,7 +445,7 @@ void PlacesSearchBar::UpdateBackground()
   texture2D->UnReference();
 }
 
-void PlacesSearchBar::RecvMouseDownFromWindow(int x, int y,
+void SearchBar::RecvMouseDownFromWindow(int x, int y,
                                               unsigned long button_flags,
                                               unsigned long key_flags)
 {
@@ -507,9 +459,10 @@ void PlacesSearchBar::RecvMouseDownFromWindow(int x, int y,
 // Key navigation
 //
 bool
-PlacesSearchBar::AcceptKeyNavFocus()
+SearchBar::AcceptKeyNavFocus()
 {
   return false;
 }
 
-#endif
+}
+}

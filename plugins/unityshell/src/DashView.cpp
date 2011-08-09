@@ -64,6 +64,9 @@ void DashView::SetupViews()
 {
   layout_ = new nux::VLayout();
   SetLayout(layout_);
+
+  search_bar_ = new SearchBar();
+  layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -89,7 +92,20 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 
 void DashView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
+  nux::Geometry clip_geo = GetGeometry();
 
+  clip_geo.height = bg_layer_->GetGeometry().height - 1;
+  gfx_context.PushClippingRectangle(clip_geo);
+
+  gfx_context.GetRenderStates().SetBlend(true);
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
+  nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+  layout_->ProcessDraw(gfx_context, force_draw);
+  nux::GetPainter().PopBackground();
+
+  gfx_context.GetRenderStates().SetBlend(false);
+  gfx_context.PopClippingRectangle();
 }
 
 void DashView::OnActivateRequest(GVariant* args)

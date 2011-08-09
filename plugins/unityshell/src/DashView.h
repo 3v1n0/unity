@@ -26,6 +26,7 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/FilesystemLenses.h>
 
+#include "DashSearchBar.h"
 #include "Introspectable.h"
 #include "UBusWrapper.h"
 
@@ -70,6 +71,7 @@ private:
 
   // View related
   nux::VLayout* layout_;
+  SearchBar* search_bar_;
 };
 
 

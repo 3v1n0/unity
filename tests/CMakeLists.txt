@@ -77,10 +77,16 @@ add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 #
 add_executable (standalone-dash
                 standalone_dash.cpp
-                ${UNITY_SRC}/DashView.cpp
-                ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/BGHash.cpp
                 ${UNITY_SRC}/BGHash.h
+                ${UNITY_SRC}/DashSearchBar.cpp
+                ${UNITY_SRC}/DashSearchBar.h
+                ${UNITY_SRC}/DashSearchBarSpinner.cpp
+                ${UNITY_SRC}/DashSearchBarSpinner.h
+                ${UNITY_SRC}/DashStyle.cpp
+                ${UNITY_SRC}/DashStyle.h
+                ${UNITY_SRC}/DashView.cpp
+                ${UNITY_SRC}/DashView.h
                 ${UNITY_SRC}/IconLoader.cpp
                 ${UNITY_SRC}/IconLoader.h
                 ${UNITY_SRC}/IconTexture.cpp

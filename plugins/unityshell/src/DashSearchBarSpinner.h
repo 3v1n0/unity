@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACES_SEARCH_BAR_SPINNER_H
-#define PLACES_SEARCH_BAR_SPINNER_H
+#ifndef DASH_SEARCH_BAR_SPINNER_H
+#define DASH_SEARCH_BAR_SPINNER_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
@@ -27,6 +27,11 @@
 #include <NuxCore/Math/Matrix4.h>
 #include "Introspectable.h"
 
+namespace unity
+{
+namespace dash
+{
+
 enum SpinnerState
 {
   STATE_READY,
@@ -34,12 +39,12 @@ enum SpinnerState
   STATE_CLEAR
 };
 
-class PlacesSearchBarSpinner : public unity::Introspectable, public nux::View
+class SearchBarSpinner : public unity::Introspectable, public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE(PlacesSearchBarSpinner, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(SearchBarSpinner, nux::View);
 public:
-  PlacesSearchBarSpinner();
-  ~PlacesSearchBarSpinner();
+  SearchBarSpinner();
+  ~SearchBarSpinner();
 
   long ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -51,7 +56,7 @@ protected:
   // Introspectable methods
   const gchar* GetName();
   void AddProperties(GVariantBuilder* builder);
-  static gboolean OnFrame(PlacesSearchBarSpinner* self);
+  static gboolean OnFrame(SearchBarSpinner* self);
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();
@@ -72,5 +77,8 @@ private:
 
   guint32 _spinner_timeout;
 };
+
+}
+}
 
 #endif

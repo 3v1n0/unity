@@ -16,21 +16,21 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef PLACES_STYLE_H
-#define PLACES_STYLE_H
+#ifndef DASH_STYLE_H
+#define DASH_STYLE_H
 
 #include <Nux/Nux.h>
 #include <NuxImage/CairoGraphics.h>
 #include <gtk/gtk.h>
 
-class PlacesStyle : public nux::Object
+class DashStyle : public nux::Object
 {
 public:
 
-  static PlacesStyle* GetDefault();
+  static DashStyle* GetDefault();
 
-  PlacesStyle();
-  ~PlacesStyle();
+  DashStyle();
+  ~DashStyle();
 
   nux::Color& GetTextColor();
 
@@ -66,7 +66,7 @@ private:
   void               Refresh();
   nux::BaseTexture* TextureFromFilename(const char* filename);
 
-  static void OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self);
+  static void OnFontChanged(GObject* object, GParamSpec* pspec, DashStyle* self);
 
 private:
   nux::CairoGraphics _util_cg;
@@ -91,4 +91,4 @@ private:
   nux::BaseTexture* _group_expand_texture;
 };
 
-#endif // PLACES_STYLE_H
+#endif // DASH_STYLE_H

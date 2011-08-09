@@ -26,7 +26,7 @@
 #include <NuxImage/CairoGraphics.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include "PlacesStyle.h"
+#include "DashStyle.h"
 
 using namespace unity;
 
@@ -35,9 +35,9 @@ namespace
 nux::logging::Logger logger("unity.places");
 }
 
-static PlacesStyle* _style = NULL;
+static DashStyle* _style = NULL;
 
-PlacesStyle::PlacesStyle()
+DashStyle::DashStyle()
   : _util_cg(CAIRO_FORMAT_ARGB32, 1, 1),
     _text_color(1.0f, 1.0f, 1.0f, 1.0f),
     _text_width(0),
@@ -56,14 +56,14 @@ PlacesStyle::PlacesStyle()
     _group_expand_texture(NULL)
 {
   g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name",
-                   G_CALLBACK(PlacesStyle::OnFontChanged), this);
+                   G_CALLBACK(DashStyle::OnFontChanged), this);
   g_signal_connect(gtk_settings_get_default(), "notify::gtk-xft-dpi",
-                   G_CALLBACK(PlacesStyle::OnFontChanged), this);
+                   G_CALLBACK(DashStyle::OnFontChanged), this);
 
   Refresh();
 }
 
-PlacesStyle::~PlacesStyle()
+DashStyle::~DashStyle()
 {
   if (_dash_bottom_texture)
     _dash_bottom_texture->UnReference();
@@ -90,20 +90,20 @@ PlacesStyle::~PlacesStyle()
     _style = NULL;
 }
 
-PlacesStyle* PlacesStyle::GetDefault()
+DashStyle* DashStyle::GetDefault()
 {
   if (G_UNLIKELY(!_style))
-    _style = new PlacesStyle();
+    _style = new DashStyle();
 
   return _style;
 }
 
-int PlacesStyle::GetDefaultNColumns()
+int DashStyle::GetDefaultNColumns()
 {
   return _n_cols;
 }
 
-void PlacesStyle::SetDefaultNColumns(int n_cols)
+void DashStyle::SetDefaultNColumns(int n_cols)
 {
   if (_n_cols == n_cols)
     return;
@@ -113,115 +113,115 @@ void PlacesStyle::SetDefaultNColumns(int n_cols)
   columns_changed.emit();
 }
 
-int PlacesStyle::GetTileIconSize()
+int DashStyle::GetTileIconSize()
 {
   return 48;
 }
 
-int PlacesStyle::GetTileWidth()
+int DashStyle::GetTileWidth()
 {
   return _text_width;
 }
 
-int PlacesStyle::GetTileHeight()
+int DashStyle::GetTileHeight()
 {
   return GetTileIconSize() + (_text_height * 4);
 }
 
-int PlacesStyle::GetHomeTileIconSize()
+int DashStyle::GetHomeTileIconSize()
 {
   return 104;
 }
 
-int PlacesStyle::GetHomeTileWidth()
+int DashStyle::GetHomeTileWidth()
 {
   return _text_width * 1.2;
 }
 
-int PlacesStyle::GetHomeTileHeight()
+int DashStyle::GetHomeTileHeight()
 {
   return GetHomeTileIconSize() + (_text_height * 4);
 }
 
 
-nux::BaseTexture* PlacesStyle::GetDashBottomTile()
+nux::BaseTexture* DashStyle::GetDashBottomTile()
 {
   if (!_dash_bottom_texture)
     _dash_bottom_texture = TextureFromFilename(PKGDATADIR"/dash_bottom_border_tile.png");
   return _dash_bottom_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetDashRightTile()
+nux::BaseTexture* DashStyle::GetDashRightTile()
 {
   if (!_dash_right_texture)
     _dash_right_texture =  TextureFromFilename(PKGDATADIR"/dash_right_border_tile.png");
   return _dash_right_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetDashCorner()
+nux::BaseTexture* DashStyle::GetDashCorner()
 {
   if (!_dash_corner_texture)
     _dash_corner_texture =  TextureFromFilename(PKGDATADIR"/dash_bottom_right_corner.png");
   return _dash_corner_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetDashFullscreenIcon()
+nux::BaseTexture* DashStyle::GetDashFullscreenIcon()
 {
   if (!_dash_fullscreen_icon)
     _dash_fullscreen_icon = TextureFromFilename(PKGDATADIR"/dash_fullscreen_icon.png");
   return _dash_fullscreen_icon;
 }
 
-nux::BaseTexture* PlacesStyle::GetSearchMagnifyIcon()
+nux::BaseTexture* DashStyle::GetSearchMagnifyIcon()
 {
   if (!_search_magnify_texture)
     _search_magnify_texture = TextureFromFilename(PKGDATADIR"/search_magnify.png");
   return _search_magnify_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetSearchCloseIcon()
+nux::BaseTexture* DashStyle::GetSearchCloseIcon()
 {
   if (!_search_close_texture)
     _search_close_texture = TextureFromFilename(PKGDATADIR"/search_close.png");
   return _search_close_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetSearchCloseGlowIcon()
+nux::BaseTexture* DashStyle::GetSearchCloseGlowIcon()
 {
   if (!_search_close_glow_texture)
     _search_close_glow_texture = TextureFromFilename(PKGDATADIR"/search_close_glow.png");
   return _search_close_glow_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetSearchSpinIcon()
+nux::BaseTexture* DashStyle::GetSearchSpinIcon()
 {
   if (!_search_spin_texture)
     _search_spin_texture = TextureFromFilename(PKGDATADIR"/search_spin.png");
   return _search_spin_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetSearchSpinGlowIcon()
+nux::BaseTexture* DashStyle::GetSearchSpinGlowIcon()
 {
   if (!_search_spin_glow_texture)
     _search_spin_glow_texture = TextureFromFilename(PKGDATADIR"/search_spin_glow.png");
   return _search_spin_glow_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetGroupUnexpandIcon()
+nux::BaseTexture* DashStyle::GetGroupUnexpandIcon()
 {
   if (!_group_unexpand_texture)
     _group_unexpand_texture = TextureFromFilename(PKGDATADIR"/dash_group_unexpand.png");
   return _group_unexpand_texture;
 }
 
-nux::BaseTexture* PlacesStyle::GetGroupExpandIcon()
+nux::BaseTexture* DashStyle::GetGroupExpandIcon()
 {
   if (!_group_expand_texture)
     _group_expand_texture = TextureFromFilename(PKGDATADIR"/dash_group_expand.png");
   return _group_expand_texture;
 }
 
-nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
+nux::BaseTexture* DashStyle::TextureFromFilename(const char* filename)
 {
   glib::Object<GdkPixbuf> pixbuf;
   glib::Error error;
@@ -241,7 +241,7 @@ nux::BaseTexture* PlacesStyle::TextureFromFilename(const char* filename)
   return texture;
 }
 
-void PlacesStyle::Refresh()
+void DashStyle::Refresh()
 {
 #define _TEXT_ "Chromium Web Browser"
   PangoLayout*          layout = NULL;
@@ -283,12 +283,12 @@ void PlacesStyle::Refresh()
   cairo_destroy(cr);
 }
 
-nux::Color& PlacesStyle::GetTextColor()
+nux::Color& DashStyle::GetTextColor()
 {
   return _text_color;
 }
 
-void PlacesStyle::OnFontChanged(GObject* object, GParamSpec* pspec, PlacesStyle* self)
+void DashStyle::OnFontChanged(GObject* object, GParamSpec* pspec, DashStyle* self)
 {
   self->Refresh();
 }
