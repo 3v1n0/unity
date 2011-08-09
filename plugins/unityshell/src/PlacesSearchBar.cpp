@@ -49,10 +49,12 @@
 NUX_IMPLEMENT_OBJECT_TYPE(PlacesSearchBar);
 
 PlacesSearchBar::PlacesSearchBar(NUX_FILE_LINE_DECL)
-  :   View(NUX_FILE_LINE_PARAM),
-      _entry(NULL),
-      _live_search_timeout(0),
-      _ubus_handle(0)
+  : View(NUX_FILE_LINE_PARAM)
+  , _last_width(0)
+  , _last_height(0)
+  , _entry(NULL)
+  , _live_search_timeout(0)
+  , _ubus_handle(0)
 {
   PlacesStyle*      style = PlacesStyle::GetDefault();
   nux::BaseTexture* icon = style->GetSearchMagnifyIcon();

@@ -88,18 +88,34 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , launcher(nullptr)
+  , controller(nullptr)
+  , panelController(nullptr)
+  , switcherController(nullptr)
+  , placesController(nullptr)
+  , gestureEngine(nullptr)
+  , wt(nullptr)
+  , launcherWindow(nullptr)
+  , panelWindow(nullptr)
+  , debugger(nullptr)
+  , needsRelayout(false)
   , relayoutSourceId(0)
   , _edge_trigger_handle(0)
+  , _edge_pointerY(0)
+  , newFocusedWindow(nullptr)
+  , lastFocusedWindow(nullptr)
   , doShellRepaint(false)
-  , switcher_desktop_icon(0)
+  , allowWindowPaint(false)
+  , damaged(false)
+  , _key_nav_mode_requested(false)
+  , _last_output(nullptr)
+  , switcher_desktop_icon(nullptr)
 {
   Timer timer;
   configure_logging();
   LOG_DEBUG(logger) << __PRETTY_FUNCTION__;
-  _key_nav_mode_requested = false;
   int (*old_handler)(Display*, XErrorEvent*);
   old_handler = XSetErrorHandler(NULL);
-  damaged = false;
 
   notify_init("unityshell");
 
@@ -129,9 +145,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
   unity_a11y_init(wt);
-
-  newFocusedWindow  = NULL;
-  lastFocusedWindow = NULL;
 
   /* i18n init */
   bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
