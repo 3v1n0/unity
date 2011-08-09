@@ -86,6 +86,7 @@ void LensView::OnCategoryAdded(Category const& category)
   categories_.push_back(group);
   
   ResultViewGrid* grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
+  grid->expanded = false;
   grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   group->SetChildView(grid);
 
