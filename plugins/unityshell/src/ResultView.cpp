@@ -40,9 +40,7 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
   expanded.changed.connect ([&] (bool value) {
     if (!value && preview_layout_)
     {
-      g_debug ("unset layout");
       RemoveLayout();
-      g_debug ("composite layout %p", GetCompositionLayout());
     }
     else if (value && preview_layout_)
     {
