@@ -120,8 +120,15 @@ void ResultView::SetPreview (PreviewBase *preview, Result& related_result)
     preview_layout_->AddView(preview, 1);
     preview_layout_->AddView(right_arrow, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
     preview_result_ = &related_result;
+    SetLayout(preview_layout_);
   }
 }
+
+long ResultView::ComputeLayout2()
+{
+  return View::ComputeLayout2();
+}
+
 
 void ResultView::DrawContent (nux::GraphicsEngine &GfxContent, bool force_draw) {
   nux::Geometry base = GetGeometry ();
