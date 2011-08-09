@@ -1,3 +1,4 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -183,12 +184,6 @@ PanelMenuView::FullRedraw()
   NeedRedraw();
 }
 
-void PanelMenuView::SetProxy(indicator::Indicator::Ptr const& proxy)
-{
-  proxy_ = proxy;
-  on_entry_added_connection_ = proxy_->on_entry_added.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryAdded));
-}
-
 long
 PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long ProcessEventInfo)
 {
@@ -235,9 +230,9 @@ PanelMenuView::ProcessEvent(nux::IEvent& ievent, long TraverseInfo, long Process
 }
 
 nux::Area*
-PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_priority, nux::NuxEventType event_type)
 {
-  bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
+  bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_priority, event_type);
 
   if (mouse_inside == false)
     return NULL;
@@ -245,7 +240,7 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   Area* found_area = NULL;
   if (!_we_control_active)
   {
-    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_priority, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
@@ -253,30 +248,30 @@ PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEven
   {
     if (_window_buttons)
     {
-      found_area = _window_buttons->FindAreaUnderMouse(mouse_position, event_type);
+      found_area = _window_buttons->FindAreaUnderMouse(mouse_priority, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
     }
 
     if (_panel_titlebar_grab_area)
     {
-      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+      found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_priority, event_type);
       NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
     }
   }
 
   if (_panel_titlebar_grab_area)
   {
-    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _panel_titlebar_grab_area->FindAreaUnderMouse(mouse_priority, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
   if (!_is_own_window)
   {
-    found_area = _menu_layout->FindAreaUnderMouse(mouse_position, event_type);
+    found_area = _menu_layout->FindAreaUnderMouse(mouse_priority, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
   }
 
-  return View::FindAreaUnderMouse(mouse_position, event_type);
+  return View::FindAreaUnderMouse(mouse_priority, event_type);
 }
 
 long PanelMenuView::PostLayoutManagement(long LayoutResult)
@@ -292,7 +287,7 @@ long PanelMenuView::PostLayoutManagement(long LayoutResult)
   _window_buttons->ComputeLayout2();
   new_window_buttons_w = _window_buttons->GetContentWidth();
 
-  /* Explicitly set the size and position of the widgets */
+  /* Explicitly set the size and priority of the widgets */
   geo.x += _padding + new_window_buttons_w + _padding;
   geo.width -= _padding + new_window_buttons_w + _padding;
 
@@ -354,7 +349,7 @@ PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     for (it = entries_.begin(); it != eit; ++it)
     {
-      if ((*it)->IsEntryValid())
+      if (it->second->IsEntryValid())
       {
         have_valid_entries = true;
         break;
@@ -698,15 +693,8 @@ PanelMenuView::Refresh()
   g_free(label);
 }
 
-/* The entry was refreshed - so relayout our panel */
 void
-PanelMenuView::OnEntryRefreshed(PanelIndicatorObjectEntryView* view)
-{
-  QueueRelayout();
-}
-
-void
-PanelMenuView::OnActiveChanged(PanelIndicatorObjectEntryView* view,
+PanelMenuView::OnActiveChanged(PanelIndicatorEntryView* view,
                                bool                           is_active)
 {
   if (is_active)
@@ -725,15 +713,35 @@ PanelMenuView::OnActiveChanged(PanelIndicatorObjectEntryView* view,
 
 void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 {
-  PanelIndicatorObjectEntryView* view = new PanelIndicatorObjectEntryView(proxy, 6);
+  PanelIndicatorEntryView* view = new PanelIndicatorEntryView(proxy, 6);
   view->active_changed.connect(sigc::mem_fun(this, &PanelMenuView::OnActiveChanged));
-  view->refreshed.connect(sigc::mem_fun(this, &PanelMenuView::OnEntryRefreshed));
+  view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
   proxy->show_now_changed.connect(sigc::mem_fun(this, &PanelMenuView::UpdateShowNow));
-  _menu_layout->AddView(view, 0, nux::eCenter, nux::eFull);
+
+  int indicator_pos = nux::NUX_LAYOUT_END;
+
+  if (proxy->priority() > -1)
+  {
+    for (nux::Area* &area : _menu_layout->GetChildren())
+    {
+      auto en = dynamic_cast<PanelIndicatorEntryView*>(area);
+
+      if (en)
+      {
+        if (proxy->priority() > en->GetEntryPriority())
+          break;
+
+        indicator_pos++;
+      }
+    }
+  }
+
+  nux::LayoutPosition pos = (nux::LayoutPosition) indicator_pos;
+
+  _menu_layout->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, pos);
   _menu_layout->SetContentDistribution(nux::eStackLeft);
 
-  entries_.push_back(view);
-
+  entries_[proxy->id()] = view;
   AddChild(view);
 
   view->OnMouseEnter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
@@ -741,6 +749,8 @@ void PanelMenuView::OnEntryAdded(unity::indicator::Entry::Ptr const& proxy)
 
   QueueRelayout();
   QueueDraw();
+
+  on_indicator_updated.emit(view);
 }
 
 void
@@ -1098,10 +1108,11 @@ void PanelMenuView::UpdateShowNow(bool ignore)
 
   for (Entries::iterator it = entries_.begin(); it != entries_.end(); ++it)
   {
-    PanelIndicatorObjectEntryView* view = *it;
-    if (view->GetShowNow())
+    PanelIndicatorEntryView* view = it->second;
+    if (view->GetShowNow()) {
       _show_now_activated = true;
-
+      break;
+    }
   }
   QueueDraw();
 }

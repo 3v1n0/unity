@@ -35,12 +35,12 @@
 namespace unity
 {
 
-class PanelIndicatorObjectEntryView : public nux::TextureArea, public unity::Introspectable
+class PanelIndicatorEntryView : public nux::TextureArea, public unity::Introspectable
 {
 public:
-  PanelIndicatorObjectEntryView(indicator::Entry::Ptr const& proxy,
+  PanelIndicatorEntryView(indicator::Entry::Ptr const& proxy,
                                 int padding = 5);
-  ~PanelIndicatorObjectEntryView();
+  ~PanelIndicatorEntryView();
 
   void Refresh();
 
@@ -55,12 +55,13 @@ public:
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
   bool IsEntryValid() const;
   bool IsSensitive() const;
+  int  GetEntryPriority() const;
 
   const gchar* GetName();
-  void          AddProperties(GVariantBuilder* builder);
+  void         AddProperties(GVariantBuilder* builder);
 
-  sigc::signal<void, PanelIndicatorObjectEntryView*, bool> active_changed;
-  sigc::signal<void, PanelIndicatorObjectEntryView*> refreshed;
+  sigc::signal<void, PanelIndicatorEntryView*, bool> active_changed;
+  sigc::signal<void, PanelIndicatorEntryView*> refreshed;
 
 private:
   unity::indicator::Entry::Ptr proxy_;

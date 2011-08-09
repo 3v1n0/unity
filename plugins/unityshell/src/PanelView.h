@@ -34,6 +34,7 @@
 #include "PanelHomeButton.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
+#include "PanelIndicatorsView.h"
 #include "PanelStyle.h"
 
 namespace unity
@@ -54,6 +55,7 @@ public:
   long PostLayoutManagement(long LayoutResult);
 
   void OnObjectAdded(indicator::Indicator::Ptr const& proxy);
+  void OnIndicatorViewUpdated(PanelIndicatorEntryView* view);
   void OnMenuPointerMoved(int x, int y);
   void OnEntryActivateRequest(std::string const& entry_id);
   void OnEntryActivated(std::string const& entry_id);
@@ -86,18 +88,16 @@ private:
   void UpdateBackground();
   void ForceUpdateBackground();
   void SyncGeometries();
-  void AddPanelView(PanelIndicatorObjectView* child,
-                    unsigned int stretchFactor);
+  void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
 private:
   indicator::DBusIndicators::Ptr _remote;
   // No ownership is taken for these views, that is done by the AddChild method.
-  typedef std::vector<PanelIndicatorObjectView*> Children;
-  Children children_;
 
   PanelHomeButton*         _home_button;
   PanelMenuView*           _menu_view;
   PanelTray*               _tray;
+  PanelIndicatorsView*     _indicators;
   nux::AbstractPaintLayer* _bg_layer;
   nux::HLayout*            _layout;
 
@@ -117,6 +117,8 @@ private:
   guint       _handle_dash_shown;
   guint       _handle_bg_color_update;
   guint       _track_menu_pointer_id;
+
+  std::vector<sigc::connection> _on_indicator_updated_connections;
 };
 
 }

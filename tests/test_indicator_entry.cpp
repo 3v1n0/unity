@@ -13,7 +13,7 @@ TEST(TestIndicatorEntry, TestConstruction)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         1, "some icon", false, true);
+                         1, "some icon", false, true, -1);
 
   EXPECT_EQ(entry.id(), "id");
   EXPECT_EQ(entry.label(), "label");
@@ -53,9 +53,9 @@ TEST(TestIndicatorEntry, TestAssignment)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
   indicator::Entry other_entry("other_id", "other_label", false, false,
-                               2, "other icon", true, false);
+                               2, "other icon", true, false, -1);
 
   Counter counter;
   entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
@@ -77,7 +77,7 @@ TEST(TestIndicatorEntry, TestUnused)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
 
   Counter counter;
   entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
@@ -92,7 +92,7 @@ TEST(TestIndicatorEntry, TestShowNowEvents)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
 
   ChangeRecorder<bool> recorder;
   Counter counter;
@@ -117,7 +117,7 @@ TEST(TestIndicatorEntry, TestActiveEvents)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
 
   ChangeRecorder<bool> recorder;
   Counter counter;
@@ -155,7 +155,7 @@ TEST(TestIndicatorEntry, TestOnScroll)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
 
   ScrollRecorder recorder("id");
   entry.on_scroll.connect(sigc::mem_fun(recorder, &ScrollRecorder::OnScroll));
@@ -186,7 +186,7 @@ TEST(TestIndicatorEntry, TestOnShowMenu)
 {
 
   indicator::Entry entry("id", "label", true, true,
-                         0, "some icon", false, true);
+                         0, "some icon", false, true, -1);
 
   ShowMenuRecorder recorder;
   entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));

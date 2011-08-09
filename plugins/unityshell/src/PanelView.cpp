@@ -32,7 +32,7 @@
 #include <glib.h>
 
 #include "PanelStyle.h"
-#include "PanelIndicatorObjectView.h"
+#include "PanelIndicatorsView.h"
 #include <UnityCore/Variant.h>
 
 #include "ubus-server.h"
@@ -77,6 +77,9 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
   AddChild(_tray);
 
+  _indicators = new PanelIndicatorsView();
+  AddPanelView(_indicators, 0);
+
   _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
   _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
@@ -112,6 +115,7 @@ PanelView::~PanelView()
   ubus_server_unregister_interest(ubus, _handle_bg_color_update);
   ubus_server_unregister_interest(ubus, _handle_dash_hidden);
   ubus_server_unregister_interest(ubus, _handle_dash_shown);
+  _on_indicator_updated_connections.clear();
   
   delete _bg_layer;
 }
@@ -136,12 +140,13 @@ void PanelView::OnDashShown(GVariant* data, PanelView* self)
   self->ForceUpdateBackground();
 }
 
-void PanelView::AddPanelView(PanelIndicatorObjectView* child,
+void PanelView::AddPanelView(PanelIndicatorsView* child,
                              unsigned int stretchFactor)
 {
   _layout->AddView(child, stretchFactor, nux::eCenter, nux::eFull);
+  auto conn = child->on_indicator_updated.connect(sigc::mem_fun(this, &PanelView::OnIndicatorViewUpdated));
+  _on_indicator_updated_connections.push_back(conn);
   AddChild(child);
-  children_.push_back(child);
 }
 
 const gchar* PanelView::GetName()
@@ -272,12 +277,9 @@ void PanelView::ForceUpdateBackground()
   _is_dirty = true;
   UpdateBackground();
 
-  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-  {
-    (*i)->QueueDraw();
-  }
-  // The home button isn't an indicator view.
   _home_button->QueueDraw();
+  _indicators->QueueDraw();
+  _menu_view->QueueDraw();
   _tray->QueueDraw();
   QueueDraw();
 }
@@ -291,18 +293,26 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   // We could do this in a more special way, but who has the time for special?
   if (proxy->name().find("appmenu") != std::string::npos)
   {
-    _menu_view->SetProxy(proxy);
+    _menu_view->AddIndicator(proxy);
   }
   else
   {
-    PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
-    AddPanelView(view, 0);
+    //PanelIndicatorObjectView* view = new PanelIndicatorObjectView(proxy);
+    //AddPanelView(view, 0);
+    //
+    _indicators->AddIndicator(proxy);
   }
 
   _layout->SetContentDistribution(nux::eStackLeft);
 
   ComputeChildLayout();
   NeedRedraw();
+}
+
+void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
+{
+  ComputeChildLayout();
+  //NeedRedraw();
 }
 
 void PanelView::OnMenuPointerMoved(int x, int y)
@@ -315,10 +325,16 @@ void PanelView::OnMenuPointerMoved(int x, int y)
 
   if (geo.IsPointInside(x, y))
   {
-    for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-    {
-      PanelIndicatorObjectView* view = *i;
+    bool ret = false;
 
+    if (!_menu_view->HasOurWindowFocused())
+      ret = _menu_view->OnPointerMoved(x, y);
+
+    if (!ret) _indicators->OnPointerMoved(x, y);
+
+/*
+    for (auto view : children_)
+    {
       if (view == _menu_view && _menu_view->HasOurWindowFocused())
         continue;
 
@@ -329,6 +345,7 @@ void PanelView::OnMenuPointerMoved(int x, int y)
         break;
       }
     }
+*/
   }
 }
 
@@ -337,13 +354,10 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
   if (!_menu_view->GetControlsActive())
     return;
 
-  bool activated = false;
-  for (Children::iterator i = children_.begin(), end = children_.end();
-       i != end && !activated; ++i)
-  {
-    PanelIndicatorObjectView* view = *i;
-    activated = view->ActivateEntry(entry_id);
-  }
+  bool ret;
+
+  ret = _menu_view->ActivateEntry(entry_id);
+  if (!ret) _indicators->ActivateEntry(entry_id);
 }
 
 static gboolean track_menu_pointer(gpointer data)
@@ -436,13 +450,9 @@ void PanelView::EndFirstMenuShow()
   if (!_menu_view->GetControlsActive())
     return;
 
-  bool activated = false;
-  for (Children::iterator i = children_.begin(), end = children_.end();
-       i != end && !activated; ++i)
-  {
-    PanelIndicatorObjectView* view = *i;
-    activated = view->ActivateIfSensitive();
-  }
+  bool ret;
+  ret = _menu_view->ActivateIfSensitive();
+  if (!ret) _indicators->ActivateIfSensitive();
 }
 
 void
@@ -474,11 +484,8 @@ PanelView::SetPrimary(bool primary)
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  for (Children::iterator i = children_.begin(), end = children_.end(); i != end; ++i)
-  {
-    (*i)->GetGeometryForSync(locations);
-  }
-  _remote->SyncGeometries(GetName(), locations);
+  _menu_view->GetGeometryForSync(locations);
+  _indicators->GetGeometryForSync(locations);
 }
 
 void
