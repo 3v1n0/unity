@@ -29,6 +29,8 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 
+#include "DndData.h"
+
 class ActionArg
 {
 public:
@@ -154,9 +156,9 @@ public:
 
   virtual std::list<DbusmenuMenuitem*> Menus() = 0;
 
-  virtual nux::DndAction QueryAcceptDrop(std::list<char*> paths) = 0;
+  virtual nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data) = 0;
 
-  virtual void AcceptDrop(std::list<char*> paths) = 0;
+  virtual void AcceptDrop(unity::DndData& dnd_data) = 0;
 
   virtual void SendDndEnter() = 0;
 

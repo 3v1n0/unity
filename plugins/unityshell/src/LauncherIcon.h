@@ -21,6 +21,9 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
+#include <set>
+#include <string>
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxCore/Math/MathInc.h>
@@ -42,7 +45,6 @@
 #include "LauncherEntryRemote.h"
 
 class Launcher;
-
 
 class LauncherIcon : public AbstractLauncherIcon, public unity::Introspectable, public nux::InitiallyUnownedObject
 {
@@ -148,14 +150,14 @@ public:
 
   void RemoveEntryRemote(LauncherEntryRemote* remote);
 
-  nux::DndAction QueryAcceptDrop(std::list<char*> paths)
+  nux::DndAction QueryAcceptDrop(unity::DndData& dnd_data)
   {
-    return OnQueryAcceptDrop(paths);
+    return OnQueryAcceptDrop(dnd_data);
   }
 
-  void AcceptDrop(std::list<char*> paths)
+  void AcceptDrop(unity::DndData& dnd_data)
   {
-    return OnAcceptDrop(paths);
+    return OnAcceptDrop(dnd_data);
   }
 
   void SendDndEnter()
@@ -219,12 +221,12 @@ protected:
     return 0;
   }
 
-  virtual nux::DndAction OnQueryAcceptDrop(std::list<char*> files)
+  virtual nux::DndAction OnQueryAcceptDrop(unity::DndData& dnd_data)
   {
     return nux::DNDACTION_NONE;
   }
 
-  virtual void OnAcceptDrop(std::list<char*> files) {}
+  virtual void OnAcceptDrop(unity::DndData& dnd_data) {}
 
   virtual void OnDndEnter() {}
 
@@ -327,7 +329,7 @@ private:
 
   std::list<LauncherEntryRemote*> _entry_list;
   std::map<std::string, std::vector<nux::Vector4> > transform_map;
-
+  
 };
 
 #endif // LAUNCHERICON_H
