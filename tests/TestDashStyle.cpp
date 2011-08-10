@@ -186,6 +186,30 @@ int main (int    argc,
   cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/multirange-right.png");
   wipe (cr);
 
+  pDashStyle->TrackViewNumber (cr, nux::NUX_STATE_NORMAL, "42");
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-number-normal.png");
+  wipe (cr);
+
+  pDashStyle->TrackViewPlay (cr, nux::NUX_STATE_NORMAL);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-play-normal.png");
+  wipe (cr);
+
+  pDashStyle->TrackViewPause (cr, nux::NUX_STATE_NORMAL);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-pause-normal.png");
+  wipe (cr);
+
+  pDashStyle->TrackViewProgress (cr);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/track-view-progress.png");
+  wipe (cr);
+
+  pDashStyle->SeparatorVert (cr);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/separator-vert.png");
+  wipe (cr);
+
+  pDashStyle->SeparatorHoriz (cr);
+  cairo_surface_write_to_png (cairo_get_target (cr), "/tmp/separator-horiz.png");
+  wipe (cr);
+
   // clean up
   cairo_surface_destroy (surface);
   cairo_destroy (cr);

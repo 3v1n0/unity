@@ -127,7 +127,7 @@ namespace unity {
 
     DashStyle::Arrow arrow;
     if (has_arrow_ == -1)
-      arrow = DashStyle::Arrow::ARROW_LEFT;
+      arrow = DashStyle::Arrow::ARROW_NONE;
     else if (has_arrow_ == 0)
       arrow = DashStyle::Arrow::ARROW_LEFT;
     else if (has_arrow_ == 1)
@@ -158,6 +158,11 @@ namespace unity {
     texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
+    // clear what is behind us
+    nux::t_u32 alpha = 0, src = 0, dest = 0;
+    GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
     nux::Color col = nux::color::Black;
     col.alpha = 0;
     GfxContext.QRP_Color(GetGeometry().x,
@@ -181,7 +186,7 @@ namespace unity {
                         texture->GetDeviceTexture(),
                         texxform,
                         nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
+    GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
   void FilterMultiRangeButton::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {

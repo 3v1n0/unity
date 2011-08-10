@@ -73,7 +73,8 @@ namespace unity
       typedef enum {
         ARROW_LEFT = 0,
 		ARROW_RIGHT,
-		ARROW_BOTH
+		ARROW_BOTH,
+		ARROW_NONE
 	  } Arrow;
 
       DashStyle ();
@@ -94,6 +95,22 @@ namespace unity
                                     std::string label,
                                     Arrow       arrow,
                                     Segment     segment);
+
+    virtual bool TrackViewNumber (cairo_t*    cr,
+                                  nux::State  state,
+                                  std::string trackNumber);
+
+    virtual bool TrackViewPlay (cairo_t*   cr,
+                                nux::State state);
+
+    virtual bool TrackViewPause (cairo_t*   cr,
+                                 nux::State state);
+
+    virtual bool TrackViewProgress (cairo_t* cr);
+
+    virtual bool SeparatorVert (cairo_t* cr);
+
+    virtual bool SeparatorHoriz (cairo_t* cr);
 
     void Blur (cairo_t* cr, int size);
 
