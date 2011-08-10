@@ -80,6 +80,7 @@ void DashView::SetupViews()
   search_bar_ = new SearchBar();
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
+  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing;  });
   content_layout_->AddView(search_bar_, 0, nux::MINOR_POSITION_LEFT);
 
   lenses_layout_ = new nux::VLayout();
@@ -327,6 +328,8 @@ void DashView::OnLensBarActivated(std::string const& id)
   LensView* view = active_lens_view_ = lens_views_[id];
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->lens()->search_hint;
+  bool expanded =view->filters_expanded;
+  search_bar_->showing_filters = expanded;
 }
 
 void DashView::OnSearchFinished(std::string const& search_string)

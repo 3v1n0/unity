@@ -76,6 +76,7 @@ private:
   void OnSearchChanged(nux::TextEntry* text_entry);
   void OnClearClicked(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void OnEntryActivated();
+  void OnShowingFiltersChanged(bool is_showing);
 
   std::string get_search_string() const;
   bool set_search_string(std::string const& string);
@@ -95,6 +96,7 @@ private:
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
   nux::TextEntry* pango_entry_;
+  nux::StaticCairoText* show_filters_;
   
   int last_width_;
   int last_height_;

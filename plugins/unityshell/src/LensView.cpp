@@ -60,6 +60,7 @@ LensView::LensView(Lens::Ptr lens)
   PlacesStyle::GetDefault()->columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
   search_string.changed.connect([&](std::string const& search) { lens_->Search(search);  });
+  filters_expanded.changed.connect([&](bool expanded) { fscroll_view_->SetVisible(expanded); ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW); }); 
 }
 
 LensView::~LensView()
@@ -78,6 +79,7 @@ void LensView::SetupViews()
   scroll_view_->SetLayout(scroll_layout_);
 
   fscroll_view_ = new nux::ScrollView();
+  fscroll_view_->SetMaximumWidth(1);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
@@ -180,7 +182,6 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
   int width = PlacesStyle::GetDefault()->GetTileWidth();
   fscroll_view_->SetMinimumWidth(width*2);
   fscroll_view_->SetMaximumWidth(width*2);
-  fscroll_view_->SetVisible(true);
 }
 
 void LensView::OnFilterRemoved(Filter::Ptr filter)

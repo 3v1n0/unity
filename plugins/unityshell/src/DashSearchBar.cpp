@@ -87,7 +87,18 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
-  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  layered_layout_->SetMinimumWidth(420);
+  layered_layout_->SetMaximumWidth(620);
+  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
+
+  std::string filter_str = _("Refine search");
+  filter_str+= "  ▸";
+  show_filters_ = new nux::StaticCairoText(filter_str.c_str());
+  show_filters_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+  show_filters_->SetCanFocus(true);
+  show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+  show_filters_->mouse_click.connect([&] (int x, int y, unsigned long b, unsigned long k) { showing_filters = !showing_filters; });
+  layout_->AddView(show_filters_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add(new Signal<void, GtkSettings*, GParamSpec*>
       (gtk_settings_get_default(),
@@ -98,6 +109,7 @@ SearchBar::SearchBar(NUX_FILE_LINE_DECL)
   search_hint.changed.connect([&](std::string const& s) { OnSearchHintChanged(); });
   search_string.SetGetterFunction(sigc::mem_fun(this, &SearchBar::get_search_string));
   search_string.SetSetterFunction(sigc::mem_fun(this, &SearchBar::set_search_string));
+  showing_filters.changed.connect(sigc::mem_fun(this, &SearchBar::OnShowingFiltersChanged));
 }
 
 SearchBar::~SearchBar()
@@ -130,6 +142,10 @@ void SearchBar::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 
   font_desc = g_strdup_printf("%s %d", pango_font_description_get_family(desc), size + HOW_LARGE);
   hint_->SetFont(font_desc);
+
+  g_free(font_desc);
+  font_desc = g_strdup_printf("%s %d", pango_font_description_get_family(desc), size + HOW_LARGE/2);
+  show_filters_->SetFont(font_desc);
 
   pango_font_description_free(desc);
   g_free(font_name);
@@ -178,7 +194,14 @@ gboolean SearchBar::OnLiveSearchTimeout(SearchBar* sef)
   return FALSE;
 }
 
-
+void SearchBar::OnShowingFiltersChanged(bool is_showing)
+{
+  std::string filter_str = _("Refine search");
+  filter_str += "  <small>";
+  filter_str += is_showing ? "▾" : "▸";
+  filter_str += "</small>";
+  show_filters_->SetText(filter_str.c_str());
+}
 
 long SearchBar::ProcessEvent(nux::IEvent& ievent, long TraverseInfo,
                                    long ProcessEventInfo)
@@ -303,6 +326,7 @@ void SearchBar::UpdateBackground()
 #define RADIUS  6
   int x, y, width, height;
   nux::Geometry geo = GetGeometry();
+  geo.width = layered_layout_->GetGeometry().width;
 
   if (geo.width == last_width_ && geo.height == last_height_)
     return;
