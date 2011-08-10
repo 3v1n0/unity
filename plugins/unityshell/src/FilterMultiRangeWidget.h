@@ -57,6 +57,7 @@ namespace unity {
     void OnAllActivated(nux::View* view);
     void OnOptionAdded(dash::FilterOption::Ptr new_filter);
     void OnOptionRemoved(dash::FilterOption::Ptr removed_filter);
+    void OnActiveChanged(bool value);
 
     nux::HLayout *layout_;
     FilterBasicButton* all_button_;
