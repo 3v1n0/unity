@@ -23,12 +23,12 @@ namespace unity {
   
 NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
-DNDCollectionWindow::DNDCollectionWindow(int x, int y)
+DNDCollectionWindow::DNDCollectionWindow(CompScreen* screen)
   : nux::BaseWindow("")
 {
   SetBackgroundColor(nux::Color(0x00000000));
-  SetBaseSize(150, 150);
-  SetBaseXY(x-75, y-75);
+  SetBaseSize(screen->width(), screen->height());
+  SetBaseXY(0, 0);
             
   EnableInputWindow(true, "DNDCollectionWindow");
   SetDndEnabled(false, true);

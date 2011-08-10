@@ -1743,7 +1743,7 @@ Launcher::OnUpdateDragManagerTimeout(gpointer data)
   {
     if (self->_collection_window == NULL)
     {
-      self->_collection_window = new unity::DNDCollectionWindow(root_x_r, root_y_r);
+      self->_collection_window = new unity::DNDCollectionWindow(self->_screen);
       self->_collection_window->SinkReference();
       self->_on_data_collected_connection = self->_collection_window->collected.connect(sigc::mem_fun(self, &Launcher::OnDNDDataCollected));
     }

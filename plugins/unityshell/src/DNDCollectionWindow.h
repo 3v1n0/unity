@@ -22,6 +22,7 @@
 
 #include <list>
 
+#include <core/screen.h>
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <sigc++/sigc++.h>
@@ -34,7 +35,7 @@ NUX_DECLARE_OBJECT_TYPE(DNDCollectionWindow, nux::BaseWindow);
 
 // Methods
 public:
-  DNDCollectionWindow(int x, int y);
+  DNDCollectionWindow(CompScreen* screen);
   ~DNDCollectionWindow();
   
 private:
