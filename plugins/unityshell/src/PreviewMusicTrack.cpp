@@ -31,6 +31,7 @@
 #include "PreviewBase.h"
 #include "IconTexture.h"
 #include "StaticCairoText.h"
+#include "PreviewMusicTrackWidget.h"
 
 #include "PreviewMusicTrack.h"
 
@@ -87,29 +88,21 @@ namespace unity {
 
       nux::VLayout* tracks = new nux::VLayout(NUX_TRACKER_LOCATION);
 
-      //FIXME use a special widget for this,
-      nux::HLayout *track_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-      //FIXME - use a button subclass for absolute renderering
       std::stringstream number;
       number << preview_->number;
-      nux::Button *track_play_button = new nux::Button(number.str());
-      //FIXME - hook up pressing button to activation URI
-
-      nux::StaticCairoText *track_title = new nux::StaticCairoText(preview_->title.c_str(), NUX_TRACKER_LOCATION);
-
       std::stringstream track_length_string;
       track_length_string << preview_->length / 60 << ":" << preview_->length % 60;
 
-      nux::StaticCairoText *track_length = new nux::StaticCairoText(track_length_string.str().c_str(), NUX_TRACKER_LOCATION);
+      PreviewMusicTrackWidget *track_widget = new PreviewMusicTrackWidget(number.str(),
+                                                                          preview_->title,
+                                                                          track_length_string.str(),
+                                                                          preview_->play_action_uri,
+                                                                          preview_->pause_action_uri,
+                                                                          NUX_TRACKER_LOCATION);
 
-      track_layout->AddView(track_play_button, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      track_layout->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);
-      track_layout->AddView(track_title, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
-      track_layout->AddLayout (new nux::SpaceLayout(6,6,6,6), 1);
-      track_layout->AddSpace (0, 1);
-      track_layout->AddView(track_length, 1, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+      track_widget->UriActivated.connect ([&] (std::string uri) { UriActivated.emit(uri); });
 
-      tracks->AddLayout(track_layout, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      tracks->AddView(track_widget, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
       PreviewBasicButton* primary_button = new PreviewBasicButton(preview_->primary_action_name.c_str(), NUX_TRACKER_LOCATION);
       //FIXME - add secondary action when we have the backend for it
