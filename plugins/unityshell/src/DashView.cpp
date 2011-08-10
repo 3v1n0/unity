@@ -181,7 +181,6 @@ void DashView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, content_geo_.width, content_geo_.height);
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo, true);
-    //FIXME: g_timeout_add(0, (GSourceFunc)OnQueueDrawDrawDraw, this);
   }
 
   if (bg_blur_texture_.IsValid()  && paint_blur)

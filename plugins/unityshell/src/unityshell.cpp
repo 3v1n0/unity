@@ -515,7 +515,10 @@ void UnityScreen::preparePaint(int ms)
 {
   PlacesSettings::DashBlurType type = PlacesSettings::GetDefault()->GetDashBlurType();
   if (type == PlacesSettings::ACTIVE_BLUR)
+  {
     dashController->window()->QueueDraw();
+    panelController->QueueRedraw();
+  }
 
   cScreen->preparePaint(ms);
 
@@ -1166,6 +1169,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::DashBlurExperimental:
       PlacesSettings::GetDefault()->SetDashBlurType((PlacesSettings::DashBlurType)optionGetDashBlurExperimental());
+      panelController->SetBlurType((unity::BlurType)optionGetDashBlurExperimental());
       break;
     case UnityshellOptions::AutomaximizeValue:
       PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
