@@ -4,6 +4,7 @@ unity (4.6.0-0ubuntu4) UNRELEASED; urgency=low
     - remove the recommends on ubuntuone-control-panel-gtk now that
       ubuntu-desktop recommends it.
     - transition to boost 1.46
+    - dep on latest compiz-dev for boost transition
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 10 Aug 2011 10:33:58 +0200
 
