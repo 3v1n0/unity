@@ -21,6 +21,7 @@
 
 #include "Nux/Nux.h"
 #include "Nux/ColorArea.h"
+#include <NuxCore/Logger.h>
 #include "NuxGraphics/GLThread.h"
 #include "UBusMessages.h"
 
@@ -35,6 +36,11 @@
 #include "PlacesSettings.h"
 #include "PlacesView.h"
 #include <UnityCore/Variant.h>
+
+namespace
+{
+nux::logging::Logger logger("unity.places");
+}
 
 static void place_entry_activate_request(GVariant* payload, PlacesView* self);
 
@@ -69,13 +75,12 @@ PlacesView::PlacesView(PlaceFactory* factory)
   nux::VLayout* vlayout = new nux::VLayout(NUX_TRACKER_LOCATION);
   _layout->AddLayout(vlayout, 1, nux::eCenter, nux::eFull);
 
-  _h_spacer = new nux::SpaceLayout(1, 1, 1, nux::AREA_MAX_HEIGHT);
+  _h_spacer = new nux::SpaceLayout(1, 1, 1, nux::AREA_MAX_HEIGHT, NUX_TRACKER_LOCATION);
   _h_spacer->SetVisible(false);
   _layout->AddLayout(_h_spacer, 0, nux::eCenter, nux::eFull);
 
   _search_bar = new PlacesSearchBar();
   vlayout->AddView(_search_bar, 0, nux::eCenter, nux::eFull);
-  AddChild(_search_bar);
 
   _search_bar->search_changed.connect(sigc::mem_fun(this, &PlacesView::OnSearchChanged));
   _search_bar->activated.connect(sigc::mem_fun(this, &PlacesView::OnEntryActivated));
@@ -89,14 +94,13 @@ PlacesView::PlacesView(PlaceFactory* factory)
   _layered_layout = new nux::LayeredLayout(NUX_TRACKER_LOCATION);
   hlayout->AddLayout(_layered_layout, 1, nux::eCenter, nux::eFull);
 
-  _v_spacer = new nux::SpaceLayout(1, nux::AREA_MAX_WIDTH, 1, 1);
+  _v_spacer = new nux::SpaceLayout(1, nux::AREA_MAX_WIDTH, 1, 1, NUX_TRACKER_LOCATION);
   _v_spacer->SetVisible(false);
   vlayout->AddLayout(_v_spacer, 0, nux::eCenter, nux::eFull);
 
   _home_view = new PlacesHomeView();
   _home_view->expanded.connect(sigc::mem_fun(this, &PlacesView::ReEvaluateShrinkMode));
   _layered_layout->AddLayer(_home_view);
-  AddChild(_home_view);
 
   _results_controller = new PlacesResultsController();
   _results_view = new PlacesResultsView();
@@ -108,7 +112,6 @@ PlacesView::PlacesView(PlaceFactory* factory)
   _layered_layout->AddLayer(_empty_view);
 
   _layered_layout->SetActiveLayer(_home_view);
-  //nux::GetWindowCompositor().SetKeyFocusArea(GetTextEntryView());
 
   SetLayout(_layout);
 
@@ -150,13 +153,16 @@ PlacesView::PlacesView(PlaceFactory* factory)
   _icon_loader = IconLoader::GetDefault();
 
   SetActiveEntry(_home_entry, 0, "");
-  
+
   // do a request for the latest colour from bghash
   ubus_server_send_message (ubus, UBUS_BACKGROUND_REQUEST_COLOUR_EMIT, NULL);
 }
 
 PlacesView::~PlacesView()
 {
+  LOG_DEBUG_BLOCK(logger);
+  nux::logging::Logger("nux.core").SetLogLevel(nux::logging::Trace);
+
   UBusServer* ubus = ubus_server_get_default();
   if (_home_button_hover > 0)
     ubus_server_unregister_interest(ubus, _home_button_hover);
