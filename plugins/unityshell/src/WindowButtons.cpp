@@ -130,19 +130,19 @@ WindowButtons::WindowButtons()
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_CLOSE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
+  but->Activated.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->OnMouseEnter.connect(lambda_statechanged);
   but->OnMouseLeave.connect(lambda_statechanged);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_MINIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
+  but->Activated.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->OnMouseEnter.connect(lambda_statechanged);
   but->OnMouseLeave.connect(lambda_statechanged);
 
   but = new WindowButton(PanelStyle::WINDOW_BUTTON_UNMAXIMIZE);
   AddView(but, 0, nux::eCenter, nux::eFix);
-  but->sigClick.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
+  but->Activated.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->OnMouseEnter.connect(lambda_statechanged);
   but->OnMouseLeave.connect(lambda_statechanged);
 
@@ -155,19 +155,19 @@ WindowButtons::~WindowButtons()
 }
 
 void
-WindowButtons::OnCloseClicked()
+WindowButtons::OnCloseClicked(nux::View* view)
 {
   close_clicked.emit();
 }
 
 void
-WindowButtons::OnMinimizeClicked()
+WindowButtons::OnMinimizeClicked(nux::View* view)
 {
   minimize_clicked.emit();
 }
 
 void
-WindowButtons::OnRestoreClicked()
+WindowButtons::OnRestoreClicked(nux::View* view)
 {
   restore_clicked.emit();
 }
