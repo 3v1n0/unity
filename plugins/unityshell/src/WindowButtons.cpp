@@ -61,7 +61,7 @@ public:
 
     GfxContext.PushClippingRectangle(geo);
 
-    if (HasMouseFocus())
+    if (HasMouseFocus() && IsMouseInside())
     {
       tex = _pressed_tex;
     }
@@ -162,7 +162,7 @@ WindowButtons::~WindowButtons()
 }
 
 void
-WindowButtons::OnCloseClicked(nux::View *view)
+WindowButtons::OnCloseClicked(nux::View* view)
 {
   close_clicked.emit();
 }
