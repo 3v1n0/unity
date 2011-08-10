@@ -82,7 +82,13 @@ namespace unity
       static DashStyle* GetDefault();
 
     virtual bool Button (cairo_t* cr, nux::State state, std::string label);
-    virtual bool Rating (cairo_t* cr, double rating);
+
+    virtual bool StarEmpty (cairo_t* cr, nux::State state);
+
+    virtual bool StarHalf (cairo_t* cr, nux::State state);
+
+    virtual bool StarFull (cairo_t* cr, nux::State state);
+
     virtual bool MultiRangeSegment (cairo_t*    cr,
                                     nux::State  state,
                                     std::string label,
@@ -172,6 +178,7 @@ namespace unity
       void ButtonOutlinePathSegment (cairo_t* cr, Segment segment);
 
       void ArrowPath (cairo_t* cr, Arrow arrow);
+
 
     private:
       cairo_font_options_t* _defaultFontOptions;
