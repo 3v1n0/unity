@@ -161,13 +161,13 @@ WindowButtons::OnCloseClicked(nux::View *view)
 }
 
 void
-WindowButtons::OnMinimizeClicked(nux::View *view)
+WindowButtons::OnMinimizeClicked(nux::View* view)
 {
   minimize_clicked.emit();
 }
 
 void
-WindowButtons::OnRestoreClicked(nux::View *view)
+WindowButtons::OnRestoreClicked(nux::View* view)
 {
   restore_clicked.emit();
 }

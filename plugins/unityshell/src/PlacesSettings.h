@@ -38,7 +38,8 @@ public:
   enum DashBlurType
   {
     NO_BLUR = 0,
-    STATIC_BLUR
+    STATIC_BLUR,
+    ACTIVE_BLUR
   };
 
   PlacesSettings();
