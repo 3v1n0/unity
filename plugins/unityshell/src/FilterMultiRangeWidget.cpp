@@ -67,7 +67,7 @@ namespace unity {
   {
     FilterMultiRangeButton* button = new FilterMultiRangeButton (NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
-    layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    layout_->AddView (button, 1);
     buttons_.push_back (button);
   }
 

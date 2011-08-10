@@ -53,14 +53,14 @@ namespace unity {
   void FilterExpanderLabel::SetRightHandView (nux::View *view)
   {
     right_hand_contents_ = view;
-    top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+    top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   }
 
   void FilterExpanderLabel::SetContents (nux::Layout *contents)
   {
     contents_ = contents;
     contents_->SetVisible(expanded);
-    layout_->AddLayout (contents_, 1);
+    layout_->AddLayout (contents_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
 
     QueueDraw();
   }
@@ -78,12 +78,15 @@ namespace unity {
         expanded = !expanded;
         if (contents_)
           contents_->SetVisible(expanded);
+        
+        QueueRelayout();
+        QueueDraw();
       });
 
-    top_bar_layout_->AddView (cairo_label_, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+    top_bar_layout_->AddView (cairo_label_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
     top_bar_layout_->AddSpace(1, 1);
 
-    layout_->AddLayout (top_bar_layout_, 1);
+    layout_->AddLayout (top_bar_layout_, 0);
     SetLayout(layout_);
 
     QueueRelayout();

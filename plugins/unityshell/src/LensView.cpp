@@ -176,8 +176,10 @@ void LensView::OnFilterAdded(Filter::Ptr filter)
 {
   std::string id = filter->id;
   filter_bar_->AddFilter(filter);
-  fscroll_view_->SetMinimumWidth(150);
-  fscroll_view_->SetMaximumWidth(150);
+
+  int width = PlacesStyle::GetDefault()->GetTileWidth();
+  fscroll_view_->SetMinimumWidth(width*2);
+  fscroll_view_->SetMaximumWidth(width*2);
   fscroll_view_->SetVisible(true);
 }
 

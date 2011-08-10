@@ -58,7 +58,7 @@ namespace unity
 
     nux::View *filter_view = factory_.WidgetForFilter (filter);
     filter_map_[filter] = filter_view;
-    GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_MATCHCONTENT);
+    GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
   }
 
   void FilterBar::RemoveFilter (dash::Filter::Ptr filter) {

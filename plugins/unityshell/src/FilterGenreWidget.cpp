@@ -38,10 +38,12 @@ namespace unity {
     all_button_->Reference();
 
     genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
+    genre_layout_->ForceChildrenSize(true);
+    genre_layout_->SetHeightMatchContent(true);
     genre_layout_->SetVerticalInternalMargin (6);
     genre_layout_->SetHorizontalInternalMargin (6);
     genre_layout_->EnablePartialVisibility (false);
-    genre_layout_->SetChildrenSize (140, 30);
+    genre_layout_->SetChildrenSize (120, 30);
     genre_layout_->Reference();
 
     SetRightHandView(all_button_);
@@ -70,7 +72,7 @@ namespace unity {
   {
     FilterGenreButton* button = new FilterGenreButton (NUX_TRACKER_LOCATION);
     button->SetFilter (new_filter);
-    genre_layout_->AddView (button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+    genre_layout_->AddView (button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
     buttons_.push_back (button);
   }
 
